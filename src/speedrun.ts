@@ -1,0 +1,39 @@
+import * as Discord from "discord.js";
+import { strict as assert } from "assert";
+import { diff_to_human, M } from "./utils";
+import { MemberTracker } from "./member_tracker";
+import { speedrun_color } from "./common";
+
+let tracker: MemberTracker;
+let client: Discord.Client;
+let action_log_channel: Discord.TextChannel;
+
+function on_ban(ban: Discord.GuildBan, now: number) {
+	M.debug("speedrun check");
+	let user = ban.user;
+	// get user info
+	let avatar = user.displayAvatarURL();
+	assert(avatar != null);
+	let index = tracker.logs.findIndex(e => e.id == user.id); // TODO: Revisit? Make a Map?
+	if(index == -1) return;
+	M.debug("xx");
+	let entry = tracker.logs[index];
+	if(entry.purged) {
+		return; // ignore bans from !raidpurge
+	}
+	// make embed
+	let embed = new Discord.MessageEmbed()
+			.setColor(speedrun_color)
+			.setAuthor(`Speedrun attempt: ${user.tag}`, avatar)
+			.setDescription(`User <@${user.id}> joined at <t:${Math.round(entry.joined_at / 1000)}:T> and banned at <t:${Math.round(now / 1000)}:T>.\nFinal timer: ${diff_to_human(now - entry.joined_at)}.\n`)
+			.setFooter(`ID: ${user.id}`)
+			.setTimestamp();
+	action_log_channel!.send({ embeds: [embed] });
+}
+
+export async function setup_speedrun(_client: Discord.Client, _tracker: MemberTracker) {
+	client = _client;
+	tracker = _tracker;
+	M.debug("Setting up speedrun");
+	tracker.add_submodule({ on_ban });
+}
