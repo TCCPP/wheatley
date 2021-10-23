@@ -1,23 +1,9 @@
 import * as Discord from "discord.js";
 import { strict as assert } from "assert";
-import { zelis } from "./common";
+import { obnoxious_autoreact_ids, obnoxious_autoreact_immunity, obnoxious_autoreact_names } from "./common";
 import { M } from "./utils";
 
-const obnoxious_autoreact_ids = new Set([
-	"841482328693669900" // "eisie"
-]);
-
-const obnoxious_autoreact_names = [
-	"eisie"
-];
-
-const obnoxious_autoreact_immunity = new Set([
-	zelis,
-	"551519630578024468" // Swyde
-]);
-
-function on_react(reaction: Discord.MessageReaction | Discord.PartialMessageReaction,
-                  user: Discord.User | Discord.PartialUser) {
+function on_react(reaction: Discord.MessageReaction | Discord.PartialMessageReaction) {
 	assert(reaction.message.author != null);
 	if(obnoxious_autoreact_immunity.has(reaction.message.author.id)) {
 		const emoji_name = reaction.emoji.name?.toLowerCase();

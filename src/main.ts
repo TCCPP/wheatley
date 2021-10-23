@@ -24,8 +24,6 @@ import * as Discord from "discord.js";
 import { strict as assert } from "assert";
 import { M } from "./utils";
 import { readFileSync } from "fs";
-import { action_log_channel_id, color, is_authorized_admin, member_log_channel_id, pepereally,
-         welcome_channel_id} from "./common";
 import { setup_anti_autoreact } from "./anti_autoreact"
 import { setup_server_suggestion_reactions } from "./server_suggestion_reactions";
 import { setup_role_manager } from "./role_manager";
@@ -36,6 +34,9 @@ import { setup_anti_raid } from "./anti_raid";
 import { setup_speedrun } from "./speedrun";
 import { setup_anti_scambot } from "./anti_scambot";
 import { setup_tracked_mentions } from "./tracked_mentions";
+import { setup_massban } from "./massban";
+import { setup_test_command } from "./test_command";
+import { setup_snowflake } from "./snowflake";
 
 // Setup client
 const client = new Discord.Client({
@@ -57,13 +58,6 @@ const client = new Discord.Client({
 	]
 });
 
-// Configuration
-const snowflake_re = /\b\d{18}\b/g;
-
-let action_log_channel: Discord.TextChannel | null = null;
-let member_log_channel: Discord.TextChannel | null = null;
-let welcome_channel   : Discord.TextChannel | null = null;
-
 // Suggestion tracking
 // deleted suggestion -> wastebin
 // log resolution in suggestions_log thread
@@ -72,82 +66,16 @@ let welcome_channel   : Discord.TextChannel | null = null;
 // maintain database of ids
 // suggestion tracker: Content, author, votes, link.
 
-function do_mass_ban(msg: Discord.Message) {
-	// TODO: Do DM logic?
-	// TODO: Set entry.purged if necessary?
-	assert(msg.guild != null);
-	let ids = msg.content.match(snowflake_re);
-	if(ids != null && ids.length > 0) {
-		M.log("Banning...");
-		msg.channel.send("Banning...");
-		M.debug(ids);
-		for(let id of ids) {
-			msg.guild.members.ban(id, {reason: "[[Wheatly]] User-Specified Mass-ban"});
-		}
-		msg.reply("Done.");
-		// TODO: use long-message logic?
-		const embed = new Discord.MessageEmbed()
-						.setColor(color)
-						.setTitle(`<@!${msg.author.id}> banned ${ids.length} users`)
-						.setDescription(`\`\`\`\n${ids.join("\n")}\n\`\`\``)
-						.setTimestamp();
-		action_log_channel!.send({ embeds: [embed] });
-	}
-}
-
-const snowflake_command_re = /!snowflake\s*(\d+)/i;
-const discordEpoch = 1420070400000;
-
-client.on("messageCreate", msg => {
-	// ignore self and other bots
-	if(msg.author.id == client.user!.id) return;
-	if(msg.author.bot) return;
-	// commands
-	if(msg.content.startsWith("!wban")) {
-		assert(msg.member != null);
-		if(is_authorized_admin(msg.member)) {
-			do_mass_ban(msg);
-		} else {
-			msg.reply(`Unauthorized ${pepereally}`);
-		}
-	}
-	if(msg.content == "!wtest") {
-		msg.reply(`test`);
-		const embed = new Discord.MessageEmbed()
-					 .setColor(color)
-					 .setAuthor(`${msg.author.username}#${msg.author.discriminator}`, msg.author.displayAvatarURL())
-					 .setDescription(`test test`)
-					 .setFooter(`ID: ${msg.author.id}`)
-					 .setTimestamp();
-		msg.channel.send({ embeds: [embed] });
-	}
-	let match = msg.content.match(snowflake_command_re);
-	if(match != null) {
-		assert(match.length == 2);
-		let arg = match[1];
-		let snowflake = BigInt.asUintN(64, BigInt(arg));
-		let timestamp = snowflake >> 22n;
-		//const date = new Date(dateBits + discordEpoch);
-		msg.channel.send(`<t:${Math.round((discordEpoch + Number(timestamp)) / 1000)}>`);
-	}
-});
-
 client.on("ready", () => {
 	M.log(`Logged in as ${client.user!.tag}`);
-	client.channels.fetch(action_log_channel_id)
-		  .then(c => action_log_channel = c as Discord.TextChannel)
-		  .catch(M.error);
-	client.channels.fetch(member_log_channel_id)
-		.then(c => member_log_channel = c as Discord.TextChannel)
-		.catch(M.error);
-	client.channels.fetch(welcome_channel_id)
-		  .then(c => welcome_channel = c as Discord.TextChannel)
-		  .catch(M.error);
 });
 
 setup_anti_autoreact(client);
 setup_server_suggestion_reactions(client);
 setup_role_manager(client);
+setup_test_command(client);
+setup_massban(client);
+setup_snowflake(client);
 let tracker = new MemberTracker(client);
 setup_tracked_mentions(client);
 setup_raidpurge(client, tracker);

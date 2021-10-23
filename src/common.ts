@@ -10,6 +10,7 @@ export const illuminator = "391270706186420224";
 // Role IDs
 export const moderators_role_id = "847915341954154536";
 export const root_role_id = "331719468440879105";
+export const pink_role_id = "888158339878490132";
 
 // Channel/Guild IDs
 export const TCCPP_ID = "331718482485837825";
@@ -36,9 +37,9 @@ export const authorized_admin_roles = [
 	root_role_id
 ];
 
-export const obnoxious_autoreact_ids = [
+export const obnoxious_autoreact_ids = new Set([
 	"841482328693669900" // "eisie"
-];
+]);
 
 export const obnoxious_autoreact_names = [
 	"eisie"

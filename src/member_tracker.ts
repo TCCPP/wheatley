@@ -32,9 +32,9 @@ export class MemberTracker {
 	currently_banning: Map<string, number> = new Map();
 	constructor(client: Discord.Client) {
 		// every 10 minutes, trim extraneous entries
-		setInterval(this.trim, 10 * MINUTE);
-		client.on("guildMemberAdd", this.on_join);
-		client.on("guildBanAdd", this.on_ban);
+		setInterval(this.trim.bind(this), 10 * MINUTE);
+		client.on("guildMemberAdd", this.on_join.bind(this));
+		client.on("guildBanAdd", this.on_ban.bind(this));
 	}
 	trim() {
 		let now = Date.now();
