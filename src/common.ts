@@ -50,7 +50,19 @@ export const obnoxious_autoreact_immunity = new Set([
 	"551519630578024468" // Swyde
 ]);
 
-export const root_only_reacts = new Set(["🟢", "🔴", "🟡", "🟩", "🟥", "🟨", "🚫"]);
+export const root_only_reacts = new Set([
+	"🟢", "🔴", "🟡",
+	"🟩", "🟥", "🟨",
+	"✅", "⛔",
+	"🚫",
+	"🫑", "🍏", "🎾", "🍅", "🍎",
+]);
+
+export const blacklisted_urls = new Set([
+	"discond.gift",
+	"dlscord.net",
+	"nitrodlscordz.com",
+]);
 
 export const pepereally = "<:pepereally:643881257624666112>";
 

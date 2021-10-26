@@ -90,8 +90,11 @@ export function diff_to_human(diff: number) {
 	}
 }
 
-const code_re = /`[^\`]`/gi;
+const code_re = /`[^\`]+`(?!`)/gi;
+const code_block_re = /```(?:[^\`]|`(?!``))+```/gi;
 
 export function parse_out(message: string) {
-
+	message = message.replace(code_re, message);
+	message = message.replace(code_block_re, message);
+	return message;
 }

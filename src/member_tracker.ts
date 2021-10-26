@@ -26,7 +26,6 @@ export class MemberTracker {
 	ping_map: Map<string, Discord.Message[]> = new Map();
 	// user id snowflake -> messages with links
 	link_map: Map<string, Discord.Message[]> = new Map();
-	link_re = /https?:\/\/(www\.)?[-a-zA-Z0-9@:%._\+~#=]{1,256}\.[a-zA-Z0-9()]{1,6}\b([-a-zA-Z0-9()@:%_\+.~#?&//=]*)/gi;
 	// set of user id snowflakes to prevent race condition
 	// snowflake -> timestamp of addition to this set
 	currently_banning: Map<string, number> = new Map();
@@ -36,6 +35,7 @@ export class MemberTracker {
 		client.on("guildMemberAdd", this.on_join.bind(this));
 		client.on("guildBanAdd", this.on_ban.bind(this));
 	}
+	// Bookkeeping
 	trim() {
 		let now = Date.now();
 		// -- join logs --
@@ -87,6 +87,9 @@ export class MemberTracker {
 			if(on_ban) on_ban(ban, now);
 		}
 	}
+	// Heuristics
+	
+	// API
 	add_submodule(submodule: submodule) {
 		this.submodules.push(submodule);
 	}
