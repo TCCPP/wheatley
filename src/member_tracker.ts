@@ -38,7 +38,7 @@ export class MemberTracker {
 	}
 	trim() {
 		let now = Date.now();
-		// first do join logs
+		// -- join logs --
 		let first_in_timeframe = this.logs.findIndex(entry => now - entry.joined_at <= LOG_DURATION);
 		if(first_in_timeframe == -1) return;
 		// debugging checks
@@ -47,8 +47,7 @@ export class MemberTracker {
 			assert(now - this.logs[i].joined_at <= LOG_DURATION);
 		}
 		this.logs = this.logs.slice(first_in_timeframe);
-
-		// now do ping/link maps
+		// -- ping/link maps --
 		for(let map of [this.ping_map, this.link_map]) {
 			for(let [k, v] of map) {
 				v = v.filter(m => now - m.createdTimestamp <= LOG_DURATION);

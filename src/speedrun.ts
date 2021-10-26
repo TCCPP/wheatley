@@ -2,7 +2,7 @@ import * as Discord from "discord.js";
 import { strict as assert } from "assert";
 import { diff_to_human, M } from "./utils";
 import { MemberTracker } from "./member_tracker";
-import { speedrun_color } from "./common";
+import { action_log_channel_id, speedrun_color } from "./common";
 
 let tracker: MemberTracker;
 let client: Discord.Client;
@@ -35,5 +35,14 @@ export async function setup_speedrun(_client: Discord.Client, _tracker: MemberTr
 	client = _client;
 	tracker = _tracker;
 	M.debug("Setting up speedrun");
-	tracker.add_submodule({ on_ban });
+	client.on("ready", async () => {
+		try {
+			action_log_channel = await client.channels.fetch(action_log_channel_id) as Discord.TextChannel;
+			assert(action_log_channel != null);
+			M.debug("tracked_mentions: action_log_channel channel fetched");
+			tracker.add_submodule({ on_ban });
+		} catch(e) {
+			M.error(e);
+		}
+	});
 }

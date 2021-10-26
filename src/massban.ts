@@ -1,8 +1,9 @@
 import * as Discord from "discord.js";
 import { strict as assert } from "assert";
 import { M } from "./utils";
-import { action_log_channel_id, color, is_authorized_admin, pepereally } from "./common";
+import { action_log_channel_id, color, is_authorized_admin, pepereally, TCCPP_ID } from "./common";
 
+let client: Discord.Client;
 let action_log_channel: Discord.TextChannel;
 
 const snowflake_re = /\b\d{18}\b/g;
@@ -32,6 +33,9 @@ function do_mass_ban(msg: Discord.Message) {
 }
 
 function on_message(message: Discord.Message) {
+	if(message.author.id == client.user!.id) return; // Ignore self
+	if(message.author.bot) return; // Ignore bots
+	if(message.guildId != TCCPP_ID) return; // Ignore messages outside TCCPP (e.g. dm's)
 	if(message.content.startsWith("!wban")) {
 		assert(message.member != null);
 		if(is_authorized_admin(message.member)) {
@@ -42,7 +46,8 @@ function on_message(message: Discord.Message) {
 	}
 }
 
-export function setup_massban(client: Discord.Client) {
+export function setup_massban(_client: Discord.Client) {
+	client = _client;
 	client.on("ready", async () => {
 		try {
 			action_log_channel = await client.channels.fetch(action_log_channel_id) as Discord.TextChannel;

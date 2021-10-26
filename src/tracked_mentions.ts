@@ -1,7 +1,7 @@
 import * as Discord from "discord.js";
 import { strict as assert } from "assert";
 import { diff_to_human, M } from "./utils";
-import { action_log_channel_id, color, tracked_mentions } from "./common";
+import { action_log_channel_id, color, TCCPP_ID, tracked_mentions } from "./common";
 
 let client: Discord.Client;
 let action_log_channel: Discord.TextChannel;
@@ -22,6 +22,9 @@ function check_tracked_mention_and_notify(message: Discord.Message) {
 }
 
 function on_message(message: Discord.Message) {
+	if(message.author.id == client.user!.id) return; // Ignore self
+	if(message.author.bot) return; // Ignore bots
+	if(message.guildId != TCCPP_ID) return; // Ignore messages outside TCCPP (e.g. dm's)
 	if(message.mentions.roles.size > 0) {
 		check_tracked_mention_and_notify(message);
 	}

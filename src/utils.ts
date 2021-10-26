@@ -89,3 +89,9 @@ export function diff_to_human(diff: number) {
 		return `${pluralize(diff / 1000, "second")}`;
 	}
 }
+
+const code_re = /`[^\`]`/gi;
+
+export function parse_out(message: string) {
+
+}
