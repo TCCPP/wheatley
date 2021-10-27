@@ -1,6 +1,7 @@
 import * as Discord from "discord.js";
 import * as moment from "moment";
 import * as chalk from "chalk";
+import * as fs from "fs";
 
 export class M {
 	static get_timestamp() {
@@ -98,3 +99,13 @@ export function parse_out(message: string) {
 	message = message.replace(code_block_re, message);
 	return message;
 }
+
+export function exists_sync(path: string) {
+	let exists = true;
+	try{
+		fs.accessSync(path, fs.constants.F_OK);
+	} catch(e) {
+		exists = false;
+	}
+	return exists;
+  }

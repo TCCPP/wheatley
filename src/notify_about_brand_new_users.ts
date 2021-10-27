@@ -17,7 +17,7 @@ function notify_about_brand_new_user(member: Discord.GuildMember) {
 			   .setTimestamp();
 	member_log_channel!.send({ embeds: [embed] })
 		.catch((...args: any[]) => M.error(...args));
-	//member_log_channel!.send(`<@!${zelis}>`);
+	//member_log_channel!.send(`<@!${zelis_id}>`);
 }
 
 function on_join(member: Discord.GuildMember) {

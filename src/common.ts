@@ -4,13 +4,14 @@ import * as Discord from "discord.js";
 export const MINUTE = 1000 * 60;
 
 // User IDs
-export const zelis = "199943082441965577";
+export const zelis_id = "199943082441965577";
 export const illuminator = "391270706186420224";
 
 // Role IDs
 export const moderators_role_id = "847915341954154536";
 export const root_role_id = "331719468440879105";
 export const pink_role_id = "888158339878490132";
+export const no_off_topic = "879419994004422666";
 
 // Channel/Guild IDs
 export const TCCPP_ID = "331718482485837825";
@@ -46,7 +47,7 @@ export const obnoxious_autoreact_names = [
 ];
 
 export const obnoxious_autoreact_immunity = new Set([
-	zelis,
+	zelis_id,
 	"551519630578024468" // Swyde
 ]);
 
