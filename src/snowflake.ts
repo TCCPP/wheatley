@@ -1,7 +1,7 @@
 import * as Discord from "discord.js";
 import { strict as assert } from "assert";
 import { M } from "./utils";
-import { color, is_authorized_admin, TCCPP_ID } from "./common";
+import { TCCPP_ID } from "./common";
 
 let client: Discord.Client;
 

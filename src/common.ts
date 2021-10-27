@@ -56,12 +56,22 @@ export const root_only_reacts = new Set([
 	"🟩", "🟥", "🟨",
 	"✅", "⛔",
 	"🚫",
-	"🫑", "🍏", "🎾", "🍅", "🍎",
+	"🫑", "🍏", "🎾", "🍅", "🍎", "🏮"
 ]);
 
 export const blacklisted_urls = new Set([
 	"discond.gift",
+	"dissord.gift",
 	"dlscord.net",
+	"dlscord.org",
+	"discordn.gift",
+	"discordt.gift",
+	"discordc.gift",
+	"discordd.gift",
+	"discocrd.gift",
+	"discordrgift.com",
+	"dlscocrdapp.com",
+	"stearncornminuty.com",
 	"nitrodlscordz.com",
 ]);
 

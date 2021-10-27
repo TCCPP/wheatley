@@ -37,6 +37,8 @@ import { setup_tracked_mentions } from "./tracked_mentions";
 import { setup_massban } from "./massban";
 import { setup_test_command } from "./test_command";
 import { setup_snowflake } from "./snowflake";
+import { DatabaseInterface } from "./database_interface";
+import { setup_nodistractions } from "./nodistractions";
 
 // Setup client
 const client = new Discord.Client({
@@ -70,21 +72,33 @@ client.on("ready", () => {
 	M.log(`Logged in as ${client.user!.tag}`);
 });
 
-setup_anti_autoreact(client);
-setup_server_suggestion_reactions(client);
-setup_role_manager(client);
-setup_test_command(client);
-setup_massban(client);
-setup_snowflake(client);
-let tracker = new MemberTracker(client);
-setup_tracked_mentions(client);
-setup_raidpurge(client, tracker);
-setup_notify_about_brand_new_users(client);
-setup_anti_raid(client, tracker);
-setup_speedrun(client, tracker);
-setup_anti_scambot(client, tracker);
+M.debug("Setting up services");
 
-client.login(readFileSync("auth.key", { encoding: "utf-8" }));
+let database = new DatabaseInterface();
+let tracker = new MemberTracker(client);
+
+M.debug("Setting up modules");
+
+(async () => {
+	await setup_anti_autoreact(client);
+	await setup_server_suggestion_reactions(client);
+	await setup_role_manager(client);
+	await setup_test_command(client);
+	await setup_massban(client);
+	await setup_snowflake(client);
+	await setup_nodistractions(client, database);
+	await setup_tracked_mentions(client);
+	await setup_raidpurge(client, tracker);
+	await setup_notify_about_brand_new_users(client);
+	await setup_anti_raid(client, tracker);
+	await setup_speedrun(client, tracker);
+	await setup_anti_scambot(client, tracker);
+	
+	M.debug("Logging in");
+	
+	client.login(readFileSync("auth.key", { encoding: "utf-8" }));
+})();
+
 
 // join link:
 // https://discord.com/oauth2/authorize?client_id=597216680271282192&scope=bot&permissions=519270
