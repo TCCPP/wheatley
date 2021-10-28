@@ -11,11 +11,11 @@ let TCCPP : Discord.Guild;
 let pink_role: Discord.Role;
 
 const skill_role_ids = new Set([
-	"331719591405551616",
-	"331719590990184450",
-	"849399021838925834",
-	"331876085820030978",
-	"784733371275673600"
+	"331719591405551616", // expert
+	"331719590990184450", // advanced
+	"849399021838925834", // proficient
+	"331876085820030978", // intermediate
+	"784733371275673600"  // beginner
 ]);
 
 async function interval() {

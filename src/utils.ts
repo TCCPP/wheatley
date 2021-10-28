@@ -2,6 +2,7 @@ import * as Discord from "discord.js";
 import * as moment from "moment";
 import * as chalk from "chalk";
 import * as fs from "fs";
+import { MINUTE } from "./common";
 
 export class M {
 	static get_timestamp() {
@@ -68,8 +69,6 @@ export function send_long_message(channel: Discord.TextChannel, msg: string, cal
 				.catch(M.error);
 	}
 }
-
-const MINUTE = 60 * 1000;
 
 function round(n: number, p: number) {
 	return Math.round(n * Math.pow(10, p)) / Math.pow(10, p);

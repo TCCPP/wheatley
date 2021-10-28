@@ -60,6 +60,9 @@ const client = new Discord.Client({
 	]
 });
 
+// Every module sets a lot of listeners. This is not a leak.
+client.setMaxListeners(20);
+
 // Suggestion tracking
 // deleted suggestion -> wastebin
 // log resolution in suggestions_log thread

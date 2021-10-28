@@ -19,7 +19,7 @@ function do_mass_ban(msg: Discord.Message) {
 		msg.channel.send("Banning...");
 		M.debug(ids);
 		for(let id of ids) {
-			msg.guild.members.ban(id, {reason: "[[Wheatly]] User-Specified Mass-ban"});
+			msg.guild.members.ban(id, {reason: "[[Wheatly]] Manual mass-ban"});
 		}
 		msg.reply("Done.");
 		// TODO: use long-message logic?

@@ -1,20 +1,28 @@
 import * as Discord from "discord.js";
 import { strict as assert } from "assert";
-import { illuminator, is_root, MINUTE, root_only_reacts, server_suggestions_channel_id } from "./common";
+import { illuminator_id, is_root, MINUTE, server_suggestions_channel_id } from "./common";
 import { M } from "./utils";
 
 let client: Discord.Client;
 let suggestion_channel: Discord.TextChannel;
 
+const root_only_reacts = new Set([
+	"🟢", "🔴", "🟡",
+	"🟩", "🟥", "🟨",
+	"✅", "⛔",
+	"🚫",
+	"🫑", "🍏", "🎾", "🍅", "🍎", "🏮"
+]);
+
 async function on_react(reaction: Discord.MessageReaction | Discord.PartialMessageReaction,
                         user: Discord.User | Discord.PartialUser) {
 	if(reaction.message.channel.id == server_suggestions_channel_id) {
-		if(reaction.users.cache.some(user => user.id == illuminator)) {
+		if(reaction.users.cache.some(user => user.id == illuminator_id)) {
 			// Remove but not immediately
 			M.debug("scheduling illuminator reaction removal");
 			setTimeout(() => {
 				M.debug("removing illuminator reaction from", reaction.message);
-				reaction.users.remove(illuminator);
+				reaction.users.remove(illuminator_id);
 			}, 5 * MINUTE);
 		} else if(root_only_reacts.has(reaction.emoji.name!)) {
 			let member: Discord.GuildMember | null = null;
@@ -50,9 +58,9 @@ async function on_ready() {
 			message.reactions.cache.forEach(async reaction => {
 				let users = await reaction.users.fetch();
 				for(let [id, user] of users) {
-					if(id == illuminator) {
+					if(id == illuminator_id) {
 						M.debug("removing illuminator reaction from", message);
-						reaction.users.remove(illuminator);
+						reaction.users.remove(illuminator_id);
 					} else if(root_only_reacts.has(reaction.emoji.name!)) {
 						let member: Discord.GuildMember | null = null;
 						try {

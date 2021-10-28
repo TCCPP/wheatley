@@ -1,10 +1,18 @@
 import * as Discord from "discord.js";
 import { strict as assert } from "assert";
-import { diff_to_human, M } from "./utils";
-import { action_log_channel_id, color, TCCPP_ID, tracked_mentions } from "./common";
+import { M } from "./utils";
+import { action_log_channel_id, color, moderators_role_id, root_role_id, TCCPP_ID } from "./common";
 
 let client: Discord.Client;
 let action_log_channel: Discord.TextChannel;
+
+const tracked_mentions = [
+	"540314034894012428", // admin role on test server
+	root_role_id,
+	moderators_role_id,
+	"892864085006360626", // red dragon
+	"859474976242270249" // wheatly
+];
 
 function check_tracked_mention_and_notify(message: Discord.Message) {
 	// TODO: only do one message per message, put all tracked roles into it / filter/unique
