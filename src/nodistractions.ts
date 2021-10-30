@@ -1,7 +1,7 @@
 import * as Discord from "discord.js";
 import { strict as assert } from "assert";
 import { M } from "./utils";
-import { alert_color, no_off_topic, TCCPP_ID, zelis_id } from "./common";
+import { is_authorized_admin, no_off_topic, TCCPP_ID, zelis_id } from "./common";
 import { DatabaseInterface } from "./database_interface";
 
 let client: Discord.Client;
@@ -9,7 +9,9 @@ let client: Discord.Client;
 let TCCPP : Discord.Guild;
 let zelis : Discord.User;
 
-const command_re = /^!nodistractions\s*(\d*)\s*(\w*)/i;
+const nodistractions_re = /^!nodistractions\s*(\d*)\s*(\w*)/i;
+const nodistractions_snowflake_re = /^!nodistractions\s*(\d*)\s*(\w*)\s*(\d{10,})/i;
+const remove_nodistractions_snowflake_re = /^!removenodistractions\s*(\d{10,})/i;
 
 let database: DatabaseInterface;
 
@@ -116,12 +118,12 @@ function set_timer() {
 	timer = setTimeout(handle_timer, next.start + next.duration - Date.now());
 }
 
-async function apply_no_distractions(message: Discord.Message, start: number, duration: number) {
+async function apply_no_distractions(target: Discord.GuildMember, message: Discord.Message, start: number, duration: number) {
 	M.debug("Applying !nodistractions");
-	assert(message.member != null);
+	assert(target != null);
 	// error handling
-	if(message.member.roles.cache.some(r => r.id == no_off_topic)) {
-		if(message.member.id in database.state.nodistractions) {
+	if(target.roles.cache.some(r => r.id == no_off_topic)) {
+		if(target.id in database.state.nodistractions) {
 			send_error(message, "You're already in !nodistractions");
 		} else {
 			send_error(message, "Nice try.");
@@ -135,16 +137,16 @@ async function apply_no_distractions(message: Discord.Message, start: number, du
 	}
 	// apply role, dm, react
 	try {
-		await message.member.roles.add(no_off_topic);
+		await target.roles.add(no_off_topic);
 	} catch(e) {
 		M.error(e);
 		return;
 	}
-	message.member.send("!nodistractions applied, use !removenodistractions to exit").catch(M.error);
+	target.send("!nodistractions applied, use !removenodistractions to exit").catch(M.error);
 	message.react("👍").catch(M.error);
 	// make entry
 	let entry: no_distraction_entry = {
-		id: message.member.id,
+		id: target.id,
 		start,
 		duration
 	};
@@ -155,7 +157,7 @@ async function apply_no_distractions(message: Discord.Message, start: number, du
 		}
 	}
 	undistract_queue.splice(i, 0, entry);
-	database.state.nodistractions[message.member.id] = {
+	database.state.nodistractions[target.id] = {
 		start,
 		duration
 	};
@@ -170,12 +172,10 @@ async function apply_no_distractions(message: Discord.Message, start: number, du
 	}
 }
 
-async function early_remove_nodistractions(message: Discord.Message) {
+async function early_remove_nodistractions(target: Discord.GuildMember, message: Discord.Message) {
 	try {
-		assert(message.member != null);
-		let member = message.member;
 		// checks
-		assert(member.id in database.state.nodistractions);
+		assert(target.id in database.state.nodistractions);
 		// timer
 		let reschedule = timer != null;
 		if(timer != null) {
@@ -183,19 +183,19 @@ async function early_remove_nodistractions(message: Discord.Message) {
 			timer = null;
 		}
 		// remove role
-		await member.roles.remove(no_off_topic);
+		await target.roles.remove(no_off_topic);
 		// check again
-		assert(member.id in database.state.nodistractions);
-		if(!undistract_queue.some(e => e.id == member.id)) {
+		assert(target.id in database.state.nodistractions);
+		if(!undistract_queue.some(e => e.id == target.id)) {
 			M.error("Not good");
 			zelis.send("Not good");
 		}
 		// remove entry
-		delete database.state.nodistractions[member.id];
-		undistract_queue = undistract_queue.filter(e => e.id != member.id);
+		delete database.state.nodistractions[target.id];
+		undistract_queue = undistract_queue.filter(e => e.id != target.id);
 		database.update();
 		message.react("👍").catch(M.error);
-		member.send("You have been removed from !nodistractions");
+		target.send("You have been removed from !nodistractions");
 		// reschedule if necessary
 		if(reschedule && undistract_queue.length > 0) {
 			set_timer();
@@ -206,23 +206,33 @@ async function early_remove_nodistractions(message: Discord.Message) {
 	}
 }
 
-function on_message(message: Discord.Message) {
+async function on_message(message: Discord.Message) {
 	if(message.author.id == client.user!.id) return; // Ignore self
 	if(message.author.bot) return; // Ignore bots
 
 	if(message.content.trim().toLowerCase() == "!removenodistractions") {
 		M.debug("Got !removenodistractions");
-		assert(message.member != null);
-		if(!message.member.roles.cache.some(r => r.id == no_off_topic)) {
+		let member = message.member;
+		if(member == null) {
+			try {
+				member = await TCCPP.members.fetch(message.author.id);
+			} catch(e) {
+				M.error(e);
+				message.reply("internal error with fetching user");
+				zelis.send("internal error with fetching user");
+				return;
+			}
+		}
+		if(!member.roles.cache.some(r => r.id == no_off_topic)) {
 			send_error(message, "You are not currently in !nodistractions");
 			return;
 		}
-		if(!(message.member.id in database.state.nodistractions)) {
+		if(!(member.id in database.state.nodistractions)) {
 			send_error(message, "Nice try.");
 			zelis.send(`Exploit attempt ${message.url}`);
 			return;
 		}
-		early_remove_nodistractions(message);
+		early_remove_nodistractions(member, message);
 		return;
 	}
 
@@ -230,7 +240,7 @@ function on_message(message: Discord.Message) {
 
 	// "!nodistractions 123d asdfdsaf".match(/^!nodistractions\s*(\d*)\s*(\w*)/)
 	// [ "!nodistractions 123d", "123", "d" ]
-	let match = message.content.match(command_re);
+	let match = message.content.match(nodistractions_re);
 	if(match != null) {
 		M.debug("Got !nodistractions");
 		assert(match.length == 3);
@@ -249,7 +259,18 @@ function on_message(message: Discord.Message) {
 			send_error(message, "Unknown units");
 			return;
 		}
-		apply_no_distractions(message, message.createdTimestamp, n * factor);
+		let member = message.member;
+		if(member == null) {
+			try {
+				member = await TCCPP.members.fetch(message.author.id);
+			} catch(e) {
+				M.error(e);
+				message.reply("internal error with fetching user");
+				zelis.send("internal error with fetching user");
+				return;
+			}
+		}
+		apply_no_distractions(member, message, message.createdTimestamp, n * factor);
 	}
 }
 
