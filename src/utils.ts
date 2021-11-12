@@ -31,12 +31,11 @@ export class M {
 	}
 };
 
-export function send_long_message(channel: Discord.TextChannel, msg: string, callback: (m: Discord.Message) => void) {
+export function send_long_message(channel: Discord.TextChannel, msg: string) {
 	if(msg.length > 2000) {
 		let lines = msg.split("\n");
 		let partial = "";
 		let queue: string[] = [];
-		let first = true;
 		while(lines.length > 0) {
 			if(partial.length + lines[0].length + 1 <= 2000) {
 				if(partial != "") partial += "\n";
@@ -50,22 +49,13 @@ export function send_long_message(channel: Discord.TextChannel, msg: string, cal
 		let send_next = () => {
 			if(queue.length > 0) {
 				channel.send(queue.shift()!)
-				       .then(m => {
-						   if(first) {
-							   callback(m);
-							   first = false;
-						   }
-						   send_next();
-					   })
+				       .then(send_next)
 					   .catch(M.error);
 			}
 		};
 		send_next();
 	} else {
 		channel.send(msg)
-				.then(m => {
-					callback(m);
-				})
 				.catch(M.error);
 	}
 }
