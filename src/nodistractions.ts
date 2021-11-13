@@ -67,7 +67,6 @@ function parse_unit(u: string) {
 			factor *= 24; // 24 hours, fallthrough
 		case "h":
 			factor *= 60; // 60 minutes, fallthrough
-			break;
 		case "m":
 			factor *= 60; // 60 seconds
 			break;
@@ -236,13 +235,11 @@ async function on_message(message: Discord.Message) {
 		return;
 	}
 
-	if(message.guildId != TCCPP_ID) return; // Ignore messages outside TCCPP (e.g. dm's) after this point
-
 	// "!nodistractions 123d asdfdsaf".match(/^!nodistractions\s*(\d*)\s*(\w*)/)
 	// [ "!nodistractions 123d", "123", "d" ]
 	let match = message.content.match(nodistractions_re);
 	if(match != null) {
-		M.debug("Got !nodistractions");
+		M.debug("Got !nodistractions", [message.author.id, message.author.tag]);
 		assert(match.length == 3);
 		let n = parseInt(match[1]);
 		let u = match[2];
@@ -259,6 +256,7 @@ async function on_message(message: Discord.Message) {
 			send_error(message, "Unknown units");
 			return;
 		}
+		M.debug("Timeframe: ", n, u, factor);
 		let member = message.member;
 		if(member == null) {
 			try {
