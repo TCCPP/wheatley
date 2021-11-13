@@ -88,6 +88,10 @@ export class MemberTracker {
 			purged: false,
 			message_block: false
 		});
+		if(this.id_map.has(member.id)) {
+			M.warn("this.id_map.has(member.id)");
+		}
+		this.id_map.set(member.id, this.entries[this.entries.length - 1]);
 		for(let { on_join } of this.submodules) {
 			if(on_join) on_join(member, now);
 		}
@@ -114,5 +118,9 @@ export class MemberTracker {
 			purged: false,
 			message_block: false
 		});
+		if(this.id_map.has(user.id)) {
+			M.warn("this.id_map.has(user.id) -- add_pseudo_entry");
+		}
+		this.id_map.set(user.id, this.entries[this.entries.length - 1]);
 	}
 }
