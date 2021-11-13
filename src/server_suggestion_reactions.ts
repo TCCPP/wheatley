@@ -10,7 +10,7 @@ const root_only_reacts = new Set([
 	"🟢", "🔴", "🟡",
 	"🟩", "🟥", "🟨",
 	"✅", "⛔",
-	"❎", "🚫",
+	"❎", "🚫", "⭕", "🅾️",
 	"🫑", "🍏", "🎾", "🍅", "🍎", "🏮"
 ]);
 
@@ -46,7 +46,7 @@ async function on_react(reaction: Discord.MessageReaction | Discord.PartialMessa
 	}
 }
 
-export async function handle_fetched_message(message: Discord.Message) {
+async function handle_fetched_message(message: Discord.Message) {
 	message.reactions.cache.forEach(async reaction => {
 		let users = await reaction.users.fetch();
 		for(let [id, user] of users) {
@@ -72,7 +72,7 @@ export async function handle_fetched_message(message: Discord.Message) {
 	});
 }
 
-async function on_ready() { // FIXME DEPRECATED
+async function on_ready() {
 	try {
 		M.debug("server_suggestion reactions handler on_ready");
 		// get the suggestion channel
@@ -85,7 +85,7 @@ async function on_ready() { // FIXME DEPRECATED
 		// recover from down time: fetch last 100 messages (and add to cache)
 		let messages = await suggestion_channel.messages.fetch({ limit: 100 }, { cache: true });
 		for(let [_, message] of messages) {
-			handle_fetched_message(message);
+			await handle_fetched_message(message);
 		}
 	} catch(e) {
 		critical_error(e);

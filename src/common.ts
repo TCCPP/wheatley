@@ -31,7 +31,7 @@ export const action_log_channel_id =
 // General config
 
 export const authorized_admin_roles = [
-	//moderators_role_id,
+	moderators_role_id,
 	root_role_id
 ];
 
