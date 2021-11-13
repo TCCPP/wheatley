@@ -14,10 +14,10 @@ function on_ban(ban: Discord.GuildBan, now: number) {
 	// get user info
 	let avatar = user.displayAvatarURL();
 	assert(avatar != null);
-	let index = tracker.logs.findIndex(e => e.id == user.id); // TODO: Revisit? Make a Map?
+	let index = tracker.entries.findIndex(e => e.id == user.id); // TODO: Revisit? Make a Map?
 	if(index == -1) return;
 	M.debug("xx");
-	let entry = tracker.logs[index];
+	let entry = tracker.entries[index];
 	if(entry.purged) {
 		return; // ignore bans from !raidpurge
 	}

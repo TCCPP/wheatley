@@ -3,12 +3,13 @@ import { strict as assert } from "assert";
 import { M } from "./utils";
 import { MINUTE } from "./common";
 
-type join_entry = {
+type member_entry = {
 	tag: string,
 	id: string,
 	joined_at: number, // timestamp
 	created_at: number, // timestamp
-	purged: boolean // already banned by !raidpurge?
+	purged: boolean, // already banned by !raidpurge?
+	message_block: boolean // set by anti-scambot when about to ban, addresses race condition on discord's end
 };
 
 type submodule = {
@@ -20,8 +21,9 @@ type submodule = {
 const LOG_DURATION = 30 * MINUTE;
 
 export class MemberTracker {
-	logs: join_entry[] = [];
-	submodules: submodule[] = [];
+	entries: member_entry[] = [];
+	// map from user id -> member entry
+	id_map: Map<Discord.Snowflake, member_entry> = new Map();
 	// user id snowflake -> messages with pings
 	ping_map: Map<string, Discord.Message[]> = new Map();
 	// user id snowflake -> messages with links
@@ -29,6 +31,8 @@ export class MemberTracker {
 	// set of user id snowflakes to prevent race condition
 	// snowflake -> timestamp of addition to this set
 	currently_banning: Map<string, number> = new Map();
+	// modules that rely on on_join and on_ban
+	submodules: submodule[] = [];
 	constructor(client: Discord.Client) {
 		// every 10 minutes, trim extraneous entries
 		setInterval(this.trim.bind(this), 10 * MINUTE);
@@ -39,14 +43,20 @@ export class MemberTracker {
 	trim() {
 		let now = Date.now();
 		// -- join logs --
-		let first_in_timeframe = this.logs.findIndex(entry => now - entry.joined_at <= LOG_DURATION);
+		let first_in_timeframe = this.entries.findIndex(entry => now - entry.joined_at <= LOG_DURATION);
 		if(first_in_timeframe == -1) return;
 		// debugging checks
 		// just check sorted order of everything
-		for(let i = first_in_timeframe; i < this.logs.length; i++) {
-			assert(now - this.logs[i].joined_at <= LOG_DURATION);
+		for(let i = first_in_timeframe; i < this.entries.length; i++) {
+			assert(now - this.entries[i].joined_at <= LOG_DURATION);
 		}
-		this.logs = this.logs.slice(first_in_timeframe);
+		// remove entries from id_map
+		for(let i = 0; i < first_in_timeframe; i++) {
+			assert(now - this.entries[i].joined_at > LOG_DURATION);
+			this.id_map.delete(this.entries[i].id);
+		}
+		// remove entries before cutoff
+		this.entries = this.entries.slice(first_in_timeframe);
 		// -- ping/link maps --
 		for(let map of [this.ping_map, this.link_map]) {
 			for(let [k, v] of map) {
@@ -68,7 +78,7 @@ export class MemberTracker {
 		// TODO: which one to use.....
 		//let now = Date.now();
 		let now = member.joinedAt.getTime();
-		this.logs.push({
+		this.entries.push({
 			tag: member.user.tag,
 			id: member.id,
 			joined_at: now,
