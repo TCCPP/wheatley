@@ -39,6 +39,7 @@ import { setup_test_command } from "./test_command";
 import { setup_snowflake } from "./snowflake";
 import { DatabaseInterface } from "./database_interface";
 import { setup_nodistractions } from "./nodistractions";
+import { setup_server_suggestion_tracker } from "./server_suggetsion_tracker";
 
 // Setup client
 const client = new Discord.Client({
@@ -96,6 +97,7 @@ process.on("unhandledRejection", (reason, promise) => {
 	try {
 		await setup_anti_autoreact(client);
 		await setup_server_suggestion_reactions(client);
+		await setup_server_suggestion_tracker(client, database);
 		await setup_role_manager(client);
 		await setup_test_command(client);
 		await setup_massban(client);

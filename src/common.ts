@@ -24,6 +24,7 @@ export const TCCPP_ID = "331718482485837825";
 export const member_log_channel_id = "875681819662622730";
 export const welcome_channel_id = "778017793567490078";
 export const server_suggestions_channel_id = "802541516655951892";
+export const suggestion_dashboard_thread_id = "908928083879415839";
 export const action_log_channel_id =
 	"845290775692443699"; // TCCPP #staff_action_log
 //	"542042995147407375"; // test server #1

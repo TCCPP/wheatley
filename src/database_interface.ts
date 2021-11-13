@@ -25,4 +25,10 @@ export class DatabaseInterface {
 		M.warn(data); // TODO: can remove later, just a debug check
 		fs.writeSync(this.fd, data, 0, "utf-8");
 	}
+	get<T>(key: string) {
+		return this.state[key] as T;
+	}
+	set<T>(key: string, value: T) {
+		this.state[key] = value;
+	}
 };
