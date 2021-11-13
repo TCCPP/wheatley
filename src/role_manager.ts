@@ -1,7 +1,7 @@
 import * as Discord from "discord.js";
 import { strict as assert } from "assert";
 import { MINUTE, pink_role_id, TCCPP_ID } from "./common";
-import { M } from "./utils";
+import { critical_error, M } from "./utils";
 
 // Role cleanup
 // Autoremove pink roles when members are no longer boosting
@@ -19,8 +19,8 @@ const skill_role_ids = new Set([
 ]);
 
 async function interval() {
-	assert(pink_role != null);
 	try {
+		assert(pink_role != null);
 		let members = await TCCPP.members.fetch();
 		members.map((m, _) => {
 			// pink
@@ -45,7 +45,7 @@ async function interval() {
 			}
 		});
 	} catch(e) {
-		M.error(e);
+		critical_error(e);
 	}
 }
 
@@ -61,7 +61,7 @@ export function setup_role_manager(client: Discord.Client) {
 			assert(pink_role != null);
 			setInterval(interval, 30 * MINUTE);
 		} catch(e) {
-			M.error(e);
+			critical_error(e);
 		}
 	});
 }

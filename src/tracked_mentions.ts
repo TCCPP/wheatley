@@ -1,6 +1,6 @@
 import * as Discord from "discord.js";
 import { strict as assert } from "assert";
-import { M } from "./utils";
+import { critical_error, M } from "./utils";
 import { action_log_channel_id, color, moderators_role_id, root_role_id, TCCPP_ID } from "./common";
 
 let client: Discord.Client;
@@ -30,11 +30,15 @@ function check_tracked_mention_and_notify(message: Discord.Message) {
 }
 
 function on_message(message: Discord.Message) {
-	if(message.author.id == client.user!.id) return; // Ignore self
-	if(message.author.bot) return; // Ignore bots
-	if(message.guildId != TCCPP_ID) return; // Ignore messages outside TCCPP (e.g. dm's)
-	if(message.mentions.roles.size > 0) {
-		check_tracked_mention_and_notify(message);
+	try {
+		if(message.author.id == client.user!.id) return; // Ignore self
+		if(message.author.bot) return; // Ignore bots
+		if(message.guildId != TCCPP_ID) return; // Ignore messages outside TCCPP (e.g. dm's)
+		if(message.mentions.roles.size > 0) {
+			check_tracked_mention_and_notify(message);
+		}
+	} catch(e) {
+		critical_error(e);
 	}
 }
 
@@ -49,7 +53,7 @@ export async function setup_tracked_mentions(_client: Discord.Client) {
 			client.on("messageCreate", on_message);
 			//tracker.add_submodule({ });
 		} catch(e) {
-			M.error(e);
+			critical_error(e);
 		}
 	});
 }

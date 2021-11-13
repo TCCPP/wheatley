@@ -1,6 +1,6 @@
 import * as Discord from "discord.js";
 import { strict as assert } from "assert";
-import { M } from "./utils";
+import { critical_error, M } from "./utils";
 import { action_log_channel_id, color, is_authorized_admin, pepereally, TCCPP_ID } from "./common";
 
 let client: Discord.Client;
@@ -33,16 +33,20 @@ function do_mass_ban(msg: Discord.Message) {
 }
 
 function on_message(message: Discord.Message) {
-	if(message.author.id == client.user!.id) return; // Ignore self
-	if(message.author.bot) return; // Ignore bots
-	if(message.guildId != TCCPP_ID) return; // Ignore messages outside TCCPP (e.g. dm's)
-	if(message.content.startsWith("!wban")) {
-		assert(message.member != null);
-		if(is_authorized_admin(message.member)) {
-			do_mass_ban(message);
-		} else {
-			message.reply(`Unauthorized ${pepereally}`);
+	try {
+		if(message.author.id == client.user!.id) return; // Ignore self
+		if(message.author.bot) return; // Ignore bots
+		if(message.guildId != TCCPP_ID) return; // Ignore messages outside TCCPP (e.g. dm's)
+		if(message.content.startsWith("!wban")) {
+			assert(message.member != null);
+			if(is_authorized_admin(message.member)) {
+				do_mass_ban(message);
+			} else {
+				message.reply(`Unauthorized ${pepereally}`);
+			}
 		}
+	} catch(e) {
+		critical_error(e);
 	}
 }
 
@@ -54,7 +58,7 @@ export function setup_massban(_client: Discord.Client) {
 			assert(action_log_channel != null);
 			client.on("messageCreate", on_message);
 		} catch(e) {
-			M.error(e);
+			critical_error(e);
 		}
 	});
 }

@@ -1,6 +1,6 @@
 import * as Discord from "discord.js";
 import { strict as assert } from "assert";
-import { M } from "./utils";
+import { critical_error, M } from "./utils";
 import { alert_color, member_log_channel_id, MINUTE } from "./common";
 
 const DO_PING_ON_NEW_USER = true;
@@ -16,14 +16,18 @@ function notify_about_brand_new_user(member: Discord.GuildMember) {
 			   .setFooter(`ID: ${member.id}`)
 			   .setTimestamp();
 	member_log_channel!.send({ embeds: [embed] })
-		.catch((...args: any[]) => M.error(...args));
+		.catch((...args: any[]) => critical_error(...args));
 	//member_log_channel!.send(`<@!${zelis_id}>`);
 }
 
 function on_join(member: Discord.GuildMember) {
-	assert(Date.now() - member.user.createdTimestamp >= 0);
-	if(Date.now() - member.user.createdTimestamp <= NEW_USER_THRESHOLD) {
-		notify_about_brand_new_user(member);
+	try {
+		assert(Date.now() - member.user.createdTimestamp >= 0);
+		if(Date.now() - member.user.createdTimestamp <= NEW_USER_THRESHOLD) {
+			notify_about_brand_new_user(member);
+		}
+	} catch(e) {
+		critical_error(e);
 	}
 }
 
@@ -36,7 +40,7 @@ export async function setup_notify_about_brand_new_users(client: Discord.Client)
 			M.debug("notify_about_brand_new_users: member_log_channel channel fetched");
 			client.on("guildMemberAdd", on_join);
 		} catch(e) {
-			M.error(e);
+			critical_error(e);
 		}
 	});
 }

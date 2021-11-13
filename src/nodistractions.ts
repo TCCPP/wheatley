@@ -1,6 +1,6 @@
 import * as Discord from "discord.js";
 import { strict as assert } from "assert";
-import { M } from "./utils";
+import { critical_error, M } from "./utils";
 import { is_authorized_admin, no_off_topic, TCCPP_ID, zelis_id } from "./common";
 import { DatabaseInterface } from "./database_interface";
 
@@ -10,8 +10,8 @@ let TCCPP : Discord.Guild;
 let zelis : Discord.User;
 
 const nodistractions_re = /^!nodistractions\s*(\d*)\s*(\w*)/i;
-const nodistractions_snowflake_re = /^!nodistractions\s*(\d*)\s*(\w*)\s*(\d{10,})/i;
-const remove_nodistractions_snowflake_re = /^!removenodistractions\s*(\d{10,})/i;
+const nodistractions_snowflake_re = /^!nodistractions\s*(\d*)\s*(\w*)\s*(\d{10,})/i; // TODO
+const remove_nodistractions_snowflake_re = /^!removenodistractions\s*(\d{10,})/i; // TODO
 
 let database: DatabaseInterface;
 
@@ -105,8 +105,7 @@ async function handle_timer() {
 			set_timer();
 		}
 	} catch(e) {
-		M.error(e);
-		zelis.send("critical error in handle_timer()");
+		critical_error(e);
 	}
 }
 
@@ -186,8 +185,7 @@ async function early_remove_nodistractions(target: Discord.GuildMember, message:
 		// check again
 		assert(target.id in database.state.nodistractions);
 		if(!undistract_queue.some(e => e.id == target.id)) {
-			M.error("Not good");
-			zelis.send("Not good");
+			critical_error("Not good");
 		}
 		// remove entry
 		delete database.state.nodistractions[target.id];
@@ -200,75 +198,78 @@ async function early_remove_nodistractions(target: Discord.GuildMember, message:
 			set_timer();
 		}
 	} catch(e) {
-		M.error(e);
-		zelis.send("critical error in early_remove_nodistractions()");
+		critical_error(e);
 	}
 }
 
 async function on_message(message: Discord.Message) {
-	if(message.author.id == client.user!.id) return; // Ignore self
-	if(message.author.bot) return; // Ignore bots
-
-	if(message.content.trim().toLowerCase() == "!removenodistractions") {
-		M.debug("Got !removenodistractions");
-		let member = message.member;
-		if(member == null) {
-			try {
-				member = await TCCPP.members.fetch(message.author.id);
-			} catch(e) {
-				M.error(e);
-				message.reply("internal error with fetching user");
-				zelis.send("internal error with fetching user");
+	try {
+		if(message.author.id == client.user!.id) return; // Ignore self
+		if(message.author.bot) return; // Ignore bots
+	
+		if(message.content.trim().toLowerCase() == "!removenodistractions") {
+			M.debug("Got !removenodistractions");
+			let member = message.member;
+			if(member == null) {
+				try {
+					member = await TCCPP.members.fetch(message.author.id);
+				} catch(e) {
+					critical_error(e);
+					message.reply("internal error with fetching user");
+					zelis.send("internal error with fetching user");
+					return;
+				}
+			}
+			if(!member.roles.cache.some(r => r.id == no_off_topic)) {
+				send_error(message, "You are not currently in !nodistractions");
 				return;
 			}
-		}
-		if(!member.roles.cache.some(r => r.id == no_off_topic)) {
-			send_error(message, "You are not currently in !nodistractions");
-			return;
-		}
-		if(!(member.id in database.state.nodistractions)) {
-			send_error(message, "Nice try.");
-			zelis.send(`Exploit attempt ${message.url}`);
-			return;
-		}
-		early_remove_nodistractions(member, message);
-		return;
-	}
-
-	// "!nodistractions 123d asdfdsaf".match(/^!nodistractions\s*(\d*)\s*(\w*)/)
-	// [ "!nodistractions 123d", "123", "d" ]
-	let match = message.content.match(nodistractions_re);
-	if(match != null) {
-		M.debug("Got !nodistractions", [message.author.id, message.author.tag]);
-		assert(match.length == 3);
-		let n = parseInt(match[1]);
-		let u = match[2];
-		if(n == NaN) {
-			send_error(message, "Empty time field");
-			return;
-		}
-		if(u == "") {
-			send_error(message, "Missing units");
-			return;
-		}
-		let factor = parse_unit(u);
-		if(factor == -1) {
-			send_error(message, "Unknown units");
-			return;
-		}
-		M.debug("Timeframe: ", n, u, factor);
-		let member = message.member;
-		if(member == null) {
-			try {
-				member = await TCCPP.members.fetch(message.author.id);
-			} catch(e) {
-				M.error(e);
-				message.reply("internal error with fetching user");
-				zelis.send("internal error with fetching user");
+			if(!(member.id in database.state.nodistractions)) {
+				send_error(message, "Nice try.");
+				zelis.send(`Exploit attempt ${message.url}`);
 				return;
 			}
+			early_remove_nodistractions(member, message);
+			return;
 		}
-		apply_no_distractions(member, message, message.createdTimestamp, n * factor);
+	
+		// "!nodistractions 123d asdfdsaf".match(/^!nodistractions\s*(\d*)\s*(\w*)/)
+		// [ "!nodistractions 123d", "123", "d" ]
+		let match = message.content.match(nodistractions_re);
+		if(match != null) {
+			M.debug("Got !nodistractions", [message.author.id, message.author.tag]);
+			assert(match.length == 3);
+			let n = parseInt(match[1]);
+			let u = match[2];
+			if(n == NaN) {
+				send_error(message, "Empty time field");
+				return;
+			}
+			if(u == "") {
+				send_error(message, "Missing units");
+				return;
+			}
+			let factor = parse_unit(u);
+			if(factor == -1) {
+				send_error(message, "Unknown units");
+				return;
+			}
+			M.debug("Timeframe: ", n, u, factor);
+			let member = message.member;
+			if(member == null) {
+				try {
+					member = await TCCPP.members.fetch(message.author.id);
+				} catch(e) {
+					critical_error(e);
+					message.reply("internal error with fetching user");
+					zelis.send("internal error with fetching user");
+					return;
+				}
+			}
+			apply_no_distractions(member, message, message.createdTimestamp, n * factor);
+		}
+	} catch(e) {
+		critical_error(e);
 	}
 }
 
@@ -302,7 +303,7 @@ export async function setup_nodistractions(_client: Discord.Client, _database: D
 			// setup listener
 			client.on("messageCreate", on_message);
 		} catch(e) {
-			M.error(e);
+			critical_error(e);
 		}
 	});
 	

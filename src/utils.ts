@@ -2,7 +2,8 @@ import * as Discord from "discord.js";
 import * as moment from "moment";
 import * as chalk from "chalk";
 import * as fs from "fs";
-import { MINUTE } from "./common";
+import { MINUTE, zelis_id } from "./common";
+import { assert } from "console";
 
 export class M {
 	static get_timestamp() {
@@ -97,4 +98,39 @@ export function exists_sync(path: string) {
 		exists = false;
 	}
 	return exists;
-  }
+}
+
+let client: Discord.Client;
+let zelis : Discord.User;
+let has_tried_fetch_zelis = false;
+
+async function get_zelis() {
+	if(!has_tried_fetch_zelis) {
+		zelis = await client.users.fetch(zelis_id);
+		has_tried_fetch_zelis = true;
+	}
+	return zelis != undefined && zelis != null;
+}
+
+export function init_debugger(_client: Discord.Client) {
+	client = _client;
+}
+
+export async function critical_error(...args: any[]) {
+	M.error(...args);
+	try {
+		if(await get_zelis()) {
+			let strs = [];
+			for(let arg of args) {
+				try {
+					strs.push(arg.toString());
+				} catch {
+					try {
+						strs.push(String(arg));
+					} catch {}
+				}
+			}
+			zelis.send(`Critical error occurred: ${strs.join(" ")}`);
+		}
+	} catch {}
+}

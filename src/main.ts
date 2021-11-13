@@ -22,7 +22,7 @@
 
 import * as Discord from "discord.js";
 import { strict as assert } from "assert";
-import { M } from "./utils";
+import { critical_error, init_debugger, M } from "./utils";
 import { readFileSync } from "fs";
 import { setup_anti_autoreact } from "./anti_autoreact"
 import { setup_server_suggestion_reactions } from "./server_suggestion_reactions";
@@ -83,28 +83,38 @@ M.debug("Setting up services");
 let database = new DatabaseInterface();
 let tracker = new MemberTracker(client);
 
+init_debugger(client);
+
 M.debug("Setting up modules");
 
-(async () => {
-	await setup_anti_autoreact(client);
-	await setup_server_suggestion_reactions(client);
-	await setup_role_manager(client);
-	await setup_test_command(client);
-	await setup_massban(client);
-	await setup_snowflake(client);
-	await setup_nodistractions(client, database);
-	await setup_tracked_mentions(client);
-	await setup_raidpurge(client, tracker);
-	await setup_notify_about_brand_new_users(client);
-	await setup_anti_raid(client, tracker);
-	await setup_speedrun(client, tracker);
-	await setup_anti_scambot(client, tracker);
-	
-	M.debug("Logging in");
-	
-	client.login(readFileSync("auth.key", { encoding: "utf-8" }));
-})();
+// Last line of defense
+process.on("unhandledRejection", (reason, promise) => {
+	critical_error("unhandledRejection", reason, promise);
+});
 
+(async () => {
+	try {
+		await setup_anti_autoreact(client);
+		await setup_server_suggestion_reactions(client);
+		await setup_role_manager(client);
+		await setup_test_command(client);
+		await setup_massban(client);
+		await setup_snowflake(client);
+		await setup_nodistractions(client, database);
+		await setup_tracked_mentions(client);
+		await setup_raidpurge(client, tracker);
+		await setup_notify_about_brand_new_users(client);
+		await setup_anti_raid(client, tracker);
+		await setup_speedrun(client, tracker);
+		await setup_anti_scambot(client, tracker);
+	
+		M.debug("Logging in");
+	
+		client.login(readFileSync("auth.key", { encoding: "utf-8" }));
+	} catch(e) {
+		critical_error(e);
+	}
+})();
 
 // join link:
 // https://discord.com/oauth2/authorize?client_id=597216680271282192&scope=bot&permissions=519270
