@@ -16,16 +16,19 @@ function on_ban(ban: Discord.GuildBan, now: number) {
 	assert(avatar != null);
 	let index = tracker.entries.findIndex(e => e.id == user.id); // TODO: Revisit? Make a Map?
 	if(index == -1) return;
-	M.debug("xx");
 	let entry = tracker.entries[index];
 	if(entry.purged) {
 		return; // ignore bans from !raidpurge
 	}
+	// .purged set by raidpurge (yes I know it's checked above), currently_banning used by anti-scambot
+	let is_auto_ban = entry.purged || tracker.currently_banning.has(user.id);
 	// make embed
 	let embed = new Discord.MessageEmbed()
 			.setColor(speedrun_color)
 			.setAuthor(`Speedrun attempt: ${user.tag}`, avatar)
-			.setDescription(`User <@${user.id}> joined at <t:${Math.round(entry.joined_at / 1000)}:T> and banned at <t:${Math.round(now / 1000)}:T>.\nFinal timer: ${diff_to_human(now - entry.joined_at)}.\n`)
+			.setDescription(`User <@${user.id}> joined at <t:${Math.round(entry.joined_at / 1000)}:T> and banned at <t:${Math.round(now / 1000)}:T>.`
+			              + `\nFinal timer: ${diff_to_human(now - entry.joined_at)}.`
+			              + (is_auto_ban ? "\n**AUTO BAN**" : ""))
 			.setFooter(`ID: ${user.id}`)
 			.setTimestamp();
 	action_log_channel!.send({ embeds: [embed] });
