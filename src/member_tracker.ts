@@ -7,6 +7,7 @@ type member_entry = {
 	tag: string,
 	id: string,
 	joined_at: number, // timestamp
+	entry_added_at: number, // timestamp used for entry cleanup
 	created_at: number, // timestamp
 	purged: boolean, // already banned by !raidpurge?
 	message_block: boolean // set by anti-scambot when about to ban, addresses race condition on discord's end
@@ -43,16 +44,16 @@ export class MemberTracker {
 	trim() {
 		let now = Date.now();
 		// -- join logs --
-		let first_in_timeframe = this.entries.findIndex(entry => now - entry.joined_at <= LOG_DURATION);
+		let first_in_timeframe = this.entries.findIndex(entry => now - entry.entry_added_at <= LOG_DURATION);
 		if(first_in_timeframe == -1) return;
 		// debugging checks
 		// just check sorted order of everything
 		for(let i = first_in_timeframe; i < this.entries.length; i++) {
-			assert(now - this.entries[i].joined_at <= LOG_DURATION);
+			assert(now - this.entries[i].entry_added_at <= LOG_DURATION);
 		}
 		// remove entries from id_map
 		for(let i = 0; i < first_in_timeframe; i++) {
-			assert(now - this.entries[i].joined_at > LOG_DURATION);
+			assert(now - this.entries[i].entry_added_at > LOG_DURATION);
 			this.id_map.delete(this.entries[i].id);
 		}
 		// remove entries before cutoff
@@ -82,8 +83,10 @@ export class MemberTracker {
 			tag: member.user.tag,
 			id: member.id,
 			joined_at: now,
+			entry_added_at: Date.now(),
 			created_at: member.user.createdTimestamp,
-			purged: false
+			purged: false,
+			message_block: false
 		});
 		for(let { on_join } of this.submodules) {
 			if(on_join) on_join(member, now);
@@ -97,10 +100,19 @@ export class MemberTracker {
 			if(on_ban) on_ban(ban, now);
 		}
 	}
-	// Heuristics
-	
 	// API
 	add_submodule(submodule: submodule) {
 		this.submodules.push(submodule);
+	}
+	add_pseudo_entry(user: Discord.User) {
+		this.entries.push({
+			tag: user.tag,
+			id: user.id,
+			joined_at: 0,
+			entry_added_at: Date.now(),
+			created_at: user.createdTimestamp,
+			purged: false,
+			message_block: false
+		});
 	}
 }
