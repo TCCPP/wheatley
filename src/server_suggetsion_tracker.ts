@@ -166,7 +166,10 @@ async function delete_suggestion(message_id: string) {
 }
 
 async function update_message_if_needed(message: Discord.Message) {
-	assert(message.id in database.get<db_schema>("suggestion_tracker").suggestions);
+	if(!(message.id in database.get<db_schema>("suggestion_tracker").suggestions)) {
+		M.warn("update_message_if_needed called on untracked message", message); // TODO: This can happen under normal operation, this is here as a debug check
+		return;
+	}
 	let entry = database.get<db_schema>("suggestion_tracker").suggestions[message.id];
 	assert(message.content != null);
 	let hash = xxh3(message.content);
@@ -210,7 +213,7 @@ async function on_message_delete(message: Discord.Message | Discord.PartialMessa
 	try {
 		if(message.channel.id == server_suggestions_channel_id) {
 			if(!(message.id in database.get<db_schema>("suggestion_tracker").suggestions)) {
-				M.info("Untracked message deleted", message);
+				M.info("Untracked message deleted", message); // TODO: This can happen under normal operation, this is here as a debug check
 				return;
 			}
 			await delete_suggestion(message.id);
