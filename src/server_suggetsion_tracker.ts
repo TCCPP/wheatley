@@ -12,7 +12,8 @@ let TCCPP : Discord.Guild;
 let database: DatabaseInterface;
 
 let suggestion_channel: Discord.TextChannel;
-let thread: Discord.ThreadChannel;
+let thread:             Discord.ThreadChannel;
+let log_thread:         Discord.ThreadChannel;
 
 const TRACKER_START_TIME =
                            1625112000000; // Thu Jul 01 2021 00:00:00 GMT-0400 (Eastern Daylight Time)
@@ -56,30 +57,50 @@ function get_message(channel: Discord.TextChannel | Discord.ThreadChannel, id: s
 	});
 }
 
+type reaction = {
+	user: Discord.User,
+	emoji: Discord.Emoji
+};
+
 async function message_has_resolution_from_root(message: Discord.Message) {
+	let roots: reaction[] = [];
 	for(let [_, reaction] of message.reactions.cache) {
 		if(resolution_reacts.has(reaction.emoji.name!)) {
 			let users = await reaction.users.fetch();
 			for(let [_, user] of users) {
 				if(is_root(user)) {
-					return true;
+					roots.push({user, emoji: reaction.emoji});
 				}
 			}
 		}
 	}
-	return false;
+	if(roots.length > 0) {
+		M.debug("[sort]", roots.sort((a, b) => -a.user.id.localeCompare(b.user.id)).map(r => r.user.id));
+		return roots.sort((a, b) => -a.user.id.localeCompare(b.user.id))[0];
+	} else {
+		return false;
+	}
 }
 
-async function get_author_display_name(message: Discord.Message) {
-	if(message.member == null) {
+async function get_author_display_name(thing: Discord.Message | Discord.User): Promise<string> {
+	if(thing instanceof Discord.User) {
+		let user = thing;
 		try {
-			return (await TCCPP.members.fetch(message.author.id)).displayName;
+			return (await TCCPP.members.fetch(user.id)).displayName;
 		} catch {
 			// user could potentially not be in the server
-			return message.author.tag;
+			return user.tag;
+		}
+	} else if(thing instanceof Discord.Message) {
+		let message = thing;
+		if(message.member == null) {
+			return get_author_display_name(message.author);
+			
+		} else {
+			return message.member.displayName;
 		}
 	} else {
-		return message.member.displayName;
+		assert(false);
 	}
 }
 
@@ -137,6 +158,27 @@ async function make_embed(message: Discord.Message) {
 	          .setAuthor(`${await get_author_display_name(message)}`, message.author.displayAvatarURL())
 	          .setDescription(message.content + `\n\n[[Jump to message]](${message.url})`)
 	          .setTimestamp(message.createdAt);
+}
+
+// Two log operations:
+// - Log suggestion resolution
+// - Log suggestion reopen
+// Not logging deletions
+
+async function log_resolution(message: Discord.Message, reaction: reaction) {
+	const action_embed = new Discord.MessageEmbed()
+	                        .setColor(color)
+	                        .setAuthor(`${await get_author_display_name(reaction.user)}: ${reaction.emoji}`, reaction.user.displayAvatarURL());
+	const suggestion_embed = await make_embed(message);
+	await log_thread.send({ embeds: [ action_embed, suggestion_embed ] });
+}
+
+async function log_reopen(message: Discord.Message) {
+	const action_embed = new Discord.MessageEmbed()
+	                        .setColor(color)
+	                        .setTitle(`Suggestion reopened`);
+	const suggestion_embed = await make_embed(message);
+	await log_thread.send({ embeds: [ action_embed, suggestion_embed ] });
 }
 
 // Four operations:
@@ -197,6 +239,7 @@ async function update_message_if_needed(message: Discord.Message) {
 		assert(message.content != null);
 		let hash = xxh3(message.content);
 		if(hash != entry.hash) {
+			M.debug("Suggestion edited", [message.author.tag, message.author.id, message.content]);
 			let status_message = await thread.messages.fetch(entry.status_message);
 			const embed = await make_embed(message);
 			status_message.edit({ embeds: [embed] });
@@ -210,17 +253,20 @@ async function update_message_if_needed(message: Discord.Message) {
 	}
 }
 
-async function resolve_suggestion(message_id: string) {
+async function resolve_suggestion(message: Discord.Message, reaction: reaction) {
 	try {
-		if(message_id in database.get<db_schema>("suggestion_tracker").suggestions) {
+		if(message.id in database.get<db_schema>("suggestion_tracker").suggestions) {
+			M.debug("Suggestion being resolved", [message.id]);
 			// remove status message
-			let entry = database.get<db_schema>("suggestion_tracker").suggestions[message_id];
+			let entry = database.get<db_schema>("suggestion_tracker").suggestions[message.id];
 			let status_message = await thread.messages.fetch(entry.status_message);
 			status_lock.insert(entry.status_message);
 			await status_message.delete();
-			delete database.get<db_schema>("suggestion_tracker").suggestions[message_id];
+			delete database.get<db_schema>("suggestion_tracker").suggestions[message.id];
 			database.update();
-			// TODO log
+			if(reaction.user.id != wheatley_id) { // if wheatley then this is logged when the reaction is done on the dashboard
+				log_resolution(message, reaction);
+			}
 		} else {
 			// already resolved
 		}
@@ -295,7 +341,10 @@ async function process_reaction(_reaction: Discord.MessageReaction | Discord.Par
 	let reaction = await departialize(_reaction);
 	if(resolution_reacts.has(reaction.emoji.name!)) {
 		if(is_root(user)) {
-			resolve_suggestion(reaction.message.id);
+			resolve_suggestion(await departialize(reaction.message), {
+				user: await departialize(user),
+				emoji: reaction.emoji
+			});
 		}
 	}
 }
@@ -307,6 +356,7 @@ async function process_reaction_remove(reaction: Discord.MessageReaction | Disco
 		if(!await message_has_resolution_from_root(message)) {
 			// reopen
 			open_suggestion(message);
+			log_reopen(message);
 		}
 	}
 }
@@ -333,6 +383,10 @@ async function on_react(reaction: Discord.MessageReaction | Discord.PartialMessa
 					await mutex.lock(reaction.message.id); // lock the status message NOTE: Assuming no identical snowflakes between channels, this should be pretty safe though
 					let suggestion = await suggestion_channel.messages.fetch(suggestion_id);
 					suggestion.react(reaction.emoji.name!);
+					log_resolution(suggestion, {
+						user: await departialize(user),
+						emoji: reaction.emoji
+					});
 					mutex.unlock(reaction.message.id);
 					// No further action done here: process_reaction will run when on_react will fires again as a result of suggestion.react
 				}
@@ -341,8 +395,10 @@ async function on_react(reaction: Discord.MessageReaction | Discord.PartialMessa
 	} catch(e) {
 		critical_error(e);
 		try {
-			let member = await TCCPP.members.fetch(user.id);
-			member.send("Error while resolving suggestion");
+			if(is_root(user)) { // only send diagnostics to root
+				let member = await TCCPP.members.fetch(user.id);
+				member.send("Error while resolving suggestion");
+			}
 		} catch(e) {
 			critical_error(e);
 		}
@@ -380,8 +436,10 @@ async function process_since_last_scanned() {
 		}
 		arr.sort((a, b) => a.createdTimestamp - b.createdTimestamp);
 		for(let message of arr) {
-			if(await message_has_resolution_from_root(message)) {
-				// already resolved, ignore
+			let root_resolve = await message_has_resolution_from_root(message);
+			if(root_resolve) {
+				// already resolved, just log
+				log_resolution(message, root_resolve);
 			} else {
 				M.debug("server_suggestion tracker process_since_last_scanned: New message found:", message.id, message.author.tag, message.content);
 				//if(message.createdTimestamp > database.state.suggestion_tracker.last_scanned_timestamp) {
@@ -411,6 +469,8 @@ async function on_ready() {
 		assert(suggestion_channel != null);
 		thread = (await suggestion_channel.threads.fetch(suggestion_dashboard_thread_id))!;
 		assert(thread != null);
+		log_thread = (await suggestion_channel.threads.fetch(suggestion_action_log_thread_id))!;
+		assert(log_thread != null);
 		M.debug("server_suggestion tracker handler fetched guilds/channels/threads");
 		// setup event handlers
 		client.on("messageCreate", on_message);
@@ -442,10 +502,11 @@ async function on_ready() {
 				}
 				// check reactions
 				M.debug(message.content, message.reactions.cache.map(r => [r.emoji.name, r.count]));
-				if(await message_has_resolution_from_root(message)) {
+				let root_resolve = await message_has_resolution_from_root(message);
+				if(root_resolve) {
 					M.warn("server_suggestion tracker state recovery: resolving message");
 					suggestion_was_resolved = true;
-					await resolve_suggestion(message.id);
+					await resolve_suggestion(message, root_resolve);
 				} else {
 					// no action needed
 				}
