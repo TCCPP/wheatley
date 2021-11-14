@@ -440,6 +440,10 @@ async function process_since_last_scanned() {
 			if(root_resolve) {
 				// already resolved, just log
 				log_resolution(message, root_resolve);
+				// update last seen
+				if(message.createdTimestamp > database.state.suggestion_tracker.last_scanned_timestamp) {
+					database.get<db_schema>("suggestion_tracker").last_scanned_timestamp = message.createdTimestamp;
+				}
 			} else {
 				M.debug("server_suggestion tracker process_since_last_scanned: New message found:", message.id, message.author.tag, message.content);
 				//if(message.createdTimestamp > database.state.suggestion_tracker.last_scanned_timestamp) {
