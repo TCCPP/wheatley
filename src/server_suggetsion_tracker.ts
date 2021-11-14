@@ -1,9 +1,9 @@
 import * as Discord from "discord.js";
 import { strict as assert } from "assert";
-import { critical_error, departialize, M } from "./utils";
+import { critical_error, departialize, M, Mutex, SelfClearingSet } from "./utils";
 import { DatabaseInterface } from "./database_interface";
-import { is_root, server_suggestions_channel_id, suggestion_dashboard_thread_id, TCCPP_ID, wheatley_id } from "./common";
-import { decode_snowflake, forge_snowflake } from "./snowflake";
+import { is_root, MINUTE, server_suggestions_channel_id, suggestion_action_log_thread_id, suggestion_dashboard_thread_id, TCCPP_ID, wheatley_id } from "./common";
+import { forge_snowflake } from "./snowflake";
 import * as XXH from "xxhashjs"
 
 let client: Discord.Client;
@@ -83,6 +83,18 @@ async function get_author_display_name(message: Discord.Message) {
 	}
 }
 
+function reverse_lookup(status_id: string) {
+	let suggestion_id: string | null = null;
+	for(let id in   database.get<db_schema>("suggestion_tracker").suggestions) {
+		let entry = database.get<db_schema>("suggestion_tracker").suggestions[id];
+		if(entry.status_message == status_id) {
+			suggestion_id = id;
+			break;
+		}
+	}
+	return suggestion_id;
+}
+
 /*
  * New messages:
  * - Send message on the dashboard
@@ -132,10 +144,16 @@ async function make_embed(message: Discord.Message) {
 // - delete suggestion TODO: misnomer
 // - update suggestion if needed
 // - resolve suggestion
-// TODO: potentially may have reopen suggestion in the future
+// TODO: potentially may have reopen suggestion and untrack suggestion in the future
+// Note: Callers obtain mutex lock
+
+// Race condition handling: edits while processing edits, await status_message.delete() and on_message_delete() interfering, etc.
+let mutex = new Mutex<string>();
+let status_lock = new SelfClearingSet<string>(5 * MINUTE, 5 * MINUTE);
 
 async function open_suggestion(message: Discord.Message) {
 	try {
+		M.debug("New suggestion", [message.author.tag, message.author.id, message.content]);
 		const embed = await make_embed(message);
 		let status_message = await thread.send({ embeds: [embed] });
 		assert(!(message.id in database.get<db_schema>("suggestion_tracker").suggestions));
@@ -148,7 +166,7 @@ async function open_suggestion(message: Discord.Message) {
 		};
 		database.update();
 	} catch(e) {
-		critical_error("error during open_suggestion", e)
+		critical_error("error during open_suggestion", e);
 	}
 }
 
@@ -156,45 +174,58 @@ async function delete_suggestion(message_id: string) {
 	try {
 		assert(message_id in database.get<db_schema>("suggestion_tracker").suggestions);
 		let entry = database.get<db_schema>("suggestion_tracker").suggestions[message_id];
+		M.debug("Suggestion deleted", message_id, entry);
 		let status_message = await thread.messages.fetch(entry.status_message);
+		status_lock.insert(entry.status_message);
 		await status_message.delete();
 		delete database.get<db_schema>("suggestion_tracker").suggestions[message_id];
 		database.update();
 	} catch(e) {
-		critical_error("error during delete_suggestion", e)
+		critical_error("error during delete_suggestion", e);
 	}
 }
 
 async function update_message_if_needed(message: Discord.Message) {
-	if(!(message.id in database.get<db_schema>("suggestion_tracker").suggestions)) {
-		M.warn("update_message_if_needed called on untracked message", message); // TODO: This can happen under normal operation, this is here as a debug check
-		return;
+	try {
+		if(!(message.id in database.get<db_schema>("suggestion_tracker").suggestions)) {
+			// TODO: This can happen under normal operation, this is here as a debug check
+			// TODO: Also happens when a thread is created directly, not off an initial message. Need to investigate why.
+			M.warn("update_message_if_needed called on untracked message", message);
+			return;
+		}
+		let entry = database.get<db_schema>("suggestion_tracker").suggestions[message.id];
+		assert(message.content != null);
+		let hash = xxh3(message.content);
+		if(hash != entry.hash) {
+			let status_message = await thread.messages.fetch(entry.status_message);
+			const embed = await make_embed(message);
+			status_message.edit({ embeds: [embed] });
+			database.get<db_schema>("suggestion_tracker").suggestions[message.id].hash = hash;
+			database.update();
+			return true; // return if we updated
+		}
+		return false;
+	} catch(e) {
+		critical_error("error during update_message_if_needed", e);
 	}
-	let entry = database.get<db_schema>("suggestion_tracker").suggestions[message.id];
-	assert(message.content != null);
-	let hash = xxh3(message.content);
-	if(hash != entry.hash) {
-		let status_message = await thread.messages.fetch(entry.status_message);
-		const embed = await make_embed(message);
-		status_message.edit({ embeds: [embed] });
-		database.get<db_schema>("suggestion_tracker").suggestions[message.id].hash = hash;
-		database.update();
-		return true; // return if we updated
-	}
-	return false;
 }
 
 async function resolve_suggestion(message_id: string) {
-	if(message_id in database.get<db_schema>("suggestion_tracker").suggestions) {
-		// remove status message
-		let entry = database.get<db_schema>("suggestion_tracker").suggestions[message_id];
-		let status_message = await thread.messages.fetch(entry.status_message);
-		await status_message.delete();
-		delete database.get<db_schema>("suggestion_tracker").suggestions[message_id];
-		database.update();
-		// TODO log
-	} else {
-		// already resolved
+	try {
+		if(message_id in database.get<db_schema>("suggestion_tracker").suggestions) {
+			// remove status message
+			let entry = database.get<db_schema>("suggestion_tracker").suggestions[message_id];
+			let status_message = await thread.messages.fetch(entry.status_message);
+			status_lock.insert(entry.status_message);
+			await status_message.delete();
+			delete database.get<db_schema>("suggestion_tracker").suggestions[message_id];
+			database.update();
+			// TODO log
+		} else {
+			// already resolved
+		}
+	} catch(e) {
+		critical_error("error during update_message_if_needed", e);
 	}
 }
 
@@ -202,7 +233,9 @@ async function on_message(message: Discord.Message) {
 	if(recovering) return;
 	if(message.channel.id != server_suggestions_channel_id) return;
 	try {
+		await mutex.lock(message.id);
 		await open_suggestion(message);
+		mutex.unlock(message.id);
 	} catch(e) {
 		critical_error(e);
 	}
@@ -216,21 +249,16 @@ async function on_message_delete(message: Discord.Message | Discord.PartialMessa
 				M.info("Untracked message deleted", message); // TODO: This can happen under normal operation, this is here as a debug check
 				return;
 			}
+			await mutex.lock(message.id);
 			await delete_suggestion(message.id);
+			mutex.unlock(message.id);
 		} else if(message.channel.id == suggestion_dashboard_thread_id) {
 			assert(message.author != null);
-			if(message.author.id == wheatley_id) {
+			if(message.author.id == wheatley_id && !status_lock.has(message.id)) { // race condition with await status_message.delete() checked here
 				// find and delete database entry
-				let suggestion_id: string | null = null;
-				for(let id in   database.get<db_schema>("suggestion_tracker").suggestions) {
-					let entry = database.get<db_schema>("suggestion_tracker").suggestions[id];
-					if(entry.status_message == message.id) {
-						suggestion_id = id;
-						break;
-					}
-				}
+				let suggestion_id = reverse_lookup(message.id);
 				if(suggestion_id == null) {
-					throw 0;
+					throw 0; // untracked  - this is an internal error or a race condition
 				} else {
 					M.info("server_suggestion tracker state recovery: Manual status delete",
 						suggestion_id,
@@ -239,6 +267,8 @@ async function on_message_delete(message: Discord.Message | Discord.PartialMessa
 					database.update();
 				}
 			}
+		} else if(message.channel.id == suggestion_action_log_thread_id && message.author!.id == wheatley_id) {
+			M.info("Wheatley message deleted", message);
 		}
 	} catch(e) {
 		critical_error(e);
@@ -246,11 +276,13 @@ async function on_message_delete(message: Discord.Message | Discord.PartialMessa
 }
 
 async function on_message_update(old_message: Discord.Message | Discord.PartialMessage,
-                           new_message: Discord.Message | Discord.PartialMessage) {
+                                 new_message: Discord.Message | Discord.PartialMessage) {
 	if(recovering) return;
 	if(new_message.channel.id != server_suggestions_channel_id) return;
 	try {
+		await mutex.lock(new_message.id);
 		await update_message_if_needed(await departialize(new_message));
+		mutex.unlock(new_message.id);
 	} catch(e) {
 		critical_error(e);
 	}
@@ -285,26 +317,25 @@ async function on_react(reaction: Discord.MessageReaction | Discord.PartialMessa
 	try {
 		if(reaction.message.channel.id == server_suggestions_channel_id) {
 			if(resolution_reacts.has(reaction.emoji.name!)) {
+				await mutex.lock(reaction.message.id);
 				process_reaction(reaction, user);
+				mutex.unlock(reaction.message.id);
 			}
 		} else if(reaction.message.channel.id == suggestion_dashboard_thread_id) {
-			if(resolution_reacts.has(reaction.emoji.name!) && is_root(user)) {
+			if(reaction.message.author!.id == wheatley_id
+			&& resolution_reacts.has(reaction.emoji.name!)
+			&& is_root(user)) {
 				// expensive-ish but this will be rare
-				let suggestion_id: string | null = null;
-				for(let id in   database.get<db_schema>("suggestion_tracker").suggestions) {
-					let entry = database.get<db_schema>("suggestion_tracker").suggestions[id];
-					if(entry.status_message == reaction.message.id) {
-						suggestion_id = id;
-						break;
-					}
-				}
+				let suggestion_id = reverse_lookup(reaction.message.id);
 				if(suggestion_id == null) {
-					throw 0;
+					throw 0; // untracked  - this is an internal error or a race condition
 				} else {
+					await mutex.lock(reaction.message.id); // lock the status message NOTE: Assuming no identical snowflakes between channels, this should be pretty safe though
 					let suggestion = await suggestion_channel.messages.fetch(suggestion_id);
 					suggestion.react(reaction.emoji.name!);
+					mutex.unlock(reaction.message.id);
+					// No further action done here: process_reaction will run when on_react will fires again as a result of suggestion.react
 				}
-				// No further action done here: process_reaction will run when on_react will fires again as a result of suggestion.react
 			}
 		}
 	} catch(e) {
@@ -318,18 +349,21 @@ async function on_react(reaction: Discord.MessageReaction | Discord.PartialMessa
 	}
 }
 
-function on_reaction_remove(reaction: Discord.MessageReaction | Discord.PartialMessageReaction,
+async function on_reaction_remove(reaction: Discord.MessageReaction | Discord.PartialMessageReaction,
                             user: Discord.User                | Discord.PartialUser) {
 	if(recovering) return;
 	if(reaction.message.channel.id != server_suggestions_channel_id) return;
 	try {
+		await mutex.lock(reaction.message.id);
 		process_reaction_remove(reaction, user);
+		mutex.unlock(reaction.message.id);
 	} catch(e) {
 		critical_error(e);
 	}
 }
 
 async function process_since_last_scanned() {
+	// Note: No locking done here
 	while(true) {
 		// TODO: Sort collection???
 		let messages = await suggestion_channel.messages.fetch({
@@ -392,11 +426,14 @@ async function on_ready() {
 		// check database entries and fetch since last_scanned_timestamp
 		M.debug("server_suggestion tracker checking database entries");
 		for(let id in   database.get<db_schema>("suggestion_tracker").suggestions) {
+			await mutex.lock(id);
 			let entry = database.get<db_schema>("suggestion_tracker").suggestions[id];
 			let message = await get_message(suggestion_channel, id);
+			let suggestion_was_resolved = false;
 			if(message == undefined) { // check if deleted
 				// deleted
 				M.debug(`server_suggestion tracker state recovery: Message was deleted:`, entry);
+				status_lock.insert(entry.status_message);
 				await delete_suggestion(id);
 			} else {
 				// check if message updated
@@ -406,19 +443,21 @@ async function on_ready() {
 				// check reactions
 				M.debug(message.content, message.reactions.cache.map(r => [r.emoji.name, r.count]));
 				if(await message_has_resolution_from_root(message)) {
-					M.warn("resolving");
+					M.warn("server_suggestion tracker state recovery: resolving message");
+					suggestion_was_resolved = true;
 					await resolve_suggestion(message.id);
 				} else {
 					// no action needed
 				}
 			}
-			// check if the status message was deleted
-			if(await get_message(thread, entry.status_message) == undefined) {
+			// check if the status message was deleted (if we didn't just delete it with resolve_suggestion)
+			if(!suggestion_was_resolved && await get_message(thread, entry.status_message) == undefined) {
 				// just delete from database - no longer tracking
 				M.info("server_suggestion tracker state recovery: Manual status delete", id, entry);
 				delete database.get<db_schema>("suggestion_tracker").suggestions[id];
 			}
 			// not currently checking root reactions on it - TODO?
+			mutex.unlock(id);
 		}
 		database.update();
 		M.debug("server_suggestion tracker finished checking database entries");

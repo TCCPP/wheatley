@@ -110,6 +110,64 @@ export async function departialize<T extends PotentiallyPartial, R extends Retur
 	}
 };
 
+export class SelfClearingSet<T> {
+	contents = new Map<T, number>();
+	duration: number;
+	constructor(duration: number, interval: number) {
+		this.duration = duration;
+		setInterval(this.sweep.bind(this), interval);
+	}
+	sweep() {
+		let now = Date.now();
+		for(let [value, timestamp] of this.contents) {
+			if(now - timestamp >= this.duration) {
+				this.contents.delete(value);
+			}
+		}
+	}
+	insert(value: T) {
+		this.contents.set(value, Date.now());
+	}
+	remove(value: T) {
+		this.contents.delete(value);
+	}
+	has(value: T) {
+		return this.contents.has(value);
+	}
+};
+
+export class Mutex<T> {
+	locks = new Set<T>();
+	waiting = new Map<T, (() => void)[]>();
+	constructor() {}
+	async lock(value: T) {
+		if(this.locks.has(value)) {
+			if(!this.waiting.has(value)) {
+				this.waiting.set(value, []);
+			}
+			await new Promise<void>(resolve => { // TODO: Is there an async break between promise call and callback call?
+				this.waiting.get(value)!.push(resolve);
+			});
+			// entry in locks will remain, no need to re-add
+		} else {
+			this.locks.add(value);
+		}
+	}
+	unlock(value: T) {
+		if(this.waiting.has(value)) {
+			assert(this.waiting.get(value)!.length > 0); // If this fails, see TODO above ^^
+			M.debug(this.waiting.get(value));
+			let resolve = this.waiting.get(value)!.shift()!;
+			if(this.waiting.get(value)!.length == 0) {
+				this.waiting.delete(value);
+			}
+			resolve();
+		} else {
+			this.locks.delete(value);
+		}
+	}
+};
+
 let client: Discord.Client;
 let zelis : Discord.User;
 let has_tried_fetch_zelis = false;
