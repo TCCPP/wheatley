@@ -22,7 +22,6 @@ export class DatabaseInterface {
 		M.debug("Saving database");
 		let data = JSON.stringify(this.state);
 		fs.ftruncateSync(this.fd, 0);
-		M.warn(data); // TODO: can remove later, just a debug check
 		fs.writeSync(this.fd, data, 0, "utf-8");
 	}
 	get<T>(key: string) {

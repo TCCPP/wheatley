@@ -61,7 +61,10 @@ const client = new Discord.Client({
 	],
 	partials: [
 		"CHANNEL"
-	]
+	],
+	makeCache: Discord.Options.cacheWithLimits({
+		MessageManager: 1000
+	})
 });
 
 // Every module sets a lot of listeners. This is not a leak.

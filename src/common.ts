@@ -36,9 +36,20 @@ export const authorized_admin_roles = [
 	root_role_id
 ];
 
+export const root_ids = new Set([
+	"199943082441965577", // zelis
+	"272564879716646914", // aspi
+	"162964325823283200", // eisen
+	"110756651694297088", // vincent
+	"190522027440865280", // not a penguin - allegedly
+	"89441674844995584",  // styx
+	"597216680271282192", // wheatley <- so that Wheatly reactions aren't removed in server suggestions and also allow some elegant handling
+]);
+
 // Some common tools
-export function is_root(member: Discord.GuildMember): boolean {
-	return member.roles.cache.some(r => r.id == root_role_id);
+export function is_root(user: Discord.User | Discord.PartialUser): boolean {
+	//return member.roles.cache.some(r => r.id == root_role_id);
+	return root_ids.has(user.id);
 }
 
 export function is_authorized_admin(member: Discord.GuildMember): boolean {

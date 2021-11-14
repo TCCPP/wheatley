@@ -1,24 +1,23 @@
 import * as Discord from "discord.js";
 import { strict as assert } from "assert";
-import { critical_error, M } from "./utils";
+import { critical_error, departialize, M } from "./utils";
 import { DatabaseInterface } from "./database_interface";
 import { is_root, server_suggestions_channel_id, suggestion_dashboard_thread_id, TCCPP_ID } from "./common";
 import { decode_snowflake, forge_snowflake } from "./snowflake";
 import * as XXH from "xxhashjs"
 
 let client: Discord.Client;
-
 let TCCPP : Discord.Guild;
-
-let suggestion_channel: Discord.TextChannel;
-
-let thread: Discord.ThreadChannel;
-
-const TRACKER_START_TIME = 1636693200000;
-                        // 1614513881250
 
 let database: DatabaseInterface;
 
+let suggestion_channel: Discord.TextChannel;
+let thread: Discord.ThreadChannel;
+
+const TRACKER_START_TIME =
+                           1625112000000; // Thu Jul 01 2021 00:00:00 GMT-0400 (Eastern Daylight Time)
+                        // 1630468800000; // Wed Sep 01 2021 00:00:00 GMT-0400 (Eastern Daylight Time)
+                        // 1636693200000; // debug: Fri Nov 12 2021 00:00:00 GMT-0500 (Eastern Standard Time)
 let recovering = true;
 
 const resolution_reacts = new Set([
@@ -45,7 +44,7 @@ function xxh3(message: string) {
 
 function get_message(id: string) {
 	return new Promise<Discord.Message | undefined>((resolve, reject) => {
-		suggestion_channel.messages.fetch(id)
+		suggestion_channel.messages.fetch(id, {cache: true })
 			.then(m => resolve(m))
 			.catch(e => {
 				if(e.httpStatus == 404) {
@@ -57,33 +56,30 @@ function get_message(id: string) {
 	});
 }
 
-function message_has_resolution_from_root(message: Discord.Message) {
-	return false; // TODO
-}
-
-async function user_is_root(user: Discord.User) {
-	try {
-		return await TCCPP.members.fetch(user.id);
-	} catch {
-		return false;
+async function message_has_resolution_from_root(message: Discord.Message) {
+	for(let [_, reaction] of message.reactions.cache) {
+		if(resolution_reacts.has(reaction.emoji.name!)) {
+			let users = await reaction.users.fetch();
+			for(let [_, user] of users) {
+				if(is_root(user)) {
+					return true;
+				}
+			}
+		}
 	}
+	return false;
 }
 
-interface DiscordPartial<T> {
-	partial: boolean;
-	//fetch(): Promise<ReturnType<typeof InstanceType<T>["fetch"]>>;
-	//fetch(): T["fetch"];
-	//fetch(): T["fetch"];
-	//fetch(): Promise<T>;
-	fetch(): Promise<any>;
-}
-
-// TODO: Improve this utility and integrate it into more of the bot
-async function departialize<T extends DiscordPartial<T>>(thing: T) {
-	if(thing.partial) {
-		return await thing.fetch();
+async function get_author_display_name(message: Discord.Message) {
+	if(message.member == null) {
+		try {
+			return (await TCCPP.members.fetch(message.author.id)).displayName;
+		} catch {
+			// user could potentially not be in the server
+			return message.author.tag;
+		}
 	} else {
-		return thing;
+		return message.member.displayName;
 	}
 }
 
@@ -93,21 +89,27 @@ async function departialize<T extends DiscordPartial<T>>(thing: T) {
  * - Create database entry
  * On edit:
  * - If message is tracked, update it
- *   - TODO: What if not tracked? That's a problem.
  * On delete:
  * - If message is tracked, remove entry
  * On reaction
  * - If 🟢🔴🟡🚫 *and added by root* remove from dashboard
  * - TODO Log resolution?
  * On reaction remove
- * - TODO If 🟢🔴🟡🚫 *and there is no longer one present by a root member* re-add to dashboard
+ * - If 🟢🔴🟡🚫 *and there is no longer one present by a root member* re-add to dashboard
  * - TODO Log reopen?
  * State recovery:
  * - Check if original messages were deleted
  * - Update with edits if necessary
  * - Scan messages since last seen
- * - TODO Process unseen messages as if new
- * - TODO Handle new 🟢🔴🟡🚫 reactions
+ * - Process unseen messages as if new if not already resolved
+ * - Handle new 🟢🔴🟡🚫 reactions
+ * - TODO: Handle removed 🟢🔴🟡🚫 reactions?
+ * On 🟢🔴🟡🚫 reaction in the dashboard:
+ * - Apply reaction to the main message and resolve suggestion
+ *     Note: Not currently checked in recovery
+ *     Note: Last 100 messages in the thread fetched and cached by server_suggestion_reactions
+ *
+ * If a message is not tracked it is either resolved or missed.
  */
 
 // jump to message link
@@ -116,23 +118,21 @@ async function departialize<T extends DiscordPartial<T>>(thing: T) {
 async function make_embed(message: Discord.Message) {
 	assert(message.content != null);
 	assert(message.author != null);
-	let member: Discord.GuildMember | null = null;
-	if(message.member == null) {
-		try {
-			member = await TCCPP.members.fetch(message.author.id);
-		} catch {} // user could potentially not be in the server
-	} else {
-		member = message.member;
-	}
-	let name = member ? member.displayName : message.author.tag;
 	return new Discord.MessageEmbed()
 	          .setColor(color)
-	          .setAuthor(`${name}`, message.author.displayAvatarURL())
-	          .setDescription(message.content + `\n\n[click here to jump](${message.url})`)
+	          .setAuthor(`${await get_author_display_name(message)}`, message.author.displayAvatarURL())
+	          .setDescription(message.content + `\n\n[[Jump to message]](${message.url})`)
 	          .setTimestamp(message.createdAt);
 }
 
-async function process_message(message: Discord.Message) {
+// Four operations:
+// - open suggestion
+// - delete suggestion TODO: misnomer
+// - update suggestion if needed
+// - resolve suggestion
+// TODO: potentially may have reopen suggestion in the future
+
+async function open_suggestion(message: Discord.Message) {
 	try {
 		const embed = await make_embed(message);
 		let status_message = await thread.send({ embeds: [embed] });
@@ -145,13 +145,12 @@ async function process_message(message: Discord.Message) {
 			hash: xxh3(message.content)
 		};
 		database.update();
-		assert(message.createdTimestamp == decode_snowflake(message.id)); // something I just want to check... TODO can remove later
 	} catch(e) {
-		critical_error("error during process_message", e)
+		critical_error("error during open_suggestion", e)
 	}
 }
 
-async function process_message_deletion(message_id: string) {
+async function delete_suggestion(message_id: string) {
 	try {
 		assert(message_id in database.get<db_schema>("suggestion_tracker").suggestions);
 		let entry = database.get<db_schema>("suggestion_tracker").suggestions[message_id];
@@ -160,11 +159,11 @@ async function process_message_deletion(message_id: string) {
 		delete database.get<db_schema>("suggestion_tracker").suggestions[message_id];
 		database.update();
 	} catch(e) {
-		critical_error("error during process_message_deletion", e)
+		critical_error("error during delete_suggestion", e)
 	}
 }
 
-async function check_message_update(message: Discord.Message) {
+async function update_message_if_needed(message: Discord.Message) {
 	assert(message.id in database.get<db_schema>("suggestion_tracker").suggestions);
 	let entry = database.get<db_schema>("suggestion_tracker").suggestions[message.id];
 	assert(message.content != null);
@@ -175,24 +174,40 @@ async function check_message_update(message: Discord.Message) {
 		status_message.edit({ embeds: [embed] });
 		database.get<db_schema>("suggestion_tracker").suggestions[message.id].hash = hash;
 		database.update();
+		return true; // return if we updated
+	}
+	return false;
+}
+
+async function resolve_suggestion(message_id: string) {
+	if(message_id in database.get<db_schema>("suggestion_tracker").suggestions) {
+		// remove status message
+		let entry = database.get<db_schema>("suggestion_tracker").suggestions[message_id];
+		let status_message = await thread.messages.fetch(entry.status_message);
+		await status_message.delete();
+		delete database.get<db_schema>("suggestion_tracker").suggestions[message_id];
+		database.update();
+		// TODO log
+	} else {
+		// already resolved
 	}
 }
 
-function on_message(message: Discord.Message) {
+async function on_message(message: Discord.Message) {
 	if(recovering) return;
 	if(message.channel.id != server_suggestions_channel_id) return;
 	try {
-		process_message(message);
+		await open_suggestion(message);
 	} catch(e) {
 		critical_error(e);
 	}
 }
 
-function on_message_delete(message: Discord.Message | Discord.PartialMessage) {
+async function on_message_delete(message: Discord.Message | Discord.PartialMessage) {
 	if(recovering) return;
 	if(message.channel.id != server_suggestions_channel_id) return;
 	try {
-		process_message_deletion(message.id);
+		await delete_suggestion(message.id);
 	} catch(e) {
 		critical_error(e);
 	}
@@ -203,7 +218,7 @@ async function on_message_update(old_message: Discord.Message | Discord.PartialM
 	if(recovering) return;
 	if(new_message.channel.id != server_suggestions_channel_id) return;
 	try {
-		check_message_update(await departialize(new_message));
+		await update_message_if_needed(await departialize(new_message));
 	} catch(e) {
 		critical_error(e);
 	}
@@ -215,49 +230,58 @@ async function process_reaction(_reaction: Discord.MessageReaction | Discord.Par
                                 user: Discord.User                 | Discord.PartialUser) {
 	let reaction = await departialize(_reaction);
 	if(resolution_reacts.has(reaction.emoji.name!)) {
-		let member: Discord.GuildMember | null = null;
-		try {
-			member = await suggestion_channel.guild.members.fetch(user.id);
-		} finally {
-			if(member != null && is_root(member)) {
-				let message_id = reaction.message.id;
-				if(message_id in database.get<db_schema>("suggestion_tracker").suggestions) {
-					// remove status message
-					let entry = database.get<db_schema>("suggestion_tracker").suggestions[message_id];
-					let status_message = await thread.messages.fetch(entry.status_message);
-					await status_message.delete();
-					delete database.get<db_schema>("suggestion_tracker").suggestions[message_id];
-					database.update();
-					// TODO log
-				} else {
-					// already resolved
-				}
-			}
+		if(is_root(user)) {
+			resolve_suggestion(reaction.message.id);
 		}
 	}
 }
 
 async function process_reaction_remove(reaction: Discord.MessageReaction | Discord.PartialMessageReaction,
 	                                   user: Discord.User                | Discord.PartialUser) {
-	if(resolution_reacts.has(reaction.emoji.name!) && user_is_root(await departialize(user))) {
+	if(resolution_reacts.has(reaction.emoji.name!) && is_root(user)) {
 		let message = await departialize(reaction.message);
-		if(!message_has_resolution_from_root(message)) {
+		if(!await message_has_resolution_from_root(message)) {
 			// reopen
-			process_message(message);
+			open_suggestion(message);
 		}
 	}
 }
 
-function on_react(reaction: Discord.MessageReaction | Discord.PartialMessageReaction,
-                  user: Discord.User                | Discord.PartialUser) {
+async function on_react(reaction: Discord.MessageReaction | Discord.PartialMessageReaction,
+                        user: Discord.User                | Discord.PartialUser) {
 	if(recovering) return;
-	if(reaction.message.channel.id != server_suggestions_channel_id) return;
 	try {
-		if(resolution_reacts.has(reaction.emoji.name!)) {
-			process_reaction(reaction, user);
+		if(reaction.message.channel.id == server_suggestions_channel_id) {
+			if(resolution_reacts.has(reaction.emoji.name!)) {
+				process_reaction(reaction, user);
+			}
+		} else if(reaction.message.channel.id == suggestion_dashboard_thread_id) {
+			if(resolution_reacts.has(reaction.emoji.name!) && is_root(user)) {
+				// expensive-ish but this will be rare
+				let suggestion_id: string | null = null;
+				for(let id in   database.get<db_schema>("suggestion_tracker").suggestions) {
+					let entry = database.get<db_schema>("suggestion_tracker").suggestions[id];
+					if(entry.status_message == reaction.message.id) {
+						suggestion_id = id;
+						break;
+					}
+				}
+				if(suggestion_id == null) {
+					throw 0;
+				} else {
+					let suggestion = await suggestion_channel.messages.fetch(suggestion_id);
+					suggestion.react(reaction.emoji.name!);
+				}
+			}
 		}
 	} catch(e) {
 		critical_error(e);
+		try {
+			let member = await TCCPP.members.fetch(user.id);
+			member.send("Error while resolving suggestion");
+		} catch(e) {
+			critical_error(e);
+		}
 	}
 }
 
@@ -266,6 +290,7 @@ function on_reaction_remove(reaction: Discord.MessageReaction | Discord.PartialM
 	if(recovering) return;
 	if(reaction.message.channel.id != server_suggestions_channel_id) return;
 	try {
+		process_reaction_remove(reaction, user);
 	} catch(e) {
 		critical_error(e);
 	}
@@ -288,12 +313,16 @@ async function process_since_last_scanned() {
 		}
 		arr.sort((a, b) => a.createdTimestamp - b.createdTimestamp);
 		for(let message of arr) {
-			M.debug("server_suggestion tracker process_since_last_scanned: New message found:", message);
-			if(message.createdTimestamp > database.state.suggestion_tracker.last_scanned_timestamp) {
-				assert(message.createdTimestamp == decode_snowflake(message.id));
-				database.get<db_schema>("suggestion_tracker").last_scanned_timestamp = message.createdTimestamp;
+			if(await message_has_resolution_from_root(message)) {
+				// already resolved, ignore
+			} else {
+				M.debug("server_suggestion tracker process_since_last_scanned: New message found:", message.id, message.author.tag, message.content);
+				//if(message.createdTimestamp > database.state.suggestion_tracker.last_scanned_timestamp) {
+				//	assert(message.createdTimestamp == decode_snowflake(message.id));
+				//	database.get<db_schema>("suggestion_tracker").last_scanned_timestamp = message.createdTimestamp;
+				//}
+				await open_suggestion(message); // will .update() database
 			}
-			await process_message(message); // will .update() database
 		}
 		break;
 	}
@@ -310,6 +339,7 @@ async function on_ready() {
 		}
 		// fetches
 		TCCPP = await client.guilds.fetch(TCCPP_ID);
+		assert(TCCPP != null);
 		suggestion_channel = (await client.channels.fetch(server_suggestions_channel_id))! as Discord.TextChannel;
 		assert(suggestion_channel != null);
 		thread = (await suggestion_channel.threads.fetch(suggestion_dashboard_thread_id))!;
@@ -325,17 +355,27 @@ async function on_ready() {
 		M.debug("server_suggestion tracker scanning database entries");
 		for(let id in   database.get<db_schema>("suggestion_tracker").suggestions) {
 			let message = await get_message(id);
-			if(message == undefined) {
+			if(message == undefined) { // check if deleted
 				// deleted
-				M.debug(`server_suggestion tracker state recovery: Message was deleted: ${database.get<db_schema>("suggestion_tracker").suggestions[id]}`);
-				process_message_deletion(id);
+				M.debug(`server_suggestion tracker state recovery: Message was deleted:`, database.get<db_schema>("suggestion_tracker").suggestions[id]);
+				await delete_suggestion(id);
 			} else {
-				M.debug(`server_suggestion tracker state recovery: Message was updated: ${database.get<db_schema>("suggestion_tracker").suggestions[id]}`);
-				check_message_update(message);
+				// check if message updated
+				if(await update_message_if_needed(message)) {
+					M.debug(`server_suggestion tracker state recovery: Message was updated:`, database.get<db_schema>("suggestion_tracker").suggestions[id]);
+				}
+				// check reactions
+				M.debug(message.content, message.reactions.cache.map(r => [r.emoji.name, r.count]));
+				if(await message_has_resolution_from_root(message)) {
+					M.warn("resolving");
+					await resolve_suggestion(message.id);
+				} else {
+					// no action needed
+				}
 			}
-			// FIXME: Check reactions
 		}
 		M.debug("server_suggestion tracker scanning since last seen");
+		// handle all new suggestions since last seen
 		await process_since_last_scanned();
 		recovering = false;
 		M.debug("server_suggestion tracker finished scanning");

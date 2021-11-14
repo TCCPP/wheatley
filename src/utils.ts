@@ -100,6 +100,16 @@ export function exists_sync(path: string) {
 	return exists;
 }
 
+type PotentiallyPartial = Discord.AllowedPartial | Discord.Partialize<Discord.AllowedPartial>;
+
+export async function departialize<T extends PotentiallyPartial, R extends ReturnType<T["fetch"]>>(thing: T): Promise<R> {
+	if(thing.partial) {
+		return thing.fetch();
+	} else {
+		return thing as R;
+	}
+};
+
 let client: Discord.Client;
 let zelis : Discord.User;
 let has_tried_fetch_zelis = false;
