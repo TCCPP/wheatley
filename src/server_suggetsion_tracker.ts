@@ -82,7 +82,7 @@ async function message_has_resolution_from_root(message: Discord.Message) {
 	}
 }
 
-async function get_author_display_name(thing: Discord.Message | Discord.User): Promise<string> {
+async function get_display_name(thing: Discord.Message | Discord.User): Promise<string> {
 	if(thing instanceof Discord.User) {
 		let user = thing;
 		try {
@@ -94,7 +94,7 @@ async function get_author_display_name(thing: Discord.Message | Discord.User): P
 	} else if(thing instanceof Discord.Message) {
 		let message = thing;
 		if(message.member == null) {
-			return get_author_display_name(message.author);
+			return get_display_name(message.author);
 			
 		} else {
 			return message.member.displayName;
@@ -114,6 +114,10 @@ function reverse_lookup(status_id: string) {
 		}
 	}
 	return suggestion_id;
+}
+
+function isnt_actually_a_message(message: Discord.Message) {
+	return message.type == "THREAD_CREATED" && message.thread == null;
 }
 
 /*
@@ -155,7 +159,7 @@ async function make_embed(message: Discord.Message) {
 	assert(message.author != null);
 	return new Discord.MessageEmbed()
 	          .setColor(color)
-	          .setAuthor(`${await get_author_display_name(message)}`, message.author.displayAvatarURL())
+	          .setAuthor(`${await get_display_name(message)}`, message.author.displayAvatarURL())
 	          .setDescription(message.content + `\n\n[[Jump to message]](${message.url})`)
 	          .setTimestamp(message.createdAt);
 }
@@ -168,7 +172,7 @@ async function make_embed(message: Discord.Message) {
 async function log_resolution(message: Discord.Message, reaction: reaction) {
 	const action_embed = new Discord.MessageEmbed()
 	                        .setColor(color)
-	                        .setAuthor(`${await get_author_display_name(reaction.user)}: ${reaction.emoji}`, reaction.user.displayAvatarURL());
+	                        .setAuthor(`${await get_display_name(reaction.user)}: ${reaction.emoji}`, reaction.user.displayAvatarURL());
 	const suggestion_embed = await make_embed(message);
 	await log_thread.send({ embeds: [ action_embed, suggestion_embed ] });
 }
@@ -277,6 +281,7 @@ async function resolve_suggestion(message: Discord.Message, reaction: reaction) 
 
 async function on_message(message: Discord.Message) {
 	if(recovering) return;
+	if(isnt_actually_a_message(message)) return;
 	if(message.channel.id != server_suggestions_channel_id) return;
 	try {
 		await mutex.lock(message.id);
@@ -289,6 +294,7 @@ async function on_message(message: Discord.Message) {
 
 async function on_message_delete(message: Discord.Message | Discord.PartialMessage) {
 	if(recovering) return;
+	if(isnt_actually_a_message(message as Discord.Message)) return;
 	try {
 		if(message.channel.id == server_suggestions_channel_id) {
 			if(!(message.id in database.get<db_schema>("suggestion_tracker").suggestions)) {
@@ -436,6 +442,7 @@ async function process_since_last_scanned() {
 		}
 		arr.sort((a, b) => a.createdTimestamp - b.createdTimestamp);
 		for(let message of arr) {
+			if(isnt_actually_a_message(message)) continue;
 			let root_resolve = await message_has_resolution_from_root(message);
 			if(root_resolve) {
 				// already resolved, just log
