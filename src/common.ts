@@ -11,6 +11,7 @@ export const speedrun_color = 0x0fc644;
 
 // User IDs
 export const zelis_id = "199943082441965577";
+export const wheatley_id = "597216680271282192";
 export const illuminator_id = "391270706186420224";
 
 // Role IDs

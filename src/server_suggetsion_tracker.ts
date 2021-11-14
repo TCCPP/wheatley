@@ -2,7 +2,7 @@ import * as Discord from "discord.js";
 import { strict as assert } from "assert";
 import { critical_error, departialize, M } from "./utils";
 import { DatabaseInterface } from "./database_interface";
-import { is_root, server_suggestions_channel_id, suggestion_dashboard_thread_id, TCCPP_ID } from "./common";
+import { is_root, server_suggestions_channel_id, suggestion_dashboard_thread_id, TCCPP_ID, wheatley_id } from "./common";
 import { decode_snowflake, forge_snowflake } from "./snowflake";
 import * as XXH from "xxhashjs"
 
@@ -42,9 +42,9 @@ function xxh3(message: string) {
 	return XXH.h64().update(message).digest().toString(16);
 }
 
-function get_message(id: string) {
+function get_message(channel: Discord.TextChannel | Discord.ThreadChannel, id: string) {
 	return new Promise<Discord.Message | undefined>((resolve, reject) => {
-		suggestion_channel.messages.fetch(id, {cache: true })
+		channel.messages.fetch(id, {cache: true })
 			.then(m => resolve(m))
 			.catch(e => {
 				if(e.httpStatus == 404) {
@@ -108,6 +108,8 @@ async function get_author_display_name(message: Discord.Message) {
  * - Apply reaction to the main message and resolve suggestion
  *     Note: Not currently checked in recovery
  *     Note: Last 100 messages in the thread fetched and cached by server_suggestion_reactions
+ * On status message delete in dashboard:
+ * - Delete database entry. This is a manual "No longer tracking the message".
  *
  * If a message is not tracked it is either resolved or missed.
  */
@@ -205,9 +207,36 @@ async function on_message(message: Discord.Message) {
 
 async function on_message_delete(message: Discord.Message | Discord.PartialMessage) {
 	if(recovering) return;
-	if(message.channel.id != server_suggestions_channel_id) return;
 	try {
-		await delete_suggestion(message.id);
+		if(message.channel.id == server_suggestions_channel_id) {
+			if(!(message.id in database.get<db_schema>("suggestion_tracker").suggestions)) {
+				M.info("Untracked message deleted", message);
+				return;
+			}
+			await delete_suggestion(message.id);
+		} else if(message.channel.id == suggestion_dashboard_thread_id) {
+			assert(message.author != null);
+			if(message.author.id == wheatley_id) {
+				// find and delete database entry
+				let suggestion_id: string | null = null;
+				for(let id in   database.get<db_schema>("suggestion_tracker").suggestions) {
+					let entry = database.get<db_schema>("suggestion_tracker").suggestions[id];
+					if(entry.status_message == message.id) {
+						suggestion_id = id;
+						break;
+					}
+				}
+				if(suggestion_id == null) {
+					throw 0;
+				} else {
+					M.info("server_suggestion tracker state recovery: Manual status delete",
+						suggestion_id,
+						database.get<db_schema>("suggestion_tracker").suggestions[suggestion_id]);
+					delete database.get<db_schema>("suggestion_tracker").suggestions[suggestion_id];
+					database.update();
+				}
+			}
+		}
 	} catch(e) {
 		critical_error(e);
 	}
@@ -272,6 +301,7 @@ async function on_react(reaction: Discord.MessageReaction | Discord.PartialMessa
 					let suggestion = await suggestion_channel.messages.fetch(suggestion_id);
 					suggestion.react(reaction.emoji.name!);
 				}
+				// No further action done here: process_reaction will run when on_react will fires again as a result of suggestion.react
 			}
 		}
 	} catch(e) {
@@ -351,18 +381,24 @@ async function on_ready() {
 		client.on("messageUpdate", on_message_update);
 		client.on("messageReactionAdd", on_react);
 		client.on("messageReactionRemove", on_reaction_remove);
-		// recover from down time: check database entries and fetch since last_scanned_timestamp
-		M.debug("server_suggestion tracker scanning database entries");
+		// handle all new suggestions since last seen
+		M.debug("server_suggestion tracker scanning since last seen");
+		await process_since_last_scanned();
+		M.debug("server_suggestion tracker finished scanning");
+		recovering = false;
+		// check database entries and fetch since last_scanned_timestamp
+		M.debug("server_suggestion tracker checking database entries");
 		for(let id in   database.get<db_schema>("suggestion_tracker").suggestions) {
-			let message = await get_message(id);
+			let entry = database.get<db_schema>("suggestion_tracker").suggestions[id];
+			let message = await get_message(suggestion_channel, id);
 			if(message == undefined) { // check if deleted
 				// deleted
-				M.debug(`server_suggestion tracker state recovery: Message was deleted:`, database.get<db_schema>("suggestion_tracker").suggestions[id]);
+				M.debug(`server_suggestion tracker state recovery: Message was deleted:`, entry);
 				await delete_suggestion(id);
 			} else {
 				// check if message updated
 				if(await update_message_if_needed(message)) {
-					M.debug(`server_suggestion tracker state recovery: Message was updated:`, database.get<db_schema>("suggestion_tracker").suggestions[id]);
+					M.debug(`server_suggestion tracker state recovery: Message was updated:`, entry);
 				}
 				// check reactions
 				M.debug(message.content, message.reactions.cache.map(r => [r.emoji.name, r.count]));
@@ -373,12 +409,16 @@ async function on_ready() {
 					// no action needed
 				}
 			}
+			// check if the status message was deleted
+			if(await get_message(thread, entry.status_message) == undefined) {
+				// just delete from database - no longer tracking
+				M.info("server_suggestion tracker state recovery: Manual status delete", id, entry);
+				delete database.get<db_schema>("suggestion_tracker").suggestions[id];
+			}
+			// not currently checking root reactions on it - TODO?
 		}
-		M.debug("server_suggestion tracker scanning since last seen");
-		// handle all new suggestions since last seen
-		await process_since_last_scanned();
-		recovering = false;
-		M.debug("server_suggestion tracker finished scanning");
+		database.update();
+		M.debug("server_suggestion tracker finished checking database entries");
 	} catch(e) {
 		critical_error(e);
 	}
