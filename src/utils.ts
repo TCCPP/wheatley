@@ -110,6 +110,10 @@ export async function departialize<T extends PotentiallyPartial, R extends Retur
 	}
 };
 
+export async function delay(n: number): Promise<void> {
+	return new Promise<void>(resolve => setTimeout(resolve, n));
+}
+
 export class SelfClearingSet<T> {
 	contents = new Map<T, number>();
 	duration: number;

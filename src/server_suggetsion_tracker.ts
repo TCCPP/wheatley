@@ -15,10 +15,10 @@ let suggestion_channel: Discord.TextChannel;
 let thread:             Discord.ThreadChannel;
 let log_thread:         Discord.ThreadChannel;
 
-const TRACKER_START_TIME =
-                           1625112000000; // Thu Jul 01 2021 00:00:00 GMT-0400 (Eastern Daylight Time)
-                        // 1630468800000; // Wed Sep 01 2021 00:00:00 GMT-0400 (Eastern Daylight Time)
-                        // 1636693200000; // debug: Fri Nov 12 2021 00:00:00 GMT-0500 (Eastern Standard Time)
+export const TRACKER_START_TIME =
+                                  1625112000000; // Thu Jul 01 2021 00:00:00 GMT-0400 (Eastern Daylight Time)
+                               // 1630468800000; // Wed Sep 01 2021 00:00:00 GMT-0400 (Eastern Daylight Time)
+                               // 1636693200000; // debug: Fri Nov 12 2021 00:00:00 GMT-0500 (Eastern Standard Time)
 let recovering = true;
 
 const resolution_reactions = [
@@ -443,7 +443,7 @@ async function process_since_last_scanned() {
 			limit: 100,
 			after: forge_snowflake(database.state.suggestion_tracker.last_scanned_timestamp + 1)
 		}, {cache: true });
-		M.debug(messages.size);
+		M.debug("process_since_last_scanned", messages.size);
 		if(messages.size == 0) {
 			break;
 		}

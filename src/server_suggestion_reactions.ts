@@ -1,7 +1,9 @@
 import * as Discord from "discord.js";
 import { strict as assert } from "assert";
 import { illuminator_id, is_root, MINUTE, server_suggestions_channel_id, suggestion_dashboard_thread_id } from "./common";
-import { critical_error, M } from "./utils";
+import { critical_error, delay, M } from "./utils";
+import { TRACKER_START_TIME } from "./server_suggetsion_tracker";
+import { forge_snowflake } from "./snowflake";
 
 let client: Discord.Client;
 
@@ -64,6 +66,32 @@ async function handle_fetched_message(message: Discord.Message) {
 	});
 }
 
+// handle *everything* since TRACKER_START_TIME
+// 100 messages every 3 minutes, avoid ratelimits
+// runs only on restart, no rush
+async function hard_catch_up() {
+	let server_suggestions_channel = monitored_channels.get(server_suggestions_channel_id);
+	let last_seen = TRACKER_START_TIME;
+	assert(server_suggestions_channel != undefined);
+	while(true) {
+		await delay(3 * MINUTE);
+		let messages = await server_suggestions_channel.messages.fetch({
+			limit: 100,
+			after: forge_snowflake(last_seen) + 1
+		});
+		M.debug("root only reactions hard_catch_up", messages.size);
+		if(messages.size == 0) {
+			break;
+		}
+		for(let [_, message] of messages) {
+			handle_fetched_message(message);
+			if(message.createdTimestamp > last_seen) {
+				last_seen = message.createdTimestamp;
+			}
+		}
+	}
+}
+
 async function on_ready() {
 	try {
 		M.debug("server_suggestion reactions handler on_ready");
@@ -85,6 +113,8 @@ async function on_ready() {
 				handle_fetched_message(message);
 			}
 		}
+		// hard catch up, fuck you CLU <3
+		hard_catch_up();
 	} catch(e) {
 		critical_error(e);
 	}
