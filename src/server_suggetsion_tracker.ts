@@ -21,9 +21,10 @@ const TRACKER_START_TIME =
                         // 1636693200000; // debug: Fri Nov 12 2021 00:00:00 GMT-0500 (Eastern Standard Time)
 let recovering = true;
 
-const resolution_reacts = new Set([
+const resolution_reactions = [
 	"🟢", "🔴", "🟡", "🚫"
-]);
+];
+const resolution_reactions_set = new Set(resolution_reactions);
 
 type db_schema = {
 	last_scanned_timestamp: number;
@@ -65,7 +66,7 @@ type reaction = {
 async function message_has_resolution_from_root(message: Discord.Message) {
 	let roots: reaction[] = [];
 	for(let [_, reaction] of message.reactions.cache) {
-		if(resolution_reacts.has(reaction.emoji.name!)) {
+		if(resolution_reactions_set.has(reaction.emoji.name!)) {
 			let users = await reaction.users.fetch();
 			for(let [_, user] of users) {
 				if(is_root(user)) {
@@ -75,7 +76,7 @@ async function message_has_resolution_from_root(message: Discord.Message) {
 		}
 	}
 	if(roots.length > 0) {
-		M.debug("[sort]", roots.sort((a, b) => -a.user.id.localeCompare(b.user.id)).map(r => r.user.id));
+		//M.debug("[sort]", roots.sort((a, b) => -a.user.id.localeCompare(b.user.id)).map(r => r.user.id));
 		return roots.sort((a, b) => -a.user.id.localeCompare(b.user.id))[0];
 	} else {
 		return false;
@@ -130,10 +131,10 @@ function isnt_actually_a_message(message: Discord.Message) {
  * - If message is tracked, remove entry
  * On reaction
  * - If 🟢🔴🟡🚫 *and added by root* remove from dashboard
- * - TODO Log resolution?
+ * - Log resolution?
  * On reaction remove
  * - If 🟢🔴🟡🚫 *and there is no longer one present by a root member* re-add to dashboard
- * - TODO Log reopen?
+ * - Log reopen?
  * State recovery:
  * - Check if original messages were deleted
  * - Update with edits if necessary
@@ -141,6 +142,7 @@ function isnt_actually_a_message(message: Discord.Message) {
  * - Process unseen messages as if new if not already resolved
  * - Handle new 🟢🔴🟡🚫 reactions
  * - TODO: Handle removed 🟢🔴🟡🚫 reactions?
+ * - Check for manual untracks
  * On 🟢🔴🟡🚫 reaction in the dashboard:
  * - Apply reaction to the main message and resolve suggestion
  *     Note: Not currently checked in recovery
@@ -211,6 +213,10 @@ async function open_suggestion(message: Discord.Message) {
 			hash: xxh3(message.content)
 		};
 		database.update();
+		// add react options
+		for(let r of resolution_reactions) {
+			await status_message.react(r);
+		}
 	} catch(e) {
 		critical_error("error during open_suggestion", e);
 	}
@@ -345,7 +351,7 @@ async function on_message_update(old_message: Discord.Message | Discord.PartialM
 async function process_reaction(_reaction: Discord.MessageReaction | Discord.PartialMessageReaction,
                                 user: Discord.User                 | Discord.PartialUser) {
 	let reaction = await departialize(_reaction);
-	if(resolution_reacts.has(reaction.emoji.name!)) {
+	if(resolution_reactions_set.has(reaction.emoji.name!)) {
 		if(is_root(user)) {
 			resolve_suggestion(await departialize(reaction.message), {
 				user: await departialize(user),
@@ -357,7 +363,7 @@ async function process_reaction(_reaction: Discord.MessageReaction | Discord.Par
 
 async function process_reaction_remove(reaction: Discord.MessageReaction | Discord.PartialMessageReaction,
 	                                   user: Discord.User                | Discord.PartialUser) {
-	if(resolution_reacts.has(reaction.emoji.name!) && is_root(user)) {
+	if(resolution_reactions_set.has(reaction.emoji.name!) && is_root(user)) {
 		let message = await departialize(reaction.message);
 		if(!await message_has_resolution_from_root(message)) {
 			// reopen
@@ -372,14 +378,14 @@ async function on_react(reaction: Discord.MessageReaction | Discord.PartialMessa
 	if(recovering) return;
 	try {
 		if(reaction.message.channel.id == server_suggestions_channel_id) {
-			if(resolution_reacts.has(reaction.emoji.name!)) {
+			if(resolution_reactions_set.has(reaction.emoji.name!)) {
 				await mutex.lock(reaction.message.id);
 				process_reaction(reaction, user);
 				mutex.unlock(reaction.message.id);
 			}
 		} else if(reaction.message.channel.id == suggestion_dashboard_thread_id) {
-			if(reaction.message.author!.id == wheatley_id
-			&& resolution_reacts.has(reaction.emoji.name!)
+			if(reaction.message.author!.id == wheatley_id // ignore self - this is important for autoreacts
+			&& resolution_reactions_set.has(reaction.emoji.name!)
 			&& is_root(user)) {
 				// expensive-ish but this will be rare
 				let suggestion_id = reverse_lookup(reaction.message.id);
@@ -512,7 +518,7 @@ async function on_ready() {
 					M.debug(`server_suggestion tracker state recovery: Message was updated:`, entry);
 				}
 				// check reactions
-				M.debug(message.content, message.reactions.cache.map(r => [r.emoji.name, r.count]));
+				//M.debug(message.content, message.reactions.cache.map(r => [r.emoji.name, r.count]));
 				let root_resolve = await message_has_resolution_from_root(message);
 				if(root_resolve) {
 					M.warn("server_suggestion tracker state recovery: resolving message");
