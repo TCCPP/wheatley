@@ -40,6 +40,8 @@ import { setup_snowflake } from "./snowflake";
 import { DatabaseInterface } from "./database_interface";
 import { setup_nodistractions } from "./nodistractions";
 import { setup_server_suggestion_tracker } from "./server_suggetsion_tracker";
+import { setup_quote } from "./quote";
+import { setup_ping } from "./ping";
 
 // Setup client
 const client = new Discord.Client({
@@ -80,6 +82,7 @@ client.setMaxListeners(20);
 
 client.on("ready", () => {
 	M.log(`Logged in as ${client.user!.tag}`);
+	client.user!.setStatus("invisible");
 });
 
 M.debug("Setting up services");
@@ -105,6 +108,8 @@ process.on("unhandledRejection", (reason, promise) => {
 		await setup_test_command(client);
 		await setup_massban(client);
 		await setup_snowflake(client);
+		await setup_quote(client);
+		await setup_ping(client);
 		await setup_nodistractions(client, database);
 		await setup_tracked_mentions(client);
 		await setup_raidpurge(client, tracker);
