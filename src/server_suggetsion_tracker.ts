@@ -172,19 +172,23 @@ async function make_embed(message: Discord.Message) {
 // Not logging deletions
 
 async function log_resolution(message: Discord.Message, reaction: reaction) {
-	const action_embed = new Discord.MessageEmbed()
-	                        .setColor(color)
-	                        .setAuthor(`${await get_display_name(reaction.user)}: ${reaction.emoji}`, reaction.user.displayAvatarURL());
-	const suggestion_embed = await make_embed(message);
-	await log_thread.send({ embeds: [ action_embed, suggestion_embed ] });
+	let embed = new Discord.MessageEmbed()
+	           .setColor(color)
+	           .setAuthor(`${await get_display_name(message)}`, message.author.displayAvatarURL())
+	           .setDescription(message.content + `\n\n[[Jump to message]](${message.url})`)
+	           .setFooter(`${await get_display_name(reaction.user)}: ${reaction.emoji}`, reaction.user.displayAvatarURL())
+	           .setTimestamp(message.createdAt);
+	await log_thread.send({ embeds: [ embed ] });
 }
 
 async function log_reopen(message: Discord.Message) {
-	const action_embed = new Discord.MessageEmbed()
-	                        .setColor(color)
-	                        .setTitle(`Suggestion reopened`);
-	const suggestion_embed = await make_embed(message);
-	await log_thread.send({ embeds: [ action_embed, suggestion_embed ] });
+	let embed = new Discord.MessageEmbed()
+	           .setColor(color)
+	           .setAuthor(`${await get_display_name(message)}`, message.author.displayAvatarURL())
+	           .setDescription(message.content + `\n\n[[Jump to message]](${message.url})`)
+	           .setFooter("Suggestion reopened")
+	           .setTimestamp(message.createdAt);
+	await log_thread.send({ embeds: [ embed ] });
 }
 
 // Four operations:
@@ -384,7 +388,8 @@ async function on_react(reaction: Discord.MessageReaction | Discord.PartialMessa
 				mutex.unlock(reaction.message.id);
 			}
 		} else if(reaction.message.channel.id == suggestion_dashboard_thread_id) {
-			if(reaction.message.author!.id == wheatley_id // ignore self - this is important for autoreacts
+			if(reaction.message.author!.id == wheatley_id
+			&& user.id != wheatley_id // ignore self - this is important for autoreacts
 			&& resolution_reactions_set.has(reaction.emoji.name!)
 			&& is_root(user)) {
 				// expensive-ish but this will be rare
