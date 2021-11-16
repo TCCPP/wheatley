@@ -5,6 +5,7 @@ import * as fs from "fs";
 
 export class DatabaseInterface {
 	readonly database_file = "bot.json";
+	readonly database_backup_file = "_bot.json";
 	private fd: number;
 	private state: any;
 	constructor() {
@@ -22,6 +23,8 @@ export class DatabaseInterface {
 	update() {
 		M.debug("Saving database");
 		let data = JSON.stringify(this.state);
+		// copy before truncating / rewriting, paranoia in case of bot crash or power loss or whatnot
+		fs.copyFileSync(this.database_file, this.database_backup_file);
 		fs.ftruncateSync(this.fd, 0);
 		fs.writeSync(this.fd, data, 0, "utf-8");
 	}
