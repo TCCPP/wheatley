@@ -298,7 +298,7 @@ export async function setup_nodistractions(_client: Discord.Client, _database: D
 			TCCPP = await client.guilds.fetch(TCCPP_ID);
 			zelis = await client.users.fetch(zelis_id);
 			assert(TCCPP != null);
-			if(!("nodistractions" in database.state)) {
+			if(!database.has("nodistractions")) {
 				database.set<database_schema>("nodistractions", {
 					/*
 					 * map of user id -> database_entry

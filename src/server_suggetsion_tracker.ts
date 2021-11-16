@@ -441,7 +441,7 @@ async function process_since_last_scanned() {
 		// TODO: Sort collection???
 		let messages = await suggestion_channel.messages.fetch({
 			limit: 100,
-			after: forge_snowflake(database.state.suggestion_tracker.last_scanned_timestamp + 1)
+			after: forge_snowflake(database.get<db_schema>("suggestion_tracker").last_scanned_timestamp + 1)
 		}, {cache: true });
 		M.debug("process_since_last_scanned", messages.size);
 		if(messages.size == 0) {
@@ -459,7 +459,7 @@ async function process_since_last_scanned() {
 				// already resolved, just log
 				log_resolution(message, root_resolve);
 				// update last seen
-				if(message.createdTimestamp > database.state.suggestion_tracker.last_scanned_timestamp) {
+				if(message.createdTimestamp > database.get<db_schema>("suggestion_tracker").last_scanned_timestamp) {
 					database.get<db_schema>("suggestion_tracker").last_scanned_timestamp = message.createdTimestamp;
 				}
 			} else {
@@ -478,7 +478,7 @@ async function process_since_last_scanned() {
 async function on_ready() {
 	try {
 		M.debug("server_suggestion tracker handler on_ready");
-		if(!("suggestion_tracker" in database.state)) {
+		if(!database.has("suggestion_tracker")) {
 			database.set<db_schema>("suggestion_tracker", {
 				last_scanned_timestamp: TRACKER_START_TIME,
 				suggestions: {}
