@@ -26,6 +26,11 @@ type database_entry = {
 	duration: number
 };
 
+type database_schema = {
+	// map of user id -> database_entry
+	[key: string]: database_entry
+};
+
 // Sorted by !nodistractions end time
 let undistract_queue: no_distraction_entry[] = [];
 
@@ -103,7 +108,7 @@ async function handle_timer() {
 		}
 		member.send("You have been removed from !nodistractions");
 		// remove database entry
-		delete database.state.nodistractions[entry.id];
+		delete database.get<database_schema>("nodistractions")[entry.id];
 		database.update();
 		// reschedule, intentionally not rescheduling
 		if(undistract_queue.length > 0) {
@@ -127,7 +132,7 @@ async function apply_no_distractions(target: Discord.GuildMember, message: Disco
 	assert(target != null);
 	// error handling
 	if(target.roles.cache.some(r => r.id == no_off_topic)) {
-		if(target.id in database.state.nodistractions) {
+		if(target.id in database.get<database_schema>("nodistractions")) {
 			send_error(message, "You're already in !nodistractions");
 		} else {
 			send_error(message, "Nice try.");
@@ -146,7 +151,7 @@ async function apply_no_distractions(target: Discord.GuildMember, message: Disco
 		M.error(e);
 		return;
 	}
-	target.send("!nodistractions applied, use !removenodistractions to exit").catch(M.error);
+	target.send("!nodistractions applied, use !removenodistractions to exit").catch(e => e.status != 403 ? M.error(e) : 0);
 	message.react("👍").catch(M.error);
 	// make entry
 	let entry: no_distraction_entry = {
@@ -162,7 +167,7 @@ async function apply_no_distractions(target: Discord.GuildMember, message: Disco
 		}
 	}
 	undistract_queue.splice(i, 0, entry);
-	database.state.nodistractions[target.id] = {
+	database.get<database_schema>("nodistractions")[target.id] = {
 		start,
 		duration
 	};
@@ -180,7 +185,7 @@ async function apply_no_distractions(target: Discord.GuildMember, message: Disco
 async function early_remove_nodistractions(target: Discord.GuildMember, message: Discord.Message) {
 	try {
 		// checks
-		assert(target.id in database.state.nodistractions);
+		assert(target.id in database.get<database_schema>("nodistractions"));
 		// timer
 		let reschedule = timer != null;
 		if(timer != null) {
@@ -190,16 +195,16 @@ async function early_remove_nodistractions(target: Discord.GuildMember, message:
 		// remove role
 		await target.roles.remove(no_off_topic);
 		// check again
-		assert(target.id in database.state.nodistractions);
+		assert(target.id in database.get<database_schema>("nodistractions"));
 		if(!undistract_queue.some(e => e.id == target.id)) {
 			critical_error("Not good");
 		}
 		// remove entry
-		delete database.state.nodistractions[target.id];
+		delete database.get<database_schema>("nodistractions")[target.id];
 		undistract_queue = undistract_queue.filter(e => e.id != target.id);
 		database.update();
 		message.react("👍").catch(M.error);
-		target.send("You have been removed from !nodistractions");
+		target.send("You have been removed from !nodistractions").catch(e => e.status != 403 ? M.error(e) : 0);
 		// reschedule if necessary
 		if(reschedule && undistract_queue.length > 0) {
 			set_timer();
@@ -236,7 +241,7 @@ async function on_message(message: Discord.Message) {
 				send_error(message, "You are not currently in !nodistractions");
 				return;
 			}
-			if(!(member.id in database.state.nodistractions)) {
+			if(!(member.id in database.get<database_schema>("nodistractions"))) {
 				send_error(message, "Nice try.");
 				zelis.send(`Exploit attempt ${message.url}`);
 				return;
@@ -294,14 +299,14 @@ export async function setup_nodistractions(_client: Discord.Client, _database: D
 			zelis = await client.users.fetch(zelis_id);
 			assert(TCCPP != null);
 			if(!("nodistractions" in database.state)) {
-				database.state.nodistractions = {
+				database.set<database_schema>("nodistractions", {
 					/*
 					 * map of user id -> database_entry
 					 */
-				};
+				});
 			}
 			// load entries
-			for(let [id, entry] of Object.entries(database.state.nodistractions) as [string, database_entry][]) {
+				for(let [id, entry] of Object.entries(database.get<database_schema>("nodistractions"))) {
 				undistract_queue.push({
 					id,
 					start: entry.start,
