@@ -88,7 +88,12 @@ async function handle_timer() {
 	try {
 		// sanity checks
 		assert(undistract_queue.length > 0);
-		assert(undistract_queue[0].start + undistract_queue[0].duration <= Date.now());
+		if(undistract_queue[0].start + undistract_queue[0].duration > Date.now()) {
+			// can happen under excessively long sleeps
+			assert(undistract_queue[0].duration > INT_MAX);
+			set_timer(); // set next timer
+			return;
+		}
 		// pop entry and remove role
 		let entry = undistract_queue.shift()!;
 		let member = await TCCPP.members.fetch(entry.id);
@@ -113,7 +118,8 @@ function set_timer() {
 	assert(timer == null);
 	assert(undistract_queue.length > 0);
 	let next = undistract_queue[0];
-	timer = setTimeout(handle_timer, next.start + next.duration - Date.now());
+	let sleep_time = (next.start - Date.now()) + next.duration; // next.start + next.duration - Date.now() but make sure overflow is prevented
+	timer = setTimeout(handle_timer, Math.min(sleep_time, INT_MAX));
 }
 
 async function apply_no_distractions(target: Discord.GuildMember, message: Discord.Message, start: number, duration: number) {
@@ -129,7 +135,7 @@ async function apply_no_distractions(target: Discord.GuildMember, message: Disco
 		}
 		return;
 	}
-	if(duration >= INT_MAX) { // prevent timer overflow
+	if(duration >= Number.MAX_SAFE_INTEGER) { // prevent timer overflow
 		send_error(message, "Invalid timeframe");
 		return;
 	}
@@ -148,6 +154,7 @@ async function apply_no_distractions(target: Discord.GuildMember, message: Disco
 		start,
 		duration
 	};
+	// Insert into appropriate place in the queue
 	let i = 0;
 	for( ; i < undistract_queue.length; i++) {
 		if(undistract_queue[i].start + undistract_queue[i].duration >= start + duration) {
@@ -207,6 +214,11 @@ async function on_message(message: Discord.Message) {
 		if(message.author.id == client.user!.id) return; // Ignore self
 		if(message.author.bot) return; // Ignore bots
 	
+		if(message.content.trim().toLowerCase() == "!nodistractions") {
+			message.channel.send("`!nodistractions <time>` where time is an integer followed by one of the following units: m, h, d, w, M, y\n`!removenodistractions` to remove nodistractions");
+			return;
+		}
+
 		if(message.content.trim().toLowerCase() == "!removenodistractions") {
 			M.debug("Got !removenodistractions");
 			let member = message.member;
@@ -261,8 +273,8 @@ async function on_message(message: Discord.Message) {
 					member = await TCCPP.members.fetch(message.author.id);
 				} catch(e) {
 					critical_error(e);
-					message.reply("internal error with fetching user");
-					zelis.send("internal error with fetching user");
+					message.reply("Internal error with fetching user");
+					zelis.send("Internal error with fetching user");
 					return;
 				}
 			}
