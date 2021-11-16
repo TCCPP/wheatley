@@ -42,7 +42,8 @@ async function make_quote(message: Discord.Message, requested_by: Discord.GuildM
 	let embed = new Discord.MessageEmbed()
 	           .setColor(color)
 	           .setAuthor(`${await get_display_name(message)}`, message.author.displayAvatarURL())
-	           .setDescription(message.content + `\n\n[[Jump to message]](${message.url})`)
+	           .setDescription(message.content
+	                        + `\n\nFrom <#${message.channel.id}> [[Jump to message]](${message.url})`)
 	           .setTimestamp(message.createdAt)
 	           .setFooter(`Quoted by ${requested_by.displayName}`, requested_by.user.displayAvatarURL());
 	if(message.attachments.size > 0) {
@@ -52,6 +53,30 @@ async function make_quote(message: Discord.Message, requested_by: Discord.GuildM
 		}
 	}
 	return embed;
+}
+
+async function do_quote(message: Discord.Message, channel_id: string, message_id: string) {
+	let channel = await TCCPP.channels.fetch(channel_id);
+	if(channel instanceof Discord.TextChannel
+	|| channel instanceof Discord.ThreadChannel) {
+		let quote_message = await channel.messages.fetch(message_id);
+		assert(message.member != null);
+		let quote = await make_quote(quote_message, message.member!);
+		await message.channel.send({ embeds: [ quote ] });
+		// log
+		// TODO: Can probably improve how this is done. Figure out later.
+		message_log_channel.send({
+			content: `Message quoted`
+					+ `\nIn <#${message.channel.id}> ${message.url}`
+					+ `\nFrom <#${channel_id}> ${quote_message.url}`
+					+ `\nBy ${message.author.tag} ${message.author.id}`,
+			embeds: [ quote ]
+		});
+		// delete request
+		message.delete();
+	} else {
+		message.reply("Error: Channel not a text channel.");
+	}
 }
 
 async function on_message(message: Discord.Message) {
@@ -65,27 +90,14 @@ async function on_message(message: Discord.Message) {
 			assert(match.length == 4);
 			let [guild_id, channel_id, message_id] = match.slice(1);
 			if(guild_id == TCCPP_ID) {
-				let channel = await TCCPP.channels.fetch(channel_id);
-				if(channel instanceof Discord.TextChannel
-				|| channel instanceof Discord.ThreadChannel) {
-					let quote_message = await channel.messages.fetch(message_id);
-					assert(message.member != null);
-					let quote = await make_quote(quote_message, message.member!);
-					await message.channel.send({ embeds: [ quote ] });
-					// log
-					// TODO: Can probably improve how this is done. Figure out later.
-					message_log_channel.send({
-						content: `Message quoted`
-						       + `\nIn <#${message.channel.id}> ${message.url}`
-							   + `\nFrom <#${channel_id}> ${quote_message.url}`
-							   + `\nBy ${message.author.tag} ${message.author.id}`,
-						embeds: [ quote ]
-					});
-					// delete request
-					message.delete();
-				} else {
-					message.reply("Error: Channel not a text channel.");
-				}
+				await do_quote(message, channel_id, message_id);
+			}
+		} else if(message.content.trim() == "!quote") {
+			if(message.type == "REPLY") {
+				let reply = await message.fetchReference();
+				await do_quote(message, reply.channel.id, reply.id);
+			} else {
+				message.channel.send("`!quote <url>` or `!quote` while replying");
 			}
 		}
 	} catch(e) {
