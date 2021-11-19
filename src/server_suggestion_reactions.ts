@@ -13,8 +13,9 @@ let monitored_channels_ids = [server_suggestions_channel_id, suggestion_dashboar
 const root_only_reacts = new Set([
 	"🟢", "🔴", "🟡",
 	"🟩", "🟥", "🟨",
-	"✅", "⛔",
-	"❎", "🚫", "⭕", "🅾️",
+	"🚫",
+	"❎", "✅",
+	"🅾️", "⛔", "⭕", "❌", "🛑",
 	"🫑", "🍏", "🎾", "🍅", "🍎", "🏮"
 ]);
 
