@@ -42,6 +42,7 @@ import { setup_nodistractions } from "./nodistractions";
 import { setup_server_suggestion_tracker } from "./server_suggetsion_tracker";
 import { setup_quote } from "./quote";
 import { setup_ping } from "./ping";
+import { fetch_root_mod_list } from "./common";
 
 // Setup client
 const client = new Discord.Client({
@@ -80,9 +81,10 @@ client.setMaxListeners(20);
 // maintain database of ids
 // suggestion tracker: Content, author, votes, link.
 
-client.on("ready", () => {
+client.on("ready", async () => {
 	M.log(`Logged in as ${client.user!.tag}`);
 	client.user!.setStatus("invisible");
+	fetch_root_mod_list(client); // fetch list of roots and mods, replace hard-coded list
 });
 
 M.debug("Setting up services");

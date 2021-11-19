@@ -1,4 +1,6 @@
 import * as Discord from "discord.js";
+import { strict as assert } from "assert";
+import { M } from "./utils";
 
 // Common constants
 export const MINUTE = 1000 * 60;
@@ -48,6 +50,34 @@ export const root_ids = new Set([
 	"89441674844995584",  // styx
 	"597216680271282192", // wheatley <- so that Wheatly reactions aren't removed in server suggestions and also allow some elegant handling
 ]);
+
+export const root_mod_ids = [
+	"199943082441965577", // zelis
+	"272564879716646914", // aspi
+	"551519630578024468", // swyde
+	"230282234085638155", // cas
+	"310536456647081985", // lumi
+	"719255892813545502", // sampersand
+	"360166880733822976", // desgroup
+	"194315619217178624", // headline
+	"287714848601538561", // iunave
+	"162964325823283200", // eisenwave
+	"89441674844995584",  // styx
+	"190522027440865280", // not a penguin - allegedly
+	"110756651694297088", // vincent
+];
+
+export var root_mod_list = "FelisPhasma#6677, easyaspi314#1497, Eisenwave#7675, Styxs#7557, or Vin¢#1293";
+
+export async function fetch_root_mod_list(client: Discord.Client) {
+	let tags = [];
+	for(let id of root_mod_ids) {
+		tags.push((await client.users.fetch(id)).tag);
+	}
+	assert(tags.length > 3);
+	root_mod_list = tags.slice(0, tags.length - 1).join(", ") + ", or " + tags[tags.length - 1];
+	M.debug("root_mod_list", [root_mod_list]);
+}
 
 // Some common tools
 export function is_root(user: Discord.User | Discord.PartialUser): boolean {
