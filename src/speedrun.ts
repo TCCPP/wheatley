@@ -15,11 +15,17 @@ function on_ban(ban: Discord.GuildBan, now: number) {
 		// get user info
 		let avatar = user.displayAvatarURL();
 		assert(avatar != null);
-		let index = tracker.entries.findIndex(e => e.id == user.id); // TODO: Revisit? Make a Map?
-		if(index == -1) return;
-		let entry = tracker.entries[index];
+		if(!tracker.id_map.has(user.id)) {
+			return; // If not in tracker, been in the server longer than 30 minutes
+		}
+		let entry = tracker.id_map.get(user.id)!;
 		if(entry.purged) {
 			return; // ignore bans from !raidpurge
+		}
+		if(entry.joined_at == 0) {
+			// ignore pseudo entries from anti-scambot, pseudo entries added when the user isn't in
+			// the tracker already (i.e. longer than 30 minutes, not a speedrun)
+			return;
 		}
 		// .purged set by raidpurge (yes I know it's checked above), currently_banning used by anti-scambot
 		let is_auto_ban = entry.purged || tracker.currently_banning.has(user.id);

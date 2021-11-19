@@ -89,6 +89,7 @@ export class MemberTracker {
 			message_block: false
 		});
 		if(this.id_map.has(member.id)) {
+			// This can happen under normal operation: User joins then leaves then rejoins
 			M.warn("this.id_map.has(member.id)");
 		}
 		this.id_map.set(member.id, this.entries[this.entries.length - 1]);
@@ -109,6 +110,12 @@ export class MemberTracker {
 		this.submodules.push(submodule);
 	}
 	add_pseudo_entry(user: Discord.User) {
+		if(this.id_map.has(user.id)) {
+			// This should never happen under normal operation based off of where this function is
+			// called from
+			M.error("this.id_map.has(user.id) -- add_pseudo_entry");
+			return;
+		}
 		this.entries.push({
 			tag: user.tag,
 			id: user.id,
@@ -118,9 +125,6 @@ export class MemberTracker {
 			purged: false,
 			message_block: false
 		});
-		if(this.id_map.has(user.id)) {
-			M.warn("this.id_map.has(user.id) -- add_pseudo_entry");
-		}
 		this.id_map.set(user.id, this.entries[this.entries.length - 1]);
 	}
 }
