@@ -87,8 +87,6 @@ client.on("ready", () => {
 
 M.debug("Setting up services");
 
-let database = new DatabaseInterface();
-let tracker = new MemberTracker(client);
 
 init_debugger(client);
 
@@ -101,6 +99,9 @@ process.on("unhandledRejection", (reason, promise) => {
 
 (async () => {
 	try {
+		let database = await DatabaseInterface.create();
+		let tracker = new MemberTracker(client);
+
 		await setup_anti_autoreact(client);
 		await setup_server_suggestion_reactions(client);
 		await setup_server_suggestion_tracker(client, database);

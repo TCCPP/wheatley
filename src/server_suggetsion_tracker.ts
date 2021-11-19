@@ -1,6 +1,6 @@
 import * as Discord from "discord.js";
 import { strict as assert } from "assert";
-import { critical_error, departialize, M, Mutex, SelfClearingSet } from "./utils";
+import { critical_error, departialize, M, KeyedMutexSet, SelfClearingSet } from "./utils";
 import { DatabaseInterface } from "./database_interface";
 import { is_root, MINUTE, server_suggestions_channel_id, suggestion_action_log_thread_id, suggestion_dashboard_thread_id, TCCPP_ID, wheatley_id } from "./common";
 import { forge_snowflake } from "./snowflake";
@@ -200,7 +200,7 @@ async function log_reopen(message: Discord.Message) {
 // Note: Callers obtain mutex lock
 
 // Race condition handling: edits while processing edits, await status_message.delete() and on_message_delete() interfering, etc.
-let mutex = new Mutex<string>();
+let mutex = new KeyedMutexSet<string>();
 let status_lock = new SelfClearingSet<string>(5 * MINUTE, 5 * MINUTE);
 
 async function open_suggestion(message: Discord.Message) {

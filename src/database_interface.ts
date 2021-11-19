@@ -1,32 +1,32 @@
 import * as Discord from "discord.js";
 import { strict as assert } from "assert";
-import { exists_sync, M } from "./utils";
+import { M, Mutex } from "./utils";
 import * as fs from "fs";
 
 export class DatabaseInterface {
-	readonly database_file = "bot.json";
-	readonly database_backup_file = "_bot.json";
-	private fd: number;
-	private state: any;
-	constructor() {
-		let creating = false;
-		if(exists_sync(this.database_file)) {
-			this.state = JSON.parse(fs.readFileSync(this.database_file, { encoding: "utf-8" }));
-		} else {
-			this.state = {};
-			creating = true;
-		}
-		this.fd = fs.openSync(this.database_file, "a");
-		if(creating) this.update();
+	static readonly database_file = "bot.json";
+	static readonly database_backup_file = "_bot.json";
+	private fh: fs.promises.FileHandle;
+	private state: { [key: string]: any };
+	private write_mutex = new Mutex();
+	private constructor() { this.fh = null as any; this.state = {}; }
+	static async create() {
+		let database = new DatabaseInterface();
+		database.fh = await fs.promises.open(DatabaseInterface.database_file, "a+");
+		let content = await database.fh.readFile({ encoding: "utf-8" });
+		database.state = content == "" ? {} : JSON.parse(content);
+		return database;
 	}
 	// TODO: Async this and also batch updates....
-	update() {
+	async update() {
+		await this.write_mutex.lock();
 		M.debug("Saving database");
 		let data = JSON.stringify(this.state);
 		// copy before truncating / rewriting, paranoia in case of bot crash or power loss or whatnot
-		fs.copyFileSync(this.database_file, this.database_backup_file);
-		fs.ftruncateSync(this.fd, 0);
-		fs.writeSync(this.fd, data, 0, "utf-8");
+		await fs.promises.copyFile(DatabaseInterface.database_file, DatabaseInterface.database_backup_file);
+		await this.fh.truncate(0);
+		await this.fh.write(data, 0, "utf-8");
+		this.write_mutex.unlock();
 	}
 	get<T>(key: string) {
 		assert(this.has(key));

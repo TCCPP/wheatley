@@ -140,7 +140,31 @@ export class SelfClearingSet<T> {
 	}
 };
 
-export class Mutex<T> {
+export class Mutex {
+	locked = false;
+	waiting: (() => void)[] = [];
+	constructor() {}
+	async lock() {
+		if(this.locked) {
+			await new Promise<void>(resolve => { // TODO: Is there an async break between promise call and callback call?
+				this.waiting.push(resolve);
+			});
+			// entry in locks will remain, no need to re-add
+		} else {
+			this.locked = true;
+		}
+	}
+	unlock() {
+		if(this.waiting.length > 0) {
+			this.waiting.shift()!();
+		} else {
+			this.locked = false;
+		}
+	}
+};
+
+// TODO: Could update this to be implemented in terms of Mutex
+export class KeyedMutexSet<T> {
 	locks = new Set<T>();
 	waiting = new Map<T, (() => void)[]>();
 	constructor() {}
@@ -160,7 +184,7 @@ export class Mutex<T> {
 	unlock(value: T) {
 		if(this.waiting.has(value)) {
 			assert(this.waiting.get(value)!.length > 0); // If this fails, see TODO above ^^
-			M.debug(this.waiting.get(value));
+			M.debug(this.waiting.get(value)); // TODO: Remove?
 			let resolve = this.waiting.get(value)!.shift()!;
 			if(this.waiting.get(value)!.length == 0) {
 				this.waiting.delete(value);
