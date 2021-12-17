@@ -46,7 +46,6 @@ export const root_ids = new Set([
 	"272564879716646914", // aspi
 	"162964325823283200", // eisen
 	"110756651694297088", // vincent
-	"190522027440865280", // not a penguin - allegedly
 	"89441674844995584",  // styx
 	"597216680271282192", // wheatley <- so that Wheatly reactions aren't removed in server suggestions and also allow some elegant handling
 ]);
@@ -63,7 +62,6 @@ export const root_mod_ids = [
 	"287714848601538561", // iunave
 	"162964325823283200", // eisenwave
 	"89441674844995584",  // styx
-	"190522027440865280", // not a penguin - allegedly
 	"110756651694297088", // vincent
 ];
 
