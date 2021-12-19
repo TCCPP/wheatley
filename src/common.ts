@@ -65,6 +65,8 @@ export const root_mod_ids = [
 	"110756651694297088", // vincent
 ];
 
+export const root_mod_ids_set = new Set(root_mod_ids);
+
 export var root_mod_list = "FelisPhasma#6677, easyaspi314#1497, Eisenwave#7675, Styxs#7557, or Vin¢#1293";
 
 export async function fetch_root_mod_list(client: Discord.Client) {
@@ -83,6 +85,7 @@ export function is_root(user: Discord.User | Discord.PartialUser): boolean {
 	return root_ids.has(user.id);
 }
 
-export function is_authorized_admin(member: Discord.GuildMember): boolean {
-	return member.roles.cache.some(r => authorized_admin_roles.indexOf(r.id) > -1);
+export function is_authorized_admin(member: Discord.GuildMember | Discord.User): boolean {
+	//return member.roles.cache.some(r => authorized_admin_roles.indexOf(r.id) > -1);
+	return root_mod_ids_set.has(member.id);
 }

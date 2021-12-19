@@ -11,7 +11,7 @@ let monitored_channels: Map<string, Discord.TextChannel>;
 let monitored_channels_ids = [server_suggestions_channel_id, suggestion_dashboard_thread_id];
 
 const root_only_reacts = new Set([
-	"🟢", "🔴", "🟡",
+	"🟢", "🔴", "🟡", "🔵",
 	"🟩", "🟥", "🟨",
 	"🚫",
 	"❎", "✅",
