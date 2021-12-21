@@ -1,6 +1,6 @@
 import * as Discord from "discord.js";
 import { strict as assert } from "assert";
-import { illuminator_id, is_root, MINUTE, server_suggestions_channel_id, suggestion_dashboard_thread_id } from "./common";
+import { is_root, MINUTE, server_suggestions_channel_id, suggestion_dashboard_thread_id } from "./common";
 import { critical_error, delay, M } from "./utils";
 import { TRACKER_START_TIME } from "./server_suggetsion_tracker";
 import { forge_snowflake } from "./snowflake";
@@ -19,22 +19,33 @@ const root_only_reacts = new Set([
 	"🫑", "🍏", "🎾", "🍅", "🍎", "🏮"
 ]);
 
+const react_blacklist = new Set([
+	"391270706186420224", // illuminator
+	"370675207423131650", // bacon
+]);
+
 async function on_react(reaction: Discord.MessageReaction | Discord.PartialMessageReaction,
                         user: Discord.User                | Discord.PartialUser) {
 	try {
 		if(monitored_channels_ids.indexOf(reaction.message.channel.id) > -1) {
-			if(reaction.users.cache.some(user => user.id == illuminator_id)) {
+			if(reaction.users.cache.some(user => react_blacklist.has(user.id))) {
 				// Remove but not immediately
-				M.debug("scheduling illuminator reaction removal");
+				M.debug("scheduling blacklisted user reaction removal");
 				setTimeout(() => {
-					M.debug("removing illuminator reaction from", reaction.message);
-					reaction.users.remove(illuminator_id);
+					M.debug("removing reaction by blacklisted user from", {
+						content: reaction.message.content,
+						reaction: reaction.emoji.name,
+						time: reaction.message.createdAt,
+						user: [user.tag, user.id]
+					});
+					reaction.users.remove(user.id);
 				}, 5 * MINUTE);
 			} else if(root_only_reacts.has(reaction.emoji.name!)) {
 				if(!is_root(user)) {
 					M.debug("removing non-root reaction", {
 						content: reaction.message.content,
 						reaction: reaction.emoji.name,
+						time: reaction.message.createdAt,
 						user: [user.tag, user.id]
 					});
 					reaction.users.remove(user.id);
@@ -49,15 +60,22 @@ async function on_react(reaction: Discord.MessageReaction | Discord.PartialMessa
 async function handle_fetched_message(message: Discord.Message) {
 	message.reactions.cache.forEach(async reaction => {
 		let users = await reaction.users.fetch();
+		///M.debug(reaction.emoji.name, users.map(u => [u.id, u.tag]));
 		for(let [id, user] of users) {
-			if(id == illuminator_id) {
-				M.debug("removing illuminator reaction from", message);
-				reaction.users.remove(illuminator_id);
+			if(react_blacklist.has(id)) {
+				M.debug("removing reaction by blacklisted user from", {
+					content: reaction.message.content,
+					reaction: reaction.emoji.name,
+					time: reaction.message.createdAt,
+					user: [user.tag, user.id]
+				});
+				reaction.users.remove(id);
 			} else if(root_only_reacts.has(reaction.emoji.name!)) {
 				if(!is_root(user)) {
 					M.debug("removing non-root reaction", {
 						content: reaction.message.content,
 						reaction: reaction.emoji.name,
+						time: reaction.message.createdAt,
 						user: [user.tag, user.id]
 					});
 					reaction.users.remove(id);
@@ -72,25 +90,33 @@ async function handle_fetched_message(message: Discord.Message) {
 // runs only on restart, no rush
 async function hard_catch_up() {
 	let server_suggestions_channel = monitored_channels.get(server_suggestions_channel_id);
-	let last_seen = TRACKER_START_TIME;
+	let oldest_seen = Date.now();
 	assert(server_suggestions_channel != undefined);
 	while(true) {
 		await delay(3 * MINUTE);
 		let messages = await server_suggestions_channel.messages.fetch({
 			limit: 100,
-			after: forge_snowflake(last_seen) + 1
+			before: forge_snowflake(oldest_seen - 1)
 		});
-		M.debug("root only reactions hard_catch_up", messages.size);
+		M.debug("fetched during root only reactions HARD CATCH UP", messages.size);
 		if(messages.size == 0) {
 			break;
 		}
 		for(let [_, message] of messages) {
+			if(message.createdTimestamp < TRACKER_START_TIME) {
+				oldest_seen = TRACKER_START_TIME;
+				continue;
+			}
 			handle_fetched_message(message);
-			if(message.createdTimestamp > last_seen) {
-				last_seen = message.createdTimestamp;
+			if(message.createdTimestamp < oldest_seen) {
+				oldest_seen = message.createdTimestamp;
 			}
 		}
+		if(oldest_seen <= TRACKER_START_TIME) {
+			break;
+		}
 	}
+	M.debug("FINISHED HARD CATCH UP");
 }
 
 async function on_ready() {
