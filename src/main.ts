@@ -44,6 +44,7 @@ import { setup_quote } from "./quote";
 import { setup_ping } from "./ping";
 import { fetch_root_mod_list } from "./common";
 import { setup_link_blacklist } from "./link_blacklist";
+import { setup_utility_tools } from "./utility_tools";
 
 // Setup client
 const client = new Discord.Client({
@@ -122,6 +123,7 @@ process.on("unhandledRejection", (reason, promise) => {
 		await setup_speedrun(client, tracker);
 		await setup_anti_scambot(client, tracker);
 		await setup_link_blacklist(client, database);
+		await setup_utility_tools(client);
 	
 		M.debug("Logging in");
 	
