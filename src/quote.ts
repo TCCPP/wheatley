@@ -58,7 +58,8 @@ async function make_quote(message: Discord.Message, requested_by: Discord.GuildM
 async function do_quote(message: Discord.Message, channel_id: string, message_id: string) {
 	let channel = await TCCPP.channels.fetch(channel_id);
 	if(channel instanceof Discord.TextChannel
-	|| channel instanceof Discord.ThreadChannel) {
+	|| channel instanceof Discord.ThreadChannel
+	|| channel instanceof Discord.NewsChannel) {
 		let quote_message = await channel.messages.fetch(message_id);
 		assert(message.member != null);
 		let quote = await make_quote(quote_message, message.member!);
