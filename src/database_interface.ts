@@ -21,7 +21,7 @@ export class DatabaseInterface {
 	async update() {
 		await this.write_mutex.lock();
 		M.debug("Saving database");
-		let data = JSON.stringify(this.state);
+		let data = JSON.stringify(this.state, null, "\t");
 		// copy before truncating / rewriting, paranoia in case of bot crash or power loss or whatnot
 		await fs.promises.copyFile(DatabaseInterface.database_file, DatabaseInterface.database_backup_file);
 		await this.fh.truncate(0);
