@@ -36,6 +36,18 @@ async function get_display_name(thing: Discord.Message | Discord.User): Promise<
 	}
 }
 
+function is_image_link_embed(embed: Discord.MessageEmbed) {
+	for(let key in embed) {
+		if(["type", "url", "thumbnail"].indexOf(key) === -1) {
+			const value = (embed as any)[key];
+			if(!(value === null || (Array.isArray(value) && value.length == 0))) {
+				return false;
+			}
+		}
+	}
+	return true;
+}
+
 async function make_quote(message: Discord.Message, requested_by: Discord.GuildMember) {
 	assert(message.content != null);
 	assert(message.author != null);
@@ -46,13 +58,23 @@ async function make_quote(message: Discord.Message, requested_by: Discord.GuildM
 	                        + `\n\nFrom <#${message.channel.id}> [[Jump to message]](${message.url})`)
 	           .setTimestamp(message.createdAt)
 	           .setFooter(`Quoted by ${requested_by.displayName}`, requested_by.user.displayAvatarURL());
-	if(message.attachments.size > 0) {
-		let image = message.attachments.find(a => a.contentType?.indexOf("image") == 0);
-		if(image) {
-			embed.setImage(image.url);
+	let images = [
+		...message.attachments.filter(a => a.contentType?.indexOf("image") == 0).map(a => a.url),
+		...message.embeds.filter(is_image_link_embed).map(e => e.url!)
+	];
+	let other_embeds = message.embeds.filter(e => !is_image_link_embed(e));
+	let image_embeds: Discord.MessageEmbed[] = [];
+	if(images.length > 0) {
+		embed.setImage(images[0]);
+		for(let image of images.slice(1)) {
+			image_embeds.push(new Discord.MessageEmbed({
+				image: {
+					url: image
+				}
+			}));
 		}
 	}
-	return embed;
+	return [embed, ...image_embeds, ...other_embeds];
 }
 
 async function do_quote(message: Discord.Message, channel_id: string, message_id: string) {
@@ -62,8 +84,8 @@ async function do_quote(message: Discord.Message, channel_id: string, message_id
 	|| channel instanceof Discord.NewsChannel) {
 		let quote_message = await channel.messages.fetch(message_id);
 		assert(message.member != null);
-		let quote = await make_quote(quote_message, message.member!);
-		await message.channel.send({ embeds: [ quote ] });
+		let quote_embeds = await make_quote(quote_message, message.member!);
+		await message.channel.send({ embeds: quote_embeds });
 		// log
 		// TODO: Can probably improve how this is done. Figure out later.
 		message_log_channel.send({
@@ -71,7 +93,7 @@ async function do_quote(message: Discord.Message, channel_id: string, message_id
 					+ `\nIn <#${message.channel.id}> ${message.url}`
 					+ `\nFrom <#${channel_id}> ${quote_message.url}`
 					+ `\nBy ${message.author.tag} ${message.author.id}`,
-			embeds: [ quote ]
+			embeds: quote_embeds
 		});
 		// delete request
 		message.delete();
