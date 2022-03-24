@@ -117,9 +117,9 @@ export async function delay(n: number): Promise<void> {
 export class SelfClearingSet<T> {
 	contents = new Map<T, number>();
 	duration: number;
-	constructor(duration: number, interval: number) {
+	constructor(duration: number, interval?: number) {
 		this.duration = duration;
-		setInterval(this.sweep.bind(this), interval);
+		setInterval(this.sweep.bind(this), interval ?? this.duration);
 	}
 	sweep() {
 		let now = Date.now();
@@ -137,6 +137,35 @@ export class SelfClearingSet<T> {
 	}
 	has(value: T) {
 		return this.contents.has(value);
+	}
+};
+
+export class SelfClearingMap<K, V> {
+	contents = new Map<K, [number, V]>();
+	duration: number;
+	constructor(duration: number, interval?: number) {
+		this.duration = duration;
+		setInterval(this.sweep.bind(this), interval ?? this.duration);
+	}
+	sweep() {
+		let now = Date.now();
+		for(let [key, [timestamp, _]] of this.contents) {
+			if(now - timestamp >= this.duration) {
+				this.contents.delete(key);
+			}
+		}
+	}
+	set(key: K, value: V) {
+		this.contents.set(key, [Date.now(), value]);
+	}
+	get(key: K) {
+		return this.contents.get(key)![1];
+	}
+	remove(key: K) {
+		this.contents.delete(key);
+	}
+	has(key: K) {
+		return this.contents.has(key);
 	}
 };
 

@@ -20,6 +20,7 @@ export const moderators_role_id = "847915341954154536";
 export const root_role_id = "331719468440879105";
 export const pink_role_id = "888158339878490132";
 export const no_off_topic = "879419994004422666";
+export const everyone_role_id = "331718482485837825"; // same as TCCPP_ID
 
 // Channel/Guild IDs
 export const TCCPP_ID = "331718482485837825";
