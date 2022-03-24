@@ -66,7 +66,7 @@ export const root_mod_ids = [
 
 export const root_mod_ids_set = new Set(root_mod_ids);
 
-export var root_mod_list = "FelisPhasma#6677, easyaspi314#1497, Eisenwave#7675, Styxs#7557, or Vin¢#1293";
+export var root_mod_list = "jr-#6677, easyaspi314#1497, Eisenwave#7675, Styxs#7557, or Vin¢#1293";
 
 export async function fetch_root_mod_list(client: Discord.Client) {
 	let tags = [];
