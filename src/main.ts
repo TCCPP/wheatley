@@ -45,6 +45,7 @@ import { setup_ping } from "./ping";
 import { fetch_root_mod_list } from "./common";
 import { setup_link_blacklist } from "./link_blacklist";
 import { setup_utility_tools } from "./utility_tools";
+import { setup_roulette } from "./roulette";
 
 // Setup client
 const client = new Discord.Client({
@@ -115,6 +116,7 @@ process.on("unhandledRejection", (reason, promise) => {
 		await setup_snowflake(client);
 		await setup_quote(client);
 		await setup_ping(client);
+		await setup_roulette(client);
 		await setup_nodistractions(client, database);
 		await setup_tracked_mentions(client);
 		await setup_raidpurge(client, tracker);
