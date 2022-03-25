@@ -4,7 +4,7 @@
 	"description": "",
 	"author": "",
 	"dependencies": {
-		"@types/node": "^15.6.1",
+		"@types/node": "^17.0.23",
 		"@types/node-fetch": "^2.5.10",
 		"@types/ws": "^7.4.4",
 		"@types/xxhashjs": "^0.2.2",
