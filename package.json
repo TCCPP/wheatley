@@ -1,19 +1,24 @@
 {
-	"name": "wheatly",
-	"version": "0.1.0",
-	"description": "",
-	"author": "",
-	"dependencies": {
-		"@types/node": "^17.0.23",
-		"@types/node-fetch": "^2.5.10",
-		"@types/ws": "^7.4.4",
-		"@types/xxhashjs": "^0.2.2",
-		"chalk": "^4.1.2",
-		"discord.js": "^13.6.0",
-		"moment": "^2.29.1",
-		"xxhashjs": "^0.2.2"
-	},
-	"scripts": {
-		"start": "tsc && unbuffer node src/main.js 2>&1 | tee -a log.txt"
-	}
+    "name": "wheatly",
+    "version": "0.1.0",
+    "description": "",
+    "author": "",
+    "dependencies": {
+        "@types/node": "^17.0.23",
+        "@types/node-fetch": "^2.5.10",
+        "@types/ws": "^7.4.4",
+        "@types/xxhashjs": "^0.2.2",
+        "chalk": "^4.1.2",
+        "discord.js": "^13.6.0",
+        "moment": "^2.29.1",
+        "xxhashjs": "^0.2.2"
+    },
+    "scripts": {
+        "start": "tsc && unbuffer node src/main.js 2>&1 | tee -a log.txt"
+    },
+    "devDependencies": {
+        "@typescript-eslint/eslint-plugin": "^5.16.0",
+        "@typescript-eslint/parser": "^5.16.0",
+        "eslint": "^8.12.0"
+    }
 }

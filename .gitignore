@@ -3,3 +3,4 @@ package-lock.json
 auth.key
 *.js
 W*/
+.vscode

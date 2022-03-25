@@ -49,28 +49,28 @@ import { setup_roulette } from "./roulette";
 
 // Setup client
 const client = new Discord.Client({
-	intents: [ // fuck it, everything (almost)
-		Discord.Intents.FLAGS.GUILDS,
-		Discord.Intents.FLAGS.GUILD_MEMBERS,
-		Discord.Intents.FLAGS.GUILD_BANS,
-		Discord.Intents.FLAGS.GUILD_EMOJIS_AND_STICKERS,
-		Discord.Intents.FLAGS.GUILD_INTEGRATIONS,
-		Discord.Intents.FLAGS.GUILD_WEBHOOKS,
-		Discord.Intents.FLAGS.GUILD_INVITES,
-		Discord.Intents.FLAGS.GUILD_VOICE_STATES,
-		Discord.Intents.FLAGS.GUILD_MESSAGES,
-		Discord.Intents.FLAGS.GUILD_MESSAGE_REACTIONS,
-		Discord.Intents.FLAGS.GUILD_MESSAGE_TYPING,
-		Discord.Intents.FLAGS.DIRECT_MESSAGES,
-		Discord.Intents.FLAGS.DIRECT_MESSAGE_REACTIONS,
-		Discord.Intents.FLAGS.DIRECT_MESSAGE_TYPING,
-	],
-	partials: [
-		"CHANNEL"
-	],
-	makeCache: Discord.Options.cacheWithLimits({
-		MessageManager: 1000
-	})
+    intents: [ // fuck it, everything (almost)
+        Discord.Intents.FLAGS.GUILDS,
+        Discord.Intents.FLAGS.GUILD_MEMBERS,
+        Discord.Intents.FLAGS.GUILD_BANS,
+        Discord.Intents.FLAGS.GUILD_EMOJIS_AND_STICKERS,
+        Discord.Intents.FLAGS.GUILD_INTEGRATIONS,
+        Discord.Intents.FLAGS.GUILD_WEBHOOKS,
+        Discord.Intents.FLAGS.GUILD_INVITES,
+        Discord.Intents.FLAGS.GUILD_VOICE_STATES,
+        Discord.Intents.FLAGS.GUILD_MESSAGES,
+        Discord.Intents.FLAGS.GUILD_MESSAGE_REACTIONS,
+        Discord.Intents.FLAGS.GUILD_MESSAGE_TYPING,
+        Discord.Intents.FLAGS.DIRECT_MESSAGES,
+        Discord.Intents.FLAGS.DIRECT_MESSAGE_REACTIONS,
+        Discord.Intents.FLAGS.DIRECT_MESSAGE_TYPING,
+    ],
+    partials: [
+        "CHANNEL"
+    ],
+    makeCache: Discord.Options.cacheWithLimits({
+        MessageManager: 1000
+    })
 });
 
 // Every module sets a lot of listeners. This is not a leak.
@@ -85,9 +85,9 @@ client.setMaxListeners(20);
 // suggestion tracker: Content, author, votes, link.
 
 client.on("ready", async () => {
-	M.log(`Logged in as ${client.user!.tag}`);
-	//client.user!.setStatus("invisible");
-	fetch_root_mod_list(client); // fetch list of roots and mods, replace hard-coded list
+    M.log(`Logged in as ${client.user!.tag}`);
+    //client.user!.setStatus("invisible");
+    fetch_root_mod_list(client); // fetch list of roots and mods, replace hard-coded list
 });
 
 M.debug("Setting up services");
@@ -99,40 +99,40 @@ M.debug("Setting up modules");
 
 // Last line of defense
 process.on("unhandledRejection", (reason, promise) => {
-	critical_error("unhandledRejection", reason, promise);
+    critical_error("unhandledRejection", reason, promise);
 });
 
 (async () => {
-	try {
-		let database = await DatabaseInterface.create();
-		let tracker = new MemberTracker(client);
+    try {
+        let database = await DatabaseInterface.create();
+        let tracker = new MemberTracker(client);
 
-		await setup_anti_autoreact(client);
-		await setup_server_suggestion_reactions(client);
-		await setup_server_suggestion_tracker(client, database);
-		await setup_role_manager(client);
-		await setup_test_command(client);
-		await setup_massban(client);
-		await setup_snowflake(client);
-		await setup_quote(client);
-		await setup_ping(client);
-		await setup_roulette(client, database);
-		await setup_nodistractions(client, database);
-		await setup_tracked_mentions(client);
-		await setup_raidpurge(client, tracker);
-		await setup_notify_about_brand_new_users(client);
-		await setup_anti_raid(client, tracker);
-		await setup_speedrun(client, tracker);
-		await setup_anti_scambot(client, tracker);
-		await setup_link_blacklist(client, database);
-		await setup_utility_tools(client);
-	
-		M.debug("Logging in");
-	
-		client.login(readFileSync("auth.key", { encoding: "utf-8" }));
-	} catch(e) {
-		critical_error(e);
-	}
+        await setup_anti_autoreact(client);
+        await setup_server_suggestion_reactions(client);
+        await setup_server_suggestion_tracker(client, database);
+        await setup_role_manager(client);
+        await setup_test_command(client);
+        await setup_massban(client);
+        await setup_snowflake(client);
+        await setup_quote(client);
+        await setup_ping(client);
+        await setup_roulette(client, database);
+        await setup_nodistractions(client, database);
+        await setup_tracked_mentions(client);
+        await setup_raidpurge(client, tracker);
+        await setup_notify_about_brand_new_users(client);
+        await setup_anti_raid(client, tracker);
+        await setup_speedrun(client, tracker);
+        await setup_anti_scambot(client, tracker);
+        await setup_link_blacklist(client, database);
+        await setup_utility_tools(client);
+    
+        M.debug("Logging in");
+    
+        client.login(readFileSync("auth.key", { encoding: "utf-8" }));
+    } catch(e) {
+        critical_error(e);
+    }
 })();
 
 // join link:
