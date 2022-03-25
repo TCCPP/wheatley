@@ -9,7 +9,7 @@ let client: Discord.Client;
 const warned_users = new SelfClearingSet<string>(60 * MINUTE);
 
 // user id -> number of roles
-const scoreboard = new SelfClearingMap<string, number>(60 * MINUTE);
+const streaks = new SelfClearingMap<string, number>(60 * MINUTE);
 
 let database: DatabaseInterface;
 
@@ -49,7 +49,7 @@ function make_ban_embed(message: Discord.Message) {
 
 async function update_scoreboard(user_id: string) {
 	// todo: not efficient at all
-	let score = scoreboard.get(user_id)!;
+	let score = streaks.get(user_id)!;
 	const db = database.get<leaderboard_schema>("roulette_leaderboard");
 	// add / update entry
 	if(!(user_id in db)) {
@@ -90,11 +90,11 @@ async function play_roulette(message: Discord.Message) {
 					ban_embed.setFooter(ban_embed.footer!.text! + `Error: Timeout failed `);
 					log_msg.edit({embeds: [ban_embed]});
 				});
-			scoreboard.set(message.author.id, 0);
+			streaks.set(message.author.id, 0);
 			await update_scoreboard(message.author.id);
 		} else {
 			const m = {embeds: [make_click_embed(message.author)]};
-			scoreboard.set(message.author.id, (scoreboard.get(message.author.id) ?? 0) + 1);
+			streaks.set(message.author.id, (streaks.get(message.author.id) ?? 0) + 1);
 			await message.channel.send(m);
 			await member_log_channel.send(m);
 			await update_scoreboard(message.author.id);
