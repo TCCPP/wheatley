@@ -6,7 +6,7 @@ import { action_log_channel_id, everyone_role_id, member_log_channel_id, MINUTE,
 let client: Discord.Client;
 
 const warned_users = new SelfClearingSet<string>(60 * MINUTE);
-const user_roles_map = new SelfClearingMap<string, string[]>(6 * 60 * MINUTE);
+const user_roles_map = new SelfClearingMap<string, string[]>(24 * 60 * MINUTE);
 
 let member_log_channel : Discord.TextChannel;
 let action_log_channel : Discord.TextChannel;
@@ -34,7 +34,7 @@ function make_ban_embed(message: Discord.Message) {
 	const author = message.author;
 	return new Discord.MessageEmbed()
 	          .setColor(red)
-	          .setDescription(`BANG. <@${author.id}> [lost](https://www.youtube.com/watch?v=dQw4w9WgXcQ) [roulette](${message.url}) and is being banned <a:saber:851241060553326652>.\n`
+	          .setDescription(`BANG. <@${author.id}> ${author.tag} [lost](https://www.youtube.com/watch?v=dQw4w9WgXcQ) [roulette](${message.url}) and is being banned <a:saber:851241060553326652>.\n`
 	                        + `User will automatically be unbanned in half an hour. ID: ${author.id}\n`
 	                        + `Roles: ${get_roles(message.member)?.map(id => `<@&${id}>`).join(" ")}\n`)
 	          .setFooter("");
@@ -101,7 +101,7 @@ async function on_message(message: Discord.Message) {
 					await member_log_channel.send(m);
 				}
 			} else {
-				message.reply("Warning: This will actually ban you (for 30 minutes). Proceed at your own risk.");
+				message.reply("Warning: This is __Russian__ roulette. Losing will result in a 30 minute ban. Proceed at your own risk.");
 				warned_users.insert(message.author.id);
 			}
 		}

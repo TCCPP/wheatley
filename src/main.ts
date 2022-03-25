@@ -1,5 +1,5 @@
 /*
- * Features:
+ * Functionality:
  *   Log mentions of @moderator and @root
  *   Log attempts to @everyone or @here
  *   Log exact join/ban times for TCCPP ban speedrun reasons
@@ -8,7 +8,6 @@
  *   Autoremove duplicate skill roles
  *   Autoban scammers. Identified based off of spamming @here/@everyone or links across channels.
  *   Protect 🟢, 🔴, 🟡, 🟩, 🟥, 🟨, and 🚫 in #server_suggestions
- *   Anti-illuminator: Remove illuminator reactions in #server_suggestions
  *   Warn and notify when a bot wave is incoming
  *     IMPORTANT: This mitigation will only work until the botters realize what we've done!
  *     This mitigation is easy to counter if the botters put in effort to do so - just stagger joins
@@ -18,6 +17,7 @@
  *     Quick-ban bot wave
  *   !wban <list of IDS, any format works as long as they're word-separated>
  *   !snowflake <ID>
+ *   ... and more
  */
 
 import * as Discord from "discord.js";
