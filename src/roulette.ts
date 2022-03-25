@@ -30,7 +30,7 @@ const red = 0xed2d2d;
 function make_click_embed(author: Discord.User) {
 	return new Discord.MessageEmbed()
 	          .setColor(green)
-	          .setDescription(`Click. <@${author.id}> got lucky.`);
+	          .setDescription(`Click. <@${author.id}> got lucky. (Current streak: ${(streaks.get(author.id) ?? 0) + 1})`);
 }
 
 function make_bang_embed(author: Discord.User) {
