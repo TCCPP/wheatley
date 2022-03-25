@@ -116,7 +116,7 @@ process.on("unhandledRejection", (reason, promise) => {
 		await setup_snowflake(client);
 		await setup_quote(client);
 		await setup_ping(client);
-		await setup_roulette(client);
+		await setup_roulette(client, database);
 		await setup_nodistractions(client, database);
 		await setup_tracked_mentions(client);
 		await setup_raidpurge(client, tracker);

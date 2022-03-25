@@ -159,7 +159,9 @@ export class SelfClearingMap<K, V> {
 		this.contents.set(key, [Date.now(), value]);
 	}
 	get(key: K) {
-		return this.contents.get(key)![1];
+		const p = this.contents.get(key);
+		if(p == undefined) return undefined;
+		return p[1];
 	}
 	remove(key: K) {
 		this.contents.delete(key);
