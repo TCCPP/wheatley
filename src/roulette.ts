@@ -110,7 +110,9 @@ async function display_leaderboard(message: Discord.Message) {
 				  .setColor(green)
 				  .setTitle("Roulette Leaderboard");
 	let description = "";
-	for(let [key, value] of Object.entries(database.get<leaderboard_schema>("roulette_leaderboard"))) {
+	for(let [key, value] of
+		Object.entries(database.get<leaderboard_schema>("roulette_leaderboard"))
+		.sort((a, b) => b[1] - a[1])) {
 		description += `<@${key}>: ${value} roll${value == 1 ? "" : "s"} before death\n`;
 	}
 	embed.setDescription(description);
