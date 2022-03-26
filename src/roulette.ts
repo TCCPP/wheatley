@@ -8,7 +8,7 @@ let client: Discord.Client;
 
 const warned_users = new SelfClearingSet<string>(60 * MINUTE);
 
-// user id -> number of roles
+// user id -> streak count
 const streaks = new SelfClearingMap<string, number>(60 * MINUTE);
 
 let database: DatabaseInterface;
