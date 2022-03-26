@@ -11,11 +11,11 @@ async function on_message(message: Discord.Message) {
         try {
             if(message.content == "!channel-rename") {
                 M.info("got !channel-rename");
-                let m = await message.channel.send("working...");
-                let TCCPP = await client.guilds.fetch(TCCPP_ID);
-                let channels = await TCCPP.channels.fetch();
-                for(let [_, channel] of channels) {
-                    let r = channel.name.replace(/_/g, "-");
+                const m = await message.channel.send("working...");
+                const TCCPP = await client.guilds.fetch(TCCPP_ID);
+                const channels = await TCCPP.channels.fetch();
+                for(const [_, channel] of channels) {
+                    const r = channel.name.replace(/_/g, "-");
                     M.info("Renaming", channel.name, r);
                     await channel.setName(r);
                 }

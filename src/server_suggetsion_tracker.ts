@@ -4,7 +4,7 @@ import { critical_error, departialize, M, KeyedMutexSet, SelfClearingSet } from 
 import { DatabaseInterface } from "./database_interface";
 import { is_root, MINUTE, server_suggestions_channel_id, suggestion_action_log_thread_id, suggestion_dashboard_thread_id, TCCPP_ID, wheatley_id } from "./common";
 import { forge_snowflake } from "./snowflake";
-import * as XXH from "xxhashjs"
+import * as XXH from "xxhashjs";
 
 let client: Discord.Client;
 let TCCPP : Discord.Guild;
@@ -15,10 +15,9 @@ let suggestion_channel: Discord.TextChannel;
 let thread:             Discord.ThreadChannel;
 let log_thread:         Discord.ThreadChannel;
 
-export const TRACKER_START_TIME =
-                                  1625112000000; // Thu Jul 01 2021 00:00:00 GMT-0400 (Eastern Daylight Time)
-                               // 1630468800000; // Wed Sep 01 2021 00:00:00 GMT-0400 (Eastern Daylight Time)
-                               // 1636693200000; // debug: Fri Nov 12 2021 00:00:00 GMT-0500 (Eastern Standard Time)
+export const TRACKER_START_TIME = 1625112000000; // Thu Jul 01 2021 00:00:00 GMT-0400 (Eastern Daylight Time)
+// export const TRACKER_START_TIME = 1630468800000; // Wed Sep 01 2021 00:00:00 GMT-0400 (Eastern Daylight Time)
+// export const TRACKER_START_TIME = 1636693200000; // debug: Fri Nov 12 2021 00:00:00 GMT-0500 (Eastern Standard Time)
 let recovering = true;
 
 const resolution_reactions = [
@@ -36,7 +35,7 @@ type db_entry = {
     hash: string // to check if message is updated, currently using xxh3 (64-bit hash)
 };
 
-let color = 0x7E78FE; //0xA931FF;
+const color = 0x7E78FE; //0xA931FF;
 
 // utilities
 
@@ -64,11 +63,11 @@ type reaction = {
 };
 
 async function message_has_resolution_from_root(message: Discord.Message) {
-    let roots: reaction[] = [];
-    for(let [_, reaction] of message.reactions.cache) {
+    const roots: reaction[] = [];
+    for(const [_, reaction] of message.reactions.cache) {
         if(resolution_reactions_set.has(reaction.emoji.name!)) {
-            let users = await reaction.users.fetch();
-            for(let [_, user] of users) {
+            const users = await reaction.users.fetch();
+            for(const [_, user] of users) {
                 if(is_root(user)) {
                     roots.push({user, emoji: reaction.emoji});
                 }
@@ -85,7 +84,7 @@ async function message_has_resolution_from_root(message: Discord.Message) {
 
 async function get_display_name(thing: Discord.Message | Discord.User): Promise<string> {
     if(thing instanceof Discord.User) {
-        let user = thing;
+        const user = thing;
         try {
             return (await TCCPP.members.fetch(user.id)).displayName;
         } catch {
@@ -93,7 +92,7 @@ async function get_display_name(thing: Discord.Message | Discord.User): Promise<
             return user.tag;
         }
     } else if(thing instanceof Discord.Message) {
-        let message = thing;
+        const message = thing;
         if(message.member == null) {
             return get_display_name(message.author);
             
@@ -107,8 +106,8 @@ async function get_display_name(thing: Discord.Message | Discord.User): Promise<
 
 function reverse_lookup(status_id: string) {
     let suggestion_id: string | null = null;
-    for(let id in   database.get<db_schema>("suggestion_tracker").suggestions) {
-        let entry = database.get<db_schema>("suggestion_tracker").suggestions[id];
+    for(const id in   database.get<db_schema>("suggestion_tracker").suggestions) {
+        const entry = database.get<db_schema>("suggestion_tracker").suggestions[id];
         if(entry.status_message == status_id) {
             suggestion_id = id;
             break;
@@ -160,10 +159,10 @@ async function make_embed(message: Discord.Message) {
     assert(message.content != null);
     assert(message.author != null);
     return new Discord.MessageEmbed()
-              .setColor(color)
-              .setAuthor(`${await get_display_name(message)}`, message.author.displayAvatarURL())
-              .setDescription(message.content + `\n\n[[Jump to message]](${message.url})`)
-              .setTimestamp(message.createdAt);
+        .setColor(color)
+        .setAuthor(`${await get_display_name(message)}`, message.author.displayAvatarURL())
+        .setDescription(message.content + `\n\n[[Jump to message]](${message.url})`)
+        .setTimestamp(message.createdAt);
 }
 
 // Two log operations:
@@ -172,22 +171,22 @@ async function make_embed(message: Discord.Message) {
 // Not logging deletions
 
 async function log_resolution(message: Discord.Message, reaction: reaction) {
-    let embed = new Discord.MessageEmbed()
-               .setColor(color)
-               .setAuthor(`${await get_display_name(message)}`, message.author.displayAvatarURL())
-               .setDescription(message.content + `\n\n[[Jump to message]](${message.url})`)
-               .setFooter(`${await get_display_name(reaction.user)}: ${reaction.emoji}`, reaction.user.displayAvatarURL())
-               .setTimestamp(message.createdAt);
+    const embed = new Discord.MessageEmbed()
+        .setColor(color)
+        .setAuthor(`${await get_display_name(message)}`, message.author.displayAvatarURL())
+        .setDescription(message.content + `\n\n[[Jump to message]](${message.url})`)
+        .setFooter(`${await get_display_name(reaction.user)}: ${reaction.emoji}`, reaction.user.displayAvatarURL())
+        .setTimestamp(message.createdAt);
     await log_thread.send({ embeds: [ embed ] });
 }
 
 async function log_reopen(message: Discord.Message) {
-    let embed = new Discord.MessageEmbed()
-               .setColor(color)
-               .setAuthor(`${await get_display_name(message)}`, message.author.displayAvatarURL())
-               .setDescription(message.content + `\n\n[[Jump to message]](${message.url})`)
-               .setFooter("Suggestion reopened")
-               .setTimestamp(message.createdAt);
+    const embed = new Discord.MessageEmbed()
+        .setColor(color)
+        .setAuthor(`${await get_display_name(message)}`, message.author.displayAvatarURL())
+        .setDescription(message.content + `\n\n[[Jump to message]](${message.url})`)
+        .setFooter("Suggestion reopened")
+        .setTimestamp(message.createdAt);
     await log_thread.send({ embeds: [ embed ] });
 }
 
@@ -200,14 +199,14 @@ async function log_reopen(message: Discord.Message) {
 // Note: Callers obtain mutex lock
 
 // Race condition handling: edits while processing edits, await status_message.delete() and on_message_delete() interfering, etc.
-let mutex = new KeyedMutexSet<string>();
-let status_lock = new SelfClearingSet<string>(5 * MINUTE, 5 * MINUTE);
+const mutex = new KeyedMutexSet<string>();
+const status_lock = new SelfClearingSet<string>(5 * MINUTE, 5 * MINUTE);
 
 async function open_suggestion(message: Discord.Message) {
     try {
         M.debug("New suggestion", [message.author.tag, message.author.id, message.content]);
         const embed = await make_embed(message);
-        let status_message = await thread.send({ embeds: [embed] });
+        const status_message = await thread.send({ embeds: [embed] });
         assert(!(message.id in database.get<db_schema>("suggestion_tracker").suggestions));
         if(message.createdTimestamp > database.get<db_schema>("suggestion_tracker").last_scanned_timestamp) {
             database.get<db_schema>("suggestion_tracker").last_scanned_timestamp = message.createdTimestamp;
@@ -218,7 +217,7 @@ async function open_suggestion(message: Discord.Message) {
         };
         database.update();
         // add react options
-        for(let r of resolution_reactions) {
+        for(const r of resolution_reactions) {
             await status_message.react(r);
         }
     } catch(e) {
@@ -229,9 +228,9 @@ async function open_suggestion(message: Discord.Message) {
 async function delete_suggestion(message_id: string) {
     try {
         assert(message_id in database.get<db_schema>("suggestion_tracker").suggestions);
-        let entry = database.get<db_schema>("suggestion_tracker").suggestions[message_id];
+        const entry = database.get<db_schema>("suggestion_tracker").suggestions[message_id];
         M.debug("Suggestion deleted", message_id, entry);
-        let status_message = await thread.messages.fetch(entry.status_message);
+        const status_message = await thread.messages.fetch(entry.status_message);
         status_lock.insert(entry.status_message);
         await status_message.delete();
         delete database.get<db_schema>("suggestion_tracker").suggestions[message_id];
@@ -249,12 +248,12 @@ async function update_message_if_needed(message: Discord.Message) {
             M.warn("update_message_if_needed called on untracked message", message);
             return;
         }
-        let entry = database.get<db_schema>("suggestion_tracker").suggestions[message.id];
+        const entry = database.get<db_schema>("suggestion_tracker").suggestions[message.id];
         assert(message.content != null);
-        let hash = xxh3(message.content);
+        const hash = xxh3(message.content);
         if(hash != entry.hash) {
             M.debug("Suggestion edited", [message.author.tag, message.author.id, message.content]);
-            let status_message = await thread.messages.fetch(entry.status_message);
+            const status_message = await thread.messages.fetch(entry.status_message);
             const embed = await make_embed(message);
             status_message.edit({ embeds: [embed] });
             database.get<db_schema>("suggestion_tracker").suggestions[message.id].hash = hash;
@@ -272,8 +271,8 @@ async function resolve_suggestion(message: Discord.Message, reaction: reaction) 
         if(message.id in database.get<db_schema>("suggestion_tracker").suggestions) {
             M.debug("Suggestion being resolved", [message.id]);
             // remove status message
-            let entry = database.get<db_schema>("suggestion_tracker").suggestions[message.id];
-            let status_message = await thread.messages.fetch(entry.status_message);
+            const entry = database.get<db_schema>("suggestion_tracker").suggestions[message.id];
+            const status_message = await thread.messages.fetch(entry.status_message);
             status_lock.insert(entry.status_message);
             await status_message.delete();
             delete database.get<db_schema>("suggestion_tracker").suggestions[message.id];
@@ -318,13 +317,13 @@ async function on_message_delete(message: Discord.Message | Discord.PartialMessa
             assert(message.author != null);
             if(message.author.id == wheatley_id && !status_lock.has(message.id)) { // race condition with await status_message.delete() checked here
                 // find and delete database entry
-                let suggestion_id = reverse_lookup(message.id);
+                const suggestion_id = reverse_lookup(message.id);
                 if(suggestion_id == null) {
                     throw 0; // untracked  - this is an internal error or a race condition
                 } else {
                     M.info("server_suggestion tracker state recovery: Manual status delete",
-                        suggestion_id,
-                        database.get<db_schema>("suggestion_tracker").suggestions[suggestion_id]);
+                           suggestion_id,
+                           database.get<db_schema>("suggestion_tracker").suggestions[suggestion_id]);
                     delete database.get<db_schema>("suggestion_tracker").suggestions[suggestion_id];
                     database.update();
                 }
@@ -354,7 +353,7 @@ async function on_message_update(old_message: Discord.Message | Discord.PartialM
 // Is root checked here
 async function process_reaction(_reaction: Discord.MessageReaction | Discord.PartialMessageReaction,
                                 user: Discord.User                 | Discord.PartialUser) {
-    let reaction = await departialize(_reaction);
+    const reaction = await departialize(_reaction);
     if(resolution_reactions_set.has(reaction.emoji.name!)) {
         if(is_root(user)) {
             resolve_suggestion(await departialize(reaction.message), {
@@ -368,7 +367,7 @@ async function process_reaction(_reaction: Discord.MessageReaction | Discord.Par
 async function process_reaction_remove(reaction: Discord.MessageReaction | Discord.PartialMessageReaction,
                                        user: Discord.User                | Discord.PartialUser) {
     if(resolution_reactions_set.has(reaction.emoji.name!) && is_root(user)) {
-        let message = await departialize(reaction.message);
+        const message = await departialize(reaction.message);
         if(!await message_has_resolution_from_root(message)) {
             // reopen
             open_suggestion(message);
@@ -393,12 +392,12 @@ async function on_react(reaction: Discord.MessageReaction | Discord.PartialMessa
             && resolution_reactions_set.has(reaction.emoji.name!)
             && is_root(user)) {
                 // expensive-ish but this will be rare
-                let suggestion_id = reverse_lookup(reaction.message.id);
+                const suggestion_id = reverse_lookup(reaction.message.id);
                 if(suggestion_id == null) {
                     throw 0; // untracked  - this is an internal error or a race condition
                 } else {
                     await mutex.lock(reaction.message.id); // lock the status message NOTE: Assuming no identical snowflakes between channels, this should be pretty safe though
-                    let suggestion = await suggestion_channel.messages.fetch(suggestion_id);
+                    const suggestion = await suggestion_channel.messages.fetch(suggestion_id);
                     suggestion.react(reaction.emoji.name!);
                     log_resolution(suggestion, {
                         user: await departialize(user),
@@ -413,7 +412,7 @@ async function on_react(reaction: Discord.MessageReaction | Discord.PartialMessa
         critical_error(e);
         try {
             if(is_root(user)) { // only send diagnostics to root
-                let member = await TCCPP.members.fetch(user.id);
+                const member = await TCCPP.members.fetch(user.id);
                 member.send("Error while resolving suggestion");
             }
         } catch(e) {
@@ -423,7 +422,7 @@ async function on_react(reaction: Discord.MessageReaction | Discord.PartialMessa
 }
 
 async function on_reaction_remove(reaction: Discord.MessageReaction | Discord.PartialMessageReaction,
-                            user: Discord.User                | Discord.PartialUser) {
+                                  user: Discord.User                | Discord.PartialUser) {
     if(recovering) return;
     if(reaction.message.channel.id != server_suggestions_channel_id) return;
     try {
@@ -439,7 +438,7 @@ async function process_since_last_scanned() {
     // Note: No locking done here
     while(true) {
         // TODO: Sort collection???
-        let messages = await suggestion_channel.messages.fetch({
+        const messages = await suggestion_channel.messages.fetch({
             limit: 100,
             after: forge_snowflake(database.get<db_schema>("suggestion_tracker").last_scanned_timestamp + 1)
         }, {cache: true });
@@ -447,14 +446,14 @@ async function process_since_last_scanned() {
         if(messages.size == 0) {
             break;
         }
-        let arr: Discord.Message[] = [];
-        for(let [_, message] of messages) {
+        const arr: Discord.Message[] = [];
+        for(const [_, message] of messages) {
             arr.push(message);
         }
         arr.sort((a, b) => a.createdTimestamp - b.createdTimestamp);
-        for(let message of arr) {
+        for(const message of arr) {
             if(isnt_actually_a_message(message)) continue;
-            let root_resolve = await message_has_resolution_from_root(message);
+            const root_resolve = await message_has_resolution_from_root(message);
             if(root_resolve) {
                 // already resolved, just log
                 log_resolution(message, root_resolve);
@@ -507,24 +506,24 @@ async function on_ready() {
         recovering = false;
         // check database entries and fetch since last_scanned_timestamp
         M.debug("server_suggestion tracker checking database entries");
-        for(let id in   database.get<db_schema>("suggestion_tracker").suggestions) {
+        for(const id in   database.get<db_schema>("suggestion_tracker").suggestions) {
             await mutex.lock(id);
-            let entry = database.get<db_schema>("suggestion_tracker").suggestions[id];
-            let message = await get_message(suggestion_channel, id);
+            const entry = database.get<db_schema>("suggestion_tracker").suggestions[id];
+            const message = await get_message(suggestion_channel, id);
             let suggestion_was_resolved = false;
             if(message == undefined) { // check if deleted
                 // deleted
-                M.debug(`server_suggestion tracker state recovery: Message was deleted:`, entry);
+                M.debug("server_suggestion tracker state recovery: Message was deleted:", entry);
                 status_lock.insert(entry.status_message);
                 await delete_suggestion(id);
             } else {
                 // check if message updated
                 if(await update_message_if_needed(message)) {
-                    M.debug(`server_suggestion tracker state recovery: Message was updated:`, entry);
+                    M.debug("server_suggestion tracker state recovery: Message was updated:", entry);
                 }
                 // check reactions
                 //M.debug(message.content, message.reactions.cache.map(r => [r.emoji.name, r.count]));
-                let root_resolve = await message_has_resolution_from_root(message);
+                const root_resolve = await message_has_resolution_from_root(message);
                 if(root_resolve) {
                     M.warn("server_suggestion tracker state recovery: resolving message");
                     suggestion_was_resolved = true;

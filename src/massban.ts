@@ -13,21 +13,21 @@ function do_mass_ban(msg: Discord.Message) {
     // TODO: Set entry.purged if necessary?
     M.debug("Heard massban command");
     assert(msg.guild != null);
-    let ids = msg.content.match(snowflake_re);
+    const ids = msg.content.match(snowflake_re);
     if(ids != null && ids.length > 0) {
         M.log("Banning...");
         msg.channel.send("Banning...");
         M.debug(ids);
-        for(let id of ids) {
+        for(const id of ids) {
             msg.guild.members.ban(id, {reason: "[[Wheatly]] Manual mass-ban"});
         }
         msg.reply("Done.");
         // TODO: use long-message logic?
         const embed = new Discord.MessageEmbed()
-             .setColor(color)
-             .setTitle(`<@!${msg.author.id}> banned ${ids.length} users`)
-             .setDescription(`\`\`\`\n${ids.join("\n")}\n\`\`\``)
-             .setTimestamp();
+            .setColor(color)
+            .setTitle(`<@!${msg.author.id}> banned ${ids.length} users`)
+            .setDescription(`\`\`\`\n${ids.join("\n")}\n\`\`\``)
+            .setTimestamp();
         action_log_channel.send({ embeds: [embed] });
     }
 }

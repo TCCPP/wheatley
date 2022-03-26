@@ -11,9 +11,9 @@ export class DatabaseInterface {
     private write_mutex = new Mutex();
     private constructor() { this.fh = null as any; this.state = {}; }
     static async create() {
-        let database = new DatabaseInterface();
+        const database = new DatabaseInterface();
         database.fh = await fs.promises.open(DatabaseInterface.database_file, "a+");
-        let content = await database.fh.readFile({ encoding: "utf-8" });
+        const content = await database.fh.readFile({ encoding: "utf-8" });
         database.state = content == "" ? {} : JSON.parse(content);
         return database;
     }
@@ -21,7 +21,7 @@ export class DatabaseInterface {
     async update() {
         await this.write_mutex.lock();
         M.debug("Saving database");
-        let data = JSON.stringify(this.state, null, "\t");
+        const data = JSON.stringify(this.state, null, "\t");
         // copy before truncating / rewriting, paranoia in case of bot crash or power loss or whatnot
         await fs.promises.copyFile(DatabaseInterface.database_file, DatabaseInterface.database_backup_file);
         await this.fh.truncate(0);
@@ -38,4 +38,4 @@ export class DatabaseInterface {
     has(key: string) {
         return key in this.state;
     }
-};
+}

@@ -8,7 +8,7 @@ import { forge_snowflake } from "./snowflake";
 let client: Discord.Client;
 
 let monitored_channels: Map<string, Discord.TextChannel>;
-let monitored_channels_ids = [server_suggestions_channel_id, suggestion_dashboard_thread_id];
+const monitored_channels_ids = [server_suggestions_channel_id, suggestion_dashboard_thread_id];
 
 const root_only_reacts = new Set([
     "🟢", "🔴", "🟡", "🔵",
@@ -59,9 +59,9 @@ async function on_react(reaction: Discord.MessageReaction | Discord.PartialMessa
 
 async function handle_fetched_message(message: Discord.Message) {
     message.reactions.cache.forEach(async reaction => {
-        let users = await reaction.users.fetch();
+        const users = await reaction.users.fetch();
         ///M.debug(reaction.emoji.name, users.map(u => [u.id, u.tag]));
-        for(let [id, user] of users) {
+        for(const [id, user] of users) {
             if(react_blacklist.has(id)) {
                 M.debug("removing reaction by blacklisted user from", {
                     content: reaction.message.content,
@@ -89,12 +89,12 @@ async function handle_fetched_message(message: Discord.Message) {
 // 100 messages every 3 minutes, avoid ratelimits
 // runs only on restart, no rush
 async function hard_catch_up() {
-    let server_suggestions_channel = monitored_channels.get(server_suggestions_channel_id);
+    const server_suggestions_channel = monitored_channels.get(server_suggestions_channel_id);
     let oldest_seen = Date.now();
     assert(server_suggestions_channel != undefined);
     while(true) {
         await delay(3 * MINUTE);
-        let messages = await server_suggestions_channel.messages.fetch({
+        const messages = await server_suggestions_channel.messages.fetch({
             limit: 100,
             before: forge_snowflake(oldest_seen - 1)
         });
@@ -102,7 +102,7 @@ async function hard_catch_up() {
         if(messages.size == 0) {
             break;
         }
-        for(let [_, message] of messages) {
+        for(const [_, message] of messages) {
             if(message.createdTimestamp < TRACKER_START_TIME) {
                 oldest_seen = TRACKER_START_TIME;
                 continue;
@@ -124,8 +124,8 @@ async function on_ready() {
         M.debug("server_suggestion reactions handler on_ready");
         // get the suggestion channel
         monitored_channels = new Map();
-        for(let channel_id of monitored_channels_ids) {
-            let channel = (await client.channels.fetch(channel_id))! as Discord.TextChannel;
+        for(const channel_id of monitored_channels_ids) {
+            const channel = (await client.channels.fetch(channel_id))! as Discord.TextChannel;
             assert(channel != null);
             monitored_channels.set(channel_id, channel);
         }
@@ -134,9 +134,9 @@ async function on_ready() {
         client.on("messageReactionAdd", on_react); // Note: This event only fires for cached messages for some reason
         M.debug("server_suggestion reactions handler set messageReactionAdd handler");
         // recover from down time: fetch last 100 messages (and add to cache)
-        for(let [_, channel] of monitored_channels) {
-            let messages = await channel.messages.fetch({ limit: 100 }, { cache: true });
-            for(let [_, message] of messages) {
+        for(const [_, channel] of monitored_channels) {
+            const messages = await channel.messages.fetch({ limit: 100 }, { cache: true });
+            for(const [_, message] of messages) {
                 handle_fetched_message(message);
             }
         }

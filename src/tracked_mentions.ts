@@ -16,14 +16,14 @@ const tracked_mentions = [
 
 function check_tracked_mention_and_notify(message: Discord.Message) {
     // TODO: only do one message per message, put all tracked roles into it / filter/unique
-    for(let [role_id, _] of message.mentions.roles) {
+    for(const [role_id, _] of message.mentions.roles) {
         if(tracked_mentions.indexOf(role_id) > -1) {
             const embed = new Discord.MessageEmbed()
-                          .setColor(color)
-                          .setAuthor(`${message.author.username}#${message.author.discriminator}`, message.author.displayAvatarURL())
-                          .setDescription(`<@&${role_id}> mentioned in <#${message.channel.id}> by <@${message.author.id}>\n[click here to jump](${message.url})`)
-                          .setFooter(`ID: ${message.author.id}`)
-                          .setTimestamp();
+                .setColor(color)
+                .setAuthor(`${message.author.username}#${message.author.discriminator}`, message.author.displayAvatarURL())
+                .setDescription(`<@&${role_id}> mentioned in <#${message.channel.id}> by <@${message.author.id}>\n[click here to jump](${message.url})`)
+                .setFooter(`ID: ${message.author.id}`)
+                .setTimestamp();
             action_log_channel.send({ embeds: [embed] });
         }
     }

@@ -24,7 +24,7 @@ import * as Discord from "discord.js";
 import { strict as assert } from "assert";
 import { critical_error, init_debugger, M } from "./utils";
 import { readFileSync } from "fs";
-import { setup_anti_autoreact } from "./anti_autoreact"
+import { setup_anti_autoreact } from "./anti_autoreact";
 import { setup_server_suggestion_reactions } from "./server_suggestion_reactions";
 import { setup_role_manager } from "./role_manager";
 import { setup_raidpurge } from "./raidpurge";
@@ -104,8 +104,8 @@ process.on("unhandledRejection", (reason, promise) => {
 
 (async () => {
     try {
-        let database = await DatabaseInterface.create();
-        let tracker = new MemberTracker(client);
+        const database = await DatabaseInterface.create();
+        const tracker = new MemberTracker(client);
 
         await setup_anti_autoreact(client);
         await setup_server_suggestion_reactions(client);

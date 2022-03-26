@@ -11,14 +11,14 @@ let action_log_channel: Discord.TextChannel;
 function on_ban(ban: Discord.GuildBan, now: number) {
     try {
         M.debug("speedrun check");
-        let user = ban.user;
+        const user = ban.user;
         // get user info
-        let avatar = user.displayAvatarURL();
+        const avatar = user.displayAvatarURL();
         assert(avatar != null);
         if(!tracker.id_map.has(user.id)) {
             return; // If not in tracker, been in the server longer than 30 minutes
         }
-        let entry = tracker.id_map.get(user.id)!;
+        const entry = tracker.id_map.get(user.id)!;
         if(entry.purged) {
             return; // ignore bans from !raidpurge
         }
@@ -28,16 +28,16 @@ function on_ban(ban: Discord.GuildBan, now: number) {
             return;
         }
         // .purged set by raidpurge (yes I know it's checked above), currently_banning used by anti-scambot
-        let is_auto_ban = entry.purged || tracker.currently_banning.has(user.id);
+        const is_auto_ban = entry.purged || tracker.currently_banning.has(user.id);
         // make embed
-        let embed = new Discord.MessageEmbed()
-                .setColor(speedrun_color)
-                .setAuthor(`Speedrun attempt: ${user.tag}`, avatar)
-                .setDescription(`User <@${user.id}> joined at <t:${Math.round(entry.joined_at / 1000)}:T> and banned at <t:${Math.round(now / 1000)}:T>.`
+        const embed = new Discord.MessageEmbed()
+            .setColor(speedrun_color)
+            .setAuthor(`Speedrun attempt: ${user.tag}`, avatar)
+            .setDescription(`User <@${user.id}> joined at <t:${Math.round(entry.joined_at / 1000)}:T> and banned at <t:${Math.round(now / 1000)}:T>.`
                               + `\nFinal timer: ${diff_to_human(now - entry.joined_at)}.`
                               + (is_auto_ban ? "\n**AUTO BAN**" : ""))
-                .setFooter(`ID: ${user.id}`)
-                .setTimestamp();
+            .setFooter(`ID: ${user.id}`)
+            .setTimestamp();
         action_log_channel!.send({ embeds: [embed] });
     } catch(e) {
         critical_error(e);

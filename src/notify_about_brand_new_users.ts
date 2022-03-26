@@ -9,12 +9,12 @@ const NEW_USER_THRESHOLD = MINUTE * 60;
 let member_log_channel: Discord.TextChannel;
 
 function notify_about_brand_new_user(member: Discord.GuildMember) {
-    let embed = new Discord.MessageEmbed()
-               .setColor(alert_color)
-               .setAuthor(`New User Warning: ${member.user.tag}`, member.user.displayAvatarURL())
-               .setDescription(`User <@${member.user.id}>'s account was created at created at: <t:${Math.round(member.user.createdTimestamp / 1000)}>`)
-               .setFooter(`ID: ${member.id}`)
-               .setTimestamp();
+    const embed = new Discord.MessageEmbed()
+        .setColor(alert_color)
+        .setAuthor(`New User Warning: ${member.user.tag}`, member.user.displayAvatarURL())
+        .setDescription(`User <@${member.user.id}>'s account was created at created at: <t:${Math.round(member.user.createdTimestamp / 1000)}>`)
+        .setFooter(`ID: ${member.id}`)
+        .setTimestamp();
     member_log_channel!.send({ embeds: [embed] })
         .catch((...args: any[]) => critical_error(...args));
     //member_log_channel!.send(`<@!${zelis_id}>`);

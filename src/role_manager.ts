@@ -21,7 +21,7 @@ const skill_role_ids = new Set([
 async function interval() {
     try {
         assert(pink_role != null);
-        let members = await TCCPP.members.fetch();
+        const members = await TCCPP.members.fetch();
         members.map((m, _) => {
             // pink
             if(m.roles.cache.some(r => r.id == pink_role_id)) {
@@ -31,7 +31,7 @@ async function interval() {
                 }
             }
             // skill roles
-            let s = m.roles.cache.filter(r => skill_role_ids.has(r.id));
+            const s = m.roles.cache.filter(r => skill_role_ids.has(r.id));
             if(s.size > 1) {
                 M.debug("duplicate skill roles", m.user.tag);
                 M.debug(m.user.tag);
@@ -39,7 +39,7 @@ async function interval() {
                 s.sort((a, b) => b.rawPosition - a.rawPosition);
                 M.debug(s.map(x => x.name));
                 M.debug(s.map(x => x.name).slice(1));
-                for(let role of s.map(x => x).slice(1)) {
+                for(const role of s.map(x => x).slice(1)) {
                     m.roles.remove(role).catch(M.error);
                 }
             }

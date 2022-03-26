@@ -100,8 +100,8 @@ async function handle_timer() {
             return;
         }
         // pop entry and remove role
-        let entry = undistract_queue.shift()!;
-        let member = await TCCPP.members.fetch(entry.id);
+        const entry = undistract_queue.shift()!;
+        const member = await TCCPP.members.fetch(entry.id);
         M.debug("removing !nodistractions", [member.id, member.user.tag]);
         if(member.roles.cache.some(r => r.id == no_off_topic)) { // might have been removed externally
             await member.roles.remove(no_off_topic);
@@ -122,8 +122,8 @@ async function handle_timer() {
 function set_timer() {
     assert(timer == null);
     assert(undistract_queue.length > 0);
-    let next = undistract_queue[0];
-    let sleep_time = (next.start - Date.now()) + next.duration; // next.start + next.duration - Date.now() but make sure overflow is prevented
+    const next = undistract_queue[0];
+    const sleep_time = (next.start - Date.now()) + next.duration; // next.start + next.duration - Date.now() but make sure overflow is prevented
     timer = setTimeout(handle_timer, Math.min(sleep_time, INT_MAX));
 }
 
@@ -154,7 +154,7 @@ async function apply_no_distractions(target: Discord.GuildMember, message: Disco
     target.send("!nodistractions applied, use !removenodistractions to exit").catch(e => e.status != 403 ? M.error(e) : 0);
     message.react("👍").catch(M.error);
     // make entry
-    let entry: no_distraction_entry = {
+    const entry: no_distraction_entry = {
         id: target.id,
         start,
         duration
@@ -187,7 +187,7 @@ async function early_remove_nodistractions(target: Discord.GuildMember, message:
         // checks
         assert(target.id in database.get<database_schema>("nodistractions"));
         // timer
-        let reschedule = timer != null;
+        const reschedule = timer != null;
         if(timer != null) {
             clearTimeout(timer);
             timer = null;
@@ -252,12 +252,12 @@ async function on_message(message: Discord.Message) {
     
         // "!nodistractions 123d asdfdsaf".match(/^!nodistractions\s*(\d*)\s*(\w*)/)
         // [ "!nodistractions 123d", "123", "d" ]
-        let match = message.content.match(nodistractions_re);
+        const match = message.content.match(nodistractions_re);
         if(match != null) {
             M.debug("Got !nodistractions", [message.author.id, message.author.tag]);
             assert(match.length == 3);
-            let n = parseInt(match[1]);
-            let u = match[2];
+            const n = parseInt(match[1]);
+            const u = match[2];
             if(n == NaN) {
                 send_error(message, "Empty time field");
                 return;
@@ -266,7 +266,7 @@ async function on_message(message: Discord.Message) {
                 send_error(message, "Missing units");
                 return;
             }
-            let factor = parse_unit(u);
+            const factor = parse_unit(u);
             if(factor == -1) {
                 send_error(message, "Unknown units");
                 return;
@@ -306,7 +306,7 @@ export async function setup_nodistractions(_client: Discord.Client, _database: D
                 });
             }
             // load entries
-            for(let [id, entry] of Object.entries(database.get<database_schema>("nodistractions"))) {
+            for(const [id, entry] of Object.entries(database.get<database_schema>("nodistractions"))) {
                 undistract_queue.push({
                     id,
                     start: entry.start,

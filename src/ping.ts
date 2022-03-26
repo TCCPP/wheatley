@@ -5,7 +5,7 @@ import { is_authorized_admin } from "./common";
 
 let client: Discord.Client;
 
-let color = 0x7E78FE; //0xA931FF;
+const color = 0x7E78FE; //0xA931FF;
 
 async function on_message(message: Discord.Message) {
     try {

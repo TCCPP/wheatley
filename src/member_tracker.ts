@@ -42,9 +42,9 @@ export class MemberTracker {
     }
     // Bookkeeping
     trim() {
-        let now = Date.now();
+        const now = Date.now();
         // -- join logs --
-        let first_in_timeframe = this.entries.findIndex(entry => now - entry.entry_added_at <= LOG_DURATION);
+        const first_in_timeframe = this.entries.findIndex(entry => now - entry.entry_added_at <= LOG_DURATION);
         if(first_in_timeframe == -1) return;
         // debugging checks
         // just check sorted order of everything
@@ -59,7 +59,7 @@ export class MemberTracker {
         // remove entries before cutoff
         this.entries = this.entries.slice(first_in_timeframe);
         // -- ping/link maps --
-        for(let map of [this.ping_map, this.link_map]) {
+        for(const map of [this.ping_map, this.link_map]) {
             for(let [k, v] of map) {
                 v = v.filter(m => now - m.createdTimestamp <= LOG_DURATION);
                 if(v.length == 0) {
@@ -67,7 +67,7 @@ export class MemberTracker {
                 }
             }
         }
-        for(let [id, timestamp] of this.currently_banning) {
+        for(const [id, timestamp] of this.currently_banning) {
             if(now - timestamp <= 5 * MINUTE) { // Don't keep around for more than 10 minutes, just need to address race condition
                 this.currently_banning.delete(id);
             }
@@ -78,7 +78,7 @@ export class MemberTracker {
         assert(member.joinedAt != null);
         // TODO: which one to use.....
         //let now = Date.now();
-        let now = member.joinedAt.getTime();
+        const now = member.joinedAt.getTime();
         this.entries.push({
             tag: member.user.tag,
             id: member.id,
@@ -93,15 +93,15 @@ export class MemberTracker {
             M.warn("this.id_map.has(member.id)");
         }
         this.id_map.set(member.id, this.entries[this.entries.length - 1]);
-        for(let { on_join } of this.submodules) {
+        for(const { on_join } of this.submodules) {
             if(on_join) on_join(member, now);
         }
     }
     on_ban(ban: Discord.GuildBan) {
-        let now = Date.now();
-        let user = ban.user;
+        const now = Date.now();
+        const user = ban.user;
         M.debug("User banned: ", [user.tag, user.id]);
-        for(let { on_ban } of this.submodules) {
+        for(const { on_ban } of this.submodules) {
             if(on_ban) on_ban(ban, now);
         }
     }

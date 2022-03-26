@@ -25,7 +25,7 @@ function on_react(reaction: Discord.MessageReaction | Discord.PartialMessageReac
             if(obnoxious_autoreact_names.some(name => emoji_name.toLowerCase().indexOf(name) > -1)
             || obnoxious_autoreact_ids.has(reaction.emoji.id!)) {
                 M.debug("Auto-react being removed");
-                for(let [id, _] of reaction.users.cache) {
+                for(const [id, _] of reaction.users.cache) {
                     reaction.users.remove(id);
                 }
             }

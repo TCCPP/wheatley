@@ -7,7 +7,7 @@ import { assert } from "console";
 
 export class M {
     static get_timestamp() {
-        return moment().format("MM.DD.YY HH:mm:ss")
+        return moment().format("MM.DD.YY HH:mm:ss");
     }
     static log(...args: any[]) {
         process.stdout.write(`[${M.get_timestamp()}] [log]   `);
@@ -30,13 +30,13 @@ export class M {
         console.log(...args);
         console.trace();
     }
-};
+}
 
 export function send_long_message(channel: Discord.TextChannel, msg: string) {
     if(msg.length > 2000) {
-        let lines = msg.split("\n");
+        const lines = msg.split("\n");
         let partial = "";
-        let queue: string[] = [];
+        const queue: string[] = [];
         while(lines.length > 0) {
             if(partial.length + lines[0].length + 1 <= 2000) {
                 if(partial != "") partial += "\n";
@@ -47,17 +47,17 @@ export function send_long_message(channel: Discord.TextChannel, msg: string) {
             }
         }
         if(partial != "") queue.push(partial);
-        let send_next = () => {
+        const send_next = () => {
             if(queue.length > 0) {
                 channel.send(queue.shift()!)
-                       .then(send_next)
-                       .catch(M.error);
+                    .then(send_next)
+                    .catch(M.error);
             }
         };
         send_next();
     } else {
         channel.send(msg)
-                .catch(M.error);
+            .catch(M.error);
     }
 }
 
@@ -108,7 +108,7 @@ export async function departialize<T extends PotentiallyPartial, R extends Retur
     } else {
         return thing as R;
     }
-};
+}
 
 export async function delay(n: number): Promise<void> {
     return new Promise<void>(resolve => setTimeout(resolve, n));
@@ -122,8 +122,8 @@ export class SelfClearingSet<T> {
         setInterval(this.sweep.bind(this), interval ?? this.duration);
     }
     sweep() {
-        let now = Date.now();
-        for(let [value, timestamp] of this.contents) {
+        const now = Date.now();
+        for(const [value, timestamp] of this.contents) {
             if(now - timestamp >= this.duration) {
                 this.contents.delete(value);
             }
@@ -138,7 +138,7 @@ export class SelfClearingSet<T> {
     has(value: T) {
         return this.contents.has(value);
     }
-};
+}
 
 export class SelfClearingMap<K, V> {
     contents = new Map<K, [number, V]>();
@@ -148,8 +148,8 @@ export class SelfClearingMap<K, V> {
         setInterval(this.sweep.bind(this), interval ?? this.duration);
     }
     sweep() {
-        let now = Date.now();
-        for(let [key, [timestamp, _]] of this.contents) {
+        const now = Date.now();
+        for(const [key, [timestamp, _]] of this.contents) {
             if(now - timestamp >= this.duration) {
                 this.contents.delete(key);
             }
@@ -169,7 +169,7 @@ export class SelfClearingMap<K, V> {
     has(key: K) {
         return this.contents.has(key);
     }
-};
+}
 
 export class Mutex {
     locked = false;
@@ -192,7 +192,7 @@ export class Mutex {
             this.locked = false;
         }
     }
-};
+}
 
 // TODO: Could update this to be implemented in terms of Mutex
 export class KeyedMutexSet<T> {
@@ -216,7 +216,7 @@ export class KeyedMutexSet<T> {
         if(this.waiting.has(value)) {
             assert(this.waiting.get(value)!.length > 0); // If this fails, see TODO above ^^
             M.debug(this.waiting.get(value)); // TODO: Remove?
-            let resolve = this.waiting.get(value)!.shift()!;
+            const resolve = this.waiting.get(value)!.shift()!;
             if(this.waiting.get(value)!.length == 0) {
                 this.waiting.delete(value);
             }
@@ -225,7 +225,7 @@ export class KeyedMutexSet<T> {
             this.locks.delete(value);
         }
     }
-};
+}
 
 let client: Discord.Client;
 let zelis : Discord.User;
@@ -247,8 +247,8 @@ export async function critical_error(...args: any[]) {
     M.error(...args);
     try {
         if(await get_zelis()) {
-            let strs = [];
-            for(let arg of args) {
+            const strs = [];
+            for(const arg of args) {
                 try {
                     strs.push(arg.toString());
                 } catch {

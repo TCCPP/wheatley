@@ -29,27 +29,29 @@ const red = 0xed2d2d;
 
 function make_click_embed(author: Discord.User) {
     return new Discord.MessageEmbed()
-              .setColor(green)
-              .setDescription(`Click. <@${author.id}> got lucky. (Current streak: ${(streaks.get(author.id) ?? 0) + 1})`);
+        .setColor(green)
+        .setDescription(`Click. <@${author.id}> got lucky. (Current streak: ${(streaks.get(author.id) ?? 0) + 1})`);
 }
 
 function make_bang_embed(author: Discord.User) {
     return new Discord.MessageEmbed()
-              .setColor(red)
-              .setDescription(`BANG. <@${author.id}> is dead <a:saber:851241060553326652>`);
+        .setColor(red)
+        .setDescription(`BANG. <@${author.id}> is dead <a:saber:851241060553326652>`);
 }
 
 function make_ban_embed(message: Discord.Message) {
     const author = message.author;
     return new Discord.MessageEmbed()
-              .setColor(red)
-              .setDescription(`BANG. <@${author.id}> ${author.tag} [lost](https://www.youtube.com/watch?v=dQw4w9WgXcQ) [roulette](${message.url}) and is being timed out for half an hour <a:saber:851241060553326652>.\nID: ${author.id}`)
-              .setFooter("");
+        .setColor(red)
+        .setDescription(`BANG. <@${author.id}> ${author.tag} [lost](https://www.youtube.com/watch?v=dQw4w9WgXcQ)`
+                      + ` [roulette](${message.url}) and is being timed out for half an hour`
+                      + ` <a:saber:851241060553326652>.\nID: ${author.id}`)
+        .setFooter("");
 }
 
 async function update_scoreboard(user_id: string) {
     // todo: not efficient at all
-    let score = streaks.get(user_id)!;
+    const score = streaks.get(user_id)!;
     const db = database.get<leaderboard_schema>("roulette_leaderboard");
     // add / update entry
     if(!(user_id in db)) {
@@ -85,9 +87,10 @@ async function play_roulette(message: Discord.Message) {
             const log_msg = await member_log_channel.send({embeds: [ban_embed]});
             message.member!.timeout(30 * MINUTE, "Bang")
                 .catch((...args: any[]) => {
-                    critical_error("promise failed for timeout of roulette loser", [message.author.id, message.author.tag]);
+                    critical_error("promise failed for timeout of roulette loser",
+                                   [message.author.id, message.author.tag]);
                     M.error(...args);
-                    ban_embed.setFooter(ban_embed.footer!.text! + `Error: Timeout failed `);
+                    ban_embed.setFooter(ban_embed.footer!.text! + "Error: Timeout failed ");
                     log_msg.edit({embeds: [ban_embed]});
                 });
             streaks.set(message.author.id, 0);
@@ -100,19 +103,20 @@ async function play_roulette(message: Discord.Message) {
             await update_scoreboard(message.author.id);
         }
     } else {
-        message.reply("Warning: This is __Russian Roulette__. Losing will result in a 30 minute timeout. Proceed at your own risk.");
+        message.reply("Warning: This is __Russian Roulette__. Losing will result in a 30 minute timeout."
+                    + " Proceed at your own risk.");
         warned_users.insert(message.author.id);
     }
 }
 
 async function display_leaderboard(message: Discord.Message) {
     const embed = new Discord.MessageEmbed()
-                  .setColor(green)
-                  .setTitle("Roulette Leaderboard");
+        .setColor(green)
+        .setTitle("Roulette Leaderboard");
     let description = "";
-    for(let [key, value] of
+    for(const [key, value] of
         Object.entries(database.get<leaderboard_schema>("roulette_leaderboard"))
-        .sort((a, b) => b[1] - a[1])) {
+            .sort((a, b) => b[1] - a[1])) {
         description += `<@${key}>: ${value} roll${value == 1 ? "" : "s"} before death\n`;
     }
     embed.setDescription(description);
