@@ -24,6 +24,8 @@ rules:
         1
       SwitchCase:
         1
+      ImportDeclaration:
+        first
   max-len:
     - error
     - 120
@@ -33,6 +35,18 @@ rules:
   quotes:
     - error
     - double
+  no-unused-vars:
+    - warn
+    - destructuredArrayIgnorePattern:
+        ^_
+      argsIgnorePattern:
+        ^_
+      varsIgnorePattern:
+        assert|M
+  no-constant-condition:
+    - off
+  "@typescript-eslint/no-unused-vars":
+    - off
   "@typescript-eslint/no-non-null-assertion":
     - off
   "@typescript-eslint/no-explicit-any":

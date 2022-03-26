@@ -2,7 +2,8 @@ import * as Discord from "discord.js";
 import { strict as assert } from "assert";
 import { critical_error, departialize, M, KeyedMutexSet, SelfClearingSet } from "./utils";
 import { DatabaseInterface } from "./database_interface";
-import { is_root, MINUTE, server_suggestions_channel_id, suggestion_action_log_thread_id, suggestion_dashboard_thread_id, TCCPP_ID, wheatley_id } from "./common";
+import { is_root, MINUTE, server_suggestions_channel_id, suggestion_action_log_thread_id,
+         suggestion_dashboard_thread_id, TCCPP_ID, wheatley_id } from "./common";
 import { forge_snowflake } from "./snowflake";
 import * as XXH from "xxhashjs";
 
@@ -198,7 +199,8 @@ async function log_reopen(message: Discord.Message) {
 // TODO: potentially may have reopen suggestion and untrack suggestion in the future
 // Note: Callers obtain mutex lock
 
-// Race condition handling: edits while processing edits, await status_message.delete() and on_message_delete() interfering, etc.
+// Race condition handling: edits while processing edits, await status_message.delete() and on_message_delete()
+// interfering, etc.
 const mutex = new KeyedMutexSet<string>();
 const status_lock = new SelfClearingSet<string>(5 * MINUTE, 5 * MINUTE);
 
@@ -244,7 +246,8 @@ async function update_message_if_needed(message: Discord.Message) {
     try {
         if(!(message.id in database.get<db_schema>("suggestion_tracker").suggestions)) {
             // TODO: This can happen under normal operation, this is here as a debug check
-            // TODO: Also happens when a thread is created directly, not off an initial message. Need to investigate why.
+            // TODO: Also happens when a thread is created directly, not off an initial message.
+            // Need to investigate why.
             M.warn("update_message_if_needed called on untracked message", message);
             return;
         }
@@ -277,7 +280,8 @@ async function resolve_suggestion(message: Discord.Message, reaction: reaction) 
             await status_message.delete();
             delete database.get<db_schema>("suggestion_tracker").suggestions[message.id];
             database.update();
-            if(reaction.user.id != wheatley_id) { // if wheatley then this is logged when the reaction is done on the dashboard
+            // if wheatley then this is logged when the reaction is done on the dashboard
+            if(reaction.user.id != wheatley_id) {
                 log_resolution(message, reaction);
             }
         } else {
@@ -307,7 +311,8 @@ async function on_message_delete(message: Discord.Message | Discord.PartialMessa
     try {
         if(message.channel.id == server_suggestions_channel_id) {
             if(!(message.id in database.get<db_schema>("suggestion_tracker").suggestions)) {
-                M.info("Untracked message deleted", message); // TODO: This can happen under normal operation, this is here as a debug check
+                // TODO: This can happen under normal operation, this is here as a debug check
+                M.info("Untracked message deleted", message);
                 return;
             }
             await mutex.lock(message.id);
@@ -315,7 +320,8 @@ async function on_message_delete(message: Discord.Message | Discord.PartialMessa
             mutex.unlock(message.id);
         } else if(message.channel.id == suggestion_dashboard_thread_id) {
             assert(message.author != null);
-            if(message.author.id == wheatley_id && !status_lock.has(message.id)) { // race condition with await status_message.delete() checked here
+            // race condition with await status_message.delete() checked here
+            if(message.author.id == wheatley_id && !status_lock.has(message.id)) {
                 // find and delete database entry
                 const suggestion_id = reverse_lookup(message.id);
                 if(suggestion_id == null) {
@@ -396,7 +402,9 @@ async function on_react(reaction: Discord.MessageReaction | Discord.PartialMessa
                 if(suggestion_id == null) {
                     throw 0; // untracked  - this is an internal error or a race condition
                 } else {
-                    await mutex.lock(reaction.message.id); // lock the status message NOTE: Assuming no identical snowflakes between channels, this should be pretty safe though
+                    // lock the status message
+                    // NOTE: Assuming no identical snowflakes between channels, this should be pretty safe though
+                    await mutex.lock(reaction.message.id);
                     const suggestion = await suggestion_channel.messages.fetch(suggestion_id);
                     suggestion.react(reaction.emoji.name!);
                     log_resolution(suggestion, {
@@ -404,7 +412,8 @@ async function on_react(reaction: Discord.MessageReaction | Discord.PartialMessa
                         emoji: reaction.emoji
                     });
                     mutex.unlock(reaction.message.id);
-                    // No further action done here: process_reaction will run when on_react will fires again as a result of suggestion.react
+                    // No further action done here: process_reaction will run when on_react will fires again as a result
+                    // of suggestion.react
                 }
             }
         }
@@ -462,7 +471,8 @@ async function process_since_last_scanned() {
                     database.get<db_schema>("suggestion_tracker").last_scanned_timestamp = message.createdTimestamp;
                 }
             } else {
-                M.debug("server_suggestion tracker process_since_last_scanned: New message found:", message.id, message.author.tag, message.content);
+                M.debug("server_suggestion tracker process_since_last_scanned: New message found:",
+                        message.id, message.author.tag, message.content);
                 //if(message.createdTimestamp > database.state.suggestion_tracker.last_scanned_timestamp) {
                 //    assert(message.createdTimestamp == decode_snowflake(message.id));
                 //    database.get<db_schema>("suggestion_tracker").last_scanned_timestamp = message.createdTimestamp;

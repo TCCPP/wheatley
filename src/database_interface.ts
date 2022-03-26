@@ -1,4 +1,3 @@
-import * as Discord from "discord.js";
 import { strict as assert } from "assert";
 import { M, Mutex } from "./utils";
 import * as fs from "fs";

@@ -14,8 +14,8 @@ type member_entry = {
 };
 
 type submodule = {
-    on_join?: (member: Discord.GuildMember, now: number) => void,
-    on_ban?: (ban: Discord.GuildBan, now: number) => void
+    on_join?: (_member: Discord.GuildMember, _now: number) => void,
+    on_ban?: (_ban: Discord.GuildBan, _now: number) => void
 };
 
 // how long we retain join info - 30 minutes for now
@@ -60,7 +60,7 @@ export class MemberTracker {
         this.entries = this.entries.slice(first_in_timeframe);
         // -- ping/link maps --
         for(const map of [this.ping_map, this.link_map]) {
-            for(let [k, v] of map) {
+            for(let [k, v] of map) { /* eslint-disable-line prefer-const */
                 v = v.filter(m => now - m.createdTimestamp <= LOG_DURATION);
                 if(v.length == 0) {
                     this.ping_map.delete(k);
@@ -68,7 +68,8 @@ export class MemberTracker {
             }
         }
         for(const [id, timestamp] of this.currently_banning) {
-            if(now - timestamp <= 5 * MINUTE) { // Don't keep around for more than 10 minutes, just need to address race condition
+            // Don't keep around for more than 10 minutes, just need to address race condition
+            if(now - timestamp <= 5 * MINUTE) {
                 this.currently_banning.delete(id);
             }
         }

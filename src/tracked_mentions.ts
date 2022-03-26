@@ -20,8 +20,10 @@ function check_tracked_mention_and_notify(message: Discord.Message) {
         if(tracked_mentions.indexOf(role_id) > -1) {
             const embed = new Discord.MessageEmbed()
                 .setColor(color)
-                .setAuthor(`${message.author.username}#${message.author.discriminator}`, message.author.displayAvatarURL())
-                .setDescription(`<@&${role_id}> mentioned in <#${message.channel.id}> by <@${message.author.id}>\n[click here to jump](${message.url})`)
+                .setAuthor(`${message.author.username}#${message.author.discriminator}`,
+                           message.author.displayAvatarURL())
+                .setDescription(`<@&${role_id}> mentioned in <#${message.channel.id}> by <@${message.author.id}>\n`
+                              + `[click here to jump](${message.url})`)
                 .setFooter(`ID: ${message.author.id}`)
                 .setTimestamp();
             action_log_channel.send({ embeds: [embed] });

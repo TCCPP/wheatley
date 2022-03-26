@@ -33,9 +33,10 @@ function on_ban(ban: Discord.GuildBan, now: number) {
         const embed = new Discord.MessageEmbed()
             .setColor(speedrun_color)
             .setAuthor(`Speedrun attempt: ${user.tag}`, avatar)
-            .setDescription(`User <@${user.id}> joined at <t:${Math.round(entry.joined_at / 1000)}:T> and banned at <t:${Math.round(now / 1000)}:T>.`
-                              + `\nFinal timer: ${diff_to_human(now - entry.joined_at)}.`
-                              + (is_auto_ban ? "\n**AUTO BAN**" : ""))
+            .setDescription(`User <@${user.id}> joined at <t:${Math.round(entry.joined_at / 1000)}:T> and`
+                          + ` banned at <t:${Math.round(now / 1000)}:T>.\n`
+                          + `Final timer: ${diff_to_human(now - entry.joined_at)}.`
+                          + (is_auto_ban ? "\n**AUTO BAN**" : ""))
             .setFooter(`ID: ${user.id}`)
             .setTimestamp();
         action_log_channel!.send({ embeds: [embed] });

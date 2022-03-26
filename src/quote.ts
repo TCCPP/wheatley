@@ -15,7 +15,8 @@ const quote_command_re = /^!(quoteb?)\s*https:\/\/discord\.com\/channels\/(\d+)\
 
 const color = 0x7E78FE; //0xA931FF;
 
-async function get_display_name(thing: Discord.Message | Discord.User): Promise<string> { // TODO: Redundant with server_suggestion_tracker
+// TODO: Redundant with server_suggestion_tracker
+async function get_display_name(thing: Discord.Message | Discord.User): Promise<string> {
     if(thing instanceof Discord.User) {
         const user = thing;
         try {
@@ -80,7 +81,7 @@ async function make_quote(messages: Discord.Message[], requested_by: Discord.Gui
     return [embed, ...image_embeds, ...other_embeds];
 }
 
-function index_of_first_not_satisfying<T>(arr: T[], fn: (x: T) => boolean) {
+function index_of_first_not_satisfying<T>(arr: T[], fn: (_: T) => boolean) {
     for(let i = 0; i < arr.length; i++) {
         if(!fn(arr[i])) {
             return i;
@@ -102,7 +103,8 @@ async function do_quote(message: Discord.Message, channel_id: string, message_id
             })).map(m => m).reverse();
             const start_time = fetched_messages.length > 0 ? fetched_messages[0].createdTimestamp : undefined;
             const end = index_of_first_not_satisfying(fetched_messages,
-                                                      m => m.author.id == fetched_messages[0].author.id && m.createdTimestamp - start_time! <= 60 * MINUTE);
+                                                      m => m.author.id == fetched_messages[0].author.id
+                                                           && m.createdTimestamp - start_time! <= 60 * MINUTE);
             messages = fetched_messages.slice(0, end == -1 ? fetched_messages.length : end);
         } else {
             const quote_message = await channel.messages.fetch(message_id);
@@ -146,7 +148,8 @@ async function on_message(message: Discord.Message) {
                 const reply = await message.fetchReference();
                 await do_quote(message, reply.channel.id, reply.id, message.content.trim() == "!quoteb");
             } else {
-                message.channel.send("`!quote <url>` or `!quote` while replying. !quoteb can be used to quote a continuous block of messages from a user");
+                message.channel.send("`!quote <url>` or `!quote` while replying."
+                                   + " !quoteb can be used to quote a continuous block of messages from a user");
             }
         }
     } catch(e) {

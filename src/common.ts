@@ -48,7 +48,8 @@ export const root_ids = new Set([
     "162964325823283200", // eisen
     "110756651694297088", // vincent
     "89441674844995584",  // styx
-    "597216680271282192", // wheatley <- so that Wheatly reactions aren't removed in server suggestions and also allow some elegant handling
+    // prevent Wheatly reactions being removed in server suggestions and also allow some elegant handling
+    "597216680271282192", // wheatley
 ]);
 
 export const root_mod_ids = [
@@ -68,7 +69,7 @@ export const root_mod_ids = [
 
 export const root_mod_ids_set = new Set(root_mod_ids);
 
-export var root_mod_list = "jr-#6677, easyaspi314#1497, Eisenwave#7675, Styxs#7557, or Vin¢#1293";
+export let root_mod_list = "jr-#6677, easyaspi314#1497, Eisenwave#7675, Styxs#7557, or Vin¢#1293";
 
 export async function fetch_root_mod_list(client: Discord.Client) {
     const tags = [];

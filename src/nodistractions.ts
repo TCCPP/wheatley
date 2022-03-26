@@ -1,7 +1,7 @@
 import * as Discord from "discord.js";
 import { strict as assert } from "assert";
 import { critical_error, M } from "./utils";
-import { is_authorized_admin, no_off_topic, TCCPP_ID, zelis_id } from "./common";
+import { no_off_topic, TCCPP_ID, zelis_id } from "./common";
 import { DatabaseInterface } from "./database_interface";
 
 let client: Discord.Client;
@@ -10,8 +10,6 @@ let TCCPP : Discord.Guild;
 let zelis : Discord.User;
 
 const nodistractions_re = /^!nodistractions\s*(\d*)\s*(\w*)/i;
-const nodistractions_snowflake_re = /^!nodistractions\s*(\d*)\s*(\w*)\s*(\d{10,})/i; // TODO
-const remove_nodistractions_snowflake_re = /^!removenodistractions\s*(\d{10,})/i; // TODO
 
 let database: DatabaseInterface;
 
@@ -123,11 +121,13 @@ function set_timer() {
     assert(timer == null);
     assert(undistract_queue.length > 0);
     const next = undistract_queue[0];
-    const sleep_time = (next.start - Date.now()) + next.duration; // next.start + next.duration - Date.now() but make sure overflow is prevented
+    // next.start + next.duration - Date.now() but make sure overflow is prevented
+    const sleep_time = (next.start - Date.now()) + next.duration;
     timer = setTimeout(handle_timer, Math.min(sleep_time, INT_MAX));
 }
 
-async function apply_no_distractions(target: Discord.GuildMember, message: Discord.Message, start: number, duration: number) {
+async function apply_no_distractions(target: Discord.GuildMember, message: Discord.Message, start: number,
+                                     duration: number) {
     M.debug("Applying !nodistractions");
     assert(target != null);
     // error handling
@@ -151,7 +151,8 @@ async function apply_no_distractions(target: Discord.GuildMember, message: Disco
         M.error(e);
         return;
     }
-    target.send("!nodistractions applied, use !removenodistractions to exit").catch(e => e.status != 403 ? M.error(e) : 0);
+    target.send("!nodistractions applied, use !removenodistractions to exit")
+        .catch(e => e.status != 403 ? M.error(e) : 0);
     message.react("👍").catch(M.error);
     // make entry
     const entry: no_distraction_entry = {
@@ -220,7 +221,8 @@ async function on_message(message: Discord.Message) {
         if(message.author.bot) return; // Ignore bots
     
         if(message.content.trim().toLowerCase() == "!nodistractions") {
-            message.channel.send("`!nodistractions <time>` where time is an integer followed by one of the following units: m, h, d, w, M, y\n`!removenodistractions` to remove nodistractions");
+            message.channel.send("`!nodistractions <time>` where time is an integer followed by one of the following"
+                               + " units: m, h, d, w, M, y\n`!removenodistractions` to remove nodistractions");
             return;
         }
 
@@ -258,7 +260,7 @@ async function on_message(message: Discord.Message) {
             assert(match.length == 3);
             const n = parseInt(match[1]);
             const u = match[2];
-            if(n == NaN) {
+            if(isNaN(n)) {
                 send_error(message, "Empty time field");
                 return;
             }

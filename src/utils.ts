@@ -81,8 +81,8 @@ export function diff_to_human(diff: number) {
     }
 }
 
-const code_re = /`[^\`]+`(?!`)/gi;
-const code_block_re = /```(?:[^\`]|`(?!``))+```/gi;
+const code_re = /`[^`]+`(?!`)/gi;
+const code_block_re = /```(?:[^`]|`(?!``))+```/gi;
 
 export function parse_out(message: string) {
     message = message.replace(code_re, message);
@@ -102,7 +102,8 @@ export function exists_sync(path: string) {
 
 type PotentiallyPartial = Discord.AllowedPartial | Discord.Partialize<Discord.AllowedPartial>;
 
-export async function departialize<T extends PotentiallyPartial, R extends ReturnType<T["fetch"]>>(thing: T): Promise<R> {
+export async function departialize<T extends PotentiallyPartial,
+                                   R extends ReturnType<T["fetch"]>>(thing: T): Promise<R> {
     if(thing.partial) {
         return thing.fetch();
     } else {
@@ -174,10 +175,9 @@ export class SelfClearingMap<K, V> {
 export class Mutex {
     locked = false;
     waiting: (() => void)[] = [];
-    constructor() {}
     async lock() {
         if(this.locked) {
-            await new Promise<void>(resolve => { // TODO: Is there an async break between promise call and callback call?
+            await new Promise<void>(resolve => {// TODO: Is there an async break between promise call and callback call?
                 this.waiting.push(resolve);
             });
             // entry in locks will remain, no need to re-add
@@ -198,13 +198,12 @@ export class Mutex {
 export class KeyedMutexSet<T> {
     locks = new Set<T>();
     waiting = new Map<T, (() => void)[]>();
-    constructor() {}
     async lock(value: T) {
         if(this.locks.has(value)) {
             if(!this.waiting.has(value)) {
                 this.waiting.set(value, []);
             }
-            await new Promise<void>(resolve => { // TODO: Is there an async break between promise call and callback call?
+            await new Promise<void>(resolve => {// TODO: Is there an async break between promise call and callback call?
                 this.waiting.get(value)!.push(resolve);
             });
             // entry in locks will remain, no need to re-add
@@ -254,10 +253,10 @@ export async function critical_error(...args: any[]) {
                 } catch {
                     try {
                         strs.push(String(arg));
-                    } catch {}
+                    } catch { void(0); }
                 }
             }
             zelis.send(`Critical error occurred: ${strs.join(" ")}`);
         }
-    } catch {}
+    } catch { void(0); }
 }
