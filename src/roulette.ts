@@ -78,23 +78,28 @@ async function play_roulette(message: Discord.Message) {
         const roll = Math.floor(Math.random() * 6);
         M.log("!roulette", [message.author.id, message.author.tag], roll);
         if(roll == 0) {
-            // Send bang message
-            const m = {embeds: [make_bang_embed(message.author)]};
-            message.channel.send(m);
-            member_log_channel.send(m);
-            // Setup ban message
-            const ban_embed = make_ban_embed(message);
-            const log_msg = await member_log_channel.send({embeds: [ban_embed]});
+            let ok = true;
             message.member!.timeout(30 * MINUTE, "Bang")
                 .catch((...args: any[]) => {
                     critical_error("promise failed for timeout of roulette loser",
                                    [message.author.id, message.author.tag]);
                     M.error(...args);
-                    ban_embed.setFooter(ban_embed.footer!.text! + "Error: Timeout failed ");
-                    log_msg.edit({embeds: [ban_embed]});
+                    ok = false;
+                })
+                .finally(() => {
+                    // Send bang message
+                    const m = {embeds: [make_bang_embed(message.author)]};
+                    message.channel.send(m);
+                    member_log_channel.send(m);
+                    // Setup ban message
+                    const ban_embed = make_ban_embed(message);
+                    if(!ok) {
+                        ban_embed.setFooter(ban_embed.footer!.text! + "Error: Timeout failed ");
+                    }
+                    member_log_channel.send({embeds: [ban_embed]});
                 });
             streaks.set(message.author.id, 0);
-            await update_scoreboard(message.author.id);
+            await update_scoreboard(message.author.id); // TODO: I forget why this is here
         } else {
             const m = {embeds: [make_click_embed(message.author)]};
             streaks.set(message.author.id, (streaks.get(message.author.id) ?? 0) + 1);
