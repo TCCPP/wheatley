@@ -4,6 +4,7 @@ import { is_root, MINUTE, server_suggestions_channel_id, suggestion_dashboard_th
 import { critical_error, delay, M } from "./utils";
 import { TRACKER_START_TIME } from "./server_suggetsion_tracker";
 import { forge_snowflake } from "./snowflake";
+import { react_blacklist } from "./config";
 
 let client: Discord.Client;
 
@@ -17,11 +18,6 @@ const root_only_reacts = new Set([
     "❎", "✅",
     "🅾️", "⛔", "⭕", "❌", "🛑",
     "🫑", "🍏", "🎾", "🍅", "🍎", "🏮"
-]);
-
-const react_blacklist = new Set([
-    "391270706186420224", // illuminator
-    "370675207423131650", // bacon
 ]);
 
 async function on_react(reaction: Discord.MessageReaction | Discord.PartialMessageReaction,
