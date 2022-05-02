@@ -4,11 +4,13 @@
     "description": "",
     "author": "",
     "dependencies": {
+        "@discordjs/rest": "^0.4.1",
         "@types/node": "^17.0.23",
         "@types/node-fetch": "^2.5.10",
         "@types/ws": "^7.4.4",
         "@types/xxhashjs": "^0.2.2",
         "chalk": "^4.1.2",
+        "discord-api-types": "^0.32.0",
         "discord.js": "^13.6.0",
         "moment": "^2.29.1",
         "xxhashjs": "^0.2.2"
