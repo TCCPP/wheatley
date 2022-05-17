@@ -48,6 +48,7 @@ import { setup_roulette } from "./roulette";
 import { setup_pasta } from "./pasta";
 import { setup_read_tutoring } from "./read_tutoring";
 import { setup_test_module } from "./test_module";
+import { setup_modmail } from "./modmail";
 
 // Setup client
 const client = new Discord.Client({
@@ -131,6 +132,7 @@ process.on("unhandledRejection", (reason, promise) => {
         await setup_read_tutoring(client);
         await setup_pasta(client);
         await setup_test_module(client);
+        await setup_modmail(client);
 
         const token = readFileSync("auth.key", { encoding: "utf-8" });
 

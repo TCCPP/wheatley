@@ -36,6 +36,8 @@ export const action_log_channel_id =
 export const bot_spam_id = "506274405500977153";
 export const tutoring_id = "922603597294870609";
 export const tutoring_requests_id = "915271477559984160";
+export const rules_channel_id = "659868782877212723";
+export const mods_channel_id = "847993258600038460";
 
 // General config
 
