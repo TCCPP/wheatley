@@ -9,10 +9,6 @@
  *   Autoban scammers. Identified based off of spamming @here/@everyone or links across channels.
  *   Protect 🟢, 🔴, 🟡, 🟩, 🟥, 🟨, and 🚫 in #server_suggestions
  *   Warn and notify when a bot wave is incoming
- *     IMPORTANT: This mitigation will only work until the botters realize what we've done!
- *     This mitigation is easy to counter if the botters put in effort to do so - just stagger joins
- *     instead of doing them all at once. The mitigation is not revolutionary, the botters probably
- *     have considered this, but still good to keep implementation details less than public.
  *   !raidpurge (may only be used in #welcome)
  *     Quick-ban bot wave
  *   !wban <list of IDS, any format works as long as they're word-separated>
@@ -21,15 +17,20 @@
  */
 
 import * as Discord from "discord.js";
+import { readFileSync } from "fs";
+
 import { strict as assert } from "assert";
 import { critical_error, init_debugger, M } from "./utils";
-import { readFileSync } from "fs";
+
+import { MemberTracker } from "./member_tracker";
+import { DatabaseInterface } from "./database_interface";
+import { fetch_root_mod_list } from "./common";
+
 import { setup_anti_autoreact } from "./anti_autoreact";
 import { setup_server_suggestion_reactions } from "./server_suggestion_reactions";
 import { setup_role_manager } from "./role_manager";
 import { setup_raidpurge } from "./raidpurge";
 import { setup_notify_about_brand_new_users } from "./notify_about_brand_new_users";
-import { MemberTracker } from "./member_tracker";
 import { setup_anti_raid } from "./anti_raid";
 import { setup_speedrun } from "./speedrun";
 import { setup_anti_scambot } from "./anti_scambot";
@@ -37,16 +38,16 @@ import { setup_tracked_mentions } from "./tracked_mentions";
 import { setup_massban } from "./massban";
 import { setup_test_command } from "./test_command";
 import { setup_snowflake } from "./snowflake";
-import { DatabaseInterface } from "./database_interface";
 import { setup_nodistractions } from "./nodistractions";
 import { setup_server_suggestion_tracker } from "./server_suggetsion_tracker";
 import { setup_quote } from "./quote";
 import { setup_ping } from "./ping";
-import { fetch_root_mod_list } from "./common";
 import { setup_link_blacklist } from "./link_blacklist";
 import { setup_utility_tools } from "./utility_tools";
 import { setup_roulette } from "./roulette";
+import { setup_pasta } from "./pasta";
 import { setup_read_tutoring } from "./read_tutoring";
+import { setup_test_module } from "./test_module";
 
 // Setup client
 const client = new Discord.Client({
@@ -128,10 +129,14 @@ process.on("unhandledRejection", (reason, promise) => {
         await setup_link_blacklist(client, database);
         await setup_utility_tools(client);
         await setup_read_tutoring(client);
-    
+        await setup_pasta(client);
+        await setup_test_module(client);
+
+        const token = readFileSync("auth.key", { encoding: "utf-8" });
+
         M.debug("Logging in");
-    
-        client.login(readFileSync("auth.key", { encoding: "utf-8" }));
+
+        client.login(token);
     } catch(e) {
         critical_error(e);
     }
@@ -139,3 +144,5 @@ process.on("unhandledRejection", (reason, promise) => {
 
 // join link:
 // https://discord.com/oauth2/authorize?client_id=597216680271282192&scope=bot&permissions=519270
+// https://discord.com/api/oauth2/authorize?client_id=597216680271282192&permissions=8&redirect_uri=https%3A%2F%2Fdiscordapp.com%2Foauth2%2Fauthorize%3F%26client_id%3D597216680271282192%26scope%3Dbot&response_type=code&scope=guilds%20guilds.join%20guilds.members.read%20bot%20messages.read%20applications.commands%20applications.store.update%20applications.entitlements%20activities.read%20activities.write%20relationships.read
+// https://discordapp.com/oauth2/authorize?&client_id=597216680271282192&scope=bot&permissions=8
