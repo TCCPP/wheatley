@@ -22,11 +22,11 @@ export async function setup_test_module(_client: Discord.Client) {
     const token = readFileSync("auth.key", { encoding: "utf-8" });
 
     const echo = new SlashCommandBuilder()
-        .setName('echo')
-        .setDescription('Replies with your input!')
+        .setName("echo")
+        .setDescription("Replies with your input!")
         .addStringOption(option =>
-            option.setName('input')
-                .setDescription('The input to echo back')
+            option.setName("input")
+                .setDescription("The input to echo back")
                 .setRequired(true));
     const commands = [echo];
     const rest = new REST({ version: "9" }).setToken(token);

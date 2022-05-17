@@ -1,7 +1,7 @@
 import * as Discord from "discord.js";
 import { strict as assert } from "assert";
 import { critical_error, M } from "./utils";
-import { is_authorized_admin, member_log_channel_id, mods_channel_id, rules_channel_id, TCCPP_ID, zelis_id } from "./common";
+import { is_authorized_admin, member_log_channel_id, mods_channel_id, rules_channel_id, TCCPP_ID } from "./common";
 
 let client: Discord.Client;
 
@@ -26,16 +26,16 @@ async function on_message(message: Discord.Message) {
         if(message.content == "!wsetupmodmailsystem"
         && is_authorized_admin(message.member!)) {
             const row = new Discord.MessageActionRow()
-                            .addComponents(
-                                new Discord.MessageButton()
-                                    .setCustomId("modmail_monkey")
-                                    .setLabel("I'm a monkey")
-                                    .setStyle('PRIMARY'),
-                                new Discord.MessageButton()
-                                    .setCustomId("modmail_create")
-                                    .setLabel("Start a modmail thread")
-                                    .setStyle('DANGER'),
-                            );
+                .addComponents(
+                    new Discord.MessageButton()
+                        .setCustomId("modmail_monkey")
+                        .setLabel("I'm a monkey")
+                        .setStyle("PRIMARY"),
+                    new Discord.MessageButton()
+                        .setCustomId("modmail_create")
+                        .setLabel("Start a modmail thread")
+                        .setStyle("DANGER"),
+                );
             message.channel.send({
                 embeds: [create_embed("Modmail", "If you have a **moderation** or **administration** related issue you can reach out to the staff team by pressing the modmail thread button below.\n\nBecause, in our experience, a surprising number of users also can't read, there is also a monkey button.")],
                 components: [row]
@@ -88,7 +88,7 @@ async function on_interaction_create(interaction: Discord.Interaction) {
             });
             await thread.members.add(member.id);
             // TODO: Add all mods?
-            let notification_embed = create_embed("Modmail Thread Created", `<#${thread.id}>`);
+            const notification_embed = create_embed("Modmail Thread Created", `<#${thread.id}> https://discord.com/channels/${TCCPP_ID}/${thread.id}`);
             notification_embed.setAuthor({
                 name: member.user.tag,
                 iconURL: member.displayAvatarURL()
@@ -112,7 +112,7 @@ async function on_ready() {
         mods_channel = await client.channels.fetch(mods_channel_id) as Discord.TextChannel;
         staff_member_log_channel = await client.channels.fetch(member_log_channel_id) as Discord.TextChannel;
         client.on("messageCreate", on_message);
-        client.on('interactionCreate', on_interaction_create);
+        client.on("interactionCreate", on_interaction_create);
     } catch(e) {
         critical_error(e);
     }

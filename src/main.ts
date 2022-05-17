@@ -143,8 +143,3 @@ process.on("unhandledRejection", (reason, promise) => {
         critical_error(e);
     }
 })();
-
-// join link:
-// https://discord.com/oauth2/authorize?client_id=597216680271282192&scope=bot&permissions=519270
-// https://discord.com/api/oauth2/authorize?client_id=597216680271282192&permissions=8&redirect_uri=https%3A%2F%2Fdiscordapp.com%2Foauth2%2Fauthorize%3F%26client_id%3D597216680271282192%26scope%3Dbot&response_type=code&scope=guilds%20guilds.join%20guilds.members.read%20bot%20messages.read%20applications.commands%20applications.store.update%20applications.entitlements%20activities.read%20activities.write%20relationships.read
-// https://discordapp.com/oauth2/authorize?&client_id=597216680271282192&scope=bot&permissions=8
