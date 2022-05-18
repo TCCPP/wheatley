@@ -111,6 +111,10 @@ export async function departialize<T extends PotentiallyPartial,
     }
 }
 
+export function get_url_for(channel: Discord.GuildChannel | Discord.TextChannel | Discord.ThreadChannel) {
+    return `https://discord.com/channels/${channel.guildId}/${channel.id}`;
+}
+
 export async function delay(n: number): Promise<void> {
     return new Promise<void>(resolve => setTimeout(resolve, n));
 }
