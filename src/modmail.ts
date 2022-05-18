@@ -1,7 +1,7 @@
 import * as Discord from "discord.js";
 import { strict as assert } from "assert";
 import { critical_error, get_url_for, M } from "./utils";
-import { is_authorized_admin, member_log_channel_id, mods_channel_id, root_mod_ids, rules_channel_id, TCCPP_ID, zelis_id } from "./common";
+import { is_authorized_admin, member_log_channel_id, MINUTE, mods_channel_id, root_mod_ids, rules_channel_id, TCCPP_ID, zelis_id } from "./common";
 import { DatabaseInterface } from "./database_interface";
 
 let client: Discord.Client;
@@ -16,6 +16,9 @@ let database: DatabaseInterface;
 type database_schema = number;
 
 let modmail_id_counter = 0;
+
+const RATELIMIT_TIME = MINUTE;
+const timeout_set = new Set<string>();
 
 const color = 0x7E78FE;
 
@@ -143,7 +146,18 @@ async function on_interaction_create(interaction: Discord.Interaction) {
             await handle_monkey(interaction);
         }
         if(interaction.customId == "modmail_create") {
-            await create_modmail_thread(interaction);
+            if(timeout_set.has(interaction.user.id)) {
+                await interaction.reply({
+                    ephemeral: true,
+                    content: "Please don't spam modmail requests"
+                });
+            } else {
+                timeout_set.add(interaction.user.id);
+                await create_modmail_thread(interaction);
+                setTimeout(() => {
+                    timeout_set.delete(interaction.user.id);
+                }, RATELIMIT_TIME);
+            }
         }
     } catch(e) {
         critical_error(e);
