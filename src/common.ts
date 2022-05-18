@@ -7,9 +7,13 @@ export const MINUTE = 1000 * 60;
 
 export const pepereally = "<:pepereally:643881257624666112>";
 
-export const color = 0x337fd5;
-export const alert_color = 0xf5a53e;
-export const speedrun_color = 0x0fc644;
+export enum colors {
+    color = 0x337fd5,
+    alert_color = 0xf5a53e,
+    speedrun_color = 0x0fc644,
+    red = 0x0,
+    green = 0x0
+}
 
 // User IDs
 export const zelis_id = "199943082441965577";

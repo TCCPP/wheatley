@@ -1,7 +1,7 @@
 import * as Discord from "discord.js";
 import { strict as assert } from "assert";
 import { critical_error, M } from "./utils";
-import { action_log_channel_id, color, moderators_role_id, root_role_id, TCCPP_ID } from "./common";
+import { action_log_channel_id, colors, moderators_role_id, root_role_id, TCCPP_ID } from "./common";
 
 let client: Discord.Client;
 let action_log_channel: Discord.TextChannel;
@@ -19,7 +19,7 @@ function check_tracked_mention_and_notify(message: Discord.Message) {
     for(const [role_id, _] of message.mentions.roles) {
         if(tracked_mentions.indexOf(role_id) > -1) {
             const embed = new Discord.MessageEmbed()
-                .setColor(color)
+                .setColor(colors.color)
                 .setAuthor(`${message.author.username}#${message.author.discriminator}`,
                            message.author.displayAvatarURL())
                 .setDescription(`<@&${role_id}> mentioned in <#${message.channel.id}> by <@${message.author.id}>\n`

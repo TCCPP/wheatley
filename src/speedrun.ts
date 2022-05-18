@@ -2,7 +2,7 @@ import * as Discord from "discord.js";
 import { strict as assert } from "assert";
 import { critical_error, diff_to_human, M } from "./utils";
 import { MemberTracker } from "./member_tracker";
-import { action_log_channel_id, speedrun_color } from "./common";
+import { action_log_channel_id, colors } from "./common";
 
 let tracker: MemberTracker;
 let client: Discord.Client;
@@ -31,7 +31,7 @@ function on_ban(ban: Discord.GuildBan, now: number) {
         const is_auto_ban = entry.purged || tracker.currently_banning.has(user.id);
         // make embed
         const embed = new Discord.MessageEmbed()
-            .setColor(speedrun_color)
+            .setColor(colors.speedrun_color)
             .setAuthor(`Speedrun attempt: ${user.tag}`, avatar)
             .setDescription(`User <@${user.id}> joined at <t:${Math.round(entry.joined_at / 1000)}:T> and`
                           + ` banned at <t:${Math.round(now / 1000)}:T>.\n`

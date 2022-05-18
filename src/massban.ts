@@ -1,7 +1,7 @@
 import * as Discord from "discord.js";
 import { strict as assert } from "assert";
 import { critical_error, M } from "./utils";
-import { action_log_channel_id, color, is_authorized_admin, pepereally, TCCPP_ID } from "./common";
+import { action_log_channel_id, colors, is_authorized_admin, pepereally, TCCPP_ID } from "./common";
 
 let client: Discord.Client;
 let action_log_channel: Discord.TextChannel;
@@ -24,7 +24,7 @@ function do_mass_ban(msg: Discord.Message) {
         msg.reply("Done.");
         // TODO: use long-message logic?
         const embed = new Discord.MessageEmbed()
-            .setColor(color)
+            .setColor(colors.color)
             .setTitle(`<@!${msg.author.id}> banned ${ids.length} users`)
             .setDescription(`\`\`\`\n${ids.join("\n")}\n\`\`\``)
             .setTimestamp();

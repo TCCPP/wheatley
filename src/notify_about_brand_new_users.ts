@@ -1,7 +1,7 @@
 import * as Discord from "discord.js";
 import { strict as assert } from "assert";
 import { critical_error, M } from "./utils";
-import { alert_color, member_log_channel_id, MINUTE } from "./common";
+import { colors, member_log_channel_id, MINUTE } from "./common";
 
 const NEW_USER_THRESHOLD = MINUTE * 60;
 
@@ -9,7 +9,7 @@ let member_log_channel: Discord.TextChannel;
 
 function notify_about_brand_new_user(member: Discord.GuildMember) {
     const embed = new Discord.MessageEmbed()
-        .setColor(alert_color)
+        .setColor(colors.alert_color)
         .setAuthor(`New User Warning: ${member.user.tag}`, member.user.displayAvatarURL())
         .setDescription(`User <@${member.user.id}>'s account was created at created at:`
                       + ` <t:${Math.round(member.user.createdTimestamp / 1000)}>`)

@@ -7,7 +7,7 @@ import { readFileSync } from "fs";
 
 import { strict as assert } from "assert";
 import { M } from "./utils";
-import { color, is_authorized_admin, TCCPP_ID, wheatley_id } from "./common";
+import { colors, is_authorized_admin, TCCPP_ID, wheatley_id } from "./common";
 
 let client: Discord.Client;
 
