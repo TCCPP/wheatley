@@ -4,7 +4,6 @@ import { M } from "./utils";
 
 // Common constants
 export const MINUTE = 1000 * 60;
-export const MINUTE = 1000 * 60;
 
 export const pepereally = "<:pepereally:643881257624666112>";
 

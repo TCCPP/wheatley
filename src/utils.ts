@@ -168,6 +168,21 @@ export class SelfClearingMap<K, V> {
         if(p == undefined) return undefined;
         return p[1];
     }
+    /*
+    get(key: K, default_value?: V): V | undefined {
+        if(this.contents.has(key)) {
+            const p = this.contents.get(key);
+            return p![1];
+        } else {
+            if(default_value) {
+                this.set(key, default_value);
+                return this.get(key);
+            } else {
+                return undefined;
+            }
+        }
+    }
+    */
     remove(key: K) {
         this.contents.delete(key);
     }

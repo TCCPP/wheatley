@@ -29,7 +29,6 @@ async function get_display_name(thing: Discord.Message | Discord.User): Promise<
         const message = thing;
         if(message.member == null) {
             return get_display_name(message.author);
-            
         } else {
             return message.member.displayName;
         }
@@ -124,7 +123,7 @@ async function do_quote(message: Discord.Message, channel_id: string, message_id
             embeds: quote_embeds
         });
         // delete request
-        message.delete();
+        ///message.delete();
     } else {
         message.reply("Error: Channel not a text channel.");
     }
