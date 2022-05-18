@@ -132,7 +132,7 @@ process.on("unhandledRejection", (reason, promise) => {
         await setup_read_tutoring(client);
         await setup_pasta(client);
         await setup_test_module(client);
-        await setup_modmail(client);
+        await setup_modmail(client, database);
 
         const token = readFileSync("auth.key", { encoding: "utf-8" });
 
