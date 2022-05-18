@@ -5,25 +5,36 @@ import * as fs from "fs";
 import { MINUTE, zelis_id } from "./common";
 import { assert } from "console";
 
+function get_caller_location() { // https://stackoverflow.com/a/53339452/15675011
+    let e = new Error();
+    if(!e.stack) {
+        return "<error>";
+    }
+    let frame = e.stack.split("\n")[3];
+    let line_number = frame.split(":").reverse()[1];
+    let function_name = frame.split(" ")[5];
+    return function_name + ":" + line_number;
+}
+
 export class M {
     static get_timestamp() {
         return moment().format("MM.DD.YY HH:mm:ss");
     }
     static log(...args: any[]) {
         process.stdout.write(`[${M.get_timestamp()}] [log]   `);
-        console.log(...args);
+        console.log(...args, `(from: ${get_caller_location()})`);
     }
     static debug(...args: any[]) {
         process.stdout.write(`${chalk.gray(`[${M.get_timestamp()}] [debug]`)} `);
-        console.log(...args);
+        console.log(...args, `(from: ${get_caller_location()})`);
     }
     static info(...args: any[]) {
         process.stdout.write(`${chalk.blueBright(`[${M.get_timestamp()}] [info] `)} `);
-        console.log(...args);
+        console.log(...args, `(from: ${get_caller_location()})`);
     }
     static warn(...args: any[]) {
         process.stdout.write(`${chalk.yellowBright(`[${M.get_timestamp()}] [warn] `)} `);
-        console.log(...args);
+        console.log(...args, `(from: ${get_caller_location()})`);
     }
     static error(...args: any[]) {
         process.stdout.write(`${chalk.redBright(`[${M.get_timestamp()}] [error]`)} `);

@@ -48,12 +48,12 @@ export const mods_channel_id = "847993258600038460";
 export const thread_based_help_channel_ids = new Set([
     "976315803634925578", // cpp-help-threads
     "976315954965381170", // c-help-threads
-    "873682069325217802", // today-i-learned
 ]);
 
 export const thread_based_channel_ids = new Set([
     "802541516655951892", // server-suggestions
     "594212045621035030", // showcase
+    "873682069325217802", // today-i-learned
 ]);
 
 // General config

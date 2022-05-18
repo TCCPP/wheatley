@@ -26,6 +26,7 @@ async function on_message(message: Discord.Message) {
             await thread.send({
                 content: `<@${message.author.id}> This thread is for your question, use \`!rename <brief description>\` to set the thread's name.\n\nSomeone will surely help soon :smile: \n\nHaving trouble getting an answer? Use \`!howto ask\` for tips on how to ask a programming question. And remember, don't ask to ask just ask your question!`
             });
+            await thread.leave();
         }
         if(thread_based_channel_ids.has(message.channel.id)) {
             const s = message.member?.displayName.trim().endsWith("s") ? "" : "s"; // rudimentary
@@ -35,6 +36,7 @@ async function on_message(message: Discord.Message) {
             await thread.send({
                 content: `<@${message.author.id}> This thread is for your post, use \`!rename <brief description>\` to set the thread's name.`
             });
+            await thread.leave();
         }
     } catch(e) {
         critical_error(e);

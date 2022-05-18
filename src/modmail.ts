@@ -138,10 +138,11 @@ async function create_modmail_thread(interaction: Discord.ModalSubmitInteraction
         });
         // add everyone
         await thread.members.add(member.id);
-        for(const id of root_mod_ids) {
-            // Deliberately not awaiting here
-            thread.members.add(id);
-        }
+        // Deliberately not awaiting here
+        Promise.all(root_mod_ids.map(id => thread.members.add(id)))
+            .then(() => {
+                thread.leave();
+            });
     } catch(e) {
         await interaction.update({
             content: "Something went wrong internally...",
@@ -168,10 +169,6 @@ async function on_interaction_create(interaction: Discord.Interaction) {
                     });
                     await log_action(interaction.member, "Modmail button spammed");
                 } else {
-                    timeout_set.add(interaction.user.id);
-                    setTimeout(() => {
-                        timeout_set.delete(interaction.user.id);
-                    }, RATELIMIT_TIME);
                     const row = new Discord.MessageActionRow()
                         .addComponents(
                             new Discord.MessageButton()
@@ -197,6 +194,10 @@ async function on_interaction_create(interaction: Discord.Interaction) {
                 });
                 await log_action(interaction.member, "Modmail abort sequence");
             } else if(interaction.customId == "modmail_create_continue") {
+                timeout_set.add(interaction.user.id);
+                setTimeout(() => {
+                    timeout_set.delete(interaction.user.id);
+                }, RATELIMIT_TIME);
                 const modal = new Discord.Modal()
                         .setCustomId("modmail_create_confirm")
                         .setTitle("Confirm Modmail");
