@@ -21,15 +21,16 @@ async function on_message(request: Discord.Message) {
         if(request.content.match(/^!rename\s+(.+)/gm)) {
             if(request.channel.isThread()) {
                 const thread = request.channel;
-                const origin = await thread.fetchStarterMessage();
-                if(origin.author.id == request.author.id) {
+                const owner = thread.type == "GUILD_PRIVATE_THREAD" ? thread.ownerId
+                    : (await thread.fetchStarterMessage()).author.id;
+                if(owner == request.author.id) {
                     await thread.setName(request.content.substring("!rename".length).trim());
                     //await request.reply({
                     //    embeds: [create_embed(undefined, colors.green, "Success :+1:")]
                     //});
-                    await request.reply({
-                        content: "Success :+1:"
-                    });
+                    //await request.reply({
+                    //    content: "Success :+1:"
+                    //});
                 } else {
                     //await request.reply({
                     //    embeds: [create_embed(undefined, colors.red, "You can only rename threads you own")]
@@ -56,9 +57,10 @@ async function on_thread_create(thread: Discord.ThreadChannel) {
     if(thread.parentId == rules_channel_id) {
         return;
     }
-    const origin = await thread.fetchStarterMessage();
+    const owner = thread.type == "GUILD_PRIVATE_THREAD" ? thread.ownerId
+        : (await thread.fetchStarterMessage()).author.id;
     await thread.send({
-        content: `<@${origin.author.id}>`,
+        content: `<@${owner}>`,
         embeds: [create_embed(undefined, colors.red, `Thread created, you are the owner. You can rename the thread with \`!rename <name>\``)]
     });
 }
