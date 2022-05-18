@@ -1,7 +1,7 @@
 import * as Discord from "discord.js";
 import { strict as assert } from "assert";
 import { critical_error, M } from "./utils";
-import { colors, rules_channel_id } from "./common";
+import { colors, rules_channel_id, wheatley_id } from "./common";
 
 let client: Discord.Client;
 
@@ -54,7 +54,8 @@ async function on_message(request: Discord.Message) {
 }
 
 async function on_thread_create(thread: Discord.ThreadChannel) {
-    if(thread.parentId == rules_channel_id) {
+    //if(thread.parentId == rules_channel_id) {
+    if(thread.ownerId == wheatley_id) { // wheatley threads are either modlogs or thread help threads
         return;
     }
     const owner = thread.type == "GUILD_PRIVATE_THREAD" ? thread.ownerId

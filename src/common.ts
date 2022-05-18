@@ -43,6 +43,13 @@ export const tutoring_requests_id = "915271477559984160";
 export const rules_channel_id = "659868782877212723";
 export const mods_channel_id = "847993258600038460";
 
+// Thread-based help channels
+
+export const thread_based_help_channel_ids = new Set([
+    "976315803634925578", // cpp-help-threads
+    "976315954965381170", // c-help-threads
+]);
+
 // General config
 
 export const authorized_admin_roles = [
