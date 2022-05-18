@@ -51,7 +51,13 @@ async function on_message(message: Discord.Message) {
                 components: [row]
             });
         }
-        // TODO: Give users a means to close / archive modmail threads
+        if(message.content == "!archive") {
+            if(message.channel.isThread() && message.channel.parentId == rules_channel_id) {
+                await message.channel.setArchived();
+            } else {
+                message.reply("You can't use that here");
+            }
+        }
     } catch(e) {
         critical_error(e);
     }
@@ -121,11 +127,9 @@ async function create_modmail_thread(interaction: Discord.ButtonInteraction) {
             content: get_url_for(thread),
             embeds: [notification_embed]
         });
-        // add members
-        // TODO: Any way to do this without ping?
-        //for(const id of [member.id, ...root_mod_ids]) {
-        for(const id of [member.id, zelis_id]) {
-            await thread.members.add(id, "test reason? FIXME");
+        // add everyone
+        for(const id of [member.id, ...root_mod_ids]) {
+            await thread.members.add(id);
         }
         // Indicate success
         await interaction.editReply({
@@ -135,7 +139,7 @@ async function create_modmail_thread(interaction: Discord.ButtonInteraction) {
         await interaction.editReply({
             content: "Something went wrong internally..."
         })
-        // FIXME: RETHROW
+        throw e; // rethrow
     }
 }
 
