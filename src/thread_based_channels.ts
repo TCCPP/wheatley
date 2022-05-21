@@ -37,16 +37,6 @@ async function on_message(message: Discord.Message) {
             });
             await thread.leave();
         }
-        if(thread_based_channel_ids.has(message.channel.id)) {
-            const s = message.member?.displayName.trim().endsWith("s") ? "" : "s"; // rudimentary
-            const thread = await message.startThread({
-                name: `${message.member?.displayName}'${s} post`
-            });
-            await thread.send({
-                content: `<@${message.author.id}> This thread is for your post, use \`!rename <brief description>\` to set the thread's name.`
-            });
-            await thread.leave();
-        }
     } catch(e) {
         critical_error(e);
     }
