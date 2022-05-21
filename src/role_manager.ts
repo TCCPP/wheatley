@@ -1,6 +1,6 @@
 import * as Discord from "discord.js";
 import { strict as assert } from "assert";
-import { MINUTE, pink_role_id, TCCPP_ID } from "./common";
+import { MINUTE, pink_role_id, skill_role_ids, TCCPP_ID } from "./common";
 import { critical_error, M } from "./utils";
 
 // Role cleanup
@@ -9,14 +9,6 @@ import { critical_error, M } from "./utils";
 
 let TCCPP : Discord.Guild;
 let pink_role: Discord.Role;
-
-const skill_role_ids = new Set([
-    "331719591405551616", // expert
-    "331719590990184450", // advanced
-    "849399021838925834", // proficient
-    "331876085820030978", // intermediate
-    "784733371275673600"  // beginner
-]);
 
 async function interval() {
     try {
