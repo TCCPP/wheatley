@@ -1,7 +1,7 @@
 import * as Discord from "discord.js";
 import { strict as assert } from "assert";
-import { critical_error, get_url_for, M, SelfClearingMap } from "./utils";
-import { is_authorized_admin, member_log_channel_id, MINUTE, mods_channel_id, root_mod_ids, rules_channel_id, TCCPP_ID, zelis_id } from "./common";
+import { critical_error, get_url_for, M } from "./utils";
+import { is_authorized_admin, member_log_channel_id, MINUTE, moderators_role_id, mods_channel_id, rules_channel_id, TCCPP_ID } from "./common";
 import { DatabaseInterface } from "./database_interface";
 import { APIInteractionGuildMember } from "discord-api-types/v10";
 
@@ -139,10 +139,12 @@ async function create_modmail_thread(interaction: Discord.ModalSubmitInteraction
         // add everyone
         await thread.members.add(member.id);
         // Deliberately not awaiting here
-        Promise.all(root_mod_ids.map(id => thread.members.add(id)))
-            .then(() => {
-                thread.leave();
-            });
+        await thread.send({
+            content: `<@&${moderators_role_id}>`,
+            allowedMentions: {
+                roles: [moderators_role_id]
+            }
+        });
     } catch(e) {
         await interaction.update({
             content: "Something went wrong internally...",
