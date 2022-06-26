@@ -107,7 +107,7 @@ process.on("unhandledRejection", (reason, promise) => {
     critical_error("unhandledRejection", reason, promise);
 });
 
-(async () => {
+async function main() {
     try {
         const database = await DatabaseInterface.create();
         const tracker = new MemberTracker(client);
@@ -142,8 +142,22 @@ process.on("unhandledRejection", (reason, promise) => {
 
         M.debug("Logging in");
 
+        client.on("error", error => {
+            M.error(error);
+        });
+
         client.login(token);
     } catch(e) {
         critical_error(e);
     }
+}
+
+(() => {
+    main();
 })();
+
+// don't crash, try to restart
+process.on("uncaughtException", error => {
+    M.error("uncaughtException", error);
+    main();
+});
