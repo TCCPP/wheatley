@@ -1,6 +1,7 @@
 import * as Discord from "discord.js";
 import { strict as assert } from "assert";
 import { M } from "./utils";
+import { APIUser } from "discord-api-types/v10";
 
 // Common constants
 export const MINUTE = 1000 * 60;
@@ -118,7 +119,7 @@ export async function fetch_root_mod_list(client: Discord.Client) {
 }
 
 // Some common tools
-export function is_root(user: Discord.User | Discord.PartialUser): boolean {
+export function is_root(user: Discord.User | Discord.PartialUser | APIUser): boolean {
     //return member.roles.cache.some(r => r.id == root_role_id);
     return root_ids.has(user.id);
 }

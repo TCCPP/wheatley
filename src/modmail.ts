@@ -1,7 +1,7 @@
 import * as Discord from "discord.js";
 import { strict as assert } from "assert";
 import { critical_error, get_url_for, M } from "./utils";
-import { is_authorized_admin, member_log_channel_id, MINUTE, moderators_role_id, mods_channel_id, rules_channel_id, TCCPP_ID } from "./common";
+import { is_authorized_admin, is_root, member_log_channel_id, MINUTE, moderators_role_id, mods_channel_id, rules_channel_id, TCCPP_ID } from "./common";
 import { DatabaseInterface } from "./database_interface";
 import { APIInteractionGuildMember } from "discord-api-types/v10";
 
@@ -163,6 +163,15 @@ async function on_interaction_create(interaction: Discord.Interaction) {
                     ephemeral: true
                 });
                 await log_action(interaction.member, "Monkey pressed the button");
+                try {
+                    assert(interaction.member);
+                    if(!is_root(interaction.member.user)) { // permissions, the .setNickname will fail
+                        const member = await TCCPP.members.fetch(interaction.member.user.id);
+                        await member.setNickname("Monkey");
+                    }
+                } catch(e) {
+                    critical_error(e);
+                }
             } else if(interaction.customId == "modmail_create") {
                 if(timeout_set.has(interaction.user.id)) {
                     await interaction.reply({
