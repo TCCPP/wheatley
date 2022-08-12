@@ -1,10 +1,10 @@
 import * as Discord from "discord.js";
 import { strict as assert } from "assert";
-import { is_root, MINUTE, server_suggestions_channel_id, suggestion_dashboard_thread_id } from "./common";
-import { critical_error, delay, M } from "./utils";
+import { is_root, MINUTE, server_suggestions_channel_id, suggestion_dashboard_thread_id } from "../common";
+import { critical_error, delay, M } from "../utils";
 import { TRACKER_START_TIME } from "./server_suggetsion_tracker";
 import { forge_snowflake } from "./snowflake";
-import { react_blacklist } from "./config";
+import { react_blacklist } from "../config";
 
 let client: Discord.Client;
 

@@ -103,7 +103,7 @@ export function parse_out(message: string) {
 
 export function exists_sync(path: string) {
     let exists = true;
-    try{
+    try {
         fs.accessSync(path, fs.constants.F_OK);
     } catch(e) {
         exists = false;

@@ -1,8 +1,8 @@
 import * as Discord from "discord.js";
 import { strict as assert } from "assert";
-import { critical_error, diff_to_human, M } from "./utils";
-import { MemberTracker } from "./member_tracker";
-import { action_log_channel_id, colors } from "./common";
+import { critical_error, diff_to_human, M } from "../utils";
+import { MemberTracker } from "../infra/member_tracker";
+import { action_log_channel_id, colors } from "../common";
 
 let tracker: MemberTracker;
 let client: Discord.Client;

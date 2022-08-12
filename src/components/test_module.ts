@@ -1,3 +1,4 @@
+/** sensitive */
 import * as Discord from "discord.js";
 import { REST } from "@discordjs/rest";
 import { Routes } from "discord-api-types/v9";
@@ -6,8 +7,8 @@ import { SlashCommandBuilder } from "@discordjs/builders";
 import { readFileSync } from "fs";
 
 import { strict as assert } from "assert";
-import { M } from "./utils";
-import { colors, is_authorized_admin, TCCPP_ID, wheatley_id } from "./common";
+import { M } from "../utils";
+import { colors, is_authorized_admin, TCCPP_ID, wheatley_id } from "../common";
 
 let client: Discord.Client;
 

@@ -1,7 +1,7 @@
 import * as Discord from "discord.js";
 import { strict as assert } from "assert";
-import { critical_error, M } from "./utils";
-import { zelis_id } from "./common";
+import { critical_error, M } from "../utils";
+import { zelis_id } from "../common";
 
 const obnoxious_autoreact_ids = new Set([
     "841482328693669900" // "eisie"

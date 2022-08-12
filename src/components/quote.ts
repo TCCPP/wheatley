@@ -1,7 +1,7 @@
 import * as Discord from "discord.js";
 import { strict as assert } from "assert";
-import { critical_error, M } from "./utils";
-import { message_log_channel_id, MINUTE, TCCPP_ID } from "./common";
+import { critical_error, M } from "../utils";
+import { message_log_channel_id, MINUTE, TCCPP_ID } from "../common";
 import { decode_snowflake, forge_snowflake } from "./snowflake";
 
 let client: Discord.Client;

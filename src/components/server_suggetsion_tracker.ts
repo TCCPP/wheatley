@@ -1,9 +1,9 @@
 import * as Discord from "discord.js";
 import { strict as assert } from "assert";
-import { critical_error, departialize, M, KeyedMutexSet, SelfClearingSet } from "./utils";
-import { DatabaseInterface } from "./database_interface";
+import { critical_error, departialize, M, KeyedMutexSet, SelfClearingSet } from "../utils";
+import { DatabaseInterface } from "../infra/database_interface";
 import { is_root, MINUTE, server_suggestions_channel_id, suggestion_action_log_thread_id,
-         suggestion_dashboard_thread_id, TCCPP_ID, wheatley_id } from "./common";
+         suggestion_dashboard_thread_id, TCCPP_ID, wheatley_id } from "../common";
 import { forge_snowflake } from "./snowflake";
 import * as XXH from "xxhashjs";
 
@@ -96,7 +96,7 @@ async function get_display_name(thing: Discord.Message | Discord.User): Promise<
         const message = thing;
         if(message.member == null) {
             return get_display_name(message.author);
-            
+
         } else {
             return message.member.displayName;
         }

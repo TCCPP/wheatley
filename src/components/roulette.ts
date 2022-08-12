@@ -1,8 +1,8 @@
 import * as Discord from "discord.js";
 import { strict as assert } from "assert";
-import { critical_error, M, SelfClearingMap, SelfClearingSet } from "./utils";
-import { bot_spam_id, member_log_channel_id, MINUTE, TCCPP_ID } from "./common";
-import { DatabaseInterface } from "./database_interface";
+import { critical_error, M, SelfClearingMap, SelfClearingSet } from "../utils";
+import { bot_spam_id, member_log_channel_id, MINUTE, TCCPP_ID } from "../common";
+import { DatabaseInterface } from "../infra/database_interface";
 
 let client: Discord.Client;
 

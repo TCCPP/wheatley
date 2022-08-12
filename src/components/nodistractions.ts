@@ -1,8 +1,8 @@
 import * as Discord from "discord.js";
 import { strict as assert } from "assert";
-import { critical_error, M } from "./utils";
-import { no_off_topic, TCCPP_ID, zelis_id } from "./common";
-import { DatabaseInterface } from "./database_interface";
+import { critical_error, M } from "../utils";
+import { no_off_topic, TCCPP_ID, zelis_id } from "../common";
+import { DatabaseInterface } from "../infra/database_interface";
 
 let client: Discord.Client;
 
@@ -219,7 +219,7 @@ async function on_message(message: Discord.Message) {
     try {
         if(message.author.id == client.user!.id) return; // Ignore self
         if(message.author.bot) return; // Ignore bots
-    
+
         if(message.content.trim().toLowerCase() == "!nodistractions") {
             message.channel.send("`!nodistractions <time>` where time is an integer followed by one of the following"
                                + " units: m, h, d, w, M, y\n`!removenodistractions` to remove nodistractions");
@@ -251,7 +251,7 @@ async function on_message(message: Discord.Message) {
             early_remove_nodistractions(member, message);
             return;
         }
-    
+
         // "!nodistractions 123d asdfdsaf".match(/^!nodistractions\s*(\d*)\s*(\w*)/)
         // [ "!nodistractions 123d", "123", "d" ]
         const match = message.content.match(nodistractions_re);
@@ -325,5 +325,5 @@ export async function setup_nodistractions(_client: Discord.Client, _database: D
             critical_error(e);
         }
     });
-    
+
 }

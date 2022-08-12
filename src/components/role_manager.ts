@@ -1,7 +1,7 @@
 import * as Discord from "discord.js";
 import { strict as assert } from "assert";
-import { MINUTE, pink_role_id, skill_role_ids, TCCPP_ID } from "./common";
-import { critical_error, M } from "./utils";
+import { MINUTE, pink_role_id, skill_role_ids, TCCPP_ID } from "../common";
+import { critical_error, M } from "../utils";
 
 // Role cleanup
 // Autoremove pink roles when members are no longer boosting

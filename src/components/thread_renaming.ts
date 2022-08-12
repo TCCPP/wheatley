@@ -1,7 +1,7 @@
 import * as Discord from "discord.js";
 import { strict as assert } from "assert";
-import { critical_error, M } from "./utils";
-import { colors, rules_channel_id, skill_role_ids, thread_based_help_channel_ids, wheatley_id } from "./common";
+import { critical_error, M } from "../utils";
+import { colors, rules_channel_id, skill_role_ids, thread_based_help_channel_ids, wheatley_id } from "../common";
 
 let client: Discord.Client;
 

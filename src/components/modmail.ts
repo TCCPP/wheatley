@@ -1,8 +1,8 @@
 import * as Discord from "discord.js";
 import { strict as assert } from "assert";
-import { critical_error, get_url_for, M } from "./utils";
-import { is_authorized_admin, is_root, member_log_channel_id, MINUTE, moderators_role_id, mods_channel_id, rules_channel_id, TCCPP_ID } from "./common";
-import { DatabaseInterface } from "./database_interface";
+import { critical_error, get_url_for, M } from "../utils";
+import { is_authorized_admin, is_root, member_log_channel_id, MINUTE, moderators_role_id, mods_channel_id, rules_channel_id, TCCPP_ID } from "../common";
+import { DatabaseInterface } from "../infra/database_interface";
 import { APIInteractionGuildMember } from "discord-api-types/v10";
 
 /*
@@ -91,7 +91,7 @@ async function log_action(interaction_member: Discord.GuildMember | APIInteracti
             const member = await TCCPP.members.fetch(interaction_member.user.id);
             return [member.user.tag, member.displayAvatarURL()];
         } else {
-            return ["NULL", undefined];
+            return ["NULL", ""];
         }
     })();
     M.log("Modmail log:", tag, title);
