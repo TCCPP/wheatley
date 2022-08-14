@@ -167,7 +167,7 @@ async function on_interaction_create(interaction: Discord.Interaction) {
                     assert(interaction.member);
                     if(!is_root(interaction.member.user)) { // permissions, the .setNickname will fail
                         const member = await TCCPP.members.fetch(interaction.member.user.id);
-                        await member.setNickname("Monkey");
+                        await member.setNickname("Monke");
                     }
                 } catch(e) {
                     critical_error(e);
