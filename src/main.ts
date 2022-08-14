@@ -36,7 +36,7 @@ import { setup_speedrun } from "./components/speedrun";
 import { setup_anti_scambot } from "./components/anti_scambot";
 import { setup_tracked_mentions } from "./components/tracked_mentions";
 import { setup_massban } from "./components/massban";
-import { setup_test_command } from "./components/test_command";
+import { setup_test_command } from "./test/test_command";
 import { setup_snowflake } from "./components/snowflake";
 import { setup_nodistractions } from "./components/nodistractions";
 import { setup_server_suggestion_tracker } from "./components/server_suggetsion_tracker";
@@ -45,12 +45,14 @@ import { setup_ping } from "./components/ping";
 import { setup_link_blacklist } from "./components/link_blacklist";
 import { setup_utility_tools } from "./components/utility_tools";
 import { setup_roulette } from "./components/roulette";
-import { setup_pasta } from "./components/pasta";
+import { setup_pasta } from "./test/pasta";
 import { setup_read_tutoring } from "./components/read_tutoring";
-import { setup_test_module } from "./components/test_module";
+import { setup_test_module } from "./test/test_module";
 import { setup_modmail } from "./components/modmail";
 import { setup_thread_renaming } from "./components/thread_renaming";
 import { setup_thread_based_channels } from "./components/thread_based_channels";
+import { GuildCommandManager } from "./infra/guild_command_manager";
+import { setup_status } from "./components/status";
 
 // Setup client
 const client = new Discord.Client({
@@ -79,7 +81,7 @@ const client = new Discord.Client({
 });
 
 // Every module sets a lot of listeners. This is not a leak.
-client.setMaxListeners(20);
+client.setMaxListeners(30);
 
 // Suggestion tracking
 // deleted suggestion -> wastebin
@@ -111,6 +113,7 @@ async function main() {
     try {
         const database = await DatabaseInterface.create();
         const tracker = new MemberTracker(client);
+        const guild_command_manager = new GuildCommandManager();
 
         await setup_anti_autoreact(client);
         await setup_server_suggestion_reactions(client);
@@ -120,7 +123,7 @@ async function main() {
         await setup_massban(client);
         await setup_snowflake(client);
         await setup_quote(client);
-        await setup_ping(client);
+        await setup_ping(client, guild_command_manager);
         await setup_roulette(client, database);
         await setup_nodistractions(client, database);
         await setup_tracked_mentions(client);
@@ -132,13 +135,16 @@ async function main() {
         await setup_link_blacklist(client, database);
         await setup_utility_tools(client);
         await setup_read_tutoring(client);
-        await setup_pasta(client);
+        await setup_pasta(client, guild_command_manager);
         await setup_test_module(client);
         await setup_modmail(client, database);
         await setup_thread_renaming(client);
         await setup_thread_based_channels(client);
+        await setup_status(client);
 
         const token = readFileSync("auth.key", { encoding: "utf-8" });
+
+        await guild_command_manager.finalize(token);
 
         M.debug("Logging in");
 

@@ -1,7 +1,11 @@
 import * as Discord from "discord.js";
+import { SlashCommandBuilder } from "@discordjs/builders";
+
 import { strict as assert } from "assert";
+
 import { critical_error, M } from "../utils";
 import { is_authorized_admin } from "../common";
+import { GuildCommandManager } from "../infra/guild_command_manager";
 
 let client: Discord.Client;
 
@@ -30,17 +34,37 @@ async function on_message(message: Discord.Message) {
     }
 }
 
+async function on_interaction_create(interaction: Discord.Interaction) {
+    if(interaction.isCommand() && interaction.commandName == "echo") {
+        const input = interaction.options.getString("input");
+        M.debug("echo command", input);
+        await interaction.reply({
+            ephemeral: true,
+            content: input
+        });
+    }
+}
+
 async function on_ready() {
     try {
         client.on("messageCreate", on_message);
+        client.on("interactionCreate", on_interaction_create);
     } catch(e) {
         critical_error(e);
     }
 }
 
-export async function setup_ping(_client: Discord.Client) {
+export async function setup_ping(_client: Discord.Client, guild_command_manager: GuildCommandManager) {
     try {
         client = _client;
+        const echo = new SlashCommandBuilder()
+            .setName("echo")
+            .setDescription("Echo")
+            .addStringOption(option =>
+                option.setName("input")
+                    .setDescription("The input to echo back")
+                    .setRequired(true));
+        guild_command_manager.register(echo);
         client.on("ready", on_ready);
     } catch(e) {
         critical_error(e);

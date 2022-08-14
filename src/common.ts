@@ -9,6 +9,9 @@ export const MINUTE = 1000 * 60;
 
 export const pepereally = "<:pepereally:643881257624666112>";
 
+export const ApplicationCommandTypeUser = 2;
+export const ApplicationCommandTypeMessage = 3;
+
 export enum colors {
     color = 0x337fd5,
     alert_color = 0xf5a53e,
