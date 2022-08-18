@@ -49,7 +49,7 @@ import { setup_pasta } from "./test/pasta";
 import { setup_read_tutoring } from "./components/read_tutoring";
 import { setup_test_module } from "./test/test_module";
 import { setup_modmail } from "./components/modmail";
-import { setup_thread_renaming } from "./components/thread_renaming";
+import { setup_thread_control } from "./components/thread_control";
 import { setup_thread_based_channels } from "./components/thread_based_channels";
 import { GuildCommandManager } from "./infra/guild_command_manager";
 import { setup_status } from "./components/status";
@@ -138,7 +138,7 @@ async function main() {
         await setup_pasta(client, guild_command_manager);
         await setup_test_module(client);
         await setup_modmail(client, database);
-        await setup_thread_renaming(client);
+        await setup_thread_control(client);
         await setup_thread_based_channels(client);
         await setup_status(client);
 

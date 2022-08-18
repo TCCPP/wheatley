@@ -127,7 +127,11 @@ export function is_root(user: Discord.User | Discord.PartialUser | APIUser): boo
     return root_ids.has(user.id);
 }
 
-export function is_authorized_admin(member: Discord.GuildMember | Discord.User): boolean {
-    //return member.roles.cache.some(r => authorized_admin_roles.indexOf(r.id) > -1);
-    return root_mod_ids_set.has(member.id);
+export function is_authorized_admin(member: Discord.GuildMember | Discord.User | string): boolean {
+    if(typeof member === "string" || member instanceof String) {
+        return root_mod_ids_set.has(member as string);
+    } else {
+        //return member.roles.cache.some(r => authorized_admin_roles.indexOf(r.id) > -1);
+        return root_mod_ids_set.has(member.id);
+    }
 }
