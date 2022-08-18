@@ -24,9 +24,11 @@ async function on_message(message: Discord.Message) {
                 name: `Help ${message.member?.displayName}`
             });
             await thread.send({
-                content: `<@${message.author.id}> This thread is for your question, use \`!rename <brief description>\` to set the thread's name.\n\nSomeone will surely help soon :smile: \n\nHaving trouble getting an answer? Use \`!howto ask\` for tips on how to ask a programming question. And remember, don't ask to ask just ask your question!`,
+                content: `<@${message.author.id}> This thread is for your question, use \`!rename <brief description>\` to set the thread's name. When your question is answered use \`!solved\` to mark the question as resolved.\n\nSomeone will surely help soon :smile: \n\nHaving trouble getting an answer? Use \`!howto ask\` for tips on how to ask a programming question. And remember, don't ask to ask just ask your question!`,
                 allowedMentions: { parse: [] }
             });
+            await thread.members.add(message.author);
+            await thread.leave();
         }
         if(thread_based_channel_ids.has(message.channel.id)) {
             const s = message.member?.displayName.trim().endsWith("s") ? "" : "s"; // rudimentary
@@ -37,6 +39,7 @@ async function on_message(message: Discord.Message) {
                 content: `<@${message.author.id}> This thread is for your post, use \`!rename <brief description>\` to set the thread's name.`,
                 allowedMentions: { parse: [] }
             });
+            await thread.members.add(message.author);
             await thread.leave();
         }
     } catch(e) {

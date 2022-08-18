@@ -65,15 +65,6 @@ async function on_message(message: Discord.Message) {
                 components: [row]
             });
         }
-        if(message.content == "!archive") {
-            if(message.channel.isThread()
-            && message.channel.parentId == rules_channel_id
-            && message.channel.type == "GUILD_PRIVATE_THREAD") {
-                await message.channel.setArchived();
-            } else {
-                message.reply("You can't use that here");
-            }
-        }
     } catch(e) {
         critical_error(e);
     }

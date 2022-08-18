@@ -80,6 +80,45 @@ async function on_message(request: Discord.Message) {
                 }
             }
         }
+        if(request.content == "!archive") {
+            if(await try_to_control_thread(request)) {
+                assert(request.channel.isThread());
+                if(request.channel.parentId == rules_channel_id
+                && request.channel.type == "GUILD_PRIVATE_THREAD") {
+                    await request.channel.setArchived();
+                } else {
+                    request.reply("You can't use that here");
+                }
+            }
+        }
+        if(request.content == "!solved") {
+            if(await try_to_control_thread(request)) {
+                assert(request.channel.isThread());
+                const thread = request.channel;
+                if(thread.parentId && thread_based_help_channel_ids.has(thread.parentId)) {
+                    if(!thread.name.startsWith("[SOLVED]")) {
+                        await request.react("👍");
+                        await thread.setName(`[SOLVED] ${thread.name}`);
+                    }
+                } else {
+                    request.reply("You can't use that here");
+                }
+            }
+        }
+        if(request.content == "!unsolve" || request.content == "!unsolved") {
+            if(await try_to_control_thread(request)) {
+                assert(request.channel.isThread());
+                const thread = request.channel;
+                if(thread.parentId && thread_based_help_channel_ids.has(thread.parentId)) {
+                    if(thread.name.startsWith("[SOLVED]")) {
+                        await request.react("👍");
+                        await thread.setName(thread.name.substring("[SOLVED]".length).trim());
+                    }
+                } else {
+                    request.reply("You can't use that here");
+                }
+            }
+        }
     } catch(e) {
         critical_error(e);
     }
