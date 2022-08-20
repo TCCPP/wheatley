@@ -17,22 +17,22 @@ function create_embed(title: string | undefined, color: number, msg: string) {
 
 // returns whether the thread can be controlled
 // or sends an error message
-async function try_to_control_thread(request: Discord.Message) {
+async function try_to_control_thread(request: Discord.Message, action: string) {
     if(request.channel.isThread()) {
         const thread = request.channel;
         const owner_id = thread.type == "GUILD_PRIVATE_THREAD" ? thread.ownerId!/*TODO*/
             : (await thread.fetchStarterMessage())!/*TODO*/.author.id;
-        if(owner_id == request.author.id || is_authorized_admin(owner_id)) {
+        if(owner_id == request.author.id || is_authorized_admin(request.author.id)) {
             return true;
         } else {
             await request.reply({
-                content: "You can only rename threads you own"
+                content: `You can only ${action} threads you own`
             });
             return false;
         }
     } else {
         await request.reply({
-            content: "You can only rename threads"
+            content: `You can only ${action} threads`
         });
         return false;
     }
@@ -42,7 +42,8 @@ async function on_message(request: Discord.Message) {
     try {
         if(request.author.bot) return; // Ignore bots
         if(request.content.match(/^!rename\s+(.+)/gm)) {
-            if(await try_to_control_thread(request)) {
+            M.debug("received rename command", request.content, request.author.username);
+            if(await try_to_control_thread(request, "rename")) {
                 assert(request.channel.isThread());
                 const thread = request.channel;
                 const owner_id = thread.type == "GUILD_PRIVATE_THREAD" ? thread.ownerId!/*TODO*/
@@ -81,7 +82,7 @@ async function on_message(request: Discord.Message) {
             }
         }
         if(request.content == "!archive") {
-            if(await try_to_control_thread(request)) {
+            if(await try_to_control_thread(request, "archive")) {
                 assert(request.channel.isThread());
                 if(request.channel.parentId == rules_channel_id
                 && request.channel.type == "GUILD_PRIVATE_THREAD") {
@@ -92,7 +93,7 @@ async function on_message(request: Discord.Message) {
             }
         }
         if(request.content == "!solved") {
-            if(await try_to_control_thread(request)) {
+            if(await try_to_control_thread(request, "solve")) {
                 assert(request.channel.isThread());
                 const thread = request.channel;
                 if(thread.parentId && thread_based_help_channel_ids.has(thread.parentId)) {
@@ -106,7 +107,7 @@ async function on_message(request: Discord.Message) {
             }
         }
         if(request.content == "!unsolve" || request.content == "!unsolved") {
-            if(await try_to_control_thread(request)) {
+            if(await try_to_control_thread(request, "unsolve")) {
                 assert(request.channel.isThread());
                 const thread = request.channel;
                 if(thread.parentId && thread_based_help_channel_ids.has(thread.parentId)) {
