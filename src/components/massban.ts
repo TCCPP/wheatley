@@ -6,7 +6,7 @@ import { action_log_channel_id, colors, is_authorized_admin, pepereally, TCCPP_I
 let client: Discord.Client;
 let action_log_channel: Discord.TextChannel;
 
-const snowflake_re = /\b\d{18}\b/g;
+const snowflake_re = /\b\d{10,}\b/g;
 
 function do_mass_ban(msg: Discord.Message) {
     // TODO: Do DM logic?
