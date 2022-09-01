@@ -1,9 +1,11 @@
 import * as Discord from "discord.js";
 import { strict as assert } from "assert";
 import { critical_error, M, SelfClearingMap } from "../utils";
-import { colors, is_authorized_admin, MINUTE, rules_channel_id, skill_role_ids, thread_based_help_channel_ids, wheatley_id } from "../common";
+import { colors, is_authorized_admin, MINUTE, rules_channel_id, skill_role_ids, TCCPP_ID, thread_based_help_channel_ids, wheatley_id } from "../common";
 
 let client: Discord.Client;
+
+let TCCPP : Discord.Guild;
 
 // tracks whether channels are forum channels or not
 // TODO: This is temporary until discordjs supports forums
@@ -17,8 +19,12 @@ const forum_help_channels = new Set([
     "1013104018739974194", // c-help
 ]);
 
+function is_forum_thread(thread: Discord.ThreadChannel) {
+    return thread.parentId && forum_channels.has(thread.parentId);
+}
+
 async function get_owner(thread: Discord.ThreadChannel) {
-    if(thread.parentId && forum_channels.has(thread.parentId)) {
+    if(is_forum_thread(thread)) {
         return thread.ownerId!/*TODO*/
     } else {
         return thread.type == "GUILD_PRIVATE_THREAD" ? thread.ownerId!/*TODO*/
@@ -64,13 +70,12 @@ async function on_message(request: Discord.Message) {
         if(request.content.match(/^!rename\s+(.+)/gm)) {
             M.debug("received rename command", request.content, request.author.username);
             if(await try_to_control_thread(request, "rename")) {
-                assert(request.channel.isThread());
-                const thread = request.channel;
-                const owner_id = thread.type == "GUILD_PRIVATE_THREAD" ? thread.ownerId!/*TODO*/
-                    : (await thread.fetchStarterMessage())!/*TODO*/.author.id;
+                const channel = request.channel ?? await TCCPP.channels.fetch(request.channelId); /* TODO: Temporary hack due to forums, for some reason with forums .channel can be undefined EDIT: Wait never mind I might have confused something but leaving this anyway */
+                assert(channel.isThread());
+                const thread = channel;
+                const owner_id = await get_owner(thread);
                 const name = request.content.substring("!rename".length).trim();
                 const old_name = thread.name;
-                await thread.setName(name);
                 M.log(`Thread ${thread.id} being renamed to "${name}"`);
                 if(name.length > 100 - "[SOLVED] ".length) {
                     await request.reply({
@@ -78,6 +83,7 @@ async function on_message(request: Discord.Message) {
                     });
                     return;
                 }
+                await thread.setName(name);
                 await request.delete();
                 //await request.reply({
                 //    embeds: [create_embed(undefined, colors.green, "Success :+1:")]
@@ -122,7 +128,7 @@ async function on_message(request: Discord.Message) {
             if(await try_to_control_thread(request, request.content == "!solved" ? "solve" : "close")) {
                 assert(request.channel.isThread());
                 const thread = request.channel;
-                if(thread.parentId && thread_based_help_channel_ids.has(thread.parentId)) {
+                if(thread.parentId && (thread_based_help_channel_ids.has(thread.parentId) || forum_help_channels.has(thread.parentId))) {
                     if(!thread.name.startsWith("[SOLVED]")) {
                         await request.react("👍");
                         await thread.setName(`[SOLVED] ${thread.name}`);
@@ -136,7 +142,7 @@ async function on_message(request: Discord.Message) {
             if(await try_to_control_thread(request, "unsolve")) {
                 assert(request.channel.isThread());
                 const thread = request.channel;
-                if(thread.parentId && thread_based_help_channel_ids.has(thread.parentId)) {
+                if(thread.parentId && (thread_based_help_channel_ids.has(thread.parentId) || forum_help_channels.has(thread.parentId))) {
                     if(thread.name.startsWith("[SOLVED]")) {
                         await request.react("👍");
                         await thread.setName(thread.name.substring("[SOLVED]".length).trim());
@@ -156,17 +162,20 @@ async function on_thread_create(thread: Discord.ThreadChannel) {
     if(thread.ownerId == wheatley_id) { // wheatley threads are either modlogs or thread help threads
         return;
     }
-    const owner_id = await get_owner(thread);
-    await thread.send({
-        content: `<@${owner_id}>`,
-        embeds: [create_embed(undefined, colors.red, `Thread created, you are the owner. You can rename the thread with \`!rename <name>\``)]
-    });
+    if(!is_forum_thread(thread)) {
+        const owner_id = await get_owner(thread);
+        await thread.send({
+            content: `<@${owner_id}>`,
+            embeds: [create_embed(undefined, colors.red, `Thread created, you are the owner. You can rename the thread with \`!rename <name>\``)]
+        });
+    }
 }
 
 async function on_ready() {
     try {
         client.on("messageCreate", on_message);
         client.on("threadCreate", on_thread_create);
+        TCCPP = await client.guilds.fetch(TCCPP_ID);
     } catch(e) {
         critical_error(e);
     }
