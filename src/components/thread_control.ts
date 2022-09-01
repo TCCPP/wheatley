@@ -72,6 +72,12 @@ async function on_message(request: Discord.Message) {
                 const old_name = thread.name;
                 await thread.setName(name);
                 M.log(`Thread ${thread.id} being renamed to "${name}"`);
+                if(name.length > 100 - "[SOLVED] ".length) {
+                    await request.reply({
+                        content: `Thread names must be ${100 - "[SOLVED] ".length} characters or shorter`
+                    });
+                    return;
+                }
                 await request.delete();
                 //await request.reply({
                 //    embeds: [create_embed(undefined, colors.green, "Success :+1:")]
