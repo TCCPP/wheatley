@@ -7,7 +7,6 @@ let client: Discord.Client;
 
 let TCCPP : Discord.Guild;
 
-// tracks whether channels are forum channels or not
 // TODO: This is temporary until discordjs supports forums
 const forum_channels = new Set([
     "1013107104678162544", // cpp-help

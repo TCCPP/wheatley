@@ -1,9 +1,37 @@
 import * as Discord from "discord.js";
 import { strict as assert } from "assert";
 import { critical_error, M } from "../utils";
-import { colors, thread_based_channel_ids, thread_based_help_channel_ids } from "../common";
+import { colors, thread_based_channel_ids, thread_based_help_channel_ids, wheatley_id } from "../common";
 
 let client: Discord.Client;
+
+// TODO: This is temporary until discordjs supports forums
+const forum_channels = new Set([
+    "1013107104678162544", // cpp-help
+    "1013104018739974194", // c-help
+    "1014328785685979136", // projects
+]);
+const forum_help_channels = new Set([
+    "1013107104678162544", // cpp-help
+    "1013104018739974194", // c-help
+]);
+
+function is_forum_thread(thread: Discord.ThreadChannel) {
+    return thread.parentId && forum_channels.has(thread.parentId);
+}
+
+function is_forum_help_thread(thread: Discord.ThreadChannel) {
+    return thread.parentId && forum_help_channels.has(thread.parentId);
+}
+
+async function get_owner(thread: Discord.ThreadChannel) {
+    if(is_forum_thread(thread)) {
+        return thread.ownerId!/*TODO*/
+    } else {
+        return thread.type == "GUILD_PRIVATE_THREAD" ? thread.ownerId!/*TODO*/
+            : (await thread.fetchStarterMessage())!/*TODO*/.author.id;
+    }
+}
 
 function create_embed(title: string | undefined, color: number, msg: string) {
     const embed = new Discord.MessageEmbed()
@@ -47,9 +75,21 @@ async function on_message(message: Discord.Message) {
     }
 }
 
+async function on_thread_create(thread: Discord.ThreadChannel) {
+    if(thread.ownerId == wheatley_id) { // wheatley threads are either modlogs or thread help threads
+        return;
+    }
+    if(is_forum_help_thread(thread)) {
+        await thread.send({
+            embeds: [create_embed(undefined, colors.red, `When your question is answered use \`!solved\` to mark the question as resolved.\n\nRemember to ask specific questions, provide necessary details, and reduce your question to its simplest form. For more information use \`!howto ask\`.`)]
+        });
+    }
+}
+
 async function on_ready() {
     try {
         client.on("messageCreate", on_message);
+        client.on("threadCreate", on_thread_create);
     } catch(e) {
         critical_error(e);
     }
