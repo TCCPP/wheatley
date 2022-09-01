@@ -1,9 +1,30 @@
 import * as Discord from "discord.js";
 import { strict as assert } from "assert";
-import { critical_error, M } from "../utils";
-import { colors, is_authorized_admin, rules_channel_id, skill_role_ids, thread_based_help_channel_ids, wheatley_id } from "../common";
+import { critical_error, M, SelfClearingMap } from "../utils";
+import { colors, is_authorized_admin, MINUTE, rules_channel_id, skill_role_ids, thread_based_help_channel_ids, wheatley_id } from "../common";
 
 let client: Discord.Client;
+
+// tracks whether channels are forum channels or not
+// TODO: This is temporary until discordjs supports forums
+const forum_channels = new Set([
+    "1013107104678162544", // cpp-help
+    "1013104018739974194", // c-help
+    "1014328785685979136", // projects
+]);
+const forum_help_channels = new Set([
+    "1013107104678162544", // cpp-help
+    "1013104018739974194", // c-help
+]);
+
+async function get_owner(thread: Discord.ThreadChannel) {
+    if(thread.parentId && forum_channels.has(thread.parentId)) {
+        return thread.ownerId!/*TODO*/
+    } else {
+        return thread.type == "GUILD_PRIVATE_THREAD" ? thread.ownerId!/*TODO*/
+            : (await thread.fetchStarterMessage())!/*TODO*/.author.id;
+    }
+}
 
 function create_embed(title: string | undefined, color: number, msg: string) {
     const embed = new Discord.MessageEmbed()
@@ -20,8 +41,7 @@ function create_embed(title: string | undefined, color: number, msg: string) {
 async function try_to_control_thread(request: Discord.Message, action: string) {
     if(request.channel.isThread()) {
         const thread = request.channel;
-        const owner_id = thread.type == "GUILD_PRIVATE_THREAD" ? thread.ownerId!/*TODO*/
-            : (await thread.fetchStarterMessage())!/*TODO*/.author.id;
+        const owner_id = await get_owner(thread);
         if(owner_id == request.author.id || is_authorized_admin(request.author.id)) {
             return true;
         } else {
@@ -92,8 +112,8 @@ async function on_message(request: Discord.Message) {
                 }
             }
         }
-        if(request.content == "!solved") {
-            if(await try_to_control_thread(request, "solve")) {
+        if(request.content == "!solved" || request.content == "!close") {
+            if(await try_to_control_thread(request, request.content == "!solved" ? "solve" : "close")) {
                 assert(request.channel.isThread());
                 const thread = request.channel;
                 if(thread.parentId && thread_based_help_channel_ids.has(thread.parentId)) {
@@ -130,10 +150,9 @@ async function on_thread_create(thread: Discord.ThreadChannel) {
     if(thread.ownerId == wheatley_id) { // wheatley threads are either modlogs or thread help threads
         return;
     }
-    const owner = thread.type == "GUILD_PRIVATE_THREAD" ? thread.ownerId
-        : (await thread.fetchStarterMessage())!/*TODO*/.author.id;
+    const owner_id = await get_owner(thread);
     await thread.send({
-        content: `<@${owner}>`,
+        content: `<@${owner_id}>`,
         embeds: [create_embed(undefined, colors.red, `Thread created, you are the owner. You can rename the thread with \`!rename <name>\``)]
     });
 }
