@@ -1,26 +1,11 @@
 import * as Discord from "discord.js";
 import { strict as assert } from "assert";
 import { critical_error, M, SelfClearingMap } from "../utils";
-import { colors, is_authorized_admin, MINUTE, rules_channel_id, skill_role_ids, TCCPP_ID, thread_based_help_channel_ids, wheatley_id } from "../common";
+import { colors, forum_help_channels, is_authorized_admin, is_forum_thread, MINUTE, rules_channel_id, skill_role_ids, TCCPP_ID, thread_based_help_channel_ids, wheatley_id } from "../common";
 
 let client: Discord.Client;
 
 let TCCPP : Discord.Guild;
-
-// TODO: This is temporary until discordjs supports forums
-const forum_channels = new Set([
-    "1013107104678162544", // cpp-help
-    "1013104018739974194", // c-help
-    "1014328785685979136", // projects
-]);
-const forum_help_channels = new Set([
-    "1013107104678162544", // cpp-help
-    "1013104018739974194", // c-help
-]);
-
-function is_forum_thread(thread: Discord.ThreadChannel) {
-    return thread.parentId && forum_channels.has(thread.parentId);
-}
 
 async function get_owner(thread: Discord.ThreadChannel) {
     if(is_forum_thread(thread)) {
