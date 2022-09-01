@@ -53,6 +53,7 @@ import { setup_thread_control } from "./components/thread_control";
 import { setup_thread_based_channels } from "./components/thread_based_channels";
 import { GuildCommandManager } from "./infra/guild_command_manager";
 import { setup_status } from "./components/status";
+import { setup_autoreact } from "./components/autoreact";
 
 // Setup client
 const client = new Discord.Client({
@@ -118,6 +119,7 @@ async function main() {
         await setup_anti_autoreact(client);
         await setup_server_suggestion_reactions(client);
         await setup_server_suggestion_tracker(client, database);
+        await setup_autoreact(client);
         await setup_role_manager(client);
         await setup_test_command(client);
         await setup_massban(client);

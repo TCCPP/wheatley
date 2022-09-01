@@ -47,6 +47,7 @@ export const tutoring_id = "922603597294870609";
 export const tutoring_requests_id = "915271477559984160";
 export const rules_channel_id = "659868782877212723";
 export const mods_channel_id = "847993258600038460";
+export const introductions_channel_id = "933113495304679494";
 
 // Thread-based help channels
 
