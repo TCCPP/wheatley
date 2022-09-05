@@ -114,8 +114,12 @@ async function on_message(request: Discord.Message) {
                 const thread = request.channel;
                 if(thread.parentId && (thread_based_help_channel_ids.has(thread.parentId) || forum_help_channels.has(thread.parentId))) {
                     if(!thread.name.startsWith("[SOLVED]")) {
-                        await request.react("👍");
+                        //await request.react("👍");
+                        await thread.send({
+                            embeds: [create_embed(undefined, colors.color, "Thank you and let us know if you have any more questions!")]
+                        });
                         await thread.setName(`[SOLVED] ${thread.name}`);
+                        await thread.setArchived(true);
                     }
                 } else {
                     request.reply("You can't use that here");

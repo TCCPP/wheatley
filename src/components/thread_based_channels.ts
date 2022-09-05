@@ -1,7 +1,8 @@
 import * as Discord from "discord.js";
 import { strict as assert } from "assert";
 import { critical_error, M } from "../utils";
-import { colors, is_forum_help_thread, thread_based_channel_ids, thread_based_help_channel_ids, wheatley_id } from "../common";
+import { colors, forum_help_channels, is_forum_help_thread, MINUTE, TCCPP_ID, thread_based_channel_ids, thread_based_help_channel_ids, wheatley_id } from "../common";
+import { decode_snowflake } from "./snowflake";
 
 let client: Discord.Client;
 
@@ -52,16 +53,59 @@ async function on_thread_create(thread: Discord.ThreadChannel) {
         return;
     }
     if(is_forum_help_thread(thread)) {
-        await thread.send({
-            embeds: [create_embed(undefined, colors.red, `When your question is answered use \`!solved\` to mark the question as resolved.\n\nRemember to ask specific questions, provide necessary details, and reduce your question to its simplest form. For more information use \`!howto ask\`.`)]
-        });
+        setTimeout(async () => {
+            await thread.send({
+                embeds: [create_embed(undefined, colors.red, `When your question is answered use \`!solved\` to mark the question as resolved.\n\nRemember to ask specific questions, provide necessary details, and reduce your question to its simplest form. For more information use \`!howto ask\`.`)]
+            });
+        }, 5 * 1000); // Somehow it's a problem to send this message too quickly: Critical error occurred: unhandledRejection DiscordAPIError: Cannot message this thread until after the post author has sent an initial message. [object Promise] TODO: revisit once api kinks are worked out
     }
+}
+
+// cleanup my mistake during development....
+async function last_message_is_shit(thread: Discord.ThreadChannel, last: string) {
+    return false;
+    const msg = await thread.messages.fetch(last);
+    if(msg.author.id == wheatley_id) {
+        return true;
+    }
+    return false;
+}
+
+async function forum_cleanup() {
+    const TCCPP = await client.guilds.fetch(TCCPP_ID);
+    const {threads, hasMore} = await TCCPP.channels.fetchActiveThreads();
+    assert(!hasMore);
+    const now = Date.now();
+    const cleanup_threshold = 2 * 60 * MINUTE; // 2 hours for a solved thread that's reopened
+    const close_threshold = 24 * 60 * MINUTE; // 24 hours for a channel that's just seen no activity
+    threads.map(async thread => {
+        assert(thread.parentId);
+        if(forum_help_channels.has(thread.parentId)) {
+            //M.debug(thread);
+            assert(thread.createdTimestamp);
+            assert(thread.lastMessageId);
+            if(thread.name.startsWith("[SOLVED]") && now - thread.createdTimestamp >= cleanup_threshold && now - decode_snowflake(thread.lastMessageId) >= cleanup_threshold) {
+                M.log(`Archiving solved channel`, [thread.id, thread.name]);
+                thread.setArchived(true);
+            } else if((now - thread.createdTimestamp >= close_threshold && now - decode_snowflake(thread.lastMessageId) >= close_threshold) || await last_message_is_shit(thread, thread.lastMessageId)) {
+                M.log(`Archiving inactive channel`, [thread.id, thread.name]);
+                assert(thread.ownerId);
+                assert(thread.messageCount);
+                await thread.send({
+                    content: thread.messageCount > 1 ? null : `<@${thread.ownerId}>`,
+                    embeds: [create_embed(undefined, colors.color, "This question thread is being automatically closed. If your question is not answered feel free to bump the post or re-ask. Take a look at `!howto ask` for tips on improving your question.")]
+                });
+                await thread.setArchived(true);
+            }
+        }
+    });
 }
 
 async function on_ready() {
     try {
         client.on("messageCreate", on_message);
         client.on("threadCreate", on_thread_create);
+        forum_cleanup();
     } catch(e) {
         critical_error(e);
     }
