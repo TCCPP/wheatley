@@ -106,6 +106,8 @@ async function on_ready() {
         client.on("messageCreate", on_message);
         client.on("threadCreate", on_thread_create);
         forum_cleanup();
+        // every hour try to cleanup
+        setInterval(forum_cleanup, 60 * MINUTE);
     } catch(e) {
         critical_error(e);
     }
