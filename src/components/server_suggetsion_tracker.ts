@@ -25,6 +25,7 @@ const resolution_reactions = [
     "🟢", "🔴", "🟡", "🚫"
 ];
 const resolution_reactions_set = new Set(resolution_reactions);
+const vote_reaction_set = new Set(["👍", "👎"]);
 
 type db_schema = {
     last_scanned_timestamp: number;
@@ -32,8 +33,10 @@ type db_schema = {
 };
 
 type db_entry = {
-    status_message: string // dashboard snowflake
-    hash: string // to check if message is updated, currently using xxh3 (64-bit hash)
+    status_message: string; // dashboard snowflake
+    hash: string; // to check if message is updated, currently using xxh3 (64-bit hash)
+    up: number;
+    down: number;
 };
 
 const color = 0x7E78FE; //0xA931FF;
@@ -159,11 +162,20 @@ function isnt_actually_a_message(message: Discord.Message) {
 async function make_embed(message: Discord.Message) {
     assert(message.content != null);
     assert(message.author != null);
+    const reactions = message.reactions.cache;
+    const up = (reactions.get("👍") || {count: 0}).count;
+    const down = (reactions.get("👎") || {count: 0}).count;
     return new Discord.MessageEmbed()
         .setColor(color)
-        .setAuthor(`${await get_display_name(message)}`, message.author.displayAvatarURL())
+        .setAuthor({
+            name: `${await get_display_name(message)}`,
+            iconURL: message.author.displayAvatarURL()
+        })
         .setDescription(message.content + `\n\n[[Jump to message]](${message.url})`)
-        .setTimestamp(message.createdAt);
+        .setTimestamp(message.createdAt)
+        .setFooter({
+            text: `${up} 👍 ${down} 👎`
+        });
 }
 
 // Two log operations:
@@ -174,9 +186,15 @@ async function make_embed(message: Discord.Message) {
 async function log_resolution(message: Discord.Message, reaction: reaction) {
     const embed = new Discord.MessageEmbed()
         .setColor(color)
-        .setAuthor(`${await get_display_name(message)}`, message.author.displayAvatarURL())
+        .setAuthor({
+            name: `${await get_display_name(message)}`,
+            iconURL: message.author.displayAvatarURL()
+        })
         .setDescription(message.content + `\n\n[[Jump to message]](${message.url})`)
-        .setFooter(`${await get_display_name(reaction.user)}: ${reaction.emoji}`, reaction.user.displayAvatarURL())
+        .setFooter({
+            text: `${await get_display_name(reaction.user)}: ${reaction.emoji}`,
+            iconURL: reaction.user.displayAvatarURL()
+        })
         .setTimestamp(message.createdAt);
     await log_thread.send({ embeds: [ embed ] });
 }
@@ -184,9 +202,14 @@ async function log_resolution(message: Discord.Message, reaction: reaction) {
 async function log_reopen(message: Discord.Message) {
     const embed = new Discord.MessageEmbed()
         .setColor(color)
-        .setAuthor(`${await get_display_name(message)}`, message.author.displayAvatarURL())
+        .setAuthor({
+            name: `${await get_display_name(message)}`,
+            iconURL: message.author.displayAvatarURL()
+        })
         .setDescription(message.content + `\n\n[[Jump to message]](${message.url})`)
-        .setFooter("Suggestion reopened")
+        .setFooter({
+            text: "Suggestion reopened"
+        })
         .setTimestamp(message.createdAt);
     await log_thread.send({ embeds: [ embed ] });
 }
@@ -215,7 +238,9 @@ async function open_suggestion(message: Discord.Message) {
         }
         database.get<db_schema>("suggestion_tracker").suggestions[message.id] = {
             status_message: status_message.id,
-            hash: xxh3(message.content)
+            hash: xxh3(message.content),
+            up: 0,
+            down: 0
         };
         database.update();
         // add react options
@@ -258,10 +283,24 @@ async function update_message_if_needed(message: Discord.Message) {
             M.debug("Suggestion edited", [message.author.tag, message.author.id, message.content]);
             const status_message = await thread.messages.fetch(entry.status_message);
             const embed = await make_embed(message);
-            status_message.edit({ embeds: [embed] });
-            database.get<db_schema>("suggestion_tracker").suggestions[message.id].hash = hash;
-            database.update();
+            await status_message.edit({ embeds: [embed] });
+            entry.hash = hash;
+            await database.update();
             return true; // return if we updated
+        } else {
+            const reactions = message.reactions.cache;
+            const up = (reactions.get("👍") || {count: 0}).count;
+            const down = (reactions.get("👎") || {count: 0}).count;
+            if(entry.up != up || entry.down != down) {
+                M.debug("Updating with new reactions", [message.author.tag, message.author.id, message.content]);
+                const status_message = await thread.messages.fetch(entry.status_message);
+                const embed = await make_embed(message);
+                await status_message.edit({ embeds: [embed] });
+                entry.up = up;
+                entry.down = down;
+                await database.update();
+                return true; // return if we updated
+            }
         }
         return false;
     } catch(e) {
@@ -355,6 +394,31 @@ async function on_message_update(old_message: Discord.Message | Discord.PartialM
     }
 }
 
+async function process_vote(_reaction: Discord.MessageReaction | Discord.PartialMessageReaction,
+                            user: Discord.User                 | Discord.PartialUser) {
+    const reaction = await departialize(_reaction);
+    if(reaction.emoji.name! == "👍" || reaction.emoji.name! == "👎") {
+        const message = await departialize(reaction.message);
+        if(message.id in database.get<db_schema>("suggestion_tracker").suggestions) {
+            M.debug("Suggestion vote", reaction.emoji.name, [message.id]);
+            // update database
+            const entry = database.get<db_schema>("suggestion_tracker").suggestions[message.id];
+            // update message
+            const status_message = await thread.messages.fetch(entry.status_message);
+            const embed = await make_embed(message);
+            await status_message.edit({ embeds: [embed] });
+            if(reaction.emoji.name! == "👍") {
+                entry.up = reaction.count;
+            } else { // 👎
+                entry.down = reaction.count;
+            }
+            await database.update();
+        } else {
+            // already resolved
+        }
+    }
+}
+
 // Process a reaction, known to be a resolution reaction
 // Is root checked here
 async function process_reaction(_reaction: Discord.MessageReaction | Discord.PartialMessageReaction,
@@ -390,6 +454,10 @@ async function on_react(reaction: Discord.MessageReaction | Discord.PartialMessa
             if(resolution_reactions_set.has(reaction.emoji.name!)) {
                 await mutex.lock(reaction.message.id);
                 process_reaction(reaction, user);
+                mutex.unlock(reaction.message.id);
+            } else if(vote_reaction_set.has(reaction.emoji.name!)) {
+                await mutex.lock(reaction.message.id);
+                process_vote(reaction, user);
                 mutex.unlock(reaction.message.id);
             }
         } else if(reaction.message.channel.id == suggestion_dashboard_thread_id) {
@@ -435,9 +503,16 @@ async function on_reaction_remove(reaction: Discord.MessageReaction | Discord.Pa
     if(recovering) return;
     if(reaction.message.channel.id != server_suggestions_channel_id) return;
     try {
-        await mutex.lock(reaction.message.id);
-        process_reaction_remove(reaction, user);
-        mutex.unlock(reaction.message.id);
+        if(resolution_reactions_set.has(reaction.emoji.name!)) {
+            await mutex.lock(reaction.message.id);
+            process_reaction_remove(reaction, user);
+            mutex.unlock(reaction.message.id);
+        } else if(reaction.message.channel.id == server_suggestions_channel_id
+               && vote_reaction_set.has(reaction.emoji.name!)) {
+            await mutex.lock(reaction.message.id);
+            process_vote(reaction, user);
+            mutex.unlock(reaction.message.id);
+        }
     } catch(e) {
         critical_error(e);
     }
