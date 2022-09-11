@@ -30,6 +30,17 @@ async function on_message(message: Discord.Message) {
                     await channel.lockPermissions();
                 }
                 await message.reply("Done");
+            } else if(message.content == "!prefix-archive-channels") {
+                M.info("got !prefix-archive-channels");
+                const TCCPP = await client.guilds.fetch(TCCPP_ID);
+                const archive = await TCCPP.channels.fetch("910306041969913938");
+                assert(archive instanceof Discord.CategoryChannel);
+                for(const [_, channel] of archive.children) {
+                    if(!channel.name.startsWith("archived-")) {
+                        await channel.setName(`archived-${channel.name}`);
+                    }
+                }
+                await message.reply("Done");
             }
         } catch(e) {
             critical_error(e);
