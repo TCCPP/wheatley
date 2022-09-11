@@ -21,6 +21,15 @@ async function on_message(message: Discord.Message) {
                 }
                 M.info("Done");
                 m.edit(":+1:");
+            } else if(message.content == "!sync-archive-permissions") {
+                M.info("got !sync-archive-permissions");
+                const TCCPP = await client.guilds.fetch(TCCPP_ID);
+                const archive = await TCCPP.channels.fetch("910306041969913938");
+                assert(archive instanceof Discord.CategoryChannel);
+                for(const [_, channel] of archive.children) {
+                    await channel.lockPermissions();
+                }
+                await message.reply("Done");
             }
         } catch(e) {
             critical_error(e);
