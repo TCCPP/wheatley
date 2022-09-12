@@ -3,7 +3,7 @@ import * as moment from "moment";
 import * as chalk from "chalk";
 import * as fs from "fs";
 import { MINUTE, zelis_id } from "./common";
-import { assert } from "console";
+import { strict as assert } from "assert";
 
 function get_caller_location() { // https://stackoverflow.com/a/53339452/15675011
     let e = new Error();
@@ -289,4 +289,14 @@ export async function critical_error(...args: any[]) {
             zelis.send(`Critical error occurred: ${strs.join(" ")}`);
         }
     } catch { void(0); }
+}
+
+export function denullify<T>(x: T | null): T {
+    assert(x !== null);
+    return x;
+}
+
+export function textchannelify(x: Discord.Channel): Discord.TextBasedChannel {
+    assert(x.isText());
+    return x;
 }

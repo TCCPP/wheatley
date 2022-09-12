@@ -54,6 +54,7 @@ import { setup_thread_based_channels } from "./components/thread_based_channels"
 import { GuildCommandManager } from "./infra/guild_command_manager";
 import { setup_status } from "./components/status";
 import { setup_autoreact } from "./components/autoreact";
+import { setup_username_manager } from "./components/username_manager";
 
 // Setup client
 const client = new Discord.Client({
@@ -143,6 +144,7 @@ async function main() {
         await setup_thread_control(client);
         await setup_thread_based_channels(client);
         await setup_status(client);
+        await setup_username_manager(client);
 
         const token = readFileSync("auth.key", { encoding: "utf-8" });
 
