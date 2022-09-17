@@ -103,7 +103,7 @@ async function hard_catch_up() {
                 oldest_seen = TRACKER_START_TIME;
                 continue;
             }
-            handle_fetched_message(message);
+            await handle_fetched_message(message);
             if(message.createdTimestamp < oldest_seen) {
                 oldest_seen = message.createdTimestamp;
             }
@@ -133,11 +133,11 @@ async function on_ready() {
         for(const [_, channel] of monitored_channels) {
             const messages = await channel.messages.fetch({ limit: 100 }, { cache: true });
             for(const [_, message] of messages) {
-                handle_fetched_message(message);
+                await handle_fetched_message(message);
             }
         }
         // hard catch up, fuck you CLU <3
-        hard_catch_up();
+        await hard_catch_up();
     } catch(e) {
         critical_error(e);
     }
