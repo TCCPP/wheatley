@@ -17,13 +17,21 @@
     },
     "scripts": {
         "start": "tsc && unbuffer node src/main.js 2>&1 | tee -a log.txt",
-        "lint": "eslint . --color",
+        "lint": "eslint .",
+        "lint-files": "eslint --color",
         "prepare": "husky install"
     },
     "devDependencies": {
         "@typescript-eslint/eslint-plugin": "^5.37.0",
         "@typescript-eslint/parser": "^5.37.0",
         "eslint": "^8.23.1",
-        "husky": "^8.0.1"
+        "husky": "^8.0.1",
+        "lint-staged": "^13.0.3",
+        "prettier": "2.7.1"
+    },
+    "lint-staged": {
+        "*.[jt]s": [
+            "npm run lint-files --"
+        ]
     }
 }
