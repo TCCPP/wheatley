@@ -13,7 +13,7 @@ import { ApplicationCommandTypeMessage, colors, is_authorized_admin, TCCPP_ID, w
 let client: Discord.Client;
 
 function on_message(message: Discord.Message) {
-
+    void(0);
 }
 
 export async function setup_test_module(_client: Discord.Client) {

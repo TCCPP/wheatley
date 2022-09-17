@@ -30,14 +30,19 @@ function on_ban(ban: Discord.GuildBan, now: number) {
         // .purged set by raidpurge (yes I know it's checked above), currently_banning used by anti-scambot
         const is_auto_ban = entry.purged || tracker.currently_banning.has(user.id);
         // make embed
-        const embed = new Discord.MessageEmbed()
+        const embed = new Discord.EmbedBuilder()
             .setColor(colors.speedrun_color)
-            .setAuthor(`Speedrun attempt: ${user.tag}`, avatar)
+            .setAuthor({
+                name: `Speedrun attempt: ${user.tag}`,
+                iconURL: avatar
+            })
             .setDescription(`User <@${user.id}> joined at <t:${Math.round(entry.joined_at / 1000)}:T> and`
                           + ` banned at <t:${Math.round(now / 1000)}:T>.\n`
                           + `Final timer: ${diff_to_human(now - entry.joined_at)}.`
                           + (is_auto_ban ? "\n**AUTO BAN**" : ""))
-            .setFooter(`ID: ${user.id}`)
+            .setFooter({
+                text: `ID: ${user.id}`
+            })
             .setTimestamp();
         action_log_channel!.send({ embeds: [embed] });
     } catch(e) {

@@ -19,7 +19,7 @@ async function on_message(message: Discord.Message) {
         && is_authorized_admin(message.member!)) {
             M.log("got ping command");
             message.channel.send({embeds: [
-                new Discord.MessageEmbed()
+                new Discord.EmbedBuilder()
                     .setColor(color)
                     .setTitle("pong")
             ]});
@@ -36,6 +36,7 @@ async function on_message(message: Discord.Message) {
 
 async function on_interaction_create(interaction: Discord.Interaction) {
     if(interaction.isCommand() && interaction.commandName == "echo") {
+        assert(interaction.isChatInputCommand());
         const input = interaction.options.getString("input");
         M.debug("echo command", input);
         await interaction.reply({

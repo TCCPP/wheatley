@@ -6,13 +6,13 @@ import { MINUTE, zelis_id } from "./common";
 import { strict as assert } from "assert";
 
 function get_caller_location() { // https://stackoverflow.com/a/53339452/15675011
-    let e = new Error();
+    const e = new Error();
     if(!e.stack) {
         return "<error>";
     }
-    let frame = e.stack.split("\n")[3];
-    let line_number = frame.split(":").reverse()[1];
-    let function_name = frame.split(" ")[5];
+    const frame = e.stack.split("\n")[3];
+    const line_number = frame.split(":").reverse()[1];
+    const function_name = frame.split(" ")[5];
     return function_name + ":" + line_number;
 }
 
@@ -113,12 +113,12 @@ export function exists_sync(path: string) {
 
 type PotentiallyPartial = Discord.AllowedPartial | Discord.Partialize<Discord.AllowedPartial>;
 
-export async function departialize<T extends PotentiallyPartial,
-                                   R extends ReturnType<T["fetch"]>>(thing: T): Promise<R> {
+// TODO: Fix types
+export async function departialize<T extends PotentiallyPartial>(thing: T): Promise<any> {
     if(thing.partial) {
-        return thing.fetch();
+        return (thing as any).fetch();
     } else {
-        return thing as R;
+        return thing;
     }
 }
 
@@ -297,6 +297,6 @@ export function denullify<T>(x: T | null): T {
 }
 
 export function textchannelify(x: Discord.Channel): Discord.TextBasedChannel {
-    assert(x.isText());
+    assert(x.isTextBased());
     return x;
 }

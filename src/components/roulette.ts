@@ -28,25 +28,27 @@ const green = 0x31ea6c;
 const red = 0xed2d2d;
 
 function make_click_embed(author: Discord.User) {
-    return new Discord.MessageEmbed()
+    return new Discord.EmbedBuilder()
         .setColor(green)
         .setDescription(`Click. <@${author.id}> got lucky. (Current streak: ${(streaks.get(author.id) ?? 0) + 1})`);
 }
 
 function make_bang_embed(author: Discord.User) {
-    return new Discord.MessageEmbed()
+    return new Discord.EmbedBuilder()
         .setColor(red)
         .setDescription(`BANG. <@${author.id}> is dead <a:saber:851241060553326652>`);
 }
 
 function make_ban_embed(message: Discord.Message) {
     const author = message.author;
-    return new Discord.MessageEmbed()
+    return new Discord.EmbedBuilder()
         .setColor(red)
         .setDescription(`BANG. <@${author.id}> ${author.tag} [lost](https://www.youtube.com/watch?v=dQw4w9WgXcQ)`
                       + ` [roulette](${message.url}) and is being timed out for half an hour`
                       + ` <a:saber:851241060553326652>.\nID: ${author.id}`)
-        .setFooter("");
+        .setFooter({
+            text: ""
+        });
 }
 
 async function update_scoreboard(user_id: string) {
@@ -94,7 +96,9 @@ async function play_roulette(message: Discord.Message) {
                     // Setup ban message
                     const ban_embed = make_ban_embed(message);
                     if(!ok) {
-                        ban_embed.setFooter(ban_embed.footer!.text! + "Error: Timeout failed ");
+                        ban_embed.setFooter({
+                            text: ban_embed.data.footer!.text + "Error: Timeout failed "
+                        });
                     }
                     member_log_channel.send({embeds: [ban_embed]});
                 });
@@ -115,7 +119,7 @@ async function play_roulette(message: Discord.Message) {
 }
 
 async function display_leaderboard(message: Discord.Message) {
-    const embed = new Discord.MessageEmbed()
+    const embed = new Discord.EmbedBuilder()
         .setColor(green)
         .setTitle("Roulette Leaderboard");
     let description = "";

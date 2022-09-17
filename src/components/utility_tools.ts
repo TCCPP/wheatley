@@ -26,7 +26,7 @@ async function on_message(message: Discord.Message) {
                 const TCCPP = await client.guilds.fetch(TCCPP_ID);
                 const archive = await TCCPP.channels.fetch("910306041969913938");
                 assert(archive instanceof Discord.CategoryChannel);
-                for(const [_, channel] of archive.children) {
+                for(const [_, channel] of archive.children.cache) {
                     await channel.lockPermissions();
                 }
                 await message.reply("Done");
@@ -35,7 +35,7 @@ async function on_message(message: Discord.Message) {
                 const TCCPP = await client.guilds.fetch(TCCPP_ID);
                 const archive = await TCCPP.channels.fetch("910306041969913938");
                 assert(archive instanceof Discord.CategoryChannel);
-                for(const [_, channel] of archive.children) {
+                for(const [_, channel] of archive.children.cache) {
                     if(!channel.name.startsWith("archived-")) {
                         await channel.setName(`archived-${channel.name}`);
                     }

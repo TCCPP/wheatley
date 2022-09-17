@@ -9,12 +9,11 @@ import { TCCPP_ID, wheatley_id } from "../common";
 export class GuildCommandManager {
     commands: any = [];
     finalized = false;
-    constructor() {}
     register(builder: any) {
         if(this.finalized) {
             throw Error("Commands registered too late");
         }
-        this.commands.push(builder)
+        this.commands.push(builder);
     }
     async finalize(token: string) {
         try {
@@ -30,5 +29,5 @@ export class GuildCommandManager {
             critical_error(e);
         }
     }
-};
+}
 

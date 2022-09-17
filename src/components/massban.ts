@@ -23,7 +23,7 @@ function do_mass_ban(msg: Discord.Message) {
         }
         msg.reply("Done.");
         // TODO: use long-message logic?
-        const embed = new Discord.MessageEmbed()
+        const embed = new Discord.EmbedBuilder()
             .setColor(colors.color)
             .setTitle(`<@!${msg.author.id}> banned ${ids.length} users`)
             .setDescription(`\`\`\`\n${ids.join("\n")}\n\`\`\``)

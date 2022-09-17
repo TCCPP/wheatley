@@ -12,10 +12,11 @@ async function on_message(message: Discord.Message) {
         if(message.author.bot) return; // Ignore bots
         if(message.channel.id == tutoring_requests_id) {
             message.reply({embeds: [
-                new Discord.MessageEmbed()
+                new Discord.EmbedBuilder()
                     .setColor(color)
                     .setTitle("Read The Instructions")
-                    .setDescription(`Hello :wave:, please read <#${tutoring_id}> and then use /tutoring to request one on one tutoring. Don't hesitate to ask specific questions in our help channels too!`)
+                    .setDescription(`Hello :wave:, please read <#${tutoring_id}> and then use /tutoring to request one "
+                        + "on one tutoring. Don't hesitate to ask specific questions in our help channels too!`)
             ]});
         }
     } catch(e) {

@@ -61,7 +61,7 @@ async function check_member(member: Discord.GuildMember) {
     // The only paths that fallthrough here change the username
     bot_spam.send({
         content: `<@${member.id}> Your nickname has been automatically changed to something with less unicode in it`
-    })
+    });
 }
 
 async function cleanup() {
@@ -89,7 +89,8 @@ async function cleanup() {
     }
 }
 
-async function on_guild_member_update(old_member: Discord.GuildMember | Discord.PartialGuildMember, new_member: Discord.GuildMember) {
+async function on_guild_member_update(old_member: Discord.GuildMember | Discord.PartialGuildMember,
+                                      new_member: Discord.GuildMember) {
     if(old_member.nickname !== new_member.nickname) {
         await check_member(new_member);
     }
@@ -107,8 +108,8 @@ export function setup_username_manager(client: Discord.Client) {
             assert(TCCPP != null);
             bot_spam = textchannelify(denullify(await TCCPP.channels.fetch(bot_spam_id)));
             // todo temp
-            client.on('guildMemberUpdate', on_guild_member_update);
-            client.on('guildMemberAdd', on_guild_member_join);
+            client.on("guildMemberUpdate", on_guild_member_update);
+            client.on("guildMemberAdd", on_guild_member_join);
             await cleanup();
             //setInterval(cleanup, 60 * MINUTE);
         } catch(e) {

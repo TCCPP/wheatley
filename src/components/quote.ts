@@ -37,7 +37,7 @@ async function get_display_name(thing: Discord.Message | Discord.User): Promise<
     }
 }
 
-function is_image_link_embed(embed: Discord.MessageEmbed) {
+function is_image_link_embed(embed: Discord.Embed) {
     for(const key in embed) {
         if(["type", "url", "thumbnail"].indexOf(key) === -1) {
             const value = (embed as any)[key];
@@ -55,22 +55,28 @@ async function make_quote(messages: Discord.Message[], requested_by: Discord.Gui
     assert(head.content != null);
     assert(head.author != null);
     const contents = messages.map(m => m.content).join("\n");
-    const embed = new Discord.MessageEmbed()
+    const embed = new Discord.EmbedBuilder()
         .setColor(color)
-        .setAuthor(`${await get_display_name(head)}`, head.author.displayAvatarURL())
+        .setAuthor({
+            name: `${await get_display_name(head)}`,
+            iconURL: head.author.displayAvatarURL()
+        })
         .setDescription(contents + `\n\nFrom <#${head.channel.id}> [[Jump to message]](${head.url})`)
         .setTimestamp(head.createdAt)
-        .setFooter(`Quoted by ${requested_by.displayName}`, requested_by.user.displayAvatarURL());
+        .setFooter({
+            text: `Quoted by ${requested_by.displayName}`,
+            iconURL: requested_by.user.displayAvatarURL()
+        });
     const images = messages.map(message => [
         ...message.attachments.filter(a => a.contentType?.indexOf("image") == 0).map(a => a.url),
         ...message.embeds.filter(is_image_link_embed).map(e => e.url!)
     ]).flat();
     const other_embeds = messages.map(message => message.embeds.filter(e => !is_image_link_embed(e))).flat();
-    const image_embeds: Discord.MessageEmbed[] = [];
+    const image_embeds: Discord.EmbedBuilder[] = [];
     if(images.length > 0) {
         embed.setImage(images[0]);
         for(const image of images.slice(1)) {
-            image_embeds.push(new Discord.MessageEmbed({
+            image_embeds.push(new Discord.EmbedBuilder({
                 image: {
                     url: image
                 }
@@ -143,7 +149,7 @@ async function on_message(message: Discord.Message) {
                 await do_quote(message, channel_id, message_id, op == "quoteb");
             }
         } else if(message.content.trim() == "!quote" || message.content.trim() == "!quoteb") {
-            if(message.type == "REPLY") {
+            if(message.type == Discord.MessageType.Reply) {
                 const reply = await message.fetchReference();
                 await do_quote(message, reply.channel.id, reply.id, message.content.trim() == "!quoteb");
             } else {

@@ -49,7 +49,7 @@ function xxh3(message: string) {
 
 function get_message(channel: Discord.TextChannel | Discord.ThreadChannel, id: string) {
     return new Promise<Discord.Message | undefined>((resolve, reject) => {
-        channel.messages.fetch(id, {cache: true })
+        channel.messages.fetch({ message: id, cache: true })
             .then(m => resolve(m))
             .catch(e => {
                 if(e.httpStatus == 404) {
@@ -121,7 +121,7 @@ function reverse_lookup(status_id: string) {
 }
 
 function isnt_actually_a_message(message: Discord.Message) {
-    return message.type == "THREAD_CREATED" && message.thread == null;
+    return message.type == Discord.MessageType.ThreadCreated && message.thread == null;
 }
 
 /*
@@ -165,7 +165,7 @@ async function make_embed(message: Discord.Message) {
     const reactions = message.reactions.cache;
     const up = (reactions.get("👍") || {count: 0}).count;
     const down = (reactions.get("👎") || {count: 0}).count;
-    return new Discord.MessageEmbed()
+    return new Discord.EmbedBuilder()
         .setColor(color)
         .setAuthor({
             name: `${await get_display_name(message)}`,
@@ -184,7 +184,7 @@ async function make_embed(message: Discord.Message) {
 // Not logging deletions
 
 async function log_resolution(message: Discord.Message, reaction: reaction) {
-    const embed = new Discord.MessageEmbed()
+    const embed = new Discord.EmbedBuilder()
         .setColor(color)
         .setAuthor({
             name: `${await get_display_name(message)}`,
@@ -200,7 +200,7 @@ async function log_resolution(message: Discord.Message, reaction: reaction) {
 }
 
 async function log_reopen(message: Discord.Message) {
-    const embed = new Discord.MessageEmbed()
+    const embed = new Discord.EmbedBuilder()
         .setColor(color)
         .setAuthor({
             name: `${await get_display_name(message)}`,
@@ -395,7 +395,7 @@ async function on_message_update(old_message: Discord.Message | Discord.PartialM
 }
 
 async function process_vote(_reaction: Discord.MessageReaction | Discord.PartialMessageReaction,
-                            user: Discord.User                 | Discord.PartialUser) {
+                            _: Discord.User                    | Discord.PartialUser) {
     const reaction = await departialize(_reaction);
     if(reaction.emoji.name! == "👍" || reaction.emoji.name! == "👎") {
         const message = await departialize(reaction.message);
@@ -407,7 +407,7 @@ async function process_vote(_reaction: Discord.MessageReaction | Discord.Partial
             const status_message = await thread.messages.fetch(entry.status_message);
             const embed = await make_embed(message);
             await status_message.edit({ embeds: [embed] });
-            if(reaction.emoji.name! == "👍") {
+            if(reaction.emoji.name == "👍") {
                 entry.up = reaction.count;
             } else { // 👎
                 entry.down = reaction.count;
@@ -524,8 +524,9 @@ async function process_since_last_scanned() {
         // TODO: Sort collection???
         const messages = await suggestion_channel.messages.fetch({
             limit: 100,
-            after: forge_snowflake(database.get<db_schema>("suggestion_tracker").last_scanned_timestamp + 1)
-        }, {cache: true });
+            after: forge_snowflake(database.get<db_schema>("suggestion_tracker").last_scanned_timestamp + 1),
+            cache: true
+        });
         M.debug("process_since_last_scanned", messages.size);
         if(messages.size == 0) {
             break;
