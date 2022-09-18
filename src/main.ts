@@ -70,6 +70,7 @@ const client = new Discord.Client({
         Discord.GatewayIntentBits.GuildMessages,
         Discord.GatewayIntentBits.GuildMessageReactions,
         Discord.GatewayIntentBits.GuildMessageTyping,
+        Discord.GatewayIntentBits.MessageContent,
         Discord.GatewayIntentBits.DirectMessages,
         Discord.GatewayIntentBits.DirectMessageReactions,
         Discord.GatewayIntentBits.DirectMessageTyping,

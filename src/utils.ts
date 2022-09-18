@@ -111,14 +111,16 @@ export function exists_sync(path: string) {
     return exists;
 }
 
-type PotentiallyPartial = Discord.AllowedPartial | Discord.Partialize<Discord.AllowedPartial>;
-
-// TODO: Fix types
-export async function departialize<T extends PotentiallyPartial>(thing: T): Promise<any> {
+type PotentiallyPartial = Discord.User | Discord.PartialUser
+                        | Discord.GuildMember | Discord.PartialGuildMember
+                        | Discord.Message | Discord.PartialMessage
+                        | Discord.MessageReaction | Discord.PartialMessageReaction;
+export async function departialize<T extends PotentiallyPartial,
+                                   R extends ReturnType<T["fetch"]>>(thing: T): Promise<R> {
     if(thing.partial) {
-        return (thing as any).fetch();
+        return await thing.fetch() as R;
     } else {
-        return thing;
+        return thing as any as R;
     }
 }
 
