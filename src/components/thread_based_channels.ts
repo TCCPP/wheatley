@@ -109,7 +109,7 @@ async function forum_cleanup() {
                 assert(thread.ownerId);
                 assert(thread.messageCount);
                 await thread.send({
-                    content: thread.messageCount > 1 ? null : `<@${thread.ownerId}>`,
+                    content: thread.messageCount > 1 ? undefined : `<@${thread.ownerId}>`,
                     embeds: [
                         create_embed(undefined, colors.color, "This question thread is being automatically closed. If "
                             + "your question is not answered feel free to bump the post or re-ask. Take a look at "

@@ -41,7 +41,7 @@ async function on_interaction_create(interaction: Discord.Interaction) {
         M.debug("echo command", input);
         await interaction.reply({
             ephemeral: true,
-            content: input
+            content: input || undefined
         });
     }
 }

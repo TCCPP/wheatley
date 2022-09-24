@@ -15,6 +15,7 @@ async function on_message(message: Discord.Message) {
                 const TCCPP = await client.guilds.fetch(TCCPP_ID);
                 const channels = await TCCPP.channels.fetch();
                 for(const [_, channel] of channels) {
+                    assert(channel);
                     const r = channel.name.replace(/_/g, "-");
                     M.info("Renaming", channel.name, r);
                     await channel.setName(r);
