@@ -6,32 +6,40 @@ import { action_log_channel_id, colors, moderators_role_id, root_role_id, TCCPP_
 let client: Discord.Client;
 let action_log_channel: Discord.TextChannel;
 
-const tracked_mentions = [
+const tracked_mentions = new Set([
     "540314034894012428", // admin role on test server
     root_role_id,
     moderators_role_id,
     "892864085006360626", // red dragon
-    "859474976242270249" // wheatly
-];
+    "970549026514698284", // wheatly
+    "1013953887029444678", // dyno
+]);
+
+function format_list(mentions: string[]) {
+    if(mentions.length <= 2) {
+        return mentions.join(" and ");
+    } else {
+        return `${mentions.slice(0, mentions.length - 1).join(", ")}, and ${mentions[mentions.length - 1]}`;
+    }
+}
 
 function check_tracked_mention_and_notify(message: Discord.Message) {
-    // TODO: only do one message per message, put all tracked roles into it / filter/unique
-    for(const [role_id, _] of message.mentions.roles) {
-        if(tracked_mentions.indexOf(role_id) > -1) {
-            const embed = new Discord.EmbedBuilder()
-                .setColor(colors.color)
-                .setAuthor({
-                    name: `${message.author.username}#${message.author.discriminator}`,
-                    iconURL: message.author.displayAvatarURL()
-                })
-                .setDescription(`<@&${role_id}> mentioned in <#${message.channel.id}> by <@${message.author.id}>\n`
-                              + `[click here to jump](${message.url})`)
-                .setFooter({
-                    text: `ID: ${message.author.id}`
-                })
-                .setTimestamp();
-            action_log_channel.send({ embeds: [embed] });
-        }
+    const mentions = [...new Set(message.mentions.roles.map(v => v.id).filter(id => tracked_mentions.has(id)))];
+    if(mentions.length > 0) {
+        const embed = new Discord.EmbedBuilder()
+            .setColor(colors.color)
+            .setAuthor({
+                name: `${message.author.username}#${message.author.discriminator}`,
+                iconURL: message.author.displayAvatarURL()
+            })
+            .setDescription(`${format_list(mentions.map(m => `<@&${m}>`))} mentioned in`
+                            + ` <#${message.channel.id}> by <@${message.author.id}>\n`
+                            + `[click here to jump](${message.url})`)
+            .setFooter({
+                text: `ID: ${message.author.id}`
+            })
+            .setTimestamp();
+        action_log_channel.send({ embeds: [embed] });
     }
 }
 
