@@ -39,7 +39,7 @@ import { setup_massban } from "./components/massban";
 import { setup_test_command } from "./test/test_command";
 import { setup_snowflake } from "./components/snowflake";
 import { setup_nodistractions } from "./components/nodistractions";
-import { setup_server_suggestion_tracker } from "./components/server_suggetsion_tracker";
+import { setup_server_suggestion_tracker } from "./components/server_suggestion_tracker";
 import { setup_quote } from "./components/quote";
 import { setup_ping } from "./components/ping";
 import { setup_link_blacklist } from "./components/link_blacklist";
