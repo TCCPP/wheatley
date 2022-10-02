@@ -55,6 +55,8 @@ import { GuildCommandManager } from "./infra/guild_command_manager";
 import { setup_status } from "./components/status";
 import { setup_autoreact } from "./components/autoreact";
 import { setup_username_manager } from "./components/username_manager";
+import { setup_forum_control } from "./components/forum_control";
+import { setup_forum_channels } from "./components/forum_channels";
 
 // Setup client
 const client = new Discord.Client({
@@ -144,6 +146,8 @@ async function main() {
         await setup_modmail(client, database);
         await setup_thread_control(client);
         await setup_thread_based_channels(client);
+        await setup_forum_control(client);
+        await setup_forum_channels(client);
         await setup_status(client);
         await setup_username_manager(client);
 

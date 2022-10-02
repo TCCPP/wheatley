@@ -1,17 +1,16 @@
 import * as Discord from "discord.js";
 import { strict as assert } from "assert";
-import { critical_error, denullify, M, SelfClearingMap } from "../utils";
-import { colors, is_authorized_admin, rules_channel_id, skill_role_ids, TCCPP_ID, wheatley_id } from "../common";
+import { critical_error, denullify, M } from "../utils";
+import { colors, forum_help_channels, is_authorized_admin, TCCPP_ID, wheatley_id } from "../common";
 
 let client: Discord.Client;
 
 let TCCPP : Discord.Guild;
 
 /*
- * Thread control for threads in thread-based (non-forum) channels
- * Really just:
- * - !rename
- * - !archive
+ * Forum thread handling:
+ * Implements:
+ * - !solved / etc
  */
 
 async function get_owner(thread: Discord.ThreadChannel) {
@@ -58,48 +57,36 @@ async function try_to_control_thread(request: Discord.Message, action: string) {
 async function on_message(request: Discord.Message) {
     try {
         if(request.author.bot) return; // Ignore bots
-        if(request.content.match(/^!rename\s+(.+)/gm)) {
-            M.debug("received rename command", request.content, request.author.username);
-            if(await try_to_control_thread(request, "rename")) {
-                const channel = request.channel;
-                assert(channel.isThread());
-                const thread = channel;
-                const owner_id = await get_owner(thread);
-                const name = request.content.substring("!rename".length).trim();
-                const old_name = thread.name;
-                M.log(`Thread ${thread.id} being renamed to "${name}"`);
-                if(name.length > 100 - "[SOLVED] ".length) { // TODO
-                    await request.reply({
-                        content: `Thread names must be ${100 - "[SOLVED] ".length} characters or shorter`
-                    });
-                    return;
-                }
-                await thread.setName(name);
-                await request.delete();
-                //await request.reply({
-                //    embeds: [create_embed(undefined, colors.green, "Success :+1:")]
-                //});
-                //await request.reply({
-                //    content: "Success :+1:"
-                //});
-                // fetch first message
-                const messages = await thread.messages.fetch({
-                    after: thread.id,
-                    limit: 2 // thread starter message, then wheatley's message
-                });
-                for(const [_, message] of messages) {
-                    if(message.type == Discord.MessageType.Default && message.author.id == wheatley_id) {
-                        message.delete();
+        if(request.content == "!solved" || request.content == "!close") {
+            if(await try_to_control_thread(request, request.content == "!solved" ? "solve" : "close")) {
+                assert(request.channel.isThread());
+                const thread = request.channel;
+                if(thread.parentId && forum_help_channels.has(thread.parentId)) { // TODO
+                    if(!thread.name.startsWith("[SOLVED]")) {
+                        //await request.react("👍");
+                        await thread.send({
+                            embeds: [
+                                create_embed(undefined, colors.color, "Thank you and let us know if you have any more "
+                                    + "questions!")
+                            ]
+                        });
+                        await thread.setName(`[SOLVED] ${thread.name}`);
+                        await thread.setArchived(true);
                     }
+                } else {
+                    request.reply("You can't use that here");
                 }
             }
         }
-        if(request.content == "!archive") {
-            if(await try_to_control_thread(request, "archive")) {
+        if(request.content == "!unsolve" || request.content == "!unsolved") {
+            if(await try_to_control_thread(request, "unsolve")) {
                 assert(request.channel.isThread());
-                if(request.channel.parentId == rules_channel_id
-                && request.channel.type == Discord.ChannelType.PrivateThread) {
-                    await request.channel.setArchived();
+                const thread = request.channel;
+                if(thread.parentId && forum_help_channels.has(thread.parentId)) { // TODO
+                    if(thread.name.startsWith("[SOLVED]")) {
+                        await request.react("👍");
+                        await thread.setName(thread.name.substring("[SOLVED]".length).trim());
+                    }
                 } else {
                     request.reply("You can't use that here");
                 }
@@ -127,7 +114,7 @@ async function on_ready() {
     }
 }
 
-export async function setup_thread_control(_client: Discord.Client) {
+export async function setup_forum_control(_client: Discord.Client) {
     try {
         client = _client;
         client.on("ready", on_ready);
