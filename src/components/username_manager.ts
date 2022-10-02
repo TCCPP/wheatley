@@ -105,9 +105,7 @@ export function setup_username_manager(client: Discord.Client) {
     client.on("ready", async () => {
         try {
             TCCPP = await client.guilds.fetch(TCCPP_ID);
-            assert(TCCPP != null);
             bot_spam = textchannelify(denullify(await TCCPP.channels.fetch(bot_spam_id)));
-            // todo temp
             client.on("guildMemberUpdate", on_guild_member_update);
             client.on("guildMemberAdd", on_guild_member_join);
             await cleanup();

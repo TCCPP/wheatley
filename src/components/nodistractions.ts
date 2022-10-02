@@ -129,7 +129,6 @@ function set_timer() {
 async function apply_no_distractions(target: Discord.GuildMember, message: Discord.Message, start: number,
                                      duration: number) {
     M.debug("Applying !nodistractions");
-    assert(target != null);
     // error handling
     if(target.roles.cache.some(r => r.id == no_off_topic)) {
         if(target.id in database.get<database_schema>("nodistractions")) {
@@ -299,7 +298,6 @@ export async function setup_nodistractions(_client: Discord.Client, _database: D
         try {
             TCCPP = await client.guilds.fetch(TCCPP_ID);
             zelis = await client.users.fetch(zelis_id);
-            assert(TCCPP != null);
             if(!database.has("nodistractions")) {
                 database.set<database_schema>("nodistractions", {
                     /*

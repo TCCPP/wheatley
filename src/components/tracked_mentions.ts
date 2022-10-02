@@ -1,6 +1,6 @@
 import * as Discord from "discord.js";
 import { strict as assert } from "assert";
-import { critical_error, M } from "../utils";
+import { critical_error, fetch_text_channel, M } from "../utils";
 import { action_log_channel_id, colors, moderators_role_id, root_role_id, TCCPP_ID } from "../common";
 
 let client: Discord.Client;
@@ -61,8 +61,7 @@ export async function setup_tracked_mentions(_client: Discord.Client) {
     M.debug("Setting up tracked_mentions");
     client.on("ready", async () => {
         try {
-            action_log_channel = await client.channels.fetch(action_log_channel_id) as Discord.TextChannel;
-            assert(action_log_channel != null);
+            action_log_channel = await fetch_text_channel(action_log_channel_id);
             M.debug("tracked_mentions: action_log_channel channel fetched");
             client.on("messageCreate", on_message);
             //tracker.add_submodule({ });

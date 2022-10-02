@@ -1,6 +1,7 @@
 import * as Discord from "discord.js";
 import { strict as assert } from "assert";
-import { critical_error, departialize, M, KeyedMutexSet, SelfClearingSet } from "../utils";
+import { critical_error, departialize, M, KeyedMutexSet, SelfClearingSet, fetch_text_channel,
+         fetch_thread_channel } from "../utils";
 import { DatabaseInterface } from "../infra/database_interface";
 import { is_root, MINUTE, server_suggestions_channel_id, suggestion_action_log_thread_id,
          suggestion_dashboard_thread_id, TCCPP_ID, wheatley_id } from "../common";
@@ -160,8 +161,6 @@ function isnt_actually_a_message(message: Discord.Message) {
 // include media in embed?
 
 async function make_embed(message: Discord.Message) {
-    assert(message.content != null);
-    assert(message.author != null);
     const reactions = message.reactions.cache;
     const up = (reactions.get("👍") || {count: 0}).count;
     const down = (reactions.get("👎") || {count: 0}).count;
@@ -277,7 +276,6 @@ async function update_message_if_needed(message: Discord.Message) {
             return;
         }
         const entry = database.get<db_schema>("suggestion_tracker").suggestions[message.id];
-        assert(message.content != null);
         const hash = xxh3(message.content);
         if(hash != entry.hash) {
             M.debug("Suggestion edited", [message.author.tag, message.author.id, message.content]);
@@ -507,8 +505,7 @@ async function on_reaction_remove(reaction: Discord.MessageReaction | Discord.Pa
             await mutex.lock(reaction.message.id);
             process_reaction_remove(reaction, user);
             mutex.unlock(reaction.message.id);
-        } else if(reaction.message.channel.id == server_suggestions_channel_id
-               && vote_reaction_set.has(reaction.emoji.name!)) {
+        } else if(vote_reaction_set.has(reaction.emoji.name!)) {
             await mutex.lock(reaction.message.id);
             process_vote(reaction, user);
             mutex.unlock(reaction.message.id);
@@ -571,13 +568,9 @@ async function on_ready() {
         }
         // fetches
         TCCPP = await client.guilds.fetch(TCCPP_ID);
-        assert(TCCPP != null);
-        suggestion_channel = (await client.channels.fetch(server_suggestions_channel_id))! as Discord.TextChannel;
-        assert(suggestion_channel != null);
-        thread = (await suggestion_channel.threads.fetch(suggestion_dashboard_thread_id))!;
-        assert(thread != null);
-        log_thread = (await suggestion_channel.threads.fetch(suggestion_action_log_thread_id))!;
-        assert(log_thread != null);
+        suggestion_channel = await fetch_text_channel(server_suggestions_channel_id);
+        thread = await fetch_thread_channel(suggestion_channel, suggestion_dashboard_thread_id);
+        log_thread = await fetch_thread_channel(suggestion_channel, suggestion_action_log_thread_id);
         M.debug("server_suggestion tracker handler fetched guilds/channels/threads");
         // setup event handlers
         client.on("messageCreate", on_message);

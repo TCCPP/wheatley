@@ -16,7 +16,7 @@ export class DatabaseInterface {
         database.state = content == "" ? {} : JSON.parse(content);
         return database;
     }
-    // TODO: Async this and also batch updates....
+    // TODO: Batch updates?
     async update() {
         await this.write_mutex.lock();
         M.debug("Saving database");

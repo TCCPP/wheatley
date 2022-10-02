@@ -1,6 +1,6 @@
 import * as Discord from "discord.js";
 import { strict as assert } from "assert";
-import { critical_error, M } from "../utils";
+import { critical_error, fetch_text_channel, M } from "../utils";
 import { colors, member_log_channel_id, MINUTE } from "../common";
 
 const NEW_USER_THRESHOLD = MINUTE * 60;
@@ -40,8 +40,7 @@ export async function setup_notify_about_brand_new_users(client: Discord.Client)
     M.debug("Setting up notify_about_brand_new_users");
     client.on("ready", async () => {
         try {
-            member_log_channel = await client.channels.fetch(member_log_channel_id) as Discord.TextChannel;
-            assert(member_log_channel != null);
+            member_log_channel = await fetch_text_channel(member_log_channel_id);
             M.debug("notify_about_brand_new_users: member_log_channel channel fetched");
             client.on("guildMemberAdd", on_join);
         } catch(e) {

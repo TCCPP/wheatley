@@ -12,7 +12,6 @@ let pink_role: Discord.Role;
 
 async function interval() {
     try {
-        assert(pink_role != null);
         const members = await TCCPP.members.fetch();
         members.map((m, _) => {
             // pink
@@ -46,11 +45,10 @@ export function setup_role_manager(client: Discord.Client) {
     client.on("ready", async () => {
         try {
             TCCPP = await client.guilds.fetch(TCCPP_ID);
-            pink_role = (await TCCPP.roles.fetch(pink_role_id))!;
-            assert(TCCPP != null);
-            assert(pink_role != null);
+            const role = await TCCPP.roles.fetch(pink_role_id);
+            assert(role != null);
+            pink_role = role;
             M.debug("setup_role_manager: got TCCPP and pink_role");
-            assert(pink_role != null);
             setInterval(interval, 30 * MINUTE);
         } catch(e) {
             critical_error(e);

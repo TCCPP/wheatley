@@ -1,6 +1,6 @@
 import * as Discord from "discord.js";
 import { strict as assert } from "assert";
-import { critical_error, diff_to_human, M } from "../utils";
+import { critical_error, diff_to_human, fetch_text_channel, M } from "../utils";
 import { MemberTracker } from "../infra/member_tracker";
 import { action_log_channel_id, colors } from "../common";
 
@@ -14,7 +14,6 @@ function on_ban(ban: Discord.GuildBan, now: number) {
         const user = ban.user;
         // get user info
         const avatar = user.displayAvatarURL();
-        assert(avatar != null);
         if(!tracker.id_map.has(user.id)) {
             return; // If not in tracker, been in the server longer than 30 minutes
         }
@@ -28,6 +27,7 @@ function on_ban(ban: Discord.GuildBan, now: number) {
             return;
         }
         // .purged set by raidpurge (yes I know it's checked above), currently_banning used by anti-scambot
+        // eslint-disable-next-line @typescript-eslint/no-unnecessary-condition
         const is_auto_ban = entry.purged || tracker.currently_banning.has(user.id);
         // make embed
         const embed = new Discord.EmbedBuilder()
@@ -56,8 +56,7 @@ export async function setup_speedrun(_client: Discord.Client, _tracker: MemberTr
     M.debug("Setting up speedrun");
     client.on("ready", async () => {
         try {
-            action_log_channel = await client.channels.fetch(action_log_channel_id) as Discord.TextChannel;
-            assert(action_log_channel != null);
+            action_log_channel = await fetch_text_channel(action_log_channel_id);
             M.debug("tracked_mentions: action_log_channel channel fetched");
             tracker.add_submodule({ on_ban });
         } catch(e) {

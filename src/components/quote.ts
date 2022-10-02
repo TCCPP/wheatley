@@ -52,8 +52,6 @@ function is_image_link_embed(embed: Discord.Embed) {
 async function make_quote(messages: Discord.Message[], requested_by: Discord.GuildMember) {
     assert(messages.length >= 1);
     const head = messages[0];
-    assert(head.content != null);
-    assert(head.author != null);
     const contents = messages.map(m => m.content).join("\n");
     const embed = new Discord.EmbedBuilder()
         .setColor(color)

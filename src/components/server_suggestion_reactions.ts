@@ -1,14 +1,14 @@
 import * as Discord from "discord.js";
 import { strict as assert } from "assert";
 import { is_root, MINUTE, server_suggestions_channel_id, suggestion_dashboard_thread_id } from "../common";
-import { critical_error, delay, M } from "../utils";
+import { critical_error, delay, fetch_text_channel, M } from "../utils";
 import { TRACKER_START_TIME } from "./server_suggetsion_tracker";
 import { forge_snowflake } from "./snowflake";
 import { react_blacklist } from "../config";
 
 let client: Discord.Client;
 
-let monitored_channels: Map<string, Discord.TextChannel>;
+let monitored_channels: Map<string, Discord.TextChannel | Discord.AnyThreadChannel>;
 const monitored_channels_ids = [server_suggestions_channel_id, suggestion_dashboard_thread_id];
 
 const root_only_reacts = new Set([
@@ -121,8 +121,8 @@ async function on_ready() {
         // get the suggestion channel
         monitored_channels = new Map();
         for(const channel_id of monitored_channels_ids) {
-            const channel = (await client.channels.fetch(channel_id))! as Discord.TextChannel;
-            assert(channel != null);
+            const channel = await client.channels.fetch(channel_id);
+            assert(channel && (channel instanceof Discord.TextChannel || channel instanceof Discord.ThreadChannel));
             monitored_channels.set(channel_id, channel);
         }
         M.debug("server_suggestion reactions handler got channels");

@@ -1,6 +1,6 @@
 import * as Discord from "discord.js";
 import { strict as assert } from "assert";
-import { critical_error, M } from "../utils";
+import { critical_error, fetch_text_channel, M } from "../utils";
 import { action_log_channel_id, colors, is_authorized_admin, pepereally, TCCPP_ID } from "../common";
 
 let client: Discord.Client;
@@ -54,8 +54,7 @@ export function setup_massban(_client: Discord.Client) {
     client = _client;
     client.on("ready", async () => {
         try {
-            action_log_channel = await client.channels.fetch(action_log_channel_id) as Discord.TextChannel;
-            assert(action_log_channel != null);
+            action_log_channel = await fetch_text_channel(action_log_channel_id);
             client.on("messageCreate", on_message);
         } catch(e) {
             critical_error(e);
