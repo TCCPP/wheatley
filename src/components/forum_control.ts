@@ -1,6 +1,6 @@
 import * as Discord from "discord.js";
 import { strict as assert } from "assert";
-import { critical_error, denullify, M } from "../utils";
+import { critical_error, denullify, get_tag, M } from "../utils";
 import { colors, forum_help_channels, is_authorized_admin, TCCPP_ID, wheatley_id } from "../common";
 
 let client: Discord.Client;
@@ -61,8 +61,12 @@ async function on_message(request: Discord.Message) {
             if(await try_to_control_thread(request, request.content == "!solved" ? "solve" : "close")) {
                 assert(request.channel.isThread());
                 const thread = request.channel;
+                const forum = thread.parent;
+                assert(forum instanceof Discord.ForumChannel);
+                const solved_tag = get_tag(forum, "Solved");
+                const open_tag = get_tag(forum, "Open");
                 if(thread.parentId && forum_help_channels.has(thread.parentId)) { // TODO
-                    if(!thread.name.startsWith("[SOLVED]")) {
+                    if(!thread.appliedTags.some(tag => tag == solved_tag.id)) {
                         //await request.react("👍");
                         await thread.send({
                             embeds: [
@@ -70,7 +74,9 @@ async function on_message(request: Discord.Message) {
                                     + "questions!")
                             ]
                         });
-                        await thread.setName(`[SOLVED] ${thread.name}`);
+                        await thread.setAppliedTags(
+                            thread.appliedTags.filter(tag => tag != open_tag.id).concat(solved_tag.id)
+                        );
                         await thread.setArchived(true);
                     }
                 } else {
@@ -82,10 +88,16 @@ async function on_message(request: Discord.Message) {
             if(await try_to_control_thread(request, "unsolve")) {
                 assert(request.channel.isThread());
                 const thread = request.channel;
+                const forum = thread.parent;
+                assert(forum instanceof Discord.ForumChannel);
+                const solved_tag = get_tag(forum, "Solved");
+                const open_tag = get_tag(forum, "Open");
                 if(thread.parentId && forum_help_channels.has(thread.parentId)) { // TODO
-                    if(thread.name.startsWith("[SOLVED]")) {
+                    if(thread.appliedTags.some(tag => tag == solved_tag.id)) {
                         await request.react("👍");
-                        await thread.setName(thread.name.substring("[SOLVED]".length).trim());
+                        await thread.setAppliedTags(
+                            thread.appliedTags.filter(tag => tag != solved_tag.id).concat(open_tag.id)
+                        );
                     }
                 } else {
                     request.reply("You can't use that here");

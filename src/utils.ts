@@ -310,9 +310,22 @@ export async function fetch_text_channel(id: string) {
     return channel;
 }
 
+export async function fetch_forum_channel(id: string) {
+    // TODO: Using the client from init_debugger is very ugly.
+    const channel = await client.channels.fetch(id);
+    assert(channel && channel instanceof Discord.ForumChannel);
+    return channel;
+}
+
 export async function fetch_thread_channel(channel: Discord.TextChannel, id: string) {
     // TODO: Using the client from init_debugger is very ugly.
     const thread = await channel.threads.fetch(id);
     assert(thread && thread instanceof Discord.ThreadChannel);
     return thread;
+}
+
+export function get_tag(channel: Discord.ForumChannel, name: string) {
+    const candidates = channel.availableTags.filter(tag => tag.name == name);
+    assert(candidates.length == 1, "Did someone change the tag name??");
+    return candidates[0];
 }
