@@ -68,9 +68,9 @@ async function on_message(request: Discord.Message) {
                 const name = request.content.substring("!rename".length).trim();
                 const old_name = thread.name;
                 M.log(`Thread ${thread.id} being renamed to "${name}"`);
-                if(name.length > 100 - "[SOLVED] ".length) { // TODO
+                if(name.length > 100) { // TODO
                     await request.reply({
-                        content: `Thread names must be ${100 - "[SOLVED] ".length} characters or shorter`
+                        content: `Thread names must be 100 characters or shorter`
                     });
                     return;
                 }
