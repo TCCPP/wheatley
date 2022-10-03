@@ -75,7 +75,7 @@ async function on_message(request: Discord.Message) {
                             ]
                         });
                         await thread.setAppliedTags(
-                            thread.appliedTags.filter(tag => tag != open_tag.id).concat(solved_tag.id)
+                            [solved_tag.id].concat(thread.appliedTags.filter(tag => tag != open_tag.id))
                         );
                         await thread.setArchived(true);
                     }
@@ -96,7 +96,7 @@ async function on_message(request: Discord.Message) {
                     if(thread.appliedTags.some(tag => tag == solved_tag.id)) {
                         await request.react("👍");
                         await thread.setAppliedTags(
-                            thread.appliedTags.filter(tag => tag != solved_tag.id).concat(open_tag.id)
+                            [open_tag.id].concat(thread.appliedTags.filter(tag => tag != solved_tag.id))
                         );
                     }
                 } else {

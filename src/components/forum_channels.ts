@@ -47,7 +47,7 @@ async function on_thread_create(thread: Discord.ThreadChannel) {
         const forum = thread.parent;
         assert(forum instanceof Discord.ForumChannel);
         const open_tag = get_tag(forum, "Open");
-        await thread.setAppliedTags(thread.appliedTags.concat(open_tag.id));
+        await thread.setAppliedTags([open_tag.id].concat(thread.appliedTags));
         setTimeout(async () => {
             await thread.send({
                 embeds: [create_embed(undefined, colors.red, "When your question is answered use `!solved` to mark "
@@ -68,10 +68,8 @@ async function last_message_is_shit(thread: Discord.ThreadChannel, last: string)
     return false;
 }
 
-async function forum_cleanup() {
-    M.info("Running forum cleanup");
+async function migration1() {
     const now = Date.now();
-    // [Migration]-------------------------------------------
     // Cleanup shit from before the forum api was solidified:
     //  Remove [SOLVED] from names and just mark old threads as solved
     for(const forum of [cpp_help, c_help]) {
@@ -93,9 +91,7 @@ async function forum_cleanup() {
             const {threads, hasMore} = await forum.threads.fetchArchived({ before: earliest });
             M.debug("Cleanup: b", threads.size, earliest);
             all_threads.push(...threads.map(t => t));
-            M.debug(threads.map(t => t.createdTimestamp));
             earliest = new Date(Math.min(earliest.getTime(), ...threads.map(t => denullify(t.createdAt).getTime())));
-            //M.debug("Cleanup: xxx", threads.map(t => t.name))
             if(!hasMore) {
                 break;
             }
@@ -107,7 +103,9 @@ async function forum_cleanup() {
                 // for some reason thread need to be not archived
                 await thread.setArchived(false);
                 await thread.setName(thread.name.substring("[SOLVED]".length).trim());
-                await thread.setAppliedTags(thread.appliedTags.filter(tag => tag != open_tag.id).concat(solved_tag.id));
+                await thread.setAppliedTags(
+                    [solved_tag.id].concat(thread.appliedTags.filter(tag => tag != open_tag.id))
+                );
                 await thread.setArchived(true);
             } else {
                 if(!thread.appliedTags.some(tag => [solved_tag.id, open_tag.id].indexOf(tag) != -1)) { // no tags
@@ -116,21 +114,64 @@ async function forum_cleanup() {
                         // default to open
                         M.debug("Cleanup: Adding open tag to recent thread", thread.name);
                         await thread.setArchived(false);
-                        await thread.setAppliedTags(thread.appliedTags.concat(open_tag.id));
+                        await thread.setAppliedTags([open_tag.id].concat(thread.appliedTags));
                         await thread.setArchived(true);
                     } else {
                         // just mark old questions as solved
                         M.debug("Cleanup: Adding solved tag to very old thread", thread.name);
                         await thread.setArchived(false);
-                        await thread.setAppliedTags(thread.appliedTags.concat(solved_tag.id));
+                        await thread.setAppliedTags([solved_tag.id].concat(thread.appliedTags));
                         await thread.setArchived(true);
                     }
                 }
             }
         }
     }
-    // ------------------------------------------------------
+}
 
+async function migration2() {
+    // Put solved/open tags at the beginning
+    for(const forum of [cpp_help, c_help]) {
+        const solved_tag = get_tag(forum, "Solved");
+        const open_tag = get_tag(forum, "Open");
+        const all_threads: Discord.ThreadChannel[] = [];
+        while(true) {
+            const {threads, hasMore} = await forum.threads.fetchActive();
+            M.debug("Cleanup: a", threads.size);
+            all_threads.push(...threads.map(t => t));
+            assert(!hasMore); // todo: temporary
+            // eslint-disable-next-line @typescript-eslint/no-unnecessary-condition
+            if(!hasMore) {
+                break;
+            }
+        }
+        let earliest = new Date(86400000000000); // year 4707
+        while(true) {
+            const {threads, hasMore} = await forum.threads.fetchArchived({ before: earliest });
+            M.debug("Cleanup: b", threads.size, earliest);
+            all_threads.push(...threads.map(t => t));
+            earliest = new Date(Math.min(earliest.getTime(), ...threads.map(t => denullify(t.createdAt).getTime())));
+            //M.debug("Cleanup: xxx", threads.map(t => t.name))
+            if(!hasMore) {
+                break;
+            }
+        }
+        for(const thread of all_threads) {
+            await thread.setArchived(false);
+            await thread.setAppliedTags(
+                thread.appliedTags.filter(tag => [solved_tag.id, open_tag.id].indexOf(tag) != -1)
+                    .concat(
+                        thread.appliedTags.filter(tag => [solved_tag.id, open_tag.id].indexOf(tag) == -1)
+                    )
+            );
+            await thread.setArchived(true);
+        }
+    }
+}
+
+async function forum_cleanup() {
+    M.info("Running forum cleanup");
+    const now = Date.now();
     // Routinely archive threads
     // Ensure no thread has both the solved and open tag
     for(const forum of [cpp_help, c_help]) {
@@ -184,7 +225,9 @@ async function on_ready() {
         c_help = await fetch_forum_channel(c_help_id);
         client.on("messageCreate", on_message);
         client.on("threadCreate", on_thread_create);
-        forum_cleanup();
+        await migration1();
+        await migration2();
+        await forum_cleanup();
         // every hour try to cleanup
         setInterval(forum_cleanup, 60 * MINUTE);
     } catch(e) {
