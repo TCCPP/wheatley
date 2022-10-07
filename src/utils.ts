@@ -4,6 +4,7 @@ import * as chalk from "chalk";
 import * as fs from "fs";
 import { MINUTE, zelis_id } from "./common";
 import { strict as assert } from "assert";
+import { decode_snowflake } from "./components/snowflake";
 
 function get_caller_location() { // https://stackoverflow.com/a/53339452/15675011
     const e = new Error();
@@ -328,4 +329,37 @@ export function get_tag(channel: Discord.ForumChannel, name: string) {
     const candidates = channel.availableTags.filter(tag => tag.name == name);
     assert(candidates.length == 1, "Did someone change the tag name??");
     return candidates[0];
+}
+
+export async function fetch_active_threads(forum: Discord.ForumChannel) {
+    const {threads, hasMore} = await forum.threads.fetchActive();
+    assert(!hasMore); // todo: how to handle
+    return threads;
+}
+
+export async function fetch_inactive_threads(forum: Discord.ForumChannel, soft_limit?: number) {
+    let earliest_seen = new Date(86400000000000); // year 4707
+    const now = Date.now();
+    const thread_entries: [string, Discord.ThreadChannel][] = [];
+    while(true) {
+        const {threads, hasMore} = await forum.threads.fetchArchived({ before: earliest_seen, limit: 2 });
+        M.debug("xx", threads.map(t => [t.id, t.name]));
+        thread_entries.push(...threads);
+        earliest_seen = new Date(Math.min(
+            earliest_seen.getTime(),
+            ...threads.map(t => decode_snowflake(denullify(t.lastMessageId)))
+        ));
+        if(!hasMore || (soft_limit && Math.abs(now - earliest_seen.getTime()) < soft_limit)) {
+            break;
+        }
+    }
+    return new Discord.Collection(thread_entries);
+}
+
+export async function fetch_all_threads(forum: Discord.ForumChannel, soft_limit?: number) {
+    const threads = new Discord.Collection([
+        ...await fetch_active_threads(forum),
+        ...await fetch_inactive_threads(forum, soft_limit)
+    ]);
+    return threads;
 }

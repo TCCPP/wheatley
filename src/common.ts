@@ -143,5 +143,5 @@ export const c_help_id = "1013104018739974194";
 export const forum_help_channels = new Set([cpp_help_id, c_help_id]);
 
 export function is_forum_help_thread(thread: Discord.ThreadChannel) {
-    return thread.parentId && forum_help_channels.has(thread.parentId);
+    return thread.parentId != null && forum_help_channels.has(thread.parentId);
 }
