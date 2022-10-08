@@ -70,7 +70,7 @@ async function on_message(request: Discord.Message) {
                 M.log(`Thread ${thread.id} being renamed to "${name}"`);
                 if(name.length > 100) { // TODO
                     await request.reply({
-                        content: `Thread names must be 100 characters or shorter`
+                        content: "Thread names must be 100 characters or shorter"
                     });
                     return;
                 }
