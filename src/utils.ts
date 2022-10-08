@@ -337,29 +337,54 @@ export async function fetch_active_threads(forum: Discord.ForumChannel) {
     return threads;
 }
 
-export async function fetch_inactive_threads(forum: Discord.ForumChannel, soft_limit?: number) {
-    let earliest_seen = new Date(86400000000000); // year 4707
+export async function fetch_inactive_threads_time_limit(forum: Discord.ForumChannel, soft_limit?: number) {
+    let before: string | undefined = undefined;
     const now = Date.now();
     const thread_entries: [string, Discord.ThreadChannel][] = [];
     while(true) {
-        const {threads, hasMore} = await forum.threads.fetchArchived({ before: earliest_seen, limit: 2 });
-        M.debug("xx", threads.map(t => [t.id, t.name]));
+        const {threads, hasMore} = await forum.threads.fetchArchived({ before /*, limit: 2*/ });
+        //M.debug("xx", threads.map(t => [t.id, t.name]), hasMore);
         thread_entries.push(...threads);
-        earliest_seen = new Date(Math.min(
-            earliest_seen.getTime(),
-            ...threads.map(t => decode_snowflake(denullify(t.lastMessageId)))
-        ));
-        if(!hasMore || (soft_limit && Math.abs(now - earliest_seen.getTime()) < soft_limit)) {
+        const last: Discord.ThreadChannel = threads.at(-1)!;
+        before = last.id;
+        if(!hasMore || (soft_limit && Math.abs(now - denullify(last.createdAt).getTime()) >= soft_limit)) {
+            //M.debug("--breaking--");
             break;
         }
     }
     return new Discord.Collection(thread_entries);
 }
 
-export async function fetch_all_threads(forum: Discord.ForumChannel, soft_limit?: number) {
+export async function fetch_all_threads_time_limit(forum: Discord.ForumChannel, soft_limit?: number) {
     const threads = new Discord.Collection([
         ...await fetch_active_threads(forum),
-        ...await fetch_inactive_threads(forum, soft_limit)
+        ...await fetch_inactive_threads_time_limit(forum, soft_limit)
+    ]);
+    return threads;
+}
+
+export async function fetch_inactive_threads_count(forum: Discord.ForumChannel, count: number) {
+    let before: string | undefined = undefined;
+    const thread_entries: [string, Discord.ThreadChannel][] = [];
+    while(true) {
+        const {threads, hasMore} = await forum.threads.fetchArchived({ before, limit: Math.min(count, 100) });
+        //M.debug("xx", threads.map(t => [t.id, t.name]), hasMore);
+        thread_entries.push(...threads);
+        const last: Discord.ThreadChannel = threads.at(-1)!;
+        before = last.id;
+        count -= threads.size;
+        if(!hasMore || count <= 0) {
+            //M.debug("--breaking--");
+            break;
+        }
+    }
+    return new Discord.Collection(thread_entries);
+}
+
+export async function fetch_all_threads_archive_count(forum: Discord.ForumChannel, count: number) {
+    const threads = new Discord.Collection([
+        ...await fetch_active_threads(forum),
+        ...await fetch_inactive_threads_count(forum, count)
     ]);
     return threads;
 }

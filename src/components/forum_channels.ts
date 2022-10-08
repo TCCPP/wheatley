@@ -1,6 +1,7 @@
 import * as Discord from "discord.js";
 import { strict as assert } from "assert";
-import { critical_error, fetch_all_threads, fetch_forum_channel, get_tag, M, SelfClearingSet } from "../utils";
+import { critical_error, fetch_all_threads_archive_count, fetch_forum_channel, get_tag, M,
+         SelfClearingSet } from "../utils";
 import { colors, cpp_help_id, c_help_id, forum_help_channels, is_forum_help_thread, MINUTE,
          wheatley_id } from "../common";
 import { decode_snowflake } from "./snowflake"; // todo: eliminate decode_snowflake
@@ -14,15 +15,14 @@ const solved_archive_timeout = 12 * 60 * MINUTE; // 12 hours for a solved thread
 const inactive_timeout = 12 * 60 * MINUTE; // 12 hours for a thread that's seen no activity, archive
 const resolution_timeout = 12 * 60 * MINUTE; // after another 12 hours, open -> solved
 
-const cleanup_limit = 5 * (24 * 60 * MINUTE); // how far back to search - 5 days
+const cleanup_limit = 200; // how many messages back in the archive to go
 
 // if a channel hasn't had activity in 2 hours prompt to ask a better question ?
 const message_inactivity_threshold = 2 * 60 * MINUTE;
 // if the op says thank you remind them to close the thread after 15 minutes
 const thank_you_timeout = 5 * MINUTE;
 
-const thank_you_re = /\b(thanks|thank\s*you|ty|cheers)\b/gi;
-// was able to figure it out
+const thank_you_re = /\b(thanks|thank\s*you|ty|cheers|figured? it out(?!\?))\b/gi;
 
 
 /*
@@ -32,6 +32,9 @@ const thank_you_re = /\b(thanks|thank\s*you|ty|cheers)\b/gi;
  * - Tag cleanup
  * - Has your question been solved prompt
  */
+
+// TODO: Improve initial message, make it more friendly to the eye
+// reduce time of initial message
 
 // don't prompt twice within 2 hours - that's just annoying
 const possibly_resolved = new SelfClearingSet<string>(2 * 60 * MINUTE);
@@ -55,7 +58,7 @@ async function prompt_close(thread: Discord.ThreadChannel) {
     if(thread.appliedTags.includes(solved_tag)) {
         // no action needed - has been marked !solved
     } else {
-        M.debug("Sending !solved prompt timeout for thread", [thread.name]);
+        M.debug("Sending !solved prompt timeout for thread", [thread.id, thread.name]);
         thread.send(`<@${thread.ownerId}> Has your question been resolved? If so, run \`!solved\` :)`);
     }
 }
@@ -64,6 +67,7 @@ async function on_message(message: Discord.Message) {
     try {
         if(message.author.bot) return; // Ignore bots
         if(message.type == Discord.MessageType.ThreadCreated) return; // ignore message create messages
+        if(message.id == message.channelId) return; // forum start message
         const channel = message.channel;
         if(channel instanceof Discord.ThreadChannel) {
             const thread = channel;
@@ -78,18 +82,12 @@ async function on_message(message: Discord.Message) {
                     if(message.author.id == op) {
                         const content = message.content.toLowerCase();
                         if(content.match(thank_you_re) != null) {
-                            /*if(timeouts.has(thread.id)) {
-                                // pass
-                            } else {
-                                timeouts.set(thread.id, setTimeout(() => {
-                                }, thank_you_threshold));
-                            }*/
                             if(!possibly_resolved.has(thread.id)) {
-                                M.debug("Setting !solved prompt timeout for thread", [thread.name], "based off of",
-                                        [content]);
-                                setTimeout(async () => {
+                                M.debug("Setting !solved prompt timeout for thread", [thread.id, thread.name],
+                                        "based off of", [content]);
+                                timeout_map.set(thread.id, setTimeout(async () => {
                                     await prompt_close(thread);
-                                }, thank_you_timeout);
+                                }, thank_you_timeout));
                                 possibly_resolved.insert(thread.id);
                                 return;
                             }
@@ -98,7 +96,7 @@ async function on_message(message: Discord.Message) {
                     // if we reach here, it's a non-thank message
                     // might need to restart the timeout
                     if(timeout_map.has(thread.id)) {
-                        M.debug("Restarting !solved prompt timeout for thread", [thread.name]);
+                        M.debug("Restarting !solved prompt timeout for thread", [thread.id, thread.name]);
                         clearTimeout(timeout_map.get(thread.id));
                         setTimeout(async () => {
                             await prompt_close(thread);
@@ -135,19 +133,19 @@ async function on_thread_create(thread: Discord.ThreadChannel) {
     }
 }
 
-async function check_thread_activity(thread: Discord.ThreadChannel, solved_tag: string) {
+async function check_thread_activity(thread: Discord.ThreadChannel, open_tag: string, solved_tag: string) {
     assert(thread.lastMessageId);
     const now = Date.now();
     const last_message = decode_snowflake(thread.lastMessageId);
     if(thread.appliedTags.includes(solved_tag) && !thread.archived && now - last_message >= solved_archive_timeout) {
-        M.log("Archiving solved channel", [thread.name]);
+        M.log("Archiving solved channel", [thread.id, thread.name]);
         thread.setArchived(true);
     } else if(!thread.appliedTags.includes(solved_tag) && !thread.archived && now - last_message >= inactive_timeout) {
-        M.log("Archiving inactive channel", [thread.name]);
+        M.log("Archiving inactive channel", [thread.id, thread.name]);
         assert(thread.ownerId);
         assert(thread.messageCount);
         await thread.send({
-            content: thread.messageCount > 1 ? undefined : `<@${thread.ownerId}>`,
+            content: `<@${thread.ownerId}>`,
             embeds: [
                 create_embed(undefined, colors.color, "This question thread is being automatically closed."
                     + " If your question is not answered feel free to bump the post or re-ask. Take a look"
@@ -156,78 +154,64 @@ async function check_thread_activity(thread: Discord.ThreadChannel, solved_tag: 
         });
         await thread.setArchived(true);
     } else if(!thread.appliedTags.includes(solved_tag) && thread.archived && now - last_message >= resolution_timeout) {
-        M.log("Resolving channel", [thread.name]);
+        M.log("Resolving channel", [thread.id, thread.name]);
         await thread.setArchived(false);
         assert(thread.messageCount);
         await thread.send({
-            content: thread.messageCount > 1 ? undefined : `<@${thread.ownerId}>`,
+            content: `<@${thread.ownerId}>`,
             embeds: [
                 create_embed(undefined, colors.color, "This question thread is being automatically marked as solved.")
             ]
         });
+        await thread.setAppliedTags([solved_tag].concat(thread.appliedTags.filter(t => t != open_tag)));
         await thread.setArchived(true);
     }
 }
 
-/*async function deep_clean() {
-    const now = Date.now();
-    // Catch up on anything that happened when the bot was offline
-    // - Archive inactive threads / mark really old threads mark old threads as solved
+async function misc_checks(thread: Discord.ThreadChannel, open_tag: string, solved_tag: string) {
     // - Ensure there is exactly one solved/open tag
-    // - Ensure the solved/open tag is at the beginning
-    for(const forum of [cpp_help, c_help]) {
-        const solved_tag = get_tag(forum, "Solved").id;
-        const open_tag = get_tag(forum, "Open").id;
-        const all_threads = (await fetch_all_threads(forum)).map((t, _) => t);
-        if(all_threads.length > 1000) { // TODO
-            critical_error("You should do this better this");
-        }
-        M.info(`Deep clean: Found ${all_threads.length} threads`);
-        for(const thread of all_threads) {
-            // - Ensure there is exactly one solved/open tag
-            if(thread.appliedTags.filter(tag => [solved_tag, open_tag].includes(tag)).length != 1) {
-                await thread.setArchived(false);
-                await thread.setAppliedTags(
-                    [solved_tag].concat(thread.appliedTags.filter(tag => ![solved_tag, open_tag].includes(tag)))
-                );
-                await thread.setArchived(true);
-            }
-            // - Ensure the solved/open tag is at the beginning
-            // We know thread.appliedTags.length >= 1 by now
-            else if(!(thread.appliedTags[0] == solved_tag || thread.appliedTags[0] == open_tag)) {
-                await thread.setArchived(false);
-                await thread.setAppliedTags(
-                    [solved_tag].concat(thread.appliedTags.filter(tag => ![solved_tag, open_tag].includes(tag)))
-                );
-                await thread.setArchived(true);
-            }
-            // - Archive inactive threads / mark really old threads Mark old threads as solved
-            await check_thread_activity(thread, solved_tag);
-        }
+    const solved_open_count = thread.appliedTags.filter(tag => [solved_tag, open_tag].includes(tag)).length;
+    if(solved_open_count != 1) {
+        M.debug("Setting thread with", solved_open_count, "solved/open tags to have one such tag",
+                [thread.id, thread.name]);
+        const {archived} = thread;
+        if(archived) await thread.setArchived(false);
+        const tag = thread.appliedTags.includes(solved_tag) ? solved_tag : open_tag;
+        await thread.setAppliedTags(
+            [tag].concat(thread.appliedTags.filter(tag => ![solved_tag, open_tag].includes(tag)))
+        );
+        if(archived) await thread.setArchived(true);
     }
-}*/
+    // - Ensure the solved/open tag is at the beginning
+    // We know thread.appliedTags.length >= 1 by now
+    else if(!(thread.appliedTags[0] == solved_tag || thread.appliedTags[0] == open_tag)) {
+        M.debug("Moving solved/open tag to the beginning", [thread.id, thread.name]);
+        const {archived} = thread;
+        if(archived) await thread.setArchived(false);
+        if(archived) await thread.setArchived(false);
+        await thread.setAppliedTags(
+            [solved_tag].concat(thread.appliedTags.filter(tag => ![solved_tag, open_tag].includes(tag)))
+        );
+        if(archived) await thread.setArchived(true);
+    }
+}
 
 async function forum_cleanup() {
     M.info("Running forum cleanup");
     // Routinely archive threads
     // Ensure no thread has both the solved and open tag?
     for(const forum of [cpp_help, c_help]) {
+        const open_tag = get_tag(forum, "Open").id;
         const solved_tag = get_tag(forum, "Solved").id;
-        (await fetch_all_threads(forum, cleanup_limit)).map(async thread => {
+        for(const [_, thread] of await fetch_all_threads_archive_count(forum, cleanup_limit)) {
             assert(thread.parentId);
             if(forum_help_channels.has(thread.parentId)) {
-                //M.debug(thread);
-                await check_thread_activity(thread, solved_tag);
+                await misc_checks(thread, open_tag, solved_tag);
+                await check_thread_activity(thread, open_tag, solved_tag);
             }
-        });
+        }
     }
 }
-
-/*async function get_initial_active() {
-    for(const forum of [cpp_help, c_help]) {
-
-    }
-}*/
 
 async function on_ready() {
     try {
