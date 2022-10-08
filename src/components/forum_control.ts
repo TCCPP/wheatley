@@ -63,10 +63,11 @@ async function on_message(request: Discord.Message) {
                 const thread = request.channel;
                 const forum = thread.parent;
                 assert(forum instanceof Discord.ForumChannel);
-                const solved_tag = get_tag(forum, "Solved");
-                const open_tag = get_tag(forum, "Open");
+                const solved_tag = get_tag(forum, "Solved").id;
+                const open_tag = get_tag(forum, "Open").id;
                 if(thread.parentId && forum_help_channels.has(thread.parentId)) { // TODO
-                    if(!thread.appliedTags.some(tag => tag == solved_tag.id)) {
+                    if(!thread.appliedTags.some(tag => tag == solved_tag)) {
+                        M.log("Marking thread as solved", [thread.id, thread.name]);
                         //await request.react("👍");
                         await thread.send({
                             embeds: [
@@ -75,7 +76,7 @@ async function on_message(request: Discord.Message) {
                             ]
                         });
                         await thread.setAppliedTags(
-                            [solved_tag.id].concat(thread.appliedTags.filter(tag => tag != open_tag.id))
+                            [solved_tag].concat(thread.appliedTags.filter(tag => tag != open_tag))
                         );
                         await thread.setArchived(true);
                     }
@@ -90,13 +91,14 @@ async function on_message(request: Discord.Message) {
                 const thread = request.channel;
                 const forum = thread.parent;
                 assert(forum instanceof Discord.ForumChannel);
-                const solved_tag = get_tag(forum, "Solved");
-                const open_tag = get_tag(forum, "Open");
+                const solved_tag = get_tag(forum, "Solved").id;
+                const open_tag = get_tag(forum, "Open").id;
                 if(thread.parentId && forum_help_channels.has(thread.parentId)) { // TODO
-                    if(thread.appliedTags.some(tag => tag == solved_tag.id)) {
+                    if(thread.appliedTags.some(tag => tag == solved_tag)) {
+                        M.log("Unsolving thread", [thread.id, thread.name]);
                         await request.react("👍");
                         await thread.setAppliedTags(
-                            [open_tag.id].concat(thread.appliedTags.filter(tag => tag != solved_tag.id))
+                            [open_tag].concat(thread.appliedTags.filter(tag => tag != solved_tag))
                         );
                     }
                 } else {

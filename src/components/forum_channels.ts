@@ -15,7 +15,7 @@ const solved_archive_timeout = 12 * 60 * MINUTE; // 12 hours for a solved thread
 const inactive_timeout = 12 * 60 * MINUTE; // 12 hours for a thread that's seen no activity, archive
 const resolution_timeout = 12 * 60 * MINUTE; // after another 12 hours, open -> solved
 
-const cleanup_limit = 200; // how many messages back in the archive to go
+const cleanup_limit = 400; // how many messages back in the archive to go
 
 // if a channel hasn't had activity in 2 hours prompt to ask a better question ?
 const message_inactivity_threshold = 2 * 60 * MINUTE;
@@ -58,7 +58,7 @@ async function prompt_close(thread: Discord.ThreadChannel) {
     if(thread.appliedTags.includes(solved_tag)) {
         // no action needed - has been marked !solved
     } else {
-        M.debug("Sending !solved prompt timeout for thread", [thread.id, thread.name]);
+        M.log("Sending !solved prompt timeout for thread", [thread.id, thread.name]);
         thread.send(`<@${thread.ownerId}> Has your question been resolved? If so, run \`!solved\` :)`);
     }
 }
@@ -122,7 +122,7 @@ async function on_thread_create(thread: Discord.ThreadChannel) {
         const forum = thread.parent;
         assert(forum instanceof Discord.ForumChannel);
         const open_tag = get_tag(forum, "Open").id;
-        await thread.setAppliedTags([open_tag].concat(thread.appliedTags));
+        await thread.setAppliedTags([open_tag].concat(thread.appliedTags.slice(0, 4)));
         setTimeout(async () => {
             await thread.send({
                 embeds: [create_embed(undefined, colors.red, "When your question is answered use **`!solved`** to mark "
@@ -142,10 +142,7 @@ async function check_thread_activity(thread: Discord.ThreadChannel, open_tag: st
         thread.setArchived(true);
     } else if(!thread.appliedTags.includes(solved_tag) && !thread.archived && now - last_message >= inactive_timeout) {
         M.log("Archiving inactive channel", [thread.id, thread.name]);
-        assert(thread.ownerId);
-        assert(thread.messageCount);
         await thread.send({
-            content: `<@${thread.ownerId}>`,
             embeds: [
                 create_embed(undefined, colors.color, "This question thread is being automatically closed."
                     + " If your question is not answered feel free to bump the post or re-ask. Take a look"
@@ -156,9 +153,7 @@ async function check_thread_activity(thread: Discord.ThreadChannel, open_tag: st
     } else if(!thread.appliedTags.includes(solved_tag) && thread.archived && now - last_message >= resolution_timeout) {
         M.log("Resolving channel", [thread.id, thread.name]);
         await thread.setArchived(false);
-        assert(thread.messageCount);
         await thread.send({
-            content: `<@${thread.ownerId}>`,
             embeds: [
                 create_embed(undefined, colors.color, "This question thread is being automatically marked as solved.")
             ]
@@ -169,29 +164,36 @@ async function check_thread_activity(thread: Discord.ThreadChannel, open_tag: st
 }
 
 async function misc_checks(thread: Discord.ThreadChannel, open_tag: string, solved_tag: string) {
-    // - Ensure there is exactly one solved/open tag
+    // Ensure there is exactly one solved/open tag
     const solved_open_count = thread.appliedTags.filter(tag => [solved_tag, open_tag].includes(tag)).length;
     if(solved_open_count != 1) {
-        M.debug("Setting thread with", solved_open_count, "solved/open tags to have one such tag",
-                [thread.id, thread.name]);
+        M.log("Setting thread with", solved_open_count, "solved/open tags to have one such tag",
+              [thread.id, thread.name]);
         const {archived} = thread;
         if(archived) await thread.setArchived(false);
         const tag = thread.appliedTags.includes(solved_tag) ? solved_tag : open_tag;
         await thread.setAppliedTags(
-            [tag].concat(thread.appliedTags.filter(tag => ![solved_tag, open_tag].includes(tag)))
+            [tag].concat(thread.appliedTags.filter(tag => ![solved_tag, open_tag].includes(tag)).slice(0, 4))
         );
         if(archived) await thread.setArchived(true);
     }
-    // - Ensure the solved/open tag is at the beginning
+    // Ensure the solved/open tag is at the beginning
     // We know thread.appliedTags.length >= 1 by now
     else if(!(thread.appliedTags[0] == solved_tag || thread.appliedTags[0] == open_tag)) {
-        M.debug("Moving solved/open tag to the beginning", [thread.id, thread.name]);
+        M.log("Moving solved/open tag to the beginning", [thread.id, thread.name]);
         const {archived} = thread;
-        if(archived) await thread.setArchived(false);
         if(archived) await thread.setArchived(false);
         await thread.setAppliedTags(
             [solved_tag].concat(thread.appliedTags.filter(tag => ![solved_tag, open_tag].includes(tag)))
         );
+        if(archived) await thread.setArchived(true);
+    }
+    // If the thread name starts with [SOLVED], remove it
+    if(thread.name.startsWith("[SOLVED]")) {
+        M.log("Removing \"[SOLVED]\" from forum thread name", [thread.id, thread.name]);
+        const {archived} = thread;
+        if(archived) await thread.setArchived(false);
+        await thread.setName(thread.name.slice("[SOLVED]".length).trim());
         if(archived) await thread.setArchived(true);
     }
 }
@@ -203,7 +205,9 @@ async function forum_cleanup() {
     for(const forum of [cpp_help, c_help]) {
         const open_tag = get_tag(forum, "Open").id;
         const solved_tag = get_tag(forum, "Solved").id;
-        for(const [_, thread] of await fetch_all_threads_archive_count(forum, cleanup_limit)) {
+        const threads = await fetch_all_threads_archive_count(forum, cleanup_limit);
+        M.info("--- Cleaning up", threads.size, "threads ---");
+        for(const [_, thread] of threads) {
             assert(thread.parentId);
             if(forum_help_channels.has(thread.parentId)) {
                 await misc_checks(thread, open_tag, solved_tag);
@@ -211,6 +215,7 @@ async function forum_cleanup() {
             }
         }
     }
+    M.info("FINISHED FORUM CLEANUP");
 }
 
 async function on_ready() {
