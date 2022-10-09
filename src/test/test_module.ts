@@ -7,7 +7,7 @@ import { SlashCommandBuilder, ContextMenuCommandBuilder } from "@discordjs/build
 import { readFileSync } from "fs";
 
 import { strict as assert } from "assert";
-import { M } from "../utils";
+import { M } from "../utility/utils";
 import { ApplicationCommandTypeMessage, colors, is_authorized_admin, TCCPP_ID, wheatley_id } from "../common";
 
 let client: Discord.Client;

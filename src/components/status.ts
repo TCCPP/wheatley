@@ -2,7 +2,7 @@ import * as Discord from "discord.js";
 
 import { strict as assert } from "assert";
 
-import { critical_error, M } from "../utils";
+import { critical_error, M } from "../utility/utils";
 
 let client: Discord.Client;
 

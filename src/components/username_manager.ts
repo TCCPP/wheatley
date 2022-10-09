@@ -1,7 +1,7 @@
 import * as Discord from "discord.js";
 import { strict as assert } from "assert";
 import { bot_spam_id, MINUTE, TCCPP_ID } from "../common";
-import { critical_error, denullify, M, textchannelify } from "../utils";
+import { critical_error, denullify, M, textchannelify } from "../utility/utils";
 
 let TCCPP: Discord.Guild;
 let bot_spam: Discord.TextBasedChannel;

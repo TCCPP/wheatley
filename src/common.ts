@@ -1,6 +1,6 @@
 import * as Discord from "discord.js";
 import { strict as assert } from "assert";
-import { M } from "./utils";
+import { M } from "./utility/utils";
 import { APIUser } from "discord-api-types/v10";
 
 // Common constants

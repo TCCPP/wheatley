@@ -1,6 +1,6 @@
 import * as Discord from "discord.js";
 import { strict as assert } from "assert";
-import { critical_error, M } from "../utils";
+import { critical_error, M } from "../utility/utils";
 import { no_off_topic, TCCPP_ID, zelis_id } from "../common";
 import { DatabaseInterface } from "../infra/database_interface";
 

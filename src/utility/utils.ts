@@ -2,9 +2,9 @@ import * as Discord from "discord.js";
 import * as moment from "moment";
 import * as chalk from "chalk";
 import * as fs from "fs";
-import { MINUTE, zelis_id } from "./common";
+import { MINUTE, zelis_id } from "../common";
 import { strict as assert } from "assert";
-import { decode_snowflake } from "./components/snowflake";
+import { decode_snowflake } from "../components/snowflake";
 
 function get_caller_location() { // https://stackoverflow.com/a/53339452/15675011
     const e = new Error();
