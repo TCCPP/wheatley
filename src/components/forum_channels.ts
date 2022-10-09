@@ -98,9 +98,9 @@ async function on_message(message: Discord.Message) {
                     if(timeout_map.has(thread.id)) {
                         M.debug("Restarting !solved prompt timeout for thread", [thread.id, thread.name]);
                         clearTimeout(timeout_map.get(thread.id));
-                        setTimeout(async () => {
+                        timeout_map.set(thread.id, setTimeout(async () => {
                             await prompt_close(thread);
-                        }, thank_you_timeout);
+                        }, thank_you_timeout));
                     }
                 }
             }
