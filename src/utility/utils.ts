@@ -388,3 +388,11 @@ export async function fetch_all_threads_archive_count(forum: Discord.ForumChanne
     ]);
     return threads;
 }
+
+export function format_list(items: string[]) {
+    if(items.length <= 2) {
+        return items.join(" and ");
+    } else {
+        return `${items.slice(0, items.length - 1).join(", ")}, and ${items[items.length - 1]}`;
+    }
+}

@@ -1,6 +1,6 @@
 import * as Discord from "discord.js";
 import { strict as assert } from "assert";
-import { critical_error, fetch_text_channel, M } from "../utility/utils";
+import { critical_error, fetch_text_channel, format_list, M } from "../utility/utils";
 import { action_log_channel_id, colors, moderators_role_id, root_role_id, TCCPP_ID } from "../common";
 
 let client: Discord.Client;
@@ -14,14 +14,6 @@ const tracked_mentions = new Set([
     "970549026514698284", // wheatly
     "1013953887029444678", // dyno
 ]);
-
-function format_list(mentions: string[]) {
-    if(mentions.length <= 2) {
-        return mentions.join(" and ");
-    } else {
-        return `${mentions.slice(0, mentions.length - 1).join(", ")}, and ${mentions[mentions.length - 1]}`;
-    }
-}
 
 function check_tracked_mention_and_notify(message: Discord.Message) {
     const mentions = [...new Set(message.mentions.roles.map(v => v.id).filter(id => tracked_mentions.has(id)))];
