@@ -126,8 +126,9 @@ async function on_thread_create(thread: Discord.ThreadChannel) {
         setTimeout(async () => {
             await thread.send({
                 embeds: [create_embed(undefined, colors.red, "When your question is answered use **`!solved`** to mark "
-                    + "the question as resolved.\n\nRemember to ask specific questions, provide necessary details, and "
-                    + "reduce your question to its simplest form. For more information use `!howto ask`.")]
+                    + "the question as resolved.\n\nRemember to ask __specific questions__, provide __necessary "
+                    + "details__, and reduce your question to its __simplest form__. For tips on how to ask a good "
+                    + "question run `!howto ask`.")]
             });
         }, 5 * 1000);
     }
