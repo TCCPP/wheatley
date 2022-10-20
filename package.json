@@ -19,14 +19,20 @@
         "start": "tsc && unbuffer node src/main.js 2>&1 | tee -a log.txt",
         "lint": "eslint .",
         "lint-files": "eslint --color",
-        "prepare": "husky install"
+        "prepare": "husky install",
+        "test": "cd test && tsc --skipLibCheck && cd .. && mocha"
     },
     "devDependencies": {
+        "@types/chai": "^4.3.3",
         "@typescript-eslint/eslint-plugin": "^5.38.1",
+        "@types/mocha": "^10.0.0",
         "@typescript-eslint/parser": "^5.38.1",
+        "chai": "^4.3.6",
         "eslint": "^8.24.0",
         "husky": "^8.0.1",
+        "linkedom": "^0.14.17",
         "lint-staged": "^13.0.3",
+        "mocha": "^10.0.0",
         "prettier": "2.7.1"
     },
     "lint-staged": {

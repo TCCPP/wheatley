@@ -6,6 +6,5 @@
         "moduleResolution": "node",
         "resolveJsonModule": true,
         "allowJs": true
-    },
-    "exclude": ["node_modules", "cppref"]
+    }
 }

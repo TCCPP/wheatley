@@ -6,6 +6,7 @@ extends:
   - plugin:@typescript-eslint/recommended
 ignorePatterns:
   - scratch
+  - "*.js"
 parser: '@typescript-eslint/parser'
 parserOptions:
   ecmaVersion: latest

@@ -7,5 +7,5 @@
         "resolveJsonModule": true,
         "allowJs": true
     },
-    "exclude": ["node_modules", "cppref"]
+    "exclude": ["en.cppreference.com", "upload.cppreference.com"]
 }
