@@ -29,7 +29,16 @@ export enum TargetIndex { C, CPP }
 type candidate_entry = {
     page: cppref_page;
     score: number;
+    scores_: [number, string][]
 };
+
+function max<T>(arr: T[], f: (x: T) => any = (x: T) => x) {
+    if(arr.length == 0) {
+        assert(false);
+    } else {
+        return arr.slice(1).reduce((previous, current) => f(current) > f(previous) ? current : previous, arr[0]);
+    }
+}
 
 // exported for test case reasons
 export function search(query: string, target: TargetIndex) {
@@ -41,27 +50,46 @@ export function search(query: string, target: TargetIndex) {
     const candidates: candidate_entry[] = [];
     for(const page of target_index) {
         const title_tokens = tokenize(page.title);
-        const scores = query_tokens.map(
-            query_token => Math.max(
-                ...title_tokens.map(title_token => {
-                    const d = weighted_levenshtein(title_token, query_token);
-                    if(d == 0) return +1;
-                    else if(title_token.startsWith(query_token)) return 1 - d;
-                    else return -d;
-                })
+        // Scoring algorithm:
+        // - For each token in the query
+        //   - If it's in the title verbatim: +2
+        //   - If it's the prefix for some word in the title: +1 + 1/(edit distance + 1)
+        //   - If it's within length / 2 edits of a word in the title: + 1/(edit distance + 1)
+        //   - Else: - 0.01
+        const scores_ = query_tokens.map(
+            query_token => max(
+                title_tokens.map(title_token => {
+                    return [(() => {
+                        const d = weighted_levenshtein(title_token, query_token);
+                        if(d == 0) {
+                            return +2;
+                        } else if(query_token.startsWith(title_token)) { // todo: fuzzy
+                            //return 3 + 1 / (query_token.length - title_token.length + 1);
+                            return 1 + (query_token.length - title_token.length + 1) * 0.001;
+                        } else if(d < Math.round(3/4 * title_token.length)) {
+                            return 1 / (d + 1) * 0.1;
+                        } else {
+                            return 0;
+                        }
+                    })(), title_token] as [number, string];
+                }),
+                (item) => item[0]
             )
         );
+        const scores = scores_.map(v => v[0]);
         const score = scores.reduce((previous, current) => previous + current, 0) - title_tokens.length * 0.01;
         //if(query == "std::getline" && page.title == "std::getline") {
         //    console.log("----->", page, score);
         //}
         candidates.push({
             page,
-            score
+            score,
+            scores_
         });
     }
     candidates.sort((a, b) => b.score - a.score);
-    console.log(query, candidates.slice(0, 4).map(candidate => [candidate.score, candidate.page.title]));
+    console.log(query);
+    candidates.slice(0, 4).map(candidate => console.log(candidate.score, candidate.page.title, candidate.scores_));
     return candidates[0].page;
 }
 
