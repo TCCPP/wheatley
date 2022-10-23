@@ -1,7 +1,7 @@
 import * as Discord from "discord.js";
 import { strict as assert } from "assert";
 import { critical_error, departialize, M, KeyedMutexSet, SelfClearingSet, fetch_text_channel,
-         fetch_thread_channel } from "../utility/utils";
+         fetch_thread_channel } from "../utils";
 import { DatabaseInterface } from "../infra/database_interface";
 import { is_root, MINUTE, server_suggestions_channel_id, suggestion_action_log_thread_id,
          suggestion_dashboard_thread_id, TCCPP_ID, wheatley_id } from "../common";

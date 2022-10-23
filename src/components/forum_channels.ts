@@ -1,7 +1,7 @@
 import * as Discord from "discord.js";
 import { strict as assert } from "assert";
 import { critical_error, fetch_all_threads_archive_count, fetch_forum_channel, get_tag, M,
-         SelfClearingSet } from "../utility/utils";
+         SelfClearingSet } from "../utils";
 import { colors, cpp_help_id, c_help_id, forum_help_channels, is_forum_help_thread, MINUTE,
          wheatley_id } from "../common";
 import { decode_snowflake } from "./snowflake"; // todo: eliminate decode_snowflake

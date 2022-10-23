@@ -1,6 +1,6 @@
 import * as Discord from "discord.js";
 import { strict as assert } from "assert";
-import { critical_error, diff_to_human, fetch_text_channel, M } from "../utility/utils";
+import { critical_error, diff_to_human, fetch_text_channel, M } from "../utils";
 import { colors, MINUTE, welcome_channel_id } from "../common";
 
 const NEW_USER_THRESHOLD = MINUTE * 30;

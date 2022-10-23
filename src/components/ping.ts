@@ -3,7 +3,7 @@ import { SlashCommandBuilder } from "@discordjs/builders";
 
 import { strict as assert } from "assert";
 
-import { critical_error, M } from "../utility/utils";
+import { critical_error, M } from "../utils";
 import { is_authorized_admin } from "../common";
 import { GuildCommandManager } from "../infra/guild_command_manager";
 

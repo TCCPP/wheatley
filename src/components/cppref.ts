@@ -5,12 +5,12 @@ import { strict as assert } from "assert";
 
 import * as fs from "fs";
 
-import { critical_error, M } from "../utility/utils";
+import { critical_error, M } from "../utils";
 import { is_authorized_admin } from "../common";
 import { GuildCommandManager } from "../infra/guild_command_manager";
 
 import { cppref_index, cppref_page } from "../../cppref/types";
-import { weighted_levenshtein } from "../utility/levenshtein";
+import { weighted_levenshtein } from "../algorithm/levenshtein";
 
 
 let client: Discord.Client;

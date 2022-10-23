@@ -1,7 +1,7 @@
 import * as Discord from "discord.js";
 import { strict as assert } from "assert";
 import { is_root, MINUTE, server_suggestions_channel_id, suggestion_dashboard_thread_id } from "../common";
-import { critical_error, delay, fetch_text_channel, M } from "../utility/utils";
+import { critical_error, delay, fetch_text_channel, M } from "../utils";
 import { TRACKER_START_TIME } from "./server_suggestion_tracker";
 import { forge_snowflake } from "./snowflake";
 import { react_blacklist } from "../config";
