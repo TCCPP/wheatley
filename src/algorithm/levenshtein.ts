@@ -23,7 +23,7 @@ export function calculate_nonlinear_substitution_cost(n: number) {
     return substitution_cost * (Math.pow(substitution_multiplier, n) - 1) / (substitution_multiplier - 1);
 }
 
-export function weighted_levenshtein_debug(src: string, target: string) {
+export function weighted_levenshtein_raw(src: string, target: string) {
     // Stores tuples [distance, substitution_count]
     const d = new Array(src.length + 1)
         .fill(0)
@@ -56,6 +56,34 @@ export function weighted_levenshtein_debug(src: string, target: string) {
             : calculate_nonlinear_substitution_cost(d[src.length][target.length][1]));
     return d[src.length][target.length];
 }
+
 export function weighted_levenshtein(src: string, target: string) {
-    return weighted_levenshtein_debug(src, target)[0];
+    return weighted_levenshtein_raw(src, target)[0];
+}
+
+export function levenshtein(src: string, target: string) {
+    // Stores tuples [distance, substitution_count]
+    const d = new Array(src.length + 1)
+        .fill(0)
+        .map(() => new Array(target.length + 1).fill(0) as number[]);
+    for(let i = 1; i <= src.length; i++) {
+        d[i][0] = i;
+    }
+    for(let j = 1; j <= target.length; j++) {
+        d[0][j] = j;
+    }
+    for(let i = 1; i <= src.length; i++) {
+        for(let j = 1; j <= target.length; j++) {
+            // for now because the variable is also used to indicate whether to increment
+            // eslint-disable-next-line @typescript-eslint/no-unnecessary-condition
+            assert(substitution_cost == 1);
+            const ts = src[i - 1] == target[j - 1] ? 0 : 1;
+            d[i][j] = Math.min(
+                d[i - 1][j    ] + 1,
+                d[i    ][j - 1] + 1,
+                d[i - 1][j - 1] + ts
+            );
+        }
+    }
+    return d[src.length][target.length];
 }

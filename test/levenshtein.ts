@@ -1,5 +1,5 @@
 import {assert, expect} from "chai";
-import { calculate_nonlinear_substitution_cost, weighted_levenshtein_debug } from "../src/algorithm/levenshtein";
+import { calculate_nonlinear_substitution_cost, weighted_levenshtein_raw } from "../src/algorithm/levenshtein";
 
 describe("levenshtein subst cost fn", () => {
     it("should be correct for s=1", done => {
@@ -18,35 +18,35 @@ describe("levenshtein subst cost fn", () => {
 
 describe("levenshtein", () => {
     it("insertion", done => {
-        expect(weighted_levenshtein_debug("abc", "abcd")).to.deep.equal([1, 0]);
+        expect(weighted_levenshtein_raw("abc", "abcd")).to.deep.equal([1, 0]);
         done();
     });
     it("deletion", done => {
-        expect(weighted_levenshtein_debug("abcd", "abc")).to.deep.equal([1, 0]);
+        expect(weighted_levenshtein_raw("abcd", "abc")).to.deep.equal([1, 0]);
         done();
     });
     it("basic substitution", done => {
-        expect(weighted_levenshtein_debug("cat", "bat")).to.deep.equal([1, 1]);
+        expect(weighted_levenshtein_raw("cat", "bat")).to.deep.equal([1, 1]);
         done();
     });
     it("1 substitution", done => {
-        expect(weighted_levenshtein_debug("Saturday", "Zaturday")).to.deep.equal([1, 1]);
+        expect(weighted_levenshtein_raw("Saturday", "Zaturday")).to.deep.equal([1, 1]);
         done();
     });
     it("2 substitutions", done => {
-        expect(weighted_levenshtein_debug("Saturday", "Zazurday")).to.deep.equal([3, 2]);
+        expect(weighted_levenshtein_raw("Saturday", "Zazurday")).to.deep.equal([3, 2]);
         done();
     });
     it("3 substitutions", done => {
-        expect(weighted_levenshtein_debug("Saturday", "Zazurbay")).to.deep.equal([7, 3]);
+        expect(weighted_levenshtein_raw("Saturday", "Zazurbay")).to.deep.equal([7, 3]);
         done();
     });
     it("Mixed 1 substitution", done => {
-        expect(weighted_levenshtein_debug("Sunday", "Saturday")).to.deep.equal([3, 1]);
+        expect(weighted_levenshtein_raw("Sunday", "Saturday")).to.deep.equal([3, 1]);
         done();
     });
     it("Mixed 2 substitution", done => {
-        expect(weighted_levenshtein_debug("Sunday", "Saturdaz")).to.deep.equal([5, 2]);
+        expect(weighted_levenshtein_raw("Sunday", "Saturdaz")).to.deep.equal([5, 2]);
         done();
     });
 });

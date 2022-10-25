@@ -1,6 +1,6 @@
 import {assert, expect} from "chai";
 
-import { search, cppref_testcase_setup, TargetIndex } from "../src/components/cppref";
+import { lookup, cppref_testcase_setup, TargetIndex } from "../src/components/cppref";
 
 type TestCase = {
     query: string | string[];
@@ -132,7 +132,7 @@ describe("cppref cases", () => {
         for(const query of queries) {
             if(test_case.cref) {
                 it(`!cref should find ${query}`, done => {
-                    const result = search(query, TargetIndex.C);
+                    const result = lookup(query, TargetIndex.C);
                     assert(result, "search did not find result when it should have");
                     expect(path_to_url(result.path)).to.equal(test_case.cref);
                     done();
@@ -148,7 +148,7 @@ describe("cppref cases", () => {
         for(const query of queries) {
             if(test_case.cppref) {
                 it(`!cppref should find ${query}`, done => {
-                    const result = search(query, TargetIndex.CPP);
+                    const result = lookup(query, TargetIndex.CPP);
                     assert(result, "search did not find result when it should have");
                     expect(path_to_url(result.path)).to.equal(test_case.cppref);
                     done();
