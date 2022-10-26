@@ -117,7 +117,7 @@ export function normalize_and_sanitize_title(title: string) {
     if(!title.startsWith("standard library header")) {
         title = strip_parentheses(title, "<", ">");
     }
-    return title;
+    return title.trim();
 }
 
 export function smart_split_list(title: string) {
@@ -292,4 +292,48 @@ class BasicIndex<T extends IndexEntry> extends BaseIndex<T> {
 
 // ---------------------------------------------------------------------------------------------------------------------
 
-export class Index<T extends index_entry> extends BasicIndex<T> { }
+// Strategy 1: Ngrams --------------------------------------------------------------------------------------------------
+
+class NgramIndex<T extends IndexEntry> extends BaseIndex<T> {
+    constructor(entries: T[]) {
+        super(entries);
+        //this.entries.map(entry => console.log(entry.title, entry.parsed_title));
+    }
+    override process_entries(entries: T[]): (T & BaseEntryData)[] {
+        return entries.map(entry => {
+            const parsed_title = split_cppref_title_list(normalize_and_sanitize_title(entry.title));
+            return {
+                ...entry,
+                parsed_title
+            } as T & BaseEntryData;
+        });
+    }
+    make_ngrams(str: string) {
+        str = ` ${str.toLowerCase()} `;
+        return new Set([
+            //...raw_ngrams(str, 2),
+            ...raw_ngrams(str, 3),
+            //...raw_ngrams(str, 4),
+            //...raw_ngrams(str, 5)
+        ]);
+    }
+    override score(query: string, title: string): EntryScore {
+        const query_ngrams = this.make_ngrams(query);
+        const title_ngrams = this.make_ngrams(title);
+        const score = cosine_similarity_uniform(query_ngrams, title_ngrams);
+        return {
+            score,
+            debug_info: [...intersect(
+                query_ngrams,
+                title_ngrams
+            )]
+        };
+    }
+}
+
+// ---------------------------------------------------------------------------------------------------------------------
+
+//export class Index<T extends IndexEntry> extends BasicIndex<T> { }
+//export class Index<T extends IndexEntry> extends WeightedLevenshteinIndex<T> { }
+export class Index<T extends IndexEntry> extends NgramIndex<T> { }
+//export class Index<T extends IndexEntry> extends IDFNgramIndex<T> { }
