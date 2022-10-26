@@ -1,5 +1,5 @@
 import {assert, expect} from "chai";
-import { parse_title, smart_split_title, strip_parentheses } from "../src/algorithm/search";
+import { split_cppref_title_list, smart_split_list, strip_parentheses, normalize_and_sanitize_title } from "../src/algorithm/search";
 
 describe("nested parentheses handling", () => {
     it("should handle unbalanced parentheses 1", done => {
@@ -35,9 +35,36 @@ describe("nested parentheses handling", () => {
     });
 });
 
+const title_sanitization_test_cases: {
+    title: string;
+    expected: string;
+}[] = [
+    {
+        title: "std::swap(std::array)",
+        expected: "std::swap(std::array)"
+    },
+    {
+        title: "std::get (std::variant)",
+        expected: "std::get (std::variant)"
+    },
+    {
+        title: "Concepts library (since C++20)",
+        expected: "concepts library"
+    }
+];
+
+describe("title sanitization", () => {
+    for(const test_case of title_sanitization_test_cases) {
+        it(`should handle "${test_case.title}"`, done => {
+            expect(normalize_and_sanitize_title(test_case.title)).to.equal(test_case.expected);
+            done();
+        });
+    }
+});
+
 describe("smart splitting", () => {
     it("should smartly split titles", done => {
-        expect(smart_split_title("foo(std::string, int), bar(std::string, float)")).to.deep.equal([
+        expect(smart_split_list("foo(std::string, int), bar(std::string, float)")).to.deep.equal([
             "foo(std::string, int)",
             "bar(std::string, float)"
         ]);
@@ -98,15 +125,27 @@ const title_splitting_cases: {
             "std::experimental::propagate_const::operator*",
             "std::experimental::propagate_const::operator->"
         ]
+    },
+    {
+        title: "std::chrono::operator+, std::chrono::operator- (std::chrono::year_month_day)",
+        expected: [
+            "std::chrono::operator+ (std::chrono::year_month_day)",
+            "std::chrono::operator- (std::chrono::year_month_day)"
+        ]
+    },
+    {
+        title: "Type support (basic types, RTTI)",
+        expected: [
+            "type support (basic types, rtti)"
+        ]
     }
 ];
 
 describe("title splitting", () => {
     for(const test_case of title_splitting_cases) {
         it(`should handle "${test_case.title}"`, done => {
-            expect(parse_title(test_case.title)).to.deep.equal(test_case.expected);
+            expect(split_cppref_title_list(normalize_and_sanitize_title(test_case.title))).to.deep.equal(test_case.expected);
             done();
         });
     }
 });
-

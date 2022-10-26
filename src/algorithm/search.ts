@@ -1,6 +1,6 @@
 import { strict as assert } from "assert";
 
-export interface index_entry {
+export interface IndexEntry {
     title: string;
 };
 
@@ -90,17 +90,7 @@ export function strip_parentheses(title: string, opening: string, closing: strin
         } else if(title[i] == closing) {
             if(parentheses_start.length > 0) {
                 const start = parentheses_start.pop()!;
-                const parentheses_part = title.substring(start, i + 1);
-                if(start > 0 && title[start - 1] == " ") {
-                    if(!parentheses_part.match(/\bc(\+\+)?\s*\d+\b/i) && !parentheses_part.includes("::")) {
-                        // pass
-                        //if(DEBUG) console.log("PASS: ", parentheses_part);
-                    } else {
-                        //if(DEBUG) console.log("CCCC: ", parentheses_part);
-                        title = title.slice(0, start) + title.slice(i + 1);
-                        i = start - 1; // i will be incremented next
-                    }
-                } else if(title.substring(0, start).match(/\boperator(?!.+::)\b/)) {
+                if(title.substring(0, start).match(/\boperator(?!.+::)\b/)) {
                     // for operator declarations, pass
                     // cases like
                     // operator==, !=, <, <=, >, >=, <=>(std::optional)
@@ -116,13 +106,21 @@ export function strip_parentheses(title: string, opening: string, closing: strin
     return title.trim();
 }
 
-function sanitize_title(title: string) {
-    title = strip_parentheses(title, "(", ")");
-    title = strip_parentheses(title, "<", ">");
+export function normalize_and_sanitize_title(title: string) {
+    //title = strip_parentheses(title, "(", ")");
+    title = title.toLowerCase();
+    title = title.replace(/\([^)]*c(\+\+)?\d+\)/g, ""); // (since c++20), (deprecated in c++98), (c++11), etc...
+    title = title.replace(/\([^)]+ ts\)/g, "");
+    title = title.replace(/\(removed\)/g, "");
+    title = title.trim();
+    title = title.replace(/\s+/, " ");
+    if(!title.startsWith("standard library header")) {
+        title = strip_parentheses(title, "<", ">");
+    }
     return title;
 }
 
-export function smart_split_title(title: string) {
+export function smart_split_list(title: string) {
     let splits = [];
     let parentheses_start: number[] = [];
     let split_start = 0;
@@ -151,19 +149,18 @@ export function smart_split_title(title: string) {
     return splits.map(s => s.trim());
 }
 
-function split_title(title: string) {
+function split_list(title: string) {
     return title.split(",").map(s => s.trim());
 }
 
-export function parse_title(title: string) {
-    title = title.toLowerCase();
+export function split_cppref_title_list(title: string) {
     if(title.match(/\boperator\b/)) {
         // take a case like
         // operator==, !=, <, <=, >, >=, <=>(std::optional)
         // try to split it into operator==(std::optional), operator!=(std::optional), ... etc.
         // the one pitfall here is taking something like std::atomic<T>::operator++,++(int),--,--(int) and making all entries
         // operator++(int) but that's perfectly fine for search purposes
-        const parts = split_title(sanitize_title(title));
+        const parts = smart_split_list(title);
         const operator_parts = new Set(parts.map(p => p.match(/^.*\boperator\b/)).filter(o => o != null).map(m => m![0]));
         const args_parts = new Set(parts.map(p => p.match(/(?<!operator)\s*\(.*\)$/)).filter(o => o != null).map(m => m![0]));
         ///assert(operator_parts.size <= 1 && args_parts.size <= 1);
@@ -198,7 +195,7 @@ export function parse_title(title: string) {
         ///const operator_part =
         ///return split_title(sanitize_title(title));
     } else {
-        return split_title(sanitize_title(title));
+        return smart_split_list(title);
     }
 }
 
@@ -210,7 +207,7 @@ type EntryScore = {
     debug_info: any[];
 };
 
-abstract class BaseIndex<T extends index_entry, ExtraEntryData = {}> {
+abstract class BaseIndex<T extends IndexEntry, ExtraEntryData = {}> {
     // hack because ts doesn't allow type aliases here
     protected entries: (T & BaseEntryData & ExtraEntryData)[];
     constructor(entries: T[]) {
@@ -218,7 +215,7 @@ abstract class BaseIndex<T extends index_entry, ExtraEntryData = {}> {
     }
     process_entries(entries: T[]): (T & BaseEntryData & ExtraEntryData)[] {
         return entries.map(entry => {
-            const parsed_title = parse_title(entry.title);
+            const parsed_title = split_cppref_title_list(normalize_and_sanitize_title(entry.title));
             return {
                 ...entry,
                 parsed_title
@@ -275,7 +272,7 @@ class BasicIndex<T extends index_entry> extends BaseIndex<T> {
 
 // Strategy 0: Baseline ------------------------------------------------------------------------------------------------
 
-class BasicIndex<T extends index_entry> extends BaseIndex<T> {
+class BasicIndex<T extends IndexEntry> extends BaseIndex<T> {
     constructor(entries: T[]) {
         super(entries);
     }
