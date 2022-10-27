@@ -119,12 +119,17 @@ const cases: TestCase[] = [
         query: ["std::cin", "cin"], // other algo fails all
         // todo cref
         cppref: "https://en.cppreference.com/w/cpp/io/cin"
+    },
+    {
+        query: ["std::basic_string::erase", "std::string::erase", "string::erase", "string erase"],
+        // todo cref
+        cppref: "https://en.cppreference.com/w/cpp/string/basic_string/erase"
     }
 ];
 
 cppref_testcase_setup();
 
-// TODO: typos, std::variants
+// TODO: more typo test cases
 
 describe("cppref cases", () => {
     for(const test_case of cases) {
