@@ -77,8 +77,16 @@ function cosine_similarity_uniform(a_ngrams: Set<string>, b_ngrams: Set<string>)
 function cosine_similarity_idf(a_ngrams: Set<string>, b_ngrams: Set<string>, ngram_idf: Record<string, number>) {
     return cosine_similarity(a_ngrams, b_ngrams, s => {
         //assert(s in ngram_idf);
-        return ngram_idf[s];
+        if(s in ngram_idf) {
+            return ngram_idf[s];
+        } else {
+            return 0;
+        }
     });
+}
+
+function log_base(base: number, x: number) {
+    return Math.log(x) / Math.log(base);
 }
 
 // exported for test purposes
@@ -211,8 +219,17 @@ abstract class BaseIndex<T extends IndexEntry, ExtraEntryData = {}> {
     // hack because ts doesn't allow type aliases here
     protected entries: (T & BaseEntryData & ExtraEntryData)[];
     constructor(entries: T[]) {
+        this.init_bookkeeping();
+        //for(const entry of entries) {
+        //    const title = normalize_and_sanitize_title(entry.title);
+        //    if(title.match(/\(.+\)/g) && !title.includes("operator")) {
+        //        console.log(title);
+        //    }
+        //}
         this.entries = this.process_entries(entries);
+        //this.entries.map(entry => console.log(entry.title, entry.parsed_title));
     }
+    init_bookkeeping() {}
     process_entries(entries: T[]): (T & BaseEntryData & ExtraEntryData)[] {
         return entries.map(entry => {
             const parsed_title = split_cppref_title_list(normalize_and_sanitize_title(entry.title));
@@ -232,7 +249,7 @@ abstract class BaseIndex<T extends IndexEntry, ExtraEntryData = {}> {
     }
     search(query: string) {
         type candidate_entry = {
-            page: T;
+            page: T & BaseEntryData;
             score: number;
             debug_info: any
         };
@@ -250,7 +267,7 @@ abstract class BaseIndex<T extends IndexEntry, ExtraEntryData = {}> {
         }
         candidates.sort((a, b) => b.score - a.score);
         if(DEBUG) console.log(query);
-        if(DEBUG) candidates.slice(0, 10).map(candidate => console.log(candidate.score, candidate.page.title, candidate.debug_info));
+        if(DEBUG) candidates.slice(0, 10).map(candidate => console.log(candidate.score, candidate.page.parsed_title, candidate.debug_info));
         return candidates[0].page;
     }
 }
@@ -297,16 +314,6 @@ class BasicIndex<T extends IndexEntry> extends BaseIndex<T> {
 class NgramIndex<T extends IndexEntry> extends BaseIndex<T> {
     constructor(entries: T[]) {
         super(entries);
-        //this.entries.map(entry => console.log(entry.title, entry.parsed_title));
-    }
-    override process_entries(entries: T[]): (T & BaseEntryData)[] {
-        return entries.map(entry => {
-            const parsed_title = split_cppref_title_list(normalize_and_sanitize_title(entry.title));
-            return {
-                ...entry,
-                parsed_title
-            } as T & BaseEntryData;
-        });
     }
     make_ngrams(str: string) {
         str = ` ${str.toLowerCase()} `;
@@ -333,7 +340,58 @@ class NgramIndex<T extends IndexEntry> extends BaseIndex<T> {
 
 // ---------------------------------------------------------------------------------------------------------------------
 
+// Strategy 2: IDF Ngrams ----------------------------------------------------------------------------------------------
+
+class IDFNgramIndex<T extends IndexEntry> extends NgramIndex<T> {
+    ngram_idf: Record<string, number>;
+    constructor(entries: T[]) {
+        super(entries);
+        this.compute_idf(entries.length);
+        console.log(this.ngram_idf);
+    }
+    override init_bookkeeping() {
+        this.ngram_idf = {};
+    }
+    compute_idf(document_count: number) {
+        for(const ngram in this.ngram_idf) {
+            this.ngram_idf[ngram] = log_base(10, document_count / this.ngram_idf[ngram]);
+        }
+    }
+    override process_entries(entries: T[]): (T & BaseEntryData)[] {
+        return entries.map(entry => {
+            const parsed_title = split_cppref_title_list(normalize_and_sanitize_title(entry.title));
+            for(const title of parsed_title) {
+                for(const ngram of this.make_ngrams(title)) {
+                    if(ngram in this.ngram_idf) {
+                        this.ngram_idf[ngram] += 1;
+                    } else {
+                        this.ngram_idf[ngram] = 1;
+                    }
+                }
+            }
+            return {
+                ...entry,
+                parsed_title
+            } as T & BaseEntryData;
+        });
+    }
+    override score(query: string, title: string): EntryScore {
+        const query_ngrams = this.make_ngrams(query);
+        const title_ngrams = this.make_ngrams(title);
+        const score = cosine_similarity_idf(query_ngrams, title_ngrams, this.ngram_idf);
+        return {
+            score,
+            debug_info: [...intersect(
+                query_ngrams,
+                title_ngrams
+            )]
+        };
+    }
+}
+
+// ---------------------------------------------------------------------------------------------------------------------
+
 //export class Index<T extends IndexEntry> extends BasicIndex<T> { }
 //export class Index<T extends IndexEntry> extends WeightedLevenshteinIndex<T> { }
-export class Index<T extends IndexEntry> extends NgramIndex<T> { }
-//export class Index<T extends IndexEntry> extends IDFNgramIndex<T> { }
+//export class Index<T extends IndexEntry> extends NgramIndex<T> { }
+export class Index<T extends IndexEntry> extends IDFNgramIndex<T> { }
