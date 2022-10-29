@@ -11,6 +11,8 @@ let client: Discord.Client;
 let cpp_help: Discord.ForumChannel;
 let c_help: Discord.ForumChannel;
 
+// TODO: Take into account thread's inactivity setting
+
 const solved_archive_timeout = 12 * 60 * MINUTE; // 12 hours for a solved thread that's reopened
 const inactive_timeout = 12 * 60 * MINUTE; // 12 hours for a thread that's seen no activity, archive
 const resolution_timeout = 12 * 60 * MINUTE; // after another 12 hours, open -> solved
@@ -183,9 +185,10 @@ async function misc_checks(thread: Discord.ThreadChannel, open_tag: string, solv
     else if(!(thread.appliedTags[0] == solved_tag || thread.appliedTags[0] == open_tag)) {
         M.log("Moving solved/open tag to the beginning", [thread.id, thread.name]);
         const {archived} = thread;
+        const tag = thread.appliedTags.includes(solved_tag) ? solved_tag : open_tag;
         if(archived) await thread.setArchived(false);
         await thread.setAppliedTags(
-            [solved_tag].concat(thread.appliedTags.filter(tag => ![solved_tag, open_tag].includes(tag)))
+            [tag].concat(thread.appliedTags.filter(tag => ![solved_tag, open_tag].includes(tag)))
         );
         if(archived) await thread.setArchived(true);
     }
