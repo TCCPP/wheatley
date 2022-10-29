@@ -8,5 +8,5 @@
         "allowJs": true,
         "strictPropertyInitialization": false
     },
-    "exclude": ["node_modules", "cppref"]
+    "exclude": ["node_modules", "indexes/cppref"]
 }

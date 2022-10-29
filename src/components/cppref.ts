@@ -9,7 +9,7 @@ import { critical_error, M } from "../utils";
 import { is_authorized_admin } from "../common";
 import { GuildCommandManager } from "../infra/guild_command_manager";
 
-import { cppref_index, cppref_page } from "../../cppref/types";
+import { cppref_index, cppref_page } from "../../indexes/cppref/types";
 import { Index } from "../algorithm/search";
 
 
@@ -175,7 +175,9 @@ function setup_indexes(index_data: cppref_index) {
 }
 
 export function cppref_testcase_setup() {
-    const index_data = JSON.parse(fs.readFileSync("cppref/cppref_index.json", {encoding: "utf-8"})) as cppref_index;
+    const index_data = <cppref_index>(
+        JSON.parse(fs.readFileSync("indexes/cppref/cppref_index.json", {encoding: "utf-8"}))
+    );
     //for(const pages of [index.c, index.cpp]) {
     //    for(const page of pages) {
     //        if(DEBUG) console.log(page.title.split(",").map(x => x.trim()));
