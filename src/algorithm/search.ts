@@ -208,6 +208,10 @@ export function split_cppref_title_list(title: string) {
     }
 }
 
+function no_duplicates<T>(arr: T[]) {
+    return new Set(arr).size == arr.length;
+}
+
 // ---------------------------------------------------------------------------------------------------------------------
 
 type BaseEntryData = { parsed_title: string[] };
@@ -220,6 +224,7 @@ abstract class BaseIndex<T extends IndexEntry, ExtraEntryData = {}> {
     // hack because ts doesn't allow type aliases here
     protected entries: (T & BaseEntryData & ExtraEntryData)[];
     constructor(entries: T[]) {
+        assert(no_duplicates(entries.map(e => e.title)));
         this.init_bookkeeping();
         //for(const entry of entries) {
         //    const title = normalize_and_sanitize_title(entry.title);
@@ -244,6 +249,9 @@ abstract class BaseIndex<T extends IndexEntry, ExtraEntryData = {}> {
     score_entry(query: string, entry: T & BaseEntryData & ExtraEntryData) {
         const scores: EntryScore[] = [];
         for(const title of entry.parsed_title) {
+            if(tokenize(title).length == 0) { // TODO: slow
+                continue;
+            }
             scores.push(this.score(query, title));
         }
         return max(scores, s => s.score);
