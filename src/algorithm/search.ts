@@ -1,4 +1,5 @@
 import { strict as assert } from "assert";
+import { M } from "../utils";
 import { weighted_levenshtein } from "./levenshtein";
 
 export interface IndexEntry {
@@ -204,7 +205,32 @@ export function split_cppref_title_list(title: string) {
         ///const operator_part =
         ///return split_title(sanitize_title(title));
     } else {
-        return smart_split_list(title);
+        const parts = smart_split_list(title);
+        // try to correct stuff like std::erase, std::erase_if (std::deque)
+        const args_parts = new Set(parts.map(p => p.match(/\s*\(.*\)$/)).filter(o => o != null).map(m => m![0]));
+        const args_part = args_parts.size ? [...args_parts].sort((a, b) => b.length - a.length)[0] : null;
+        const corrected_parts = parts.map(part => {
+            if(args_part && !part.endsWith(args_part)) {
+                if(part.match(/\s*\(.*\)$/)) {
+                    M.warn("more than one parameter set in title", part);
+                }
+                part = part + args_part;
+            }
+            return part;
+        });
+        return corrected_parts;
+    }
+}
+
+export function normalize_and_split_cppref_title(title: string) {
+    if(title.match(/\bbasic_/g)) { // basic_string::xyz -> string::xyz, etc.
+        const alt_title = title.replace(/\bbasic_/g, "");
+        return [
+            ...split_cppref_title_list(normalize_and_sanitize_title(title)),
+            ...split_cppref_title_list(normalize_and_sanitize_title(alt_title))
+        ];
+    } else {
+        return split_cppref_title_list(normalize_and_sanitize_title(title));
     }
 }
 
@@ -238,10 +264,9 @@ abstract class BaseIndex<T extends IndexEntry, ExtraEntryData = {}> {
     init_bookkeeping() {}
     process_entries(entries: T[]): (T & BaseEntryData & ExtraEntryData)[] {
         return entries.map(entry => {
-            const parsed_title = split_cppref_title_list(normalize_and_sanitize_title(entry.title));
             return {
                 ...entry,
-                parsed_title
+                parsed_title: normalize_and_split_cppref_title(entry.title)
             } as T & BaseEntryData & ExtraEntryData;
         });
     }
@@ -425,14 +450,18 @@ class IDFNgramIndex<T extends IndexEntry> extends NgramIndex<T> {
             if(entry.title.includes(" keywords:")) {
                 this.keyword_count++;
             }
-            const parsed_title = split_cppref_title_list(normalize_and_sanitize_title(entry.title));
+            const parsed_title = normalize_and_split_cppref_title(entry.title);
+            const ngram_set = new Set<string>();
             for(const title of parsed_title) {
                 for(const ngram of this.make_ngrams(title)) {
-                    if(ngram in this.ngram_idf) {
-                        this.ngram_idf[ngram] += 1;
-                    } else {
-                        this.ngram_idf[ngram] = 1;
-                    }
+                    ngram_set.add(ngram);
+                }
+            }
+            for(const ngram of ngram_set) {
+                if(ngram in this.ngram_idf) {
+                    this.ngram_idf[ngram] += 1;
+                } else {
+                    this.ngram_idf[ngram] = 1;
                 }
             }
             return {

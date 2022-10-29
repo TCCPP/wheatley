@@ -1,5 +1,6 @@
 import {assert, expect} from "chai";
-import { split_cppref_title_list, smart_split_list, strip_parentheses, normalize_and_sanitize_title } from "../src/algorithm/search";
+import { smart_split_list, strip_parentheses, normalize_and_sanitize_title,
+    normalize_and_split_cppref_title } from "../src/algorithm/search";
 
 describe("nested parentheses handling", () => {
     it("should handle unbalanced parentheses 1", done => {
@@ -109,7 +110,9 @@ const title_splitting_cases: {
         title: "std::experimental::basic_string_view<CharT,Traits>::to_string, std::experimental::basic_string_view<CharT,Traits>::operator basic_string",
         expected: [
             "std::experimental::basic_string_view::to_string",
-            "std::experimental::basic_string_view::operator basic_string"
+            "std::experimental::basic_string_view::operator basic_string",
+            "std::experimental::string_view::to_string",
+            "std::experimental::string_view::operator string"
         ]
     },
     {
@@ -138,13 +141,20 @@ const title_splitting_cases: {
         expected: [
             "type support (basic types, rtti)"
         ]
+    },
+    {
+        title: "std::basic_string<CharT,Traits,Allocator>::erase",
+        expected: [
+            "std::basic_string::erase",
+            "std::string::erase"
+        ]
     }
 ];
 
 describe("title splitting", () => {
     for(const test_case of title_splitting_cases) {
         it(`should handle "${test_case.title}"`, done => {
-            expect(split_cppref_title_list(normalize_and_sanitize_title(test_case.title))).to.deep.equal(test_case.expected);
+            expect(normalize_and_split_cppref_title(test_case.title)).to.deep.equal(test_case.expected);
             done();
         });
     }
