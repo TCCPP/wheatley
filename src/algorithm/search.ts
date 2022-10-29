@@ -6,7 +6,7 @@ export interface IndexEntry {
     title: string;
 };
 
-const DEBUG = true;
+const DEBUG = false;
 
 function max<T>(arr: T[], f: (x: T) => any = (x: T) => x) {
     if(arr.length == 0) {
@@ -132,20 +132,15 @@ export function normalize_and_sanitize_title(title: string) {
 
 export function smart_split_list(title: string) {
     let splits = [];
-    let parentheses_start: number[] = [];
+    let parentheses_depth = 0;
     let split_start = 0;
     for(let i = 0; i < title.length; i++) {
         if(title[i] == "(") {
-            parentheses_start.push(i);
+            parentheses_depth++;
         } else if(title[i] == ")") {
-            parentheses_start.pop();
-            //if(parentheses_start.length > 0) {
-                //const start = parentheses_start.pop()!;
-                //title = title.slice(0, start) + title.slice(i + 1);
-                //i = start - 1; // i will be incremented next
-            //}
+            parentheses_depth--;
         } else if(title[i] == ",") {
-            if(parentheses_start.length == 0) {
+            if(parentheses_depth == 0) {
                 splits.push(title.substring(split_start, i));
                 split_start = i + 1;
             } else {
@@ -159,11 +154,8 @@ export function smart_split_list(title: string) {
     return splits.map(s => s.trim());
 }
 
-function split_list(title: string) {
-    return title.split(",").map(s => s.trim());
-}
-
 export function split_cppref_title_list(title: string) {
+    // TODO: Code probably needs to be cleaned up a lot
     if(title.match(/\boperator\b/)) {
         // take a case like
         // operator==, !=, <, <=, >, >=, <=>(std::optional)
@@ -241,6 +233,7 @@ function no_duplicates<T>(arr: T[]) {
 // ---------------------------------------------------------------------------------------------------------------------
 
 type BaseEntryData = { parsed_title: string[] };
+
 type EntryScore = {
     score: number;
     debug_info: any[];
@@ -281,6 +274,9 @@ abstract class BaseIndex<T extends IndexEntry, ExtraEntryData = {}> {
         }
         return max(scores, s => s.score);
     }
+    meets_threshold(score: number) {
+        return true;
+    }
     search(query: string) {
         type candidate_entry = {
             page: T & BaseEntryData;
@@ -302,7 +298,7 @@ abstract class BaseIndex<T extends IndexEntry, ExtraEntryData = {}> {
         candidates.sort((a, b) => b.score - a.score);
         if(DEBUG) console.log(query);
         if(DEBUG) candidates.slice(0, 3).map(candidate => console.log(candidate.score, candidate.page.parsed_title.join(", "), "////", candidate.debug_info.join(", ")));
-        if(candidates[0].score >= 0.45) {
+        if(this.meets_threshold(candidates[0].score)) {
             return candidates[0].page;
         } else {
             return null;
@@ -391,6 +387,8 @@ class WeightedLevenshteinIndex<T extends IndexEntry> extends BaseIndex<T> {
 
 // Strategy 2: Ngrams --------------------------------------------------------------------------------------------------
 
+const MAGIC_NGRAM_SIMILARITY_THRESHOLD = 0.39;
+
 class NgramIndex<T extends IndexEntry> extends BaseIndex<T> {
     constructor(entries: T[]) {
         super(entries);
@@ -403,6 +401,9 @@ class NgramIndex<T extends IndexEntry> extends BaseIndex<T> {
             //...raw_ngrams(str, 4),
             //...raw_ngrams(str, 5)
         ]);
+    }
+    override meets_threshold(score: number) {
+        return score  >= MAGIC_NGRAM_SIMILARITY_THRESHOLD;
     }
     override score(query: string, title: string): EntryScore {
         const query_ngrams = this.make_ngrams(query);

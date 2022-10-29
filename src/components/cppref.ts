@@ -139,10 +139,10 @@ function eliminate_aliases_and_duplicates(pages: cppref_page[]) {
             if(new Set(pages.map(e => e.wgPageName)).size == 1) {
                 // all wgPageName match - these all alias
                 pages.sort((a, b) => a.path.length - b.path.length);
-                console.log(title);
-                console.log(pages.map((e, i) => `    ${i == 0 ? "*" : " "} cppref/${e.path}`).join("\n"));
+                //console.log(title);
+                //console.log(pages.map((e, i) => `    ${i == 0 ? "*" : " "} cppref/${e.path}`).join("\n"));
                 for(const alias of pages.slice(1)) {
-                    console.log("        --> deleting", alias.path);
+                    //console.log("        --> deleting", alias.path);
                     delete page_map[alias.path];
                 }
             } else {
@@ -157,10 +157,10 @@ function eliminate_aliases_and_duplicates(pages: cppref_page[]) {
                         return a.path.length - b.path.length;
                     }
                 });
-                console.log(title);
-                console.log(pages.map((e, i) => `    ${i == 0 ? "*" : " "} cppref/${e.path}`).join("\n"));
+                //console.log(title);
+                //console.log(pages.map((e, i) => `    ${i == 0 ? "*" : " "} cppref/${e.path}`).join("\n"));
                 for(const to_delete of pages.slice(1)) {
-                    console.log("    --> deleting", to_delete.path);
+                    //console.log("    --> deleting", to_delete.path);
                     delete page_map[to_delete.path];
                 }
             }
