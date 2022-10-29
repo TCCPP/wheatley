@@ -42,7 +42,7 @@ async function process_file(file: string) {
         const wgPageName = content.substring(
             content.indexOf("\"wgPageName\":\"") + "\"wgPageName\":\"".length,
             content.indexOf("\",\"wgTitle")
-        )
+        );
         const search_end = performance.now();
         total_search_time += search_end - search_start;
 
