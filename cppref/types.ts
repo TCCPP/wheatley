@@ -1,6 +1,7 @@
 export type cppref_page = {
     title: string;
     path: string;
+    wgPageName: string;
     headers: string[];
 };
 

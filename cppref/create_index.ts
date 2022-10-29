@@ -6,11 +6,9 @@ import { strict as assert } from "assert";
 
 import { cppref_index, cppref_page } from "./types";
 
-import { tokenize } from "../src/components/cppref";
-
 async function* walk_dir(dir: string): AsyncGenerator<string> {
     for(const f of await fs.promises.readdir(dir)) {
-        const file_path = path.join(dir, f);
+        const file_path = path.join(dir, f).replace(/\\/g, "/");
         if((await fs.promises.stat(file_path)).isDirectory()) {
             yield* walk_dir(file_path);
         } else {
@@ -19,52 +17,63 @@ async function* walk_dir(dir: string): AsyncGenerator<string> {
     }
 }
 
+let total_read_time = 0;
 let total_parse_time = 0;
-
-const freq: Record<string, number> = {};
+let total_dom_time = 0; // getting elements, etc.
+let total_search_time = 0; // text search for things like the wgPageName
 
 async function process_file(file: string) {
     if(file.endsWith(".html")) {
+        const read_start = performance.now();
         const content = await fs.promises.readFile(file, {encoding: "utf-8"});
-        const start = performance.now();
+        const read_end = performance.now();
+        total_read_time += read_end - read_start;
+
+        const parse_start = performance.now();
         //const dom = new JSDOM(content);
         const dom = parseHTML(content);
-        const end = performance.now();
-        total_parse_time += end - start;
-        //const post0 = performance.now();
+        const parse_end = performance.now();
+        total_parse_time += parse_end - parse_start;
+
+        const search_start = performance.now();
+        //const wgPageNameMatches = [...content.matchAll(/"wgPageName":"(.+)","wgTitle/g)];
+        //assert(wgPageNameMatches.length == 1);
+        //const wgPageName = wgPageNameMatches[0][1];
+        const wgPageName = content.substring(
+            content.indexOf("\"wgPageName\":\"") + "\"wgPageName\":\"".length,
+            content.indexOf("\",\"wgTitle")
+        )
+        const search_end = performance.now();
+        total_search_time += search_end - search_start;
+
+        const dom_start = performance.now();
         const document = dom.window.document;
         const title_heading = document.getElementById("firstHeading");
         assert(title_heading);
         assert(title_heading.textContent);
         // cppref likes no-break spaces for some reason
         const title = title_heading.textContent.replace(/\u00a0/g, " ").trim();
-        const entry: cppref_page = {
-            title,
-            path: file,
-            headers: []
-        };
-        console.log(`    ${file}`);
+        let headers: string[] = [];
         const decl_block = document.querySelector(".t-dcl-begin");
         if(decl_block) {
             const defined_in_header = decl_block.querySelectorAll(".t-dsc-header code");
             if(defined_in_header.length > 0) {
-                entry.headers = [...defined_in_header].map(e => {
+                headers = [...defined_in_header].map(e => {
                     assert(e.textContent);
                     return e.textContent;
                 });
             }
         }
-        //const post1 = performance.now();
-        //console.log(`        ${Math.round(post0 - start)}ms parse, ${Math.round(post1 - post0)}ms process`);
+        const dom_end = performance.now();
+        total_dom_time += dom_end - dom_start;
 
-        const tokens = tokenize(title);
-        for(const token of tokens) {
-            if(!(token in freq) || typeof freq[token] != "number") { // deal with freq["constructor"]
-                freq[token] = 0;
-            }
-            freq[token] += 1;
-        }
-
+        const entry: cppref_page = {
+            title,
+            path: file,
+            wgPageName,
+            headers
+        };
+        console.log(`    ${file}`);
         return entry;
     } else {
         //console.log(`Ignoring ${file_path}`);
@@ -97,11 +106,8 @@ async function process_file(file: string) {
 
     await fs.promises.writeFile("cppref_index.json", JSON.stringify(index, null, "    "));
 
-    console.log(JSON.stringify(Object.entries(freq), null, "    "));
-
-    for(const entry of Object.entries(freq).sort((a, b) => a[1] - b[1]).map(a => a.reverse())) {
-        console.log(entry);
-    }
-
-    console.log(`${total_parse_time}ms`);
+    console.log(`Read:   ${total_read_time}ms`);
+    console.log(`Parse:  ${total_parse_time}ms`);
+    console.log(`DOM:    ${total_dom_time}ms`);
+    console.log(`Search: ${total_search_time}ms`);
 })();
