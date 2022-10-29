@@ -1,6 +1,6 @@
 import {assert, expect} from "chai";
 import { smart_split_list, strip_parentheses, normalize_and_sanitize_title,
-    normalize_and_split_cppref_title } from "../src/algorithm/search";
+         normalize_and_split_cppref_title } from "../src/algorithm/search";
 
 describe("nested parentheses handling", () => {
     it("should handle unbalanced parentheses 1", done => {
@@ -73,6 +73,7 @@ describe("smart splitting", () => {
     });
 });
 
+/* eslint-disable max-len */
 const title_splitting_cases: {
     title: string;
     expected: string[];
@@ -150,6 +151,7 @@ const title_splitting_cases: {
         ]
     }
 ];
+/* eslint-enable max-len */
 
 describe("title splitting", () => {
     for(const test_case of title_splitting_cases) {

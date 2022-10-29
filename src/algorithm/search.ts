@@ -4,11 +4,11 @@ import { weighted_levenshtein } from "./levenshtein";
 
 export interface IndexEntry {
     title: string;
-};
+}
 
 const DEBUG = false;
 
-function max<T>(arr: T[], f: (x: T) => any = (x: T) => x) {
+function max<T>(arr: T[], f: (_: T) => any = (x: T) => x) {
     if(arr.length == 0) {
         assert(false);
     } else {
@@ -25,19 +25,6 @@ function intersect<T>(a: Set<T>, b: Set<T>) {
     return new Set([...a].filter(item => b.has(item)));
 }
 
-function set_xor<T>(a: Set<T>, b: Set<T>) {
-    return new Set([
-        ...[...a, ...b].filter(item => !a.has(item) || !b.has(item)),
-    ]);
-}
-
-// returns a - b
-function set_diff<T>(a: Set<T>, b: Set<T>) {
-    return new Set([
-        ...[...a].filter(item => !b.has(item))
-    ]);
-}
-
 function raw_ngrams(str: string, n: number) {
     const arr = [];
     for(let i = 0; i <= str.length - n; i++) {
@@ -46,7 +33,7 @@ function raw_ngrams(str: string, n: number) {
     return arr;
 }
 
-function cosine_similarity(a_ngrams: Set<string>, b_ngrams: Set<string>, f: (s: string) => number) {
+function cosine_similarity(a_ngrams: Set<string>, b_ngrams: Set<string>, f: (_: string) => number) {
     let dot = 0;
     let a_mag = 0;
     let b_mag = 0;
@@ -71,12 +58,13 @@ function cosine_similarity(a_ngrams: Set<string>, b_ngrams: Set<string>, f: (s: 
 }
 
 function cosine_similarity_uniform(a_ngrams: Set<string>, b_ngrams: Set<string>) {
-    return cosine_similarity(a_ngrams, b_ngrams, s => {
+    return cosine_similarity(a_ngrams, b_ngrams, () => {
         return 1;
     });
 }
 
-function cosine_similarity_idf(a_ngrams: Set<string>, b_ngrams: Set<string>, ngram_idf: Record<string, number>, default_idf: number) {
+function cosine_similarity_idf(a_ngrams: Set<string>, b_ngrams: Set<string>,
+                               ngram_idf: Record<string, number>, default_idf: number) {
     return cosine_similarity(a_ngrams, b_ngrams, s => {
         //assert(s in ngram_idf);
         if(s in ngram_idf) {
@@ -93,13 +81,13 @@ function log_base(base: number, x: number) {
 
 // exported for test purposes
 export function strip_parentheses(title: string, opening: string, closing: string) {
-    let parentheses_start: number[] = [];
+    const parentheses_stack: number[] = [];
     for(let i = 0; i < title.length; i++) {
         if(title[i] == opening) {
-            parentheses_start.push(i);
+            parentheses_stack.push(i);
         } else if(title[i] == closing) {
-            if(parentheses_start.length > 0) {
-                const start = parentheses_start.pop()!;
+            if(parentheses_stack.length > 0) {
+                const start = parentheses_stack.pop()!;
                 if(title.substring(0, start).match(/\boperator(?!.+::)\b/)) {
                     // for operator declarations, pass
                     // cases like
@@ -131,7 +119,7 @@ export function normalize_and_sanitize_title(title: string) {
 }
 
 export function smart_split_list(title: string) {
-    let splits = [];
+    const splits = [];
     let parentheses_depth = 0;
     let split_start = 0;
     for(let i = 0; i < title.length; i++) {
@@ -160,17 +148,34 @@ export function split_cppref_title_list(title: string) {
         // take a case like
         // operator==, !=, <, <=, >, >=, <=>(std::optional)
         // try to split it into operator==(std::optional), operator!=(std::optional), ... etc.
-        // the one pitfall here is taking something like std::atomic<T>::operator++,++(int),--,--(int) and making all entries
-        // operator++(int) but that's perfectly fine for search purposes
+        // the one pitfall here is taking something like std::atomic<T>::operator++,++(int),--,--(int) and making all
+        // entries operator++(int) but that's perfectly fine for search purposes
         const parts = smart_split_list(title);
-        const operator_parts = new Set(parts.map(p => p.match(/^.*\boperator\b/)).filter(o => o != null).map(m => m![0]));
-        const args_parts = new Set(parts.map(p => p.match(/(?<!operator)\s*\(.*\)$/)).filter(o => o != null).map(m => m![0]));
+        const operator_parts = new Set(
+            parts
+                .map(p => p.match(/^.*\boperator\b/))
+                .filter(o => o != null)
+                .map(m => m![0])
+        );
+        const args_parts = new Set(
+            parts
+                .map(p => p.match(/(?<!operator)\s*\(.*\)$/))
+                .filter(o => o != null)
+                .map(m => m![0])
+        );
         ///assert(operator_parts.size <= 1 && args_parts.size <= 1);
         // sorting by size because of cases like
         // std::experimental::filesystem::directory_iterator::operator*,operator->
-        // operator_parts will be "std::experimental::filesystem::directory_iterator::operator" and "operator", take the first
-        const operator_part = operator_parts.size ? [...operator_parts].sort((a, b) => b.length - a.length)[0] : null;
-        const args_part = args_parts.size ? [...args_parts].sort((a, b) => b.length - a.length)[0] : null;
+        // operator_parts will be "std::experimental::filesystem::directory_iterator::operator" and "operator", take the
+        // first
+        const operator_part =
+            operator_parts.size ?
+                [...operator_parts].sort((a, b) => b.length - a.length)[0]
+                : null;
+        const args_part =
+            args_parts.size ?
+                [...args_parts].sort((a, b) => b.length - a.length)[0]
+                : null;
         ///if(new Set(operator_parts).size > 1 || new Set(args_parts).size > 1) {
         ///    console.log(title, parts);
         ///    console.log(operator_parts);
@@ -239,6 +244,8 @@ type EntryScore = {
     debug_info: any[];
 };
 
+// TODO: Find a way to make Record<string, never> work?
+// eslint-disable-next-line @typescript-eslint/ban-types
 abstract class BaseIndex<T extends IndexEntry, ExtraEntryData = {}> {
     // hack because ts doesn't allow type aliases here
     protected entries: (T & BaseEntryData & ExtraEntryData)[];
@@ -254,6 +261,7 @@ abstract class BaseIndex<T extends IndexEntry, ExtraEntryData = {}> {
         this.entries = this.process_entries(entries);
         //this.entries.map(entry => console.log(entry.title, entry.parsed_title));
     }
+    // eslint-disable-next-line @typescript-eslint/no-empty-function
     init_bookkeeping() {}
     process_entries(entries: T[]): (T & BaseEntryData & ExtraEntryData)[] {
         return entries.map(entry => {
@@ -263,6 +271,7 @@ abstract class BaseIndex<T extends IndexEntry, ExtraEntryData = {}> {
             } as T & BaseEntryData & ExtraEntryData;
         });
     }
+    // eslint-disable-next-line no-unused-vars
     abstract score(query: string, title: string): EntryScore;
     score_entry(query: string, entry: T & BaseEntryData & ExtraEntryData) {
         const scores: EntryScore[] = [];
@@ -274,6 +283,7 @@ abstract class BaseIndex<T extends IndexEntry, ExtraEntryData = {}> {
         }
         return max(scores, s => s.score);
     }
+    // eslint-disable-next-line no-unused-vars
     meets_threshold(score: number) {
         return true;
     }
@@ -296,8 +306,19 @@ abstract class BaseIndex<T extends IndexEntry, ExtraEntryData = {}> {
             });
         }
         candidates.sort((a, b) => b.score - a.score);
+        /* eslint-disable @typescript-eslint/no-unnecessary-condition */
         if(DEBUG) console.log(query);
-        if(DEBUG) candidates.slice(0, 3).map(candidate => console.log(candidate.score, candidate.page.parsed_title.join(", "), "////", candidate.debug_info.join(", ")));
+        if(DEBUG) {
+            candidates
+                .slice(0, 3)
+                .map(candidate => console.log(
+                    candidate.score,
+                    candidate.page.parsed_title.join(", "),
+                    "////",
+                    candidate.debug_info.join(", ")
+                ));
+        }
+        /* eslint-enable @typescript-eslint/no-unnecessary-condition */
         if(this.meets_threshold(candidates[0].score)) {
             return candidates[0].page;
         } else {
@@ -323,6 +344,7 @@ class BasicIndex<T extends index_entry> extends BaseIndex<T> {
 
 // Strategy 0: Baseline ------------------------------------------------------------------------------------------------
 
+// eslint-disable-next-line no-unused-vars
 class BasicIndex<T extends IndexEntry> extends BaseIndex<T> {
     constructor(entries: T[]) {
         super(entries);
@@ -345,6 +367,7 @@ class BasicIndex<T extends IndexEntry> extends BaseIndex<T> {
 
 // Strategy 1: WeightedLevenshteinIndex --------------------------------------------------------------------------------
 
+// eslint-disable-next-line no-unused-vars
 class WeightedLevenshteinIndex<T extends IndexEntry> extends BaseIndex<T> {
     constructor(entries: T[]) {
         super(entries);
@@ -374,8 +397,9 @@ class WeightedLevenshteinIndex<T extends IndexEntry> extends BaseIndex<T> {
         );
         const score =
             scores
-            .map(v => v[0])
-            .reduce((previous, current) => previous + current, 0) - title_tokens.length * 0.001;
+                .map(v => v[0])
+                .reduce((previous, current) => previous + current, 0)
+            - title_tokens.length * 0.001;
         return {
             score,
             debug_info: scores
@@ -389,6 +413,7 @@ class WeightedLevenshteinIndex<T extends IndexEntry> extends BaseIndex<T> {
 
 const MAGIC_NGRAM_SIMILARITY_THRESHOLD = 0.39;
 
+// eslint-disable-next-line no-unused-vars
 class NgramIndex<T extends IndexEntry> extends BaseIndex<T> {
     constructor(entries: T[]) {
         super(entries);
@@ -423,6 +448,7 @@ class NgramIndex<T extends IndexEntry> extends BaseIndex<T> {
 
 // Strategy 3: IDF Ngrams ----------------------------------------------------------------------------------------------
 
+// eslint-disable-next-line no-unused-vars
 class IDFNgramIndex<T extends IndexEntry> extends NgramIndex<T> {
     ngram_idf: Record<string, number>;
     default_idf: number; // idf for something we haven't seen, important for weighting the cosine

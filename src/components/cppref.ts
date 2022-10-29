@@ -10,7 +10,6 @@ import { is_authorized_admin } from "../common";
 import { GuildCommandManager } from "../infra/guild_command_manager";
 
 import { cppref_index, cppref_page } from "../../cppref/types";
-import { weighted_levenshtein } from "../algorithm/levenshtein";
 import { Index } from "../algorithm/search";
 
 
@@ -134,6 +133,7 @@ function eliminate_aliases_and_duplicates(pages: cppref_page[]) {
             title_map[page.title] = [page];
         }
     }
+    // eslint-disable-next-line no-unused-vars
     for(const [title, pages] of Object.entries(title_map)) {
         if(pages.length > 1) {
             if(new Set(pages.map(e => e.wgPageName)).size == 1) {
