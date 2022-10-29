@@ -18,7 +18,11 @@ describe("levenshtein subst cost fn", () => {
 
 describe("levenshtein", () => {
     it("insertion", done => {
-        expect(weighted_levenshtein_raw("abc", "abcd")).to.deep.equal([1, 0]);
+        expect(weighted_levenshtein_raw("abd", "abcd")).to.deep.equal([1, 0]);
+        done();
+    });
+    it("insertion at the end", done => {
+        expect(weighted_levenshtein_raw("abc", "abcd")).to.deep.equal([.1, 0]);
         done();
     });
     it("deletion", done => {

@@ -1,4 +1,5 @@
 import { strict as assert } from "assert";
+import { weighted_levenshtein } from "./levenshtein";
 
 export interface IndexEntry {
     title: string;
@@ -309,7 +310,49 @@ class BasicIndex<T extends IndexEntry> extends BaseIndex<T> {
 
 // ---------------------------------------------------------------------------------------------------------------------
 
-// Strategy 1: Ngrams --------------------------------------------------------------------------------------------------
+// Strategy 1: WeightedLevenshteinIndex --------------------------------------------------------------------------------
+
+class WeightedLevenshteinIndex<T extends IndexEntry> extends BaseIndex<T> {
+    constructor(entries: T[]) {
+        super(entries);
+    }
+    override score(query: string, title: string) {
+        const query_tokens = tokenize(query);
+        const title_tokens = tokenize(title);
+        assert(title_tokens.length > 0);
+        const scores = query_tokens.map(
+            query_token => max(
+                title_tokens.map(title_token => {
+                    return [(() => {
+                        if(title_token == query_token) {
+                            return +2;
+                        } else {
+                            const d = weighted_levenshtein(query_token, title_token);
+                            if(d < Math.round(3/4 * title_token.length)) {
+                                return Math.log10(100 / d) / 2;
+                            } else {
+                                return 0;
+                            }
+                        }
+                    })(), title_token] as [number, string];
+                }),
+                (item) => item[0]
+            )
+        );
+        const score =
+            scores
+            .map(v => v[0])
+            .reduce((previous, current) => previous + current, 0) - title_tokens.length * 0.001;
+        return {
+            score,
+            debug_info: scores
+        };
+    }
+}
+
+// ---------------------------------------------------------------------------------------------------------------------
+
+// Strategy 2: Ngrams --------------------------------------------------------------------------------------------------
 
 class NgramIndex<T extends IndexEntry> extends BaseIndex<T> {
     constructor(entries: T[]) {

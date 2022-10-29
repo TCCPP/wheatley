@@ -40,9 +40,10 @@ export function weighted_levenshtein_raw(src: string, target: string) {
             // eslint-disable-next-line @typescript-eslint/no-unnecessary-condition
             assert(substitution_cost == 1);
             const ts = src[i - 1] == target[j - 1] ? 0 : substitution_cost;
+            const ic = i == 0 || i == src.length ? .1 : insertion_cost;
             const actions: [number, number][] = [
                 [d[i - 1][j    ][0] + deletion_cost,  d[i - 1][j    ][1]],
-                [d[i    ][j - 1][0] + insertion_cost, d[i    ][j - 1][1]],
+                [d[i    ][j - 1][0] + ic,             d[i    ][j - 1][1]],
                 [d[i - 1][j - 1][0] + ts,             d[i - 1][j - 1][1] + ts]
             ];
             d[i][j] = find_min_action(actions);
