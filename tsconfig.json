@@ -5,7 +5,8 @@
         "strict": true,
         "moduleResolution": "node",
         "resolveJsonModule": true,
-        "allowJs": true
+        "allowJs": true,
+        "strictPropertyInitialization": false
     },
     "exclude": ["node_modules", "cppref"]
 }

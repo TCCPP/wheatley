@@ -75,13 +75,13 @@ function cosine_similarity_uniform(a_ngrams: Set<string>, b_ngrams: Set<string>)
     });
 }
 
-function cosine_similarity_idf(a_ngrams: Set<string>, b_ngrams: Set<string>, ngram_idf: Record<string, number>) {
+function cosine_similarity_idf(a_ngrams: Set<string>, b_ngrams: Set<string>, ngram_idf: Record<string, number>, default_idf: number) {
     return cosine_similarity(a_ngrams, b_ngrams, s => {
         //assert(s in ngram_idf);
         if(s in ngram_idf) {
             return ngram_idf[s];
         } else {
-            return 0;
+            return default_idf;
         }
     });
 }
@@ -276,8 +276,12 @@ abstract class BaseIndex<T extends IndexEntry, ExtraEntryData = {}> {
         }
         candidates.sort((a, b) => b.score - a.score);
         if(DEBUG) console.log(query);
-        if(DEBUG) candidates.slice(0, 10).map(candidate => console.log(candidate.score, candidate.page.parsed_title, candidate.debug_info));
-        return candidates[0].page;
+        if(DEBUG) candidates.slice(0, 3).map(candidate => console.log(candidate.score, candidate.page.parsed_title.join(", "), "////", candidate.debug_info.join(", ")));
+        if(candidates[0].score >= 0.45) {
+            return candidates[0].page;
+        } else {
+            return null;
+        }
     }
 }
 
@@ -391,25 +395,36 @@ class NgramIndex<T extends IndexEntry> extends BaseIndex<T> {
 
 // ---------------------------------------------------------------------------------------------------------------------
 
-// Strategy 2: IDF Ngrams ----------------------------------------------------------------------------------------------
+// Strategy 3: IDF Ngrams ----------------------------------------------------------------------------------------------
 
 class IDFNgramIndex<T extends IndexEntry> extends NgramIndex<T> {
     ngram_idf: Record<string, number>;
+    default_idf: number; // idf for something we haven't seen, important for weighting the cosine
+    keyword_count: number;
     constructor(entries: T[]) {
         super(entries);
+        // artificially lower the count of "keyword" so this only turns up keyword results when that's really the best
+        // option
+        for(const gram of this.make_ngrams("keywords:")) {
+            this.ngram_idf[gram] -= this.keyword_count - 1;
+        }
         this.compute_idf(entries.length);
-        console.log(this.ngram_idf);
     }
     override init_bookkeeping() {
         this.ngram_idf = {};
+        this.keyword_count = 0;
     }
     compute_idf(document_count: number) {
         for(const ngram in this.ngram_idf) {
             this.ngram_idf[ngram] = log_base(10, document_count / this.ngram_idf[ngram]);
         }
+        this.default_idf = log_base(10, document_count);
     }
     override process_entries(entries: T[]): (T & BaseEntryData)[] {
         return entries.map(entry => {
+            if(entry.title.includes(" keywords:")) {
+                this.keyword_count++;
+            }
             const parsed_title = split_cppref_title_list(normalize_and_sanitize_title(entry.title));
             for(const title of parsed_title) {
                 for(const ngram of this.make_ngrams(title)) {
@@ -429,7 +444,7 @@ class IDFNgramIndex<T extends IndexEntry> extends NgramIndex<T> {
     override score(query: string, title: string): EntryScore {
         const query_ngrams = this.make_ngrams(query);
         const title_ngrams = this.make_ngrams(title);
-        const score = cosine_similarity_idf(query_ngrams, title_ngrams, this.ngram_idf);
+        const score = cosine_similarity_idf(query_ngrams, title_ngrams, this.ngram_idf, this.default_idf);
         return {
             score,
             debug_info: [...intersect(

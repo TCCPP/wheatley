@@ -4,8 +4,8 @@ import { lookup, cppref_testcase_setup, TargetIndex } from "../src/components/cp
 
 type TestCase = {
     query: string | string[];
-    cref?: string;
-    cppref?: string;
+    cref: string | null;
+    cppref: string | null;
 };
 
 function path_to_url(path: string) {
@@ -14,9 +14,14 @@ function path_to_url(path: string) {
 
 const cases: TestCase[] = [
     {
-        query: ["printf", "std::printf"],
+        query: ["printf"],
         cref: "https://en.cppreference.com/w/c/io/fprintf",
-        cppref: "https://en.cppreference.com/w/cpp/io/c/fprintf"
+        cppref: "https://en.cppreference.com/w/cpp/io/c/printf"
+    },
+    {
+        query: ["std::printf"],
+        cref: null,
+        cppref: "https://en.cppreference.com/w/cpp/io/c/printf"
     },
     {
         query: ["getline", "std::getline"],
@@ -24,9 +29,14 @@ const cases: TestCase[] = [
         cppref: "https://en.cppreference.com/w/cpp/string/basic_string/getline"
     },
     {
-        query: ["scanf", "std::scanf"],
+        query: ["scanf"],
         cref: "https://en.cppreference.com/w/c/io/fscanf",
-        cppref: "https://en.cppreference.com/w/cpp/io/c/fscanf"
+        cppref: "https://en.cppreference.com/w/cpp/io/c/scanf"
+    },
+    {
+        query: ["std::scanf"],
+        cref: null,
+        cppref: "https://en.cppreference.com/w/cpp/io/c/scanf"
     },
     {
         query: ["strcmp", "std::strcmp"],
@@ -40,7 +50,7 @@ const cases: TestCase[] = [
     },
     {
         query: ["vector", "std::vector"],
-        // TODO: Check that it prints out "no results found" for C?
+        cref: null,
         cppref: "https://en.cppreference.com/w/cpp/container/vector"
     },
     {
@@ -54,13 +64,23 @@ const cases: TestCase[] = [
         cppref: "https://en.cppreference.com/w/cpp/string/byte/memcpy"
     },
     {
-        query: ["fgets", "std::fgets"],
+        query: ["fgets"],
         cref: "https://en.cppreference.com/w/c/io/fgets",
         cppref: "https://en.cppreference.com/w/cpp/io/c/fgets"
     },
     {
-        query: ["sort", "std::sort"],
+        query: ["std::fgets"],
+        cref: "https://en.cppreference.com/w/c/io/fgets",
+        cppref: "https://en.cppreference.com/w/cpp/io/c/fgets"
+    },
+    {
+        query: ["sort"],
         cref: "https://en.cppreference.com/w/c/algorithm/qsort",
+        cppref: "https://en.cppreference.com/w/cpp/algorithm/sort"
+    },
+    {
+        query: ["std::sort"],
+        cref: null,
         cppref: "https://en.cppreference.com/w/cpp/algorithm/sort"
     },
     {
@@ -75,12 +95,12 @@ const cases: TestCase[] = [
     },
     {
         query: "nullptr",
-        cref: "https://en.cppreference.com/w/c/language/nullptr",
+        cref: "https://en.cppreference.com/w/c/language/nullptr", // TODO: Maybe disable.
         cppref: "https://en.cppreference.com/w/cpp/language/nullptr"
     },
     {
         query: ["swap", "std::swap"],
-        // todo: cref
+        cref: null,
         cppref: "https://en.cppreference.com/w/cpp/algorithm/swap"
     },
     {
@@ -90,40 +110,49 @@ const cases: TestCase[] = [
     },
     {
         query: ["uniform_int_distribution", "uniform int distribution"],
-        // todo cref
+        cref: null,
         cppref: "https://en.cppreference.com/w/cpp/numeric/random/uniform_int_distribution"
     },
     {
         query: ["member initializer list", "member init list"], // other algo fails "member init list"
-        // todo cref
+        cref: null,
         // called /w/cpp/language/initializer_list.html in the data, /w/cpp/language/constructor on the site
         cppref: "https://en.cppreference.com/w/cpp/language/initializer_list"
     },
     {
         query: ["ranged for", "range based for", "range based for loop"],
-        // todo cref
+        cref: null,
         cppref: "https://en.cppreference.com/w/cpp/language/range-for"
     },
     {
         query: ["initializer list", "init list" /*, "i list"*/], // other algo fails all
-        // todo cref
+        cref: null,
         cppref: "https://en.cppreference.com/w/cpp/utility/initializer_list"
     },
-    /*{ // TODO: disabled for now. This is a bonus goal.
-        // TODO: One idea, rename operator>> to operatorgtgt
-        query: ["istream::operator>>", "istream>>", "std::cin>>", "cin>>"], // other algo fails all
-        // todo cref
+    {
+        query: ["istream::operator>>", "istream>>"], // other algo fails all
+        cref: null,
         cppref: "https://en.cppreference.com/w/cpp/io/basic_istream/operator_gtgt"
-    },*/
+    },
     {
         query: ["std::cin", "cin"], // other algo fails all
-        // todo cref
+        cref: null,
         cppref: "https://en.cppreference.com/w/cpp/io/cin"
     },
     {
         query: ["std::basic_string::erase", "std::string::erase", "string::erase", "string erase"],
-        // todo cref
+        cref: null,
         cppref: "https://en.cppreference.com/w/cpp/string/basic_string/erase"
+    },
+    {
+        query: ["sizeof"],
+        cref: "https://en.cppreference.com/w/c/language/sizeof",
+        cppref: "https://en.cppreference.com/w/cpp/language/sizeof"
+    },
+    {
+        query: ["sizeof..."],
+        cref: null,
+        cppref: "https://en.cppreference.com/w/cpp/language/sizeof..."
     }
 ];
 
@@ -131,7 +160,7 @@ cppref_testcase_setup();
 
 // TODO: more typo test cases
 
-describe("cppref cases", () => {
+describe("cref cases", () => {
     for(const test_case of cases) {
         const queries = test_case.query instanceof Array ? test_case.query : [test_case.query];
         for(const query of queries) {
@@ -140,6 +169,12 @@ describe("cppref cases", () => {
                     const result = lookup(query, TargetIndex.C);
                     assert(result, "search did not find result when it should have");
                     expect(path_to_url(result.path)).to.equal(test_case.cref);
+                    done();
+                });
+            } else {
+                it(`!cref shouldn't find ${query}`, done => {
+                    const result = lookup(query, TargetIndex.C);
+                    assert(!result, "search found a result when it shouldn't have");
                     done();
                 });
             }
@@ -156,6 +191,12 @@ describe("cppref cases", () => {
                     const result = lookup(query, TargetIndex.CPP);
                     assert(result, "search did not find result when it should have");
                     expect(path_to_url(result.path)).to.equal(test_case.cppref);
+                    done();
+                });
+            } else {
+                it(`!cppref shouldn't find ${query}`, done => {
+                    const result = lookup(query, TargetIndex.CPP);
+                    assert(!result, "search found a result when it shouldn't have");
                     done();
                 });
             }
