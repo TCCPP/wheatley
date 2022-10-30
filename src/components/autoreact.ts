@@ -1,7 +1,7 @@
 import * as Discord from "discord.js";
 import { strict as assert } from "assert";
 import { critical_error, M } from "../utils";
-import { introductions_channel_id, MINUTE, TCCPP_ID } from "../common";
+import { introductions_channel_id, memes_channel_id, MINUTE, TCCPP_ID } from "../common";
 
 let client: Discord.Client;
 
@@ -33,6 +33,9 @@ async function on_message(message: Discord.Message) {
                     message.react("👋");
                 }, 1 * MINUTE);
             }
+        }
+        if(message.channel.id == memes_channel_id) {
+            message.react("⭐");
         }
     } catch(e) {
         critical_error(e);
