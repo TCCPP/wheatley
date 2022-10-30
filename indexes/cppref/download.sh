@@ -1,3 +1,4 @@
+#!/bin/bash
 regex=".*index\\.php.*|.*/Special:.*|.*/Talk:.*|.*/Help:.*|.*/File:.*|.*/Cppreference:.*|.*/WhatLinksHere:.*|.*/Template:.*|.*/Category:.*|.*action=.*|.*printable=.*|.*en.cppreference.com/book.*" ;
 echo $regex ;
 wget --adjust-extension --page-requisites --convert-links \

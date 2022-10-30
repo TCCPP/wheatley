@@ -1,6 +1,7 @@
 import {assert, expect} from "chai";
 
-import { lookup, cppref_testcase_setup, TargetIndex } from "../src/components/cppref";
+import { TargetIndex } from "../indexes/cppref/types";
+import { lookup, cppref_testcase_setup } from "../src/components/cppref";
 
 type TestCase = {
     query: string | string[];
@@ -135,6 +136,11 @@ const cases: TestCase[] = [
         cppref: "https://en.cppreference.com/w/cpp/string/basic_string/erase"
     },
     {
+        query: ["std::vector::erase", "vector erase"],
+        cref: null,
+        cppref: "https://en.cppreference.com/w/cpp/container/vector/erase"
+    },
+    {
         query: ["sizeof"],
         cref: "https://en.cppreference.com/w/c/language/sizeof",
         cppref: "https://en.cppreference.com/w/cpp/language/sizeof"
@@ -157,7 +163,7 @@ describe("cref cases", () => {
             if(test_case.cref) {
                 it(`!cref should find ${query}`, done => {
                     const result = lookup(query, TargetIndex.C);
-                    assert(result, "search did not find result when it should have");
+                    assert(result, "search did not find a result when it should have");
                     expect(path_to_url(result.path)).to.equal(test_case.cref);
                     done();
                 });
@@ -179,7 +185,7 @@ describe("cppref cases", () => {
             if(test_case.cppref) {
                 it(`!cppref should find ${query}`, done => {
                     const result = lookup(query, TargetIndex.CPP);
-                    assert(result, "search did not find result when it should have");
+                    assert(result, "search did not find a result when it should have");
                     expect(path_to_url(result.path)).to.equal(test_case.cppref);
                     done();
                 });

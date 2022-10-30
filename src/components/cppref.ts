@@ -9,7 +9,7 @@ import { critical_error, M } from "../utils";
 import { is_authorized_admin } from "../common";
 import { GuildCommandManager } from "../infra/guild_command_manager";
 
-import { cppref_index, cppref_page } from "../../indexes/cppref/types";
+import { cppref_index, cppref_page, TargetIndex } from "../../indexes/cppref/types";
 import { Index } from "../algorithm/search";
 
 
