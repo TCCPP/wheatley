@@ -90,6 +90,8 @@ async function on_message(message: Discord.Message) {
             if(message.type == Discord.MessageType.Reply) {
                 const replying_to = await message.fetchReference();
 
+                M.debug("!f", [message.author.tag, message.author.id], replying_to.url);
+
                 if(replying_to.author.bot) {
                     message.reply("Can't format a bot message");
                     return;
@@ -102,7 +104,6 @@ async function on_message(message: Discord.Message) {
                     code_blocks.push(block);
                     return `<[<[<[<[${code_blocks.length - 1}]>]>]>]>`;
                 });
-                M.debug(code_blocks);
                 // else ...
                 if(code_blocks.length == 0) {
                     const start = content.search(code_begin_re);
@@ -147,14 +148,16 @@ async function on_message(message: Discord.Message) {
                         .setAuthor({
                             name: replying_to.member?.displayName ?? replying_to.author.tag,
                             iconURL: replying_to.author.displayAvatarURL()
-                        })
-                        .setDescription(content)
-                        .setFooter({
+                        });
+                    if(message.author.id != replying_to.author.id) {
+                        embed.setFooter({
                             text: `Formatted by ${message.member?.displayName ?? message.author.tag}`,
                             iconURL: message.author.displayAvatarURL()
                         });
+                    }
                     await message.channel.send({
                         embeds: [embed],
+                        content,
                         files: attachments.filter(x => x != null) as Discord.AttachmentBuilder[]
                     });
                     if(message.createdAt.getTime() - replying_to.createdAt.getTime() < 30 * MINUTE
