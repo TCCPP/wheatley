@@ -1,16 +1,16 @@
 import { strict as assert } from "assert";
 
-import { Worker, isMainThread, parentPort } from "worker_threads";
+import { parentPort } from "worker_threads";
 
 import { RequestInfo, RequestInit, Response } from 'node-fetch';
 import { parseHTML } from "linkedom";
+import { man7_entry, WorkerJob, WorkerResponse } from "./types";
+import { MessageForThreadPool, MessageForWorker } from "../common/utils";
 
 const fetch = (url: RequestInfo, init?: RequestInit) =>
   import('node-fetch').then(({ default: fetch }) => fetch(url, init));
 
 assert(parentPort);
-
-const base_url = "https://man7.org/linux/man-pages/";
 
 function extract_title(title: string) {
     assert(title.endsWith("— Linux manual page"));
@@ -19,15 +19,14 @@ function extract_title(title: string) {
 
 function extract_h2(title: string | null) {
     assert(title);
-    assert(title.endsWith(" top"), `title doesn't end with top: "${title}"`);
-    return title.substring(0, title.length - " top".length).trim();
-}
-
-export type man7_entry = {
-    title: string,
-    path: string,
-    name?: string,
-    synopsis?: string,
+    // there is one page on the entire site that doesn't have a top link in the h2....
+    // https://man7.org/linux/man-pages/man5/groff_font.5.html
+    //assert(title.endsWith(" top"), `title doesn't end with top: "${title}"`);
+    if(title.endsWith(" top")) {
+        return title.substring(0, title.length - " top".length).trim();
+    } else {
+        return title.trim();
+    }
 }
 
 async function wait(ms: number) {
@@ -45,7 +44,8 @@ function process_synopsis(text: string) {
     return text.split("\n").map(line => line.replace(/^ {7}/, "")).filter(line => line.trim().length != 0).join("\n");
 }
 
-export async function process_page(path: string) {
+async function fulfill_job(job: WorkerJob): Promise<man7_entry | null> {
+    console.log(job.url);
     let retry_count = 0;
     const max_retries = 8;
     let retry_delay = 1000;
@@ -54,17 +54,20 @@ export async function process_page(path: string) {
     while(true) {
         let errored = false;
         try {
-            response = await fetch(base_url + path);
+            response = await fetch(job.url);
         } catch(e) {
             errored = true;
         }
         if(!errored && response!.ok) {
             break;
+        } else if(response && response.status == 404) {
+            console.log("404 while trying to access", job.url);
+            return null;
         } else {
             if(++retry_count == max_retries) {
-                throw Error("Fuck");
+                throw Error("Failed to get page, exceeded max retries");
             } else {
-                console.log("-----------------> Retrying", retry_count, path);
+                console.log("-----------------> Retrying", retry_count, job.path);
                 await wait(retry_delay);
                 retry_delay *= retry_factor;
             }
@@ -77,52 +80,32 @@ export async function process_page(path: string) {
     assert(h1);
     const h2s = document.querySelectorAll("h2");
     const data: man7_entry = {
-        title: extract_title(h1.innerHTML),
-        path,
+        title: extract_title(h1.textContent!),
+        path: job.path,
     };
     for(const h2 of h2s) {
-        const h2_text = extract_h2(h2.textContent); // text_between(h2.innerHTML, "</a>", "<a href=");
+        const h2_text = extract_h2(h2.textContent);
         if(h2_text == "NAME") {
-            //console.log(h2.nextElementSibling!.innerHTML.trim());
             data.name = process_field(h2.nextElementSibling!.textContent!.trim());
         } else if(h2_text == "SYNOPSIS") {
-            //console.log(h2.nextElementSibling!.innerHTML.trim());
             data.synopsis = process_synopsis(h2.nextElementSibling!.textContent!);
         }
     }
     return data;
 }
 
-async function scrape(path: string): Promise<man7_entry> {
-    console.log(path);
-    return await process_page(path);
-}
-
-export type WorkerTask = {
-    path: string;
-};
-
-export type WorkerMessage<TaskType> = {
-    terminate: boolean;
-    task?: TaskType;
-};
-export type WorkerResponse<ResultType> = {
-    kick: boolean;
-    result?: ResultType;
-};
-
-async function handle_worker_message(message: WorkerMessage<WorkerTask>): Promise<WorkerResponse<man7_entry>> {
+async function handle_worker_message(message: MessageForWorker<WorkerJob>):
+    Promise<MessageForThreadPool<WorkerResponse>> {
     if(message.terminate) {
         process.exit();
     }
-    assert(message.task);
+    assert(message.job);
     return {
-        kick: false,
-        result: await scrape(message.task?.path)
+        result: await fulfill_job(message.job)
     };
 }
 
-parentPort.on("message", async (message: WorkerMessage<WorkerTask>) => {
+parentPort.on("message", async (message: MessageForWorker<WorkerJob>) => {
     parentPort!.postMessage(await handle_worker_message(message));
 });
 
