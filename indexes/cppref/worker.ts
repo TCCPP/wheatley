@@ -5,7 +5,7 @@ import * as fs from "fs";
 
 import { parseHTML } from "linkedom";
 
-import { cppref_page, TargetIndex, WorkerJob, WorkerResponse } from "./types";
+import { cppref_page, WorkerJob, WorkerResponse } from "./types";
 import { MessageForThreadPool, MessageForWorker } from "../common/utils";
 
 assert(parentPort);

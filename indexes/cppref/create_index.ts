@@ -3,7 +3,7 @@ import { strict as assert } from "assert";
 import * as fs from "fs";
 import * as path from "path";
 
-import { cppref_index, TargetIndex, WorkerJob, WorkerResponse } from "./types";
+import { cppref_index, CpprefSubIndex, WorkerJob, WorkerResponse } from "./types";
 
 import { ThreadPool } from "../common/utils";
 
@@ -36,7 +36,7 @@ async function* walk_dir(dir: string): AsyncGenerator<string> {
             if(path.endsWith(".html")) {
                 pool.submit_job({
                     path,
-                    target_index: TargetIndex.C
+                    target_index: CpprefSubIndex.C
                 });
                 count++;
             }
@@ -47,7 +47,7 @@ async function* walk_dir(dir: string): AsyncGenerator<string> {
             if(path.endsWith(".html")) {
                 pool.submit_job({
                     path,
-                    target_index: TargetIndex.CPP
+                    target_index: CpprefSubIndex.CPP
                 });
                 count++;
             }
@@ -57,7 +57,7 @@ async function* walk_dir(dir: string): AsyncGenerator<string> {
     })();
 
     for await(const { target_index, entry } of pool) {
-        (target_index == TargetIndex.C ? index.c : index.cpp).push(entry);
+        (target_index == CpprefSubIndex.C ? index.c : index.cpp).push(entry);
         count--;
     }
 

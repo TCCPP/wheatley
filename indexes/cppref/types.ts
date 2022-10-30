@@ -11,15 +11,15 @@ export type cppref_index = {
     cpp: cppref_page[];
 };
 
-export enum TargetIndex { C, CPP }
+export enum CpprefSubIndex { C, CPP }
 
 export type WorkerJob = {
     path: string;
-    target_index: TargetIndex;
+    target_index: CpprefSubIndex;
 };
 
 
 export type WorkerResponse = {
     entry: cppref_page;
-    target_index: TargetIndex;
+    target_index: CpprefSubIndex;
 };

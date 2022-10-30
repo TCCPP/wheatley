@@ -9,7 +9,7 @@ import { critical_error, format_list, M } from "../utils";
 import { is_authorized_admin } from "../common";
 import { GuildCommandManager } from "../infra/guild_command_manager";
 
-import { cppref_index, cppref_page, TargetIndex } from "../../indexes/cppref/types";
+import { cppref_index, cppref_page, CpprefSubIndex } from "../../indexes/cppref/types";
 import { Index } from "../algorithm/search";
 
 
@@ -20,8 +20,8 @@ let cpp_index: Index<cppref_page>;
 
 const color = 0x7289DA; // todo: use ping color? make this common?
 
-export function lookup(query: string, target: TargetIndex) {
-    return (target == TargetIndex.C ? c_index : cpp_index).search(query);
+export function lookup(query: string, target: CpprefSubIndex) {
+    return (target == CpprefSubIndex.C ? c_index : cpp_index).search(query);
 }
 
 function link_headers(header: string) {
@@ -76,13 +76,13 @@ async function on_message(message: Discord.Message) {
         if(message.author.bot) return; // Ignore bots
         if(message.content.startsWith("!cref ")) {
             const query = message.content.slice("!cref".length).trim();
-            const result = lookup(query, TargetIndex.C);
+            const result = lookup(query, CpprefSubIndex.C);
             M.debug("cref query", [query, result]);
             await send_results(message, result);
         }
         if(message.content.startsWith("!cppref")) {
             const query = message.content.slice("!cppref".length).trim();
-            const result = lookup(query, TargetIndex.CPP);
+            const result = lookup(query, CpprefSubIndex.CPP);
             M.debug("cppref query", [query, result]);
             await send_results(message, result);
         }
