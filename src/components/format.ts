@@ -8,6 +8,7 @@ const fetch = (url: RequestInfo, init?: RequestInit) =>
 
 import { async_exec_file, critical_error, M } from "../utils";
 import { is_authorized_admin, MINUTE } from "../common";
+import { make_message_deletable } from "./deletable";
 
 let client: Discord.Client;
 
@@ -107,7 +108,8 @@ async function on_message(message: Discord.Message) {
                 M.debug("!f", [message.author.tag, message.author.id], replying_to.url);
 
                 if(replying_to.author.bot) {
-                    message.reply("Can't format a bot message");
+                    const reply = await message.reply("Can't format a bot message");
+                    make_message_deletable(message, reply);
                     return;
                 }
 
@@ -169,7 +171,7 @@ async function on_message(message: Discord.Message) {
                             iconURL: message.author.displayAvatarURL()
                         });
                     }
-                    await message.channel.send({
+                    const formatted_message = await message.channel.send({
                         embeds: [embed],
                         content,
                         files: attachments.filter(x => x != null) as Discord.AttachmentBuilder[]
@@ -177,39 +179,29 @@ async function on_message(message: Discord.Message) {
                     if(message.createdAt.getTime() - replying_to.createdAt.getTime() < 30 * MINUTE
                     && replying_to.type != Discord.MessageType.ThreadStarterMessage) {
                         await replying_to.delete();
+                    } else {
+                        make_message_deletable(message, formatted_message);
                     }
                     //await message.delete();
                 }
             } else {
-                message.reply("!f must be used while replying to a message");
+                const reply = await message.reply("!f must be used while replying to a message");
+                make_message_deletable(message, reply);
             }
         }
     } catch(e) {
         critical_error(e);
         try {
-            message.reply("Internal error while replying to !wping");
+            message.reply("Internal error while running !f");
         } catch(e) {
             critical_error(e);
         }
     }
 }
 
-async function on_interaction_create(interaction: Discord.Interaction) {
-    if(interaction.isCommand() && interaction.commandName == "echo") {
-        assert(interaction.isChatInputCommand());
-        const input = interaction.options.getString("input");
-        M.debug("echo command", input);
-        await interaction.reply({
-            ephemeral: true,
-            content: input || undefined
-        });
-    }
-}
-
 async function on_ready() {
     try {
         client.on("messageCreate", on_message);
-        client.on("interactionCreate", on_interaction_create);
     } catch(e) {
         critical_error(e);
     }

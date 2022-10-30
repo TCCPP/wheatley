@@ -11,6 +11,7 @@ import { GuildCommandManager } from "../infra/guild_command_manager";
 
 import { cppref_index, cppref_page, CpprefSubIndex } from "../../indexes/cppref/types";
 import { Index } from "../algorithm/search";
+import { make_message_deletable } from "./deletable";
 
 
 let client: Discord.Client;
@@ -37,7 +38,7 @@ function link_headers(header: string) {
 
 async function send_results(message: Discord.Message, result: cppref_page | null) {
     if(result === null) {
-        message.channel.send({embeds: [
+        const result_message = await message.channel.send({embeds: [
             new Discord.EmbedBuilder()
                 .setColor(color)
                 .setAuthor({
@@ -47,6 +48,7 @@ async function send_results(message: Discord.Message, result: cppref_page | null
                 })
                 .setDescription("No results found")
         ]});
+        make_message_deletable(message, result_message);
     } else {
         // TODO: Clang format.....?
         const embed = new Discord.EmbedBuilder()
@@ -67,7 +69,8 @@ async function send_results(message: Discord.Message, result: cppref_page | null
                 value: format_list(result.headers.map(link_headers))
             });
         }
-        message.channel.send({embeds: [embed]});
+        const result_message = await message.channel.send({embeds: [embed]});
+        make_message_deletable(message, result_message);
     }
 }
 

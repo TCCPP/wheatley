@@ -6,6 +6,7 @@ import { strict as assert } from "assert";
 import { critical_error, M } from "../utils";
 import { is_authorized_admin } from "../common";
 import { GuildCommandManager } from "../infra/guild_command_manager";
+import { make_message_deletable } from "./deletable";
 
 let client: Discord.Client;
 
@@ -18,11 +19,12 @@ async function on_message(message: Discord.Message) {
         || message.content == "!wstatus"
         && is_authorized_admin(message.member!)) {
             M.log("got ping command");
-            message.channel.send({embeds: [
+            const reply = await message.channel.send({embeds: [
                 new Discord.EmbedBuilder()
                     .setColor(color)
                     .setTitle("pong")
             ]});
+            make_message_deletable(message, reply);
         }
     } catch(e) {
         critical_error(e);

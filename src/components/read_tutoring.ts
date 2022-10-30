@@ -2,6 +2,7 @@ import * as Discord from "discord.js";
 import { strict as assert } from "assert";
 import { critical_error, M } from "../utils";
 import { tutoring_id, tutoring_requests_id } from "../common";
+import { make_message_deletable } from "./deletable";
 
 let client: Discord.Client;
 
@@ -11,13 +12,14 @@ async function on_message(message: Discord.Message) {
     try {
         if(message.author.bot) return; // Ignore bots
         if(message.channel.id == tutoring_requests_id) {
-            message.reply({embeds: [
+            const reply = await message.reply({embeds: [
                 new Discord.EmbedBuilder()
                     .setColor(color)
                     .setTitle("Read The Instructions")
                     .setDescription(`Hello :wave:, please read <#${tutoring_id}> and then use /tutoring to request one "
                         + "on one tutoring. Don't hesitate to ask specific questions in our help channels too!`)
             ]});
+            make_message_deletable(message, reply);
         }
     } catch(e) {
         critical_error(e);

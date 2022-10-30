@@ -2,6 +2,7 @@ import * as Discord from "discord.js";
 import { strict as assert } from "assert";
 import { critical_error, M } from "../utils";
 import { TCCPP_ID } from "../common";
+import { make_message_deletable } from "./deletable";
 
 let client: Discord.Client;
 
@@ -19,7 +20,7 @@ export function forge_snowflake(timestamp: number) {
     return snowflake.toString();
 }
 
-function on_message(message: Discord.Message) {
+async function on_message(message: Discord.Message) {
     try {
         if(message.author.id == client.user!.id) return; // Ignore self
         if(message.author.bot) return; // Ignore bots
@@ -28,7 +29,8 @@ function on_message(message: Discord.Message) {
         if(match != null) {
             assert(match.length == 2);
             const timestamp = decode_snowflake(match[1]);
-            message.channel.send(`<t:${Math.round(timestamp / 1000)}>`);
+            const reply = await message.channel.send(`<t:${Math.round(timestamp / 1000)}>`);
+            make_message_deletable(message, reply);
         }
     } catch(e) {
         critical_error(e);

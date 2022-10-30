@@ -3,6 +3,7 @@ import { strict as assert } from "assert";
 import { critical_error, M } from "../utils";
 import { message_log_channel_id, MINUTE, TCCPP_ID } from "../common";
 import { decode_snowflake, forge_snowflake } from "./snowflake";
+import { make_message_deletable } from "./deletable";
 
 let client: Discord.Client;
 
@@ -116,7 +117,8 @@ async function do_quote(message: Discord.Message, channel_id: string, message_id
         }
         assert(messages.length >= 1);
         const quote_embeds = await make_quote(messages, message.member!);
-        await message.channel.send({ embeds: quote_embeds });
+        const quote = await message.channel.send({ embeds: quote_embeds });
+        make_message_deletable(message, quote);
         // log
         // TODO: Can probably improve how this is done. Figure out later.
         message_log_channel.send({

@@ -11,6 +11,7 @@ import { GuildCommandManager } from "../infra/guild_command_manager";
 
 import { Index, IndexEntry } from "../algorithm/search";
 import { man7_entry, man7_index } from "../../indexes/man7/types";
+import { make_message_deletable } from "./deletable";
 
 
 let client: Discord.Client;
@@ -35,7 +36,7 @@ async function on_message(message: Discord.Message) {
             const result = lookup(query);
             M.debug("man7 query", query, result);
             if(result === null) {
-                message.channel.send({embeds: [
+                const result_message = await message.channel.send({embeds: [
                     new Discord.EmbedBuilder()
                         .setColor(color)
                         .setAuthor({
@@ -44,6 +45,7 @@ async function on_message(message: Discord.Message) {
                         })
                         .setDescription(`No results found`)
                 ]});
+                make_message_deletable(message, result_message);
             } else {
                 const embed = new Discord.EmbedBuilder()
                     .setColor(color)
@@ -60,7 +62,8 @@ async function on_message(message: Discord.Message) {
                         value: `\`\`\`c\n${result.synopsis}\n\`\`\``
                     });
                 }
-                message.channel.send({embeds: [embed]});
+                const result_message = await message.channel.send({embeds: [embed]});
+                make_message_deletable(message, result_message);
             }
         }
     } catch(e) {

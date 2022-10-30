@@ -2,6 +2,7 @@ import * as Discord from "discord.js";
 import { strict as assert } from "assert";
 import { critical_error, denullify, get_tag, M } from "../utils";
 import { colors, forum_help_channels, is_authorized_admin, TCCPP_ID, wheatley_id } from "../common";
+import { make_message_deletable } from "./deletable";
 
 let client: Discord.Client;
 
@@ -41,15 +42,17 @@ async function try_to_control_thread(request: Discord.Message, action: string) {
         if(owner_id == request.author.id || is_authorized_admin(request.author.id)) {
             return true;
         } else {
-            await request.reply({
+            const reply = await request.reply({
                 content: `You can only ${action} threads you own`
             });
+            make_message_deletable(request, reply);
             return false;
         }
     } else {
-        await request.reply({
+        const reply = await request.reply({
             content: `You can only ${action} threads`
         });
+        make_message_deletable(request, reply);
         return false;
     }
 }
@@ -69,19 +72,21 @@ async function on_message(request: Discord.Message) {
                     if(!thread.appliedTags.some(tag => tag == solved_tag)) {
                         M.log("Marking thread as solved", [thread.id, thread.name]);
                         //await request.react("👍");
-                        await thread.send({
+                        const reply = await thread.send({
                             embeds: [
                                 create_embed(undefined, colors.color, "Thank you and let us know if you have any more "
                                     + "questions!")
                             ]
                         });
+                        make_message_deletable(request, reply);
                         await thread.setAppliedTags(
                             [solved_tag].concat(thread.appliedTags.filter(tag => tag != open_tag))
                         );
                         await thread.setArchived(true);
                     }
                 } else {
-                    request.reply("You can't use that here");
+                    const reply = await request.reply("You can't use that here");
+                    make_message_deletable(request, reply);
                 }
             }
         }
@@ -102,7 +107,8 @@ async function on_message(request: Discord.Message) {
                         );
                     }
                 } else {
-                    request.reply("You can't use that here");
+                    const reply = await request.reply("You can't use that here");
+                    make_message_deletable(request, reply);
                 }
             }
         }

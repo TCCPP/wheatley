@@ -3,6 +3,7 @@ import { strict as assert } from "assert";
 import { critical_error, M } from "../utils";
 import { no_off_topic, TCCPP_ID, zelis_id } from "../common";
 import { DatabaseInterface } from "../infra/database_interface";
+import { make_message_deletable } from "./deletable";
 
 let client: Discord.Client;
 
@@ -220,8 +221,10 @@ async function on_message(message: Discord.Message) {
         if(message.author.bot) return; // Ignore bots
 
         if(message.content.trim().toLowerCase() == "!nodistractions") {
-            message.channel.send("`!nodistractions <time>` where time is an integer followed by one of the following"
-                               + " units: m, h, d, w, M, y\n`!removenodistractions` to remove nodistractions");
+            const reply = await message.channel.send("`!nodistractions <time>` where time is an integer followed by one"
+                                                   + " of the following units: m, h, d, w, M, y"
+                                                   + "\n`!removenodistractions` to remove nodistractions");
+            make_message_deletable(message, reply);
             return;
         }
 
