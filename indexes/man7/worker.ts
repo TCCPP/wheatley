@@ -80,13 +80,13 @@ async function fulfill_job(job: WorkerJob): Promise<man7_entry | null> {
     assert(h1);
     const h2s = document.querySelectorAll("h2");
     const data: man7_entry = {
-        title: extract_title(h1.textContent!),
+        page_title: extract_title(h1.textContent!),
         path: job.path,
     };
     for(const h2 of h2s) {
         const h2_text = extract_h2(h2.textContent);
         if(h2_text == "NAME") {
-            data.name = process_field(h2.nextElementSibling!.textContent!.trim());
+            data.short_description = process_field(h2.nextElementSibling!.textContent!.trim());
         } else if(h2_text == "SYNOPSIS") {
             data.synopsis = process_synopsis(h2.nextElementSibling!.textContent!);
         }

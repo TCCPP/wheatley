@@ -9,15 +9,15 @@ import { parseHTML } from "linkedom";
 const fetch = (url: RequestInfo, init?: RequestInit) =>
   import('node-fetch').then(({ default: fetch }) => fetch(url, init));
 
-import { ThreadPool } from "../common/utils"
+import { ThreadPool } from "../common/utils";
 
-import { man7_entry, WorkerJob, WorkerResponse } from "./types";
+import { man7_index, WorkerJob, WorkerResponse } from "./types";
 
 const seed_url = "https://man7.org/linux/man-pages/dir_all_by_section.html";
 const base_url = "https://man7.org/linux/man-pages/";
 
 (async () => {
-    let man_entries: man7_entry[] = [];
+    let man_entries: man7_index = [];
     if(fs.existsSync("man7_index.json")) {
         man_entries = JSON.parse(await fs.promises.readFile("man7_index.json", {encoding: "utf-8"}));
     }

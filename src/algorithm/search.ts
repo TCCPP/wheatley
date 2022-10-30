@@ -249,7 +249,7 @@ type EntryScore = {
 abstract class BaseIndex<T extends IndexEntry, ExtraEntryData = {}> {
     // hack because ts doesn't allow type aliases here
     protected entries: (T & BaseEntryData & ExtraEntryData)[];
-    constructor(entries: T[]) {
+    constructor(entries: T[], normalizer: (_: string) => string[]) {
         assert(no_duplicates(entries.map(e => e.title)));
         this.init_bookkeeping();
         //for(const entry of entries) {
@@ -258,16 +258,16 @@ abstract class BaseIndex<T extends IndexEntry, ExtraEntryData = {}> {
         //        console.log(title);
         //    }
         //}
-        this.entries = this.process_entries(entries);
+        this.entries = this.process_entries(entries, normalizer);
         //this.entries.map(entry => console.log(entry.title, entry.parsed_title));
     }
     // eslint-disable-next-line @typescript-eslint/no-empty-function
     init_bookkeeping() {}
-    process_entries(entries: T[]): (T & BaseEntryData & ExtraEntryData)[] {
+    process_entries(entries: T[], normalizer: (_: string) => string[]): (T & BaseEntryData & ExtraEntryData)[] {
         return entries.map(entry => {
             return {
                 ...entry,
-                parsed_title: normalize_and_split_cppref_title(entry.title)
+                parsed_title: normalizer(entry.title)
             } as T & BaseEntryData & ExtraEntryData;
         });
     }
@@ -346,8 +346,8 @@ class BasicIndex<T extends index_entry> extends BaseIndex<T> {
 
 // eslint-disable-next-line no-unused-vars
 class BasicIndex<T extends IndexEntry> extends BaseIndex<T> {
-    constructor(entries: T[]) {
-        super(entries);
+    constructor(entries: T[], normalizer = normalize_and_split_cppref_title) {
+        super(entries, normalizer);
     }
     override score(query: string, title: string): EntryScore {
         const query_tokens = tokenize(query);
@@ -369,8 +369,8 @@ class BasicIndex<T extends IndexEntry> extends BaseIndex<T> {
 
 // eslint-disable-next-line no-unused-vars
 class WeightedLevenshteinIndex<T extends IndexEntry> extends BaseIndex<T> {
-    constructor(entries: T[]) {
-        super(entries);
+    constructor(entries: T[], normalizer = normalize_and_split_cppref_title) {
+        super(entries, normalizer);
     }
     override score(query: string, title: string) {
         const query_tokens = tokenize(query);
@@ -415,8 +415,8 @@ const MAGIC_NGRAM_SIMILARITY_THRESHOLD = 0.39;
 
 // eslint-disable-next-line no-unused-vars
 class NgramIndex<T extends IndexEntry> extends BaseIndex<T> {
-    constructor(entries: T[]) {
-        super(entries);
+    constructor(entries: T[], normalizer = normalize_and_split_cppref_title) {
+        super(entries, normalizer);
     }
     make_ngrams(str: string) {
         str = ` ${str.toLowerCase()} `;
@@ -453,12 +453,20 @@ class IDFNgramIndex<T extends IndexEntry> extends NgramIndex<T> {
     ngram_idf: Record<string, number>;
     default_idf: number; // idf for something we haven't seen, important for weighting the cosine
     keyword_count: number;
-    constructor(entries: T[]) {
-        super(entries);
+    posix_count: number;
+    constructor(entries: T[], normalizer = normalize_and_split_cppref_title) {
+        super(entries, normalizer);
         // artificially lower the count of "keyword" so this only turns up keyword results when that's really the best
         // option
-        for(const gram of this.make_ngrams("keywords:")) {
-            this.ngram_idf[gram] -= this.keyword_count - 1;
+        if(this.keyword_count) {
+            for(const gram of this.make_ngrams("keywords:")) {
+                this.ngram_idf[gram] -= this.keyword_count - 1;
+            }
+        }
+        if(this.posix_count) {
+            for(const gram of this.make_ngrams("(posix)")) {
+                this.ngram_idf[gram] -= this.posix_count - 1;
+            }
         }
         this.compute_idf(entries.length);
     }
@@ -472,12 +480,15 @@ class IDFNgramIndex<T extends IndexEntry> extends NgramIndex<T> {
         }
         this.default_idf = log_base(10, document_count);
     }
-    override process_entries(entries: T[]): (T & BaseEntryData)[] {
+    override process_entries(entries: T[], normalizer: (_: string) => string[]): (T & BaseEntryData)[] {
         return entries.map(entry => {
             if(entry.title.includes(" keywords:")) {
                 this.keyword_count++;
             }
-            const parsed_title = normalize_and_split_cppref_title(entry.title);
+            if(entry.title.includes(" (POSIX)")) {
+                this.posix_count++;
+            }
+            const parsed_title = normalizer(entry.title);
             const ngram_set = new Set<string>();
             for(const title of parsed_title) {
                 for(const ngram of this.make_ngrams(title)) {
@@ -517,3 +528,4 @@ class IDFNgramIndex<T extends IndexEntry> extends NgramIndex<T> {
 //export class Index<T extends IndexEntry> extends WeightedLevenshteinIndex<T> { }
 //export class Index<T extends IndexEntry> extends NgramIndex<T> { }
 export class Index<T extends IndexEntry> extends IDFNgramIndex<T> { }
+//export class Index<T extends IndexEntry> extends TFIDFNgramIndex<T> { }

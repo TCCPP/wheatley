@@ -1,9 +1,12 @@
 export type man7_entry = {
-    title: string;
+    page_title: string;
     path: string;
-    name?: string;
+    short_description?: string; // corresponds to the "name" field
+    //long_description?: string; // corresponds to the "description field"
     synopsis?: string;
 }
+
+export type man7_index = man7_entry[];
 
 export type WorkerJob = {
     path: string;
