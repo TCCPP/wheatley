@@ -34,7 +34,7 @@ async function on_message(message: Discord.Message) {
                 }, 1 * MINUTE);
             }
         }
-        if(message.channel.id == memes_channel_id) {
+        if(message.channel.id == memes_channel_id && message.attachments.size > 0) {
             message.react("⭐");
         }
     } catch(e) {
