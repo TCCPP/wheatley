@@ -5,7 +5,7 @@ import { strict as assert } from "assert";
 
 import * as fs from "fs";
 
-import { critical_error, M } from "../utils";
+import { critical_error, format_list, M } from "../utils";
 import { is_authorized_admin } from "../common";
 import { GuildCommandManager } from "../infra/guild_command_manager";
 
@@ -20,10 +20,19 @@ let cpp_index: Index<cppref_page>;
 
 const color = 0x7289DA; // todo: use ping color? make this common?
 
-export enum TargetIndex { C, CPP }
-
 export function lookup(query: string, target: TargetIndex) {
     return (target == TargetIndex.C ? c_index : cpp_index).search(query);
+}
+
+function link_headers(header: string) {
+    const matches = [...header.matchAll(/^<(.+)>$/g)];
+    assert(matches.length == 1);
+    const header_part = matches[0][1];
+    if(header_part.endsWith(".h")) {
+        return header;
+    } else {
+        return `[${header}](en.cppreference.com/w/cpp/header/${header_part}.html)`;
+    }
 }
 
 async function on_message(message: Discord.Message) {
@@ -36,21 +45,39 @@ async function on_message(message: Discord.Message) {
             const query = message.content.slice(".cppref".length).trim();
             const result = lookup(query, TargetIndex.CPP);
             M.debug("cppref", [query, result]);
-            message.channel.send({embeds: [
-                new Discord.EmbedBuilder()
+            if(result === null) {
+                message.channel.send({embeds: [
+                    new Discord.EmbedBuilder()
+                        .setColor(color)
+                        .setAuthor({
+                            name: "cppreference.com",
+                            iconURL: "https://en.cppreference.com/favicon.ico",
+                            url: "https://en.cppreference.com"
+                        })
+                        .setDescription("No results found")
+                ]});
+            } else {
+                // TODO: Clang format.....?
+                const embed = new Discord.EmbedBuilder()
                     .setColor(color)
                     .setAuthor({
                         name: "cppreference.com",
                         iconURL: "https://en.cppreference.com/favicon.ico",
                         url: "https://en.cppreference.com"
                     })
-                    .setTitle("foobar")
-                    .setURL("https://en.cppreference.com/w/cpp/container/unordered_map/insert")
-                    .addFields({
+                    .setTitle(result.title)
+                    .setURL(`https://${result.path}`);
+                if(result.sample_declaration) {
+                    embed.setDescription(`\`\`\`cpp\n${result.sample_declaration}\n\`\`\``);
+                }
+                if(result.headers) {
+                    embed.addFields({
                         name: "Defined in",
-                        value: "<test>"
-                    })
-            ]});
+                        value: format_list(result.headers.map(link_headers))
+                    });
+                }
+                message.channel.send({embeds: [embed]});
+            }
         }
     } catch(e) {
         critical_error(e);
@@ -198,7 +225,7 @@ export async function setup_cppref(_client: Discord.Client, guild_command_manage
                     .setRequired(true));
         guild_command_manager.register(echo);*/
         const index_data = JSON.parse(
-            await fs.promises.readFile("cppref/cppref_index.json", {encoding: "utf-8"})
+            await fs.promises.readFile("indexes/cppref/cppref_index.json", {encoding: "utf-8"})
         ) as cppref_index;
         setup_indexes(index_data);
         client.on("ready", on_ready);

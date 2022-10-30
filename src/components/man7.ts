@@ -57,7 +57,7 @@ async function on_message(message: Discord.Message) {
                 if(result.synopsis) {
                     embed.addFields({
                         name: "Synopsis",
-                        value: `\`\`\`${result.synopsis}\`\`\``
+                        value: `\`\`\`c\n${result.synopsis}\n\`\`\``
                     });
                 }
                 message.channel.send({embeds: [embed]});
