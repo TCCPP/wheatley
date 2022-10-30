@@ -9,14 +9,15 @@ const fetch = (url: RequestInfo, init?: RequestInit) =>
 import { async_exec_file, critical_error, M } from "../utils";
 import { is_authorized_admin, MINUTE } from "../common";
 import { make_message_deletable } from "./deletable";
+import { MessageFlags } from "discord.js";
 
 let client: Discord.Client;
 
 const color = 0x7E78FE; //0xA931FF;
 
-const clang_format_path = "/usr/bin/clang-format";
+const clang_format_path = "/usr/bin/clang-format-10";
 
-const max_attachment_length = 1024 * 10;
+const max_attachment_size = 1024 * 10;
 
 const default_clang_format_language = "cpp";
 
@@ -72,25 +73,22 @@ async function clang_format(text: string, args: string[]) {
 const clang_format_style = [
     "BasedOnStyle: Chromium",
     "IndentWidth: 2",
-    "SpacesInAngles: Never",
+    "SpacesInAngles: false",
     "SpaceAfterTemplateKeyword: false"
-].join(", ");
+];
 
 const clang_format_style_embed = [
-    "BasedOnStyle: Chromium",
-    "IndentWidth: 2",
+    ...clang_format_style,
     "ColumnLimit: 48",
-    "AlignAfterOpenBracket: AlwaysBreak",
-    "SpacesInAngles: Never",
-    "SpaceAfterTemplateKeyword: false"
-].join(", ");
+    "AlignAfterOpenBracket: AlwaysBreak"
+];
 
 export async function clang_format_embed_code(text: string) {
-    return await clang_format(text, [`-style={${clang_format_style_embed}}`]);
+    return await clang_format(text, [`-style={${clang_format_style_embed.join(", ")}}`]);
 }
 
 export async function clang_format_general(text: string) {
-    return await clang_format(text, [`-style={${clang_format_style}}`]);
+    return await clang_format(text, [`-style={${clang_format_style.join(", ")}}`]);
 }
 
 // https://stackoverflow.com/questions/12568097/how-can-i-replace-a-string-by-range
@@ -141,6 +139,7 @@ async function on_message(message: Discord.Message) {
                 // does the message have attachments?
                 const attachments = await Promise.all([...replying_to.attachments.values()]
                     .filter(attachment => attachment.contentType?.startsWith("text/") ?? false)
+                    .filter(attachment => attachment.size < max_attachment_size)
                     .slice(0, 2) // at most 2 attachments
                     .map(async (attachment) => {
                         const fetch_response = await fetch(attachment.url);
@@ -177,12 +176,18 @@ async function on_message(message: Discord.Message) {
                         files: attachments.filter(x => x != null) as Discord.AttachmentBuilder[]
                     });
                     if(message.createdAt.getTime() - replying_to.createdAt.getTime() < 30 * MINUTE
-                    && replying_to.type != Discord.MessageType.ThreadStarterMessage) {
+                    && replying_to.id != replying_to.channel.id // Don't delete if it's a forum thread starter message
+                    && !replying_to.flags.has(MessageFlags.HasThread)
+                    && replying_to.attachments.size <= 2 // Also don't delete if it has additional/non-txt attachments
+                    && !replying_to.attachments.some(({contentType}) => contentType?.startsWith("text/") ?? false)) {
                         await replying_to.delete();
                     } else {
                         make_message_deletable(message, formatted_message);
                     }
                     //await message.delete();
+                } else {
+                    const reply = await message.reply("Nothing to format");
+                    make_message_deletable(message, reply);
                 }
             } else {
                 const reply = await message.reply("!f must be used while replying to a message");
