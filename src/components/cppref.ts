@@ -35,49 +35,56 @@ function link_headers(header: string) {
     }
 }
 
+async function send_results(message: Discord.Message, result: cppref_page | null) {
+    if(result === null) {
+        message.channel.send({embeds: [
+            new Discord.EmbedBuilder()
+                .setColor(color)
+                .setAuthor({
+                    name: "cppreference.com",
+                    iconURL: "https://en.cppreference.com/favicon.ico",
+                    url: "https://en.cppreference.com"
+                })
+                .setDescription("No results found")
+        ]});
+    } else {
+        // TODO: Clang format.....?
+        const embed = new Discord.EmbedBuilder()
+            .setColor(color)
+            .setAuthor({
+                name: "cppreference.com",
+                iconURL: "https://en.cppreference.com/favicon.ico",
+                url: "https://en.cppreference.com"
+            })
+            .setTitle(result.title)
+            .setURL(`https://${result.path}`);
+        if(result.sample_declaration) {
+            embed.setDescription(`\`\`\`cpp\n${result.sample_declaration}\n\`\`\``);
+        }
+        if(result.headers) {
+            embed.addFields({
+                name: "Defined in",
+                value: format_list(result.headers.map(link_headers))
+            });
+        }
+        message.channel.send({embeds: [embed]});
+    }
+}
+
 async function on_message(message: Discord.Message) {
     try {
         if(message.author.bot) return; // Ignore bots
         if(message.content.startsWith(".cref ") && is_authorized_admin(message.member!)) {
             const query = message.content.slice(".cref".length).trim();
+            const result = lookup(query, TargetIndex.C);
+            M.debug("cref query", [query, result]);
+            await send_results(message, result);
         }
         if(message.content.startsWith(".cppref") && is_authorized_admin(message.member!)) {
             const query = message.content.slice(".cppref".length).trim();
             const result = lookup(query, TargetIndex.CPP);
-            M.debug("cppref", [query, result]);
-            if(result === null) {
-                message.channel.send({embeds: [
-                    new Discord.EmbedBuilder()
-                        .setColor(color)
-                        .setAuthor({
-                            name: "cppreference.com",
-                            iconURL: "https://en.cppreference.com/favicon.ico",
-                            url: "https://en.cppreference.com"
-                        })
-                        .setDescription("No results found")
-                ]});
-            } else {
-                // TODO: Clang format.....?
-                const embed = new Discord.EmbedBuilder()
-                    .setColor(color)
-                    .setAuthor({
-                        name: "cppreference.com",
-                        iconURL: "https://en.cppreference.com/favicon.ico",
-                        url: "https://en.cppreference.com"
-                    })
-                    .setTitle(result.title)
-                    .setURL(`https://${result.path}`);
-                if(result.sample_declaration) {
-                    embed.setDescription(`\`\`\`cpp\n${result.sample_declaration}\n\`\`\``);
-                }
-                if(result.headers) {
-                    embed.addFields({
-                        name: "Defined in",
-                        value: format_list(result.headers.map(link_headers))
-                    });
-                }
-                message.channel.send({embeds: [embed]});
-            }
+            M.debug("cppref query", [query, result]);
+            await send_results(message, result);
         }
     } catch(e) {
         critical_error(e);

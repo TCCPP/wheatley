@@ -33,7 +33,7 @@ async function on_message(message: Discord.Message) {
         if(message.content.startsWith(".man ") && is_authorized_admin(message.member!)) {
             const query = message.content.slice(".man".length).trim();
             const result = lookup(query);
-            M.debug("man7", [query, result]);
+            M.debug("man7 query", query, result);
             if(result === null) {
                 message.channel.send({embeds: [
                     new Discord.EmbedBuilder()
