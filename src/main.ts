@@ -59,6 +59,7 @@ import { setup_forum_control } from "./components/forum_control";
 import { setup_forum_channels } from "./components/forum_channels";
 import { setup_cppref } from "./components/cppref";
 import { setup_man7 } from "./components/man7";
+import { setup_format } from "./components/format";
 
 // Setup client
 const client = new Discord.Client({
@@ -154,6 +155,7 @@ async function main() {
         await setup_username_manager(client);
         await setup_cppref(client, guild_command_manager);
         await setup_man7(client, guild_command_manager);
+        await setup_format(client);
 
         const token = readFileSync("auth.key", { encoding: "utf-8" });
 

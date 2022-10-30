@@ -1,7 +1,10 @@
 import * as Discord from "discord.js";
 import * as moment from "moment";
 import * as chalk from "chalk";
+
 import * as fs from "fs";
+import { execFile, ExecFileOptions } from "child_process";
+
 import { MINUTE, zelis_id } from "./common";
 import { strict as assert } from "assert";
 import { decode_snowflake } from "./components/snowflake";
@@ -395,4 +398,22 @@ export function format_list(items: string[]) {
     } else {
         return `${items.slice(0, items.length - 1).join(", ")}, and ${items[items.length - 1]}`;
     }
+}
+
+export async function async_exec_file(file: string, args?: string[], options?: fs.ObjectEncodingOptions & ExecFileOptions, input?: string) {
+    return new Promise<{stdout: string | Buffer, stderr: string | Buffer}>((resolve, reject) => {
+        const child = execFile(file, args, options, (error, stdout, stderr) => {
+            if(error) {
+                reject(error);
+            } else {
+                resolve({ stdout, stderr });
+            }
+        });
+        if(!child.stdin) {
+            reject("!child.stdin");
+            assert(false);
+        }
+        child.stdin.write(input);
+        child.stdin.end();
+    });
 }
