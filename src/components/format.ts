@@ -86,8 +86,7 @@ function replace_range(s: string, start: number, end: number, substitute: string
 async function on_message(message: Discord.Message) {
     try {
         if(message.author.bot) return; // Ignore bots
-        if(message.content == ".f"
-        && is_authorized_admin(message.member!)) {
+        if(message.content == "!f") {
             if(message.type == Discord.MessageType.Reply) {
                 const replying_to = await message.fetchReference();
 

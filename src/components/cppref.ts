@@ -74,14 +74,14 @@ async function send_results(message: Discord.Message, result: cppref_page | null
 async function on_message(message: Discord.Message) {
     try {
         if(message.author.bot) return; // Ignore bots
-        if(message.content.startsWith(".cref ") && is_authorized_admin(message.member!)) {
-            const query = message.content.slice(".cref".length).trim();
+        if(message.content.startsWith("!cref ")) {
+            const query = message.content.slice("!cref".length).trim();
             const result = lookup(query, TargetIndex.C);
             M.debug("cref query", [query, result]);
             await send_results(message, result);
         }
-        if(message.content.startsWith(".cppref") && is_authorized_admin(message.member!)) {
-            const query = message.content.slice(".cppref".length).trim();
+        if(message.content.startsWith("!cppref")) {
+            const query = message.content.slice("!cppref".length).trim();
             const result = lookup(query, TargetIndex.CPP);
             M.debug("cppref query", [query, result]);
             await send_results(message, result);

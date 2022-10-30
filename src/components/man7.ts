@@ -30,8 +30,8 @@ export function lookup(query: string) {
 async function on_message(message: Discord.Message) {
     try {
         if(message.author.bot) return; // Ignore bots
-        if(message.content.startsWith(".man ") && is_authorized_admin(message.member!)) {
-            const query = message.content.slice(".man".length).trim();
+        if(message.content.startsWith("!man ")) {
+            const query = message.content.slice("!man".length).trim();
             const result = lookup(query);
             M.debug("man7 query", query, result);
             if(result === null) {
