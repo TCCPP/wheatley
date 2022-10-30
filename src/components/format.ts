@@ -68,14 +68,28 @@ async function clang_format(text: string, args: string[]) {
     return stdout.toString("utf8");
 }
 
+const clang_format_style = [
+    "BasedOnStyle: Chromium",
+    "IndentWidth: 2",
+    "SpacesInAngles: Never",
+    "SpaceAfterTemplateKeyword: false"
+].join(", ");
+
+const clang_format_style_embed = [
+    "BasedOnStyle: Chromium",
+    "IndentWidth: 2",
+    "ColumnLimit: 48",
+    "AlignAfterOpenBracket: AlwaysBreak",
+    "SpacesInAngles: Never",
+    "SpaceAfterTemplateKeyword: false"
+].join(", ");
+
 export async function clang_format_embed_code(text: string) {
-    return await clang_format(text, [
-        "-style={BasedOnStyle: Chromium, IndentWidth: 2, ColumnLimit: 48, AlignAfterOpenBracket: AlwaysBreak}"
-    ]);
+    return await clang_format(text, [`-style={${clang_format_style_embed}}`]);
 }
 
 export async function clang_format_general(text: string) {
-    return await clang_format(text, [ "-style={BasedOnStyle: Chromium, IndentWidth: 4}" ]);
+    return await clang_format(text, [`-style={${clang_format_style}}`]);
 }
 
 // https://stackoverflow.com/questions/12568097/how-can-i-replace-a-string-by-range

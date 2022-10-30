@@ -38,19 +38,23 @@ export class AsyncQueue<T> extends EventEmitter implements AsyncIterable<T> {
         } else {
             return new Promise(resolve => {
                 const closure = () => {
-                    this.removeListener("push", closure);
-                    this.removeListener("drain", closure);
                     if(this.data.length > 0) {
+                        this.removeListener("push", closure);
+                        this.removeListener("drain", closure);
                         resolve({
                             drained: false,
                             value: this.data.shift()!
                         });
-                    } else {
-                        assert(this.draining);
+                    } else if(this.draining) {
+                        this.removeListener("push", closure);
+                        this.removeListener("drain", closure);
                         resolve({
                             drained: true,
                             value: undefined as any
                         });
+                    } else {
+                        // multiple people might be waiting for an item from the queue
+                        // TODO: Better to find a way to not have every listener fire...
                     }
                 };
                 this.on("push", closure);
@@ -136,5 +140,53 @@ export class ThreadPool<JobType, ResultType> implements AsyncIterable<ResultType
                 return q.results.get_next();
             }
         };
+    }
+}
+
+export class Funnel extends EventEmitter {
+    count = 0;
+    queue: (() => Promise<void>)[] = [];
+    constructor(private limit: number) {
+        super();
+        this.on("boop", () => {
+            if(this.queue.length > 0) {
+                assert(this.count < this.limit);
+                const promise_factory = this.queue.shift()!;
+                this.count++;
+                (async () => {
+                    await promise_factory();
+                    this.count--;
+                    this.emit("boop");
+                })();
+            }
+        });
+    }
+    submit(promise_factory: () => Promise<void>) {
+        if(this.count < this.limit) {
+            this.count++;
+            (async () => {
+                await promise_factory();
+                this.count--;
+                this.emit("boop");
+            })();
+        } else {
+            this.queue.push(promise_factory);
+        }
+    }
+    async wait_all() {
+        if(this.count == 0) {
+            return;
+        } else {
+            return new Promise<void>(resolve => {
+                const closure = () => {
+                    // TODO: Better to find a way to not have every listener fire...
+                    if(this.count == 0) {
+                        this.removeListener("boop", closure);
+                        resolve();
+                    }
+                };
+                this.on("boop", closure);
+            });
+        }
     }
 }
