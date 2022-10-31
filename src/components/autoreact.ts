@@ -1,7 +1,7 @@
 import * as Discord from "discord.js";
 import { strict as assert } from "assert";
-import { critical_error, M } from "../utils";
-import { introductions_channel_id, memes_channel_id, MINUTE, TCCPP_ID } from "../common";
+import { critical_error, delay, M } from "../utils";
+import { introductions_channel_id, memes_channel_id, MINUTE, server_suggestions_channel_id, TCCPP_ID } from "../common";
 
 let client: Discord.Client;
 
@@ -29,13 +29,14 @@ async function on_message(message: Discord.Message) {
         if(message.channel.id == introductions_channel_id) {
             if(message.member == null) M.warn("Why??", message);
             if(await is_new_member(message)) {
-                setTimeout(() => {
-                    message.react("👋");
-                }, 1 * MINUTE);
+                await delay(1 * MINUTE);
+                await message.react("👋");
             }
-        }
-        if(message.channel.id == memes_channel_id && message.attachments.size > 0) {
-            message.react("⭐");
+        } else if(message.channel.id == memes_channel_id && message.attachments.size > 0) {
+            await message.react("⭐");
+        } else if(message.channel.id == server_suggestions_channel_id) {
+            await message.react("👍");
+            await message.react("👎");
         }
     } catch(e) {
         critical_error(e);
