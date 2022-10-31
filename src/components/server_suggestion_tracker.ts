@@ -1,12 +1,12 @@
 import * as Discord from "discord.js";
 import { strict as assert } from "assert";
 import { critical_error, departialize, M, KeyedMutexSet, SelfClearingSet, fetch_text_channel,
-         fetch_thread_channel } from "../utils";
+         fetch_thread_channel,
+         xxh3} from "../utils";
 import { DatabaseInterface } from "../infra/database_interface";
 import { is_root, MINUTE, server_suggestions_channel_id, suggestion_action_log_thread_id,
          suggestion_dashboard_thread_id, TCCPP_ID, wheatley_id } from "../common";
 import { forge_snowflake } from "./snowflake";
-import * as XXH from "xxhashjs";
 
 let client: Discord.Client;
 let TCCPP : Discord.Guild;
@@ -43,10 +43,6 @@ type db_entry = {
 const color = 0x7E78FE; //0xA931FF;
 
 // utilities
-
-function xxh3(message: string) {
-    return XXH.h64().update(message).digest().toString(16);
-}
 
 function get_message(channel: Discord.TextChannel | Discord.ThreadChannel, id: string) {
     return new Promise<Discord.Message | undefined>((resolve, reject) => {

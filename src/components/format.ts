@@ -62,6 +62,8 @@ const code_begin_re = new RegExp(code_begin.join("|"));
 
 const code_block_re = new RegExp(`\`\`\`(?:${languages_re.source}\b)?(.*?)\`\`\``, "gms");
 
+const ignore_prefixes = [";compile", ";asm"];
+
 async function clang_format(text: string, args: string[]) {
     const {stdout, stderr} = await async_exec_file(clang_format_path, args, {}, text);
     if(stderr.toString("utf8").trim().length != 0) {
@@ -179,7 +181,9 @@ async function on_message(message: Discord.Message) {
                     && replying_to.id != replying_to.channel.id // Don't delete if it's a forum thread starter message
                     && !replying_to.flags.has(MessageFlags.HasThread)
                     && replying_to.attachments.size <= 2 // Also don't delete if it has additional/non-txt attachments
-                    && !replying_to.attachments.some(({contentType}) => contentType?.startsWith("text/") ?? false)) {
+                    && !replying_to.attachments.some(({contentType}) => contentType?.startsWith("text/") ?? false)
+                        // and not a ;compile, ;asm, or other bot command
+                    && !ignore_prefixes.some(prefix => replying_to.content.startsWith(prefix))) {
                         await replying_to.delete();
                     } else {
                         make_message_deletable(message, formatted_message);

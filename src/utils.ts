@@ -1,6 +1,7 @@
 import * as Discord from "discord.js";
 import * as moment from "moment";
 import * as chalk from "chalk";
+import * as XXH from "xxhashjs";
 
 import * as fs from "fs";
 import { execFile, ExecFileOptions } from "child_process";
@@ -250,7 +251,6 @@ export class KeyedMutexSet<T> {
     unlock(value: T) {
         if(this.waiting.has(value)) {
             assert(this.waiting.get(value)!.length > 0); // If this fails, see TODO above ^^
-            M.debug(this.waiting.get(value)); // TODO: Remove?
             const resolve = this.waiting.get(value)!.shift()!;
             if(this.waiting.get(value)!.length == 0) {
                 this.waiting.delete(value);
@@ -416,4 +416,8 @@ export async function async_exec_file(file: string, args?: string[], options?: f
         child.stdin.write(input);
         child.stdin.end();
     });
+}
+
+export function xxh3(message: string) {
+    return XXH.h64().update(message).digest().toString(16);
 }
