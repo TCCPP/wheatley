@@ -19,7 +19,6 @@ let deletion_map = new SelfClearingMap<string, deletion_target>(30 * MINUTE);
 
 async function on_message_delete(message: Discord.Message | Discord.PartialMessage) {
     try {
-        M.debug("Message delete", message);
         if(deletion_map.has(message.id)) {
             const {channel, id} = deletion_map.get(message.id)!;
             deletion_map.remove(message.id)!;

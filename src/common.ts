@@ -71,11 +71,15 @@ export const thread_based_channel_ids = new Set([
 
 // General config
 
-export const skill_role_ids = new Set([
+export const non_beginner_skill_role_ids = new Set([
     "331719591405551616", // expert
     "331719590990184450", // advanced
     "849399021838925834", // proficient
-    "331876085820030978", // intermediate
+    "331876085820030978" // intermediate
+]);
+
+export const skill_role_ids = new Set([
+    ...non_beginner_skill_role_ids,
     "784733371275673600"  // beginner
 ]);
 
@@ -145,4 +149,8 @@ export const forum_help_channels = new Set([cpp_help_id, c_help_id]);
 
 export function is_forum_help_thread(thread: Discord.ThreadChannel) {
     return thread.parentId != null && forum_help_channels.has(thread.parentId);
+}
+
+export function has_skill_roles_other_than_beginner(member: Discord.GuildMember) {
+    return member.roles.cache.some(role => non_beginner_skill_role_ids.has(role.id));
 }

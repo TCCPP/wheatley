@@ -132,7 +132,7 @@ async function on_thread_create(thread: Discord.ThreadChannel) {
                     + "details__, and reduce your question to its __simplest form__. For tips on how to ask a good "
                     + "question run `!howto ask`.")]
             });
-        }, 5 * 1000);
+        }, 1000);
     }
 }
 
@@ -229,9 +229,9 @@ async function on_ready() {
         client.on("messageCreate", on_message);
         client.on("threadCreate", on_thread_create);
         //await get_initial_active();
-        await forum_cleanup();
+        //await forum_cleanup();
         // every hour try to cleanup
-        setInterval(forum_cleanup, 60 * MINUTE);
+        //setInterval(forum_cleanup, 60 * MINUTE);
     } catch(e) {
         critical_error(e);
     }
