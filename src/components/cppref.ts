@@ -61,7 +61,10 @@ async function send_results(message: Discord.Message, result: cppref_page | null
             .setTitle(result.title)
             .setURL(`https://${result.path}`);
         if(result.sample_declaration) {
-            embed.setDescription(`\`\`\`cpp\n${result.sample_declaration}\n\`\`\``);
+            embed.setDescription(`\`\`\`cpp\n${
+                result.sample_declaration
+                + (result.other_declarations ? `\n// ... and ${result.other_declarations} more` : "")
+            }\n\`\`\``);
         }
         if(result.headers) {
             embed.addFields({

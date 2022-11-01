@@ -32,6 +32,7 @@ async function parse_file(path: string) {
     const title = title_heading.textContent.replace(/\u00a0/g, " ").trim();
     let headers: string[] | undefined;
     let sample_declaration: string | undefined;
+    let other_declarations: number | undefined;
     const decl_block = document.querySelector(".t-dcl-begin");
     if(decl_block) {
         const defined_in_header = decl_block.querySelectorAll(".t-dsc-header code");
@@ -47,25 +48,10 @@ async function parse_file(path: string) {
         }*/
         const decl_rows = [...decl_block.querySelectorAll(".t-dcl")];
         if(decl_rows.length > 0) {
-            // This will have to be updated when C++23 becomes more of a thin
-            const current_declarations = decl_rows
-                .filter(e => e
-                    .getAttributeNames()
-                    .some(attr => {
-                        const matches = [...attr.matchAll(/^t-until-c(?:xx)?(\d{2})$/g)];
-                        if(matches.length == 0) {
-                            return true;
-                        } else {
-                            return parseInt(matches[0][1]) >= 20;
-                        }
-                    })
-                );
-            if(current_declarations.length > 0) {
-                // take the first current
-                sample_declaration = current_declarations[0].querySelector("td")!.textContent!.trim();
-            } else {
-                // just take the first
-                sample_declaration = decl_rows[0].querySelector("td")!.textContent!.trim();
+            // just take the first
+            sample_declaration = decl_rows[0].querySelector("td")!.textContent!.trim();
+            if(decl_rows.length > 1) {
+                other_declarations = decl_rows.length - 1;
             }
         }
     }
@@ -75,7 +61,8 @@ async function parse_file(path: string) {
         path,
         wgPageName,
         headers,
-        sample_declaration
+        sample_declaration,
+        other_declarations
     };
     console.log(`    ${path}`);
     return entry;

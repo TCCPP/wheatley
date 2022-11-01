@@ -15,7 +15,7 @@ type deletion_target = {
 };
 
 // deletion trigger -> deletion target
-let deletion_map = new SelfClearingMap<string, deletion_target>(30 * MINUTE);
+let deletion_map: SelfClearingMap<string, deletion_target>;
 
 async function on_message_delete(message: Discord.Message | Discord.PartialMessage) {
     try {
@@ -47,6 +47,9 @@ async function on_ready() {
 export async function setup_deletable(_client: Discord.Client) {
     try {
         client = _client;
+        // This needs to be initialized in the setup function. The create index scripts indirectly import this and the
+        // timer needs to not be running.
+        deletion_map = new SelfClearingMap(30 * MINUTE);
         client.on("ready", on_ready);
     } catch(e) {
         critical_error(e);

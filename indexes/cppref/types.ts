@@ -4,6 +4,7 @@ export type cppref_page = {
     wgPageName: string;
     headers?: string[];
     sample_declaration?: string;
+    other_declarations?: number;
 };
 
 export type cppref_index = {
@@ -17,7 +18,6 @@ export type WorkerJob = {
     path: string;
     target_index: CpprefSubIndex;
 };
-
 
 export type WorkerResponse = {
     entry: cppref_page;
