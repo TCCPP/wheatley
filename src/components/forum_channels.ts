@@ -1,6 +1,6 @@
 import * as Discord from "discord.js";
 import { strict as assert } from "assert";
-import { critical_error, fetch_all_threads_archive_count, fetch_forum_channel, get_tag, M,
+import { critical_error, delay, fetch_all_threads_archive_count, fetch_forum_channel, get_tag, M,
          SelfClearingSet } from "../utils";
 import { colors, cpp_help_id, c_help_id, forum_help_channels, is_forum_help_thread, MINUTE,
          wheatley_id } from "../common";
@@ -74,6 +74,7 @@ async function on_message(message: Discord.Message) {
         if(channel instanceof Discord.ThreadChannel) {
             const thread = channel;
             if(is_forum_help_thread(thread)) {
+                // solved prompt logic
                 const forum = thread.parent;
                 assert(forum instanceof Discord.ForumChannel);
                 const solved_tag = get_tag(forum, "Solved").id;
@@ -125,14 +126,13 @@ async function on_thread_create(thread: Discord.ThreadChannel) {
         assert(forum instanceof Discord.ForumChannel);
         const open_tag = get_tag(forum, "Open").id;
         await thread.setAppliedTags([open_tag].concat(thread.appliedTags.slice(0, 4)));
-        setTimeout(async () => {
-            await thread.send({
-                embeds: [create_embed(undefined, colors.red, "When your question is answered use **`!solved`** to mark "
-                    + "the question as resolved.\n\nRemember to ask __specific questions__, provide __necessary "
-                    + "details__, and reduce your question to its __simplest form__. For tips on how to ask a good "
-                    + "question run `!howto ask`.")]
-            });
-        }, 1000);
+        await delay(100);
+        await thread.send({
+            embeds: [create_embed(undefined, colors.red, "When your question is answered use **`!solved`** to mark "
+                + "the question as resolved.\n\nRemember to ask __specific questions__, provide __necessary "
+                + "details__, and reduce your question to its __simplest form__. For tips on how to ask a good "
+                + "question run `!howto ask`.")]
+        });
     }
 }
 

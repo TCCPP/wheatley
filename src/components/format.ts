@@ -15,7 +15,7 @@ let client: Discord.Client;
 
 const color = 0x7E78FE; //0xA931FF;
 
-const clang_format_path = "/usr/bin/clang-format-10";
+const clang_format_path = "/usr/bin/clang-format";
 
 const max_attachment_size = 1024 * 10;
 
