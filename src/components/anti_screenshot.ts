@@ -2,12 +2,11 @@ import { strict as assert } from "assert";
 
 import * as Discord from "discord.js";
 
-import { critical_error, delay, M } from "../utils";
-import { colors, has_skill_roles_other_than_beginner, is_authorized_admin, is_forum_help_thread, wheatley_id, zelis_id } from "../common";
-import { make_message_deletable } from "./deletable";
+import { critical_error, delay, denullify, M } from "../utils";
+import { colors, has_skill_roles_other_than_beginner, is_forum_help_thread, message_log_channel_id } from "../common";
 
 let client: Discord.Client;
-let zelis : Discord.User;
+let staff_message_log: Discord.TextChannel;
 
 function create_embed(title: string | undefined, color: number, msg: string) {
     const embed = new Discord.EmbedBuilder()
@@ -33,44 +32,60 @@ function message_might_have_code(message: string) {
     return message.includes("```") || message.match(/[{};]/g);
 }
 
-async function on_thread_create(thread: Discord.ThreadChannel) {
+async function anti_screenshot(starter_message: Discord.Message, thread: Discord.ThreadChannel) {
+    await delay(1000);
+    assert(starter_message);
+    assert(starter_message.member);
+    // trust people with skill roles
+    if(has_skill_roles_other_than_beginner(starter_message.member)) {
+        return;
+    }
+    // check if it has images and no code
+    if(starter_message.attachments.some(are_images)
+    && !starter_message.attachments.some(are_text)
+    && !message_might_have_code(starter_message.content)) {
+        M.debug("anti-screenshot firing", thread.url);
+        const row = new Discord.ActionRowBuilder<Discord.MessageActionRowComponentBuilder>()
+            .addComponents(
+                new Discord.ButtonBuilder()
+                    .setCustomId("anti_screenshot_acknowledge")
+                    .setLabel("Acknowledge/Dismiss")
+                    .setStyle(Discord.ButtonStyle.Danger)
+            );
+        await thread.send({
+            content: `<@${thread.ownerId}>`,
+            embeds: [create_embed("Screenshots!", colors.red, "Your message appears to contain screenshots"
+                + " but no code. Please send code and error messages in text instead of screenshots if"
+                + " applicable!")],
+            components: [row]
+        });
+        // Log to the message log
+        const log_embed = new Discord.EmbedBuilder()
+            .setColor(colors.color)
+            .setTitle(thread.name)
+            .setURL(starter_message.url)
+            .setAuthor({
+                name: starter_message.author.tag,
+                iconURL: starter_message.author.avatarURL()!
+            })
+            .setDescription(starter_message.content);
+        await staff_message_log.send({
+            content: "Anti-screenshot message sent",
+            embeds: [log_embed],
+            files: starter_message.attachments.map(a => a)
+        });
+    }
+}
+
+async function on_message(message: Discord.Message) {
     try {
-        if(thread.ownerId == wheatley_id) { // wheatley threads are either modlogs or thread help threads
-            return;
-        }
-        if(is_forum_help_thread(thread)) { // TODO
-            const forum = thread.parent;
-            assert(forum instanceof Discord.ForumChannel);
-            await delay(1100);
-            const starter_message = await thread.fetchStarterMessage();
-            assert(starter_message);
-            assert(starter_message.member);
-            // trust people with skill roles
-            if(has_skill_roles_other_than_beginner(starter_message.member)) {
-                M.debug("skipping.....");
-                return;
-            }
-            // check if it has images and no code
-            if(starter_message.attachments.some(are_images)
-            && !starter_message.attachments.some(are_text)
-            && !message_might_have_code(starter_message.content)) {
-                const row = new Discord.ActionRowBuilder<Discord.MessageActionRowComponentBuilder>()
-                    .addComponents(
-                        new Discord.ButtonBuilder()
-                            .setCustomId("anti_screenshot_acknowledge")
-                            .setLabel("Acknowledge")
-                            .setStyle(Discord.ButtonStyle.Primary)
-                    );
-                await thread.send({
-                    content: `<@${thread.ownerId}>`,
-                    embeds: [create_embed("Screenshots!", colors.red, "Your message appears to contain screenshots"
-                        + " but no code. Please send code and error messages in text instead of screenshots if"
-                        + " applicable!")],
-                    components: [row]
-                });
-                await zelis.send({
-                    content: `${thread.url}\n\n${starter_message.content}`
-                });
+        if(message.author.bot) return;
+        if(message.id == message.channel.id) {
+            assert(message.channel instanceof Discord.ThreadChannel);
+            if(is_forum_help_thread(message.channel)) {
+                // forum created and starter message now exists
+                // anti-screenshot logic
+                await anti_screenshot(message, message.channel);
             }
         }
     } catch(e) {
@@ -83,7 +98,23 @@ async function on_interaction_create(interaction: Discord.Interaction) {
         if(interaction.isButton()) {
             if(interaction.customId == "anti_screenshot_acknowledge"
             && interaction.user.id == (interaction.channel as Discord.ThreadChannel).ownerId) {
+                M.debug("anti_screenshot_acknowledge received", [
+                    interaction.channel?.url, interaction.user.id, interaction.user.tag
+                ]);
                 await interaction.message.delete();
+                // Log to the message log
+                const log_embed = new Discord.EmbedBuilder()
+                    .setColor(colors.color)
+                    .setTitle((interaction.channel as Discord.ThreadChannel).name)
+                    .setURL(interaction.channel!.url)
+                    .setAuthor({
+                        name: interaction.user.tag,
+                        iconURL: interaction.user.avatarURL()!
+                    });
+                await staff_message_log.send({
+                    content: "Anti-screenshot message dismissed",
+                    embeds: [log_embed]
+                });
             }
         }
     } catch(e) {
@@ -93,8 +124,8 @@ async function on_interaction_create(interaction: Discord.Interaction) {
 
 async function on_ready() {
     try {
-        zelis = await client.users.fetch(zelis_id);
-        client.on("threadCreate", on_thread_create);
+        staff_message_log = denullify(await client.channels.fetch(message_log_channel_id)) as Discord.TextChannel;
+        client.on("messageCreate", on_message);
         client.on("interactionCreate", on_interaction_create);
     } catch(e) {
         critical_error(e);
