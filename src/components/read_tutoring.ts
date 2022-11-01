@@ -17,7 +17,7 @@ async function on_message(message: Discord.Message) {
                     .setColor(color)
                     .setTitle("Read The Instructions")
                     .setDescription(`Hello :wave:, please read <#${tutoring_id}> and then use /tutoring to request one`
-                        + "on one tutoring. Don't hesitate to ask specific questions in our help channels too!")
+                        + " on one tutoring. Don't hesitate to ask specific questions in our help channels too!")
             ]});
             make_message_deletable(message, reply);
         }

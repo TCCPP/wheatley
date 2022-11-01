@@ -60,7 +60,7 @@ const code_begin = [
 
 const code_begin_re = new RegExp(code_begin.join("|"));
 
-const code_block_re = new RegExp(`\`\`\`(?:${languages_re.source}\b)?(.*?)\`\`\``, "gms");
+const code_block_re = new RegExp(`\`\`\`(?:${languages_re.source}\b)?(.*?)\`\`\``, "gims");
 
 const ignore_prefixes = [";compile", ";asm"];
 

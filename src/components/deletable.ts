@@ -22,7 +22,9 @@ async function on_message_delete(message: Discord.Message | Discord.PartialMessa
         if(deletion_map.has(message.id)) {
             const {channel, id} = deletion_map.get(message.id)!;
             deletion_map.remove(message.id)!;
-            channel.messages.delete(id);
+            try {
+                await channel.messages.delete(id);
+            } catch(e) {}
         }
     } catch(e) {
         critical_error(e);
