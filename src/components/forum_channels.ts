@@ -3,11 +3,11 @@ import { strict as assert } from "assert";
 import { critical_error, delay, fetch_all_threads_archive_count, fetch_forum_channel, get_tag, M,
          SelfClearingSet } from "../utils";
 import { colors, cpp_help_id, c_help_id, forum_help_channels, is_forum_help_thread, MINUTE,
-         wheatley_id } from "../common";
+         wheatley_id, zelis_id} from "../common";
 import { decode_snowflake } from "./snowflake"; // todo: eliminate decode_snowflake
 
 let client: Discord.Client;
-
+let zelis: Discord.User;
 let cpp_help: Discord.ForumChannel;
 let c_help: Discord.ForumChannel;
 
@@ -125,6 +125,7 @@ async function on_thread_create(thread: Discord.ThreadChannel) {
         const forum = thread.parent;
         assert(forum instanceof Discord.ForumChannel);
         const open_tag = get_tag(forum, "Open").id;
+        // at most 5 tags
         await thread.setAppliedTags([open_tag].concat(thread.appliedTags.slice(0, 4)));
         await delay(100);
         await thread.send({
@@ -137,13 +138,21 @@ async function on_thread_create(thread: Discord.ThreadChannel) {
 }
 
 async function check_thread_activity(thread: Discord.ThreadChannel, open_tag: string, solved_tag: string) {
-    assert(thread.lastMessageId);
+    // thread.lastMessageId can be null if there are no messages (possibly and the forum starter has been deleted)
+    // if the thread author hasn't sent an initial message it'll mess things up, this needs manual review
+    if(thread.lastMessageId == null) {
+        zelis.send(`thread.lastMessageId is null for ${thread.url}`);
+        return;
+    }
     const now = Date.now();
     const last_message = decode_snowflake(thread.lastMessageId);
+    // if the thread is solved and needs to be re-archived
     if(thread.appliedTags.includes(solved_tag) && !thread.archived && now - last_message >= solved_archive_timeout) {
         M.log("Archiving solved channel", [thread.id, thread.name]);
         thread.setArchived(true);
-    } else if(!thread.appliedTags.includes(solved_tag) && !thread.archived && now - last_message >= inactive_timeout) {
+    }
+    // if the thread is open has been inactive
+    else if(!thread.appliedTags.includes(solved_tag) && !thread.archived && now - last_message >= inactive_timeout) {
         M.log("Archiving inactive channel", [thread.id, thread.name]);
         await thread.send({
             embeds: [
@@ -153,7 +162,9 @@ async function check_thread_activity(thread: Discord.ThreadChannel, open_tag: st
             ]
         });
         await thread.setArchived(true);
-    } else if(!thread.appliedTags.includes(solved_tag) && thread.archived && now - last_message >= resolution_timeout) {
+    }
+    // if the thread is open and is inactive after initially being archived - mark it solved
+    else if(!thread.appliedTags.includes(solved_tag) && thread.archived && now - last_message >= resolution_timeout) {
         M.log("Resolving channel", [thread.id, thread.name]);
         await thread.setArchived(false);
         await thread.send({
@@ -180,19 +191,7 @@ async function misc_checks(thread: Discord.ThreadChannel, open_tag: string, solv
         );
         if(archived) await thread.setArchived(true);
     }
-    // Ensure the solved/open tag is at the beginning
-    // We know thread.appliedTags.length >= 1 by now
-    else if(!(thread.appliedTags[0] == solved_tag || thread.appliedTags[0] == open_tag)) {
-        M.log("Moving solved/open tag to the beginning", [thread.id, thread.name]);
-        const {archived} = thread;
-        const tag = thread.appliedTags.includes(solved_tag) ? solved_tag : open_tag;
-        if(archived) await thread.setArchived(false);
-        await thread.setAppliedTags(
-            [tag].concat(thread.appliedTags.filter(tag => ![solved_tag, open_tag].includes(tag)))
-        );
-        if(archived) await thread.setArchived(true);
-    }
-    // If the thread name starts with [SOLVED], remove it
+    // Cleanup the legacy system: If the thread name starts with [SOLVED], remove it
     if(thread.name.startsWith("[SOLVED]")) {
         M.log("Removing \"[SOLVED]\" from forum thread name", [thread.id, thread.name]);
         const {archived} = thread;
@@ -226,12 +225,13 @@ async function on_ready() {
     try {
         cpp_help = await fetch_forum_channel(cpp_help_id);
         c_help = await fetch_forum_channel(c_help_id);
+        zelis = await client.users.fetch(zelis_id);
         client.on("messageCreate", on_message);
         client.on("threadCreate", on_thread_create);
         //await get_initial_active();
-        //await forum_cleanup();
+        await forum_cleanup();
         // every hour try to cleanup
-        //setInterval(forum_cleanup, 60 * MINUTE);
+        setInterval(forum_cleanup, 60 * MINUTE);
     } catch(e) {
         critical_error(e);
     }
