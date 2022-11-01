@@ -8,6 +8,8 @@ import { colors, has_skill_roles_other_than_beginner, is_forum_help_thread, mess
 let client: Discord.Client;
 let staff_message_log: Discord.TextChannel;
 
+const DISMISS_TIME = 30 * 1000;
+
 function create_embed(title: string | undefined, color: number, msg: string) {
     const embed = new Discord.EmbedBuilder()
         .setColor(color)
@@ -98,23 +100,34 @@ async function on_interaction_create(interaction: Discord.Interaction) {
         if(interaction.isButton()) {
             if(interaction.customId == "anti_screenshot_acknowledge"
             && interaction.user.id == (interaction.channel as Discord.ThreadChannel).ownerId) {
-                M.debug("anti_screenshot_acknowledge received", [
-                    interaction.channel?.url, interaction.user.id, interaction.user.tag
-                ]);
-                await interaction.message.delete();
-                // Log to the message log
-                const log_embed = new Discord.EmbedBuilder()
-                    .setColor(colors.color)
-                    .setTitle((interaction.channel as Discord.ThreadChannel).name)
-                    .setURL(interaction.channel!.url)
-                    .setAuthor({
-                        name: interaction.user.tag,
-                        iconURL: interaction.user.avatarURL()!
+                const time = interaction.createdTimestamp - interaction.message.createdTimestamp;
+                if(time < DISMISS_TIME) {
+                    M.debug("anti_screenshot_acknowledge received too quick", [
+                        interaction.channel?.url, interaction.user.id, interaction.user.tag
+                    ]);
+                    await interaction.reply({
+                        ephemeral: true,
+                        content: "Please read before dismissing"
                     });
-                await staff_message_log.send({
-                    content: "Anti-screenshot message dismissed",
-                    embeds: [log_embed]
-                });
+                } else {
+                    M.debug("anti_screenshot_acknowledge received", [
+                        interaction.channel?.url, interaction.user.id, interaction.user.tag
+                    ]);
+                    await interaction.message.delete();
+                    // Log to the message log
+                    const log_embed = new Discord.EmbedBuilder()
+                        .setColor(colors.color)
+                        .setTitle((interaction.channel as Discord.ThreadChannel).name)
+                        .setURL(interaction.channel!.url)
+                        .setAuthor({
+                            name: interaction.user.tag,
+                            iconURL: interaction.user.avatarURL()!
+                        });
+                    await staff_message_log.send({
+                        content: "Anti-screenshot message dismissed",
+                        embeds: [log_embed]
+                    });
+                }
             }
         }
     } catch(e) {
