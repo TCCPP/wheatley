@@ -62,6 +62,7 @@ import { setup_man7 } from "./components/man7";
 import { setup_format } from "./components/format";
 import { setup_deletable } from "./components/deletable";
 import { setup_anti_screenshot } from "./components/anti_screenshot";
+import { setup_inspect } from "./components/inspect";
 
 // Setup client
 const client = new Discord.Client({
