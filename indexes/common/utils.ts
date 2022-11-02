@@ -28,7 +28,7 @@ export class AsyncQueue<T> implements AsyncIterable<T> {
             f();
         }
     }
-    get_core(): AsyncQueueResult<T> {
+    private get_core(): AsyncQueueResult<T> {
         if(this.data.length > 0) {
             return {
                 drained: false,
@@ -92,12 +92,12 @@ export class ThreadPool<JobType, ResultType> implements AsyncIterable<ResultType
     constructor(worker_path: string, n_threads: number) {
         this.threads = new Array(n_threads).fill(0).map(() => this.create_new_worker(worker_path));
     }
-    create_new_worker(worker_path: string) {
+    private create_new_worker(worker_path: string) {
         const worker = new Worker(worker_path);
         worker.on("message", message => this.handle_worker_message(worker, message));
         return worker;
     }
-    async handle_worker_message(worker: Worker, message: MessageForThreadPool<ResultType>) {
+    private async handle_worker_message(worker: Worker, message: MessageForThreadPool<ResultType>) {
         if(message.kick) {
             this.active_workers++;
         } else {
@@ -141,7 +141,7 @@ export class Funnel {
     queue: (() => Promise<void>)[] = [];
     waiting: (() => void)[] = [];
     constructor(private limit: number) {}
-    dispatch_promise(promise_factory: () => Promise<void>) {
+    private dispatch_promise(promise_factory: () => Promise<void>) {
         this.count++;
         (async () => {
             await promise_factory();
@@ -149,7 +149,7 @@ export class Funnel {
             this.on_promise_finish();
         })();
     }
-    on_promise_finish() {
+    private on_promise_finish() {
         // run the next promise if needed
         if(this.queue.length > 0) {
             assert(this.count < this.limit);

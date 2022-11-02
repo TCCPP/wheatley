@@ -62,6 +62,7 @@ import { setup_man7 } from "./components/man7";
 import { setup_format } from "./components/format";
 import { setup_deletable } from "./components/deletable";
 import { setup_anti_screenshot } from "./components/anti_screenshot";
+import { setup_wiki } from "./components/wiki";
 import { setup_inspect } from "./components/inspect";
 
 // Setup client
@@ -161,6 +162,8 @@ async function main() {
         await setup_format(client);
         await setup_deletable(client);
         await setup_anti_screenshot(client);
+        await setup_wiki(client, guild_command_manager);
+        await setup_inspect(client, guild_command_manager);
 
         const token = readFileSync("auth.key", { encoding: "utf-8" });
 

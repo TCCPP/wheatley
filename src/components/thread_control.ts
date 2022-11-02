@@ -95,6 +95,7 @@ async function on_message(request: Discord.Message) {
             }
         }
         if(request.content == "!archive") {
+            M.debug("received archive command", request.content, request.author.username);
             if(await try_to_control_thread(request, "archive")) {
                 assert(request.channel.isThread());
                 if(request.channel.parentId == rules_channel_id

@@ -111,6 +111,7 @@ export const root_mod_ids = [
     "162964325823283200", // eisenwave
     "89441674844995584",  // styx
     "110756651694297088", // vincent
+    "138014214093668353", // dxpower
 ];
 
 export const root_mod_ids_set = new Set(root_mod_ids);
