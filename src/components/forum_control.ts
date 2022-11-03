@@ -60,8 +60,8 @@ async function try_to_control_thread(request: Discord.Message, action: string) {
 async function on_message(request: Discord.Message) {
     try {
         if(request.author.bot) return; // Ignore bots
-        if(request.content == "!solved" || request.content == "!close") {
-            if(await try_to_control_thread(request, request.content == "!solved" ? "solve" : "close")) {
+        if(request.content == "!solve" || request.content == "!solved" || request.content == "!close") {
+            if(await try_to_control_thread(request, request.content.startsWith("!solve") ? "solve" : "close")) {
                 assert(request.channel.isThread());
                 const thread = request.channel;
                 const forum = thread.parent;
@@ -83,6 +83,9 @@ async function on_message(request: Discord.Message) {
                             [solved_tag].concat(thread.appliedTags.filter(tag => tag != open_tag))
                         );
                         await thread.setArchived(true);
+                    } else {
+                        const reply = await request.reply("Message is already solved");
+                        make_message_deletable(request, reply);
                     }
                 } else {
                     const reply = await request.reply("You can't use that here");
@@ -90,8 +93,8 @@ async function on_message(request: Discord.Message) {
                 }
             }
         }
-        if(request.content == "!unsolve" || request.content == "!unsolved") {
-            if(await try_to_control_thread(request, "unsolve")) {
+        if(request.content == "!unsolve" || request.content == "!unsolved" || request.content == "!open") {
+            if(await try_to_control_thread(request, request.content.startsWith("!unsolve") ? "unsolve" : "open")) {
                 assert(request.channel.isThread());
                 const thread = request.channel;
                 const forum = thread.parent;

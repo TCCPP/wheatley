@@ -12,12 +12,16 @@ import { ContextMenuCommandBuilder } from "discord.js";
 let client: Discord.Client;
 
 async function on_interaction_create(interaction: Discord.Interaction) {
-    if(interaction.isMessageContextMenuCommand() && interaction.commandName == "inspect") {
-        M.debug("inspect command");
-        await interaction.reply({
-            ephemeral: true,
-            content: Discord.escapeMarkdown(interaction.targetMessage.content).replace(/[<>]/g, c => `\\${c}`) || undefined
-        });
+    try {
+        if(interaction.isMessageContextMenuCommand() && interaction.commandName == "inspect") {
+            M.debug("inspect command");
+            await interaction.reply({
+                ephemeral: true,
+                content: Discord.escapeMarkdown(interaction.targetMessage.content).replace(/[<>]/g, c => `\\${c}`) || undefined
+            });
+        }
+    } catch(e) {
+        critical_error(e);
     }
 }
 
