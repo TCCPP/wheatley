@@ -38,10 +38,12 @@ const articles: Record<string, WikiArticle> = {};
 async function on_message(message: Discord.Message) {
     try {
         if(message.author.bot) return; // Ignore bots
-        if(message.content.startsWith("!wiki")
+        if((message.content.startsWith("!wiki") || message.content.startsWith("!howto"))
         && is_authorized_admin(message.member!)) {
             M.log("got wiki command");
-            const query = message.content.substring("!wiki".length).trim();
+            const query = message.content.startsWith("!wiki") ?
+                message.content.substring("!wiki".length).trim()
+                : message.content.substring("!howto".length).trim();
             if(query in articles) {
                 const article = articles[query];
                 const embed = new Discord.EmbedBuilder()
@@ -69,15 +71,39 @@ async function on_message(message: Discord.Message) {
 }
 
 async function on_interaction_create(interaction: Discord.Interaction) {
-    if(interaction.isCommand() && interaction.commandName == "echo") {
+    if(interaction.isCommand() && (interaction.commandName == "wiki" || interaction.commandName == "howto")) {
         assert(interaction.isChatInputCommand());
-        const input = interaction.options.getString("input");
-        M.debug("echo command", input);
-        await interaction.reply({
-            ephemeral: true,
-            content: input || undefined
-        });
-    } else if(interaction.isAutocomplete() && interaction.commandName == "wiki") {
+        const query = interaction.options.getString("article_name");
+        if(!query) {
+            await interaction.reply({
+                content: "You must provide a query",
+                ephemeral: true
+            });
+            return;
+        }
+        const matching_articles = Object.values(articles).filter(({title}) => title == query);
+        const article = matching_articles.length > 0 ? matching_articles[0] : undefined;
+        if(article) {
+            const embed = new Discord.EmbedBuilder()
+                .setColor(colors.color)
+                .setTitle(article.title)
+                .setDescription(article.body)
+                .setFields(article.fields);
+            if(article.footer) {
+                embed.setFooter({
+                    text: article.footer
+                });
+            }
+            await interaction.reply({embeds: [embed]});
+        } else {
+            await interaction.reply({
+                content: "Couldn't find article",
+                ephemeral: true
+            });
+            return;
+        }
+    } else if(interaction.isAutocomplete()
+    && (interaction.commandName == "wiki" || interaction.commandName == "howto")) {
         const query = interaction.options.getFocused();
         await interaction.respond(
             Object.values(articles)
@@ -156,7 +182,7 @@ function parse_article(content: string): WikiArticle {
 async function load_wiki_pages() {
     for await(const file_path of walk_dir(wiki_dir)) {
         const name = path.basename(file_path, path.extname(file_path));
-        M.debug(file_path, name);
+        //M.debug(file_path, name);
         if(name == "README") {
             continue;
         }
@@ -173,9 +199,19 @@ export async function setup_wiki(_client: Discord.Client, guild_command_manager:
             .setDescription("Retrieve wiki articles")
             .addStringOption(option =>
                 option.setName('article_name')
+                    .setRequired(true)
                     .setDescription('Phrase to search for')
                     .setAutocomplete(true));
         guild_command_manager.register(wiki);
+        const howto = new SlashCommandBuilder()
+            .setName("howto")
+            .setDescription("Retrieve wiki articles (alternatively /wiki)")
+            .addStringOption(option =>
+                option.setName('article_name')
+                    .setRequired(true)
+                    .setDescription('Phrase to search for')
+                    .setAutocomplete(true));
+        guild_command_manager.register(howto);
         client.on("ready", on_ready);
         await load_wiki_pages();
     } catch(e) {
