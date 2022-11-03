@@ -162,11 +162,12 @@ function should_replace_original(replying_to: Discord.Message, request_timestamp
 async function on_message(message: Discord.Message) {
     try {
         if(message.author.bot) return; // Ignore bots
-        if(message.content == "!f") {
+        if(message.content == "!f" || message.content == "!format") {
             if(message.type == Discord.MessageType.Reply) {
                 const replying_to = await message.fetchReference();
 
-                M.debug("!f", [message.author.tag, message.author.id], replying_to.url);
+                M.debug(`${message.content.substring(1)} received`,
+                    [message.author.tag, message.author.id], replying_to.url);
 
                 if(replying_to.author.bot) {
                     const reply = await message.reply("Can't format a bot message");
