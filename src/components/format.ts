@@ -21,12 +21,48 @@ const clang_format_path = "/usr/bin/clang-format";
 const max_attachment_size = 1024 * 10;
 
 // highlight js accepts all
-const languages = new Set(["c", "h", "cpp", "hpp", "cc", "hh", "cxx", "cxx", "c++", "h++"]);
+const languages = [
+    "1c", "4d", "abnf", "accesslog", "actionscript", "ada", "adoc", "alan", "angelscript", "apache", "apacheconf",
+    "applescript", "arcade", "arduino", "arm", "armasm", "as", "asc", "asciidoc", "aspectj", "atom", "autohotkey",
+    "autoit", "avrasm", "awk", "axapta", "bash", "basic", "bat", "bbcode", "bf", "bind", "blade", "bnf", "brainfuck",
+    "c", "c++", "cal", "capnp", "capnproto", "cc", "chaos", "chapel", "chpl", "cisco", "clj", "clojure", "cls",
+    "cmake.in", "cmake", "cmd", "coffee", "coffeescript", "console", "coq", "cos", "cpc", "cpp", "cr", "craftcms",
+    "crm", "crmsh", "crystal", "cs", "csharp", "cshtml", "cson", "csp", "css", "cxx", "cypher", "d", "dart", "delphi",
+    "dfm", "diff", "django", "dns", "docker", "dockerfile", "dos", "dpr", "dsconfig", "dst", "dts", "dust", "dylan",
+    "ebnf", "elixir", "elm", "erl", "erlang", "excel", "extempore", "f90", "f95", "fix", "fortran", "freepascal", "fs",
+    "fsharp", "gams", "gauss", "gawk", "gcode", "gdscript", "gemspec", "gf", "gherkin", "glimmer", "glsl", "gms", "gn",
+    "gni", "go", "godot", "golang", "golo", "gololang", "gradle", "graph", "groovy", "gss", "gyp", "h", "h++", "haml",
+    "handlebars", "haskell", "haxe", "hbs", "hbs", "hcl", "hh", "hlsl", "hpp", "hs", "html.handlebars",
+    "html.handlebars", "html.hbs", "html.hbs", "html", "htmlbars", "http", "https", "hx", "hxx", "hy", "hylang", "i",
+    "i7", "iced", "iecst", "inform7", "ini", "ino", "instances", "iol", "irb", "irpf90", "java", "javascript", "jinja",
+    "jolie", "js", "json", "jsp", "jsx", "julia-repl", "julia", "k", "kaos", "kdb", "kotlin", "kt", "lasso",
+    "lassoscript", "lazarus", "ldif", "leaf", "lean", "less", "lfm", "lisp", "livecodeserver", "livescript", "ln",
+    "lpr", "ls", "ls", "lua", "mak", "make", "makefile", "markdown", "mathematica", "matlab", "mawk", "maxima", "md",
+    "mel", "mercury", "mirc", "mizar", "mk", "mkd", "mkdown", "ml", "ml", "mm", "mma", "mojolicious", "monkey", "moon",
+    "moonscript", "mrc", "n1ql", "nawk", "nc", "never", "nginx", "nginxconf", "nim", "nimrod", "nix", "nsis", "obj-c",
+    "obj-c++", "objc", "objective-c++", "objectivec", "ocaml", "ocl", "ol", "openscad", "osascript", "oxygene", "p21",
+    "papyrus", "parser3", "pas", "pascal", "patch", "pcmk", "perl", "pf.conf", "pf", "pgsql", "php", "php3", "php4",
+    "php5", "php6", "php7", "php8", "pl", "plaintext", "plist", "pm", "podspec", "pony", "postgres", "postgresql",
+    "powershell", "pp", "processing", "profile", "prolog", "properties", "protobuf", "ps", "ps1", "psc", "puppet", "py",
+    "pycon", "python-repl", "python", "qml", "qsharp", "r", "razor-cshtml", "razor", "rb", "re", "reasonml", "rebol",
+    "red-system", "red", "redbol", "rf", "rib", "risc", "riscript", "robot", "rpm-spec", "rpm-specfile", "rpm", "rs",
+    "rsl", "rss", "ruby", "ruleslanguage", "rust", "sas", "SAS", "sc", "scad", "scala", "scheme", "sci", "scilab",
+    "scl", "scss", "sh", "shell", "shexc", "smali", "smalltalk", "sml", "sol", "solidity", "spec", "specfile", "spl",
+    "sql", "st", "stan", "stanfuncs", "stata", "step", "stl", "stp", "structured-text", "styl", "stylus", "subunit",
+    "supercollider", "svelte", "svg", "swift", "tao", "tap", "tcl", "terraform", "tex", "text", "tf", "thor", "thrift",
+    "tk", "toml", "tp", "ts", "tsql", "twig", "txt", "typescript", "unicorn-rails-log", "v", "vala", "vb", "vba",
+    "vbnet", "vbs", "vbscript", "verilog", "vhdl", "vim", "wl", "x++", "x86asm", "xhtml", "xjb", "xl", "xls", "xlsx",
+    "xml", "xpath", "xq", "xquery", "xsd", "xsl", "xtlang", "xtm", "yaml", "yml", "zenscript", "zep", "zephir", "zone",
+    "zs", "zsh"
+];
 
-const languages_re = new RegExp([...languages]
-    .sort((a, b) => b.length - a.length)
-    .map(x => x.replaceAll("+", "\\+"))
-    .join("|")
+const c_cpp_language_codes = new Set(["c", "h", "cpp", "hpp", "cc", "hh", "cxx", "cxx", "c++", "h++"]);
+
+const languages_re = new RegExp(
+    languages
+        .sort((a, b) => b.length - a.length)
+        .map(x => x.replaceAll("+", "\\+"))
+        .join("|")
 );
 
 const code_begin = [
@@ -59,7 +95,9 @@ const code_begin = [
 
 const code_begin_re = new RegExp(code_begin.join("|"));
 
-const code_block_re = new RegExp(`\`\`\`(?:${languages_re.source}\b)?(.*?)\`\`\``, "gims");
+const code_block_re = new RegExp(`(\`\`\`(?:${languages_re.source}\b)?)(.*?)\`\`\``, "gims");
+
+const default_clang_format_language = "cpp";
 
 const ignore_prefixes = [";compile", ";asm"];
 
@@ -100,9 +138,10 @@ function replace_range(s: string, start: number, end: number, substitute: string
 async function format(replying_to: Discord.Message) {
     let content = replying_to.content;
     // does the message have code blocks?
-    const code_blocks: string[] = [];
-    content = content.replaceAll(code_block_re, (_, block) => {
-        code_blocks.push(block);
+    const code_blocks: {language: string, content: string}[] = [];
+    content = content.replaceAll(code_block_re, (_, starter: string, block: string) => {
+        const language = starter.length > 3 ? starter.substring(3) : "cpp";
+        code_blocks.push({language, content: block});
         return `<[<[<[<[${code_blocks.length - 1}]>]>]>]>`;
     });
     // else ...
@@ -111,16 +150,21 @@ async function format(replying_to: Discord.Message) {
         if(start > -1) {
             const end = Math.max(...[...";}"].map(c => content.lastIndexOf(c)));
             if(end > start) {
-                code_blocks.push(content.substring(start, end + 1));
+                code_blocks.push({language: default_clang_format_language, content: content.substring(start, end + 1)});
                 content = replace_range(content, start, end + 1, `<[<[<[<[${code_blocks.length - 1}]>]>]>]>`);
             }
         }
     }
 
     for(const [i, block] of code_blocks.entries()) {
-        content = content.replace(`<[<[<[<[${i}]>]>]>]>`, `\`\`\`cpp\n${
-            await clang_format_general(block)
-        }\n\`\`\``);
+        if(c_cpp_language_codes.has(block.language)) {
+            content = content.replace(`<[<[<[<[${i}]>]>]>]>`, `\`\`\`${block.language}\n${
+                await clang_format_general(block.content)
+            }\n\`\`\``);
+        } else {
+            // don't format, just put it back
+            content = content.replace(`<[<[<[<[${i}]>]>]>]>`, `\`\`\`${block.language}\n${block.content}\n\`\`\``);
+        }
     }
 
     // does the message have attachments?
@@ -182,7 +226,7 @@ async function on_message(message: Discord.Message) {
                         .setColor(color)
                         .setAuthor({
                             name: replying_to.member?.displayName ?? replying_to.author.tag,
-                            iconURL: replying_to.author.displayAvatarURL()
+                            iconURL: replying_to.member?.avatarURL() ?? replying_to.author.displayAvatarURL()
                         });
                     if(message.author.id != replying_to.author.id) {
                         embed.setFooter({
@@ -258,7 +302,7 @@ async function on_interaction_create(interaction: Discord.Interaction) {
                             .setColor(color)
                             .setAuthor({
                                 name: replying_to.member?.displayName ?? replying_to.author.tag,
-                                iconURL: replying_to.author.displayAvatarURL()
+                                iconURL: replying_to.member?.avatarURL() ?? replying_to.author.displayAvatarURL()
                             })
                     ];
                 }
