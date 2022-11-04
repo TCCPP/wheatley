@@ -164,7 +164,7 @@ function parse_article(name: string, content: string): WikiArticle {
             let name = line.substring(2).trim();
             let inline = false;
             if(name.match(/^\[.+\]$/)) {
-                name = name.substring(1, name.length - 2).trim();
+                name = name.substring(1, name.length - 1).trim();
                 inline = true;
             }
             data.fields.push({

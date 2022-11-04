@@ -24,7 +24,7 @@ const message_inactivity_threshold = 2 * 60 * MINUTE;
 // if the op says thank you remind them to close the thread after 15 minutes
 const thank_you_timeout = 5 * MINUTE;
 
-const thank_you_re = /\b(thanks|thank\s*you|ty|cheers|figured? it out(?!\?))\b/gi;
+const thank_you_re = /\b(thanks|thank\s*(?:you|u)|ty|cheers|figured? it out(?!\?))\b/gi;
 
 
 /*
