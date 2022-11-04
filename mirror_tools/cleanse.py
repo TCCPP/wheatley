@@ -29,7 +29,9 @@ def cleanse(path):
         print(f"    Error: Couldn't find {path}")
 
 def main():
-    for path, directories, files in os.walk("src"):
+    exclude = set([".git"])
+    for path, directories, files in os.walk("."):
+        directories[:] = [d for d in directories if d not in exclude] # https://stackoverflow.com/a/19859907/15675011
         for file_name in files:
             file_path = os.path.join(path, file_name)
             print(f"checking {file_path}")
@@ -42,13 +44,14 @@ def main():
                     for i, line in enumerate(lines):
                         new_line = line.replace(
                             "https://github.com/jeremy-rifkin/wheatly/",
-                            "https://github.com/jeremy-rifkin/wheatly-mirror/"
+                            "https://github.com/jeremy-rifkin/wheatley-mirror/"
                         )
                         if new_line != line:
                             lines[i] = new_line
                             changed_anything = True
                     if changed_anything:
+                        print(f"rewriting links in {file_path}")
                         with open(file_path, "w", encoding="utf-8") as f:
-                            f.write("\n".join(lines))
+                            f.write("".join(lines))
 
 main()
