@@ -34,7 +34,21 @@ def main():
             file_path = os.path.join(path, file_name)
             print(f"checking {file_path}")
             with open(file_path, "r", encoding="utf-8") as f:
-                if f.readline().strip() == sensitive_tag:
+                lines = f.readlines()
+                if len(lines) > 0 and lines[0].strip() == sensitive_tag:
                     cleanse(file_path)
+                else:
+                    changed_anything = False
+                    for i, line in enumerate(lines):
+                        new_line = line.replace(
+                            "https://github.com/jeremy-rifkin/wheatly/",
+                            "https://github.com/jeremy-rifkin/wheatly-mirror/"
+                        )
+                        if new_line != line:
+                            lines[i] = new_line
+                            changed_anything = True
+                    if changed_anything:
+                        with open(file_path, "w", encoding="utf-8") as f:
+                            f.write("\n".join(lines))
 
 main()

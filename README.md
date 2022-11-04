@@ -1,5 +1,9 @@
 # Wheatley
 
+[![build](https://github.com/jeremy-rifkin/wheatly/actions/workflows/build.yml/badge.svg)](https://github.com/jeremy-rifkin/wheatly/actions/workflows/build.yml)
+[![test](https://github.com/jeremy-rifkin/wheatly/actions/workflows/test.yml/badge.svg)](https://github.com/jeremy-rifkin/wheatly/actions/workflows/test.yml)
+[![eslint](https://github.com/jeremy-rifkin/wheatly/actions/workflows/eslint.yml/badge.svg)](https://github.com/jeremy-rifkin/wheatly/actions/workflows/eslint.yml)
+
 This repository contains the source code for the Wheatley bot, made for the Together C & C++ discord
 server.
 

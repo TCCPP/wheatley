@@ -1,0 +1,16 @@
+name: eslint
+
+on:
+  push:
+  pull_request:
+
+jobs:
+  run-eslint:
+    runs-on: ubuntu-20.04
+    steps:
+    - name: checkout
+      uses: actions/checkout@v3
+    - name: dependencies
+      run: npm i --dev
+    - name: lint
+      run: npm run lint
