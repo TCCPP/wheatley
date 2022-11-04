@@ -1,4 +1,5 @@
 [[user author]]
+[[alias ask]]
 
 # Just Post Your Question
 

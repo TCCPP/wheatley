@@ -35,6 +35,23 @@ type WikiArticle = {
 
 const articles: Record<string, WikiArticle> = {};
 
+const article_aliases: Map<string, string> = new Map();
+
+async function send_wiki_article(article: WikiArticle, message: Discord.Message) {
+    const embed = new Discord.EmbedBuilder()
+        .setColor(colors.color)
+        .setTitle(article.title)
+        .setDescription(article.body)
+        .setFields(article.fields);
+    if(article.footer) {
+        embed.setFooter({
+            text: article.footer
+        });
+    }
+    const reply = await message.channel.send({embeds: [embed]});
+    make_message_deletable(message, reply);
+}
+
 async function on_message(message: Discord.Message) {
     try {
         if(message.author.bot) return; // Ignore bots
@@ -46,19 +63,15 @@ async function on_message(message: Discord.Message) {
                 : message.content.substring("!howto".length).trim();
             if(query in articles) {
                 const article = articles[query];
-                const embed = new Discord.EmbedBuilder()
-                    .setColor(colors.color)
-                    .setTitle(article.title)
-                    .setDescription(article.body)
-                    .setFields(article.fields);
-                if(article.footer) {
-                    embed.setFooter({
-                        text: article.footer
-                    });
-                }
-                const reply = await message.channel.send({embeds: [embed]});
-                make_message_deletable(message, reply);
+                await send_wiki_article(article, message);
             }
+            return;
+        }
+        // check aliases
+        if(message.content.startsWith("!") && article_aliases.has(message.content.substring(1))) {
+            const article_name = article_aliases.get(message.content.substring(1))!;
+            await send_wiki_article(articles[article_name], message);
+            return;
         }
     } catch(e) {
         critical_error(e);
@@ -68,6 +81,20 @@ async function on_message(message: Discord.Message) {
             critical_error(e);
         }
     }
+}
+
+async function send_wiki_article_slash(article: WikiArticle, interaction: Discord.ChatInputCommandInteraction) {
+    const embed = new Discord.EmbedBuilder()
+        .setColor(colors.color)
+        .setTitle(article.title)
+        .setDescription(article.body)
+        .setFields(article.fields);
+    if(article.footer) {
+        embed.setFooter({
+            text: article.footer
+        });
+    }
+    await interaction.reply({embeds: [embed]});
 }
 
 async function on_interaction_create(interaction: Discord.Interaction) {
@@ -84,17 +111,7 @@ async function on_interaction_create(interaction: Discord.Interaction) {
         const matching_articles = Object.values(articles).filter(({title}) => title == query);
         const article = matching_articles.length > 0 ? matching_articles[0] : undefined;
         if(article) {
-            const embed = new Discord.EmbedBuilder()
-                .setColor(colors.color)
-                .setTitle(article.title)
-                .setDescription(article.body)
-                .setFields(article.fields);
-            if(article.footer) {
-                embed.setFooter({
-                    text: article.footer
-                });
-            }
-            await interaction.reply({embeds: [embed]});
+            await send_wiki_article_slash(article, interaction);
         } else {
             await interaction.reply({
                 content: "Couldn't find article",
@@ -112,6 +129,10 @@ async function on_interaction_create(interaction: Discord.Interaction) {
                 .map(title => ({ name: title, value: title }))
                 .slice(0, 25),
         );
+    } else if(interaction.isCommand() && article_aliases.has(interaction.commandName)) {
+        assert(interaction.isChatInputCommand());
+        const article_name = article_aliases.get(interaction.commandName)!;
+        await send_wiki_article_slash(articles[article_name], interaction);
     }
 }
 
@@ -124,7 +145,7 @@ async function on_ready() {
     }
 }
 
-function parse_article(content: string): WikiArticle {
+function parse_article(name: string, content: string): WikiArticle {
     const data: Partial<WikiArticle> = {};
     data.body = "";
     data.fields = [];
@@ -156,6 +177,13 @@ function parse_article(content: string): WikiArticle {
             current_state = state.footer;
         } else if(line.trim() == "[[user author]]" && !code) {
             data.set_author = true;
+        } else if(line.trim().match(/^\[\[alias .+\]\]$/) && !code) {
+            let match = line.trim().match(/^\[\[alias (.+)\]\]$/)!;
+            const aliases = match[1].split(",").map(alias => alias.trim());
+            for(const alias of aliases) {
+                assert(!article_aliases.has(alias));
+                article_aliases.set(alias, name);
+            }
         } else {
             if(current_state == state.body) {
                 data.body += `\n${line}`;
@@ -187,7 +215,7 @@ async function load_wiki_pages() {
             continue;
         }
         const content = await fs.promises.readFile(file_path, {encoding: "utf-8"});
-        articles[name] = parse_article(content);
+        articles[name] = parse_article(name, content);
     }
 }
 
@@ -214,6 +242,14 @@ export async function setup_wiki(_client: Discord.Client, guild_command_manager:
         guild_command_manager.register(howto);
         client.on("ready", on_ready);
         await load_wiki_pages();
+        // setup slash commands for aliases
+        for(const [alias, article_name] of article_aliases.entries()) {
+            const article = articles[article_name];
+            const command = new SlashCommandBuilder()
+                .setName(alias)
+                .setDescription(article.title);
+            guild_command_manager.register(command);
+        }
     } catch(e) {
         critical_error(e);
     }

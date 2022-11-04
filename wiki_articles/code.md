@@ -1,3 +1,5 @@
+[[alias code]]
+
 # How to Format Code on Discord
 
 - type three "backticks" (not quotes/apostrophes, on QWERTY layout, left of `1`-key)
