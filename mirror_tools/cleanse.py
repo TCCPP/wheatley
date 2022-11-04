@@ -43,7 +43,7 @@ def main():
                     changed_anything = False
                     for i, line in enumerate(lines):
                         new_line = line.replace(
-                            "https://github.com/jeremy-rifkin/wheatly/",
+                            "https://github.com/jeremy-rifkin/wheatley/",
                             "https://github.com/jeremy-rifkin/wheatley-mirror/"
                         )
                         if new_line != line:

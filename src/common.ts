@@ -94,7 +94,7 @@ export const root_ids = new Set([
     "162964325823283200", // eisen
     "110756651694297088", // vincent
     "89441674844995584",  // styx
-    // prevent Wheatly reactions being removed in server suggestions and also allow some elegant handling
+    // prevent Wheatley reactions being removed in server suggestions and also allow some elegant handling
     "597216680271282192", // wheatley
 ]);
 

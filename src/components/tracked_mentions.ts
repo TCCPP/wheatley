@@ -11,7 +11,7 @@ const tracked_mentions = new Set([
     root_role_id,
     moderators_role_id,
     "892864085006360626", // red dragon
-    "970549026514698284", // wheatly
+    "970549026514698284", // wheatley
     "1013953887029444678", // dyno
 ]);
 
