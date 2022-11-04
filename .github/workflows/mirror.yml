@@ -1,0 +1,33 @@
+name: mirror
+
+on:
+  push:
+
+jobs:
+  mirror:
+    runs-on: ubuntu-20.04
+    steps:
+    - name: checkout source
+      uses: actions/checkout@v3
+      with:
+        path: source
+    - name: checkout mirror
+      uses: actions/checkout@v3
+      with:
+        repository: jeremy-rifkin/wheatley-mirror
+        token: ${{secrets.CHECKOUT_TOKEN}}
+        path: mirror
+    - name: copy files
+      run: |
+           rm -rfv mirror/* mirror/.github
+           mv -v source/* source/.github mirror
+           rm mirror/.github/workflows/mirror.yml
+    - name: cleanse sensitive files
+      run: |
+           cd mirror
+           python3 mirror_tools/cleanse.py
+    - name: commit
+      uses: stefanzweifel/git-auto-commit-action@v4
+      with:
+        repository: mirror
+        commit_message: "[Workflow] Changes from upstream"
