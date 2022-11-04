@@ -1,13 +1,10 @@
 import * as Discord from "discord.js";
-import { SlashCommandBuilder } from "@discordjs/builders";
 
 import { strict as assert } from "assert";
 
 import * as fs from "fs";
 
 import { critical_error, M } from "../utils";
-import { is_authorized_admin } from "../common";
-import { GuildCommandManager } from "../infra/guild_command_manager";
 
 import { Index, IndexEntry } from "../algorithm/search";
 import { man7_entry, man7_index } from "../../indexes/man7/types";
@@ -43,7 +40,7 @@ async function on_message(message: Discord.Message) {
                             name: "man7",
                             url: "https://man7.org/linux/man-pages"
                         })
-                        .setDescription(`No results found`)
+                        .setDescription("No results found")
                 ]});
                 make_message_deletable(message, result_message);
             } else {
@@ -101,7 +98,7 @@ function eliminate_aliases_and_duplicates_and_set_title(index_data: man7_index) 
             ...entry,
             title: (entry.short_description || entry.page_title)
                 + (entry.page_title.endsWith("p)") ? " (POSIX)" : "") // add posix tag to help prioritize other results
-        }
+        };
         entry_map[augmented_entry.path] = augmented_entry;
         if(augmented_entry.title in title_map) {
             title_map[augmented_entry.title].push(augmented_entry);
@@ -124,7 +121,10 @@ function eliminate_aliases_and_duplicates_and_set_title(index_data: man7_index) 
 }
 
 function setup_index(index_data: man7_index) {
-    index = new Index(eliminate_aliases_and_duplicates_and_set_title(index_data), (title: string) => [title.toLowerCase()]);
+    index = new Index(
+        eliminate_aliases_and_duplicates_and_set_title(index_data),
+        (title: string) => [title.toLowerCase()]
+    );
 }
 
 export function man7_testcase_setup() {
@@ -139,7 +139,8 @@ export function man7_testcase_setup() {
     setup_index(index_data);
 }
 
-export async function setup_man7(_client: Discord.Client, guild_command_manager: GuildCommandManager) {
+export async function setup_man7(_client: Discord.Client) {
+    // TODO: Come back and implement the slash command
     try {
         client = _client;
         /*const echo = new SlashCommandBuilder()

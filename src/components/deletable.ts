@@ -3,11 +3,9 @@ import { strict as assert } from "assert";
 import * as Discord from "discord.js";
 
 import { critical_error, M, SelfClearingMap } from "../utils";
-import { is_authorized_admin, MINUTE } from "../common";
+import { MINUTE } from "../common";
 
 let client: Discord.Client;
-
-const color = 0x7E78FE; //0xA931FF;
 
 type deletion_target = {
     id: string;

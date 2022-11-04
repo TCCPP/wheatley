@@ -1,12 +1,10 @@
-import * as Discord from "discord.js";
-import { SlashCommandBuilder } from "@discordjs/builders";
-
 import { strict as assert } from "assert";
 
+import * as Discord from "discord.js";
+
 import { critical_error, M } from "../utils";
-import { ApplicationCommandTypeMessage, is_authorized_admin } from "../common";
+import { ApplicationCommandTypeMessage } from "../common";
 import { GuildCommandManager } from "../infra/guild_command_manager";
-import { make_message_deletable } from "./deletable";
 import { ContextMenuCommandBuilder } from "discord.js";
 
 let client: Discord.Client;
@@ -17,7 +15,8 @@ async function on_interaction_create(interaction: Discord.Interaction) {
             M.debug("inspect command");
             await interaction.reply({
                 ephemeral: true,
-                content: Discord.escapeMarkdown(interaction.targetMessage.content).replace(/[<>]/g, c => `\\${c}`) || undefined
+                content: Discord.escapeMarkdown(interaction.targetMessage.content).replace(/[<>]/g, c => `\\${c}`)
+                    || undefined
             });
         }
     } catch(e) {

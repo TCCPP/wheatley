@@ -150,7 +150,7 @@ function parse_article(name: string, content: string): WikiArticle {
     data.body = "";
     data.fields = [];
     const lines = content.split("\n");
-    enum state { body, field, footer };
+    enum state { body, field, footer }
     let code = false;
     let current_state = state.body;
     for(const line of lines) {
@@ -178,7 +178,7 @@ function parse_article(name: string, content: string): WikiArticle {
         } else if(line.trim() == "[[user author]]" && !code) {
             data.set_author = true;
         } else if(line.trim().match(/^\[\[alias .+\]\]$/) && !code) {
-            let match = line.trim().match(/^\[\[alias (.+)\]\]$/)!;
+            const match = line.trim().match(/^\[\[alias (.+)\]\]$/)!;
             const aliases = match[1].split(",").map(alias => alias.trim());
             for(const alias of aliases) {
                 assert(!article_aliases.has(alias));
@@ -189,7 +189,7 @@ function parse_article(name: string, content: string): WikiArticle {
                 data.body += `\n${line}`;
             } else if(current_state == state.field) {
                 data.fields[data.fields.length - 1].value += `\n${line}`;
-            } else if(current_state == state.footer) {
+            } else if(current_state == state.footer) { //eslint-disable-line @typescript-eslint/no-unnecessary-condition
                 data.footer = (data.footer ?? "") + `\n${line}`;
             } else {
                 assert(false);
@@ -226,18 +226,18 @@ export async function setup_wiki(_client: Discord.Client, guild_command_manager:
             .setName("wiki")
             .setDescription("Retrieve wiki articles")
             .addStringOption(option =>
-                option.setName('article_name')
+                option.setName("article_name")
                     .setRequired(true)
-                    .setDescription('Phrase to search for')
+                    .setDescription("Phrase to search for")
                     .setAutocomplete(true));
         guild_command_manager.register(wiki);
         const howto = new SlashCommandBuilder()
             .setName("howto")
             .setDescription("Retrieve wiki articles (alternatively /wiki)")
             .addStringOption(option =>
-                option.setName('article_name')
+                option.setName("article_name")
                     .setRequired(true)
-                    .setDescription('Phrase to search for')
+                    .setDescription("Phrase to search for")
                     .setAutocomplete(true));
         guild_command_manager.register(howto);
         client.on("ready", on_ready);

@@ -90,6 +90,6 @@ parentPort.on("close", () => {
     process.exit();
 });
 
-parentPort!.postMessage({
+parentPort.postMessage({
     kick: true
 });

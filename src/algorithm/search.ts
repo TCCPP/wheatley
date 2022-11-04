@@ -271,7 +271,7 @@ abstract class BaseIndex<T extends IndexEntry, ExtraEntryData = {}> {
             } as T & BaseEntryData & ExtraEntryData;
         });
     }
-    // eslint-disable-next-line no-unused-vars
+    // eslint-disable-next-line @typescript-eslint/no-unused-vars
     abstract score(query: string, title: string): EntryScore;
     score_entry(query: string, entry: T & BaseEntryData & ExtraEntryData) {
         const scores: EntryScore[] = [];
@@ -283,7 +283,7 @@ abstract class BaseIndex<T extends IndexEntry, ExtraEntryData = {}> {
         }
         return max(scores, s => s.score);
     }
-    // eslint-disable-next-line no-unused-vars
+    // eslint-disable-next-line @typescript-eslint/no-unused-vars
     meets_threshold(score: number) {
         return true;
     }
@@ -344,7 +344,7 @@ class BasicIndex<T extends index_entry> extends BaseIndex<T> {
 
 // Strategy 0: Baseline ------------------------------------------------------------------------------------------------
 
-// eslint-disable-next-line no-unused-vars
+// eslint-disable-next-line @typescript-eslint/no-unused-vars
 class BasicIndex<T extends IndexEntry> extends BaseIndex<T> {
     constructor(entries: T[], normalizer = normalize_and_split_cppref_title) {
         super(entries, normalizer);
@@ -367,7 +367,7 @@ class BasicIndex<T extends IndexEntry> extends BaseIndex<T> {
 
 // Strategy 1: WeightedLevenshteinIndex --------------------------------------------------------------------------------
 
-// eslint-disable-next-line no-unused-vars
+// eslint-disable-next-line @typescript-eslint/no-unused-vars
 class WeightedLevenshteinIndex<T extends IndexEntry> extends BaseIndex<T> {
     constructor(entries: T[], normalizer = normalize_and_split_cppref_title) {
         super(entries, normalizer);
@@ -413,7 +413,7 @@ class WeightedLevenshteinIndex<T extends IndexEntry> extends BaseIndex<T> {
 
 const MAGIC_NGRAM_SIMILARITY_THRESHOLD = 0.39;
 
-// eslint-disable-next-line no-unused-vars
+// eslint-disable-next-line @typescript-eslint/no-unused-vars
 class NgramIndex<T extends IndexEntry> extends BaseIndex<T> {
     constructor(entries: T[], normalizer = normalize_and_split_cppref_title) {
         super(entries, normalizer);
@@ -448,7 +448,7 @@ class NgramIndex<T extends IndexEntry> extends BaseIndex<T> {
 
 // Strategy 3: IDF Ngrams ----------------------------------------------------------------------------------------------
 
-// eslint-disable-next-line no-unused-vars
+// eslint-disable-next-line @typescript-eslint/no-unused-vars
 class IDFNgramIndex<T extends IndexEntry> extends NgramIndex<T> {
     ngram_idf: Record<string, number>;
     default_idf: number; // idf for something we haven't seen, important for weighting the cosine

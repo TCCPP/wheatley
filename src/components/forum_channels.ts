@@ -19,8 +19,6 @@ const resolution_timeout = 12 * 60 * MINUTE; // after another 12 hours, open -> 
 
 const cleanup_limit = 400; // how many messages back in the archive to go
 
-// if a channel hasn't had activity in 2 hours prompt to ask a better question ?
-const message_inactivity_threshold = 2 * 60 * MINUTE;
 // if the op says thank you remind them to close the thread after 15 minutes
 const thank_you_timeout = 5 * MINUTE;
 

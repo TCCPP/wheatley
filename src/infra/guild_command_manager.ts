@@ -1,8 +1,6 @@
 import { REST } from "@discordjs/rest";
 import { Routes } from "discord-api-types/v9";
 
-import * as fs from "fs";
-
 import { critical_error, M } from "../utils";
 import { TCCPP_ID, wheatley_id } from "../common";
 

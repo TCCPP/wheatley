@@ -40,17 +40,27 @@ rules:
     - error
     - double
   no-unused-vars:
+    - off
+  no-constant-condition:
+    - off
+  semi-spacing:
+    - error
+    - before:
+        false
+      after:
+        true
+  no-empty:
+    - error
+    - allowEmptyCatch:
+        true
+  "@typescript-eslint/no-unused-vars":
     - warn
     - destructuredArrayIgnorePattern:
         ^_
       argsIgnorePattern:
         ^_
       varsIgnorePattern:
-        assert|M
-  no-constant-condition:
-    - off
-  "@typescript-eslint/no-unused-vars":
-    - off
+        ^assert$|^M$
   "@typescript-eslint/no-non-null-assertion":
     - off
   "@typescript-eslint/no-explicit-any":
@@ -61,3 +71,7 @@ rules:
     - error
     - allowConstantLoopConditions:
         true
+  "@typescript-eslint/no-this-alias":
+    - error
+    - allowedNames:
+      - self

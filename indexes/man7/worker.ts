@@ -2,13 +2,13 @@ import { strict as assert } from "assert";
 
 import { parentPort } from "worker_threads";
 
-import { RequestInfo, RequestInit, Response } from 'node-fetch';
+import { RequestInfo, RequestInit, Response } from "node-fetch";
 import { parseHTML } from "linkedom";
 import { man7_entry, WorkerJob, WorkerResponse } from "./types";
 import { MessageForThreadPool, MessageForWorker } from "../common/utils";
 
 const fetch = (url: RequestInfo, init?: RequestInit) =>
-  import('node-fetch').then(({ default: fetch }) => fetch(url, init));
+    import("node-fetch").then(({ default: fetch }) => fetch(url, init));
 
 assert(parentPort);
 
@@ -113,6 +113,6 @@ parentPort.on("close", () => {
     process.exit();
 });
 
-parentPort!.postMessage({
+parentPort.postMessage({
     kick: true
 });

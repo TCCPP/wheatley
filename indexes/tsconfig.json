@@ -8,5 +8,5 @@
         "allowJs": true,
         "skipLibCheck": true
     },
-    "exclude": ["en.cppreference.com", "upload.cppreference.com"]
+    "exclude": ["cppref/en.cppreference.com", "cppref/upload.cppreference.com"]
 }

@@ -2,12 +2,12 @@ import { strict as assert } from "assert";
 
 import * as Discord from "discord.js";
 
-import { RequestInfo, RequestInit, Response } from 'node-fetch';
+import { RequestInfo, RequestInit } from "node-fetch";
 const fetch = (url: RequestInfo, init?: RequestInit) =>
-  import("node-fetch").then(({ default: fetch }) => fetch(url, init));
+    import("node-fetch").then(({ default: fetch }) => fetch(url, init));
 
 import { async_exec_file, critical_error, M } from "../utils";
-import { ApplicationCommandTypeMessage, is_authorized_admin, MINUTE } from "../common";
+import { ApplicationCommandTypeMessage, MINUTE } from "../common";
 import { make_message_deletable } from "./deletable";
 import { ContextMenuCommandBuilder, MessageFlags } from "discord.js";
 import { GuildCommandManager } from "../infra/guild_command_manager";
@@ -197,7 +197,7 @@ function should_replace_original(replying_to: Discord.Message, request_timestamp
         && !replying_to.flags.has(MessageFlags.HasThread)
         && replying_to.attachments.size <= 2 // Also don't delete if it has additional/non-txt attachments
         && !replying_to.attachments.some(({contentType}) => contentType?.startsWith("text/") ?? false)
-            // and not a ;compile, ;asm, or other bot command
+    // and not a ;compile, ;asm, or other bot command
         && !ignore_prefixes.some(prefix => replying_to.content.startsWith(prefix));
 }
 
@@ -211,7 +211,7 @@ async function on_message(message: Discord.Message) {
                 const replying_to = await message.fetchReference();
 
                 M.debug(`${message.content.substring(1)} received`,
-                    [message.author.tag, message.author.id], replying_to.url);
+                        [message.author.tag, message.author.id], replying_to.url);
 
                 if(replying_to.author.bot) {
                     const reply = await message.reply("Can't format a bot message");

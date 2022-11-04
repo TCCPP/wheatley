@@ -1,6 +1,6 @@
 import * as Discord from "discord.js";
 import { strict as assert } from "assert";
-import { bot_spam_id, MINUTE, TCCPP_ID } from "../common";
+import { bot_spam_id, TCCPP_ID } from "../common";
 import { critical_error, denullify, M, textchannelify } from "../utils";
 
 let TCCPP: Discord.Guild;

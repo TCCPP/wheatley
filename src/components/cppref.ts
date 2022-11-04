@@ -1,13 +1,10 @@
 import * as Discord from "discord.js";
-import { SlashCommandBuilder } from "@discordjs/builders";
 
 import { strict as assert } from "assert";
 
 import * as fs from "fs";
 
 import { critical_error, format_list, M } from "../utils";
-import { is_authorized_admin } from "../common";
-import { GuildCommandManager } from "../infra/guild_command_manager";
 
 import { cppref_index, cppref_page, CpprefSubIndex } from "../../indexes/cppref/types";
 import { Index } from "../algorithm/search";
@@ -173,7 +170,7 @@ function eliminate_aliases_and_duplicates(pages: cppref_page[]) {
             title_map[page.title] = [page];
         }
     }
-    // eslint-disable-next-line no-unused-vars
+    // eslint-disable-next-line @typescript-eslint/no-unused-vars
     for(const [title, pages] of Object.entries(title_map)) {
         if(pages.length > 1) {
             if(new Set(pages.map(e => e.wgPageName)).size == 1) {
@@ -226,7 +223,8 @@ export function cppref_testcase_setup() {
     setup_indexes(index_data);
 }
 
-export async function setup_cppref(_client: Discord.Client, guild_command_manager: GuildCommandManager) {
+export async function setup_cppref(_client: Discord.Client) {
+    // TODO: Actually implement the slash command
     try {
         client = _client;
         /*const echo = new SlashCommandBuilder()

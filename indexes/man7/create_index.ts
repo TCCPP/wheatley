@@ -3,11 +3,11 @@ import { strict as assert } from "assert";
 import * as fs from "fs";
 import * as path from "path";
 
-import { RequestInfo, RequestInit } from 'node-fetch';
+import { RequestInfo, RequestInit } from "node-fetch";
 import { parseHTML } from "linkedom";
 
 const fetch = (url: RequestInfo, init?: RequestInit) =>
-  import('node-fetch').then(({ default: fetch }) => fetch(url, init));
+    import("node-fetch").then(({ default: fetch }) => fetch(url, init));
 
 import { ThreadPool } from "../common/utils";
 
@@ -29,11 +29,12 @@ const base_url = "https://man7.org/linux/man-pages/";
     const dom = parseHTML(content);
     const document = dom.window.document;
 
-    const links = document.querySelectorAll("pre a") as NodeListOf<HTMLLinkElement>;
+    // Interesting type assertion bug https://github.com/typescript-eslint/typescript-eslint/issues/2817
+    const links = document.querySelectorAll<HTMLLinkElement>("pre a");
     const pool = new ThreadPool<WorkerJob, WorkerResponse>(path.resolve(__dirname, "worker.js"), 24);
     for(const link of links) {
         assert(link.href.startsWith("./"));
-        const path = link.href.substring(2)
+        const path = link.href.substring(2);
         if(!milestones.has(path)) {
             pool.submit_job({
                 path,

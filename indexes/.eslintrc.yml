@@ -1,6 +1,6 @@
 extends:
-  - ../../.eslintrc.yml
+  - ../.eslintrc.yml
 parserOptions:
   ecmaVersion: latest
   sourceType: module
-  project: ./indexes/cppref/tsconfig.json
+  project: ./indexes/tsconfig.json

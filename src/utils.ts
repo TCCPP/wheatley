@@ -8,7 +8,6 @@ import { execFile, ExecFileOptions } from "child_process";
 
 import { MINUTE, zelis_id } from "./common";
 import { strict as assert } from "assert";
-import { decode_snowflake } from "./components/snowflake";
 
 function get_caller_location() { // https://stackoverflow.com/a/53339452/15675011
     const e = new Error();
@@ -400,7 +399,8 @@ export function format_list(items: string[]) {
     }
 }
 
-export async function async_exec_file(file: string, args?: string[], options?: fs.ObjectEncodingOptions & ExecFileOptions, input?: string) {
+export async function async_exec_file(file: string, args?: string[],
+                                      options?: fs.ObjectEncodingOptions & ExecFileOptions, input?: string) {
     return new Promise<{stdout: string | Buffer, stderr: string | Buffer}>((resolve, reject) => {
         const child = execFile(file, args, options, (error, stdout, stderr) => {
             if(error) {

@@ -1,6 +1,0 @@
-extends:
-  - ../../.eslintrc.yml
-parserOptions:
-  ecmaVersion: latest
-  sourceType: module
-  project: ./indexes/man7/tsconfig.json

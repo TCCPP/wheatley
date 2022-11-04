@@ -4,7 +4,7 @@ import { lookup, man7_testcase_setup } from "../src/components/man7";
 
 type TestCase = {
     query: string | string[];
-    path?: string;
+    path: string;
 };
 
 const cases: TestCase[] = [
@@ -38,20 +38,12 @@ describe("man cases", () => {
     for(const test_case of cases) {
         const queries = test_case.query instanceof Array ? test_case.query : [test_case.query];
         for(const query of queries) {
-            if(test_case.path) {
-                it(`!cref should find ${query}`, done => {
-                    const result = lookup(query);
-                    assert(result, "search did not find a result when it should have");
-                    expect(result.path).to.equal(test_case.path);
-                    done();
-                });
-            } else if(test_case.path === null) {
-                it(`!cref shouldn't find ${query}`, done => {
-                    const result = lookup(query);
-                    assert(!result, "search found a result when it shouldn't have");
-                    done();
-                });
-            }
+            it(`!cref should find ${query}`, done => {
+                const result = lookup(query);
+                assert(result, "search did not find a result when it should have");
+                expect(result.path).to.equal(test_case.path);
+                done();
+            });
         }
     }
 });

@@ -1,7 +1,5 @@
 import { strict as assert } from "assert";
 
-import * as EventEmitter from "events";
-
 import { Worker } from "worker_threads";
 
 type AsyncQueueResult<T> = {
@@ -13,7 +11,6 @@ export class AsyncQueue<T> implements AsyncIterable<T> {
     data: T[] = [];
     draining = false;
     data_waiters: (() => void)[] = [];
-    constructor() {}
     push(item: T) {
         assert(!this.draining);
         this.data.push(item);
@@ -64,10 +61,10 @@ export class AsyncQueue<T> implements AsyncIterable<T> {
         };
     }
     [Symbol.asyncIterator]() {
-        const q = this;
+        const self = this;
         return {
             async next(): Promise<IteratorResult<T>> {
-                return q.get_next();
+                return self.get_next();
             }
         };
     }
@@ -127,10 +124,10 @@ export class ThreadPool<JobType, ResultType> implements AsyncIterable<ResultType
         this.jobs.drain();
     }
     [Symbol.asyncIterator]() {
-        const q = this;
+        const self = this;
         return {
             async next(): Promise<IteratorResult<ResultType>> {
-                return q.results.get_next();
+                return self.results.get_next();
             }
         };
     }

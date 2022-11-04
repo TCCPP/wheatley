@@ -1,12 +1,10 @@
 import * as Discord from "discord.js";
 import { strict as assert } from "assert";
 import { critical_error, denullify, get_tag, M } from "../utils";
-import { colors, forum_help_channels, is_authorized_admin, TCCPP_ID, wheatley_id } from "../common";
+import { colors, forum_help_channels, is_authorized_admin, wheatley_id } from "../common";
 import { make_message_deletable } from "./deletable";
 
 let client: Discord.Client;
-
-let TCCPP : Discord.Guild;
 
 /*
  * Forum thread handling:
@@ -131,7 +129,6 @@ async function on_ready() {
     try {
         client.on("messageCreate", on_message);
         client.on("threadCreate", on_thread_create);
-        TCCPP = await client.guilds.fetch(TCCPP_ID);
     } catch(e) {
         critical_error(e);
     }
