@@ -1,3 +1,5 @@
+[[[alias vla]]]
+
 # What Is a VLA And Why Is It 'Bad'?
 
 A [Variable Length Array (VLA)](https://en.cppreference.com/w/c/language/array#Variable-length_arrays)
@@ -16,7 +18,5 @@ flag) it can be easy to create a VLA by accident, even in C++ with some compiler
 ⚠ supported as non-standard extension by GCC, clang
 
 ## [See Also]
-<:stackoverflow:874353689031233606>
-[What technical disadvantages do C99-style VLAs have?](https://stackoverflow.com/q/12407754/5740428)
-<:stackoverflow:874353689031233606>
-[What's the point of VLA anyway?](https://stackoverflow.com/q/22530363/5740428)
+<:stackoverflow:874353689031233606> [What technical disadvantages do C99-style VLAs have?](https://stackoverflow.com/q/12407754/5740428)
+<:stackoverflow:874353689031233606> [What's the point of VLA anyway?](https://stackoverflow.com/q/22530363/5740428)

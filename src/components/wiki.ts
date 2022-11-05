@@ -5,14 +5,14 @@ import * as fs from "fs";
 import * as path from "path";
 
 import { critical_error, M } from "../utils";
-import { colors } from "../common";
+import { bot_spam_id, colors } from "../common";
 import { make_message_deletable } from "./deletable";
 import { SlashCommandBuilder } from "discord.js";
 import { GuildCommandManager } from "../infra/guild_command_manager";
 
 let client: Discord.Client;
 
-const wiki_dir = "wiki_articles";
+export const wiki_dir = "wiki_articles";
 
 async function* walk_dir(dir: string): AsyncGenerator<string> { // todo: duplicate
     for(const f of await fs.promises.readdir(dir)) {
@@ -55,8 +55,30 @@ async function send_wiki_article(article: WikiArticle, message: Discord.Message)
 async function on_message(message: Discord.Message) {
     try {
         if(message.author.bot) return; // Ignore bots
+        // preview command
+        if(message.content.startsWith("!wiki-preview")) {
+            M.log("Received wiki preview command", message.author.id, message.author.tag, message.url);
+            if(message.channel.id != bot_spam_id) {
+                const reply = await message.reply(`!wiki-preview must be used in <#${bot_spam_id}>`);
+                make_message_deletable(message, reply);
+                return;
+            }
+            const content = message.content.substring("!wiki-preview".length);
+            let article: WikiArticle;
+            try {
+                article = parse_article(null, content);
+            } catch(e) {
+                message.reply("Parse error: " + e);
+                return;
+            }
+            try {
+                await send_wiki_article(article, message);
+            } catch(e) {
+                message.reply("Error while building / sending: " + e);
+            }
+        }
         if(message.content.startsWith("!wiki") || message.content.startsWith("!howto")) {
-            M.log("got wiki command");
+            M.log("Received wiki command", message.author.id, message.author.tag, message.url);
             const query = (message.content.startsWith("!wiki") ?
                 message.content.substring("!wiki".length).trim()
                 : message.content.substring("!howto".length).trim())
@@ -69,6 +91,7 @@ async function on_message(message: Discord.Message) {
         }
         // check aliases
         if(message.content.startsWith("!") && article_aliases.has(message.content.substring(1))) {
+            M.log(`Received ${message.content} (wiki alias)`, message.author.id, message.author.tag, message.url);
             const article_name = article_aliases.get(message.content.substring(1))!;
             await send_wiki_article(articles[article_name], message);
             return;
@@ -145,7 +168,7 @@ async function on_ready() {
     }
 }
 
-function parse_article(name: string, content: string): WikiArticle {
+export function parse_article(name: string | null, content: string): WikiArticle {
     const data: Partial<WikiArticle> = {};
     data.body = "";
     data.fields = [];
@@ -153,12 +176,12 @@ function parse_article(name: string, content: string): WikiArticle {
     enum state { body, field, footer }
     let code = false;
     let current_state = state.body;
-    for(const line of lines) {
+    for(const [i, line] of lines.entries()) {
         if(line.trim().startsWith("```")) {
             code = !code;
         }
         if(line.match(/^#(?!#).+$/) && !code) { // H1
-            assert(!data.title);
+            assert(!data.title, "More than one title (# H1) provided");
             data.title = line.substring(1).trim();
         } else if(line.match(/^##(?!#).+$/) && !code) { // H2
             let name = line.substring(2).trim();
@@ -175,15 +198,20 @@ function parse_article(name: string, content: string): WikiArticle {
             current_state = state.field;
         } else if(line.trim().toLowerCase() == "<!-- footer -->" && !code) {
             current_state = state.footer;
-        } else if(line.trim() == "[[user author]]" && !code) {
+        } else if(line.trim() == "[[[user author]]]" && !code) {
             data.set_author = true;
-        } else if(line.trim().match(/^\[\[alias .+\]\]$/) && !code) {
-            const match = line.trim().match(/^\[\[alias (.+)\]\]$/)!;
+        } else if(line.trim().match(/^\[\[\[alias .+\]\]\]$/) && !code) {
+            const match = line.trim().match(/^\[\[\[alias (.+)\]\]\]$/)!;
             const aliases = match[1].split(",").map(alias => alias.trim());
-            for(const alias of aliases) {
-                assert(!article_aliases.has(alias));
-                article_aliases.set(alias, name);
+            // null is passed by the preview command, don't actually want to set aliases in for
+            if(name != null) {
+                for(const alias of aliases) {
+                    assert(!article_aliases.has(alias));
+                    article_aliases.set(alias, name);
+                }
             }
+        } else if(line.trim().match(/\[\[\[.*\]\]\]/) && !code) {
+            throw `Parse error on line ${i + 1}, unrecognized [[[]]] directive`;
         } else {
             if(current_state == state.body) {
                 data.body += `\n${line}`;
@@ -196,13 +224,14 @@ function parse_article(name: string, content: string): WikiArticle {
             }
         }
     }
+    assert(!code, "Unclosed code block in wiki article");
     data.body = data.body.trim();
     if(data.body == "") {
         data.body = null;
     }
     data.footer = data.footer?.trim();
-    assert(data.title);
-    assert(data.fields);
+    assert(data.title, "Wiki article must have a title");
+    assert(data.fields); // will always be true
     // need to do this nonsense for TS....
     const {title, body, fields, footer, set_author} = data;
     return {

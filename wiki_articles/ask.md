@@ -1,5 +1,5 @@
-[[user author]]
-[[alias ask]]
+[[[user author]]]
+[[[alias ask]]]
 
 # Just Post Your Question
 

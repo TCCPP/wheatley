@@ -1,3 +1,5 @@
+[[[alias asan]]]
+
 # How To Use Sanitizers
 
 Sanitizers are tools which generate additional code in your program that can catch many common programming mistakes,
