@@ -158,7 +158,7 @@ async function main() {
         await setup_status(client);
         await setup_username_manager(client);
         await setup_cppref(client, guild_command_manager);
-        await setup_man7(client);
+        await setup_man7(client, guild_command_manager);
         await setup_format(client, guild_command_manager);
         await setup_deletable(client);
         await setup_anti_screenshot(client);

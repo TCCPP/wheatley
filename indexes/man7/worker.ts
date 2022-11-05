@@ -41,7 +41,37 @@ function process_field(text: string) {
 }
 
 function process_synopsis(text: string) {
-    return text.split("\n").map(line => line.replace(/^ {7}/, "")).filter(line => line.trim().length != 0).join("\n");
+    const original_lines = text.split("\n");
+    const lines = original_lines.slice(0, 15);
+    const remaining_lines_not_empty = original_lines.slice(15).some(l => l.trim() != "");
+    let code = false;
+    let output = "";
+    for(const line of lines) {
+        if(line.startsWith("       ")) {
+            if(!code) {
+                output += "\n```cpp";
+                code = true;
+            }
+            output += "\n" + line.substring(7);
+        } else if(line.startsWith("   ")) {
+            if(code) {
+                output += "\n```\n";
+                code = false;
+            }
+            // .substring(2) instead of .substring(3) to leave one space at the start
+            output += line.substring(2);
+        } else {
+            assert(line.trim() == "");
+            output += "\n";
+        }
+    }
+    if(code) {
+        output += "\n```";
+    }
+    if(remaining_lines_not_empty) {
+        output += "\n... (truncated)";
+    }
+    return output.trim();
 }
 
 async function fulfill_job(job: WorkerJob): Promise<man7_entry | null> {

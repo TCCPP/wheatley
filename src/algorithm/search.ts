@@ -476,6 +476,7 @@ class IDFNgramIndex<T extends IndexEntry> extends NgramIndex<T> {
     override init_bookkeeping() {
         this.ngram_idf = {};
         this.keyword_count = 0;
+        this.posix_count = 0;
     }
     compute_idf(document_count: number) {
         for(const ngram in this.ngram_idf) {

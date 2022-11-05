@@ -1,4 +1,5 @@
 import * as Discord from "discord.js";
+import { SlashCommandBuilder } from "discord.js";
 
 import { strict as assert } from "assert";
 
@@ -9,7 +10,7 @@ import { critical_error, M } from "../utils";
 import { Index, IndexEntry } from "../algorithm/search";
 import { man7_entry, man7_index } from "../../indexes/man7/types";
 import { make_message_deletable } from "./deletable";
-
+import { GuildCommandManager } from "../infra/guild_command_manager";
 
 let client: Discord.Client;
 
@@ -23,6 +24,10 @@ export enum TargetIndex { C, CPP }
 
 export function lookup(query: string) {
     return index.search(query);
+}
+
+function lookup_top_5(query: string) {
+    return index.search_get_top_5(query);
 }
 
 async function on_message(message: Discord.Message) {
@@ -56,7 +61,7 @@ async function on_message(message: Discord.Message) {
                 if(result.synopsis) {
                     embed.addFields({
                         name: "Synopsis",
-                        value: `\`\`\`c\n${result.synopsis}\n\`\`\``
+                        value: result.synopsis
                     });
                 }
                 const result_message = await message.channel.send({embeds: [embed]});
@@ -68,22 +73,56 @@ async function on_message(message: Discord.Message) {
     }
 }
 
-/*async function on_interaction_create(interaction: Discord.Interaction) {
-    if(interaction.isCommand() && interaction.commandName == "echo") {
+async function on_interaction_create(interaction: Discord.Interaction) {
+    if(interaction.isCommand() && interaction.commandName == "man") {
         assert(interaction.isChatInputCommand());
-        const input = interaction.options.getString("input");
-        M.debug("echo command", input);
-        await interaction.reply({
-            ephemeral: true,
-            content: input || undefined
-        });
+        const query = interaction.options.getString("query")!.trim();
+        const result = lookup(query);
+        M.debug(`${interaction.commandName} query`, query, result ? `https://${result.path}` : null);
+        if(result === null) {
+            await interaction.reply({embeds: [
+                new Discord.EmbedBuilder()
+                    .setColor(color)
+                    .setAuthor({
+                        name: "man7",
+                        url: "https://man7.org/linux/man-pages"
+                    })
+                    .setDescription("No results found")
+            ]});
+        } else {
+            const embed = new Discord.EmbedBuilder()
+                .setColor(color)
+                .setAuthor({
+                    name: "man7",
+                    url: "https://man7.org/linux/man-pages"
+                })
+                .setTitle(result.page_title)
+                .setURL(`https://man7.org/linux/man-pages/${result.path}`)
+                .setDescription(result.short_description ?? null);
+            if(result.synopsis) {
+                embed.addFields({
+                    name: "Synopsis",
+                    value: result.synopsis
+                });
+            }
+            await interaction.reply({embeds: [embed]});
+        }
+    } else if(interaction.isAutocomplete() && interaction.commandName == "man") {
+        const query = interaction.options.getFocused().trim();
+        await interaction.respond(
+            lookup_top_5(query)
+                .map(page => ({
+                    name: `${page.title.substring(0, 100 - 14)} . . . . ${Math.round(page.score * 100) / 100}`,
+                    value: page.title
+                }))
+        );
     }
-}*/
+}
 
 async function on_ready() {
     try {
         client.on("messageCreate", on_message);
-        //client.on("interactionCreate", on_interaction_create);
+        client.on("interactionCreate", on_interaction_create);
     } catch(e) {
         critical_error(e);
     }
@@ -96,8 +135,7 @@ function eliminate_aliases_and_duplicates_and_set_title(index_data: man7_index) 
         assert(!(entry.path in entry_map));
         const augmented_entry = {
             ...entry,
-            title: (entry.short_description || entry.page_title)
-                + (entry.page_title.endsWith("p)") ? " (POSIX)" : "") // add posix tag to help prioritize other results
+            title: entry.page_title + (entry.page_title.endsWith("p)") ? " (POSIX)" : "")
         };
         entry_map[augmented_entry.path] = augmented_entry;
         if(augmented_entry.title in title_map) {
@@ -121,6 +159,7 @@ function eliminate_aliases_and_duplicates_and_set_title(index_data: man7_index) 
 }
 
 function setup_index(index_data: man7_index) {
+    // TODO: Prioritize (3), then (2), then (1), then other?
     index = new Index(
         eliminate_aliases_and_duplicates_and_set_title(index_data),
         (title: string) => [title.toLowerCase()]
@@ -139,18 +178,19 @@ export function man7_testcase_setup() {
     setup_index(index_data);
 }
 
-export async function setup_man7(_client: Discord.Client) {
+export async function setup_man7(_client: Discord.Client, guild_command_manager: GuildCommandManager) {
     // TODO: Come back and implement the slash command
     try {
         client = _client;
-        /*const echo = new SlashCommandBuilder()
-            .setName("echo")
-            .setDescription("Echo")
+        const man7 = new SlashCommandBuilder()
+            .setName("man")
+            .setDescription("Query linux man pages")
             .addStringOption(option =>
-                option.setName("input")
-                    .setDescription("The input to echo back")
+                option.setName("query")
+                    .setDescription("Query")
+                    .setAutocomplete(true)
                     .setRequired(true));
-        guild_command_manager.register(echo);*/
+        guild_command_manager.register(man7);
         const index_data = JSON.parse(
             await fs.promises.readFile("indexes/man7/man7_index.json", {encoding: "utf-8"})
         ) as man7_index;
