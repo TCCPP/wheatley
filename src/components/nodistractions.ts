@@ -101,7 +101,7 @@ async function handle_timer() {
         // pop entry and remove role
         const entry = undistract_queue.shift()!;
         const member = await TCCPP.members.fetch(entry.id);
-        M.debug("removing !nodistractions", [member.id, member.user.tag]);
+        M.log("removing !nodistractions", member.id, member.user.tag);
         if(member.roles.cache.some(r => r.id == no_off_topic)) { // might have been removed externally
             await member.roles.remove(no_off_topic);
         }
@@ -129,7 +129,7 @@ function set_timer() {
 
 async function apply_no_distractions(target: Discord.GuildMember, message: Discord.Message, start: number,
                                      duration: number) {
-    M.debug("Applying !nodistractions");
+    M.log("Applying !nodistractions", target.user.id, target.user.tag);
     // error handling
     if(target.roles.cache.some(r => r.id == no_off_topic)) {
         if(target.id in database.get<database_schema>("nodistractions")) {
@@ -229,7 +229,7 @@ async function on_message(message: Discord.Message) {
         }
 
         if(message.content.trim().toLowerCase() == "!removenodistractions") {
-            M.debug("Got !removenodistractions");
+            M.log("Received !removenodistractions", message.author.id, message.author.tag);
             let member = message.member;
             if(member == null) {
                 try {
@@ -258,7 +258,7 @@ async function on_message(message: Discord.Message) {
         // [ "!nodistractions 123d", "123", "d" ]
         const match = message.content.match(nodistractions_re);
         if(match != null) {
-            M.debug("Got !nodistractions", [message.author.id, message.author.tag]);
+            M.debug("Received !nodistractions", message.author.id, message.author.tag);
             assert(match.length == 3);
             const n = parseInt(match[1]);
             const u = match[2];

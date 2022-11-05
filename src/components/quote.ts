@@ -142,7 +142,7 @@ async function on_message(message: Discord.Message) {
         //if(message.guildId != TCCPP_ID) return; // Ignore messages outside TCCPP (e.g. dm's)
         const match = message.content.match(quote_command_re);
         if(match != null) {
-            M.log("got quote command", message.content, match);
+            M.log("Received quote command", message.content, message.url);
             assert(match.length == 5);
             const [op, guild_id, channel_id, message_id] = match.slice(1);
             if(guild_id == TCCPP_ID) {

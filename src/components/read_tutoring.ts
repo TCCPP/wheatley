@@ -12,6 +12,7 @@ async function on_message(message: Discord.Message) {
     try {
         if(message.author.bot) return; // Ignore bots
         if(message.channel.id == tutoring_requests_id) {
+            M.log("Sending read tutoring message", message.author.id, message.author.tag, message.url);
             const reply = await message.reply({embeds: [
                 new Discord.EmbedBuilder()
                     .setColor(color)

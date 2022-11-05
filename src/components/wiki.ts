@@ -5,7 +5,7 @@ import * as fs from "fs";
 import * as path from "path";
 
 import { critical_error, M } from "../utils";
-import { colors, is_authorized_admin } from "../common";
+import { colors } from "../common";
 import { make_message_deletable } from "./deletable";
 import { SlashCommandBuilder } from "discord.js";
 import { GuildCommandManager } from "../infra/guild_command_manager";

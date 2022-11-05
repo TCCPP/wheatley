@@ -18,7 +18,7 @@ async function on_message(message: Discord.Message) {
         if(message.content == "!wping"
         || message.content == "!wstatus"
         && is_authorized_admin(message.member!)) {
-            M.log("got ping command");
+            M.log("Received ping command");
             const reply = await message.channel.send({embeds: [
                 new Discord.EmbedBuilder()
                     .setColor(color)
@@ -40,7 +40,7 @@ async function on_interaction_create(interaction: Discord.Interaction) {
     if(interaction.isCommand() && interaction.commandName == "echo") {
         assert(interaction.isChatInputCommand());
         const input = interaction.options.getString("input");
-        M.debug("echo command", input);
+        M.debug("Received echo command", input);
         await interaction.reply({
             ephemeral: true,
             content: input || undefined

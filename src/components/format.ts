@@ -105,6 +105,7 @@ async function clang_format(text: string, args: string[]) {
     const {stdout, stderr} = await async_exec_file(clang_format_path, args, {}, text);
     if(stderr.toString("utf8").trim().length != 0) {
         M.debug("Clang format stderr", stderr.toString("utf8"));
+        // TODO: Ping zelis?
     }
     return stdout.toString("utf8");
 }
@@ -210,8 +211,7 @@ async function on_message(message: Discord.Message) {
             if(message.type == Discord.MessageType.Reply) {
                 const replying_to = await message.fetchReference();
 
-                M.debug(`${message.content.substring(1)} received`,
-                        [message.author.tag, message.author.id], replying_to.url);
+                M.log(`Received ${message.content}`, message.author.tag, message.author.id, replying_to.url);
 
                 if(replying_to.author.bot) {
                     const reply = await message.reply("Can't format a bot message");
@@ -268,7 +268,7 @@ async function on_interaction_create(interaction: Discord.Interaction) {
         if(interaction.isMessageContextMenuCommand() && interaction.commandName == "format") {
             const replying_to = interaction.targetMessage;
 
-            M.debug("received format interaction", [interaction.user.tag, interaction.user.id], replying_to.url);
+            M.debug("Received format command", interaction.user.tag, interaction.user.id, replying_to.url);
 
             if(replying_to.author.bot) {
                 await interaction.reply({

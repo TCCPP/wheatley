@@ -15,9 +15,10 @@ const tracked_mentions = new Set([
     "1013953887029444678", // dyno
 ]);
 
-function check_tracked_mention_and_notify(message: Discord.Message) {
+async function check_tracked_mention_and_notify(message: Discord.Message) {
     const mentions = [...new Set(message.mentions.roles.map(v => v.id).filter(id => tracked_mentions.has(id)))];
     if(mentions.length > 0) {
+        M.log("Spotted tracked mention", message.url, message.author.id, message.author.tag);
         const embed = new Discord.EmbedBuilder()
             .setColor(colors.color)
             .setAuthor({
@@ -31,17 +32,17 @@ function check_tracked_mention_and_notify(message: Discord.Message) {
                 text: `ID: ${message.author.id}`
             })
             .setTimestamp();
-        action_log_channel.send({ embeds: [embed] });
+        await action_log_channel.send({ embeds: [embed] });
     }
 }
 
-function on_message(message: Discord.Message) {
+async function on_message(message: Discord.Message) {
     try {
         if(message.author.id == client.user!.id) return; // Ignore self
         if(message.author.bot) return; // Ignore bots
         if(message.guildId != TCCPP_ID) return; // Ignore messages outside TCCPP (e.g. dm's)
         if(message.mentions.roles.size > 0) {
-            check_tracked_mention_and_notify(message);
+            await check_tracked_mention_and_notify(message);
         }
     } catch(e) {
         critical_error(e);

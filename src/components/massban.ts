@@ -11,11 +11,11 @@ const snowflake_re = /\b\d{10,}\b/g;
 function do_mass_ban(msg: Discord.Message) {
     // TODO: Do DM logic?
     // TODO: Set entry.purged if necessary?
-    M.debug("Heard massban command");
+    M.log("Got massban command");
     assert(msg.guild != null);
     const ids = msg.content.match(snowflake_re);
     if(ids != null && ids.length > 0) {
-        M.log("Banning...");
+        M.debug("Banning...");
         msg.channel.send("Banning...");
         M.debug(ids);
         for(const id of ids) {

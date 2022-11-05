@@ -36,7 +36,7 @@ async function on_message(message: Discord.Message) {
         if(message.content.startsWith("!man ")) {
             const query = message.content.slice("!man".length).trim();
             const result = lookup(query);
-            M.debug("man7 query", query, result);
+            M.log("man7 query", query, result ? `https://man7.org/linux/man-pages/${result.path}` : null);
             if(result === null) {
                 const result_message = await message.channel.send({embeds: [
                     new Discord.EmbedBuilder()
@@ -78,7 +78,8 @@ async function on_interaction_create(interaction: Discord.Interaction) {
         assert(interaction.isChatInputCommand());
         const query = interaction.options.getString("query")!.trim();
         const result = lookup(query);
-        M.debug(`${interaction.commandName} query`, query, result ? `https://${result.path}` : null);
+        M.log("man7 query", query,
+              result ? `https://man7.org/linux/man-pages/${result.path}` : null);
         if(result === null) {
             await interaction.reply({embeds: [
                 new Discord.EmbedBuilder()

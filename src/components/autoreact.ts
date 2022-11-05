@@ -27,14 +27,17 @@ async function on_message(message: Discord.Message) {
         if(message.author.bot) return; // Ignore bots
         if(message.guildId != TCCPP_ID) return; // Ignore messages outside TCCPP (e.g. dm's)
         if(message.channel.id == introductions_channel_id) {
-            if(message.member == null) M.warn("Why??", message);
+            if(message.member == null) M.warn("Why??", message); // TODO: Ping zelis?
             if(await is_new_member(message)) {
                 await delay(1 * MINUTE);
+                M.log("Waving to new user", message.author.tag, message.author.id, message.url);
                 await message.react("👋");
             }
         } else if(message.channel.id == memes_channel_id && message.attachments.size > 0) {
+            M.log("adding star reaction", message.author.tag, message.author.id, message.url);
             await message.react("⭐");
         } else if(message.channel.id == server_suggestions_channel_id) {
+            M.log("adding server suggestion reactions", message.author.tag, message.author.id, message.url);
             await message.react("👍");
             await message.react("👎");
         }
@@ -51,6 +54,7 @@ async function catch_up() {
     const messages = await introductions_channel.messages.fetch({ limit: 100, cache: false });
     for(const [_, message] of messages) {
         if(await is_new_member(message)) {
+            M.log("Waving to new user", message.author.tag, message.author.id, message.url);
             message.react("👋");
         }
     }

@@ -17,14 +17,14 @@ async function interval() {
             // pink
             if(m.roles.cache.some(r => r.id == pink_role_id)) {
                 if(m.premiumSince == null) {
-                    M.debug("removing pink for", m.user.tag);
+                    M.log("removing pink for", m.user.tag);
                     m.roles.remove(pink_role!).catch(M.error);
                 }
             }
             // skill roles
             const s = m.roles.cache.filter(r => skill_role_ids.has(r.id));
             if(s.size > 1) {
-                M.debug("duplicate skill roles", m.user.tag);
+                M.log("removing duplicate skill roles for", m.user.tag);
                 M.debug(m.user.tag);
                 //M.debug(s);
                 s.sort((a, b) => b.rawPosition - a.rawPosition);

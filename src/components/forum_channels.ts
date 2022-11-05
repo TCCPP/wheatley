@@ -58,7 +58,7 @@ async function prompt_close(thread: Discord.ThreadChannel) {
     if(thread.appliedTags.includes(solved_tag)) {
         // no action needed - has been marked !solved
     } else {
-        M.log("Sending !solved prompt timeout for thread", [thread.id, thread.name]);
+        M.log("Sending !solved prompt timeout for thread", thread.id, thread.name, thread.url);
         thread.send(`<@${thread.ownerId}> Has your question been resolved? If so, run \`!solved\` :)`);
     }
 }
@@ -84,8 +84,8 @@ async function on_message(message: Discord.Message) {
                         const content = message.content.toLowerCase();
                         if(content.match(thank_you_re) != null) {
                             if(!possibly_resolved.has(thread.id)) {
-                                M.debug("Setting !solved prompt timeout for thread", [thread.id, thread.name],
-                                        "based off of", [content]);
+                                M.debug("Setting !solved prompt timeout for thread", thread.id, thread.name, thread.url,
+                                        "based off of", message.url);
                                 timeout_map.set(thread.id, setTimeout(async () => {
                                     await prompt_close(thread);
                                 }, thank_you_timeout));
@@ -97,7 +97,6 @@ async function on_message(message: Discord.Message) {
                     // if we reach here, it's a non-thank message
                     // might need to restart the timeout
                     if(timeout_map.has(thread.id)) {
-                        M.debug("Restarting !solved prompt timeout for thread", [thread.id, thread.name]);
                         clearTimeout(timeout_map.get(thread.id));
                         timeout_map.set(thread.id, setTimeout(async () => {
                             await prompt_close(thread);
@@ -146,12 +145,12 @@ async function check_thread_activity(thread: Discord.ThreadChannel, open_tag: st
     const last_message = decode_snowflake(thread.lastMessageId);
     // if the thread is solved and needs to be re-archived
     if(thread.appliedTags.includes(solved_tag) && !thread.archived && now - last_message >= solved_archive_timeout) {
-        M.log("Archiving solved channel", [thread.id, thread.name]);
+        M.log("Archiving solved channel", thread.id, thread.name, thread.url);
         thread.setArchived(true);
     }
     // if the thread is open has been inactive
     else if(!thread.appliedTags.includes(solved_tag) && !thread.archived && now - last_message >= inactive_timeout) {
-        M.log("Archiving inactive channel", [thread.id, thread.name]);
+        M.log("Archiving inactive channel", thread.id, thread.name, thread.url);
         await thread.send({
             embeds: [
                 create_embed(undefined, colors.color, "This question thread is being automatically closed."
@@ -163,7 +162,7 @@ async function check_thread_activity(thread: Discord.ThreadChannel, open_tag: st
     }
     // if the thread is open and is inactive after initially being archived - mark it solved
     else if(!thread.appliedTags.includes(solved_tag) && thread.archived && now - last_message >= resolution_timeout) {
-        M.log("Resolving channel", [thread.id, thread.name]);
+        M.log("Resolving channel", thread.id, thread.name, thread.url);
         await thread.setArchived(false);
         await thread.send({
             embeds: [
@@ -180,7 +179,7 @@ async function misc_checks(thread: Discord.ThreadChannel, open_tag: string, solv
     const solved_open_count = thread.appliedTags.filter(tag => [solved_tag, open_tag].includes(tag)).length;
     if(solved_open_count != 1) {
         M.log("Setting thread with", solved_open_count, "solved/open tags to have one such tag",
-              [thread.id, thread.name]);
+              thread.id, thread.name, thread.url);
         const {archived} = thread;
         if(archived) await thread.setArchived(false);
         const tag = thread.appliedTags.includes(solved_tag) ? solved_tag : open_tag;
@@ -191,7 +190,7 @@ async function misc_checks(thread: Discord.ThreadChannel, open_tag: string, solv
     }
     // Cleanup the legacy system: If the thread name starts with [SOLVED], remove it
     if(thread.name.startsWith("[SOLVED]")) {
-        M.log("Removing \"[SOLVED]\" from forum thread name", [thread.id, thread.name]);
+        M.log("Removing \"[SOLVED]\" from forum thread name", thread.id, thread.name, thread.url);
         const {archived} = thread;
         if(archived) await thread.setArchived(false);
         await thread.setName(thread.name.slice("[SOLVED]".length).trim());
@@ -200,14 +199,14 @@ async function misc_checks(thread: Discord.ThreadChannel, open_tag: string, solv
 }
 
 async function forum_cleanup() {
-    M.info("Running forum cleanup");
+    M.debug("Running forum cleanup");
     // Routinely archive threads
     // Ensure no thread has both the solved and open tag?
     for(const forum of [cpp_help, c_help]) {
         const open_tag = get_tag(forum, "Open").id;
         const solved_tag = get_tag(forum, "Solved").id;
         const threads = await fetch_all_threads_archive_count(forum, cleanup_limit);
-        M.info("--- Cleaning up", threads.size, "threads ---");
+        M.debug("Cleaning up", threads.size, "threads");
         for(const [_, thread] of threads) {
             assert(thread.parentId);
             if(forum_help_channels.has(thread.parentId)) {
@@ -216,7 +215,7 @@ async function forum_cleanup() {
             }
         }
     }
-    M.info("FINISHED FORUM CLEANUP");
+    M.debug("Finished forum cleanup");
 }
 
 async function on_ready() {

@@ -78,7 +78,7 @@ async function play_roulette(message: Discord.Message) {
     }
     if(warned_users.has(message.author.id)) {
         const roll = Math.floor(Math.random() * 6);
-        M.log("!roulette", [message.author.id, message.author.tag], roll);
+        M.log("Received !roulette", message.author.id, message.author.tag, roll);
         if(roll == 0) {
             let ok = true;
             message.member!.timeout(30 * MINUTE, "Bang")

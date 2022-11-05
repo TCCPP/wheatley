@@ -44,16 +44,16 @@ async function check_member(member: Discord.GuildMember) {
     if(member.nickname && !is_valid_name(member.nickname)) {
         if(is_valid_name(member.user.username)) {
             // Invalid nickname, valid username: Just remove nickname
-            M.debug("Username management: Removing nickname", [member.id, member.user.tag, member.nickname]);
+            M.log("Username management: Removing nickname", member.id, member.user.tag, member.nickname);
             await member.setNickname(null);
         } else {
             // Invalid nickname and invalid username: Monke
-            M.debug("Username management: Changing nickname", [member.id, member.user.tag, member.displayName]);
+            M.log("Username management: Changing nickname", member.id, member.user.tag, member.displayName);
             await member.setNickname(`Monke ${member.user.discriminator}`);
         }
     } else if(!is_valid_name(member.displayName)) {
         // No nickname and invalid username: Monke
-        M.debug("Username management: Changing nickname", [member.id, member.user.tag, member.displayName]);
+        M.log("Username management: Changing nickname", member.id, member.user.tag, member.displayName);
         await member.setNickname(`Monke ${member.user.discriminator}`);
     } else {
         return;

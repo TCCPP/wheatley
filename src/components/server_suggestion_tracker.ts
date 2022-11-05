@@ -224,7 +224,7 @@ const status_lock = new SelfClearingSet<string>(5 * MINUTE, 5 * MINUTE);
 
 async function open_suggestion(message: Discord.Message) {
     try {
-        M.debug("New suggestion", [message.author.tag, message.author.id, message.content]);
+        M.log("New suggestion", message.author.tag, message.author.id, message.url);
         const embed = await make_embed(message);
         const status_message = await thread.send({ embeds: [embed] });
         assert(!(message.id in database.get<db_schema>("suggestion_tracker").suggestions));
@@ -251,7 +251,7 @@ async function delete_suggestion(message_id: string) {
     try {
         assert(message_id in database.get<db_schema>("suggestion_tracker").suggestions);
         const entry = database.get<db_schema>("suggestion_tracker").suggestions[message_id];
-        M.debug("Suggestion deleted", message_id, entry);
+        M.log("Suggestion deleted", message_id, entry);
         const status_message = await thread.messages.fetch(entry.status_message);
         status_lock.insert(entry.status_message);
         await status_message.delete();
@@ -274,7 +274,7 @@ async function update_message_if_needed(message: Discord.Message) {
         const entry = database.get<db_schema>("suggestion_tracker").suggestions[message.id];
         const hash = xxh3(message.content);
         if(hash != entry.hash) {
-            M.debug("Suggestion edited", [message.author.tag, message.author.id, message.content]);
+            M.log("Suggestion edited", message.author.tag, message.author.id, message.url);
             const status_message = await thread.messages.fetch(entry.status_message);
             const embed = await make_embed(message);
             await status_message.edit({ embeds: [embed] });
@@ -286,7 +286,7 @@ async function update_message_if_needed(message: Discord.Message) {
             const up = (reactions.get("👍") || {count: 0}).count;
             const down = (reactions.get("👎") || {count: 0}).count;
             if(entry.up != up || entry.down != down) {
-                M.debug("Updating with new reactions", [message.author.tag, message.author.id, message.content]);
+                M.debug("Updating suggestion with new reactions", message.author.tag, message.author.id, message.url);
                 const status_message = await thread.messages.fetch(entry.status_message);
                 const embed = await make_embed(message);
                 await status_message.edit({ embeds: [embed] });
@@ -305,7 +305,7 @@ async function update_message_if_needed(message: Discord.Message) {
 async function resolve_suggestion(message: Discord.Message, reaction: reaction) {
     try {
         if(message.id in database.get<db_schema>("suggestion_tracker").suggestions) {
-            M.debug("Suggestion being resolved", [message.id]);
+            M.log("Suggestion being resolved", [message.id]);
             // remove status message
             const entry = database.get<db_schema>("suggestion_tracker").suggestions[message.id];
             const status_message = await thread.messages.fetch(entry.status_message);
@@ -345,7 +345,7 @@ async function on_message_delete(message: Discord.Message | Discord.PartialMessa
         if(message.channel.id == server_suggestions_channel_id) {
             if(!(message.id in database.get<db_schema>("suggestion_tracker").suggestions)) {
                 // TODO: This can happen under normal operation, this is here as a debug check
-                M.info("Untracked message deleted", message);
+                M.log("Untracked suggestion deleted", message);
                 return;
             }
             await mutex.lock(message.id);
@@ -368,7 +368,7 @@ async function on_message_delete(message: Discord.Message | Discord.PartialMessa
                 }
             }
         } else if(message.channel.id == suggestion_action_log_thread_id && message.author!.id == wheatley_id) {
-            M.info("Wheatley message deleted", message);
+            M.log("Wheatley message deleted", message);
         }
     } catch(e) {
         critical_error(e);

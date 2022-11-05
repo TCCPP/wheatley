@@ -26,6 +26,7 @@ function on_ban(ban: Discord.GuildBan, now: number) {
             // the tracker already (i.e. longer than 30 minutes, not a speedrun)
             return;
         }
+        M.log("Ban speedrun", diff_to_human(now - entry.joined_at), user.id, user.tag);
         // .purged set by raidpurge (yes I know it's checked above), currently_banning used by anti-scambot
         // eslint-disable-next-line @typescript-eslint/no-unnecessary-condition
         const is_auto_ban = entry.purged || tracker.currently_banning.has(user.id);

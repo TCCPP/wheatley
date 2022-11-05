@@ -28,7 +28,7 @@ async function on_react(reaction: Discord.MessageReaction | Discord.PartialMessa
                 // Remove but not immediately
                 M.debug("scheduling blacklisted user reaction removal");
                 setTimeout(() => {
-                    M.debug("removing reaction by blacklisted user from", {
+                    M.log("removing reaction by blacklisted user from", {
                         content: reaction.message.content,
                         reaction: reaction.emoji.name,
                         time: reaction.message.createdAt,
@@ -38,7 +38,7 @@ async function on_react(reaction: Discord.MessageReaction | Discord.PartialMessa
                 }, 5 * MINUTE);
             } else if(root_only_reacts.has(reaction.emoji.name!)) {
                 if(!is_root(user)) {
-                    M.debug("removing non-root reaction", {
+                    M.log("removing non-root reaction", {
                         content: reaction.message.content,
                         reaction: reaction.emoji.name,
                         time: reaction.message.createdAt,
@@ -59,7 +59,7 @@ async function handle_fetched_message(message: Discord.Message) {
         ///M.debug(reaction.emoji.name, users.map(u => [u.id, u.tag]));
         for(const [id, user] of users) {
             if(react_blacklist.has(id)) {
-                M.debug("removing reaction by blacklisted user from", {
+                M.log("removing reaction by blacklisted user from", {
                     content: reaction.message.content,
                     reaction: reaction.emoji.name,
                     time: reaction.message.createdAt,
@@ -68,7 +68,7 @@ async function handle_fetched_message(message: Discord.Message) {
                 reaction.users.remove(id);
             } else if(root_only_reacts.has(reaction.emoji.name!)) {
                 if(!is_root(user)) {
-                    M.debug("removing non-root reaction", {
+                    M.log("removing non-root reaction", {
                         content: reaction.message.content,
                         reaction: reaction.emoji.name,
                         time: reaction.message.createdAt,

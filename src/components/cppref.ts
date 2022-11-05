@@ -85,13 +85,13 @@ async function on_message(message: Discord.Message) {
         if(message.content.startsWith("!cref ")) {
             const query = message.content.slice("!cref".length).trim();
             const result = lookup(query, CpprefSubIndex.C);
-            M.debug("cref query", query, result ? `https://${result.path}` : null);
+            M.log("cref query", query, result ? `https://${result.path}` : null);
             await send_results(message, result);
         }
         if(message.content.startsWith("!cppref")) {
             const query = message.content.slice("!cppref".length).trim();
             const result = lookup(query, CpprefSubIndex.CPP);
-            M.debug("cppref query", query, result ? `https://${result.path}` : null);
+            M.log("cppref query", query, result ? `https://${result.path}` : null);
             await send_results(message, result);
         }
     } catch(e) {
@@ -144,7 +144,7 @@ async function on_interaction_create(interaction: Discord.Interaction) {
         assert(interaction.isChatInputCommand());
         const query = interaction.options.getString("query")!.trim();
         const result = lookup(query, interaction.commandName == "cref" ? CpprefSubIndex.C : CpprefSubIndex.CPP);
-        M.debug(`${interaction.commandName} query`, query, result ? `https://${result.path}` : null);
+        M.log(`${interaction.commandName} query`, query, result ? `https://${result.path}` : null);
         await send_results_slash(interaction, result);
     } else if(interaction.isAutocomplete()
     && (interaction.commandName == "cref" || interaction.commandName == "cppref")) {

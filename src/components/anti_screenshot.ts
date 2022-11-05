@@ -46,7 +46,7 @@ async function anti_screenshot(starter_message: Discord.Message, thread: Discord
     if(starter_message.attachments.some(are_images)
     && !starter_message.attachments.some(are_text)
     && !message_might_have_code(starter_message.content)) {
-        M.debug("anti-screenshot firing", thread.url);
+        M.log("anti-screenshot firing", thread.url);
         const row = new Discord.ActionRowBuilder<Discord.MessageActionRowComponentBuilder>()
             .addComponents(
                 new Discord.ButtonBuilder()

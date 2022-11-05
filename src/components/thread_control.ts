@@ -47,7 +47,7 @@ async function on_message(request: Discord.Message) {
     try {
         if(request.author.bot) return; // Ignore bots
         if(request.content.match(/^!rename\s+(.+)/gm)) {
-            M.debug("received rename command", request.content, request.author.username);
+            M.log("Received rename command", request.content, request.author.username, request.channel.url);
             if(await try_to_control_thread(request, "rename")) {
                 const channel = request.channel;
                 assert(channel.isThread());
@@ -75,7 +75,7 @@ async function on_message(request: Discord.Message) {
             }
         }
         if(request.content == "!archive") {
-            M.debug("received archive command", request.content, request.author.username);
+            M.debug("Received archive command", request.content, request.author.username, request.channel.url);
             if(await try_to_control_thread(request, "archive")) {
                 assert(request.channel.isThread());
                 if(request.channel.parentId == rules_channel_id

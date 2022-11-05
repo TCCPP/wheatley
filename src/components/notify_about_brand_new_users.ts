@@ -42,7 +42,6 @@ export async function setup_notify_about_brand_new_users(client: Discord.Client)
     client.on("ready", async () => {
         try {
             member_log_channel = await fetch_text_channel(welcome_channel_id);
-            M.debug("notify_about_brand_new_users: member_log_channel channel fetched");
             client.on("guildMemberAdd", on_join);
         } catch(e) {
             critical_error(e);

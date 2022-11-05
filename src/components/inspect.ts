@@ -12,7 +12,7 @@ let client: Discord.Client;
 async function on_interaction_create(interaction: Discord.Interaction) {
     try {
         if(interaction.isMessageContextMenuCommand() && interaction.commandName == "inspect") {
-            M.debug("inspect command");
+            M.log("Received inspect command");
             await interaction.reply({
                 ephemeral: true,
                 content: Discord.escapeMarkdown(interaction.targetMessage.content).replace(/[<>]/g, c => `\\${c}`)
