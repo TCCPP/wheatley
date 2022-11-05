@@ -16,11 +16,16 @@ export class GuildCommandManager {
     async finalize(token: string) {
         try {
             this.finalized = true;
-            const rest = new REST({ version: "9" }).setToken(token);
+            const rest = new REST({ version: "10" }).setToken(token);
             M.log("Sending guild commands");
             await rest.put(
-                Routes.applicationGuildCommands(wheatley_id, TCCPP_ID),
+                Routes.applicationCommands(wheatley_id),
                 { body: this.commands },
+            );
+            // clear previous guild commands
+            await rest.put(
+                Routes.applicationGuildCommands(wheatley_id, TCCPP_ID),
+                { body: [] },
             );
             M.log("Finished sending guild commands");
         } catch(e) {
@@ -28,4 +33,3 @@ export class GuildCommandManager {
         }
     }
 }
-

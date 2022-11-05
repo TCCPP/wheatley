@@ -55,12 +55,12 @@ async function send_wiki_article(article: WikiArticle, message: Discord.Message)
 async function on_message(message: Discord.Message) {
     try {
         if(message.author.bot) return; // Ignore bots
-        if((message.content.startsWith("!wiki") || message.content.startsWith("!howto"))
-        && is_authorized_admin(message.member!)) {
+        if(message.content.startsWith("!wiki") || message.content.startsWith("!howto")) {
             M.log("got wiki command");
-            const query = message.content.startsWith("!wiki") ?
+            const query = (message.content.startsWith("!wiki") ?
                 message.content.substring("!wiki".length).trim()
-                : message.content.substring("!howto".length).trim();
+                : message.content.substring("!howto".length).trim())
+                .replaceAll("-", "_");
             if(query in articles) {
                 const article = articles[query];
                 await send_wiki_article(article, message);
