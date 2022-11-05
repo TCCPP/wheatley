@@ -1,4 +1,5 @@
 import * as Discord from "discord.js";
+import { SlashCommandBuilder } from "@discordjs/builders";
 
 import { strict as assert } from "assert";
 
@@ -9,7 +10,7 @@ import { critical_error, format_list, M } from "../utils";
 import { cppref_index, cppref_page, CpprefSubIndex } from "../../indexes/cppref/types";
 import { Index } from "../algorithm/search";
 import { make_message_deletable } from "./deletable";
-
+import { GuildCommandManager } from "../infra/guild_command_manager";
 
 let client: Discord.Client;
 
@@ -20,6 +21,10 @@ const color = 0x7289DA; // todo: use ping color? make this common?
 
 export function lookup(query: string, target: CpprefSubIndex) {
     return (target == CpprefSubIndex.C ? c_index : cpp_index).search(query);
+}
+
+function lookup_top_5(query: string, target: CpprefSubIndex) {
+    return (target == CpprefSubIndex.C ? c_index : cpp_index).search_get_top_5(query);
 }
 
 function link_headers(header: string) {
@@ -80,13 +85,13 @@ async function on_message(message: Discord.Message) {
         if(message.content.startsWith("!cref ")) {
             const query = message.content.slice("!cref".length).trim();
             const result = lookup(query, CpprefSubIndex.C);
-            M.debug("cref query", [query, result]);
+            M.debug("cref query", query, result ? `https://${result.path}` : null);
             await send_results(message, result);
         }
         if(message.content.startsWith("!cppref")) {
             const query = message.content.slice("!cppref".length).trim();
             const result = lookup(query, CpprefSubIndex.CPP);
-            M.debug("cppref query", [query, result]);
+            M.debug("cppref query", query, result ? `https://${result.path}` : null);
             await send_results(message, result);
         }
     } catch(e) {
@@ -94,22 +99,70 @@ async function on_message(message: Discord.Message) {
     }
 }
 
-/*async function on_interaction_create(interaction: Discord.Interaction) {
-    if(interaction.isCommand() && interaction.commandName == "echo") {
-        assert(interaction.isChatInputCommand());
-        const input = interaction.options.getString("input");
-        M.debug("echo command", input);
-        await interaction.reply({
-            ephemeral: true,
-            content: input || undefined
-        });
+// TODO: Lots of code duplication
+async function send_results_slash(interaction: Discord.ChatInputCommandInteraction, result: cppref_page | null) {
+    if(result === null) {
+        await interaction.reply({embeds: [
+            new Discord.EmbedBuilder()
+                .setColor(color)
+                .setAuthor({
+                    name: "cppreference.com",
+                    iconURL: "https://en.cppreference.com/favicon.ico",
+                    url: "https://en.cppreference.com"
+                })
+                .setDescription("No results found")
+        ]});
+    } else {
+        // TODO: Clang format.....?
+        const embed = new Discord.EmbedBuilder()
+            .setColor(color)
+            .setAuthor({
+                name: "cppreference.com",
+                iconURL: "https://en.cppreference.com/favicon.ico",
+                url: "https://en.cppreference.com"
+            })
+            .setTitle(result.title)
+            .setURL(`https://${result.path}`);
+        if(result.sample_declaration) {
+            embed.setDescription(`\`\`\`cpp\n${
+                result.sample_declaration
+                + (result.other_declarations ? `\n// ... and ${result.other_declarations} more` : "")
+            }\n\`\`\``);
+        }
+        if(result.headers) {
+            embed.addFields({
+                name: "Defined in",
+                value: format_list(result.headers.map(link_headers))
+            });
+        }
+        await interaction.reply({embeds: [embed]});
     }
-}*/
+}
+
+async function on_interaction_create(interaction: Discord.Interaction) {
+    if(interaction.isCommand() && (interaction.commandName == "cref" || interaction.commandName == "cppref")) {
+        assert(interaction.isChatInputCommand());
+        const query = interaction.options.getString("query")!.trim();
+        const result = lookup(query, interaction.commandName == "cref" ? CpprefSubIndex.C : CpprefSubIndex.CPP);
+        M.debug(`${interaction.commandName} query`, query, result ? `https://${result.path}` : null);
+        await send_results_slash(interaction, result);
+    } else if(interaction.isAutocomplete()
+    && (interaction.commandName == "cref" || interaction.commandName == "cppref")) {
+        const query = interaction.options.getFocused().trim();
+        await interaction.respond(
+            lookup_top_5(query, interaction.commandName == "cref" ? CpprefSubIndex.C : CpprefSubIndex.CPP)
+                .map(page => ({
+                    name: `${page.title.substring(0, 100 - 14)} . . . . ${Math.round(page.score * 100) / 100}`,
+                    value: page.title
+                }))
+        );
+    }
+}
 
 async function on_ready() {
     try {
         client.on("messageCreate", on_message);
-        //client.on("interactionCreate", on_interaction_create);
+        client.on("interactionCreate", on_interaction_create);
     } catch(e) {
         critical_error(e);
     }
@@ -223,18 +276,27 @@ export function cppref_testcase_setup() {
     setup_indexes(index_data);
 }
 
-export async function setup_cppref(_client: Discord.Client) {
-    // TODO: Actually implement the slash command
+export async function setup_cppref(_client: Discord.Client, guild_command_manager: GuildCommandManager) {
     try {
         client = _client;
-        /*const echo = new SlashCommandBuilder()
-            .setName("echo")
-            .setDescription("Echo")
+        const cppref = new SlashCommandBuilder()
+            .setName("cppref")
+            .setDescription("Query C++ reference pages")
             .addStringOption(option =>
-                option.setName("input")
-                    .setDescription("The input to echo back")
+                option.setName("query")
+                    .setDescription("Query")
+                    .setAutocomplete(true)
                     .setRequired(true));
-        guild_command_manager.register(echo);*/
+        const cref = new SlashCommandBuilder()
+            .setName("cref")
+            .setDescription("Query C reference pages")
+            .addStringOption(option =>
+                option.setName("query")
+                    .setDescription("Query")
+                    .setAutocomplete(true)
+                    .setRequired(true));
+        guild_command_manager.register(cppref);
+        guild_command_manager.register(cref);
         const index_data = JSON.parse(
             await fs.promises.readFile("indexes/cppref/cppref_index.json", {encoding: "utf-8"})
         ) as cppref_index;

@@ -34,7 +34,7 @@ man7_testcase_setup();
 
 // TODO: more typo test cases
 
-describe("man cases", () => {
+/*describe("man cases", () => {
     for(const test_case of cases) {
         const queries = test_case.query instanceof Array ? test_case.query : [test_case.query];
         for(const query of queries) {
@@ -46,4 +46,4 @@ describe("man cases", () => {
             });
         }
     }
-});
+});*/

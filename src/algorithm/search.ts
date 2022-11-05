@@ -93,6 +93,9 @@ export function strip_parentheses(title: string, opening: string, closing: strin
                     // cases like
                     // operator==, !=, <, <=, >, >=, <=>(std::optional)
                     // std::expected<t,e>::operator->, std::expected<t,e>::operator*
+                } else if(title.substring(start + 1, i) == "bool") {
+                    // skip
+                    // TODO: Temporary hack for std::vector<bool>
                 } else {
                     //if(DEBUG) console.log(parentheses_part);
                     title = title.slice(0, start) + title.slice(i + 1);
@@ -287,7 +290,7 @@ abstract class BaseIndex<T extends IndexEntry, ExtraEntryData = {}> {
     meets_threshold(score: number) {
         return true;
     }
-    search(query: string) {
+    search_get_top_5(query: string) {
         type candidate_entry = {
             page: T & BaseEntryData;
             score: number;
@@ -318,12 +321,12 @@ abstract class BaseIndex<T extends IndexEntry, ExtraEntryData = {}> {
                     candidate.debug_info.join(", ")
                 ));
         }
-        /* eslint-enable @typescript-eslint/no-unnecessary-condition */
-        if(this.meets_threshold(candidates[0].score)) {
-            return candidates[0].page;
-        } else {
-            return null;
-        }
+        return candidates.slice(0, 5)
+            .filter(candidate => this.meets_threshold(candidate.score))
+            .map(candidate => ({...candidate.page, score: candidate.score}));
+    }
+    search(query: string) {
+        return this.search_get_top_5(query).at(0) ?? null;
     }
 }
 
