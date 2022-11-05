@@ -49,7 +49,7 @@ async function parse_file(path: string) {
         const decl_rows = [...decl_block.querySelectorAll(".t-dcl")];
         if(decl_rows.length > 0) {
             // just take the first
-            sample_declaration = decl_rows[0].querySelector("td")!.textContent!.trim();
+            sample_declaration = decl_rows[0].querySelector("td")!.textContent!.replace(/\u00a0/g, " ").trim();
             if(decl_rows.length > 1) {
                 other_declarations = decl_rows.length - 1;
             }

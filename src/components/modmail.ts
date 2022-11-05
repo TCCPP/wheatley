@@ -91,14 +91,15 @@ async function log_action(interaction_member: Discord.GuildMember | APIInteracti
             return ["NULL", ""];
         }
     })();
-    M.log("Modmail log:", tag, title);
+    M.log("Modmail log:", interaction_member?.user.id, tag, title);
     const embed = new Discord.EmbedBuilder()
         .setColor(color)
         .setTitle(title)
         .setAuthor({
             name: tag,
             iconURL: avatar
-        });
+        })
+        .setFooter({ text: `ID: ${interaction_member?.user.id}` });
     if(body) embed.setDescription(body);
     await staff_member_log_channel.send({
         embeds: [embed]

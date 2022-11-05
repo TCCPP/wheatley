@@ -27,7 +27,7 @@ async function* walk_dir(dir: string): AsyncGenerator<string> { // todo: duplica
 
 type WikiArticle = {
     title: string;
-    body: string;
+    body: string | null;
     fields: {name: string, value: string, inline: boolean}[],
     footer?: string;
     set_author?: true;
@@ -197,6 +197,9 @@ function parse_article(name: string, content: string): WikiArticle {
         }
     }
     data.body = data.body.trim();
+    if(data.body == "") {
+        data.body = null;
+    }
     data.footer = data.footer?.trim();
     assert(data.title);
     assert(data.fields);

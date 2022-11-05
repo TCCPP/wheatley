@@ -45190,7 +45190,7 @@
             "headers": [
                 "<variant>"
             ],
-            "sample_declaration": "template< class... Types >\nconstexpr bool operator==( const std::variant<Types...>& v, \n\n                           const std::variant<Types...>& w );",
+            "sample_declaration": "template< class... Types >\nconstexpr bool operator==( const std::variant<Types...>& v, \n\n                           const std::variant<Types...>& w );",
             "other_declarations": 6
         },
         {
