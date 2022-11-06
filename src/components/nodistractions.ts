@@ -309,7 +309,7 @@ export async function setup_nodistractions(_client: Discord.Client, _database: D
                 });
             }
             // load entries
-            for(const [id, entry] of Object.entries(database.get<database_schema>("nodistractions"))) {
+            for(const [ id, entry ] of Object.entries(database.get<database_schema>("nodistractions"))) {
                 undistract_queue.push({
                     id,
                     start: entry.start,

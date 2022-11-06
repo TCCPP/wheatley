@@ -19,11 +19,11 @@ async function on_message(message: Discord.Message) {
         || message.content == "!wstatus"
         && is_authorized_admin(message.member!)) {
             M.log("Received ping command");
-            const reply = await message.channel.send({embeds: [
+            const reply = await message.channel.send({ embeds: [
                 new Discord.EmbedBuilder()
                     .setColor(color)
                     .setTitle("pong")
-            ]});
+            ] });
             make_message_deletable(message, reply);
         }
     } catch(e) {

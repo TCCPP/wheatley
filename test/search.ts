@@ -1,4 +1,4 @@
-import {assert, expect} from "chai";
+import { assert, expect } from "chai";
 import { smart_split_list, strip_parentheses, normalize_and_sanitize_title,
          normalize_and_split_cppref_title } from "../src/algorithm/search";
 

@@ -14,7 +14,7 @@ async function on_message(message: Discord.Message) {
                 const m = await message.channel.send("working...");
                 const TCCPP = await client.guilds.fetch(TCCPP_ID);
                 const channels = await TCCPP.channels.fetch();
-                for(const [_, channel] of channels) {
+                for(const [ _, channel ] of channels) {
                     assert(channel);
                     const r = channel.name.replace(/_/g, "-");
                     M.info("Renaming", channel.name, r);
@@ -27,7 +27,7 @@ async function on_message(message: Discord.Message) {
                 const TCCPP = await client.guilds.fetch(TCCPP_ID);
                 const archive = await TCCPP.channels.fetch("910306041969913938");
                 assert(archive instanceof Discord.CategoryChannel);
-                for(const [_, channel] of archive.children.cache) {
+                for(const [ _, channel ] of archive.children.cache) {
                     await channel.lockPermissions();
                 }
                 await message.reply("Done");
@@ -36,7 +36,7 @@ async function on_message(message: Discord.Message) {
                 const TCCPP = await client.guilds.fetch(TCCPP_ID);
                 const archive = await TCCPP.channels.fetch("910306041969913938");
                 assert(archive instanceof Discord.CategoryChannel);
-                for(const [_, channel] of archive.children.cache) {
+                for(const [ _, channel ] of archive.children.cache) {
                     if(!channel.name.startsWith("archived-")) {
                         await channel.setName(`archived-${channel.name}`);
                     }

@@ -67,7 +67,7 @@ async function on_message(request: Discord.Message) {
                     after: thread.id,
                     limit: 2 // thread starter message, then wheatley's message
                 });
-                for(const [_, message] of messages) {
+                for(const [ _, message ] of messages) {
                     if(message.type == Discord.MessageType.Default && message.author.id == wheatley_id) {
                         message.delete();
                     }

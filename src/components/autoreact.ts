@@ -52,7 +52,7 @@ async function catch_up() {
     assert(introductions_channel);
     assert(introductions_channel.type == Discord.ChannelType.GuildText);
     const messages = await introductions_channel.messages.fetch({ limit: 100, cache: false });
-    for(const [_, message] of messages) {
+    for(const [ _, message ] of messages) {
         if(await is_new_member(message)) {
             M.log("Waving to new user", message.author.tag, message.author.id, message.url);
             message.react("👋");

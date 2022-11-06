@@ -100,7 +100,7 @@ export class ThreadPool<JobType, ResultType> implements AsyncIterable<ResultType
         } else {
             this.results.push(message.result!);
         }
-        const {drained, value} = await this.jobs.get();
+        const { drained, value } = await this.jobs.get();
         if(drained) {
             worker.postMessage({
                 terminate: true

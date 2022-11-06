@@ -20,12 +20,12 @@ function create_embed(title: string | undefined, color: number, msg: string) {
     return embed;
 }
 
-function are_images({contentType}: {contentType: string | null}) {
+function are_images({ contentType }: {contentType: string | null}) {
     assert(contentType);
     return contentType.startsWith("image/");
 }
 
-function are_text({contentType}: {contentType: string | null}) {
+function are_text({ contentType }: {contentType: string | null}) {
     assert(contentType);
     return contentType.startsWith("text/");
 }

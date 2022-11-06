@@ -1,4 +1,4 @@
-import {assert, expect} from "chai";
+import { assert, expect } from "chai";
 
 import { CpprefSubIndex } from "../indexes/cppref/types";
 import { lookup, cppref_testcase_setup } from "../src/components/cppref";
@@ -15,42 +15,42 @@ function path_to_url(path: string) {
 
 const cases: TestCase[] = [
     {
-        query: ["printf", "std::printf"],
+        query: [ "printf", "std::printf" ],
         cref: "https://en.cppreference.com/w/c/io/fprintf",
         cppref: "https://en.cppreference.com/w/cpp/io/c/printf"
     },
     {
-        query: ["getline", "std::getline"],
+        query: [ "getline", "std::getline" ],
         cref: "https://en.cppreference.com/w/c/experimental/dynamic/getline",
         cppref: "https://en.cppreference.com/w/cpp/string/basic_string/getline"
     },
     {
-        query: ["scanf", "std::scanf"],
+        query: [ "scanf", "std::scanf" ],
         cref: "https://en.cppreference.com/w/c/io/fscanf",
         cppref: "https://en.cppreference.com/w/cpp/io/c/scanf"
     },
     {
-        query: ["strcmp", "std::strcmp"],
+        query: [ "strcmp", "std::strcmp" ],
         cref: "https://en.cppreference.com/w/c/string/byte/strcmp",
         cppref: "https://en.cppreference.com/w/cpp/string/byte/strcmp"
     },
     {
-        query: ["strncmp", "std::strncmp"],
+        query: [ "strncmp", "std::strncmp" ],
         cref: "https://en.cppreference.com/w/c/string/byte/strncmp",
         cppref: "https://en.cppreference.com/w/cpp/string/byte/strncmp"
     },
     {
-        query: ["vector", "std::vector"],
+        query: [ "vector", "std::vector" ],
         cref: null,
         cppref: "https://en.cppreference.com/w/cpp/container/vector"
     },
     {
-        query: ["operator precedence", "precedence"],
+        query: [ "operator precedence", "precedence" ],
         cref: "https://en.cppreference.com/w/c/language/operator_precedence",
         cppref: "https://en.cppreference.com/w/cpp/language/operator_precedence"
     },
     {
-        query: ["memcpy", "std::memcpy"],
+        query: [ "memcpy", "std::memcpy" ],
         cref: "https://en.cppreference.com/w/c/string/byte/memcpy",
         cppref: "https://en.cppreference.com/w/cpp/string/byte/memcpy"
     },
@@ -90,53 +90,54 @@ const cases: TestCase[] = [
         cppref: "https://en.cppreference.com/w/cpp/language/nullptr"
     },
     {
-        query: ["swap", "std::swap"],
+        query: [ "swap", "std::swap" ],
         cref: null,
         cppref: "https://en.cppreference.com/w/cpp/algorithm/swap"
     },
     {
-        query: ["Order of evaluation", "eval order"],
+        query: [ "Order of evaluation", "eval order" ],
         cref: "https://en.cppreference.com/w/c/language/eval_order",
         cppref: "https://en.cppreference.com/w/cpp/language/eval_order"
     },
     {
-        query: ["uniform_int_distribution", "uniform int distribution"],
+        query: [ "uniform_int_distribution", "uniform int distribution" ],
         cref: null,
         cppref: "https://en.cppreference.com/w/cpp/numeric/random/uniform_int_distribution"
     },
     {
-        query: ["member initializer list", "member init list"], // other algo fails "member init list"
+        query: [ "member initializer list", "member init list" ], // other algo fails "member init list"
         // cref: null, // TODO: ?
         // called /w/cpp/language/initializer_list.html in the data, /w/cpp/language/constructor on the site
         cppref: "https://en.cppreference.com/w/cpp/language/initializer_list"
     },
     {
-        query: ["ranged for", "range based for", "range based for loop"],
+        query: [ "ranged for", "range based for", "range based for loop" ],
         //cref: null, // TODO: ?
         cppref: "https://en.cppreference.com/w/cpp/language/range-for"
     },
     {
-        query: ["initializer list", /*"init list" /*, "i list"*/], // other algo fails all
+        /* "init list", "i list" */
+        query: ["initializer list"], // other algo fails all
         //cref: null, // TODO: ?
         cppref: "https://en.cppreference.com/w/cpp/utility/initializer_list"
     },
     {
-        query: ["istream::operator>>", "istream>>"], // other algo fails all
+        query: [ "istream::operator>>", "istream>>" ], // other algo fails all
         cref: null,
         cppref: "https://en.cppreference.com/w/cpp/io/basic_istream/operator_gtgt"
     },
     {
-        query: ["std::cin", "cin"], // other algo fails all
+        query: [ "std::cin", "cin" ], // other algo fails all
         cref: null,
         cppref: "https://en.cppreference.com/w/cpp/io/cin"
     },
     {
-        query: ["std::basic_string::erase", "std::string::erase", "string::erase", "string erase"],
+        query: [ "std::basic_string::erase", "std::string::erase", "string::erase", "string erase" ],
         cref: null,
         cppref: "https://en.cppreference.com/w/cpp/string/basic_string/erase"
     },
     {
-        query: ["std::vector::erase", "vector erase"],
+        query: [ "std::vector::erase", "vector erase" ],
         cref: null,
         cppref: "https://en.cppreference.com/w/cpp/container/vector/erase"
     },

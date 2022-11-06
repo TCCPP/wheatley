@@ -40,7 +40,7 @@ async function get_display_name(thing: Discord.Message | Discord.User): Promise<
 
 function is_image_link_embed(embed: Discord.Embed) {
     for(const key in embed) {
-        if(["type", "url", "thumbnail"].indexOf(key) === -1) {
+        if([ "type", "url", "thumbnail" ].indexOf(key) === -1) {
             const value = (embed as any)[key];
             if(!(value === null || (Array.isArray(value) && value.length == 0))) {
                 return false;
@@ -82,7 +82,7 @@ async function make_quote(messages: Discord.Message[], requested_by: Discord.Gui
             }));
         }
     }
-    return [embed, ...image_embeds, ...other_embeds];
+    return [ embed, ...image_embeds, ...other_embeds ];
 }
 
 function index_of_first_not_satisfying<T>(arr: T[], fn: (_: T) => boolean) {
@@ -144,7 +144,7 @@ async function on_message(message: Discord.Message) {
         if(match != null) {
             M.log("Received quote command", message.content, message.url);
             assert(match.length == 5);
-            const [op, guild_id, channel_id, message_id] = match.slice(1);
+            const [ op, guild_id, channel_id, message_id ] = match.slice(1);
             if(guild_id == TCCPP_ID) {
                 await do_quote(message, channel_id, message_id, op == "quoteb");
             }

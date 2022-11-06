@@ -146,7 +146,7 @@ export function is_authorized_admin(member: Discord.GuildMember | Discord.User |
 export const cpp_help_id = "1013107104678162544";
 export const c_help_id = "1013104018739974194";
 
-export const forum_help_channels = new Set([cpp_help_id, c_help_id]);
+export const forum_help_channels = new Set([ cpp_help_id, c_help_id ]);
 
 export function is_forum_help_thread(thread: Discord.ThreadChannel) {
     return thread.parentId != null && forum_help_channels.has(thread.parentId);

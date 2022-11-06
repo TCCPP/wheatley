@@ -9,7 +9,7 @@ import { react_blacklist } from "../config";
 let client: Discord.Client;
 
 let monitored_channels: Map<string, Discord.TextChannel | Discord.AnyThreadChannel>;
-const monitored_channels_ids = [server_suggestions_channel_id, suggestion_dashboard_thread_id];
+const monitored_channels_ids = [ server_suggestions_channel_id, suggestion_dashboard_thread_id ];
 
 const root_only_reacts = new Set([
     "🟢", "🔴", "🟡", "🔵",
@@ -32,7 +32,7 @@ async function on_react(reaction: Discord.MessageReaction | Discord.PartialMessa
                         content: reaction.message.content,
                         reaction: reaction.emoji.name,
                         time: reaction.message.createdAt,
-                        user: [user.tag, user.id]
+                        user: [ user.tag, user.id ]
                     });
                     reaction.users.remove(user.id);
                 }, 5 * MINUTE);
@@ -42,7 +42,7 @@ async function on_react(reaction: Discord.MessageReaction | Discord.PartialMessa
                         content: reaction.message.content,
                         reaction: reaction.emoji.name,
                         time: reaction.message.createdAt,
-                        user: [user.tag, user.id]
+                        user: [ user.tag, user.id ]
                     });
                     reaction.users.remove(user.id);
                 }
@@ -57,13 +57,13 @@ async function handle_fetched_message(message: Discord.Message) {
     message.reactions.cache.forEach(async reaction => {
         const users = await reaction.users.fetch();
         ///M.debug(reaction.emoji.name, users.map(u => [u.id, u.tag]));
-        for(const [id, user] of users) {
+        for(const [ id, user ] of users) {
             if(react_blacklist.has(id)) {
                 M.log("removing reaction by blacklisted user from", {
                     content: reaction.message.content,
                     reaction: reaction.emoji.name,
                     time: reaction.message.createdAt,
-                    user: [user.tag, user.id]
+                    user: [ user.tag, user.id ]
                 });
                 reaction.users.remove(id);
             } else if(root_only_reacts.has(reaction.emoji.name!)) {
@@ -72,7 +72,7 @@ async function handle_fetched_message(message: Discord.Message) {
                         content: reaction.message.content,
                         reaction: reaction.emoji.name,
                         time: reaction.message.createdAt,
-                        user: [user.tag, user.id]
+                        user: [ user.tag, user.id ]
                     });
                     reaction.users.remove(id);
                 }
@@ -98,7 +98,7 @@ async function hard_catch_up() {
         if(messages.size == 0) {
             break;
         }
-        for(const [_, message] of messages) {
+        for(const [ _, message ] of messages) {
             if(message.createdTimestamp < TRACKER_START_TIME) {
                 oldest_seen = TRACKER_START_TIME;
                 continue;
@@ -130,9 +130,9 @@ async function on_ready() {
         client.on("messageReactionAdd", on_react); // Note: This event only fires for cached messages for some reason
         M.debug("server_suggestion reactions handler set messageReactionAdd handler");
         // recover from down time: fetch last 100 messages (and add to cache)
-        for(const [_, channel] of monitored_channels) {
+        for(const [ _, channel ] of monitored_channels) {
             const messages = await channel.messages.fetch({ limit: 100, cache: true });
-            for(const [_, message] of messages) {
+            for(const [ _, message ] of messages) {
                 await handle_fetched_message(message);
             }
         }

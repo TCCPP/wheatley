@@ -59,15 +59,15 @@ export class MemberTracker {
         // remove entries before cutoff
         this.entries = this.entries.slice(first_in_timeframe);
         // -- ping/link maps --
-        for(const map of [this.ping_map, this.link_map]) {
-            for(let [k, v] of map) { /* eslint-disable-line prefer-const */
+        for(const map of [ this.ping_map, this.link_map ]) {
+            for(let [ k, v ] of map) { /* eslint-disable-line prefer-const */
                 v = v.filter(m => now - m.createdTimestamp <= LOG_DURATION);
                 if(v.length == 0) {
                     this.ping_map.delete(k);
                 }
             }
         }
-        for(const [id, timestamp] of this.currently_banning) {
+        for(const [ id, timestamp ] of this.currently_banning) {
             // Don't keep around for more than 10 minutes, just need to address race condition
             if(now - timestamp <= 5 * MINUTE) {
                 this.currently_banning.delete(id);
@@ -101,7 +101,7 @@ export class MemberTracker {
     on_ban(ban: Discord.GuildBan) {
         const now = Date.now();
         const user = ban.user;
-        M.debug("User banned: ", [user.tag, user.id]);
+        M.debug("User banned: ", [ user.tag, user.id ]);
         for(const { on_ban } of this.submodules) {
             if(on_ban) on_ban(ban, now);
         }

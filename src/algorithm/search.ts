@@ -37,7 +37,7 @@ function cosine_similarity(a_ngrams: Set<string>, b_ngrams: Set<string>, f: (_: 
     let dot = 0;
     let a_mag = 0;
     let b_mag = 0;
-    for(const ngram of new Set([...a_ngrams, ...b_ngrams])) {
+    for(const ngram of new Set([ ...a_ngrams, ...b_ngrams ])) {
         // dot computation
         if(a_ngrams.has(ngram) && b_ngrams.has(ngram)) {
             //assert(ngram in ngram_idf);
@@ -301,7 +301,7 @@ abstract class BaseIndex<T extends IndexEntry, ExtraEntryData = {}> {
         assert(query.length < 100);
         const candidates: candidate_entry[] = [];
         for(const page of this.entries) {
-            const {score, debug_info} = this.score_entry(query, page);
+            const { score, debug_info } = this.score_entry(query, page);
             candidates.push({
                 page,
                 score,
@@ -323,7 +323,7 @@ abstract class BaseIndex<T extends IndexEntry, ExtraEntryData = {}> {
         }
         return candidates.slice(0, 5)
             .filter(candidate => this.meets_threshold(candidate.score))
-            .map(candidate => ({...candidate.page, score: candidate.score}));
+            .map(candidate => ({ ...candidate.page, score: candidate.score }));
     }
     search(query: string) {
         return this.search_get_top_5(query).at(0) ?? null;
@@ -382,7 +382,7 @@ class WeightedLevenshteinIndex<T extends IndexEntry> extends BaseIndex<T> {
         const scores = query_tokens.map(
             query_token => max(
                 title_tokens.map(title_token => {
-                    return [(() => {
+                    return [ (() => {
                         if(title_token == query_token) {
                             return +2;
                         } else {
@@ -393,7 +393,7 @@ class WeightedLevenshteinIndex<T extends IndexEntry> extends BaseIndex<T> {
                                 return 0;
                             }
                         }
-                    })(), title_token] as [number, string];
+                    })(), title_token ] as [number, string];
                 }),
                 (item) => item[0]
             )

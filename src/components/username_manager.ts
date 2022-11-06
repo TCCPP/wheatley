@@ -67,7 +67,7 @@ async function check_member(member: Discord.GuildMember) {
 async function cleanup() {
     try {
         const members = await TCCPP.members.fetch();
-        for(const [_, member] of members) {
+        for(const [ _, member ] of members) {
             // undo my first go
             //if(member.displayName.startsWith("Monke ")) {
             //    const old = member.displayName.slice("Monke ".length);

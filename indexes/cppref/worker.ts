@@ -11,7 +11,7 @@ import { MessageForThreadPool, MessageForWorker } from "../common/utils";
 assert(parentPort);
 
 async function parse_file(path: string) {
-    const content = await fs.promises.readFile(path, {encoding: "utf-8"});
+    const content = await fs.promises.readFile(path, { encoding: "utf-8" });
 
     const dom = parseHTML(content);
 

@@ -84,13 +84,13 @@ async function play_roulette(message: Discord.Message) {
             message.member!.timeout(30 * MINUTE, "Bang")
                 .catch((...args: any[]) => {
                     critical_error("promise failed for timeout of roulette loser",
-                                   [message.author.id, message.author.tag]);
+                                   [ message.author.id, message.author.tag ]);
                     M.error(...args);
                     ok = false;
                 })
                 .finally(() => {
                     // Send bang message
-                    const m = {embeds: [make_bang_embed(message.author)]};
+                    const m = { embeds: [make_bang_embed(message.author)] };
                     message.channel.send(m);
                     member_log_channel.send(m);
                     // Setup ban message
@@ -100,12 +100,12 @@ async function play_roulette(message: Discord.Message) {
                             text: ban_embed.data.footer!.text + "Error: Timeout failed "
                         });
                     }
-                    member_log_channel.send({embeds: [ban_embed]});
+                    member_log_channel.send({ embeds: [ban_embed] });
                 });
             streaks.set(message.author.id, 0);
             await update_scoreboard(message.author.id); // TODO: I forget why this is here
         } else {
-            const m = {embeds: [make_click_embed(message.author)]};
+            const m = { embeds: [make_click_embed(message.author)] };
             streaks.set(message.author.id, (streaks.get(message.author.id) ?? 0) + 1);
             await message.channel.send(m);
             await member_log_channel.send(m);
@@ -123,13 +123,13 @@ async function display_leaderboard(message: Discord.Message) {
         .setColor(green)
         .setTitle("Roulette Leaderboard");
     let description = "";
-    for(const [key, value] of
+    for(const [ key, value ] of
         Object.entries(database.get<leaderboard_schema>("roulette_leaderboard"))
             .sort((a, b) => b[1] - a[1])) {
         description += `<@${key}>: ${value} roll${value == 1 ? "" : "s"} before death\n`;
     }
     embed.setDescription(description);
-    await message.channel.send({embeds: [embed]});
+    await message.channel.send({ embeds: [embed] });
 }
 
 async function on_message(message: Discord.Message) {

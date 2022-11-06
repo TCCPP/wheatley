@@ -56,7 +56,7 @@ const languages = [
     "zs", "zsh"
 ];
 
-const c_cpp_language_codes = new Set(["c", "h", "cpp", "hpp", "cc", "hh", "cxx", "cxx", "c++", "h++"]);
+const c_cpp_language_codes = new Set([ "c", "h", "cpp", "hpp", "cc", "hh", "cxx", "cxx", "c++", "h++" ]);
 
 const languages_re = new RegExp(
     languages
@@ -99,10 +99,10 @@ const code_block_re = new RegExp(`(\`\`\`(?:${languages_re.source}\b)?)(.*?)\`\`
 
 const default_clang_format_language = "cpp";
 
-const ignore_prefixes = [";compile", ";asm"];
+const ignore_prefixes = [ ";compile", ";asm" ];
 
 async function clang_format(text: string, args: string[]) {
-    const {stdout, stderr} = await async_exec_file(clang_format_path, args, {}, text);
+    const { stdout, stderr } = await async_exec_file(clang_format_path, args, {}, text);
     if(stderr.toString("utf8").trim().length != 0) {
         M.debug("Clang format stderr", stderr.toString("utf8"));
         // TODO: Ping zelis?
@@ -142,7 +142,7 @@ async function format(replying_to: Discord.Message) {
     const code_blocks: {language: string, content: string}[] = [];
     content = content.replaceAll(code_block_re, (_, starter: string, block: string) => {
         const language = starter.length > 3 ? starter.substring(3) : "cpp";
-        code_blocks.push({language, content: block});
+        code_blocks.push({ language, content: block });
         return `<[<[<[<[${code_blocks.length - 1}]>]>]>]>`;
     });
     // else ...
@@ -151,13 +151,16 @@ async function format(replying_to: Discord.Message) {
         if(start > -1) {
             const end = Math.max(...[...";}"].map(c => content.lastIndexOf(c)));
             if(end > start) {
-                code_blocks.push({language: default_clang_format_language, content: content.substring(start, end + 1)});
+                code_blocks.push({
+                    language: default_clang_format_language,
+                    content: content.substring(start, end + 1)
+                });
                 content = replace_range(content, start, end + 1, `<[<[<[<[${code_blocks.length - 1}]>]>]>]>`);
             }
         }
     }
 
-    for(const [i, block] of code_blocks.entries()) {
+    for(const [ i, block ] of code_blocks.entries()) {
         if(c_cpp_language_codes.has(block.language)) {
             content = content.replace(`<[<[<[<[${i}]>]>]>]>`, `\`\`\`${block.language}\n${
                 await clang_format_general(block.content)
@@ -189,7 +192,7 @@ async function format(replying_to: Discord.Message) {
         })
     );
 
-    return {content, attachments, found_code_blocks: code_blocks.length > 0};
+    return { content, attachments, found_code_blocks: code_blocks.length > 0 };
 }
 
 function should_replace_original(replying_to: Discord.Message, request_timestamp: Date) {
@@ -197,7 +200,7 @@ function should_replace_original(replying_to: Discord.Message, request_timestamp
         && replying_to.id != replying_to.channel.id // Don't delete if it's a forum thread starter message
         && !replying_to.flags.has(MessageFlags.HasThread)
         && replying_to.attachments.size <= 2 // Also don't delete if it has additional/non-txt attachments
-        && !replying_to.attachments.some(({contentType}) => contentType?.startsWith("text/") ?? false)
+        && !replying_to.attachments.some(({ contentType }) => contentType?.startsWith("text/") ?? false)
     // and not a ;compile, ;asm, or other bot command
         && !ignore_prefixes.some(prefix => replying_to.content.startsWith(prefix));
 }
@@ -219,7 +222,7 @@ async function on_message(message: Discord.Message) {
                     return;
                 }
 
-                const {content, attachments, found_code_blocks} = await format(replying_to);
+                const { content, attachments, found_code_blocks } = await format(replying_to);
 
                 if(attachments.length || found_code_blocks) {
                     const embed = new Discord.EmbedBuilder()
@@ -292,7 +295,7 @@ async function on_interaction_create(interaction: Discord.Interaction) {
                 return;
             }
 
-            const {content, attachments, found_code_blocks} = await format(replying_to);
+            const { content, attachments, found_code_blocks } = await format(replying_to);
 
             if(attachments.length || found_code_blocks) {
                 let embeds: Discord.EmbedBuilder[] | undefined;

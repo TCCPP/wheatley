@@ -83,12 +83,12 @@ async function update_db() {
 
 async function log_action(interaction_member: Discord.GuildMember | APIInteractionGuildMember | null,
                           title: string, body?: string) {
-    const [tag, avatar] = await (async () => {
+    const [ tag, avatar ] = await (async () => {
         if(interaction_member) {
             const member = await TCCPP.members.fetch(interaction_member.user.id);
-            return [member.user.tag, member.displayAvatarURL()];
+            return [ member.user.tag, member.displayAvatarURL() ];
         } else {
-            return ["NULL", ""];
+            return [ "NULL", "" ];
         }
     })();
     M.log("Modmail log:", interaction_member?.user.id, tag, title);

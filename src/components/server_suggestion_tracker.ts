@@ -2,7 +2,7 @@ import * as Discord from "discord.js";
 import { strict as assert } from "assert";
 import { critical_error, departialize, M, KeyedMutexSet, SelfClearingSet, fetch_text_channel,
          fetch_thread_channel,
-         xxh3} from "../utils";
+         xxh3 } from "../utils";
 import { DatabaseInterface } from "../infra/database_interface";
 import { is_root, MINUTE, server_suggestions_channel_id, suggestion_action_log_thread_id,
          suggestion_dashboard_thread_id, TCCPP_ID, wheatley_id } from "../common";
@@ -26,7 +26,7 @@ const resolution_reactions = [
     "🟢", "🔴", "🟡", "🚫"
 ];
 const resolution_reactions_set = new Set(resolution_reactions);
-const vote_reaction_set = new Set(["👍", "👎"]);
+const vote_reaction_set = new Set([ "👍", "👎" ]);
 
 type db_schema = {
     last_scanned_timestamp: number;
@@ -65,12 +65,12 @@ type reaction = {
 
 async function message_has_resolution_from_root(message: Discord.Message) {
     const roots: reaction[] = [];
-    for(const [_, reaction] of message.reactions.cache) {
+    for(const [ _, reaction ] of message.reactions.cache) {
         if(resolution_reactions_set.has(reaction.emoji.name!)) {
             const users = await reaction.users.fetch();
-            for(const [_, user] of users) {
+            for(const [ _, user ] of users) {
                 if(is_root(user)) {
-                    roots.push({user, emoji: reaction.emoji});
+                    roots.push({ user, emoji: reaction.emoji });
                 }
             }
         }
@@ -158,8 +158,8 @@ function isnt_actually_a_message(message: Discord.Message) {
 
 async function make_embed(message: Discord.Message) {
     const reactions = message.reactions.cache;
-    const up = (reactions.get("👍") || {count: 0}).count;
-    const down = (reactions.get("👎") || {count: 0}).count;
+    const up = (reactions.get("👍") || { count: 0 }).count;
+    const down = (reactions.get("👎") || { count: 0 }).count;
     return new Discord.EmbedBuilder()
         .setColor(color)
         .setAuthor({
@@ -191,7 +191,7 @@ async function log_resolution(message: Discord.Message, reaction: reaction) {
             iconURL: reaction.user.displayAvatarURL()
         })
         .setTimestamp(message.createdAt);
-    await log_thread.send({ embeds: [ embed ] });
+    await log_thread.send({ embeds: [embed] });
 }
 
 async function log_reopen(message: Discord.Message) {
@@ -206,7 +206,7 @@ async function log_reopen(message: Discord.Message) {
             text: "Suggestion reopened"
         })
         .setTimestamp(message.createdAt);
-    await log_thread.send({ embeds: [ embed ] });
+    await log_thread.send({ embeds: [embed] });
 }
 
 // Four operations:
@@ -283,8 +283,8 @@ async function update_message_if_needed(message: Discord.Message) {
             return true; // return if we updated
         } else {
             const reactions = message.reactions.cache;
-            const up = (reactions.get("👍") || {count: 0}).count;
-            const down = (reactions.get("👎") || {count: 0}).count;
+            const up = (reactions.get("👍") || { count: 0 }).count;
+            const down = (reactions.get("👎") || { count: 0 }).count;
             if(entry.up != up || entry.down != down) {
                 M.debug("Updating suggestion with new reactions", message.author.tag, message.author.id, message.url);
                 const status_message = await thread.messages.fetch(entry.status_message);
@@ -525,7 +525,7 @@ async function process_since_last_scanned() {
             break;
         }
         const arr: Discord.Message[] = [];
-        for(const [_, message] of messages) {
+        for(const [ _, message ] of messages) {
             arr.push(message);
         }
         arr.sort((a, b) => a.createdTimestamp - b.createdTimestamp);

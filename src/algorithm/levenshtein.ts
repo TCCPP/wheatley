@@ -27,12 +27,12 @@ export function weighted_levenshtein_raw(src: string, target: string) {
     // Stores tuples [distance, substitution_count]
     const d = new Array(src.length + 1)
         .fill(0)
-        .map(() => new Array(target.length + 1).fill(0).map(() => [0, 0]));
+        .map(() => new Array(target.length + 1).fill(0).map(() => [ 0, 0 ]));
     for(let i = 1; i <= src.length; i++) {
-        d[i][0] = [i, 0];
+        d[i][0] = [ i, 0 ];
     }
     for(let j = 1; j <= target.length; j++) {
-        d[0][j] = [j, 0];
+        d[0][j] = [ j, 0 ];
     }
     for(let i = 1; i <= src.length; i++) {
         for(let j = 1; j <= target.length; j++) {
@@ -42,9 +42,9 @@ export function weighted_levenshtein_raw(src: string, target: string) {
             const ts = src[i - 1] == target[j - 1] ? 0 : substitution_cost;
             const ic = i == 0 || i == src.length ? .1 : insertion_cost;
             const actions: [number, number][] = [
-                [d[i - 1][j    ][0] + deletion_cost,  d[i - 1][j    ][1]],
-                [d[i    ][j - 1][0] + ic,             d[i    ][j - 1][1]],
-                [d[i - 1][j - 1][0] + ts,             d[i - 1][j - 1][1] + ts]
+                [ d[i - 1][j][0] + deletion_cost,  d[i - 1][j][1] ],
+                [ d[i][j - 1][0] + ic,             d[i][j - 1][1] ],
+                [ d[i - 1][j - 1][0] + ts,             d[i - 1][j - 1][1] + ts ]
             ];
             d[i][j] = find_min_action(actions);
         }
@@ -80,8 +80,8 @@ export function levenshtein(src: string, target: string) {
             assert(substitution_cost == 1);
             const ts = src[i - 1] == target[j - 1] ? 0 : 1;
             d[i][j] = Math.min(
-                d[i - 1][j    ] + 1,
-                d[i    ][j - 1] + 1,
+                d[i - 1][j] + 1,
+                d[i][j - 1] + 1,
                 d[i - 1][j - 1] + ts
             );
         }

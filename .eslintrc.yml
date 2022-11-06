@@ -53,6 +53,22 @@ rules:
     - error
     - allowEmptyCatch:
         true
+  object-curly-spacing:
+    - error
+    - always
+  array-bracket-spacing:
+    - error
+    - always
+    - singleValue:
+        false
+      objectsInArrays:
+        false
+      arraysInArrays:
+        false
+  comma-spacing:
+    - error
+  computed-property-spacing:
+    - error
   "@typescript-eslint/no-unused-vars":
     - warn
     - destructuredArrayIgnorePattern:

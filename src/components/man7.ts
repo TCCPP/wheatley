@@ -38,7 +38,7 @@ async function on_message(message: Discord.Message) {
             const result = lookup(query);
             M.log("man7 query", query, result ? `https://man7.org/linux/man-pages/${result.path}` : null);
             if(result === null) {
-                const result_message = await message.channel.send({embeds: [
+                const result_message = await message.channel.send({ embeds: [
                     new Discord.EmbedBuilder()
                         .setColor(color)
                         .setAuthor({
@@ -46,7 +46,7 @@ async function on_message(message: Discord.Message) {
                             url: "https://man7.org/linux/man-pages"
                         })
                         .setDescription("No results found")
-                ]});
+                ] });
                 make_message_deletable(message, result_message);
             } else {
                 const embed = new Discord.EmbedBuilder()
@@ -64,7 +64,7 @@ async function on_message(message: Discord.Message) {
                         value: result.synopsis
                     });
                 }
-                const result_message = await message.channel.send({embeds: [embed]});
+                const result_message = await message.channel.send({ embeds: [embed] });
                 make_message_deletable(message, result_message);
             }
         }
@@ -81,7 +81,7 @@ async function on_interaction_create(interaction: Discord.Interaction) {
         M.log("man7 query", query,
               result ? `https://man7.org/linux/man-pages/${result.path}` : null);
         if(result === null) {
-            await interaction.reply({embeds: [
+            await interaction.reply({ embeds: [
                 new Discord.EmbedBuilder()
                     .setColor(color)
                     .setAuthor({
@@ -89,7 +89,7 @@ async function on_interaction_create(interaction: Discord.Interaction) {
                         url: "https://man7.org/linux/man-pages"
                     })
                     .setDescription("No results found")
-            ]});
+            ] });
         } else {
             const embed = new Discord.EmbedBuilder()
                 .setColor(color)
@@ -106,7 +106,7 @@ async function on_interaction_create(interaction: Discord.Interaction) {
                     value: result.synopsis
                 });
             }
-            await interaction.reply({embeds: [embed]});
+            await interaction.reply({ embeds: [embed] });
         }
     } else if(interaction.isAutocomplete() && interaction.commandName == "man") {
         const query = interaction.options.getFocused().trim();
@@ -169,7 +169,7 @@ function setup_index(index_data: man7_index) {
 
 export function man7_testcase_setup() {
     const index_data = <man7_index>(
-        JSON.parse(fs.readFileSync("indexes/man7/man7_index.json", {encoding: "utf-8"}))
+        JSON.parse(fs.readFileSync("indexes/man7/man7_index.json", { encoding: "utf-8" }))
     );
     //for(const pages of [index.c, index.cpp]) {
     //    for(const page of pages) {
@@ -193,7 +193,7 @@ export async function setup_man7(_client: Discord.Client, guild_command_manager:
                     .setRequired(true));
         guild_command_manager.register(man7);
         const index_data = JSON.parse(
-            await fs.promises.readFile("indexes/man7/man7_index.json", {encoding: "utf-8"})
+            await fs.promises.readFile("indexes/man7/man7_index.json", { encoding: "utf-8" })
         ) as man7_index;
         setup_index(index_data);
         client.on("ready", on_ready);

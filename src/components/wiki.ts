@@ -48,7 +48,7 @@ async function send_wiki_article(article: WikiArticle, message: Discord.Message)
             text: article.footer
         });
     }
-    const reply = await message.channel.send({embeds: [embed]});
+    const reply = await message.channel.send({ embeds: [embed] });
     make_message_deletable(message, reply);
 }
 
@@ -117,7 +117,7 @@ async function send_wiki_article_slash(article: WikiArticle, interaction: Discor
             text: article.footer
         });
     }
-    await interaction.reply({embeds: [embed]});
+    await interaction.reply({ embeds: [embed] });
 }
 
 async function on_interaction_create(interaction: Discord.Interaction) {
@@ -131,7 +131,7 @@ async function on_interaction_create(interaction: Discord.Interaction) {
             });
             return;
         }
-        const matching_articles = Object.values(articles).filter(({title}) => title == query);
+        const matching_articles = Object.values(articles).filter(({ title }) => title == query);
         const article = matching_articles.length > 0 ? matching_articles[0] : undefined;
         if(article) {
             await send_wiki_article_slash(article, interaction);
@@ -176,7 +176,7 @@ export function parse_article(name: string | null, content: string): WikiArticle
     enum state { body, field, footer }
     let code = false;
     let current_state = state.body;
-    for(const [i, line] of lines.entries()) {
+    for(const [ i, line ] of lines.entries()) {
         if(line.trim().startsWith("```")) {
             code = !code;
         }
@@ -233,7 +233,7 @@ export function parse_article(name: string | null, content: string): WikiArticle
     assert(data.title, "Wiki article must have a title");
     assert(data.fields); // will always be true
     // need to do this nonsense for TS....
-    const {title, body, fields, footer, set_author} = data;
+    const { title, body, fields, footer, set_author } = data;
     return {
         title, body, fields, footer, set_author
     };
@@ -246,7 +246,7 @@ async function load_wiki_pages() {
         if(name == "README") {
             continue;
         }
-        const content = await fs.promises.readFile(file_path, {encoding: "utf-8"});
+        const content = await fs.promises.readFile(file_path, { encoding: "utf-8" });
         articles[name] = parse_article(name, content);
     }
 }
@@ -275,7 +275,7 @@ export async function setup_wiki(_client: Discord.Client, guild_command_manager:
         client.on("ready", on_ready);
         await load_wiki_pages();
         // setup slash commands for aliases
-        for(const [alias, article_name] of article_aliases.entries()) {
+        for(const [ alias, article_name ] of article_aliases.entries()) {
             const article = articles[article_name];
             const command = new SlashCommandBuilder()
                 .setName(alias)

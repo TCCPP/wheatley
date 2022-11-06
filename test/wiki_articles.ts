@@ -1,9 +1,9 @@
-import {assert, expect} from "chai";
+import { assert } from "chai";
 
 import * as fs from "fs";
 import * as path from "path";
 
-import {parse_article, wiki_dir} from "../src/components/wiki";
+import { parse_article, wiki_dir } from "../src/components/wiki";
 
 function* walk_dir(dir: string): Generator<string> { // todo: duplicate
     for(const f of fs.readdirSync(dir)) {
@@ -23,7 +23,7 @@ describe("parse wiki articles", () => {
             continue;
         }
         it(`${name} article should parse`, async () => {
-            const content = await fs.promises.readFile(file_path, {encoding: "utf-8"});
+            const content = await fs.promises.readFile(file_path, { encoding: "utf-8" });
             parse_article(name, content);
         });
     }

@@ -145,7 +145,7 @@ export class SelfClearingSet<T> {
     }
     sweep() {
         const now = Date.now();
-        for(const [value, timestamp] of this.contents) {
+        for(const [ value, timestamp ] of this.contents) {
             if(now - timestamp >= this.duration) {
                 this.contents.delete(value);
             }
@@ -171,14 +171,14 @@ export class SelfClearingMap<K, V> {
     }
     sweep() {
         const now = Date.now();
-        for(const [key, [timestamp, _]] of this.contents) {
+        for(const [ key, [ timestamp, _ ]] of this.contents) {
             if(now - timestamp >= this.duration) {
                 this.contents.delete(key);
             }
         }
     }
     set(key: K, value: V) {
-        this.contents.set(key, [Date.now(), value]);
+        this.contents.set(key, [ Date.now(), value ]);
     }
     get(key: K) {
         const p = this.contents.get(key);
@@ -334,7 +334,7 @@ export function get_tag(channel: Discord.ForumChannel, name: string) {
 }
 
 export async function fetch_active_threads(forum: Discord.ForumChannel) {
-    const {threads, hasMore} = await forum.threads.fetchActive();
+    const { threads, hasMore } = await forum.threads.fetchActive();
     assert(!hasMore); // todo: how to handle
     return threads;
 }
@@ -344,7 +344,7 @@ export async function fetch_inactive_threads_time_limit(forum: Discord.ForumChan
     const now = Date.now();
     const thread_entries: [string, Discord.ThreadChannel][] = [];
     while(true) {
-        const {threads, hasMore} = await forum.threads.fetchArchived({ before });
+        const { threads, hasMore } = await forum.threads.fetchArchived({ before });
         thread_entries.push(...threads);
         // The type annotation is needed because of a typescript bug
         // https://github.com/microsoft/TypeScript/issues/51115
@@ -369,7 +369,7 @@ export async function fetch_inactive_threads_count(forum: Discord.ForumChannel, 
     let before: string | undefined = undefined;
     const thread_entries: [string, Discord.ThreadChannel][] = [];
     while(true) {
-        const {threads, hasMore} = await forum.threads.fetchArchived({ before, limit: Math.min(count, 100) });
+        const { threads, hasMore } = await forum.threads.fetchArchived({ before, limit: Math.min(count, 100) });
         thread_entries.push(...threads);
         // The type annotation is needed because of a typescript bug
         // https://github.com/microsoft/TypeScript/issues/51115

@@ -19,7 +19,7 @@ const base_url = "https://man7.org/linux/man-pages/";
 (async () => {
     let man_entries: man7_index = [];
     if(fs.existsSync("man7_index.json")) {
-        man_entries = JSON.parse(await fs.promises.readFile("man7_index.json", {encoding: "utf-8"}));
+        man_entries = JSON.parse(await fs.promises.readFile("man7_index.json", { encoding: "utf-8" }));
     }
     const milestones = new Set(man_entries.map(entry => entry.path));
 

@@ -27,10 +27,10 @@ async function* walk_dir(dir: string): AsyncGenerator<string> {
     };
 
     if(fs.existsSync("cppref_index.json")) {
-        index = JSON.parse(await fs.promises.readFile("cppref_index.json", {encoding: "utf-8"}));
+        index = JSON.parse(await fs.promises.readFile("cppref_index.json", { encoding: "utf-8" }));
     }
 
-    const handled_paths = new Set([...index.c, ...index.cpp].map(page => page.path));
+    const handled_paths = new Set([ ...index.c, ...index.cpp ].map(page => page.path));
 
     const pool = new ThreadPool<WorkerJob, WorkerResponse>(path.resolve(__dirname, "worker.js"), 12);
 
@@ -83,7 +83,7 @@ async function* walk_dir(dir: string): AsyncGenerator<string> {
     const format_start = performance.now();
 
     const funnel = new Funnel(8);
-    for(const sub_index of [index.c, index.cpp]) {
+    for(const sub_index of [ index.c, index.cpp ]) {
         for(const page of sub_index) {
             if(page.sample_declaration && !handled_paths.has(page.path)) {
                 const page_ref_copy = page;
@@ -102,5 +102,5 @@ async function* walk_dir(dir: string): AsyncGenerator<string> {
     console.log(`Parse wall clock time:  ${parse_end - parse_start}ms`);
     console.log(`Format wall clock time: ${format_end - format_start}ms`);
 
-    await fs.promises.writeFile("cppref_index.json", JSON.stringify(index, null, "    "), {encoding: "utf-8"});
+    await fs.promises.writeFile("cppref_index.json", JSON.stringify(index, null, "    "), { encoding: "utf-8" });
 })();

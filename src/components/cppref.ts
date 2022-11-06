@@ -40,7 +40,7 @@ function link_headers(header: string) {
 
 async function send_results(message: Discord.Message, result: cppref_page | null) {
     if(result === null) {
-        const result_message = await message.channel.send({embeds: [
+        const result_message = await message.channel.send({ embeds: [
             new Discord.EmbedBuilder()
                 .setColor(color)
                 .setAuthor({
@@ -49,7 +49,7 @@ async function send_results(message: Discord.Message, result: cppref_page | null
                     url: "https://en.cppreference.com"
                 })
                 .setDescription("No results found")
-        ]});
+        ] });
         make_message_deletable(message, result_message);
     } else {
         // TODO: Clang format.....?
@@ -74,7 +74,7 @@ async function send_results(message: Discord.Message, result: cppref_page | null
                 value: format_list(result.headers.map(link_headers))
             });
         }
-        const result_message = await message.channel.send({embeds: [embed]});
+        const result_message = await message.channel.send({ embeds: [embed] });
         make_message_deletable(message, result_message);
     }
 }
@@ -102,7 +102,7 @@ async function on_message(message: Discord.Message) {
 // TODO: Lots of code duplication
 async function send_results_slash(interaction: Discord.ChatInputCommandInteraction, result: cppref_page | null) {
     if(result === null) {
-        await interaction.reply({embeds: [
+        await interaction.reply({ embeds: [
             new Discord.EmbedBuilder()
                 .setColor(color)
                 .setAuthor({
@@ -111,7 +111,7 @@ async function send_results_slash(interaction: Discord.ChatInputCommandInteracti
                     url: "https://en.cppreference.com"
                 })
                 .setDescription("No results found")
-        ]});
+        ] });
     } else {
         // TODO: Clang format.....?
         const embed = new Discord.EmbedBuilder()
@@ -135,7 +135,7 @@ async function send_results_slash(interaction: Discord.ChatInputCommandInteracti
                 value: format_list(result.headers.map(link_headers))
             });
         }
-        await interaction.reply({embeds: [embed]});
+        await interaction.reply({ embeds: [embed] });
     }
 }
 
@@ -224,7 +224,7 @@ function eliminate_aliases_and_duplicates(pages: cppref_page[]) {
         }
     }
     // eslint-disable-next-line @typescript-eslint/no-unused-vars
-    for(const [title, pages] of Object.entries(title_map)) {
+    for(const [ title, pages ] of Object.entries(title_map)) {
         if(pages.length > 1) {
             if(new Set(pages.map(e => e.wgPageName)).size == 1) {
                 // all wgPageName match - these all alias
@@ -266,7 +266,7 @@ function setup_indexes(index_data: cppref_index) {
 
 export function cppref_testcase_setup() {
     const index_data = <cppref_index>(
-        JSON.parse(fs.readFileSync("indexes/cppref/cppref_index.json", {encoding: "utf-8"}))
+        JSON.parse(fs.readFileSync("indexes/cppref/cppref_index.json", { encoding: "utf-8" }))
     );
     //for(const pages of [index.c, index.cpp]) {
     //    for(const page of pages) {
@@ -298,7 +298,7 @@ export async function setup_cppref(_client: Discord.Client, guild_command_manage
         guild_command_manager.register(cppref);
         guild_command_manager.register(cref);
         const index_data = JSON.parse(
-            await fs.promises.readFile("indexes/cppref/cppref_index.json", {encoding: "utf-8"})
+            await fs.promises.readFile("indexes/cppref/cppref_index.json", { encoding: "utf-8" })
         ) as cppref_index;
         setup_indexes(index_data);
         client.on("ready", on_ready);

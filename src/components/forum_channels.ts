@@ -3,7 +3,7 @@ import { strict as assert } from "assert";
 import { critical_error, delay, fetch_all_threads_archive_count, fetch_forum_channel, get_tag, M,
          SelfClearingSet } from "../utils";
 import { colors, cpp_help_id, c_help_id, forum_help_channels, is_forum_help_thread, MINUTE,
-         wheatley_id, zelis_id} from "../common";
+         wheatley_id, zelis_id } from "../common";
 import { decode_snowflake } from "./snowflake"; // todo: eliminate decode_snowflake
 
 let client: Discord.Client;
@@ -176,22 +176,22 @@ async function check_thread_activity(thread: Discord.ThreadChannel, open_tag: st
 
 async function misc_checks(thread: Discord.ThreadChannel, open_tag: string, solved_tag: string) {
     // Ensure there is exactly one solved/open tag
-    const solved_open_count = thread.appliedTags.filter(tag => [solved_tag, open_tag].includes(tag)).length;
+    const solved_open_count = thread.appliedTags.filter(tag => [ solved_tag, open_tag ].includes(tag)).length;
     if(solved_open_count != 1) {
         M.log("Setting thread with", solved_open_count, "solved/open tags to have one such tag",
               thread.id, thread.name, thread.url);
-        const {archived} = thread;
+        const { archived } = thread;
         if(archived) await thread.setArchived(false);
         const tag = thread.appliedTags.includes(solved_tag) ? solved_tag : open_tag;
         await thread.setAppliedTags(
-            [tag].concat(thread.appliedTags.filter(tag => ![solved_tag, open_tag].includes(tag)).slice(0, 4))
+            [tag].concat(thread.appliedTags.filter(tag => ![ solved_tag, open_tag ].includes(tag)).slice(0, 4))
         );
         if(archived) await thread.setArchived(true);
     }
     // Cleanup the legacy system: If the thread name starts with [SOLVED], remove it
     if(thread.name.startsWith("[SOLVED]")) {
         M.log("Removing \"[SOLVED]\" from forum thread name", thread.id, thread.name, thread.url);
-        const {archived} = thread;
+        const { archived } = thread;
         if(archived) await thread.setArchived(false);
         await thread.setName(thread.name.slice("[SOLVED]".length).trim());
         if(archived) await thread.setArchived(true);
@@ -202,12 +202,12 @@ async function forum_cleanup() {
     M.debug("Running forum cleanup");
     // Routinely archive threads
     // Ensure no thread has both the solved and open tag?
-    for(const forum of [cpp_help, c_help]) {
+    for(const forum of [ cpp_help, c_help ]) {
         const open_tag = get_tag(forum, "Open").id;
         const solved_tag = get_tag(forum, "Solved").id;
         const threads = await fetch_all_threads_archive_count(forum, cleanup_limit);
         M.debug("Cleaning up", threads.size, "threads");
-        for(const [_, thread] of threads) {
+        for(const [ _, thread ] of threads) {
             assert(thread.parentId);
             if(forum_help_channels.has(thread.parentId)) {
                 await misc_checks(thread, open_tag, solved_tag);
