@@ -102,17 +102,15 @@ async function on_interaction_create(interaction: Discord.Interaction) {
             && interaction.user.id == (interaction.channel as Discord.ThreadChannel).ownerId) {
                 const time = interaction.createdTimestamp - interaction.message.createdTimestamp;
                 if(time < DISMISS_TIME) {
-                    M.debug("anti_screenshot_acknowledge received too quick", [
-                        interaction.channel?.url, interaction.user.id, interaction.user.tag
-                    ]);
+                    M.debug("anti_screenshot_acknowledge received too quick",
+                        interaction.channel?.url, interaction.user.id, interaction.user.tag);
                     await interaction.reply({
                         ephemeral: true,
                         content: "Please read before dismissing"
                     });
                 } else {
-                    M.debug("anti_screenshot_acknowledge received", [
-                        interaction.channel?.url, interaction.user.id, interaction.user.tag
-                    ]);
+                    M.debug("anti_screenshot_acknowledge received",
+                        interaction.channel?.url, interaction.user.id, interaction.user.tag);
                     await interaction.message.delete();
                     // Log to the message log
                     const log_embed = new Discord.EmbedBuilder()

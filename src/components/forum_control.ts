@@ -68,7 +68,7 @@ async function on_message(request: Discord.Message) {
                 const open_tag = get_tag(forum, "Open").id;
                 if(thread.parentId && forum_help_channels.has(thread.parentId)) { // TODO
                     if(!thread.appliedTags.some(tag => tag == solved_tag)) {
-                        M.log("Marking thread as solved", [ thread.id, thread.name ]);
+                        M.log("Marking thread as solved", thread.id, thread.name);
                         //await request.react("👍");
                         const reply = await thread.send({
                             embeds: [
@@ -101,7 +101,7 @@ async function on_message(request: Discord.Message) {
                 const open_tag = get_tag(forum, "Open").id;
                 if(thread.parentId && forum_help_channels.has(thread.parentId)) { // TODO
                     if(thread.appliedTags.some(tag => tag == solved_tag)) {
-                        M.log("Unsolving thread", [ thread.id, thread.name ]);
+                        M.log("Unsolving thread", thread.id, thread.name);
                         await request.react("👍");
                         await thread.setAppliedTags(
                             [open_tag].concat(thread.appliedTags.filter(tag => tag != solved_tag))
