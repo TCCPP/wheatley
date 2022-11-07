@@ -2,9 +2,8 @@ import * as Discord from "discord.js";
 import { strict as assert } from "assert";
 import { critical_error, M } from "../utils";
 import { TCCPP_ID } from "../common";
-import { make_message_deletable } from "./deletable";
-
-let client: Discord.Client;
+import { BotComponent } from "../bot_component";
+import { Wheatley } from "../wheatley";
 
 const snowflake_command_re = /!snowflake\s*(\d+)/i;
 const DISCORD_EPOCH = 1420070400000;
@@ -20,9 +19,13 @@ export function forge_snowflake(timestamp: number) {
     return snowflake.toString();
 }
 
-async function on_message(message: Discord.Message) {
-    try {
-        if(message.author.id == client.user!.id) return; // Ignore self
+export class Snowflake extends BotComponent {
+    constructor(wheatley: Wheatley) {
+        super(wheatley);
+    }
+
+    override async on_message_create(message: Discord.Message) {
+        if(message.author.id == this.wheatley.client.user!.id) return; // Ignore self
         if(message.author.bot) return; // Ignore bots
         if(message.guildId != TCCPP_ID) return; // Ignore messages outside TCCPP (e.g. dm's)
         const match = message.content.match(snowflake_command_re);
@@ -30,18 +33,7 @@ async function on_message(message: Discord.Message) {
             assert(match.length == 2);
             const timestamp = decode_snowflake(match[1]);
             const reply = await message.channel.send(`<t:${Math.round(timestamp / 1000)}>`);
-            make_message_deletable(message, reply);
+            this.wheatley.deletable.make_message_deletable(message, reply);
         }
-    } catch(e) {
-        critical_error(e);
-    }
-}
-
-export async function setup_snowflake(_client: Discord.Client) {
-    try {
-        client = _client;
-        client.on("messageCreate", on_message);
-    } catch(e) {
-        critical_error(e);
     }
 }

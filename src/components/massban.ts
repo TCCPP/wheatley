@@ -2,62 +2,55 @@ import * as Discord from "discord.js";
 import { strict as assert } from "assert";
 import { critical_error, fetch_text_channel, M } from "../utils";
 import { action_log_channel_id, colors, is_authorized_admin, pepereally, TCCPP_ID } from "../common";
-
-let client: Discord.Client;
-let action_log_channel: Discord.TextChannel;
+import { BotComponent } from "../bot_component";
+import { Wheatley } from "../wheatley";
 
 const snowflake_re = /\b\d{10,}\b/g;
 
-function do_mass_ban(msg: Discord.Message) {
-    // TODO: Do DM logic?
-    // TODO: Set entry.purged if necessary?
-    M.log("Got massban command");
-    assert(msg.guild != null);
-    const ids = msg.content.match(snowflake_re);
-    if(ids != null && ids.length > 0) {
-        M.debug("Banning...");
-        msg.channel.send("Banning...");
-        M.debug(ids);
-        for(const id of ids) {
-            msg.guild.members.ban(id, { reason: "[[Wheatley]] Manual mass-ban" });
-        }
-        msg.reply("Done.");
-        // TODO: use long-message logic?
-        const embed = new Discord.EmbedBuilder()
-            .setColor(colors.color)
-            .setTitle(`<@!${msg.author.id}> banned ${ids.length} users`)
-            .setDescription(`\`\`\`\n${ids.join("\n")}\n\`\`\``)
-            .setTimestamp();
-        action_log_channel.send({ embeds: [embed] });
+export class Massban extends BotComponent {
+    constructor(wheatley: Wheatley) {
+        super(wheatley);
     }
-}
 
-function on_message(message: Discord.Message) {
-    try {
-        if(message.author.id == client.user!.id) return; // Ignore self
-        if(message.author.bot) return; // Ignore bots
-        if(message.guildId != TCCPP_ID) return; // Ignore messages outside TCCPP (e.g. dm's)
-        if(message.content.startsWith("!wban")) {
-            assert(message.member != null);
-            if(is_authorized_admin(message.member)) {
-                do_mass_ban(message);
-            } else {
-                message.reply(`Unauthorized ${pepereally}`);
-            }
-        }
-    } catch(e) {
-        critical_error(e);
-    }
-}
-
-export function setup_massban(_client: Discord.Client) {
-    client = _client;
-    client.on("ready", async () => {
+    override async on_message_create(message: Discord.Message) {
         try {
-            action_log_channel = await fetch_text_channel(action_log_channel_id);
-            client.on("messageCreate", on_message);
+            if(message.author.id == this.wheatley.client.user!.id) return; // Ignore self
+            if(message.author.bot) return; // Ignore bots
+            if(message.guildId != TCCPP_ID) return; // Ignore messages outside TCCPP (e.g. dm's)
+            if(message.content.startsWith("!wban")) {
+                assert(message.member != null);
+                if(is_authorized_admin(message.member)) {
+                    this.do_mass_ban(message);
+                } else {
+                    message.reply(`Unauthorized ${pepereally}`);
+                }
+            }
         } catch(e) {
             critical_error(e);
         }
-    });
+    }
+
+    do_mass_ban(msg: Discord.Message) {
+        // TODO: Do DM logic?
+        // TODO: Set entry.purged if necessary?
+        M.log("Got massban command");
+        assert(msg.guild != null);
+        const ids = msg.content.match(snowflake_re);
+        if(ids != null && ids.length > 0) {
+            M.debug("Banning...");
+            msg.channel.send("Banning...");
+            M.debug(ids);
+            for(const id of ids) {
+                msg.guild.members.ban(id, { reason: "[[Wheatley]] Manual mass-ban" });
+            }
+            msg.reply("Done.");
+            // TODO: use long-message logic?
+            const embed = new Discord.EmbedBuilder()
+                .setColor(colors.color)
+                .setTitle(`<@!${msg.author.id}> banned ${ids.length} users`)
+                .setDescription(`\`\`\`\n${ids.join("\n")}\n\`\`\``)
+                .setTimestamp();
+            this.wheatley.action_log_channel.send({ embeds: [embed] });
+        }
+    }
 }

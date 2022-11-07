@@ -2,18 +2,21 @@ import * as Discord from "discord.js";
 import { strict as assert } from "assert";
 import { critical_error, M } from "../utils";
 import { is_authorized_admin, TCCPP_ID } from "../common";
+import { BotComponent } from "../bot_component";
+import { Wheatley } from "../wheatley";
 
-let client: Discord.Client;
+export class UtilityTools extends BotComponent {
+    constructor(wheatley: Wheatley) {
+        super(wheatley);
+    }
 
-async function on_message(message: Discord.Message) {
-    if(message.author.bot) return; // Ignore bots
-    if(is_authorized_admin(message.author)) {
-        try {
+    override async on_message_create(message: Discord.Message) {
+        if(message.author.bot) return; // Ignore bots
+        if(is_authorized_admin(message.author)) {
             if(message.content == "!channel-rename") {
                 M.info("got !channel-rename");
                 const m = await message.channel.send("working...");
-                const TCCPP = await client.guilds.fetch(TCCPP_ID);
-                const channels = await TCCPP.channels.fetch();
+                const channels = await this.wheatley.TCCPP.channels.fetch();
                 for(const [ _, channel ] of channels) {
                     assert(channel);
                     const r = channel.name.replace(/_/g, "-");
@@ -24,8 +27,7 @@ async function on_message(message: Discord.Message) {
                 m.edit(":+1:");
             } else if(message.content == "!sync-archive-permissions") {
                 M.info("got !sync-archive-permissions");
-                const TCCPP = await client.guilds.fetch(TCCPP_ID);
-                const archive = await TCCPP.channels.fetch("910306041969913938");
+                const archive = await this.wheatley.TCCPP.channels.fetch("910306041969913938");
                 assert(archive instanceof Discord.CategoryChannel);
                 for(const [ _, channel ] of archive.children.cache) {
                     await channel.lockPermissions();
@@ -33,8 +35,7 @@ async function on_message(message: Discord.Message) {
                 await message.reply("Done");
             } else if(message.content == "!prefix-archive-channels") {
                 M.info("got !prefix-archive-channels");
-                const TCCPP = await client.guilds.fetch(TCCPP_ID);
-                const archive = await TCCPP.channels.fetch("910306041969913938");
+                const archive = await this.wheatley.TCCPP.channels.fetch("910306041969913938");
                 assert(archive instanceof Discord.CategoryChannel);
                 for(const [ _, channel ] of archive.children.cache) {
                     if(!channel.name.startsWith("archived-")) {
@@ -43,30 +44,6 @@ async function on_message(message: Discord.Message) {
                 }
                 await message.reply("Done");
             }
-        } catch(e) {
-            critical_error(e);
-            try {
-                await message.reply("Internal error");
-            } catch(e) {
-                critical_error(e);
-            }
         }
-    }
-}
-
-async function on_ready() {
-    try {
-        client.on("messageCreate", on_message);
-    } catch(e) {
-        critical_error(e);
-    }
-}
-
-export async function setup_utility_tools(_client: Discord.Client) {
-    try {
-        client = _client;
-        client.on("ready", on_ready);
-    } catch(e) {
-        critical_error(e);
     }
 }

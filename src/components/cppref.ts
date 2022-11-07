@@ -5,168 +5,13 @@ import { strict as assert } from "assert";
 
 import * as fs from "fs";
 
-import { critical_error, format_list, M } from "../utils";
+import { format_list, M } from "../utils";
 
 import { cppref_index, cppref_page, CpprefSubIndex } from "../../indexes/cppref/types";
 import { Index } from "../algorithm/search";
-import { make_message_deletable } from "./deletable";
-import { GuildCommandManager } from "../infra/guild_command_manager";
-
-let client: Discord.Client;
-
-let c_index: Index<cppref_page>;
-let cpp_index: Index<cppref_page>;
-
-const color = 0x7289DA; // todo: use ping color? make this common?
-
-export function lookup(query: string, target: CpprefSubIndex) {
-    return (target == CpprefSubIndex.C ? c_index : cpp_index).search(query);
-}
-
-function lookup_top_5(query: string, target: CpprefSubIndex) {
-    return (target == CpprefSubIndex.C ? c_index : cpp_index).search_get_top_5(query);
-}
-
-function link_headers(header: string) {
-    const matches = [...header.matchAll(/^<(.+)>$/g)];
-    assert(matches.length == 1);
-    const header_part = matches[0][1];
-    if(header_part.endsWith(".h")) {
-        return header;
-    } else {
-        return `[${header}](en.cppreference.com/w/cpp/header/${header_part}.html)`;
-    }
-}
-
-async function send_results(message: Discord.Message, result: cppref_page | null) {
-    if(result === null) {
-        const result_message = await message.channel.send({ embeds: [
-            new Discord.EmbedBuilder()
-                .setColor(color)
-                .setAuthor({
-                    name: "cppreference.com",
-                    iconURL: "https://en.cppreference.com/favicon.ico",
-                    url: "https://en.cppreference.com"
-                })
-                .setDescription("No results found")
-        ] });
-        make_message_deletable(message, result_message);
-    } else {
-        // TODO: Clang format.....?
-        const embed = new Discord.EmbedBuilder()
-            .setColor(color)
-            .setAuthor({
-                name: "cppreference.com",
-                iconURL: "https://en.cppreference.com/favicon.ico",
-                url: "https://en.cppreference.com"
-            })
-            .setTitle(result.title)
-            .setURL(`https://${result.path}`);
-        if(result.sample_declaration) {
-            embed.setDescription(`\`\`\`cpp\n${
-                result.sample_declaration
-                + (result.other_declarations ? `\n// ... and ${result.other_declarations} more` : "")
-            }\n\`\`\``);
-        }
-        if(result.headers) {
-            embed.addFields({
-                name: "Defined in",
-                value: format_list(result.headers.map(link_headers))
-            });
-        }
-        const result_message = await message.channel.send({ embeds: [embed] });
-        make_message_deletable(message, result_message);
-    }
-}
-
-async function on_message(message: Discord.Message) {
-    try {
-        if(message.author.bot) return; // Ignore bots
-        if(message.content.startsWith("!cref ")) {
-            const query = message.content.slice("!cref".length).trim();
-            const result = lookup(query, CpprefSubIndex.C);
-            M.log("cref query", query, result ? `https://${result.path}` : null);
-            await send_results(message, result);
-        }
-        if(message.content.startsWith("!cppref")) {
-            const query = message.content.slice("!cppref".length).trim();
-            const result = lookup(query, CpprefSubIndex.CPP);
-            M.log("cppref query", query, result ? `https://${result.path}` : null);
-            await send_results(message, result);
-        }
-    } catch(e) {
-        critical_error(e);
-    }
-}
-
-// TODO: Lots of code duplication
-async function send_results_slash(interaction: Discord.ChatInputCommandInteraction, result: cppref_page | null) {
-    if(result === null) {
-        await interaction.reply({ embeds: [
-            new Discord.EmbedBuilder()
-                .setColor(color)
-                .setAuthor({
-                    name: "cppreference.com",
-                    iconURL: "https://en.cppreference.com/favicon.ico",
-                    url: "https://en.cppreference.com"
-                })
-                .setDescription("No results found")
-        ] });
-    } else {
-        // TODO: Clang format.....?
-        const embed = new Discord.EmbedBuilder()
-            .setColor(color)
-            .setAuthor({
-                name: "cppreference.com",
-                iconURL: "https://en.cppreference.com/favicon.ico",
-                url: "https://en.cppreference.com"
-            })
-            .setTitle(result.title)
-            .setURL(`https://${result.path}`);
-        if(result.sample_declaration) {
-            embed.setDescription(`\`\`\`cpp\n${
-                result.sample_declaration
-                + (result.other_declarations ? `\n// ... and ${result.other_declarations} more` : "")
-            }\n\`\`\``);
-        }
-        if(result.headers) {
-            embed.addFields({
-                name: "Defined in",
-                value: format_list(result.headers.map(link_headers))
-            });
-        }
-        await interaction.reply({ embeds: [embed] });
-    }
-}
-
-async function on_interaction_create(interaction: Discord.Interaction) {
-    if(interaction.isCommand() && (interaction.commandName == "cref" || interaction.commandName == "cppref")) {
-        assert(interaction.isChatInputCommand());
-        const query = interaction.options.getString("query")!.trim();
-        const result = lookup(query, interaction.commandName == "cref" ? CpprefSubIndex.C : CpprefSubIndex.CPP);
-        M.log(`${interaction.commandName} query`, query, result ? `https://${result.path}` : null);
-        await send_results_slash(interaction, result);
-    } else if(interaction.isAutocomplete()
-    && (interaction.commandName == "cref" || interaction.commandName == "cppref")) {
-        const query = interaction.options.getFocused().trim();
-        await interaction.respond(
-            lookup_top_5(query, interaction.commandName == "cref" ? CpprefSubIndex.C : CpprefSubIndex.CPP)
-                .map(page => ({
-                    name: `${page.title.substring(0, 100 - 14)} . . . . ${Math.round(page.score * 100) / 100}`,
-                    value: page.title
-                }))
-        );
-    }
-}
-
-async function on_ready() {
-    try {
-        client.on("messageCreate", on_message);
-        client.on("interactionCreate", on_interaction_create);
-    } catch(e) {
-        critical_error(e);
-    }
-}
+import { BotComponent } from "../bot_component";
+import { Wheatley } from "../wheatley";
+import { colors } from "../common";
 
 function eliminate_aliases_and_duplicates(pages: cppref_page[]) {
     // There's this annoying thing where multiple pages are really the same page
@@ -259,26 +104,51 @@ function eliminate_aliases_and_duplicates(pages: cppref_page[]) {
     return Object.values(page_map);
 }
 
-function setup_indexes(index_data: cppref_index) {
-    c_index = new Index(eliminate_aliases_and_duplicates(index_data.c));
-    cpp_index = new Index(eliminate_aliases_and_duplicates(index_data.cpp));
+export class CpprefIndex {
+    c_index: Index<cppref_page>;
+    cpp_index: Index<cppref_page>;
+
+    setup_indexes(index_data: cppref_index) {
+        this.c_index = new Index(eliminate_aliases_and_duplicates(index_data.c));
+        this.cpp_index = new Index(eliminate_aliases_and_duplicates(index_data.cpp));
+    }
+
+    async load_data() {
+        const index_data = JSON.parse(
+            await fs.promises.readFile("indexes/cppref/cppref_index.json", { encoding: "utf-8" })
+        ) as cppref_index;
+        this.setup_indexes(index_data);
+    }
+
+    // for testcase purposes
+    load_data_sync() {
+        const index_data = <cppref_index>(
+            JSON.parse(fs.readFileSync("indexes/cppref/cppref_index.json", { encoding: "utf-8" }))
+        );
+        //for(const pages of [index.c, index.cpp]) {
+        //    for(const page of pages) {
+        //        if(DEBUG) console.log(page.title.split(",").map(x => x.trim()));
+        //    }
+        //}
+        this.setup_indexes(index_data);
+        return this;
+    }
+
+    lookup(query: string, target: CpprefSubIndex) {
+        return (target == CpprefSubIndex.C ? this.c_index : this.cpp_index).search(query);
+    }
+
+    lookup_top_5(query: string, target: CpprefSubIndex) {
+        return (target == CpprefSubIndex.C ? this.c_index : this.cpp_index).search_get_top_5(query);
+    }
 }
 
-export function cppref_testcase_setup() {
-    const index_data = <cppref_index>(
-        JSON.parse(fs.readFileSync("indexes/cppref/cppref_index.json", { encoding: "utf-8" }))
-    );
-    //for(const pages of [index.c, index.cpp]) {
-    //    for(const page of pages) {
-    //        if(DEBUG) console.log(page.title.split(",").map(x => x.trim()));
-    //    }
-    //}
-    setup_indexes(index_data);
-}
+export class Cppref extends BotComponent {
+    readonly index = new CpprefIndex;
 
-export async function setup_cppref(_client: Discord.Client, guild_command_manager: GuildCommandManager) {
-    try {
-        client = _client;
+    constructor(wheatley: Wheatley) {
+        super(wheatley);
+
         const cppref = new SlashCommandBuilder()
             .setName("cppref")
             .setDescription("Query C++ reference pages")
@@ -295,14 +165,140 @@ export async function setup_cppref(_client: Discord.Client, guild_command_manage
                     .setDescription("Query")
                     .setAutocomplete(true)
                     .setRequired(true));
-        guild_command_manager.register(cppref);
-        guild_command_manager.register(cref);
-        const index_data = JSON.parse(
-            await fs.promises.readFile("indexes/cppref/cppref_index.json", { encoding: "utf-8" })
-        ) as cppref_index;
-        setup_indexes(index_data);
-        client.on("ready", on_ready);
-    } catch(e) {
-        critical_error(e);
+        this.wheatley.guild_command_manager.register(cppref);
+        this.wheatley.guild_command_manager.register(cref);
+        // Ok if the bot spins up while this is loading
+        this.index.load_data();
+    }
+
+    override async on_message_create(message: Discord.Message) {
+        if(message.author.bot) return; // Ignore bots
+        if(message.content.startsWith("!cref ")) {
+            const query = message.content.slice("!cref".length).trim();
+            const result = this.index.lookup(query, CpprefSubIndex.C);
+            M.log("cref query", query, result ? `https://${result.path}` : null);
+            await this.send_results(message, result);
+        }
+        if(message.content.startsWith("!cppref")) {
+            const query = message.content.slice("!cppref".length).trim();
+            const result = this.index.lookup(query, CpprefSubIndex.CPP);
+            M.log("cppref query", query, result ? `https://${result.path}` : null);
+            await this.send_results(message, result);
+        }
+    }
+
+    override async on_interaction_create(interaction: Discord.Interaction) {
+        if(interaction.isCommand() && (interaction.commandName == "cref" || interaction.commandName == "cppref")) {
+            assert(interaction.isChatInputCommand());
+            const query = interaction.options.getString("query")!.trim();
+            const result = this.index.lookup(
+                query, interaction.commandName == "cref" ? CpprefSubIndex.C : CpprefSubIndex.CPP
+            );
+            M.log(`${interaction.commandName} query`, query, result ? `https://${result.path}` : null);
+            await this.send_results_slash(interaction, result);
+        } else if(interaction.isAutocomplete()
+        && (interaction.commandName == "cref" || interaction.commandName == "cppref")) {
+            const query = interaction.options.getFocused().trim();
+            await interaction.respond(
+                this.index
+                    .lookup_top_5(query,interaction.commandName == "cref" ? CpprefSubIndex.C : CpprefSubIndex.CPP)
+                    .map(page => ({
+                        name: `${page.title.substring(0, 100 - 14)} . . . . ${Math.round(page.score * 100) / 100}`,
+                        value: page.title
+                    }))
+            );
+        }
+    }
+
+    link_headers(header: string) {
+        const matches = [...header.matchAll(/^<(.+)>$/g)];
+        assert(matches.length == 1);
+        const header_part = matches[0][1];
+        if(header_part.endsWith(".h")) {
+            return header;
+        } else {
+            return `[${header}](en.cppreference.com/w/cpp/header/${header_part}.html)`;
+        }
+    }
+
+    async send_results(message: Discord.Message, result: cppref_page | null) {
+        if(result === null) {
+            const result_message = await message.channel.send({ embeds: [
+                new Discord.EmbedBuilder()
+                    .setColor(colors.color)
+                    .setAuthor({
+                        name: "cppreference.com",
+                        iconURL: "https://en.cppreference.com/favicon.ico",
+                        url: "https://en.cppreference.com"
+                    })
+                    .setDescription("No results found")
+            ] });
+            this.wheatley.deletable.make_message_deletable(message, result_message);
+        } else {
+            // TODO: Clang format.....?
+            const embed = new Discord.EmbedBuilder()
+                .setColor(colors.color)
+                .setAuthor({
+                    name: "cppreference.com",
+                    iconURL: "https://en.cppreference.com/favicon.ico",
+                    url: "https://en.cppreference.com"
+                })
+                .setTitle(result.title)
+                .setURL(`https://${result.path}`);
+            if(result.sample_declaration) {
+                embed.setDescription(`\`\`\`cpp\n${
+                    result.sample_declaration
+                    + (result.other_declarations ? `\n// ... and ${result.other_declarations} more` : "")
+                }\n\`\`\``);
+            }
+            if(result.headers) {
+                embed.addFields({
+                    name: "Defined in",
+                    value: format_list(result.headers.map(this.link_headers))
+                });
+            }
+            const result_message = await message.channel.send({ embeds: [embed] });
+            this.wheatley.deletable.make_message_deletable(message, result_message);
+        }
+    }
+
+    // TODO: Lots of code duplication
+    async send_results_slash(interaction: Discord.ChatInputCommandInteraction, result: cppref_page | null) {
+        if(result === null) {
+            await interaction.reply({ embeds: [
+                new Discord.EmbedBuilder()
+                    .setColor(colors.color)
+                    .setAuthor({
+                        name: "cppreference.com",
+                        iconURL: "https://en.cppreference.com/favicon.ico",
+                        url: "https://en.cppreference.com"
+                    })
+                    .setDescription("No results found")
+            ] });
+        } else {
+            // TODO: Clang format.....?
+            const embed = new Discord.EmbedBuilder()
+                .setColor(colors.color)
+                .setAuthor({
+                    name: "cppreference.com",
+                    iconURL: "https://en.cppreference.com/favicon.ico",
+                    url: "https://en.cppreference.com"
+                })
+                .setTitle(result.title)
+                .setURL(`https://${result.path}`);
+            if(result.sample_declaration) {
+                embed.setDescription(`\`\`\`cpp\n${
+                    result.sample_declaration
+                    + (result.other_declarations ? `\n// ... and ${result.other_declarations} more` : "")
+                }\n\`\`\``);
+            }
+            if(result.headers) {
+                embed.addFields({
+                    name: "Defined in",
+                    value: format_list(result.headers.map(this.link_headers))
+                });
+            }
+            await interaction.reply({ embeds: [embed] });
+        }
     }
 }

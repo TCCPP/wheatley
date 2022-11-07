@@ -3,21 +3,25 @@ import { strict as assert } from "assert";
 import { critical_error, diff_to_human, fetch_text_channel, M } from "../utils";
 import { MemberTracker } from "../infra/member_tracker";
 import { action_log_channel_id, colors } from "../common";
+import { BotComponent } from "../bot_component";
+import { Wheatley } from "../wheatley";
 
-let tracker: MemberTracker;
-let client: Discord.Client;
-let action_log_channel: Discord.TextChannel;
+export class Speedrun extends BotComponent {
+    constructor(wheatley: Wheatley) {
+        super(wheatley);
 
-function on_ban(ban: Discord.GuildBan, now: number) {
-    try {
+        this.wheatley.tracker.add_submodule({ on_ban: this.on_ban });
+    }
+
+    on_ban(ban: Discord.GuildBan, now: number) {
         M.debug("speedrun check");
         const user = ban.user;
         // get user info
         const avatar = user.displayAvatarURL();
-        if(!tracker.id_map.has(user.id)) {
+        if(!this.wheatley.tracker.id_map.has(user.id)) {
             return; // If not in tracker, been in the server longer than 30 minutes
         }
-        const entry = tracker.id_map.get(user.id)!;
+        const entry = this.wheatley.tracker.id_map.get(user.id)!;
         if(entry.purged) {
             return; // ignore bans from !raidpurge
         }
@@ -29,7 +33,7 @@ function on_ban(ban: Discord.GuildBan, now: number) {
         M.log("Ban speedrun", diff_to_human(now - entry.joined_at), user.id, user.tag);
         // .purged set by raidpurge (yes I know it's checked above), currently_banning used by anti-scambot
         // eslint-disable-next-line @typescript-eslint/no-unnecessary-condition
-        const is_auto_ban = entry.purged || tracker.currently_banning.has(user.id);
+        const is_auto_ban = entry.purged || this.wheatley.tracker.currently_banning.has(user.id);
         // make embed
         const embed = new Discord.EmbedBuilder()
             .setColor(colors.speedrun_color)
@@ -38,30 +42,13 @@ function on_ban(ban: Discord.GuildBan, now: number) {
                 iconURL: avatar
             })
             .setDescription(`User <@${user.id}> joined at <t:${Math.round(entry.joined_at / 1000)}:T> and`
-                          + ` banned at <t:${Math.round(now / 1000)}:T>.\n`
-                          + `Final timer: ${diff_to_human(now - entry.joined_at)}.`
-                          + (is_auto_ban ? "\n**AUTO BAN**" : ""))
+                            + ` banned at <t:${Math.round(now / 1000)}:T>.\n`
+                            + `Final timer: ${diff_to_human(now - entry.joined_at)}.`
+                            + (is_auto_ban ? "\n**AUTO BAN**" : ""))
             .setFooter({
                 text: `ID: ${user.id}`
             })
             .setTimestamp();
-        action_log_channel!.send({ embeds: [embed] });
-    } catch(e) {
-        critical_error(e);
+        this.wheatley.action_log_channel!.send({ embeds: [embed] });
     }
-}
-
-export async function setup_speedrun(_client: Discord.Client, _tracker: MemberTracker) {
-    client = _client;
-    tracker = _tracker;
-    M.debug("Setting up speedrun");
-    client.on("ready", async () => {
-        try {
-            action_log_channel = await fetch_text_channel(action_log_channel_id);
-            M.debug("tracked_mentions: action_log_channel channel fetched");
-            tracker.add_submodule({ on_ban });
-        } catch(e) {
-            critical_error(e);
-        }
-    });
 }

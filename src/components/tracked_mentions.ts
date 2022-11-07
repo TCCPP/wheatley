@@ -2,9 +2,8 @@ import * as Discord from "discord.js";
 import { strict as assert } from "assert";
 import { critical_error, fetch_text_channel, format_list, M } from "../utils";
 import { action_log_channel_id, colors, moderators_role_id, root_role_id, TCCPP_ID } from "../common";
-
-let client: Discord.Client;
-let action_log_channel: Discord.TextChannel;
+import { BotComponent } from "../bot_component";
+import { Wheatley } from "../wheatley";
 
 const tracked_mentions = new Set([
     "540314034894012428", // admin role on test server
@@ -15,51 +14,38 @@ const tracked_mentions = new Set([
     "1013953887029444678", // dyno
 ]);
 
-async function check_tracked_mention_and_notify(message: Discord.Message) {
-    const mentions = [...new Set(message.mentions.roles.map(v => v.id).filter(id => tracked_mentions.has(id)))];
-    if(mentions.length > 0) {
-        M.log("Spotted tracked mention", message.url, message.author.id, message.author.tag);
-        const embed = new Discord.EmbedBuilder()
-            .setColor(colors.color)
-            .setAuthor({
-                name: `${message.author.username}#${message.author.discriminator}`,
-                iconURL: message.author.displayAvatarURL()
-            })
-            .setDescription(`${format_list(mentions.map(m => `<@&${m}>`))} mentioned in`
-                            + ` <#${message.channel.id}> by <@${message.author.id}>\n`
-                            + `[click here to jump](${message.url})`)
-            .setFooter({
-                text: `ID: ${message.author.id}`
-            })
-            .setTimestamp();
-        await action_log_channel.send({ embeds: [embed] });
+export class TrackedMentions extends BotComponent {
+    constructor(wheatley: Wheatley) {
+        super(wheatley);
     }
-}
 
-async function on_message(message: Discord.Message) {
-    try {
-        if(message.author.id == client.user!.id) return; // Ignore self
+    async check_tracked_mention_and_notify(message: Discord.Message) {
+        const mentions = [...new Set(message.mentions.roles.map(v => v.id).filter(id => tracked_mentions.has(id)))];
+        if(mentions.length > 0) {
+            M.log("Spotted tracked mention", message.url, message.author.id, message.author.tag);
+            const embed = new Discord.EmbedBuilder()
+                .setColor(colors.color)
+                .setAuthor({
+                    name: `${message.author.username}#${message.author.discriminator}`,
+                    iconURL: message.author.displayAvatarURL()
+                })
+                .setDescription(`${format_list(mentions.map(m => `<@&${m}>`))} mentioned in`
+                                + ` <#${message.channel.id}> by <@${message.author.id}>\n`
+                                + `[click here to jump](${message.url})`)
+                .setFooter({
+                    text: `ID: ${message.author.id}`
+                })
+                .setTimestamp();
+            await this.wheatley.action_log_channel.send({ embeds: [embed] });
+        }
+    }
+
+    override async on_message_create(message: Discord.Message) {
+        if(message.author.id == this.wheatley.client.user!.id) return; // Ignore self
         if(message.author.bot) return; // Ignore bots
         if(message.guildId != TCCPP_ID) return; // Ignore messages outside TCCPP (e.g. dm's)
         if(message.mentions.roles.size > 0) {
-            await check_tracked_mention_and_notify(message);
+            await this.check_tracked_mention_and_notify(message);
         }
-    } catch(e) {
-        critical_error(e);
     }
-}
-
-export async function setup_tracked_mentions(_client: Discord.Client) {
-    client = _client;
-    M.debug("Setting up tracked_mentions");
-    client.on("ready", async () => {
-        try {
-            action_log_channel = await fetch_text_channel(action_log_channel_id);
-            M.debug("tracked_mentions: action_log_channel channel fetched");
-            client.on("messageCreate", on_message);
-            //tracker.add_submodule({ });
-        } catch(e) {
-            critical_error(e);
-        }
-    });
 }

@@ -8,9 +8,10 @@ const fetch = (url: RequestInfo, init?: RequestInit) =>
 
 import { async_exec_file, critical_error, M } from "../utils";
 import { ApplicationCommandTypeMessage, MINUTE } from "../common";
-import { make_message_deletable } from "./deletable";
 import { ContextMenuCommandBuilder, MessageFlags } from "discord.js";
 import { GuildCommandManager } from "../infra/guild_command_manager";
+import { BotComponent } from "../bot_component";
+import { Wheatley } from "../wheatley";
 
 let client: Discord.Client;
 
@@ -205,69 +206,80 @@ function should_replace_original(replying_to: Discord.Message, request_timestamp
         && !ignore_prefixes.some(prefix => replying_to.content.startsWith(prefix));
 }
 
-// TODO: More refactoring needed
+export class Format extends BotComponent {
+    constructor(wheatley: Wheatley) {
+        super(wheatley);
 
-async function on_message(message: Discord.Message) {
-    try {
-        if(message.author.bot) return; // Ignore bots
-        if(message.content == "!f" || message.content == "!format") {
-            if(message.type == Discord.MessageType.Reply) {
-                const replying_to = await message.fetchReference();
+        const format = new ContextMenuCommandBuilder()
+            .setName("format")
+            .setType(ApplicationCommandTypeMessage);
+        this.wheatley.guild_command_manager.register(format);
+    }
 
-                M.log(`Received ${message.content}`, message.author.tag, message.author.id, replying_to.url);
+    // TODO: More refactoring needed
 
-                if(replying_to.author.bot) {
-                    const reply = await message.reply("Can't format a bot message");
-                    make_message_deletable(message, reply);
-                    return;
-                }
+    override async on_message_create(message: Discord.Message) {
+        // TODO: Leaving for now, need better way to handle this in the general case. Will probably be part of a larger
+        // command abstraction
+        try {
+            if(message.author.bot) return; // Ignore bots
+            if(message.content == "!f" || message.content == "!format") {
+                if(message.type == Discord.MessageType.Reply) {
+                    const replying_to = await message.fetchReference();
 
-                const { content, attachments, found_code_blocks } = await format(replying_to);
+                    M.log(`Received ${message.content}`, message.author.tag, message.author.id, replying_to.url);
 
-                if(attachments.length || found_code_blocks) {
-                    const embed = new Discord.EmbedBuilder()
-                        .setColor(color)
-                        .setAuthor({
-                            name: replying_to.member?.displayName ?? replying_to.author.tag,
-                            iconURL: replying_to.member?.avatarURL() ?? replying_to.author.displayAvatarURL()
-                        });
-                    if(message.author.id != replying_to.author.id) {
-                        embed.setFooter({
-                            text: `Formatted by ${message.member?.displayName ?? message.author.tag}`,
-                            iconURL: message.author.displayAvatarURL()
-                        });
+                    if(replying_to.author.bot) {
+                        const reply = await message.reply("Can't format a bot message");
+                        this.wheatley.deletable.make_message_deletable(message, reply);
+                        return;
                     }
-                    const formatted_message = await message.channel.send({
-                        embeds: [embed],
-                        content,
-                        files: attachments.filter(x => x != null) as Discord.AttachmentBuilder[]
-                    });
-                    if(should_replace_original(replying_to, message.createdAt)) {
-                        await replying_to.delete();
+
+                    const { content, attachments, found_code_blocks } = await format(replying_to);
+
+                    if(attachments.length || found_code_blocks) {
+                        const embed = new Discord.EmbedBuilder()
+                            .setColor(color)
+                            .setAuthor({
+                                name: replying_to.member?.displayName ?? replying_to.author.tag,
+                                iconURL: replying_to.member?.avatarURL() ?? replying_to.author.displayAvatarURL()
+                            });
+                        if(message.author.id != replying_to.author.id) {
+                            embed.setFooter({
+                                text: `Formatted by ${message.member?.displayName ?? message.author.tag}`,
+                                iconURL: message.author.displayAvatarURL()
+                            });
+                        }
+                        const formatted_message = await message.channel.send({
+                            embeds: [embed],
+                            content,
+                            files: attachments.filter(x => x != null) as Discord.AttachmentBuilder[]
+                        });
+                        if(should_replace_original(replying_to, message.createdAt)) {
+                            await replying_to.delete();
+                        } else {
+                            this.wheatley.deletable.make_message_deletable(message, formatted_message);
+                        }
                     } else {
-                        make_message_deletable(message, formatted_message);
+                        const reply = await message.reply("Nothing to format");
+                        this.wheatley.deletable.make_message_deletable(message, reply);
                     }
                 } else {
-                    const reply = await message.reply("Nothing to format");
-                    make_message_deletable(message, reply);
+                    const reply = await message.reply("!f must be used while replying to a message");
+                    this.wheatley.deletable.make_message_deletable(message, reply);
                 }
-            } else {
-                const reply = await message.reply("!f must be used while replying to a message");
-                make_message_deletable(message, reply);
             }
-        }
-    } catch(e) {
-        critical_error(e);
-        try {
-            message.reply("Internal error while running !f");
         } catch(e) {
             critical_error(e);
+            try {
+                message.reply("Internal error while running !f");
+            } catch(e) {
+                critical_error(e);
+            }
         }
     }
-}
 
-async function on_interaction_create(interaction: Discord.Interaction) {
-    try {
+    override async on_interaction_create(interaction: Discord.Interaction) {
         if(interaction.isMessageContextMenuCommand() && interaction.commandName == "format") {
             const replying_to = interaction.targetMessage;
 
@@ -324,29 +336,5 @@ async function on_interaction_create(interaction: Discord.Interaction) {
                 });
             }
         }
-    } catch(e) {
-        critical_error(e);
-    }
-}
-
-async function on_ready() {
-    try {
-        client.on("messageCreate", on_message);
-        client.on("interactionCreate", on_interaction_create);
-    } catch(e) {
-        critical_error(e);
-    }
-}
-
-export async function setup_format(_client: Discord.Client, guild_command_manager: GuildCommandManager) {
-    try {
-        client = _client;
-        const format = new ContextMenuCommandBuilder()
-            .setName("format")
-            .setType(ApplicationCommandTypeMessage);
-        guild_command_manager.register(format);
-        client.on("ready", on_ready);
-    } catch(e) {
-        critical_error(e);
     }
 }

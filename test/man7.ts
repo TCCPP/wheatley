@@ -1,6 +1,6 @@
 import { assert, expect } from "chai";
 
-import { lookup, man7_testcase_setup } from "../src/components/man7";
+import { Man7Index } from "../src/components/man7";
 
 type TestCase = {
     query: string | string[];
@@ -34,16 +34,16 @@ const cases: TestCase[] = [
     }
 ];
 
-man7_testcase_setup();
-
 // TODO: more typo test cases
+
+const index = new Man7Index().load_data_sync();
 
 describe("man cases", () => {
     for(const test_case of cases) {
         const queries = test_case.query instanceof Array ? test_case.query : [test_case.query];
         for(const query of queries) {
             it(`!cref should find ${query}`, done => {
-                const result = lookup(query);
+                const result = index.lookup(query);
                 assert(result, "search did not find a result when it should have");
                 expect(result.path).to.equal(test_case.path);
                 done();

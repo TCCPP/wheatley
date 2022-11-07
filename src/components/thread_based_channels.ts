@@ -2,8 +2,8 @@ import * as Discord from "discord.js";
 import { strict as assert } from "assert";
 import { critical_error, denullify, M } from "../utils";
 import { colors, thread_based_channel_ids, wheatley_id } from "../common";
-
-let client: Discord.Client;
+import { BotComponent } from "../bot_component";
+import { Wheatley } from "../wheatley";
 
 /*
  * Thread-based channel logic (non-forum)
@@ -31,8 +31,12 @@ function create_embed(title: string | undefined, color: number, msg: string) {
     return embed;
 }
 
-async function on_message(message: Discord.Message) {
-    try {
+export class ThreadBasedChannels extends BotComponent {
+    constructor(wheatley: Wheatley) {
+        super(wheatley);
+    }
+
+    override async on_message_create(message: Discord.Message) {
         if(message.author.bot) return; // Ignore bots
         if(message.type == Discord.MessageType.ThreadCreated) return; // ignore message create messages
         if(thread_based_channel_ids.has(message.channel.id)) {
@@ -48,41 +52,21 @@ async function on_message(message: Discord.Message) {
             await thread.members.add(message.author);
             await thread.leave();
         }
-    } catch(e) {
-        critical_error(e);
     }
-}
 
-async function on_thread_create(thread: Discord.ThreadChannel) {
-    if(thread.ownerId == wheatley_id) { // wheatley threads are either modlogs or thread help threads
-        return;
-    }
-    if(!(denullify(thread.parent) instanceof Discord.ForumChannel)) {
-        const owner_id = await get_owner(thread);
-        await thread.send({
-            content: `<@${owner_id}>`,
-            embeds: [
-                create_embed(undefined, colors.red, "Thread created, you are the owner. You can rename the thread with "
-                    + "`!rename <name>`")
-            ]
-        });
-    }
-}
-
-async function on_ready() {
-    try {
-        client.on("messageCreate", on_message);
-        client.on("threadCreate", on_thread_create);
-    } catch(e) {
-        critical_error(e);
-    }
-}
-
-export async function setup_thread_based_channels(_client: Discord.Client) {
-    try {
-        client = _client;
-        client.on("ready", on_ready);
-    } catch(e) {
-        critical_error(e);
+    override async on_thread_create(thread: Discord.ThreadChannel) {
+        if(thread.ownerId == wheatley_id) { // wheatley threads are either modlogs or thread help threads
+            return;
+        }
+        if(!(denullify(thread.parent) instanceof Discord.ForumChannel)) {
+            const owner_id = await get_owner(thread);
+            await thread.send({
+                content: `<@${owner_id}>`,
+                embeds: [
+                    create_embed(undefined, colors.red, "Thread created, you are the owner. You can rename the thread with "
+                        + "`!rename <name>`")
+                ]
+            });
+        }
     }
 }

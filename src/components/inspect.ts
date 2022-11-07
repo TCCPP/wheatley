@@ -2,15 +2,23 @@ import { strict as assert } from "assert";
 
 import * as Discord from "discord.js";
 
-import { critical_error, M } from "../utils";
+import { M } from "../utils";
 import { ApplicationCommandTypeMessage } from "../common";
-import { GuildCommandManager } from "../infra/guild_command_manager";
 import { ContextMenuCommandBuilder } from "discord.js";
+import { BotComponent } from "../bot_component";
+import { Wheatley } from "../wheatley";
 
-let client: Discord.Client;
+export class Inspect extends BotComponent {
+    constructor(wheatley: Wheatley) {
+        super(wheatley);
 
-async function on_interaction_create(interaction: Discord.Interaction) {
-    try {
+        const inspect = new ContextMenuCommandBuilder()
+            .setName("inspect")
+            .setType(ApplicationCommandTypeMessage);
+        this.wheatley.guild_command_manager.register(inspect);
+    }
+
+    override async on_interaction_create(interaction: Discord.Interaction) {
         if(interaction.isMessageContextMenuCommand() && interaction.commandName == "inspect") {
             M.log("Received inspect command");
             await interaction.reply({
@@ -19,28 +27,5 @@ async function on_interaction_create(interaction: Discord.Interaction) {
                     || undefined
             });
         }
-    } catch(e) {
-        critical_error(e);
-    }
-}
-
-async function on_ready() {
-    try {
-        client.on("interactionCreate", on_interaction_create);
-    } catch(e) {
-        critical_error(e);
-    }
-}
-
-export async function setup_inspect(_client: Discord.Client, guild_command_manager: GuildCommandManager) {
-    try {
-        client = _client;
-        const inspect = new ContextMenuCommandBuilder()
-            .setName("inspect")
-            .setType(ApplicationCommandTypeMessage);
-        guild_command_manager.register(inspect);
-        client.on("ready", on_ready);
-    } catch(e) {
-        critical_error(e);
     }
 }
