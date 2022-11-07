@@ -1,11 +1,8 @@
 import * as Discord from "discord.js";
 import { strict as assert } from "assert";
-import { critical_error, departialize, M, KeyedMutexSet, SelfClearingSet, fetch_text_channel,
-         fetch_thread_channel,
-         xxh3 } from "../utils";
-import { DatabaseInterface } from "../infra/database_interface";
+import { critical_error, departialize, M, KeyedMutexSet, SelfClearingSet, xxh3 } from "../utils";
 import { is_root, MINUTE, server_suggestions_channel_id, suggestion_action_log_thread_id,
-         suggestion_dashboard_thread_id, TCCPP_ID, wheatley_id } from "../common";
+         suggestion_dashboard_thread_id, wheatley_id } from "../common";
 import { forge_snowflake } from "./snowflake";
 import { BotComponent } from "../bot_component";
 import { Wheatley } from "../wheatley";
@@ -230,8 +227,10 @@ export class ServerSuggestionTracker extends BotComponent {
             const embed = await this.make_embed(message);
             const status_message = await this.thread.send({ embeds: [embed] });
             assert(!(message.id in this.wheatley.database.get<db_schema>("suggestion_tracker").suggestions));
-            if(message.createdTimestamp > this.wheatley.database.get<db_schema>("suggestion_tracker").last_scanned_timestamp) {
-                this.wheatley.database.get<db_schema>("suggestion_tracker").last_scanned_timestamp = message.createdTimestamp;
+            const last_scanned = this.wheatley.database.get<db_schema>("suggestion_tracker").last_scanned_timestamp;
+            if(message.createdTimestamp > last_scanned) {
+                this.wheatley.database.get<db_schema>("suggestion_tracker").last_scanned_timestamp
+                    = message.createdTimestamp;
             }
             this.wheatley.database.get<db_schema>("suggestion_tracker").suggestions[message.id] = {
                 status_message: status_message.id,
@@ -288,7 +287,8 @@ export class ServerSuggestionTracker extends BotComponent {
                 const up = (reactions.get("👍") || { count: 0 }).count;
                 const down = (reactions.get("👎") || { count: 0 }).count;
                 if(entry.up != up || entry.down != down) {
-                    M.debug("Updating suggestion with new reactions", message.author.tag, message.author.id, message.url);
+                    M.debug("Updating suggestion with new reactions",
+                            message.author.tag, message.author.id, message.url);
                     const status_message = await this.thread.messages.fetch(entry.status_message);
                     const embed = await this.make_embed(message);
                     await status_message.edit({ embeds: [embed] });
@@ -363,8 +363,8 @@ export class ServerSuggestionTracker extends BotComponent {
                         throw 0; // untracked  - this is an internal error or a race condition
                     } else {
                         M.info("server_suggestion tracker state recovery: Manual status delete",
-                            suggestion_id,
-                            this.wheatley.database.get<db_schema>("suggestion_tracker").suggestions[suggestion_id]);
+                               suggestion_id,
+                               this.wheatley.database.get<db_schema>("suggestion_tracker").suggestions[suggestion_id]);
                         delete this.wheatley.database.get<db_schema>("suggestion_tracker").suggestions[suggestion_id];
                         this.wheatley.database.update();
                     }
@@ -378,7 +378,7 @@ export class ServerSuggestionTracker extends BotComponent {
     }
 
     override async on_message_update(old_message: Discord.Message | Discord.PartialMessage,
-                                     new_message: Discord.Message | Discord.PartialMessage) {
+        new_message: Discord.Message | Discord.PartialMessage) {
         if(this.recovering) return;
         if(new_message.channel.id != server_suggestions_channel_id) return;
         try {
@@ -391,7 +391,7 @@ export class ServerSuggestionTracker extends BotComponent {
     }
 
     async process_vote(_reaction: Discord.MessageReaction | Discord.PartialMessageReaction,
-                       _: Discord.User                    | Discord.PartialUser) {
+        _: Discord.User                    | Discord.PartialUser) {
         const reaction = await departialize(_reaction);
         if(reaction.emoji.name! == "👍" || reaction.emoji.name! == "👎") {
             const message = await departialize(reaction.message);
@@ -418,7 +418,7 @@ export class ServerSuggestionTracker extends BotComponent {
     // Process a reaction, known to be a resolution reaction
     // Is root checked here
     async process_reaction(_reaction: Discord.MessageReaction | Discord.PartialMessageReaction,
-                                    user: Discord.User                 | Discord.PartialUser) {
+        user: Discord.User                 | Discord.PartialUser) {
         const reaction = await departialize(_reaction);
         if(resolution_reactions_set.has(reaction.emoji.name!)) {
             if(is_root(user)) {
@@ -431,7 +431,7 @@ export class ServerSuggestionTracker extends BotComponent {
     }
 
     async process_reaction_remove(reaction: Discord.MessageReaction | Discord.PartialMessageReaction,
-                                        user: Discord.User                | Discord.PartialUser) {
+        user: Discord.User                | Discord.PartialUser) {
         if(resolution_reactions_set.has(reaction.emoji.name!) && is_root(user)) {
             const message = await departialize(reaction.message);
             if(!await this.message_has_resolution_from_root(message)) {
@@ -443,7 +443,7 @@ export class ServerSuggestionTracker extends BotComponent {
     }
 
     override async on_reaction_add(reaction: Discord.MessageReaction | Discord.PartialMessageReaction,
-                                   user: Discord.User                | Discord.PartialUser) {
+        user: Discord.User                | Discord.PartialUser) {
         if(this.recovering) return;
         try {
             if(reaction.message.channel.id == server_suggestions_channel_id) {
@@ -476,8 +476,8 @@ export class ServerSuggestionTracker extends BotComponent {
                             emoji: reaction.emoji
                         });
                         this.mutex.unlock(reaction.message.id);
-                        // No further action done here: process_reaction will run when on_react will fires again as a result
-                        // of suggestion.react
+                        // No further action done here: process_reaction will run when on_react will fires again as a
+                        // result of suggestion.react
                     }
                 }
             }
@@ -495,7 +495,7 @@ export class ServerSuggestionTracker extends BotComponent {
     }
 
     override async on_reaction_remove(reaction: Discord.MessageReaction | Discord.PartialMessageReaction,
-                                      user: Discord.User                | Discord.PartialUser) {
+        user: Discord.User                | Discord.PartialUser) {
         if(this.recovering) return;
         if(reaction.message.channel.id != server_suggestions_channel_id) return;
         try {
@@ -519,7 +519,9 @@ export class ServerSuggestionTracker extends BotComponent {
             // TODO: Sort collection???
             const messages = await this.suggestion_channel.messages.fetch({
                 limit: 100,
-                after: forge_snowflake(this.wheatley.database.get<db_schema>("suggestion_tracker").last_scanned_timestamp + 1),
+                after: forge_snowflake(
+                    this.wheatley.database.get<db_schema>("suggestion_tracker").last_scanned_timestamp + 1
+                ),
                 cache: true
             });
             M.debug("process_since_last_scanned", messages.size);
@@ -538,15 +540,20 @@ export class ServerSuggestionTracker extends BotComponent {
                     // already resolved, just log
                     this.log_resolution(message, root_resolve);
                     // update last seen
-                    if(message.createdTimestamp > this.wheatley.database.get<db_schema>("suggestion_tracker").last_scanned_timestamp) {
-                        this.wheatley.database.get<db_schema>("suggestion_tracker").last_scanned_timestamp = message.createdTimestamp;
+                    const last_scanned = this.wheatley.database.get<db_schema>("suggestion_tracker")
+                        .last_scanned_timestamp;
+                    if(message.createdTimestamp > last_scanned) {
+                        this.wheatley.database.get<db_schema>("suggestion_tracker").last_scanned_timestamp
+                            = message.createdTimestamp;
                     }
                 } else {
                     M.debug("server_suggestion tracker process_since_last_scanned: New message found:",
                             message.id, message.author.tag, message.content);
-                    //if(message.createdTimestamp > this.wheatley.database.state.suggestion_tracker.last_scanned_timestamp) {
+                    //if(message.createdTimestamp >
+                    //      this.wheatley.database.state.suggestion_tracker.last_scanned_timestamp) {
                     //    assert(message.createdTimestamp == decode_snowflake(message.id));
-                    //    this.wheatley.database.get<db_schema>("suggestion_tracker").last_scanned_timestamp = message.createdTimestamp;
+                    //    this.wheatley.database.get<db_schema>("suggestion_tracker").last_scanned_timestamp =
+                    //          message.createdTimestamp;
                     //}
                     await this.open_suggestion(message); // will .update() this.wheatley.database
                 }

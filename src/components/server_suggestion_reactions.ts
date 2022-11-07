@@ -1,7 +1,7 @@
 import * as Discord from "discord.js";
 import { strict as assert } from "assert";
 import { is_root, MINUTE, server_suggestions_channel_id, suggestion_dashboard_thread_id } from "../common";
-import { critical_error, delay, M } from "../utils";
+import { delay, M } from "../utils";
 import { TRACKER_START_TIME } from "./server_suggestion_tracker";
 import { forge_snowflake } from "./snowflake";
 import { react_blacklist } from "../config";
@@ -106,7 +106,7 @@ export class ServerSuggestionReactions extends BotComponent {
     }
 
     override async on_reaction_add(reaction: Discord.MessageReaction | Discord.PartialMessageReaction,
-                                   user: Discord.User                | Discord.PartialUser) {
+        user: Discord.User                | Discord.PartialUser) {
         if(monitored_channels_ids.indexOf(reaction.message.channel.id) > -1) {
             if(reaction.users.cache.some(user => react_blacklist.has(user.id))) {
                 // Remove but not immediately

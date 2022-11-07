@@ -1,6 +1,6 @@
 import * as Discord from "discord.js";
 import { strict as assert } from "assert";
-import { critical_error, denullify, M } from "../utils";
+import { denullify } from "../utils";
 import { colors, thread_based_channel_ids, wheatley_id } from "../common";
 import { BotComponent } from "../bot_component";
 import { Wheatley } from "../wheatley";
@@ -63,8 +63,8 @@ export class ThreadBasedChannels extends BotComponent {
             await thread.send({
                 content: `<@${owner_id}>`,
                 embeds: [
-                    create_embed(undefined, colors.red, "Thread created, you are the owner. You can rename the thread with "
-                        + "`!rename <name>`")
+                    create_embed(undefined, colors.red,
+                                 "Thread created, you are the owner. You can rename the thread with `!rename <name>`")
                 ]
             });
         }

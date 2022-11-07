@@ -3,9 +3,8 @@ import { SlashCommandBuilder } from "@discordjs/builders";
 
 import { strict as assert } from "assert";
 
-import { critical_error, M } from "../utils";
+import { M } from "../utils";
 import { colors, is_authorized_admin } from "../common";
-import { GuildCommandManager } from "../infra/guild_command_manager";
 import { BotComponent } from "../bot_component";
 import { Wheatley } from "../wheatley";
 

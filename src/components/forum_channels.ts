@@ -1,9 +1,7 @@
 import * as Discord from "discord.js";
 import { strict as assert } from "assert";
-import { critical_error, delay, fetch_all_threads_archive_count, fetch_forum_channel, get_tag, M,
-         SelfClearingSet } from "../utils";
-import { colors, cpp_help_id, c_help_id, forum_help_channels, is_forum_help_thread, MINUTE,
-         wheatley_id, zelis_id } from "../common";
+import { delay, fetch_all_threads_archive_count, get_tag, M, SelfClearingSet } from "../utils";
+import { colors, forum_help_channels, is_forum_help_thread, MINUTE, wheatley_id } from "../common";
 import { decode_snowflake } from "./snowflake"; // todo: eliminate decode_snowflake
 import { BotComponent } from "../bot_component";
 import { Wheatley } from "../wheatley";
@@ -122,7 +120,7 @@ export class ForumChannels extends BotComponent {
             await thread.send({
                 embeds: [
                     create_embed(undefined, colors.color,
-                        "This question thread is being automatically marked as solved.")
+                                 "This question thread is being automatically marked as solved.")
                 ]
             });
             await thread.setAppliedTags([solved_tag].concat(thread.appliedTags.filter(t => t != open_tag)));

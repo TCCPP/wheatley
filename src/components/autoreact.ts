@@ -1,6 +1,6 @@
 import * as Discord from "discord.js";
 import { strict as assert } from "assert";
-import { critical_error, delay, M } from "../utils";
+import { delay, M } from "../utils";
 import { introductions_channel_id, memes_channel_id, MINUTE, server_suggestions_channel_id, TCCPP_ID } from "../common";
 import { BotComponent } from "../bot_component";
 import { Wheatley } from "../wheatley";

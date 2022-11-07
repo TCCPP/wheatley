@@ -4,7 +4,9 @@ import * as Discord from "discord.js";
 import { readFileSync } from "fs";
 
 import { BotComponent } from "./bot_component";
-import { action_log_channel_id, bot_spam_id, cpp_help_id, c_help_id, member_log_channel_id, message_log_channel_id, mods_channel_id, rules_channel_id, server_suggestions_channel_id, suggestion_action_log_thread_id, suggestion_dashboard_thread_id, TCCPP_ID, welcome_channel_id, zelis_id } from "./common";
+import { action_log_channel_id, bot_spam_id, cpp_help_id, c_help_id, member_log_channel_id, message_log_channel_id,
+         mods_channel_id, rules_channel_id, server_suggestions_channel_id, suggestion_action_log_thread_id,
+         suggestion_dashboard_thread_id, TCCPP_ID, welcome_channel_id, zelis_id } from "./common";
 import { AntiAutoreact } from "./components/anti_autoreact";
 import { AntiRaid } from "./components/anti_raid";
 import { AntiScambot } from "./components/anti_scambot";
@@ -106,8 +108,10 @@ export class Wheatley {
             })();
             (async () => {
                 this.server_suggestions_channel = await fetch_text_channel(server_suggestions_channel_id);
-                this.suggestion_dashboard_thread = await fetch_thread_channel(this.server_suggestions_channel, suggestion_dashboard_thread_id);
-                this.suggestion_action_log_thread = await fetch_thread_channel(this.server_suggestions_channel, suggestion_action_log_thread_id);
+                this.suggestion_dashboard_thread =
+                    await fetch_thread_channel(this.server_suggestions_channel, suggestion_dashboard_thread_id);
+                this.suggestion_action_log_thread =
+                    await fetch_thread_channel(this.server_suggestions_channel, suggestion_action_log_thread_id);
             })();
         });
         this.add_component(AntiAutoreact);

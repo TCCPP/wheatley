@@ -1,9 +1,7 @@
 import * as Discord from "discord.js";
 import { strict as assert } from "assert";
 import { critical_error, get_url_for, M } from "../utils";
-import { colors, is_authorized_admin, is_root, member_log_channel_id, MINUTE, moderators_role_id, mods_channel_id,
-         rules_channel_id, TCCPP_ID } from "../common";
-import { DatabaseInterface } from "../infra/database_interface";
+import { colors, is_authorized_admin, is_root, MINUTE, moderators_role_id } from "../common";
 import { APIInteractionGuildMember } from "discord-api-types/v10";
 import { BotComponent } from "../bot_component";
 import { Wheatley } from "../wheatley";
@@ -66,9 +64,9 @@ export class Modmail extends BotComponent {
                 // initial message
                 await thread.send({
                     embeds: [
-                        create_embed("Modmail", "Hello, thank you for reaching out. The staff team can view this thread "
-                            + "and will respond as soon as possible. When the issue is resolved, use `!archive` to archive "
-                            + "the thread.")
+                        create_embed("Modmail", "Hello, thank you for reaching out. The staff team can view this thread"
+                            + " and will respond as soon as possible. When the issue is resolved, use `!archive` to"
+                            + " archive the thread.")
                     ]
                 });
                 // send notification in mods channel
@@ -231,7 +229,7 @@ export class Modmail extends BotComponent {
     }
 
     async log_action(interaction_member: Discord.GuildMember | APIInteractionGuildMember | null,
-                              title: string, body?: string) {
+        title: string, body?: string) {
         const [ tag, avatar ] = await (async () => {
             if(interaction_member) {
                 const member = await this.wheatley.TCCPP.members.fetch(interaction_member.user.id);

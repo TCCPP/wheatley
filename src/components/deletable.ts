@@ -2,7 +2,7 @@ import { strict as assert } from "assert";
 
 import * as Discord from "discord.js";
 
-import { critical_error, M, SelfClearingMap } from "../utils";
+import { SelfClearingMap } from "../utils";
 import { MINUTE } from "../common";
 import { BotComponent } from "../bot_component";
 import { Wheatley } from "../wheatley";

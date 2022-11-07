@@ -9,11 +9,8 @@ const fetch = (url: RequestInfo, init?: RequestInit) =>
 import { async_exec_file, critical_error, M } from "../utils";
 import { ApplicationCommandTypeMessage, MINUTE } from "../common";
 import { ContextMenuCommandBuilder, MessageFlags } from "discord.js";
-import { GuildCommandManager } from "../infra/guild_command_manager";
 import { BotComponent } from "../bot_component";
 import { Wheatley } from "../wheatley";
-
-let client: Discord.Client;
 
 const color = 0x7E78FE; //0xA931FF;
 

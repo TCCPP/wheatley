@@ -1,7 +1,7 @@
 import * as Discord from "discord.js";
 import { strict as assert } from "assert";
-import { critical_error, fetch_text_channel, format_list, M } from "../utils";
-import { action_log_channel_id, colors, moderators_role_id, root_role_id, TCCPP_ID } from "../common";
+import { format_list, M } from "../utils";
+import { colors, moderators_role_id, root_role_id, TCCPP_ID } from "../common";
 import { BotComponent } from "../bot_component";
 import { Wheatley } from "../wheatley";
 

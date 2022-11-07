@@ -17,12 +17,10 @@
  */
 
 import * as Discord from "discord.js";
-import { readFileSync } from "fs";
 
 import { strict as assert } from "assert";
 import { critical_error, init_debugger, M } from "./utils";
 
-import { MemberTracker } from "./infra/member_tracker";
 import { DatabaseInterface } from "./infra/database_interface";
 import { fetch_root_mod_list } from "./common";
 

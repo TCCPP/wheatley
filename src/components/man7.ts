@@ -9,7 +9,6 @@ import { critical_error, M } from "../utils";
 
 import { Index, IndexEntry } from "../algorithm/search";
 import { man7_entry, man7_index } from "../../indexes/man7/types";
-import { GuildCommandManager } from "../infra/guild_command_manager";
 import { BotComponent } from "../bot_component";
 import { Wheatley } from "../wheatley";
 import { colors } from "../common";

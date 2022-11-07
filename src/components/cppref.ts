@@ -201,7 +201,7 @@ export class Cppref extends BotComponent {
             const query = interaction.options.getFocused().trim();
             await interaction.respond(
                 this.index
-                    .lookup_top_5(query,interaction.commandName == "cref" ? CpprefSubIndex.C : CpprefSubIndex.CPP)
+                    .lookup_top_5(query, interaction.commandName == "cref" ? CpprefSubIndex.C : CpprefSubIndex.CPP)
                     .map(page => ({
                         name: `${page.title.substring(0, 100 - 14)} . . . . ${Math.round(page.score * 100) / 100}`,
                         value: page.title

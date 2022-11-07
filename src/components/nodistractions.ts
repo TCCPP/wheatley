@@ -1,8 +1,7 @@
 import * as Discord from "discord.js";
 import { strict as assert } from "assert";
 import { critical_error, M } from "../utils";
-import { no_off_topic, TCCPP_ID, zelis_id } from "../common";
-import { DatabaseInterface } from "../infra/database_interface";
+import { no_off_topic } from "../common";
 import { BotComponent } from "../bot_component";
 import { Wheatley } from "../wheatley";
 
@@ -148,7 +147,7 @@ export class Nodistractions extends BotComponent {
     }
 
     async apply_no_distractions(target: Discord.GuildMember, message: Discord.Message, start: number,
-                                         duration: number) {
+        duration: number) {
         M.log("Applying !nodistractions", target.user.id, target.user.tag);
         // error handling
         if(target.roles.cache.some(r => r.id == no_off_topic)) {

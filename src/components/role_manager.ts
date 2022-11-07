@@ -1,6 +1,6 @@
 import * as Discord from "discord.js";
 import { strict as assert } from "assert";
-import { MINUTE, pink_role_id, skill_role_ids, TCCPP_ID } from "../common";
+import { MINUTE, pink_role_id, skill_role_ids } from "../common";
 import { critical_error, denullify, M } from "../utils";
 import { BotComponent } from "../bot_component";
 import { Wheatley } from "../wheatley";
@@ -29,7 +29,7 @@ export class RoleManager extends BotComponent {
                 if(m.roles.cache.some(r => r.id == pink_role_id)) {
                     if(m.premiumSince == null) {
                         M.log("removing pink for", m.user.tag);
-                        m.roles.remove(this.pink_role!).catch(M.error);
+                        m.roles.remove(this.pink_role).catch(M.error);
                     }
                 }
                 // skill roles

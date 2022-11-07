@@ -1,7 +1,6 @@
 import * as Discord from "discord.js";
 import { strict as assert } from "assert";
-import { bot_spam_id, TCCPP_ID } from "../common";
-import { critical_error, denullify, M, textchannelify } from "../utils";
+import { M } from "../utils";
 import { BotComponent } from "../bot_component";
 import { Wheatley } from "../wheatley";
 
@@ -53,7 +52,7 @@ export class UsernameManager extends BotComponent {
     }
 
     override async on_guild_member_update(old_member: Discord.GuildMember | Discord.PartialGuildMember,
-                                          new_member: Discord.GuildMember) {
+        new_member: Discord.GuildMember) {
         if(old_member.nickname !== new_member.nickname) {
             await this.check_member(new_member);
         }

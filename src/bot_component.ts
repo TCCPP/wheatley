@@ -32,15 +32,15 @@ export class BotComponent {
     async on_message_create(message: Discord.Message) {}
     async on_message_delete(message: Discord.Message | Discord.PartialMessage) {}
     async on_message_update(old_message: Discord.Message | Discord.PartialMessage,
-                            new_message: Discord.Message | Discord.PartialMessage) {}
+        new_message: Discord.Message | Discord.PartialMessage) {}
     async on_interaction_create(interaction: Discord.Interaction) {}
     async on_guild_member_add(member: Discord.GuildMember) {}
     async on_guild_member_update(old_member: Discord.GuildMember | Discord.PartialGuildMember,
-                                 new_member: Discord.GuildMember) {}
+        new_member: Discord.GuildMember) {}
     async on_reaction_add(reaction: Discord.MessageReaction | Discord.PartialMessageReaction,
-                          user: Discord.User                | Discord.PartialUser) {}
+        user: Discord.User                | Discord.PartialUser) {}
     async on_reaction_remove(reaction: Discord.MessageReaction | Discord.PartialMessageReaction,
-                             user: Discord.User                | Discord.PartialUser) {}
+        user: Discord.User                | Discord.PartialUser) {}
     async on_thread_create(thread: Discord.ThreadChannel) {}
     /* eslint-enable @typescript-eslint/no-empty-function, @typescript-eslint/no-unused-vars */
     // TODO: Register slash command...

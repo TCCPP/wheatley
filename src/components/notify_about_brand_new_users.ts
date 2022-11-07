@@ -1,7 +1,7 @@
 import * as Discord from "discord.js";
 import { strict as assert } from "assert";
-import { critical_error, diff_to_human, fetch_text_channel, M } from "../utils";
-import { colors, MINUTE, welcome_channel_id } from "../common";
+import { critical_error, diff_to_human, M } from "../utils";
+import { colors, MINUTE } from "../common";
 import { BotComponent } from "../bot_component";
 import { Wheatley } from "../wheatley";
 
@@ -26,7 +26,7 @@ export class NotifyAboutBrandNewUsers extends BotComponent {
                 text: `ID: ${member.id}`
             })
             .setTimestamp();
-        await this.wheatley.welcome_channel!.send({ embeds: [embed] })
+        await this.wheatley.welcome_channel.send({ embeds: [embed] })
             .catch((...args: any[]) => critical_error(...args));
         //member_log_channel!.send(`<@!${zelis_id}>`);
     }

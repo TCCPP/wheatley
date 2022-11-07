@@ -4,10 +4,9 @@ import * as Discord from "discord.js";
 import * as fs from "fs";
 import * as path from "path";
 
-import { critical_error, M } from "../utils";
+import { M } from "../utils";
 import { bot_spam_id, colors } from "../common";
 import { SlashCommandBuilder } from "discord.js";
-import { GuildCommandManager } from "../infra/guild_command_manager";
 import { BotComponent } from "../bot_component";
 import { Wheatley } from "../wheatley";
 
