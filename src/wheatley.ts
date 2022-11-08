@@ -24,6 +24,7 @@ import { Cppref } from "./components/cppref";
 import { Deletable } from "./components/deletable";
 import { Format } from "./components/format";
 import { ForumChannels } from "./components/forum_channels";
+import { ForumControl } from "./components/forum_control";
 import { Inspect } from "./components/inspect";
 import { LinkBlacklist } from "./components/link_blacklist";
 import { Man7 } from "./components/man7";
@@ -148,6 +149,7 @@ export class Wheatley extends EventEmitter {
         this.deletable = await this.add_component(Deletable);
         await this.add_component(Format);
         await this.add_component(ForumChannels);
+        await this.add_component(ForumControl);
         await this.add_component(Inspect);
         this.link_blacklist = await this.add_component(LinkBlacklist);
         await this.add_component(Man7);
