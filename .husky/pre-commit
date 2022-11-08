@@ -4,3 +4,5 @@
 tsc --noEmit
 npx lint-staged
 npm test
+
+./clear_js.sh
