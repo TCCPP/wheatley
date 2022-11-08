@@ -20,7 +20,7 @@ jobs:
     - name: copy files
       run: |
            rm -rfv mirror/* mirror/.github mirror/.gitignore mirror/.eslintrc.yml
-           mv -v source/* source/.github source/.gitignore source/.eslintrc.yml mirror
+           mv -v source/* source/.github source/.gitignore source/.eslintrc.yml source/.husky mirror
            rm mirror/.github/workflows/mirror.yml
     - name: cleanse sensitive files
       run: |
