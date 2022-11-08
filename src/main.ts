@@ -53,9 +53,6 @@ const client = new Discord.Client({
     })
 });
 
-// Every module sets a lot of listeners. This is not a leak.
-client.setMaxListeners(30);
-
 // Suggestion tracking
 // deleted suggestion -> wastebin
 // log resolution in suggestions_log thread
@@ -71,7 +68,6 @@ client.on("ready", async () => {
 });
 
 M.debug("Setting up services");
-
 
 init_debugger(client);
 
@@ -96,6 +92,6 @@ async function main() {
 
 // don't crash, try to restart
 process.on("uncaughtException", error => {
-    M.error("uncaughtException", error);
+    critical_error("uncaughtException", error);
     main();
 });

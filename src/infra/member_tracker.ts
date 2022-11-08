@@ -1,7 +1,8 @@
 import * as Discord from "discord.js";
 import { strict as assert } from "assert";
-import { M } from "../utils";
+import { critical_error, M } from "../utils";
 import { MINUTE } from "../common";
+import { Wheatley } from "../wheatley";
 
 type member_entry = {
     tag: string,
@@ -34,11 +35,11 @@ export class MemberTracker {
     currently_banning: Map<string, number> = new Map();
     // modules that rely on on_join and on_ban
     submodules: submodule[] = [];
-    constructor(client: Discord.Client) {
+    constructor(readonly wheatley: Wheatley) {
         // every 10 minutes, trim extraneous entries
         setInterval(this.trim.bind(this), 10 * MINUTE);
-        client.on("guildMemberAdd", this.on_join.bind(this));
-        client.on("guildBanAdd", this.on_ban.bind(this));
+        wheatley.client.on("guildMemberAdd", this.on_join.bind(this));
+        wheatley.client.on("guildBanAdd", this.on_ban.bind(this));
     }
     // Bookkeeping
     trim() {
@@ -94,16 +95,40 @@ export class MemberTracker {
             M.warn("this.id_map.has(member.id)");
         }
         this.id_map.set(member.id, this.entries[this.entries.length - 1]);
+        if(!this.wheatley.ready) {
+            // don't fire events until wheatley setup is complete
+            // could queue calls until wheatley is ready but it is not critical we catch events in the split second
+            // wheatley isn't ready
+            return;
+        }
         for(const { on_join } of this.submodules) {
-            if(on_join) on_join(member, now);
+            if(on_join) {
+                try {
+                    on_join(member, now);
+                } catch(e) {
+                    critical_error(e);
+                }
+            }
         }
     }
     on_ban(ban: Discord.GuildBan) {
         const now = Date.now();
         const user = ban.user;
         M.debug("User banned: ", [ user.tag, user.id ]);
+        if(!this.wheatley.ready) {
+            // don't fire events until wheatley setup is complete
+            // could queue calls until wheatley is ready but it is not critical we catch events in the split second
+            // wheatley isn't ready
+            return;
+        }
         for(const { on_ban } of this.submodules) {
-            if(on_ban) on_ban(ban, now);
+            if(on_ban) {
+                try {
+                    on_ban(ban, now);
+                } catch(e) {
+                    critical_error(e);
+                }
+            }
         }
     }
     // API

@@ -1,12 +1,20 @@
 import { strict as assert } from "assert";
 
 import * as Discord from "discord.js";
-import { readFileSync } from "fs";
+import { EventEmitter } from "events";
+import * as fs from "fs";
+
+import { DatabaseInterface } from "./infra/database_interface";
+import { GuildCommandManager } from "./infra/guild_command_manager";
+import { MemberTracker } from "./infra/member_tracker";
 
 import { BotComponent } from "./bot_component";
+
 import { action_log_channel_id, bot_spam_id, cpp_help_id, c_help_id, member_log_channel_id, message_log_channel_id,
          mods_channel_id, rules_channel_id, server_suggestions_channel_id, suggestion_action_log_thread_id,
          suggestion_dashboard_thread_id, TCCPP_ID, welcome_channel_id, zelis_id } from "./common";
+import { critical_error, fetch_forum_channel, fetch_text_channel, fetch_thread_channel, M } from "./utils";
+
 import { AntiAutoreact } from "./components/anti_autoreact";
 import { AntiRaid } from "./components/anti_raid";
 import { AntiScambot } from "./components/anti_scambot";
@@ -40,14 +48,8 @@ import { TrackedMentions } from "./components/tracked_mentions";
 import { UsernameManager } from "./components/username_manager";
 import { UtilityTools } from "./components/utility_tools";
 import { Wiki } from "./components/wiki";
-import { DatabaseInterface } from "./infra/database_interface";
-import { GuildCommandManager } from "./infra/guild_command_manager";
-import { MemberTracker } from "./infra/member_tracker";
-import { fetch_forum_channel, fetch_text_channel, fetch_thread_channel, M } from "./utils";
 
-type GetConstructorArgs<T> = T extends new (...args: infer U) => any ? U : never; // Taken from SO
-
-export class Wheatley {
+export class Wheatley extends EventEmitter {
     private components: BotComponent[] = [];
     readonly guild_command_manager = new GuildCommandManager();
     readonly tracker: MemberTracker; // TODO: Rename
@@ -69,102 +71,125 @@ export class Wheatley {
     deletable: Deletable;
     link_blacklist: LinkBlacklist;
 
+    // whether wheatley is ready (client is ready + wheatley has set up)
+    ready = false;
+
     constructor(readonly client: Discord.Client, readonly database: DatabaseInterface) {
-        this.tracker = new MemberTracker(client);
-        client.on("ready", () => {
-            // TODO: Log everything?
-            (async () => {
-                this.action_log_channel = await fetch_text_channel(action_log_channel_id);
-            })();
-            (async () => {
-                this.staff_message_log = await fetch_text_channel(message_log_channel_id);
-            })();
-            (async () => {
-                this.TCCPP = await client.guilds.fetch(TCCPP_ID);
-            })();
-            (async () => {
-                this.cpp_help = await fetch_forum_channel(cpp_help_id);
-            })();
-            (async () => {
-                this.c_help = await fetch_forum_channel(c_help_id);
-            })();
-            (async () => {
-                this.zelis = await client.users.fetch(zelis_id);
-            })();
-            (async () => {
-                this.rules_channel = await fetch_text_channel(rules_channel_id);
-            })();
-            (async () => {
-                this.mods_channel = await fetch_text_channel(mods_channel_id);
-            })();
-            (async () => {
-                this.staff_member_log_channel = await fetch_text_channel(member_log_channel_id);
-            })();
-            (async () => {
-                this.welcome_channel = await fetch_text_channel(welcome_channel_id);
-            })();
-            (async () => {
-                this.bot_spam = await fetch_text_channel(bot_spam_id);
-            })();
-            (async () => {
-                this.server_suggestions_channel = await fetch_text_channel(server_suggestions_channel_id);
-                this.suggestion_dashboard_thread =
-                    await fetch_thread_channel(this.server_suggestions_channel, suggestion_dashboard_thread_id);
-                this.suggestion_action_log_thread =
-                    await fetch_thread_channel(this.server_suggestions_channel, suggestion_action_log_thread_id);
-            })();
+        super();
+
+        this.tracker = new MemberTracker(this);
+        this.setup();
+
+        this.client.on("error", error => {
+            M.error(error);
         });
-        this.add_component(AntiAutoreact);
-        this.add_component(AntiRaid);
-        this.add_component(AntiScambot);
-        this.add_component(AntiScreenshot);
-        this.add_component(Autoreact);
-        this.add_component(Cppref);
-        this.deletable = this.add_component(Deletable);
-        this.add_component(Format);
-        this.add_component(ForumChannels);
-        this.add_component(Inspect);
-        this.link_blacklist = this.add_component(LinkBlacklist);
-        this.add_component(Man7);
-        this.add_component(Massban);
-        this.add_component(Modmail);
-        this.add_component(Nodistractions);
-        this.add_component(NotifyAboutBrandNewUsers);
-        this.add_component(Ping);
-        this.add_component(Quote);
-        this.add_component(RaidPurge);
-        this.add_component(ReadTutoring);
-        this.add_component(RoleManager);
-        this.add_component(Roulette);
-        this.add_component(ServerSuggestionReactions);
-        this.add_component(ServerSuggestionTracker);
-        this.add_component(Snowflake);
-        this.add_component(Speedrun);
-        this.add_component(Status);
-        this.add_component(ThreadBasedChannels);
-        this.add_component(ThreadControl);
-        this.add_component(TrackedMentions);
-        this.add_component(UsernameManager);
-        this.add_component(UtilityTools);
-        this.add_component(Wiki);
 
-        const token = readFileSync("auth.key", { encoding: "utf-8" });
-
-        (async () => {
-            await this.guild_command_manager.finalize(token);
-
-            M.debug("Logging in");
-
-            client.on("error", error => {
-                M.error(error);
-            });
-
-            client.login(token);
-        });
+        // Every module sets a lot of listeners. This is not a leak.
+        this.client.setMaxListeners(35);
+        this.setMaxListeners(35);
     }
-    add_component<T extends BotComponent>(component: { new(...args: GetConstructorArgs<typeof BotComponent>): T }) {
+
+    async setup() {
+        this.client.on("ready", async () => {
+            // TODO: Log everything?
+            const promises = [
+                (async () => {
+                    this.action_log_channel = await fetch_text_channel(action_log_channel_id);
+                })(),
+                (async () => {
+                    this.staff_message_log = await fetch_text_channel(message_log_channel_id);
+                })(),
+                (async () => {
+                    this.TCCPP = await this.client.guilds.fetch(TCCPP_ID);
+                })(),
+                (async () => {
+                    this.cpp_help = await fetch_forum_channel(cpp_help_id);
+                })(),
+                (async () => {
+                    this.c_help = await fetch_forum_channel(c_help_id);
+                })(),
+                (async () => {
+                    this.zelis = await this.client.users.fetch(zelis_id);
+                })(),
+                (async () => {
+                    this.rules_channel = await fetch_text_channel(rules_channel_id);
+                })(),
+                (async () => {
+                    this.mods_channel = await fetch_text_channel(mods_channel_id);
+                })(),
+                (async () => {
+                    this.staff_member_log_channel = await fetch_text_channel(member_log_channel_id);
+                })(),
+                (async () => {
+                    this.welcome_channel = await fetch_text_channel(welcome_channel_id);
+                })(),
+                (async () => {
+                    this.bot_spam = await fetch_text_channel(bot_spam_id);
+                })(),
+                (async () => {
+                    this.server_suggestions_channel = await fetch_text_channel(server_suggestions_channel_id);
+                    this.suggestion_dashboard_thread =
+                        await fetch_thread_channel(this.server_suggestions_channel, suggestion_dashboard_thread_id);
+                    this.suggestion_action_log_thread =
+                        await fetch_thread_channel(this.server_suggestions_channel, suggestion_action_log_thread_id);
+                })()
+            ];
+            await Promise.all(promises);
+            this.emit("wheatley_ready");
+            this.ready = true;
+        });
+
+        await this.add_component(AntiAutoreact);
+        await this.add_component(AntiRaid);
+        await this.add_component(AntiScambot);
+        await this.add_component(AntiScreenshot);
+        await this.add_component(Autoreact);
+        await this.add_component(Cppref);
+        this.deletable = await this.add_component(Deletable);
+        await this.add_component(Format);
+        await this.add_component(ForumChannels);
+        await this.add_component(Inspect);
+        this.link_blacklist = await this.add_component(LinkBlacklist);
+        await this.add_component(Man7);
+        await this.add_component(Massban);
+        await this.add_component(Modmail);
+        await this.add_component(Nodistractions);
+        await this.add_component(NotifyAboutBrandNewUsers);
+        await this.add_component(Ping);
+        await this.add_component(Quote);
+        await this.add_component(RaidPurge);
+        await this.add_component(ReadTutoring);
+        await this.add_component(RoleManager);
+        await this.add_component(Roulette);
+        await this.add_component(ServerSuggestionReactions);
+        await this.add_component(ServerSuggestionTracker);
+        await this.add_component(Snowflake);
+        await this.add_component(Speedrun);
+        await this.add_component(Status);
+        await this.add_component(ThreadBasedChannels);
+        await this.add_component(ThreadControl);
+        await this.add_component(TrackedMentions);
+        await this.add_component(UsernameManager);
+        await this.add_component(UtilityTools);
+        await this.add_component(Wiki);
+
+        const token = await fs.promises.readFile("auth.key", { encoding: "utf-8" });
+
+        await this.guild_command_manager.finalize(token);
+
+        M.debug("Logging in");
+
+        this.client.login(token);
+    }
+
+    async add_component<T extends BotComponent>(component: { new(w: Wheatley): T }) {
         M.log(`Initializing ${component.name}`);
         const instance = new component(this);
+        try {
+            await instance.setup();
+        } catch(e) {
+            critical_error(e);
+        }
         this.components.push(instance);
         return instance;
     }

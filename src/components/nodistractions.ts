@@ -143,7 +143,7 @@ export class Nodistractions extends BotComponent {
         const next = this.undistract_queue[0];
         // next.start + next.duration - Date.now() but make sure overflow is prevented
         const sleep_time = (next.start - Date.now()) + next.duration;
-        this.timer = setTimeout(this.handle_timer, Math.min(sleep_time, INT_MAX));
+        this.timer = setTimeout(this.handle_timer.bind(this), Math.min(sleep_time, INT_MAX));
     }
 
     async apply_no_distractions(target: Discord.GuildMember, message: Discord.Message, start: number,

@@ -121,7 +121,9 @@ async function load_wiki_pages() {
 export class Wiki extends BotComponent {
     constructor(wheatley: Wheatley) {
         super(wheatley);
+    }
 
+    override async setup() {
         const wiki = new SlashCommandBuilder()
             .setName("wiki")
             .setDescription("Retrieve wiki articles")
@@ -141,17 +143,15 @@ export class Wiki extends BotComponent {
                     .setAutocomplete(true));
         this.wheatley.guild_command_manager.register(howto);
 
-        (async () => {
-            await load_wiki_pages();
-            // setup slash commands for aliases
-            for(const [ alias, article_name ] of article_aliases.entries()) {
-                const article = articles[article_name];
-                const command = new SlashCommandBuilder()
-                    .setName(alias)
-                    .setDescription(article.title);
-                this.wheatley.guild_command_manager.register(command);
-            }
-        })();
+        await load_wiki_pages();
+        // setup slash commands for aliases
+        for(const [ alias, article_name ] of article_aliases.entries()) {
+            const article = articles[article_name];
+            const command = new SlashCommandBuilder()
+                .setName(alias)
+                .setDescription(article.title);
+            this.wheatley.guild_command_manager.register(command);
+        }
     }
 
     async send_wiki_article(article: WikiArticle, message: Discord.Message) {
