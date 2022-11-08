@@ -156,7 +156,7 @@ export class ForumChannels extends BotComponent {
         //await get_initial_active();
         await this.forum_cleanup();
         // every hour try to cleanup
-        setInterval(this.forum_cleanup, 60 * MINUTE);
+        setInterval(this.forum_cleanup.bind(this), 60 * MINUTE);
     }
 
     override async on_message_create(message: Discord.Message) {
