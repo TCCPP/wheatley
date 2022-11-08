@@ -34,7 +34,7 @@ def main():
     for path, directories, files in os.walk("."):
         directories[:] = [d for d in directories if d not in exclude] # https://stackoverflow.com/a/19859907/15675011
         for file_name in files:
-            if not file_name.endswith(".ts"):
+            if not (file_name.endswith(".ts") or file_name.endswith(".md")):
                 continue
             file_path = os.path.join(path, file_name)
             print(f"checking {file_path}")
