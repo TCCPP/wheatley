@@ -9,7 +9,7 @@ export class Speedrun extends BotComponent {
     constructor(wheatley: Wheatley) {
         super(wheatley);
 
-        this.wheatley.tracker.add_submodule({ on_ban: this.on_ban });
+        this.wheatley.tracker.add_submodule({ on_ban: this.on_ban.bind(this) });
     }
 
     on_ban(ban: Discord.GuildBan, now: number) {
