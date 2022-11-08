@@ -11,7 +11,7 @@ Everything discord supports plus the following:
 - `# H1`: Article title
 - `## H2`: Discord embed field header, everything that follows will be part of that field
 - `## [H2]`: Inline discord embed field, everything that follows will be part of that field
-- `<!-- footer -->`: Footer marker, everything that follows will be part of the footer
+- `[[[footer]]]`: Footer marker, everything that follows will be part of the footer
 - `[[[user author]]]`: Set the discord embed's author to the command invoker
 - `[[[alias x, y, z]]]`: Make `!x`, `!y`, and `!z` commands for pulling up the article
 

@@ -44,5 +44,5 @@ int main(void) {
 > Exiting
 (`3:5` is line and column of `return`)
 
-<!-- footer -->
+[[[footer]]]
 Note: The sanitizer lists for GCC and clang are not exhaustive

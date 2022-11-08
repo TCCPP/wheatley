@@ -63,7 +63,7 @@ export function parse_article(name: string | null, content: string): WikiArticle
                 inline
             });
             current_state = state.field;
-        } else if(line.trim().toLowerCase() == "<!-- footer -->" && !code) {
+        } else if(line.trim().toLowerCase() == "[[[footer]]]" && !code) {
             current_state = state.footer;
         } else if(line.trim() == "[[[user author]]]" && !code) {
             data.set_author = true;
