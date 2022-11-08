@@ -31,7 +31,7 @@ export class NotifyAboutBrandNewUsers extends BotComponent {
         //member_log_channel!.send(`<@!${zelis_id}>`);
     }
 
-    async on_guild_member_add(member: Discord.GuildMember) {
+    override async on_guild_member_add(member: Discord.GuildMember) {
         assert(Date.now() - member.user.createdTimestamp >= 0);
         if(Date.now() - member.user.createdTimestamp <= NEW_USER_THRESHOLD) {
             await this.notify_about_brand_new_user(member);

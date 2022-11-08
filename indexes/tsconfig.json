@@ -7,7 +7,8 @@
         "resolveJsonModule": true,
         "allowJs": true,
         "skipLibCheck": true,
-        "strictPropertyInitialization": false
+        "strictPropertyInitialization": false,
+        "noImplicitOverride": true
     },
     "exclude": ["cppref/en.cppreference.com", "cppref/upload.cppreference.com"]
 }

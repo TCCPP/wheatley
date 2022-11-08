@@ -6,7 +6,8 @@
         "moduleResolution": "node",
         "resolveJsonModule": true,
         "allowJs": true,
-        "strictPropertyInitialization": false
+        "strictPropertyInitialization": false,
+        "noImplicitOverride": true
     },
     "exclude": ["node_modules", "indexes/"]
 }
