@@ -421,3 +421,17 @@ export async function async_exec_file(file: string, args?: string[],
 export function xxh3(message: string) {
     return XXH.h64().update(message).digest().toString(16);
 }
+
+export function is_image_link_embed(embed: Discord.Embed) {
+    assert(embed.data.type);
+    return embed.data.type == "image" || embed.data.type == "video";
+}
+
+export function index_of_first_not_satisfying<T>(arr: T[], fn: (_: T) => boolean) {
+    for(let i = 0; i < arr.length; i++) {
+        if(!fn(arr[i])) {
+            return i;
+        }
+    }
+    return -1;
+}

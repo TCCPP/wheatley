@@ -1,6 +1,6 @@
 import * as Discord from "discord.js";
 import { strict as assert } from "assert";
-import { M } from "../utils";
+import { index_of_first_not_satisfying, is_image_link_embed, M } from "../utils";
 import { MINUTE, TCCPP_ID } from "../common";
 import { decode_snowflake, forge_snowflake } from "./snowflake";
 import { BotComponent } from "../bot_component";
@@ -11,27 +11,6 @@ import { Wheatley } from "../wheatley";
 const quote_command_re = /^!(quoteb?)\s*https:\/\/discord\.com\/channels\/(\d+)\/(\d+)\/(\d+)$/i;
 
 const color = 0x7E78FE; //0xA931FF;
-
-function is_image_link_embed(embed: Discord.Embed) {
-    for(const key in embed) {
-        if([ "type", "url", "thumbnail" ].indexOf(key) === -1) {
-            const value = (embed as any)[key];
-            if(!(value === null || (Array.isArray(value) && value.length == 0))) {
-                return false;
-            }
-        }
-    }
-    return true;
-}
-
-function index_of_first_not_satisfying<T>(arr: T[], fn: (_: T) => boolean) {
-    for(let i = 0; i < arr.length; i++) {
-        if(!fn(arr[i])) {
-            return i;
-        }
-    }
-    return -1;
-}
 
 export class Quote extends BotComponent {
     constructor(wheatley: Wheatley) {

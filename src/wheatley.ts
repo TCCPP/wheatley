@@ -16,6 +16,7 @@ import { action_log_channel_id, bot_spam_id, cpp_help_id, c_help_id, member_log_
 import { critical_error, fetch_forum_channel, fetch_text_channel, fetch_thread_channel, M } from "./utils";
 
 import { AntiAutoreact } from "./components/anti_autoreact";
+import { AntiForumPostDelete } from "./components/anti_forum_post_delete";
 import { AntiRaid } from "./components/anti_raid";
 import { AntiScambot } from "./components/anti_scambot";
 import { AntiScreenshot } from "./components/anti_screenshot";
@@ -141,6 +142,7 @@ export class Wheatley extends EventEmitter {
         });
 
         await this.add_component(AntiAutoreact);
+        await this.add_component(AntiForumPostDelete);
         await this.add_component(AntiRaid);
         await this.add_component(AntiScambot);
         await this.add_component(AntiScreenshot);

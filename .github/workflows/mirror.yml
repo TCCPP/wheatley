@@ -19,7 +19,7 @@ jobs:
         path: mirror
     - name: copy files
       run: |
-           rm -rfv mirror/* mirror/.github mirror/.gitignore mirror/.eslintrc.yml
+           rm -rfv mirror/* mirror/.github mirror/.gitignore mirror/.eslintrc.yml mirror/.husky
            mv -v source/* source/.github source/.gitignore source/.eslintrc.yml source/.husky mirror
            rm mirror/.github/workflows/mirror.yml
     - name: cleanse sensitive files

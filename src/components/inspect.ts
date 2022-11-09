@@ -23,9 +23,22 @@ export class Inspect extends BotComponent {
             M.log("Received inspect command");
             await interaction.reply({
                 ephemeral: true,
-                content: Discord.escapeMarkdown(interaction.targetMessage.content).replace(/[<>]/g, c => `\\${c}`)
-                    || undefined
+                content: interaction.targetMessage.content.length > 0 ?
+                    Discord.escapeMarkdown(interaction.targetMessage.content).replace(/[<>]/g, c => `\\${c}`)
+                    : "<empty>"
             });
+            if(interaction.targetMessage.attachments.size > 0) {
+                await interaction.followUp({
+                    ephemeral: true,
+                    content: JSON.stringify(interaction.targetMessage.attachments.map(x => x), null, 4)
+                });
+            }
+            if(interaction.targetMessage.embeds.length > 0) {
+                await interaction.followUp({
+                    ephemeral: true,
+                    content: JSON.stringify(interaction.targetMessage.embeds, null, 4)
+                });
+            }
         }
     }
 }
