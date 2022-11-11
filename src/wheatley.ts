@@ -10,9 +10,10 @@ import { MemberTracker } from "./infra/member_tracker";
 
 import { BotComponent } from "./bot_component";
 
-import { action_log_channel_id, bot_spam_id, cpp_help_id, c_help_id, member_log_channel_id, message_log_channel_id,
-         mods_channel_id, rules_channel_id, server_suggestions_channel_id, suggestion_action_log_thread_id,
-         suggestion_dashboard_thread_id, TCCPP_ID, welcome_channel_id, zelis_id } from "./common";
+import { action_log_channel_id, bot_spam_id, colors, cpp_help_id, c_help_id, member_log_channel_id,
+         message_log_channel_id, mods_channel_id, rules_channel_id, server_suggestions_channel_id,
+         suggestion_action_log_thread_id, suggestion_dashboard_thread_id, TCCPP_ID, welcome_channel_id, zelis_id }
+         from "./common";
 import { critical_error, fetch_forum_channel, fetch_text_channel, fetch_thread_channel, M } from "./utils";
 
 import { AntiAutoreact } from "./components/anti_autoreact";
@@ -50,6 +51,18 @@ import { TrackedMentions } from "./components/tracked_mentions";
 import { UsernameManager } from "./components/username_manager";
 import { UtilityTools } from "./components/utility_tools";
 import { Wiki } from "./components/wiki";
+import { BotCommand, Command, CommandBuilder } from "./command";
+import { SlashCommandBuilder } from "discord.js";
+
+function create_basic_embed(title: string | undefined, color: number, content: string) {
+    const embed = new Discord.EmbedBuilder()
+        .setColor(color)
+        .setDescription(content);
+    if(title) {
+        embed.setTitle(title);
+    }
+    return embed;
+}
 
 export class Wheatley extends EventEmitter {
     private components: BotComponent[] = [];
@@ -72,6 +85,8 @@ export class Wheatley extends EventEmitter {
 
     deletable: Deletable;
     link_blacklist: LinkBlacklist;
+
+    commands: Record<string, BotCommand<any>> = {};
 
     // whether wheatley is ready (client is ready + wheatley has set up)
     ready = false;
@@ -139,6 +154,9 @@ export class Wheatley extends EventEmitter {
             await Promise.all(promises);
             this.emit("wheatley_ready");
             this.ready = true;
+
+            this.client.on("messageCreate", this.on_message.bind(this));
+            this.client.on("interactionCreate", this.on_interaction.bind(this));
         });
 
         await this.add_component(AntiAutoreact);
@@ -196,5 +214,117 @@ export class Wheatley extends EventEmitter {
         }
         this.components.push(instance);
         return instance;
+    }
+
+    add_command<T extends unknown[]>(command: CommandBuilder<T, true>) {
+        assert(!(command.name in this.commands));
+        this.commands[command.name] = new BotCommand(command);
+        const djs_command = new SlashCommandBuilder()
+            .setName(command.name)
+            .setDescription(command.description);
+        for(const option of command.options.values()) {
+            if(option.type == "string") {
+                djs_command.addStringOption(slash_option =>
+                    slash_option.setName(option.title)
+                        .setDescription(option.description)
+                        .setAutocomplete(!!option.autocomplete)
+                        .setRequired(!!option.required));
+            } else {
+                assert(false, "unhandled option type");
+            }
+        }
+        this.guild_command_manager.register(djs_command);
+    }
+
+    static command_regex = new RegExp("^!(\\S+)");
+
+    async on_message(message: Discord.Message) {
+        try {
+            if(message.content.startsWith("!")) {
+                const match = message.content.match(Wheatley.command_regex);
+                if(match) {
+                    const command_name = match[1];
+                    if(command_name in this.commands) {
+                        const command = this.commands[command_name];
+                        const command_options: unknown[] = [];
+                        for(const option of command.options.values()) {
+                            if(option.type == "string") {
+                                // take the rest
+                                const rest = message.content.substring(match[0].length).trim();
+                                if(rest == "") {
+                                    await message.reply({
+                                        embeds: [
+                                            create_basic_embed(undefined, colors.red, "Required argument not found")
+                                        ]
+                                    });
+                                }
+                                command_options.push(rest);
+                            } else {
+                                assert(false, "unhandled option type");
+                            }
+                        }
+                        command.handler!(
+                            new Command(
+                                command_name,
+                                message.member,
+                                message.channel,
+                                message
+                            ),
+                            ...command_options
+                        );
+                    } else {
+                        // unknown command
+                    }
+                } else {
+                    // starts with ! but doesn't match the command regex
+                }
+            }
+            // if we reach here, the command was not recognized
+        } catch(e) {
+            critical_error(e);
+        }
+    }
+
+    async on_interaction(interaction: Discord.Interaction) {
+        try {
+            if(interaction.isChatInputCommand()) {
+                if(interaction.commandName in this.commands) {
+                    const command = this.commands[interaction.commandName];
+                    const command_options: unknown[] = [];
+                    for(const option of command.options.values()) {
+                        if(option.type == "string") {
+                            command_options.push(interaction.options.getString(option.title));
+                        } else {
+                            assert(false, "unhandled option type");
+                        }
+                    }
+                    command.handler!(
+                        new Command(
+                            interaction.commandName,
+                            interaction.member,
+                            interaction.channel,
+                            interaction
+                        ),
+                        ...command_options
+                    );
+                    return;
+                } else {
+                    // TODO unknown command
+                }
+            } else if(interaction.isAutocomplete()) {
+                if(interaction.commandName in this.commands) {
+                    const command = this.commands[interaction.commandName];
+                    const field = interaction.options.getFocused(true);
+                    assert(command.options.has(field.name));
+                    const option = command.options.get(field.name)!;
+                    assert(option.autocomplete);
+                    await interaction.respond(option.autocomplete(field.value));
+                } else {
+                    // TODO unknown command
+                }
+            }
+        } catch(e) {
+            critical_error(e);
+        }
     }
 }

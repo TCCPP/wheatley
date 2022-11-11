@@ -12,6 +12,7 @@ import { man7_entry, man7_index } from "../../indexes/man7/types";
 import { BotComponent } from "../bot_component";
 import { Wheatley } from "../wheatley";
 import { colors } from "../common";
+import { Command, CommandBuilder } from "../command";
 
 type augmented_man7_entry = man7_entry & IndexEntry
 
@@ -92,71 +93,33 @@ export class Man7 extends BotComponent {
     constructor(wheatley: Wheatley) {
         super(wheatley);
 
-        const man7 = new SlashCommandBuilder()
-            .setName("man")
-            .setDescription("Query linux man pages")
-            .addStringOption(option =>
-                option.setName("query")
-                    .setDescription("Query")
-                    .setAutocomplete(true)
-                    .setRequired(true));
-        this.wheatley.guild_command_manager.register(man7);
+        this.add_command(
+            new CommandBuilder("man")
+                .set_description("Query linux man pages")
+                .add_string_option({
+                    title: "query",
+                    description: "Query",
+                    required: true,
+                    autocomplete: query => this.index.lookup_top_5(query)
+                        .map(page => ({
+                            name: `${page.title.substring(0, 100 - 14)} . . . . ${Math.round(page.score * 100) / 100}`,
+                            value: page.title
+                        }))
+                })
+                .set_handler(this.man.bind(this))
+        );
+
         // Ok if the bot spins up while this is loading
         this.index.load_data();
     }
 
-    override async on_message_create(message: Discord.Message) {
-        try {
-            if(message.author.bot) return; // Ignore bots
-            if(message.content.startsWith("!man ")) {
-                const query = message.content.slice("!man".length).trim();
-                const result = this.index.lookup(query);
-                M.log("man7 query", query, result ? `https://man7.org/linux/man-pages/${result.path}` : null);
-                if(result === null) {
-                    const result_message = await message.channel.send({ embeds: [
-                        new Discord.EmbedBuilder()
-                            .setColor(colors.color)
-                            .setAuthor({
-                                name: "man7",
-                                url: "https://man7.org/linux/man-pages"
-                            })
-                            .setDescription("No results found")
-                    ] });
-                    this.wheatley.deletable.make_message_deletable(message, result_message);
-                } else {
-                    const embed = new Discord.EmbedBuilder()
-                        .setColor(colors.color)
-                        .setAuthor({
-                            name: "man7",
-                            url: "https://man7.org/linux/man-pages"
-                        })
-                        .setTitle(result.page_title)
-                        .setURL(`https://man7.org/linux/man-pages/${result.path}`)
-                        .setDescription(result.short_description ?? null);
-                    if(result.synopsis) {
-                        embed.addFields({
-                            name: "Synopsis",
-                            value: result.synopsis
-                        });
-                    }
-                    const result_message = await message.channel.send({ embeds: [embed] });
-                    this.wheatley.deletable.make_message_deletable(message, result_message);
-                }
-            }
-        } catch(e) {
-            critical_error(e);
-        }
-    }
-
-    override async on_interaction_create(interaction: Discord.Interaction) {
-        if(interaction.isCommand() && interaction.commandName == "man") {
-            assert(interaction.isChatInputCommand());
-            const query = interaction.options.getString("query")!.trim();
-            const result = this.index.lookup(query);
-            M.log("man7 query", query,
-                  result ? `https://man7.org/linux/man-pages/${result.path}` : null);
-            if(result === null) {
-                await interaction.reply({ embeds: [
+    async man(command: Command, query: string) {
+        const result = this.index.lookup(query);
+        M.log("man7 query", query,
+                result ? `https://man7.org/linux/man-pages/${result.path}` : null);
+        if(result === null) {
+            await command.reply({
+                embeds: [
                     new Discord.EmbedBuilder()
                         .setColor(colors.color)
                         .setAuthor({
@@ -164,34 +127,25 @@ export class Man7 extends BotComponent {
                             url: "https://man7.org/linux/man-pages"
                         })
                         .setDescription("No results found")
-                ] });
-            } else {
-                const embed = new Discord.EmbedBuilder()
-                    .setColor(colors.color)
-                    .setAuthor({
-                        name: "man7",
-                        url: "https://man7.org/linux/man-pages"
-                    })
-                    .setTitle(result.page_title)
-                    .setURL(`https://man7.org/linux/man-pages/${result.path}`)
-                    .setDescription(result.short_description ?? null);
-                if(result.synopsis) {
-                    embed.addFields({
-                        name: "Synopsis",
-                        value: result.synopsis
-                    });
-                }
-                await interaction.reply({ embeds: [embed] });
+                ]
+            });
+        } else {
+            const embed = new Discord.EmbedBuilder()
+                .setColor(colors.color)
+                .setAuthor({
+                    name: "man7",
+                    url: "https://man7.org/linux/man-pages"
+                })
+                .setTitle(result.page_title)
+                .setURL(`https://man7.org/linux/man-pages/${result.path}`)
+                .setDescription(result.short_description ?? null);
+            if(result.synopsis) {
+                embed.addFields({
+                    name: "Synopsis",
+                    value: result.synopsis
+                });
             }
-        } else if(interaction.isAutocomplete() && interaction.commandName == "man") {
-            const query = interaction.options.getFocused().trim();
-            await interaction.respond(
-                this.index.lookup_top_5(query)
-                    .map(page => ({
-                        name: `${page.title.substring(0, 100 - 14)} . . . . ${Math.round(page.score * 100) / 100}`,
-                        value: page.title
-                    }))
-            );
+            await command.reply({ embeds: [embed] });
         }
     }
 }

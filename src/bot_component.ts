@@ -1,6 +1,7 @@
 import { strict as assert } from "assert";
 
 import * as Discord from "discord.js";
+import { CommandBuilder } from "./command";
 import { critical_error } from "./utils";
 
 import { Wheatley } from "./wheatley";
@@ -34,7 +35,11 @@ export class BotComponent {
     }
     /* eslint-disable @typescript-eslint/no-empty-function, @typescript-eslint/no-unused-vars */
     async setup() {}
+    add_command<T extends unknown[]>(command: CommandBuilder<T, true>) {
+        this.wheatley.add_command(command);
+    }
     // events
+    // TODO: Make stuff optional
     async on_ready() {} // actually on wheatley ready
     async on_message_create(message: Discord.Message) {}
     async on_message_delete(message: Discord.Message | Discord.PartialMessage) {}
