@@ -30,7 +30,6 @@ export class Quote extends BotComponent {
     }
 
     async quote(command: Command, url: string) {
-        M.debug("---->", url);
         const match = url.trim().match(url_re);
         if(match != null) {
             M.log("Received quote command", url, command.get_or_forge_url());

@@ -1,6 +1,8 @@
 import { REST } from "@discordjs/rest";
 import { Routes } from "discord-api-types/v9";
 
+import * as util from "util";
+
 import { critical_error, M } from "../utils";
 import { TCCPP_ID, wheatley_id } from "../common";
 
@@ -22,13 +24,14 @@ export class GuildCommandManager {
                 Routes.applicationCommands(wheatley_id),
                 { body: this.commands },
             );
-            // clear previous guild commands
+            // Clear any previous guild commands
             await rest.put(
                 Routes.applicationGuildCommands(wheatley_id, TCCPP_ID),
                 { body: [] },
             );
             M.log("Finished sending guild commands");
         } catch(e) {
+            M.log(util.inspect({ body: this.commands }, {showHidden: false, depth: null, colors: true}));
             critical_error(e);
         }
     }

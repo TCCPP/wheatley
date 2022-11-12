@@ -6,9 +6,9 @@ import * as path from "path";
 
 import { M } from "../utils";
 import { bot_spam_id, colors } from "../common";
-import { SlashCommandBuilder } from "discord.js";
 import { BotComponent } from "../bot_component";
 import { Wheatley } from "../wheatley";
+import { Command, CommandBuilder } from "../command";
 
 export const wiki_dir = "wiki_articles";
 
@@ -31,6 +31,7 @@ type WikiArticle = {
     set_author?: true;
 };
 
+// TODO: Make not global
 const articles: Record<string, WikiArticle> = {};
 
 const article_aliases: Map<string, string> = new Map();
@@ -121,149 +122,109 @@ async function load_wiki_pages() {
 export class Wiki extends BotComponent {
     constructor(wheatley: Wheatley) {
         super(wheatley);
+
+        this.add_command(
+            new CommandBuilder(["wiki", "howto"])
+                .set_description(["Retrieve wiki articles", "Retrieve wiki articles (alternatively /wiki)"])
+                .add_string_option({
+                    title: "query",
+                    description: "Query",
+                    required: true,
+                    autocomplete: query =>
+                        Object.values(articles)
+                            .map(article => article.title)
+                            .filter(title => title.toLowerCase().includes(query))
+                            .map(title => ({ name: title, value: title }))
+                            .slice(0, 25)
+                })
+                .set_handler(this.wiki.bind(this))
+        );
+
+        this.add_command(
+            new CommandBuilder("wiki-preview")
+                .set_slash(false)
+                .set_description(["Preview a wiki article"])
+                .add_string_option({
+                    title: "content",
+                    description: "Content",
+                    required: true
+                })
+                .set_handler(this.wiki_preview.bind(this))
+        );
     }
 
     override async setup() {
-        const wiki = new SlashCommandBuilder()
-            .setName("wiki")
-            .setDescription("Retrieve wiki articles")
-            .addStringOption(option =>
-                option.setName("article_name")
-                    .setRequired(true)
-                    .setDescription("Phrase to search for")
-                    .setAutocomplete(true));
-        this.wheatley.guild_command_manager.register(wiki);
-        const howto = new SlashCommandBuilder()
-            .setName("howto")
-            .setDescription("Retrieve wiki articles (alternatively /wiki)")
-            .addStringOption(option =>
-                option.setName("article_name")
-                    .setRequired(true)
-                    .setDescription("Phrase to search for")
-                    .setAutocomplete(true));
-        this.wheatley.guild_command_manager.register(howto);
-
         await load_wiki_pages();
         // setup slash commands for aliases
         for(const [ alias, article_name ] of article_aliases.entries()) {
             const article = articles[article_name];
-            const command = new SlashCommandBuilder()
-                .setName(alias)
-                .setDescription(article.title);
-            this.wheatley.guild_command_manager.register(command);
-        }
-    }
-
-    async send_wiki_article(article: WikiArticle, message: Discord.Message) {
-        const embed = new Discord.EmbedBuilder()
-            .setColor(colors.color)
-            .setTitle(article.title)
-            .setDescription(article.body)
-            .setFields(article.fields);
-        if(article.footer) {
-            embed.setFooter({
-                text: article.footer
-            });
-        }
-        const reply = await message.channel.send({ embeds: [embed] });
-        this.wheatley.deletable.make_message_deletable(message, reply);
-    }
-
-    async send_wiki_article_slash(article: WikiArticle, interaction: Discord.ChatInputCommandInteraction) {
-        const embed = new Discord.EmbedBuilder()
-            .setColor(colors.color)
-            .setTitle(article.title)
-            .setDescription(article.body)
-            .setFields(article.fields);
-        if(article.footer) {
-            embed.setFooter({
-                text: article.footer
-            });
-        }
-        await interaction.reply({ embeds: [embed] });
-    }
-
-    override async on_message_create(message: Discord.Message) {
-        if(message.author.bot) return; // Ignore bots
-        // preview command
-        if(message.content.startsWith("!wiki-preview")) {
-            M.log("Received wiki preview command", message.author.id, message.author.tag, message.url);
-            if(message.channel.id != bot_spam_id) {
-                const reply = await message.reply(`!wiki-preview must be used in <#${bot_spam_id}>`);
-                this.wheatley.deletable.make_message_deletable(message, reply);
-                return;
-            }
-            const content = message.content.substring("!wiki-preview".length);
-            let article: WikiArticle;
-            try {
-                article = parse_article(null, content);
-            } catch(e) {
-                message.reply("Parse error: " + e);
-                return;
-            }
-            try {
-                await this.send_wiki_article(article, message);
-            } catch(e) {
-                message.reply("Error while building / sending: " + e);
-            }
-        }
-        if(message.content.startsWith("!wiki") || message.content.startsWith("!howto")) {
-            M.log("Received wiki command", message.author.id, message.author.tag, message.url);
-            const query = (message.content.startsWith("!wiki") ?
-                message.content.substring("!wiki".length).trim()
-                : message.content.substring("!howto".length).trim())
-                .replaceAll("-", "_");
-            if(query in articles) {
-                const article = articles[query];
-                await this.send_wiki_article(article, message);
-            }
-            return;
-        }
-        // check aliases
-        if(message.content.startsWith("!") && article_aliases.has(message.content.substring(1))) {
-            M.log(`Received ${message.content} (wiki alias)`, message.author.id, message.author.tag, message.url);
-            const article_name = article_aliases.get(message.content.substring(1))!;
-            await this.send_wiki_article(articles[article_name], message);
-            return;
-        }
-    }
-
-    override async on_interaction_create(interaction: Discord.Interaction) {
-        if(interaction.isCommand() && (interaction.commandName == "wiki" || interaction.commandName == "howto")) {
-            assert(interaction.isChatInputCommand());
-            const query = interaction.options.getString("article_name");
-            if(!query) {
-                await interaction.reply({
-                    content: "You must provide a query",
-                    ephemeral: true
-                });
-                return;
-            }
-            const matching_articles = Object.values(articles).filter(({ title }) => title == query);
-            const article = matching_articles.length > 0 ? matching_articles[0] : undefined;
-            if(article) {
-                await this.send_wiki_article_slash(article, interaction);
-            } else {
-                await interaction.reply({
-                    content: "Couldn't find article",
-                    ephemeral: true
-                });
-                return;
-            }
-        } else if(interaction.isAutocomplete()
-        && (interaction.commandName == "wiki" || interaction.commandName == "howto")) {
-            const query = interaction.options.getFocused();
-            await interaction.respond(
-                Object.values(articles)
-                    .map(article => article.title)
-                    .filter(title => title.toLowerCase().includes(query))
-                    .map(title => ({ name: title, value: title }))
-                    .slice(0, 25),
+            this.add_command(
+                new CommandBuilder(alias)
+                    .set_description(article.title)
+                    .set_handler(this.wiki_alias.bind(this))
             );
-        } else if(interaction.isCommand() && article_aliases.has(interaction.commandName)) {
-            assert(interaction.isChatInputCommand());
-            const article_name = article_aliases.get(interaction.commandName)!;
-            await this.send_wiki_article_slash(articles[article_name], interaction);
+        }
+    }
+
+    async send_wiki_article(article: WikiArticle, command: Command) {
+        const embed = new Discord.EmbedBuilder()
+            .setColor(colors.color)
+            .setTitle(article.title)
+            .setDescription(article.body)
+            .setFields(article.fields);
+        if(article.footer) {
+            embed.setFooter({
+                text: article.footer
+            });
+        }
+        await command.reply({
+            embeds: [embed],
+            should_text_reply: true
+        });
+    }
+
+    async wiki(command: Command, query: string) {
+        const matching_articles = Object
+            .entries(articles)
+            .filter(([ name, { title } ]) => name == query.replaceAll("-", "_") || title == query)
+            .map(([_, article]) => article);
+        const article = matching_articles.length > 0 ? matching_articles[0] : undefined;
+        if(article) {
+            await this.send_wiki_article(article, command);
+        } else {
+            await command.reply({
+                content: "Couldn't find article",
+                ephemeral_if_possible: true,
+                should_text_reply: true
+            });
+            return;
+        }
+    }
+
+    async wiki_alias(command: Command) {
+        assert(article_aliases.has(command.name));
+        M.log(`Received ${command.name} (wiki alias)`, command.user.id, command.user.tag, command.get_or_forge_url());
+        const article_name = article_aliases.get(command.name)!;
+        await this.send_wiki_article(articles[article_name], command);
+    }
+
+    async wiki_preview(command: Command, content: string) {
+        M.log("Received wiki preview command", command.user.id, command.user.tag, command.get_or_forge_url());
+        if(command.channel_id != bot_spam_id) {
+            await command.reply(`!wiki-preview must be used in <#${bot_spam_id}>`, true, true);
+            return;
+        }
+        let article: WikiArticle;
+        try {
+            article = parse_article(null, content);
+        } catch(e) {
+            await command.reply("Parse error: " + e, true, true);
+            return;
+        }
+        try {
+            await this.send_wiki_article(article, command);
+        } catch(e) {
+            await command.reply("Error while building / sending: " + e, true, true);
         }
     }
 }
