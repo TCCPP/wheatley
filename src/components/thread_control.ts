@@ -50,6 +50,9 @@ export class ThreadControl extends BotComponent {
         const channel = await request.get_channel();
         if(channel.isThread()) {
             const thread = channel;
+            if(thread.parentId == rules_channel_id) {
+                return true; // just let the user do it, should be fine
+            }
             const owner_id = await this.get_owner(thread);
             if(owner_id == request.user.id || is_authorized_admin(request.user.id)) {
                 return true;
