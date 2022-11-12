@@ -141,7 +141,6 @@ export class Nodistractions extends BotComponent {
             if(member.roles.cache.some(r => r.id == no_off_topic)) { // might have been removed externally
                 await member.roles.remove(no_off_topic);
             }
-            member.send("You have been removed from !nodistractions");
             // remove database entry
             delete this.wheatley.database.get<database_schema>("nodistractions")[entry.id];
             this.wheatley.database.update();
@@ -189,8 +188,6 @@ export class Nodistractions extends BotComponent {
             M.error(e);
             return;
         }
-        target.send("!nodistractions applied, use !removenodistractions to exit")
-            .catch(e => e.status != 403 ? M.error(e) : 0);
         command.react("✅").catch(M.error);
         // make entry
         const entry: no_distraction_entry = {
@@ -242,7 +239,6 @@ export class Nodistractions extends BotComponent {
         this.undistract_queue = this.undistract_queue.filter(e => e.id != target.id);
         this.wheatley.database.update();
         command.react("✅").catch(M.error);
-        target.send("You have been removed from !nodistractions").catch(e => e.status != 403 ? M.error(e) : 0);
         // reschedule if necessary
         if(reschedule && this.undistract_queue.length > 0) {
             this.set_timer();
