@@ -28,13 +28,13 @@ export class ForumControl extends BotComponent {
 
         this.add_command(
             new CommandBuilder(["solve", "solved", "close"])
-                .set_description(["Close forum post and mark it as solved"])
+                .set_description("Close forum post and mark it as solved")
                 .set_handler(this.solve.bind(this))
         );
 
         this.add_command(
             new CommandBuilder(["unsolve", "unsolved", "open"])
-                .set_description(["Re-open forum post"])
+                .set_description("Re-open forum post")
                 .set_handler(this.unsolve.bind(this))
         );
     }
@@ -87,7 +87,6 @@ export class ForumControl extends BotComponent {
             if(thread.parentId && forum_help_channels.has(thread.parentId)) { // TODO
                 if(!thread.appliedTags.some(tag => tag == solved_tag)) {
                     M.log("Marking thread as solved", thread.id, thread.name);
-                    //await request.react("👍");
                     await command.reply({
                         embeds: [
                             create_embed(undefined, colors.color, "Thank you and let us know if you have any more "
@@ -125,7 +124,7 @@ export class ForumControl extends BotComponent {
             if(thread.parentId && forum_help_channels.has(thread.parentId)) { // TODO
                 if(thread.appliedTags.some(tag => tag == solved_tag)) {
                     M.log("Unsolving thread", thread.id, thread.name);
-                    await command.react("👍");
+                    await command.react("✅");
                     await thread.setAppliedTags(
                         [open_tag].concat(thread.appliedTags.filter(tag => tag != solved_tag))
                     );

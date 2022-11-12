@@ -219,29 +219,32 @@ export class Wheatley extends EventEmitter {
     add_command<T extends unknown[]>(command: CommandBuilder<T, true, true>) {
         assert(command.names.length > 0);
         assert(command.names.length == command.descriptions.length);
-        for(const [name, description] of zip(command.names, command.descriptions)) {
+        for(const [name, description, slash] of zip(command.names, command.descriptions, command.slash_config)) {
             assert(!(name in this.commands));
-            this.commands[name] = new BotCommand(name, description, command);
-            const djs_command = new SlashCommandBuilder()
-                .setName(name)
-                .setDescription(description ?? ""); // TODO: make sure eslint catches this
-            for(const option of command.options.values()) {
-                if(option.type == "string") {
-                    djs_command.addStringOption(slash_option =>
-                        slash_option.setName(option.title)
-                            .setDescription(option.description)
-                            .setAutocomplete(!!option.autocomplete)
-                            .setRequired(!!option.required));
-                } else {
-                    assert(false, "unhandled option type");
+            this.commands[name] = new BotCommand(name, description, slash, command);
+            if(slash) {
+                const djs_command = new SlashCommandBuilder()
+                    .setName(name)
+                    .setDescription(description ?? ""); // TODO: make sure eslint catches this
+                for(const option of command.options.values()) {
+                    if(option.type == "string") {
+                        djs_command.addStringOption(slash_option =>
+                            slash_option.setName(option.title)
+                                .setDescription(option.description)
+                                .setAutocomplete(!!option.autocomplete)
+                                .setRequired(!!option.required));
+                    } else {
+                        assert(false, "unhandled option type");
+                    }
                 }
+                this.guild_command_manager.register(djs_command);
             }
-            this.guild_command_manager.register(djs_command);
         }
     }
 
     static command_regex = new RegExp("^!(\\S+)");
 
+    // TODO: Notify about critical errors.....
     async on_message(message: Discord.Message) {
         try {
             if(message.author.bot) return; // skip bots
@@ -252,16 +255,19 @@ export class Wheatley extends EventEmitter {
                     if(command_name in this.commands) {
                         const command = this.commands[command_name];
                         const command_options: unknown[] = [];
+                        // TODO: Handle unexpected input?
                         for(const option of command.options.values()) {
                             if(option.type == "string") {
                                 // take the rest
                                 const rest = message.content.substring(match[0].length).trim();
-                                if(rest == "") {
-                                    await message.reply({
+                                if(rest == "" && option.required) {
+                                    const reply = await message.reply({
                                         embeds: [
                                             create_basic_embed(undefined, colors.red, "Required argument not found")
                                         ]
                                     });
+                                    this.deletable.make_message_deletable(message, reply);
+                                    return;
                                 }
                                 command_options.push(rest);
                             } else {
@@ -297,7 +303,18 @@ export class Wheatley extends EventEmitter {
                     const command_options: unknown[] = [];
                     for(const option of command.options.values()) {
                         if(option.type == "string") {
-                            command_options.push(interaction.options.getString(option.title));
+                            const option_value = interaction.options.getString(option.title);
+                            if(!option_value && option.required) {
+                                await interaction.reply({
+                                    embeds: [
+                                        create_basic_embed(undefined, colors.red, "Required argument not found")
+                                    ],
+                                    ephemeral: true
+                                });
+                                critical_error("this shouldn't happen");
+                                return;
+                            }
+                            command_options.push(option_value ?? "");
                         } else {
                             assert(false, "unhandled option type");
                         }

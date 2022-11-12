@@ -19,6 +19,8 @@ type Append<T extends unknown[], U> = [...T, U];
 
 type ConditionalOptional<C extends true | false, T> = C extends true ? T : T | undefined;
 
+type MoreThanOne<T> = [T, T, ...T[]];
+
 export class CommandBuilder<
     Args extends unknown[] = [],
     HasDescriptions extends boolean = false,
@@ -28,15 +30,17 @@ export class CommandBuilder<
     descriptions: ConditionalOptional<HasDescriptions, string[]>;
     options = new Discord.Collection<string, CommandOption & {type: CommandOptionType}>();
     handler: ConditionalOptional<HasHandler, (x: Command, ...args: Args) => any>;
+    slash_config: boolean[];
 
-    constructor(names: string | string[]) {
+    constructor(names: string | MoreThanOne<string>) {
         this.names = Array.isArray(names) ? names : [names];
+        this.slash_config = new Array(this.names.length).fill(true);
     }
 
-    set_description(descriptions: string | string[]): CommandBuilder<Args, true, HasHandler> {
-        descriptions = Array.isArray(descriptions) ? descriptions : [descriptions];
+    set_description(raw_descriptions: string | MoreThanOne<string>): CommandBuilder<Args, true, HasHandler> {
+        const descriptions = Array.isArray(raw_descriptions) ? raw_descriptions : [raw_descriptions];
         if(descriptions.length == this.names.length) {
-            this.descriptions = descriptions;
+            this.descriptions = descriptions as string[];
         } else {
             assert(descriptions.length == 1);
             this.descriptions = new Array(this.names.length).fill(descriptions[0]);
@@ -57,6 +61,16 @@ export class CommandBuilder<
         this.handler = handler;
         return this as unknown as CommandBuilder<Args, HasDescriptions, true>;
     }
+
+    set_slash(...config: boolean[]) {
+        if(config.length == this.names.length) {
+            this.slash_config = config;
+        } else {
+            assert(config.length == 1);
+            this.slash_config = new Array(this.names.length).fill(config[0]);
+        }
+        return this;
+    }
 }
 
 export class BotCommand<Args extends unknown[] = []> {
@@ -65,6 +79,7 @@ export class BotCommand<Args extends unknown[] = []> {
 
     constructor(public readonly name: string,
                 public readonly description: string | undefined,
+                public readonly slash: boolean,
                 builder: CommandBuilder<Args, true, true>) {
         this.options = builder.options;
         this.handler = builder.handler;
@@ -134,8 +149,10 @@ export class Command {
         }
     }
 
-    async get_member() {
-        if(this.member instanceof Discord.GuildMember) {
+    async get_member(guild_override?: Discord.Guild) {
+        if(guild_override) {
+            return await guild_override.members.fetch(this.user.id);
+        } else if(this.member instanceof Discord.GuildMember) {
             return this.member;
         } else {
             return await (await this.get_guild()).members.fetch(this.user.id);
@@ -144,7 +161,8 @@ export class Command {
 
     async reply(
         raw_message_options: string | (Discord.BaseMessageOptions & CommandAbstractionReplyOptions),
-        positional_ephemeral_if_possible = false
+        positional_ephemeral_if_possible = false,
+        positional_should_text_reply = false
     ) {
         if(is_string(raw_message_options)) {
             raw_message_options = {
@@ -158,6 +176,8 @@ export class Command {
         };
         message_options.ephemeral_if_possible =
             message_options.ephemeral_if_possible || positional_ephemeral_if_possible;
+        message_options.should_text_reply =
+            message_options.should_text_reply || positional_should_text_reply;
         if(this.reply_object instanceof Discord.ChatInputCommandInteraction) {
             await this.reply_object.reply({
                 ephemeral: !!message_options.ephemeral_if_possible,

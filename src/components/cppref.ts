@@ -168,7 +168,6 @@ export class Cppref extends BotComponent {
                 .set_handler(this.cppref.bind(this))
         );
 
-
         // Ok if the bot spins up while this is loading
         this.index.load_data();
     }

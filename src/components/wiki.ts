@@ -143,7 +143,7 @@ export class Wiki extends BotComponent {
         this.add_command(
             new CommandBuilder("wiki-preview")
                 .set_slash(false)
-                .set_description(["Preview a wiki article"])
+                .set_description("Preview a wiki article")
                 .add_string_option({
                     title: "content",
                     description: "Content",
