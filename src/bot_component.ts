@@ -35,7 +35,7 @@ export class BotComponent {
     }
     /* eslint-disable @typescript-eslint/no-empty-function, @typescript-eslint/no-unused-vars */
     async setup() {}
-    add_command<T extends unknown[]>(command: CommandBuilder<T, true>) {
+    add_command<T extends unknown[]>(command: CommandBuilder<T, true, true>) {
         this.wheatley.add_command(command);
     }
     // events

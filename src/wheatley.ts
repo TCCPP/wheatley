@@ -216,7 +216,7 @@ export class Wheatley extends EventEmitter {
         return instance;
     }
 
-    add_command<T extends unknown[]>(command: CommandBuilder<T, true>) {
+    add_command<T extends unknown[]>(command: CommandBuilder<T, true, true>) {
         assert(command.names.length > 0);
         assert(command.names.length == command.descriptions.length);
         for(const [name, description] of zip(command.names, command.descriptions)) {
@@ -224,7 +224,7 @@ export class Wheatley extends EventEmitter {
             this.commands[name] = new BotCommand(name, description, command);
             const djs_command = new SlashCommandBuilder()
                 .setName(name)
-                .setDescription(description);
+                .setDescription(description ?? ""); // TODO: make sure eslint catches this
             for(const option of command.options.values()) {
                 if(option.type == "string") {
                     djs_command.addStringOption(slash_option =>
@@ -244,6 +244,7 @@ export class Wheatley extends EventEmitter {
 
     async on_message(message: Discord.Message) {
         try {
+            if(message.author.bot) return; // skip bots
             if(message.content.startsWith("!")) {
                 const match = message.content.match(Wheatley.command_regex);
                 if(match) {

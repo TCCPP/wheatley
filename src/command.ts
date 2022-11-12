@@ -1,6 +1,7 @@
 import { strict as assert } from "assert";
 
 import * as Discord from "discord.js";
+import { forge_snowflake } from "./components/snowflake";
 
 import { denullify, escape_regex, is_string } from "./utils";
 import { Wheatley } from "./wheatley";
@@ -18,37 +19,43 @@ type Append<T extends unknown[], U> = [...T, U];
 
 type ConditionalOptional<C extends true | false, T> = C extends true ? T : T | undefined;
 
-export class CommandBuilder<Args extends unknown[] = [], HasHandler extends boolean = false> {
+export class CommandBuilder<
+    Args extends unknown[] = [],
+    HasDescriptions extends boolean = false,
+    HasHandler extends boolean = false>
+{
+    readonly names: string[];
     descriptions: string[] = [];
     options = new Discord.Collection<string, CommandOption & {type: CommandOptionType}>();
     handler: ConditionalOptional<HasHandler, (x: Command, ...args: Args) => any>;
-    readonly names: string[];
 
     constructor(names: string | string[]) {
         this.names = Array.isArray(names) ? names : [names];
     }
 
-    set_description(descriptions: string | string[]) {
-        this.descriptions = Array.isArray(descriptions) ? descriptions : [descriptions];
-        if(this.descriptions.length != this.names.length) {
-            assert(this.descriptions.length == 1);
-            this.descriptions = new Array(this.names.length).fill(this.descriptions[0]);
+    set_description(descriptions: string | string[]): CommandBuilder<Args, true, HasHandler> {
+        descriptions = Array.isArray(descriptions) ? descriptions : [descriptions];
+        if(descriptions.length == this.names.length) {
+            this.descriptions = descriptions;
+        } else {
+            assert(descriptions.length == 1);
+            this.descriptions = new Array(this.names.length).fill(descriptions[0]);
         }
-        return this;
+        return this as unknown as CommandBuilder<Args, true, HasHandler>;
     }
 
-    add_string_option(option: CommandOption): CommandBuilder<Append<Args, string>> {
+    add_string_option(option: CommandOption): CommandBuilder<Append<Args, string>, HasDescriptions, HasHandler> {
         assert(!this.options.has(option.title));
         this.options.set(option.title, {
             ...option,
             type: "string"
         });
-        return this as unknown as CommandBuilder<Append<Args, string>>;
+        return this as unknown as CommandBuilder<Append<Args, string>, HasDescriptions, HasHandler>;
     }
 
-    set_handler(handler: (x: Command, ...args: Args) => any): CommandBuilder<Args, true> {
+    set_handler(handler: (x: Command, ...args: Args) => any): CommandBuilder<Args, HasDescriptions, true> {
         this.handler = handler;
-        return this as unknown as CommandBuilder<Args, true>;
+        return this as unknown as CommandBuilder<Args, HasDescriptions, true>;
     }
 }
 
@@ -57,8 +64,8 @@ export class BotCommand<Args extends unknown[] = []> {
     handler: (x: Command, ...args: Args) => any;
 
     constructor(public readonly name: string,
-                public readonly description: string,
-                builder: CommandBuilder<Args, true>) {
+                public readonly description: string | undefined,
+                builder: CommandBuilder<Args, true, true>) {
         this.options = builder.options;
         this.handler = builder.handler;
     }
@@ -87,7 +94,7 @@ export class Command {
 
     constructor(
         public readonly name: string,
-        private readonly reply_object: Discord.ChatInputCommandInteraction | Discord.Message,
+        public readonly reply_object: Discord.ChatInputCommandInteraction | Discord.Message,
         private readonly wheatley: Wheatley
     ) {
         if(this.reply_object instanceof Discord.ChatInputCommandInteraction) {
@@ -135,7 +142,10 @@ export class Command {
         }
     }
 
-    async reply(raw_message_options: string | (Discord.BaseMessageOptions & CommandAbstractionReplyOptions)) {
+    async reply(
+        raw_message_options: string | (Discord.BaseMessageOptions & CommandAbstractionReplyOptions),
+        positional_ephemeral_if_possible = false
+    ) {
         if(is_string(raw_message_options)) {
             raw_message_options = {
                 content: raw_message_options
@@ -146,6 +156,8 @@ export class Command {
             allowedMentions: default_allowed_mentions,
             ...raw_message_options
         };
+        message_options.ephemeral_if_possible =
+            message_options.ephemeral_if_possible || positional_ephemeral_if_possible;
         if(this.reply_object instanceof Discord.ChatInputCommandInteraction) {
             await this.reply_object.reply({
                 ephemeral: !!message_options.ephemeral_if_possible,
@@ -166,6 +178,10 @@ export class Command {
         }
     }
 
+    is_slash() {
+        return this.reply_object instanceof Discord.ChatInputCommandInteraction;
+    }
+
     async react(emoji: string, ephemeral_if_possible = false) {
         if(this.reply_object instanceof Discord.ChatInputCommandInteraction) {
             await this.reply_object.reply({
@@ -175,6 +191,20 @@ export class Command {
             });
         } else {
             await this.reply_object.react(emoji);
+        }
+    }
+
+    get_or_forge_url() {
+        if(this.reply_object instanceof Discord.Message) {
+            return this.reply_object.url;
+        } else {
+            return `https://discord.com/channels/${this.guild_id}/${this.channel_id}/${forge_snowflake(Date.now())}`;
+        }
+    }
+
+    async delete_invocation_if_possible() {
+        if(this.reply_object instanceof Discord.Message) {
+            this.reply_object.delete();
         }
     }
 }
