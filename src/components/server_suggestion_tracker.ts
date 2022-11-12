@@ -27,6 +27,7 @@ type db_entry = {
     hash: string; // to check if message is updated, currently using xxh3 (64-bit hash)
     up: number;
     down: number;
+    maybe: number;
 };
 
 const color = 0x7E78FE; //0xA931FF;
@@ -156,6 +157,7 @@ export class ServerSuggestionTracker extends BotComponent {
         const reactions = message.reactions.cache;
         const up = (reactions.get("👍") || { count: 0 }).count;
         const down = (reactions.get("👎") || { count: 0 }).count;
+        const maybe = (reactions.get("🤷") || { count: 0 }).count;
         return new Discord.EmbedBuilder()
             .setColor(color)
             .setAuthor({
@@ -165,7 +167,7 @@ export class ServerSuggestionTracker extends BotComponent {
             .setDescription(message.content + `\n\n[[Jump to message]](${message.url})`)
             .setTimestamp(message.createdAt)
             .setFooter({
-                text: `${up} 👍 ${down} 👎`
+                text: `${up} 👍 ${down} 👎 ${maybe} 🤷`
             });
     }
 
@@ -233,7 +235,8 @@ export class ServerSuggestionTracker extends BotComponent {
                 status_message: status_message.id,
                 hash: xxh3(message.content),
                 up: 0,
-                down: 0
+                down: 0,
+                maybe: 0
             };
             this.wheatley.database.update();
             // add react options
@@ -284,7 +287,8 @@ export class ServerSuggestionTracker extends BotComponent {
                 const reactions = message.reactions.cache;
                 const up = (reactions.get("👍") || { count: 0 }).count;
                 const down = (reactions.get("👎") || { count: 0 }).count;
-                if(entry.up != up || entry.down != down) {
+                const maybe = (reactions.get("🤷") || { count: 0 }).count;
+                if(entry.up != up || entry.down != down || entry.maybe != maybe) {
                     M.debug("Updating suggestion with new reactions",
                             message.author.tag, message.author.id, message.url);
                     const status_message =
@@ -293,6 +297,7 @@ export class ServerSuggestionTracker extends BotComponent {
                     await status_message.edit({ embeds: [embed] });
                     entry.up = up;
                     entry.down = down;
+                    entry.maybe = maybe;
                     await this.wheatley.database.update();
                     return true; // return if we updated
                 }
@@ -393,7 +398,7 @@ export class ServerSuggestionTracker extends BotComponent {
     async process_vote(_reaction: Discord.MessageReaction | Discord.PartialMessageReaction,
         _: Discord.User                    | Discord.PartialUser) {
         const reaction = await departialize(_reaction);
-        if(reaction.emoji.name! == "👍" || reaction.emoji.name! == "👎") {
+        if(reaction.emoji.name! == "👍" || reaction.emoji.name! == "👎" || reaction.emoji.name! == "🤷") {
             const message = await departialize(reaction.message);
             if(message.id in this.wheatley.database.get<db_schema>("suggestion_tracker").suggestions) {
                 M.debug("Suggestion vote", reaction.emoji.name, [message.id]);
@@ -406,8 +411,10 @@ export class ServerSuggestionTracker extends BotComponent {
                 await status_message.edit({ embeds: [embed] });
                 if(reaction.emoji.name == "👍") {
                     entry.up = reaction.count;
-                } else { // 👎
+                } else if(reaction.emoji.name == "👎") {
                     entry.down = reaction.count;
+                } else { // 🤷
+                    entry.maybe = reaction.count;
                 }
                 await this.wheatley.database.update();
             } else {
