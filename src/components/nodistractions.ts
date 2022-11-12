@@ -193,7 +193,7 @@ export class Nodistractions extends BotComponent {
         };
         // Insert into appropriate place in the queue
         let i = 0;
-        for( ; i < this.undistract_queue.length; i++) {
+        for(; i < this.undistract_queue.length; i++) {
             if(this.undistract_queue[i].start + this.undistract_queue[i].duration >= start + duration) {
                 break;
             }

@@ -65,6 +65,9 @@ rules:
         false
       arraysInArrays:
         false
+  space-in-parens:
+    - error
+    - never
   comma-spacing:
     - error
   computed-property-spacing:
