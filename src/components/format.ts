@@ -250,7 +250,10 @@ export class Format extends BotComponent {
                         const formatted_message = await message.channel.send({
                             embeds: [embed],
                             content,
-                            files: attachments.filter(x => x != null) as Discord.AttachmentBuilder[]
+                            files: attachments.filter(x => x != null) as Discord.AttachmentBuilder[],
+                            allowedMentions: {
+                                parse: ["users"]
+                            }
                         });
                         if(should_replace_original(replying_to, message.createdAt)) {
                             await replying_to.delete();
@@ -321,7 +324,10 @@ export class Format extends BotComponent {
                 await interaction.reply({
                     embeds,
                     content,
-                    files: attachments.filter(x => x != null) as Discord.AttachmentBuilder[]
+                    files: attachments.filter(x => x != null) as Discord.AttachmentBuilder[],
+                    allowedMentions: {
+                        parse: ["users"]
+                    }
                 });
                 if(should_replace_original(replying_to, interaction.createdAt)) {
                     await replying_to.delete();
