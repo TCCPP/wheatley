@@ -60,6 +60,7 @@ export class Autoreact extends BotComponent {
             M.log("adding server suggestion reactions", message.author.tag, message.author.id, message.url);
             await message.react("👍");
             await message.react("👎");
+            await message.react("🤷");
         }
     }
 
