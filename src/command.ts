@@ -25,7 +25,7 @@ export class CommandBuilder<
     HasHandler extends boolean = false>
 {
     readonly names: string[];
-    descriptions: string[] = [];
+    descriptions: ConditionalOptional<HasDescriptions, string[]>;
     options = new Discord.Collection<string, CommandOption & {type: CommandOptionType}>();
     handler: ConditionalOptional<HasHandler, (x: Command, ...args: Args) => any>;
 
