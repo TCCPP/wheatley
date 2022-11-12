@@ -4,6 +4,7 @@ import { critical_error, M } from "../utils";
 import { no_off_topic } from "../common";
 import { BotComponent } from "../bot_component";
 import { Wheatley } from "../wheatley";
+import { Command, CommandBuilder } from "../command";
 
 /*
  * !nodistractions
@@ -55,7 +56,7 @@ function parse_unit(u: string) {
     return factor;
 }
 
-const nodistractions_re = /^!nodistractions\s*(\d*)\s*(\w*)/i;
+const nodistractions_arg_re = /^(\d*)\s*(\w*)/i;
 const INT_MAX = 0x7FFFFFFF;
 
 type no_distraction_entry = {
@@ -97,6 +98,22 @@ export class Nodistractions extends BotComponent {
                 duration: entry.duration
             });
         }
+
+        this.add_command(
+            new CommandBuilder("nodistractions")
+                .set_description("Turns on nodistractions")
+                .add_string_option({
+                    title: "time",
+                    description: "How long to go in nodistractions"
+                })
+                .set_handler(this.nodistractions.bind(this))
+        );
+
+        this.add_command(
+            new CommandBuilder("removenodistractions")
+                .set_description("Removes nodistractions")
+                .set_handler(this.removenodistractions.bind(this))
+        );
     }
 
     override async on_ready() {
@@ -146,21 +163,23 @@ export class Nodistractions extends BotComponent {
         this.timer = setTimeout(this.handle_timer.bind(this), Math.min(sleep_time, INT_MAX));
     }
 
-    async apply_no_distractions(target: Discord.GuildMember, message: Discord.Message, start: number,
+    async apply_no_distractions(command: Command, target: Discord.GuildMember, start: number,
         duration: number) {
         M.log("Applying !nodistractions", target.user.id, target.user.tag);
         // error handling
         if(target.roles.cache.some(r => r.id == no_off_topic)) {
             if(target.id in this.wheatley.database.get<database_schema>("nodistractions")) {
-                send_error(message, "You're already in !nodistractions");
+                command.reply("You're already in !nodistractions", true, true);
             } else {
-                send_error(message, "Nice try.");
-                this.wheatley.zelis.send(`Exploit attempt ${message.url}`);
+                command.reply("Nice try.", true, true);
+                this.wheatley.zelis.send(
+                    "Exploit attempt" + (command.is_slash() ? "" : " " + command.get_or_forge_url())
+                );
             }
             return;
         }
         if(duration >= Number.MAX_SAFE_INTEGER) { // prevent timer overflow
-            send_error(message, "Invalid timeframe");
+            command.reply("Invalid timeframe", true, true);
             return;
         }
         // apply role, dm, react
@@ -172,7 +191,7 @@ export class Nodistractions extends BotComponent {
         }
         target.send("!nodistractions applied, use !removenodistractions to exit")
             .catch(e => e.status != 403 ? M.error(e) : 0);
-        message.react("👍").catch(M.error);
+        command.react("✅").catch(M.error);
         // make entry
         const entry: no_distraction_entry = {
             id: target.id,
@@ -202,7 +221,7 @@ export class Nodistractions extends BotComponent {
         }
     }
 
-    async early_remove_nodistractions(target: Discord.GuildMember, message: Discord.Message) {
+    async early_remove_nodistractions(command: Command, target: Discord.GuildMember) {
         // checks
         assert(target.id in this.wheatley.database.get<database_schema>("nodistractions"));
         // timer
@@ -222,7 +241,7 @@ export class Nodistractions extends BotComponent {
         delete this.wheatley.database.get<database_schema>("nodistractions")[target.id];
         this.undistract_queue = this.undistract_queue.filter(e => e.id != target.id);
         this.wheatley.database.update();
-        message.react("👍").catch(M.error);
+        command.react("✅").catch(M.error);
         target.send("You have been removed from !nodistractions").catch(e => e.status != 403 ? M.error(e) : 0);
         // reschedule if necessary
         if(reschedule && this.undistract_queue.length > 0) {
@@ -230,79 +249,53 @@ export class Nodistractions extends BotComponent {
         }
     }
 
-
-    override async on_message_create(message: Discord.Message) {
-        if(message.author.id == this.wheatley.client.user!.id) return; // Ignore self
-        if(message.author.bot) return; // Ignore bots
-
-        if(message.content.trim().toLowerCase() == "!nodistractions") {
-            const reply = await message.channel.send("`!nodistractions <time>` where time is an integer followed by one"
-                                                   + " of the following units: m, h, d, w, M, y"
-                                                   + "\n`!removenodistractions` to remove nodistractions");
-            this.wheatley.deletable.make_message_deletable(message, reply);
-            return;
-        }
-
-        if(message.content.trim().toLowerCase() == "!removenodistractions") {
-            M.log("Received !removenodistractions", message.author.id, message.author.tag);
-            let member = message.member;
-            if(member == null) {
-                try {
-                    member = await this.wheatley.TCCPP.members.fetch(message.author.id);
-                } catch(e) {
-                    critical_error(e);
-                    message.reply("internal error with fetching user");
-                    this.wheatley.zelis.send("internal error with fetching user");
-                    return;
-                }
-            }
-            if(!member.roles.cache.some(r => r.id == no_off_topic)) {
-                send_error(message, "You are not currently in !nodistractions");
-                return;
-            }
-            if(!(member.id in this.wheatley.database.get<database_schema>("nodistractions"))) {
-                send_error(message, "Nice try.");
-                this.wheatley.zelis.send(`Exploit attempt ${message.url}`);
-                return;
-            }
-            this.early_remove_nodistractions(member, message);
-            return;
-        }
-
-        // "!nodistractions 123d asdfdsaf".match(/^!nodistractions\s*(\d*)\s*(\w*)/)
-        // [ "!nodistractions 123d", "123", "d" ]
-        const match = message.content.match(nodistractions_re);
-        if(match != null) {
-            M.debug("Received !nodistractions", message.author.id, message.author.tag);
+    async nodistractions(command: Command, arg: string) {
+        if(arg == "") {
+            M.debug("Received !nodistractions", command.user.id, command.user.tag);
+            await command.reply("`!nodistractions <time>` where time is an integer followed by one of the following"
+                            + " units: m, h, d, w, M, y\n`!removenodistractions` to remove nodistractions", true, true);
+        } else {
+            M.debug("Received !nodistractions", arg, command.user.id, command.user.tag);
+            // "123d".match(nodistractions_arg_re)
+            // [ "123d", "123", "d" ]
+            const match = arg.match(nodistractions_arg_re)!;
             assert(match.length == 3);
             const n = parseInt(match[1]);
             const u = match[2];
             if(isNaN(n)) {
-                send_error(message, "Empty time field");
+                command.reply("Empty time field", true, true);
                 return;
             }
             if(u == "") {
-                send_error(message, "Missing units");
+                command.reply("Missing units", true, true);
                 return;
             }
             const factor = parse_unit(u);
             if(factor == -1) {
-                send_error(message, "Unknown units");
+                command.reply("Unknown units", true, true);
                 return;
             }
             M.debug("Timeframe: ", n, u, factor);
-            let member = message.member;
-            if(member == null) {
-                try {
-                    member = await this.wheatley.TCCPP.members.fetch(message.author.id);
-                } catch(e) {
-                    critical_error(e);
-                    message.reply("Internal error with fetching user");
-                    this.wheatley.zelis.send("Internal error with fetching user");
-                    return;
-                }
-            }
-            this.apply_no_distractions(member, message, message.createdTimestamp, n * factor);
+            let member = await command.get_member(this.wheatley.TCCPP);
+            this.apply_no_distractions(command, member, Date.now(), n * factor);
         }
+    }
+
+    async removenodistractions(command: Command) {
+        M.log("Received !removenodistractions", command.user.id, command.user.tag);
+        const member = await command.get_member(this.wheatley.TCCPP);
+        if(!member.roles.cache.some(r => r.id == no_off_topic)) {
+            await command.reply("You are not currently in !nodistractions", true, true);
+            return;
+        }
+        if(!(member.id in this.wheatley.database.get<database_schema>("nodistractions"))) {
+            await command.reply("Nice try.", true, true);
+            await this.wheatley.zelis.send(
+                "Exploit attempt" + (command.is_slash() ? "" : " " + command.get_or_forge_url())
+            );
+            return;
+        }
+        this.early_remove_nodistractions(command, member);
+        return;
     }
 }
