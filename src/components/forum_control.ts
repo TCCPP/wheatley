@@ -4,6 +4,7 @@ import { denullify, get_tag, M } from "../utils";
 import { colors, forum_help_channels, is_authorized_admin } from "../common";
 import { BotComponent } from "../bot_component";
 import { Wheatley } from "../wheatley";
+import { Command, CommandBuilder } from "../command";
 
 /*
  * Forum thread handling:
@@ -24,6 +25,18 @@ function create_embed(title: string | undefined, color: number, msg: string) {
 export class ForumControl extends BotComponent {
     constructor(wheatley: Wheatley) {
         super(wheatley);
+
+        this.add_command(
+            new CommandBuilder(["solve", "solved", "close"])
+                .set_description(["Close forum post and mark it as solved"])
+                .set_handler(this.solve.bind(this))
+        );
+
+        this.add_command(
+            new CommandBuilder(["unsolve", "unsolved", "open"])
+                .set_description(["Re-open forum post"])
+                .set_handler(this.unsolve.bind(this))
+        );
     }
 
     async get_owner(thread: Discord.ThreadChannel) {
@@ -37,83 +50,91 @@ export class ForumControl extends BotComponent {
 
     // returns whether the thread can be controlled
     // or sends an error message
-    async try_to_control_thread(request: Discord.Message, action: string) {
-        if(request.channel.isThread()) {
-            const thread = request.channel;
+    async try_to_control_thread(request: Command, action: string) {
+        const channel = await request.get_channel();
+        if(channel.isThread()) {
+            const thread = channel;
             const owner_id = await this.get_owner(thread);
-            if(owner_id == request.author.id || is_authorized_admin(request.author.id)) {
+            if(owner_id == request.user.id || is_authorized_admin(request.user.id)) {
                 return true;
             } else {
-                const reply = await request.reply({
-                    content: `You can only ${action} threads you own`
+                await request.reply({
+                    content: `You can only ${action} threads you own`,
+                    should_text_reply: true
                 });
-                this.wheatley.deletable.make_message_deletable(request, reply);
                 return false;
             }
         } else {
-            const reply = await request.reply({
-                content: `You can only ${action} threads`
+            await request.reply({
+                content: `You can only ${action} threads`,
+                should_text_reply: true
             });
-            this.wheatley.deletable.make_message_deletable(request, reply);
             return false;
         }
     }
 
-    override async on_message_create(message: Discord.Message) {
-        if(message.author.bot) return; // Ignore bots
-        if(message.content == "!solve" || message.content == "!solved" || message.content == "!close") {
-            if(await this.try_to_control_thread(message, message.content.startsWith("!solve") ? "solve" : "close")) {
-                assert(message.channel.isThread());
-                const thread = message.channel;
-                const forum = thread.parent;
-                assert(forum instanceof Discord.ForumChannel);
-                const solved_tag = get_tag(forum, "Solved").id;
-                const open_tag = get_tag(forum, "Open").id;
-                if(thread.parentId && forum_help_channels.has(thread.parentId)) { // TODO
-                    if(!thread.appliedTags.some(tag => tag == solved_tag)) {
-                        M.log("Marking thread as solved", thread.id, thread.name);
-                        //await request.react("👍");
-                        const reply = await thread.send({
-                            embeds: [
-                                create_embed(undefined, colors.color, "Thank you and let us know if you have any more "
-                                    + "questions!")
-                            ]
-                        });
-                        this.wheatley.deletable.make_message_deletable(message, reply);
-                        await thread.setAppliedTags(
-                            [solved_tag].concat(thread.appliedTags.filter(tag => tag != open_tag))
-                        );
-                        await thread.setArchived(true);
-                    } else {
-                        const reply = await message.reply("Message is already solved");
-                        this.wheatley.deletable.make_message_deletable(message, reply);
-                    }
+    // TODO: more to dedupe
+
+    async solve(command: Command) {
+        if(await this.try_to_control_thread(command, command.name.startsWith("!solve") ? "solve" : "close")) {
+            const channel = await command.get_channel();
+            assert(channel.isThread());
+            const thread = channel;
+            const forum = thread.parent;
+            assert(forum instanceof Discord.ForumChannel);
+            const solved_tag = get_tag(forum, "Solved").id;
+            const open_tag = get_tag(forum, "Open").id;
+            if(thread.parentId && forum_help_channels.has(thread.parentId)) { // TODO
+                if(!thread.appliedTags.some(tag => tag == solved_tag)) {
+                    M.log("Marking thread as solved", thread.id, thread.name);
+                    //await request.react("👍");
+                    await command.reply({
+                        embeds: [
+                            create_embed(undefined, colors.color, "Thank you and let us know if you have any more "
+                                + "questions!")
+                        ]
+                    });
+                    await thread.setAppliedTags(
+                        [solved_tag].concat(thread.appliedTags.filter(tag => tag != open_tag))
+                    );
+                    await thread.setArchived(true);
                 } else {
-                    const reply = await message.reply("You can't use that here");
-                    this.wheatley.deletable.make_message_deletable(message, reply);
+                    await command.reply({
+                        content: "Message is already solved",
+                        should_text_reply: true
+                    });
                 }
+            } else {
+                await command.reply({
+                    content: "You can't use that here",
+                    should_text_reply: true
+                });
             }
         }
-        if(message.content == "!unsolve" || message.content == "!unsolved" || message.content == "!open") {
-            if(await this.try_to_control_thread(message, message.content.startsWith("!unsolve") ? "unsolve" : "open")) {
-                assert(message.channel.isThread());
-                const thread = message.channel;
-                const forum = thread.parent;
-                assert(forum instanceof Discord.ForumChannel);
-                const solved_tag = get_tag(forum, "Solved").id;
-                const open_tag = get_tag(forum, "Open").id;
-                if(thread.parentId && forum_help_channels.has(thread.parentId)) { // TODO
-                    if(thread.appliedTags.some(tag => tag == solved_tag)) {
-                        M.log("Unsolving thread", thread.id, thread.name);
-                        await message.react("👍");
-                        await thread.setAppliedTags(
-                            [open_tag].concat(thread.appliedTags.filter(tag => tag != solved_tag))
-                        );
-                    }
-                } else {
-                    const reply = await message.reply("You can't use that here");
-                    this.wheatley.deletable.make_message_deletable(message, reply);
+    }
+
+    async unsolve(command: Command) {
+        if(await this.try_to_control_thread(command, command.name.startsWith("!unsolve") ? "unsolve" : "open")) {
+            const channel = await command.get_channel();
+            assert(channel.isThread());
+            const thread = channel;
+            const forum = thread.parent;
+            assert(forum instanceof Discord.ForumChannel);
+            const solved_tag = get_tag(forum, "Solved").id;
+            const open_tag = get_tag(forum, "Open").id;
+            if(thread.parentId && forum_help_channels.has(thread.parentId)) { // TODO
+                if(thread.appliedTags.some(tag => tag == solved_tag)) {
+                    M.log("Unsolving thread", thread.id, thread.name);
+                    await command.react("👍");
+                    await thread.setAppliedTags(
+                        [open_tag].concat(thread.appliedTags.filter(tag => tag != solved_tag))
+                    );
                 }
+            } else {
+                await command.reply({
+                    content: "You can't use that here",
+                    should_text_reply: true
+                });
             }
         }
     }

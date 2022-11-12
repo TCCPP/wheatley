@@ -12,6 +12,7 @@ import { Index } from "../algorithm/search";
 import { BotComponent } from "../bot_component";
 import { Wheatley } from "../wheatley";
 import { colors } from "../common";
+import { Command, CommandBuilder } from "../command";
 
 function eliminate_aliases_and_duplicates(pages: cppref_page[]) {
     // There's this annoying thing where multiple pages are really the same page
@@ -149,64 +150,70 @@ export class Cppref extends BotComponent {
     constructor(wheatley: Wheatley) {
         super(wheatley);
 
-        const cppref = new SlashCommandBuilder()
-            .setName("cppref")
-            .setDescription("Query C++ reference pages")
-            .addStringOption(option =>
-                option.setName("query")
-                    .setDescription("Query")
-                    .setAutocomplete(true)
-                    .setRequired(true));
-        const cref = new SlashCommandBuilder()
-            .setName("cref")
-            .setDescription("Query C reference pages")
-            .addStringOption(option =>
-                option.setName("query")
-                    .setDescription("Query")
-                    .setAutocomplete(true)
-                    .setRequired(true));
-        this.wheatley.guild_command_manager.register(cppref);
-        this.wheatley.guild_command_manager.register(cref);
+        this.add_command(
+            new CommandBuilder(["cref", "cppref"])
+                .set_description(["Query C reference pages", "Query C++ reference pages"])
+                .add_string_option({
+                    title: "query",
+                    description: "Query",
+                    required: true,
+                    autocomplete: (query, name) => this
+                        .index
+                        .lookup_top_5(query, name == "cref" ? CpprefSubIndex.C : CpprefSubIndex.CPP)
+                        .map(page => ({
+                            name: `${page.title.substring(0, 100 - 14)} . . . . ${Math.round(page.score * 100) / 100}`,
+                            value: page.title
+                        }))
+                })
+                .set_handler(this.cppref.bind(this))
+        );
+
+
         // Ok if the bot spins up while this is loading
         this.index.load_data();
     }
 
-    override async on_message_create(message: Discord.Message) {
-        if(message.author.bot) return; // Ignore bots
-        if(message.content.startsWith("!cref ")) {
-            const query = message.content.slice("!cref".length).trim();
-            const result = this.index.lookup(query, CpprefSubIndex.C);
-            M.log("cref query", query, result ? `https://${result.path}` : null);
-            await this.send_results(message, result);
-        }
-        if(message.content.startsWith("!cppref")) {
-            const query = message.content.slice("!cppref".length).trim();
-            const result = this.index.lookup(query, CpprefSubIndex.CPP);
-            M.log("cppref query", query, result ? `https://${result.path}` : null);
-            await this.send_results(message, result);
-        }
-    }
+    async cppref(command: Command, query: string) {
+        const result = this.index.lookup(query.trim(), command.name == "cref" ? CpprefSubIndex.C : CpprefSubIndex.CPP);
+        M.log(`${command.name} query`, query, result ? `https://${result.path}` : null);
 
-    override async on_interaction_create(interaction: Discord.Interaction) {
-        if(interaction.isCommand() && (interaction.commandName == "cref" || interaction.commandName == "cppref")) {
-            assert(interaction.isChatInputCommand());
-            const query = interaction.options.getString("query")!.trim();
-            const result = this.index.lookup(
-                query, interaction.commandName == "cref" ? CpprefSubIndex.C : CpprefSubIndex.CPP
-            );
-            M.log(`${interaction.commandName} query`, query, result ? `https://${result.path}` : null);
-            await this.send_results_slash(interaction, result);
-        } else if(interaction.isAutocomplete()
-        && (interaction.commandName == "cref" || interaction.commandName == "cppref")) {
-            const query = interaction.options.getFocused().trim();
-            await interaction.respond(
-                this.index
-                    .lookup_top_5(query, interaction.commandName == "cref" ? CpprefSubIndex.C : CpprefSubIndex.CPP)
-                    .map(page => ({
-                        name: `${page.title.substring(0, 100 - 14)} . . . . ${Math.round(page.score * 100) / 100}`,
-                        value: page.title
-                    }))
-            );
+        if(result === null) {
+            await command.reply({
+                embeds: [
+                    new Discord.EmbedBuilder()
+                        .setColor(colors.color)
+                        .setAuthor({
+                            name: "cppreference.com",
+                            iconURL: "https://en.cppreference.com/favicon.ico",
+                            url: "https://en.cppreference.com"
+                        })
+                        .setDescription("No results found")
+                ]
+            });
+        } else {
+            // TODO: Clang format.....?
+            const embed = new Discord.EmbedBuilder()
+                .setColor(colors.color)
+                .setAuthor({
+                    name: "cppreference.com",
+                    iconURL: "https://en.cppreference.com/favicon.ico",
+                    url: "https://en.cppreference.com"
+                })
+                .setTitle(result.title)
+                .setURL(`https://${result.path}`);
+            if(result.sample_declaration) {
+                embed.setDescription(`\`\`\`cpp\n${
+                    result.sample_declaration
+                    + (result.other_declarations ? `\n// ... and ${result.other_declarations} more` : "")
+                }\n\`\`\``);
+            }
+            if(result.headers) {
+                embed.addFields({
+                    name: "Defined in",
+                    value: format_list(result.headers.map(this.link_headers))
+                });
+            }
+            await command.reply({ embeds: [embed] });
         }
     }
 
@@ -218,87 +225,6 @@ export class Cppref extends BotComponent {
             return header;
         } else {
             return `[${header}](en.cppreference.com/w/cpp/header/${header_part}.html)`;
-        }
-    }
-
-    async send_results(message: Discord.Message, result: cppref_page | null) {
-        if(result === null) {
-            const result_message = await message.channel.send({ embeds: [
-                new Discord.EmbedBuilder()
-                    .setColor(colors.color)
-                    .setAuthor({
-                        name: "cppreference.com",
-                        iconURL: "https://en.cppreference.com/favicon.ico",
-                        url: "https://en.cppreference.com"
-                    })
-                    .setDescription("No results found")
-            ] });
-            this.wheatley.deletable.make_message_deletable(message, result_message);
-        } else {
-            // TODO: Clang format.....?
-            const embed = new Discord.EmbedBuilder()
-                .setColor(colors.color)
-                .setAuthor({
-                    name: "cppreference.com",
-                    iconURL: "https://en.cppreference.com/favicon.ico",
-                    url: "https://en.cppreference.com"
-                })
-                .setTitle(result.title)
-                .setURL(`https://${result.path}`);
-            if(result.sample_declaration) {
-                embed.setDescription(`\`\`\`cpp\n${
-                    result.sample_declaration
-                    + (result.other_declarations ? `\n// ... and ${result.other_declarations} more` : "")
-                }\n\`\`\``);
-            }
-            if(result.headers) {
-                embed.addFields({
-                    name: "Defined in",
-                    value: format_list(result.headers.map(this.link_headers))
-                });
-            }
-            const result_message = await message.channel.send({ embeds: [embed] });
-            this.wheatley.deletable.make_message_deletable(message, result_message);
-        }
-    }
-
-    // TODO: Lots of code duplication
-    async send_results_slash(interaction: Discord.ChatInputCommandInteraction, result: cppref_page | null) {
-        if(result === null) {
-            await interaction.reply({ embeds: [
-                new Discord.EmbedBuilder()
-                    .setColor(colors.color)
-                    .setAuthor({
-                        name: "cppreference.com",
-                        iconURL: "https://en.cppreference.com/favicon.ico",
-                        url: "https://en.cppreference.com"
-                    })
-                    .setDescription("No results found")
-            ] });
-        } else {
-            // TODO: Clang format.....?
-            const embed = new Discord.EmbedBuilder()
-                .setColor(colors.color)
-                .setAuthor({
-                    name: "cppreference.com",
-                    iconURL: "https://en.cppreference.com/favicon.ico",
-                    url: "https://en.cppreference.com"
-                })
-                .setTitle(result.title)
-                .setURL(`https://${result.path}`);
-            if(result.sample_declaration) {
-                embed.setDescription(`\`\`\`cpp\n${
-                    result.sample_declaration
-                    + (result.other_declarations ? `\n// ... and ${result.other_declarations} more` : "")
-                }\n\`\`\``);
-            }
-            if(result.headers) {
-                embed.addFields({
-                    name: "Defined in",
-                    value: format_list(result.headers.map(this.link_headers))
-                });
-            }
-            await interaction.reply({ embeds: [embed] });
         }
     }
 }

@@ -14,7 +14,7 @@ import { action_log_channel_id, bot_spam_id, colors, cpp_help_id, c_help_id, mem
          message_log_channel_id, mods_channel_id, rules_channel_id, server_suggestions_channel_id,
          suggestion_action_log_thread_id, suggestion_dashboard_thread_id, TCCPP_ID, welcome_channel_id, zelis_id }
          from "./common";
-import { critical_error, fetch_forum_channel, fetch_text_channel, fetch_thread_channel, M } from "./utils";
+import { critical_error, fetch_forum_channel, fetch_text_channel, fetch_thread_channel, M, zip } from "./utils";
 
 import { AntiAutoreact } from "./components/anti_autoreact";
 import { AntiForumPostDelete } from "./components/anti_forum_post_delete";
@@ -217,23 +217,27 @@ export class Wheatley extends EventEmitter {
     }
 
     add_command<T extends unknown[]>(command: CommandBuilder<T, true>) {
-        assert(!(command.name in this.commands));
-        this.commands[command.name] = new BotCommand(command);
-        const djs_command = new SlashCommandBuilder()
-            .setName(command.name)
-            .setDescription(command.description);
-        for(const option of command.options.values()) {
-            if(option.type == "string") {
-                djs_command.addStringOption(slash_option =>
-                    slash_option.setName(option.title)
-                        .setDescription(option.description)
-                        .setAutocomplete(!!option.autocomplete)
-                        .setRequired(!!option.required));
-            } else {
-                assert(false, "unhandled option type");
+        assert(command.names.length > 0);
+        assert(command.names.length == command.descriptions.length);
+        for(const [name, description] of zip(command.names, command.descriptions)) {
+            assert(!(name in this.commands));
+            this.commands[name] = new BotCommand(name, description, command);
+            const djs_command = new SlashCommandBuilder()
+                .setName(name)
+                .setDescription(description);
+            for(const option of command.options.values()) {
+                if(option.type == "string") {
+                    djs_command.addStringOption(slash_option =>
+                        slash_option.setName(option.title)
+                            .setDescription(option.description)
+                            .setAutocomplete(!!option.autocomplete)
+                            .setRequired(!!option.required));
+                } else {
+                    assert(false, "unhandled option type");
+                }
             }
+            this.guild_command_manager.register(djs_command);
         }
-        this.guild_command_manager.register(djs_command);
     }
 
     static command_regex = new RegExp("^!(\\S+)");
@@ -266,9 +270,8 @@ export class Wheatley extends EventEmitter {
                         command.handler!(
                             new Command(
                                 command_name,
-                                message.member,
-                                message.channel,
-                                message
+                                message,
+                                this
                             ),
                             ...command_options
                         );
@@ -301,9 +304,8 @@ export class Wheatley extends EventEmitter {
                     command.handler!(
                         new Command(
                             interaction.commandName,
-                            interaction.member,
-                            interaction.channel,
-                            interaction
+                            interaction,
+                            this
                         ),
                         ...command_options
                     );
@@ -318,7 +320,7 @@ export class Wheatley extends EventEmitter {
                     assert(command.options.has(field.name));
                     const option = command.options.get(field.name)!;
                     assert(option.autocomplete);
-                    await interaction.respond(option.autocomplete(field.value));
+                    await interaction.respond(option.autocomplete(field.value, interaction.commandName));
                 } else {
                     // TODO unknown command
                 }

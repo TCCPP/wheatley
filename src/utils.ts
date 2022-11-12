@@ -440,3 +440,30 @@ export function index_of_first_not_satisfying<T>(arr: T[], fn: (_: T) => boolean
 export function escape_regex(string: string) {
     return string.replace(/[.*+?^${}()|[\]\\]/g, '\\$&');
 }
+
+export function* zip<A, B>(a: Iterable<A>, b: Iterable<B>): Generator<[A, B]> {
+    const it_a = a[Symbol.iterator](), it_b = b[Symbol.iterator]();
+    let value_a = it_a.next(), value_b = it_b.next();
+    while(!value_a.done && !value_b.done) {
+        yield [value_a.value, value_b.value];
+        value_a = it_a.next();
+        value_b = it_b.next();
+    }
+}
+
+export function* zip_uneven<A, B>(a: Iterable<A>, b: Iterable<B>): Generator<[A | undefined, B | undefined]> {
+    const it_a = a[Symbol.iterator](), it_b = b[Symbol.iterator]();
+    let value_a = it_a.next(), value_b = it_b.next();
+    while(!value_a.done || !value_b.done) {
+        yield [
+            !value_a.done ? value_a.value : undefined,
+            !value_b.done ? value_b.value : undefined
+        ];
+        value_a = it_a.next();
+        value_b = it_b.next();
+    }
+}
+
+export function is_string(value: string | unknown): value is string {
+    return typeof value === "string" || value instanceof String;
+}
