@@ -1,9 +1,16 @@
 import * as Discord from "discord.js";
 import { strict as assert } from "assert";
 import { delay, is_image_link_embed, M } from "../utils";
-import { introductions_channel_id, memes_channel_id, MINUTE, server_suggestions_channel_id, TCCPP_ID } from "../common";
+import { introductions_channel_id, memes_channel_id, MINUTE, server_suggestions_channel_id, TCCPP_ID,
+         wheatley_id } from "../common";
 import { BotComponent } from "../bot_component";
 import { Wheatley } from "../wheatley";
+
+function has_media(message: Discord.Message | Discord.PartialMessage) {
+    return message.attachments.some(
+        a => a.contentType?.startsWith("image/") || a.contentType?.startsWith("video/") || false
+    ) || message.embeds.some(is_image_link_embed);
+}
 
 export class Autoreact extends BotComponent {
     constructor(wheatley: Wheatley) {
@@ -34,14 +41,6 @@ export class Autoreact extends BotComponent {
         if(message.author.id == this.wheatley.client.user!.id) return; // Ignore self
         if(message.author.bot) return; // Ignore bots
         if(message.guildId != TCCPP_ID) return; // Ignore messages outside TCCPP (e.g. dm's)
-
-        //if(message.channel.id == memes_channel_id) {
-        //    M.info(message.content, message.attachments, message.embeds,
-        //        message.attachments.some(
-        //          a.contentType?.startsWith("image/") || a.contentType?.startsWith("video/") || false),
-        //        message.embeds.some(is_image_link_embed));
-        //}
-
         if(message.channel.id == introductions_channel_id) {
             if(message.member == null) M.warn("Why??", message); // TODO: Ping zelis?
             if(await this.is_new_member(message)) {
@@ -49,11 +48,7 @@ export class Autoreact extends BotComponent {
                 M.log("Waving to new user", message.author.tag, message.author.id, message.url);
                 await message.react("👋");
             }
-        } else if(message.channel.id == memes_channel_id && (
-            message.attachments.some(a =>
-                a.contentType?.startsWith("image/") || a.contentType?.startsWith("video/") || false)
-            || message.embeds.some(is_image_link_embed)
-        )) {
+        } else if(message.channel.id == memes_channel_id && has_media(message)) {
             M.log("adding star reaction", message.author.tag, message.author.id, message.url);
             await message.react("⭐");
         } else if(message.channel.id == server_suggestions_channel_id) {
@@ -61,6 +56,27 @@ export class Autoreact extends BotComponent {
             await message.react("👍");
             await message.react("👎");
             await message.react("🤷");
+        }
+    }
+
+    // Primarily here to catch url embeds, sometimes they aren't present in the initial message create
+    override async on_message_update(old_message: Discord.Message<boolean> | Discord.PartialMessage,
+        new_message: Discord.Message<boolean> | Discord.PartialMessage): Promise<void> {
+        if(new_message.author?.id == this.wheatley.client.user!.id) return; // Ignore self
+        if(new_message.author?.bot) return; // Ignore bots
+        if(new_message.guildId != TCCPP_ID) return; // Ignore messages outside TCCPP (e.g. dm's)
+        if(new_message.channel.id == memes_channel_id) {
+            const bot_starred = new_message.reactions.cache.get("⭐")?.users.cache.has(wheatley_id);
+            // If we haven't stared (or don't know if we've starred) and the new message has media, star
+            if(!bot_starred && has_media(new_message)) {
+                M.log("adding star reaction on message update", new_message.reactions.cache.has(wheatley_id),
+                      new_message.author?.tag, new_message.author?.id, new_message.url);
+                await new_message.react("⭐");
+            } else if(bot_starred && !has_media(new_message)) { // if we starred and there's no longer media, remove
+                M.log("removing star reaction on message update", new_message.reactions.cache.has(wheatley_id),
+                      new_message.author?.tag, new_message.author?.id, new_message.url);
+                await new_message.reactions.cache.get("⭐")?.users.remove(wheatley_id);
+            }
         }
     }
 
