@@ -1,5 +1,4 @@
 import * as Discord from "discord.js";
-import { SlashCommandBuilder } from "@discordjs/builders";
 
 import { strict as assert } from "assert";
 
@@ -151,8 +150,8 @@ export class Cppref extends BotComponent {
         super(wheatley);
 
         this.add_command(
-            new CommandBuilder(["cref", "cppref"])
-                .set_description(["Query C reference pages", "Query C++ reference pages"])
+            new CommandBuilder([ "cref", "cppref" ])
+                .set_description([ "Query C reference pages", "Query C++ reference pages" ])
                 .add_string_option({
                     title: "query",
                     description: "Query",

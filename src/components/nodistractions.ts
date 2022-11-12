@@ -23,10 +23,6 @@ import { Command, CommandBuilder } from "../command";
  * - Remove role and database entry
  */
 
-function send_error(original_message: Discord.Message, message: string) {
-    original_message.reply(`Error: ${message}`);
-}
-
 function parse_unit(u: string) {
     let factor = 1000; // in ms
     switch(u) {
@@ -272,7 +268,7 @@ export class Nodistractions extends BotComponent {
                 return;
             }
             M.debug("Timeframe: ", n, u, factor);
-            let member = await command.get_member(this.wheatley.TCCPP);
+            const member = await command.get_member(this.wheatley.TCCPP);
             this.apply_no_distractions(command, member, Date.now(), n * factor);
         }
     }

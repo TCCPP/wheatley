@@ -438,7 +438,7 @@ export function index_of_first_not_satisfying<T>(arr: T[], fn: (_: T) => boolean
 
 // https://stackoverflow.com/questions/3446170/escape-string-for-use-in-javascript-regex
 export function escape_regex(string: string) {
-    return string.replace(/[.*+?^${}()|[\]\\]/g, '\\$&');
+    return string.replace(/[.*+?^${}()|[\]\\]/g, "\\$&");
 }
 
 type Arr = readonly unknown[];

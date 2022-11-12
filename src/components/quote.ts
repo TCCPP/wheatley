@@ -18,8 +18,8 @@ export class Quote extends BotComponent {
         super(wheatley);
 
         this.add_command(
-            new CommandBuilder(["quote", "quoteb"])
-                .set_description(["Quote a message", "Quote a block of messages"])
+            new CommandBuilder([ "quote", "quoteb" ])
+                .set_description([ "Quote a message", "Quote a block of messages" ])
                 .add_string_option({
                     title: "url",
                     description: "url",

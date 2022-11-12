@@ -124,8 +124,8 @@ export class Wiki extends BotComponent {
         super(wheatley);
 
         this.add_command(
-            new CommandBuilder(["wiki", "howto"])
-                .set_description(["Retrieve wiki articles", "Retrieve wiki articles (alternatively /wiki)"])
+            new CommandBuilder([ "wiki", "howto" ])
+                .set_description([ "Retrieve wiki articles", "Retrieve wiki articles (alternatively /wiki)" ])
                 .add_string_option({
                     title: "query",
                     description: "Query",
@@ -186,8 +186,8 @@ export class Wiki extends BotComponent {
     async wiki(command: Command, query: string) {
         const matching_articles = Object
             .entries(articles)
-            .filter(([ name, { title } ]) => name == query.replaceAll("-", "_") || title == query)
-            .map(([_, article]) => article);
+            .filter(([ name, { title }]) => name == query.replaceAll("-", "_") || title == query)
+            .map(([ _, article ]) => article);
         const article = matching_articles.length > 0 ? matching_articles[0] : undefined;
         if(article) {
             await this.send_wiki_article(article, command);

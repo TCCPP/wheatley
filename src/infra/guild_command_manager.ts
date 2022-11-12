@@ -31,7 +31,7 @@ export class GuildCommandManager {
             );
             M.log("Finished sending guild commands");
         } catch(e) {
-            M.log(util.inspect({ body: this.commands }, {showHidden: false, depth: null, colors: true}));
+            M.log(util.inspect({ body: this.commands }, { showHidden: false, depth: null, colors: true }));
             critical_error(e);
         }
     }

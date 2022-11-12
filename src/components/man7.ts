@@ -1,11 +1,10 @@
 import * as Discord from "discord.js";
-import { SlashCommandBuilder } from "discord.js";
 
 import { strict as assert } from "assert";
 
 import * as fs from "fs";
 
-import { critical_error, M } from "../utils";
+import { M } from "../utils";
 
 import { Index, IndexEntry } from "../algorithm/search";
 import { man7_entry, man7_index } from "../../indexes/man7/types";
@@ -116,7 +115,7 @@ export class Man7 extends BotComponent {
     async man(command: Command, query: string) {
         const result = this.index.lookup(query);
         M.log("man7 query", query,
-                result ? `https://man7.org/linux/man-pages/${result.path}` : null);
+              result ? `https://man7.org/linux/man-pages/${result.path}` : null);
         if(result === null) {
             await command.reply({
                 embeds: [

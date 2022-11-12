@@ -3,7 +3,7 @@ import { strict as assert } from "assert";
 import * as Discord from "discord.js";
 import { forge_snowflake } from "./components/snowflake";
 
-import { denullify, escape_regex, is_string } from "./utils";
+import { denullify, is_string } from "./utils";
 import { Wheatley } from "./wheatley";
 
 export type CommandOptionType = "string";
@@ -40,7 +40,7 @@ export class CommandBuilder<
     set_description(raw_descriptions: string | MoreThanOne<string>): CommandBuilder<Args, true, HasHandler> {
         const descriptions = Array.isArray(raw_descriptions) ? raw_descriptions : [raw_descriptions];
         if(descriptions.length == this.names.length) {
-            this.descriptions = descriptions as string[];
+            this.descriptions = descriptions;
         } else {
             assert(descriptions.length == 1);
             this.descriptions = new Array(this.names.length).fill(descriptions[0]);

@@ -1,5 +1,4 @@
 import { strict as assert } from "assert";
-import * as Discord from "discord.js";
 import { M } from "../utils";
 import { BotComponent } from "../bot_component";
 import { Wheatley } from "../wheatley";

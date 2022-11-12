@@ -136,7 +136,7 @@ export function is_root(user: Discord.User | Discord.PartialUser | APIUser): boo
 
 export function is_authorized_admin(member: Discord.GuildMember | Discord.User | string): boolean {
     if(is_string(member)) {
-        return root_mod_ids_set.has(member as string);
+        return root_mod_ids_set.has(member);
     } else {
         //return member.roles.cache.some(r => authorized_admin_roles.indexOf(r.id) > -1);
         return root_mod_ids_set.has(member.id);

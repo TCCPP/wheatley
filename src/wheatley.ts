@@ -13,7 +13,7 @@ import { BotComponent } from "./bot_component";
 import { action_log_channel_id, bot_spam_id, colors, cpp_help_id, c_help_id, member_log_channel_id,
          message_log_channel_id, mods_channel_id, rules_channel_id, server_suggestions_channel_id,
          suggestion_action_log_thread_id, suggestion_dashboard_thread_id, TCCPP_ID, welcome_channel_id, zelis_id }
-         from "./common";
+    from "./common";
 import { critical_error, fetch_forum_channel, fetch_text_channel, fetch_thread_channel, M, zip } from "./utils";
 
 import { AntiAutoreact } from "./components/anti_autoreact";
@@ -219,14 +219,16 @@ export class Wheatley extends EventEmitter {
     add_command<T extends unknown[]>(command: CommandBuilder<T, true, true>) {
         assert(command.names.length > 0);
         assert(command.names.length == command.descriptions.length);
-        for(const [name, description, slash] of zip(command.names, command.descriptions, command.slash_config)) {
+        for(const [ name, description, slash ] of zip(command.names, command.descriptions, command.slash_config)) {
             assert(!(name in this.commands));
             this.commands[name] = new BotCommand(name, description, slash, command);
             if(slash) {
                 const djs_command = new SlashCommandBuilder()
                     .setName(name)
-                    .setDescription(description ?? ""); // TODO: make sure eslint catches this
+                    .setDescription(description);
                 for(const option of command.options.values()) {
+                    // NOTE: Temp for now
+                    // eslint-disable-next-line @typescript-eslint/no-unnecessary-condition
                     if(option.type == "string") {
                         djs_command.addStringOption(slash_option =>
                             slash_option.setName(option.title)
@@ -257,6 +259,8 @@ export class Wheatley extends EventEmitter {
                         const command_options: unknown[] = [];
                         // TODO: Handle unexpected input?
                         for(const option of command.options.values()) {
+                            // NOTE: Temp for now
+                            // eslint-disable-next-line @typescript-eslint/no-unnecessary-condition
                             if(option.type == "string") {
                                 // take the rest
                                 const rest = message.content.substring(match[0].length).trim();
@@ -274,7 +278,7 @@ export class Wheatley extends EventEmitter {
                                 assert(false, "unhandled option type");
                             }
                         }
-                        command.handler!(
+                        command.handler(
                             new Command(
                                 command_name,
                                 message,
@@ -302,6 +306,8 @@ export class Wheatley extends EventEmitter {
                     const command = this.commands[interaction.commandName];
                     const command_options: unknown[] = [];
                     for(const option of command.options.values()) {
+                        // NOTE: Temp for now
+                        // eslint-disable-next-line @typescript-eslint/no-unnecessary-condition
                         if(option.type == "string") {
                             const option_value = interaction.options.getString(option.title);
                             if(!option_value && option.required) {
@@ -319,7 +325,7 @@ export class Wheatley extends EventEmitter {
                             assert(false, "unhandled option type");
                         }
                     }
-                    command.handler!(
+                    command.handler(
                         new Command(
                             interaction.commandName,
                             interaction,

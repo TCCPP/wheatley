@@ -27,13 +27,13 @@ export class ForumControl extends BotComponent {
         super(wheatley);
 
         this.add_command(
-            new CommandBuilder(["solve", "solved", "close"])
+            new CommandBuilder([ "solve", "solved", "close" ])
                 .set_description("Close forum post and mark it as solved")
                 .set_handler(this.solve.bind(this))
         );
 
         this.add_command(
-            new CommandBuilder(["unsolve", "unsolved", "open"])
+            new CommandBuilder([ "unsolve", "unsolved", "open" ])
                 .set_description("Re-open forum post")
                 .set_handler(this.unsolve.bind(this))
         );

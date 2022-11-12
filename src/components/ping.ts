@@ -1,10 +1,9 @@
 import * as Discord from "discord.js";
-import { SlashCommandBuilder } from "@discordjs/builders";
 
 import { strict as assert } from "assert";
 
 import { M } from "../utils";
-import { colors, is_authorized_admin } from "../common";
+import { colors } from "../common";
 import { BotComponent } from "../bot_component";
 import { Wheatley } from "../wheatley";
 import { Command, CommandBuilder } from "../command";
@@ -14,7 +13,7 @@ export class Ping extends BotComponent {
         super(wheatley);
 
         this.add_command(
-            new CommandBuilder(["ping", "wstatus"])
+            new CommandBuilder([ "ping", "wstatus" ])
                 .set_description("ping")
                 .set_handler(this.ping.bind(this))
         );
