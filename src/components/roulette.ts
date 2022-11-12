@@ -4,6 +4,7 @@ import { critical_error, M, SelfClearingMap, SelfClearingSet } from "../utils";
 import { bot_spam_id, MINUTE } from "../common";
 import { BotComponent } from "../bot_component";
 import { Wheatley } from "../wheatley";
+import { Command, CommandBuilder } from "../command";
 
 const green = 0x31ea6c;
 const red = 0xed2d2d;
@@ -32,6 +33,18 @@ export class Roulette extends BotComponent {
                  */
             });
         }
+
+        this.add_command(
+            new CommandBuilder("roulette")
+                .set_description("roulette")
+                .set_handler(this.roulette.bind(this))
+        );
+
+        this.add_command(
+            new CommandBuilder(["leaderboard"])
+                .set_description("leaderboard")
+                .set_handler(this.leaderboard.bind(this))
+        );
     }
 
     make_click_embed(author: Discord.User) {
@@ -47,16 +60,13 @@ export class Roulette extends BotComponent {
             .setDescription(`BANG. <@${author.id}> is dead <a:saber:851241060553326652>`);
     }
 
-    make_ban_embed(message: Discord.Message) {
-        const author = message.author;
+    make_ban_embed(command: Command) {
+        const author = command.user;
         return new Discord.EmbedBuilder()
             .setColor(red)
             .setDescription(`BANG. <@${author.id}> ${author.tag} [lost](https://www.youtube.com/watch?v=dQw4w9WgXcQ)`
-                          + ` [roulette](${message.url}) and is being timed out for half an hour`
-                          + ` <a:saber:851241060553326652>.\nID: ${author.id}`)
-            .setFooter({
-                text: ""
-            });
+                          + ` [roulette](${command.get_or_forge_url()}) and is being timed out for half an hour`
+                          + ` <a:saber:851241060553326652>.\nID: ${author.id}`);
     }
 
     async update_scoreboard(user_id: string) {
@@ -79,54 +89,57 @@ export class Roulette extends BotComponent {
         await this.wheatley.database.update();
     }
 
-    async play_roulette(message: Discord.Message) {
-        if(message.channel.id != bot_spam_id) {
-            message.reply(`Must be used in <#${bot_spam_id}>`);
+    async roulette(command: Command) {
+        if(command.channel_id != bot_spam_id) {
+            await command.reply({
+                content: `Must be used in <#${bot_spam_id}>`,
+                ephemeral_if_possible: true
+            });
             return;
         }
-        if(this.warned_users.has(message.author.id)) {
+        if(this.warned_users.has(command.user.id)) {
             const roll = Math.floor(Math.random() * 6);
-            M.log("Received !roulette", message.author.id, message.author.tag, roll);
+            M.log("Received !roulette", command.user.id, command.user.tag, roll);
             if(roll == 0) {
                 let ok = true;
-                message.member!.timeout(30 * MINUTE, "Bang")
+                (await command.get_member()).timeout(30 * MINUTE, "Bang")
                     .catch((...args: any[]) => {
                         critical_error("promise failed for timeout of roulette loser",
-                                       [ message.author.id, message.author.tag ]);
+                                       [ command.user.id, command.user.tag ]);
                         M.error(...args);
                         ok = false;
                     })
                     .finally(() => {
                         // Send bang message
-                        const m = { embeds: [this.make_bang_embed(message.author)] };
-                        message.channel.send(m);
+                        const m = { embeds: [this.make_bang_embed(command.user)] };
+                        command.reply(m);
                         this.wheatley.staff_member_log_channel.send(m);
                         // Setup ban message
-                        const ban_embed = this.make_ban_embed(message);
+                        const ban_embed = this.make_ban_embed(command);
                         if(!ok) {
                             ban_embed.setFooter({
-                                text: ban_embed.data.footer!.text + "Error: Timeout failed "
+                                text: "Error: Timeout failed "
                             });
                         }
                         this.wheatley.staff_member_log_channel.send({ embeds: [ban_embed] });
                     });
-                this.streaks.set(message.author.id, 0);
-                await this.update_scoreboard(message.author.id); // TODO: I forget why this is here
+                this.streaks.set(command.user.id, 0);
+                await this.update_scoreboard(command.user.id); // TODO: I forget why this is here
             } else {
-                const m = { embeds: [this.make_click_embed(message.author)] };
-                this.streaks.set(message.author.id, (this.streaks.get(message.author.id) ?? 0) + 1);
-                await message.channel.send(m);
+                const m = { embeds: [this.make_click_embed(command.user)] };
+                this.streaks.set(command.user.id, (this.streaks.get(command.user.id) ?? 0) + 1);
+                await command.reply(m);
                 await this.wheatley.staff_member_log_channel.send(m);
-                await this.update_scoreboard(message.author.id);
+                await this.update_scoreboard(command.user.id);
             }
         } else {
-            message.reply("Warning: This is __Russian Roulette__. Losing will result in a 30 minute timeout."
+            command.reply("Warning: This is __Russian Roulette__. Losing will result in a 30 minute timeout."
                         + " Proceed at your own risk.");
-            this.warned_users.insert(message.author.id);
+            this.warned_users.insert(command.user.id);
         }
     }
 
-    async display_leaderboard(message: Discord.Message) {
+    async leaderboard(command: Command) {
         const embed = new Discord.EmbedBuilder()
             .setColor(green)
             .setTitle("Roulette Leaderboard");
@@ -137,15 +150,6 @@ export class Roulette extends BotComponent {
             description += `<@${key}>: ${value} roll${value == 1 ? "" : "s"} before death\n`;
         }
         embed.setDescription(description);
-        await message.channel.send({ embeds: [embed] });
-    }
-
-    override async on_message_create(message: Discord.Message) {
-        if(message.author.bot) return; // Ignore bots
-        if(message.content == "!roulette") {
-            await this.play_roulette(message);
-        } else if(message.content == "!leaderboard") {
-            await this.display_leaderboard(message);
-        }
+        await command.reply({ embeds: [embed] });
     }
 }

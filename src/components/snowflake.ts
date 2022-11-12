@@ -1,11 +1,12 @@
-import * as Discord from "discord.js";
 import { strict as assert } from "assert";
+import * as Discord from "discord.js";
 import { M } from "../utils";
-import { TCCPP_ID } from "../common";
 import { BotComponent } from "../bot_component";
 import { Wheatley } from "../wheatley";
+import { Command, CommandBuilder } from "../command";
 
-const snowflake_command_re = /!snowflake\s*(\d+)/i;
+const snowflakes_re = /\d+/g;
+
 const DISCORD_EPOCH = 1420070400000;
 
 export function decode_snowflake(snowflake_text: string) {
@@ -22,18 +23,28 @@ export function forge_snowflake(timestamp: number) {
 export class Snowflake extends BotComponent {
     constructor(wheatley: Wheatley) {
         super(wheatley);
+
+        this.add_command(
+            new CommandBuilder("snowflake")
+                .set_description("snowflake")
+                .add_string_option({
+                    title: "input",
+                    description: "Input",
+                    required: true
+                })
+                .set_handler(this.snowflake.bind(this))
+        );
     }
 
-    override async on_message_create(message: Discord.Message) {
-        if(message.author.id == this.wheatley.client.user!.id) return; // Ignore self
-        if(message.author.bot) return; // Ignore bots
-        if(message.guildId != TCCPP_ID) return; // Ignore messages outside TCCPP (e.g. dm's)
-        const match = message.content.match(snowflake_command_re);
+    async snowflake(command: Command, input: string) {
+        const match = input.match(snowflakes_re);
         if(match != null) {
-            assert(match.length == 2);
-            const timestamp = decode_snowflake(match[1]);
-            const reply = await message.channel.send(`<t:${Math.round(timestamp / 1000)}>`);
-            this.wheatley.deletable.make_message_deletable(message, reply);
+            await command.reply(
+                match
+                    .map(snowflake => `${snowflake}: <t:${Math.round(decode_snowflake(snowflake) / 1000)}>`)
+                    .join("\n"),
+                true
+            );
         }
     }
 }

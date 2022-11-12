@@ -7,45 +7,46 @@ import { M } from "../utils";
 import { colors, is_authorized_admin } from "../common";
 import { BotComponent } from "../bot_component";
 import { Wheatley } from "../wheatley";
+import { Command, CommandBuilder } from "../command";
 
 export class Ping extends BotComponent {
     constructor(wheatley: Wheatley) {
         super(wheatley);
 
-        const echo = new SlashCommandBuilder()
-            .setName("echo")
-            .setDescription("Echo")
-            .addStringOption(option =>
-                option.setName("input")
-                    .setDescription("The input to echo back")
-                    .setRequired(true));
-        this.wheatley.guild_command_manager.register(echo);
+        this.add_command(
+            new CommandBuilder(["ping", "wstatus"])
+                .set_description("ping")
+                .set_handler(this.ping.bind(this))
+        );
+
+        this.add_command(
+            new CommandBuilder("echo")
+                .set_description("echo")
+                .add_string_option({
+                    title: "input",
+                    description: "The input to echo back",
+                    required: true
+                })
+                .set_handler(this.echo.bind(this))
+        );
     }
 
-    override async on_message_create(message: Discord.Message) {
-        if(message.author.bot) return; // Ignore bots
-        if(message.content == "!wping"
-        || message.content == "!wstatus"
-        && is_authorized_admin(message.member!)) {
-            M.log("Received ping command");
-            const reply = await message.channel.send({ embeds: [
+    async ping(command: Command) {
+        M.log("Received ping command");
+        await command.reply({
+            embeds: [
                 new Discord.EmbedBuilder()
                     .setColor(colors.color)
                     .setTitle("pong")
-            ] });
-            this.wheatley.deletable.make_message_deletable(message, reply);
-        }
+            ]
+        });
     }
 
-    override async on_interaction_create(interaction: Discord.Interaction) {
-        if(interaction.isCommand() && interaction.commandName == "echo") {
-            assert(interaction.isChatInputCommand());
-            const input = interaction.options.getString("input");
-            M.debug("Received echo command", input);
-            await interaction.reply({
-                ephemeral: true,
-                content: input || undefined
-            });
-        }
+    async echo(command: Command, input: string) {
+        M.debug("Received echo command", input);
+        await command.reply({
+            ephemeral_if_possible: true,
+            content: input
+        });
     }
 }
