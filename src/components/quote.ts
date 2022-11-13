@@ -39,11 +39,8 @@ export class Quote extends BotComponent {
                 await this.do_quote(command, channel_id, message_id, command.name == "quoteb");
             }
         } else {
-            command.reply({
-                content: "Usage: `!quote <url>`\n"
-                       + "`!quoteb` can be used to quote a continuous block of messages",
-                ephemeral_if_possible: true
-            });
+            command.reply("Usage: `!quote <url>`\n"
+                        + "`!quoteb` can be used to quote a continuous block of messages", true);
         }
     }
 
@@ -146,10 +143,7 @@ export class Quote extends BotComponent {
             // delete request
             ///message.delete();
         } else {
-            await command.reply({
-                content: "Error: Channel not a text channel.",
-                ephemeral_if_possible: true
-            });
+            await command.reply("Error: Channel not a text channel.", true);
         }
     }
 }

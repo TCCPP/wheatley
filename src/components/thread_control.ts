@@ -79,10 +79,7 @@ export class ThreadControl extends BotComponent {
             && channel.type == Discord.ChannelType.PrivateThread) {
                 await channel.setArchived();
             } else {
-                command.reply({
-                    content: "You can't use that here",
-                    ephemeral_if_possible: true
-                });
+                await command.reply("You can't use that here", true);
             }
         }
     }
@@ -96,10 +93,7 @@ export class ThreadControl extends BotComponent {
             name = name.trim();
             M.log(`Thread ${thread.id} being renamed to "${name}"`);
             if(name.length > 100) { // TODO
-                await command.reply({
-                    content: "Thread names must be 100 characters or shorter",
-                    ephemeral_if_possible: true
-                });
+                await command.reply("Thread names must be 100 characters or shorter", true);
                 return;
             }
             await thread.setName(name);

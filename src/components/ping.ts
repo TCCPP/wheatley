@@ -43,9 +43,6 @@ export class Ping extends BotComponent {
 
     async echo(command: Command, input: string) {
         M.debug("Received echo command", input);
-        await command.reply({
-            ephemeral_if_possible: true,
-            content: input
-        });
+        await command.reply(input, true);
     }
 }

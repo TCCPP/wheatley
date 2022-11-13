@@ -91,10 +91,7 @@ export class Roulette extends BotComponent {
 
     async roulette(command: Command) {
         if(command.channel_id != bot_spam_id) {
-            await command.reply({
-                content: `Must be used in <#${bot_spam_id}>`,
-                ephemeral_if_possible: true
-            });
+            await command.reply(`Must be used in <#${bot_spam_id}>`, true);
             return;
         }
         if(this.warned_users.has(command.user.id)) {

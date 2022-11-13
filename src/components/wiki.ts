@@ -192,11 +192,7 @@ export class Wiki extends BotComponent {
         if(article) {
             await this.send_wiki_article(article, command);
         } else {
-            await command.reply({
-                content: "Couldn't find article",
-                ephemeral_if_possible: true,
-                should_text_reply: true
-            });
+            await command.reply("Couldn't find article", true, true);
             return;
         }
     }
