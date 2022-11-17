@@ -100,6 +100,10 @@ const default_allowed_mentions: Discord.MessageMentionOptions = {
 };
 
 export class Command {
+    public readonly name: string;
+    private readonly wheatley: Wheatley;
+    private readonly reply_object: Discord.ChatInputCommandInteraction | Discord.Message;
+
     public readonly guild: Discord.Guild | null;
     public readonly guild_id: string | null;
     public readonly channel: Discord.TextBasedChannel | null;
@@ -107,25 +111,60 @@ export class Command {
     public readonly member: Discord.GuildMember | Discord.APIInteractionGuildMember | null;
     public readonly user: Discord.User;
 
-    constructor(
-        public readonly name: string,
-        public readonly reply_object: Discord.ChatInputCommandInteraction | Discord.Message,
-        private readonly wheatley: Wheatley
-    ) {
-        if(this.reply_object instanceof Discord.ChatInputCommandInteraction) {
-            this.guild = this.reply_object.guild;
-            this.guild_id = this.reply_object.guildId;
-            this.channel = this.reply_object.channel;
-            this.channel_id = this.reply_object.channelId;
-            this.member = this.reply_object.member;
-            this.user = this.reply_object.user;
+    private response: Discord.Message | Discord.InteractionResponse | null = null;
+    private replied = false;
+    private editing = false;
+
+    // normal constructor
+    constructor(name: string, reply_object: Discord.ChatInputCommandInteraction | Discord.Message, wheatley: Wheatley);
+    // copy constructor - used for edit
+    constructor(command: Command, name: string, reply_object: Discord.Message);
+    // impl
+    constructor(..._args: [string, Discord.ChatInputCommandInteraction | Discord.Message, Wheatley]
+                        | [Command, string, Discord.Message]) {
+        const args = is_string(_args[0]) ?
+            [ "n", ..._args ] as ["n", string, Discord.ChatInputCommandInteraction | Discord.Message, Wheatley]
+            : [ "c", ..._args ] as ["c", Command, string, Discord.Message];
+        if(args[0] == "n") {
+            // construct new command
+            const [ _, name, reply_object, wheatley ] = args;
+            this.name = name;
+            this.reply_object = reply_object;
+            this.wheatley = wheatley;
+            if(reply_object instanceof Discord.ChatInputCommandInteraction) {
+                this.guild = reply_object.guild;
+                this.guild_id = reply_object.guildId;
+                this.channel = reply_object.channel;
+                this.channel_id = reply_object.channelId;
+                this.member = reply_object.member;
+                this.user = reply_object.user;
+            } else {
+                this.guild = reply_object.guild;
+                this.guild_id = reply_object.guildId;
+                this.channel = reply_object.channel;
+                this.channel_id = reply_object.channelId;
+                this.member = reply_object.member;
+                this.user = reply_object.author;
+            }
+        } else if(args[0] == "c") { // eslint-disable-line @typescript-eslint/no-unnecessary-condition
+            // construct from copy, used for edit
+            const [ _, command, name, reply_object ] = args;
+            this.name = name;
+            this.wheatley = command.wheatley;
+            this.reply_object = reply_object;
+            this.guild = command.guild;
+            this.guild_id = command.guild_id;
+            this.channel = command.channel;
+            this.channel_id = command.channel_id;
+            this.member = command.member;
+            this.user = command.user;
+            this.response = command.response;
+            assert(command.replied);
+            assert(command.editing);
+            this.replied = true;
+            this.editing = true;
         } else {
-            this.guild = this.reply_object.guild;
-            this.guild_id = this.reply_object.guildId;
-            this.channel = this.reply_object.channel;
-            this.channel_id = this.reply_object.channelId;
-            this.member = this.reply_object.member;
-            this.user = this.reply_object.author;
+            assert(false, "impossible");
         }
     }
 
@@ -172,30 +211,47 @@ export class Command {
         const message_options: Discord.BaseMessageOptions & CommandAbstractionReplyOptions = {
             deletable: true,
             allowedMentions: default_allowed_mentions,
+            embeds: [],
+            files: [],
+            components: [],
+            content: "",
             ...raw_message_options
         };
         message_options.ephemeral_if_possible =
             message_options.ephemeral_if_possible || positional_ephemeral_if_possible;
         message_options.should_text_reply =
             message_options.should_text_reply || positional_should_text_reply;
-        if(this.reply_object instanceof Discord.ChatInputCommandInteraction) {
-            await this.reply_object.reply({
-                ephemeral: !!message_options.ephemeral_if_possible,
-                ...message_options
-            });
-        } else {
-            if(message_options.should_text_reply) {
-                const message = await this.reply_object.reply(message_options);
-                if(message_options.deletable) {
-                    this.wheatley.deletable.make_message_deletable(this.reply_object, message);
-                }
+
+        assert(!this.replied || this.editing);
+        if(this.editing) {
+            assert(this.reply_object instanceof Discord.ChatInputCommandInteraction
+                    == this.response instanceof Discord.InteractionResponse);
+            assert(this.response);
+            if(this.response instanceof Discord.InteractionResponse) {
+                assert(this.reply_object instanceof Discord.ChatInputCommandInteraction);
+                await this.reply_object.editReply({
+                    ...message_options
+                });
             } else {
-                const message = await this.reply_object.channel.send(message_options);
-                if(message_options.deletable) {
-                    this.wheatley.deletable.make_message_deletable(this.reply_object, message);
+                await this.response.edit(message_options);
+            }
+        } else {
+            assert(this.response === null);
+            if(this.reply_object instanceof Discord.ChatInputCommandInteraction) {
+                this.response = await this.reply_object.reply({
+                    ephemeral: !!message_options.ephemeral_if_possible,
+                    ...message_options
+                });
+            } else {
+                if(message_options.should_text_reply) {
+                    this.response = await this.reply_object.reply(message_options);
+                } else {
+                    this.response = await this.reply_object.channel.send(message_options);
                 }
             }
         }
+        this.replied = true;
+        this.editing = false;
     }
 
     is_slash() {
@@ -222,9 +278,22 @@ export class Command {
         }
     }
 
-    async delete_invocation_if_possible() {
-        if(this.reply_object instanceof Discord.Message) {
-            this.reply_object.delete();
+    async delete_invocation() {
+        assert(this.reply_object instanceof Discord.Message);
+        this.reply_object.delete();
+    }
+
+    async delete_replies() {
+        assert(this.replied && this.response !== null);
+        if(this.response instanceof Discord.InteractionResponse) {
+            assert(this.reply_object instanceof Discord.ChatInputCommandInteraction);
+            await this.reply_object.deleteReply();
+        } else {
+            await this.response.delete();
         }
+    }
+
+    set_editing() {
+        this.editing = true;
     }
 }

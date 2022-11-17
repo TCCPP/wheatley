@@ -23,7 +23,7 @@ export class ReadTutoring extends BotComponent {
                     .setDescription(`Hello :wave:, please read <#${tutoring_id}> and then use /tutoring to request one`
                         + " on one tutoring. Don't hesitate to ask specific questions in our help channels too!")
             ] });
-            this.wheatley.deletable.make_message_deletable(message, reply);
+            this.wheatley.make_deletable(message, reply);
         }
     }
 }
