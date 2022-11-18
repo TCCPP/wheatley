@@ -284,7 +284,7 @@ export class Command {
     }
 
     async delete_replies_if_replied() {
-        assert(!this.editing);
+        // note can be called while editing if edited from a command to a non-command
         if(this.replied) {
             assert(this.response !== null);
             if(this.response instanceof Discord.InteractionResponse) {
