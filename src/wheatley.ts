@@ -52,7 +52,7 @@ import { UsernameManager } from "./components/username_manager";
 import { UtilityTools } from "./components/utility_tools";
 import { Wiki } from "./components/wiki";
 import { BotCommand, Command, CommandBuilder } from "./command";
-import { SlashCommandBuilder } from "discord.js";
+import { DiscordAPIError, SlashCommandBuilder } from "discord.js";
 
 function create_basic_embed(title: string | undefined, color: number, content: string) {
     const embed = new Discord.EmbedBuilder()
@@ -331,8 +331,11 @@ export class Wheatley extends EventEmitter {
                 try {
                     await target.delete();
                 } catch(e) {
-                    // todo: just rethrow if not a message was already deleted error
-                    throw e;
+                    if(e instanceof DiscordAPIError && e.code == 10008) {
+                        // pass, ignore - response deleted before trigger
+                    } else {
+                        throw e;
+                    }
                 }
             }
         } catch(e) {
