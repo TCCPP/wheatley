@@ -323,7 +323,7 @@ export class Wheatley extends EventEmitter {
                 const { command, deletable } = this.text_command_map.get(message.id)!;
                 this.text_command_map.remove(message.id);
                 if(deletable) {
-                    command.delete_replies();
+                    command.delete_replies_if_replied();
                 }
             } else if(this.deletable_map.has(message.id)) {
                 const target = this.deletable_map.get(message.id)!;
@@ -353,7 +353,7 @@ export class Wheatley extends EventEmitter {
                 const message = !new_message.partial ? new_message : await new_message.fetch();
                 if(!await this.handle_command(message, command)) {
                     // returns false if the message was not a wheatley command; delete replies and remove from map
-                    command.delete_replies();
+                    command.delete_replies_if_replied();
                     this.text_command_map.remove(new_message.id);
                 }
             }

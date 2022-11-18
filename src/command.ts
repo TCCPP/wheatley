@@ -283,17 +283,25 @@ export class Command {
         this.reply_object.delete();
     }
 
-    async delete_replies() {
-        assert(this.replied && this.response !== null);
-        if(this.response instanceof Discord.InteractionResponse) {
-            assert(this.reply_object instanceof Discord.ChatInputCommandInteraction);
-            await this.reply_object.deleteReply();
-        } else {
-            await this.response.delete();
+    async delete_replies_if_replied() {
+        assert(!this.editing);
+        if(this.replied) {
+            assert(this.response !== null);
+            if(this.response instanceof Discord.InteractionResponse) {
+                assert(this.reply_object instanceof Discord.ChatInputCommandInteraction);
+                await this.reply_object.deleteReply();
+            } else {
+                await this.response.delete();
+            }
         }
     }
 
     set_editing() {
         this.editing = true;
+    }
+
+    get_reply() {
+        assert(this.replied);
+        return this.response;
     }
 }
