@@ -1,8 +1,8 @@
-import * as Discord from "discord.js";
 import { strict as assert } from "assert";
+import * as Discord from "discord.js";
+
 import { critical_error, get_url_for, M } from "../utils";
 import { colors, is_authorized_admin, is_root, MINUTE, moderators_role_id } from "../common";
-import { APIInteractionGuildMember } from "discord-api-types/v10";
 import { BotComponent } from "../bot_component";
 import { Wheatley } from "../wheatley";
 
@@ -229,7 +229,7 @@ export class Modmail extends BotComponent {
         await this.wheatley.database.update();
     }
 
-    async log_action(interaction_member: Discord.GuildMember | APIInteractionGuildMember | null,
+    async log_action(interaction_member: Discord.GuildMember | Discord.APIInteractionGuildMember | null,
         title: string, body?: string) {
         const [ tag, avatar ] = await (async () => {
             if(interaction_member) {
