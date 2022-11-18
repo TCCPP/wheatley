@@ -4,11 +4,13 @@ import { Routes } from "discord-api-types/v9";
 import * as util from "util";
 
 import { critical_error, M } from "../utils";
-import { TCCPP_ID, wheatley_id } from "../common";
+import { TCCPP_ID } from "../common";
+import { Wheatley } from "../wheatley";
 
 export class GuildCommandManager {
     commands: any = [];
     finalized = false;
+    constructor(readonly wheatley: Wheatley) {}
     register(builder: any) {
         if(this.finalized) {
             throw Error("Commands registered too late");
@@ -21,12 +23,12 @@ export class GuildCommandManager {
             const rest = new REST({ version: "10" }).setToken(token);
             M.log("Sending guild commands");
             await rest.put(
-                Routes.applicationCommands(wheatley_id),
+                Routes.applicationCommands(this.wheatley.id),
                 { body: this.commands },
             );
             // Clear any previous guild commands
             await rest.put(
-                Routes.applicationGuildCommands(wheatley_id, TCCPP_ID),
+                Routes.applicationGuildCommands(this.wheatley.id, TCCPP_ID),
                 { body: [] },
             );
             M.log("Finished sending guild commands");

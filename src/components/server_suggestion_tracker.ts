@@ -2,7 +2,7 @@ import * as Discord from "discord.js";
 import { strict as assert } from "assert";
 import { critical_error, departialize, M, KeyedMutexSet, SelfClearingSet, xxh3 } from "../utils";
 import { is_root, MINUTE, server_suggestions_channel_id, suggestion_action_log_thread_id,
-         suggestion_dashboard_thread_id, wheatley_id } from "../common";
+         suggestion_dashboard_thread_id } from "../common";
 import { forge_snowflake } from "./snowflake";
 import { BotComponent } from "../bot_component";
 import { Wheatley } from "../wheatley";
@@ -321,7 +321,7 @@ export class ServerSuggestionTracker extends BotComponent {
                 delete this.wheatley.database.get<db_schema>("suggestion_tracker").suggestions[message.id];
                 this.wheatley.database.update();
                 // if wheatley then this is logged when the reaction is done on the dashboard
-                if(reaction.user.id != wheatley_id) {
+                if(reaction.user.id != this.wheatley.id) {
                     this.log_resolution(message, reaction);
                 }
             } else {
@@ -361,7 +361,7 @@ export class ServerSuggestionTracker extends BotComponent {
             } else if(message.channel.id == suggestion_dashboard_thread_id) {
                 assert(message.author != null);
                 // race condition with await status_message.delete() checked here
-                if(message.author.id == wheatley_id && !this.status_lock.has(message.id)) {
+                if(message.author.id == this.wheatley.id && !this.status_lock.has(message.id)) {
                     // find and delete this.wheatley.database entry
                     const suggestion_id = this.reverse_lookup(message.id);
                     if(suggestion_id == null) {
@@ -374,7 +374,7 @@ export class ServerSuggestionTracker extends BotComponent {
                         this.wheatley.database.update();
                     }
                 }
-            } else if(message.channel.id == suggestion_action_log_thread_id && message.author!.id == wheatley_id) {
+            } else if(message.channel.id == suggestion_action_log_thread_id && message.author!.id == this.wheatley.id) {
                 M.log("Wheatley message deleted", message);
             }
         } catch(e) {
@@ -465,8 +465,8 @@ export class ServerSuggestionTracker extends BotComponent {
                     this.mutex.unlock(reaction.message.id);
                 }
             } else if(reaction.message.channel.id == suggestion_dashboard_thread_id) {
-                if(reaction.message.author!.id == wheatley_id
-                && user.id != wheatley_id // ignore self - this is important for autoreacts
+                if(reaction.message.author!.id == this.wheatley.id
+                && user.id != this.wheatley.id // ignore self - this is important for autoreacts
                 && resolution_reactions_set.has(reaction.emoji.name!)
                 && is_root(user)) {
                     // expensive-ish but this will be rare

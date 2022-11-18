@@ -22,7 +22,6 @@ export enum colors {
 
 // User IDs
 export const zelis_id = "199943082441965577";
-export const wheatley_id = "597216680271282192";
 
 // Role IDs
 export const moderators_role_id = "847915341954154536";

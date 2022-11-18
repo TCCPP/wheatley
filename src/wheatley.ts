@@ -71,7 +71,7 @@ type text_command_map_target = {
 
 export class Wheatley extends EventEmitter {
     private components: BotComponent[] = [];
-    readonly guild_command_manager = new GuildCommandManager();
+    readonly guild_command_manager;
     readonly tracker: MemberTracker; // TODO: Rename
     action_log_channel: Discord.TextChannel;
     staff_message_log: Discord.TextChannel;
@@ -100,8 +100,12 @@ export class Wheatley extends EventEmitter {
     // whether wheatley is ready (client is ready + wheatley has set up)
     ready = false;
 
+    readonly id = "597216680271282192";
+
     constructor(readonly client: Discord.Client, readonly database: DatabaseInterface) {
         super();
+
+        this.guild_command_manager = new GuildCommandManager(this);
 
         this.tracker = new MemberTracker(this);
         this.setup();

@@ -265,6 +265,8 @@ let client: Discord.Client;
 let zelis : Discord.User | undefined | null;
 let has_tried_fetch_zelis = false;
 
+// FIXME: eliminate this hackery
+
 async function get_zelis() {
     if(!has_tried_fetch_zelis) {
         zelis = await client.users.fetch(zelis_id);

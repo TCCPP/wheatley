@@ -1,7 +1,7 @@
 import * as Discord from "discord.js";
 import { strict as assert } from "assert";
 import { denullify, M } from "../utils";
-import { is_authorized_admin, rules_channel_id, wheatley_id } from "../common";
+import { is_authorized_admin, rules_channel_id } from "../common";
 import { BotComponent } from "../bot_component";
 import { Wheatley } from "../wheatley";
 import { Command, CommandBuilder } from "../command";
@@ -108,7 +108,7 @@ export class ThreadControl extends BotComponent {
                 limit: 2 // thread starter message, then wheatley's message
             });
             for(const [ _, message ] of messages) {
-                if(message.type == Discord.MessageType.Default && message.author.id == wheatley_id) {
+                if(message.type == Discord.MessageType.Default && message.author.id == this.wheatley.id) {
                     message.delete();
                 }
             }

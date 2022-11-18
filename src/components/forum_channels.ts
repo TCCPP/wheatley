@@ -1,7 +1,7 @@
 import * as Discord from "discord.js";
 import { strict as assert } from "assert";
 import { delay, fetch_all_threads_archive_count, get_tag, M, SelfClearingSet } from "../utils";
-import { colors, forum_help_channels, is_forum_help_thread, MINUTE, wheatley_id } from "../common";
+import { colors, forum_help_channels, is_forum_help_thread, MINUTE } from "../common";
 import { decode_snowflake } from "./snowflake"; // todo: eliminate decode_snowflake
 import { BotComponent } from "../bot_component";
 import { Wheatley } from "../wheatley";
@@ -203,7 +203,7 @@ export class ForumChannels extends BotComponent {
     }
 
     override async on_thread_create(thread: Discord.ThreadChannel) {
-        if(thread.ownerId == wheatley_id) { // wheatley threads are either modlogs or thread help threads
+        if(thread.ownerId == this.wheatley.id) { // wheatley threads are either modlogs or thread help threads
             return;
         }
         if(is_forum_help_thread(thread)) { // TODO

@@ -1,7 +1,7 @@
 import * as Discord from "discord.js";
 import { strict as assert } from "assert";
 import { denullify } from "../utils";
-import { colors, thread_based_channel_ids, wheatley_id } from "../common";
+import { colors, thread_based_channel_ids } from "../common";
 import { BotComponent } from "../bot_component";
 import { Wheatley } from "../wheatley";
 
@@ -55,7 +55,7 @@ export class ThreadBasedChannels extends BotComponent {
     }
 
     override async on_thread_create(thread: Discord.ThreadChannel) {
-        if(thread.ownerId == wheatley_id) { // wheatley threads are either modlogs or thread help threads
+        if(thread.ownerId == this.wheatley.id) { // wheatley threads are either modlogs or thread help threads
             return;
         }
         if(!(denullify(thread.parent) instanceof Discord.ForumChannel)) {
