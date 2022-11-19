@@ -2,7 +2,7 @@ import { strict as assert } from "assert";
 import { M } from "../utils";
 import { BotComponent } from "../bot_component";
 import { Wheatley } from "../wheatley";
-import { Command, CommandBuilder } from "../command";
+import { TextBasedCommand, TextBasedCommandBuilder } from "../command";
 
 const snowflakes_re = /\d+/g;
 
@@ -24,7 +24,7 @@ export class Snowflake extends BotComponent {
         super(wheatley);
 
         this.add_command(
-            new CommandBuilder("snowflake")
+            new TextBasedCommandBuilder("snowflake")
                 .set_description("snowflake")
                 .add_string_option({
                     title: "input",
@@ -35,7 +35,7 @@ export class Snowflake extends BotComponent {
         );
     }
 
-    async snowflake(command: Command, input: string) {
+    async snowflake(command: TextBasedCommand, input: string) {
         const match = input.match(snowflakes_re);
         if(match != null) {
             await command.reply(

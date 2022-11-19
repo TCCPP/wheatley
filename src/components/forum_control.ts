@@ -4,7 +4,7 @@ import { denullify, get_tag, M } from "../utils";
 import { colors, forum_help_channels, is_authorized_admin } from "../common";
 import { BotComponent } from "../bot_component";
 import { Wheatley } from "../wheatley";
-import { Command, CommandBuilder } from "../command";
+import { TextBasedCommand, TextBasedCommandBuilder } from "../command";
 
 /*
  * Forum thread handling:
@@ -27,13 +27,13 @@ export class ForumControl extends BotComponent {
         super(wheatley);
 
         this.add_command(
-            new CommandBuilder([ "solve", "solved", "close" ])
+            new TextBasedCommandBuilder([ "solve", "solved", "close" ])
                 .set_description("Close forum post and mark it as solved")
                 .set_handler(this.solve.bind(this))
         );
 
         this.add_command(
-            new CommandBuilder([ "unsolve", "unsolved", "open" ])
+            new TextBasedCommandBuilder([ "unsolve", "unsolved", "open" ])
                 .set_description("Re-open forum post")
                 .set_handler(this.unsolve.bind(this))
         );
@@ -50,7 +50,7 @@ export class ForumControl extends BotComponent {
 
     // returns whether the thread can be controlled
     // or sends an error message
-    async try_to_control_thread(request: Command, action: string) {
+    async try_to_control_thread(request: TextBasedCommand, action: string) {
         const channel = await request.get_channel();
         if(channel.isThread()) {
             const thread = channel;
@@ -75,7 +75,7 @@ export class ForumControl extends BotComponent {
 
     // TODO: more to dedupe
 
-    async solve(command: Command) {
+    async solve(command: TextBasedCommand) {
         if(await this.try_to_control_thread(command, command.name.startsWith("!solve") ? "solve" : "close")) {
             const channel = await command.get_channel();
             assert(channel.isThread());
@@ -112,7 +112,7 @@ export class ForumControl extends BotComponent {
         }
     }
 
-    async unsolve(command: Command) {
+    async unsolve(command: TextBasedCommand) {
         if(await this.try_to_control_thread(command, command.name.startsWith("!unsolve") ? "unsolve" : "open")) {
             const channel = await command.get_channel();
             assert(channel.isThread());

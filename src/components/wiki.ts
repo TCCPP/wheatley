@@ -8,7 +8,7 @@ import { M } from "../utils";
 import { bot_spam_id, colors } from "../common";
 import { BotComponent } from "../bot_component";
 import { Wheatley } from "../wheatley";
-import { Command, CommandBuilder } from "../command";
+import { TextBasedCommand, TextBasedCommandBuilder } from "../command";
 
 export const wiki_dir = "wiki_articles";
 
@@ -124,7 +124,7 @@ export class Wiki extends BotComponent {
         super(wheatley);
 
         this.add_command(
-            new CommandBuilder([ "wiki", "howto" ])
+            new TextBasedCommandBuilder([ "wiki", "howto" ])
                 .set_description([ "Retrieve wiki articles", "Retrieve wiki articles (alternatively /wiki)" ])
                 .add_string_option({
                     title: "query",
@@ -141,7 +141,7 @@ export class Wiki extends BotComponent {
         );
 
         this.add_command(
-            new CommandBuilder("wiki-preview")
+            new TextBasedCommandBuilder("wiki-preview")
                 .set_slash(false)
                 .set_description("Preview a wiki article")
                 .add_string_option({
@@ -159,14 +159,14 @@ export class Wiki extends BotComponent {
         for(const [ alias, article_name ] of article_aliases.entries()) {
             const article = articles[article_name];
             this.add_command(
-                new CommandBuilder(alias)
+                new TextBasedCommandBuilder(alias)
                     .set_description(article.title)
                     .set_handler(this.wiki_alias.bind(this))
             );
         }
     }
 
-    async send_wiki_article(article: WikiArticle, command: Command) {
+    async send_wiki_article(article: WikiArticle, command: TextBasedCommand) {
         const embed = new Discord.EmbedBuilder()
             .setColor(colors.color)
             .setTitle(article.title)
@@ -183,7 +183,7 @@ export class Wiki extends BotComponent {
         });
     }
 
-    async wiki(command: Command, query: string) {
+    async wiki(command: TextBasedCommand, query: string) {
         const matching_articles = Object
             .entries(articles)
             .filter(([ name, { title }]) => name == query.replaceAll("-", "_") || title == query)
@@ -197,14 +197,14 @@ export class Wiki extends BotComponent {
         }
     }
 
-    async wiki_alias(command: Command) {
+    async wiki_alias(command: TextBasedCommand) {
         assert(article_aliases.has(command.name));
         M.log(`Received ${command.name} (wiki alias)`, command.user.id, command.user.tag, command.get_or_forge_url());
         const article_name = article_aliases.get(command.name)!;
         await this.send_wiki_article(articles[article_name], command);
     }
 
-    async wiki_preview(command: Command, content: string) {
+    async wiki_preview(command: TextBasedCommand, content: string) {
         M.log("Received wiki preview command", command.user.id, command.user.tag, command.get_or_forge_url());
         if(command.channel_id != bot_spam_id) {
             await command.reply(`!wiki-preview must be used in <#${bot_spam_id}>`, true, true);

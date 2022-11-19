@@ -5,7 +5,7 @@ import { MINUTE, TCCPP_ID } from "../common";
 import { decode_snowflake, forge_snowflake } from "./snowflake";
 import { BotComponent } from "../bot_component";
 import { Wheatley } from "../wheatley";
-import { Command, CommandBuilder } from "../command";
+import { TextBasedCommand, TextBasedCommandBuilder } from "../command";
 
 // https://discord.com/channels/331718482485837825/802541516655951892/877257002584252426
 //                              guild              channel            message
@@ -26,7 +26,7 @@ export class Quote extends BotComponent {
         super(wheatley);
 
         this.add_command(
-            new CommandBuilder([ "quote", "quoteb" ])
+            new TextBasedCommandBuilder([ "quote", "quoteb" ])
                 .set_description([ "Quote a message", "Quote a block of messages" ])
                 .add_string_option({
                     title: "url",
@@ -37,7 +37,7 @@ export class Quote extends BotComponent {
         );
     }
 
-    async quote(command: Command, url: string) {
+    async quote(command: TextBasedCommand, url: string) {
         const match = url.trim().match(url_re);
         if(match != null) {
             M.log("Received quote command", command.user.tag, command.user.id, url, command.get_or_forge_url());
@@ -78,7 +78,7 @@ export class Quote extends BotComponent {
                     ...quote_descriptors.map(d => `${d.channel_id}/${d.message_id}` + (d.block ? " block" : "")),
                     message.url
                 );
-                const command = new Command("quote", message, this.wheatley);
+                const command = new TextBasedCommand("quote", message, this.wheatley);
                 await this.do_quote(command, quote_descriptors);
                 const reply = command.get_reply();
                 assert(reply instanceof Discord.Message);
@@ -145,7 +145,7 @@ export class Quote extends BotComponent {
         return [ embed, ...image_embeds, ...other_embeds ];
     }
 
-    async do_quote(command: Command, messages: QuoteDescriptor[]) {
+    async do_quote(command: TextBasedCommand, messages: QuoteDescriptor[]) {
         const embeds: (Discord.EmbedBuilder | Discord.Embed)[] = [];
         for(const { channel_id, message_id, block } of messages) {
             const channel = await this.wheatley.TCCPP.channels.fetch(channel_id);

@@ -51,7 +51,7 @@ import { TrackedMentions } from "./components/tracked_mentions";
 import { UsernameManager } from "./components/username_manager";
 import { UtilityTools } from "./components/utility_tools";
 import { Wiki } from "./components/wiki";
-import { BotCommand, Command, CommandBuilder } from "./command";
+import { BotCommand, TextBasedCommand, TextBasedCommandBuilder } from "./command";
 import { DiscordAPIError, SlashCommandBuilder } from "discord.js";
 
 function create_basic_embed(title: string | undefined, color: number, content: string) {
@@ -65,7 +65,7 @@ function create_basic_embed(title: string | undefined, color: number, content: s
 }
 
 type text_command_map_target = {
-    command: Command;
+    command: TextBasedCommand;
     deletable: boolean;
 };
 
@@ -232,7 +232,7 @@ export class Wheatley extends EventEmitter {
 
     // command edit/deletion
 
-    register_text_command(trigger: Discord.Message, command: Command, deletable = true) {
+    register_text_command(trigger: Discord.Message, command: TextBasedCommand, deletable = true) {
         this.text_command_map.set(trigger.id, { command, deletable });
     }
 
@@ -242,7 +242,7 @@ export class Wheatley extends EventEmitter {
 
     // command stuff
 
-    add_command<T extends unknown[]>(command: CommandBuilder<T, true, true>) {
+    add_command<T extends unknown[]>(command: TextBasedCommandBuilder<T, true, true>) {
         assert(command.names.length > 0);
         assert(command.names.length == command.descriptions.length);
         for(const [ name, description, slash ] of zip(command.names, command.descriptions, command.slash_config)) {
@@ -272,18 +272,18 @@ export class Wheatley extends EventEmitter {
 
     static command_regex = new RegExp("^!(\\S+)");
 
-    async handle_command(message: Discord.Message, prev_command_obj?: Command) {
+    async handle_command(message: Discord.Message, prev_command_obj?: TextBasedCommand) {
         const match = message.content.match(Wheatley.command_regex);
         if(match) {
             const command_name = match[1];
             if(command_name in this.commands) {
                 const command = this.commands[command_name];
                 const command_options: unknown[] = [];
-                const command_obj = prev_command_obj ? new Command(
+                const command_obj = prev_command_obj ? new TextBasedCommand(
                     prev_command_obj,
                     command_name,
                     message
-                ) : new Command(
+                ) : new TextBasedCommand(
                     command_name,
                     message,
                     this
@@ -386,7 +386,7 @@ export class Wheatley extends EventEmitter {
                 if(interaction.commandName in this.commands) {
                     const command = this.commands[interaction.commandName];
                     const command_options: unknown[] = [];
-                    const command_object = new Command(
+                    const command_object = new TextBasedCommand(
                         interaction.commandName,
                         interaction,
                         this

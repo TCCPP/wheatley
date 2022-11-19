@@ -4,7 +4,7 @@ import { denullify, M } from "../utils";
 import { is_authorized_admin, rules_channel_id } from "../common";
 import { BotComponent } from "../bot_component";
 import { Wheatley } from "../wheatley";
-import { Command, CommandBuilder } from "../command";
+import { TextBasedCommand, TextBasedCommandBuilder } from "../command";
 
 /*
  * Thread control for threads in thread-based (non-forum) channels
@@ -18,13 +18,13 @@ export class ThreadControl extends BotComponent {
         super(wheatley);
 
         this.add_command(
-            new CommandBuilder("archive")
+            new TextBasedCommandBuilder("archive")
                 .set_description("Archives the thread")
                 .set_handler(this.archive.bind(this))
         );
 
         this.add_command(
-            new CommandBuilder("rename")
+            new TextBasedCommandBuilder("rename")
                 .set_description("Rename the thread")
                 .add_string_option({
                     title: "name",
@@ -46,7 +46,7 @@ export class ThreadControl extends BotComponent {
 
     // returns whether the thread can be controlled
     // or sends an error message
-    async try_to_control_thread(request: Command, action: string) {
+    async try_to_control_thread(request: TextBasedCommand, action: string) {
         const channel = await request.get_channel();
         if(channel.isThread()) {
             const thread = channel;
@@ -70,7 +70,7 @@ export class ThreadControl extends BotComponent {
         }
     }
 
-    async archive(command: Command) {
+    async archive(command: TextBasedCommand) {
         M.debug("Received archive command", command.user.username, command.get_or_forge_url());
         if(await this.try_to_control_thread(command, "archive")) {
             const channel = await command.get_channel();
@@ -84,7 +84,7 @@ export class ThreadControl extends BotComponent {
         }
     }
 
-    async rename(command: Command, name: string) {
+    async rename(command: TextBasedCommand, name: string) {
         M.log("Received rename command", command.user.username, command.get_or_forge_url());
         if(await this.try_to_control_thread(command, "rename")) {
             const channel = await command.get_channel();

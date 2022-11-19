@@ -6,9 +6,9 @@ import { forge_snowflake } from "./components/snowflake";
 import { denullify, is_string } from "./utils";
 import { Wheatley } from "./wheatley";
 
-export type CommandOptionType = "string";
+export type TextBasedCommandOptionType = "string";
 
-export type CommandOption = {
+export type TextBasedCommandOption = {
     title: string;
     description: string;
     required?: boolean;
@@ -20,71 +20,6 @@ type Append<T extends unknown[], U> = [...T, U];
 type ConditionalOptional<C extends true | false, T> = C extends true ? T : T | undefined;
 
 type MoreThanOne<T> = [T, T, ...T[]];
-
-export class CommandBuilder<
-    Args extends unknown[] = [],
-    HasDescriptions extends boolean = false,
-    HasHandler extends boolean = false>
-{
-    readonly names: string[];
-    descriptions: ConditionalOptional<HasDescriptions, string[]>;
-    options = new Discord.Collection<string, CommandOption & {type: CommandOptionType}>();
-    handler: ConditionalOptional<HasHandler, (x: Command, ...args: Args) => any>;
-    slash_config: boolean[];
-
-    constructor(names: string | MoreThanOne<string>) {
-        this.names = Array.isArray(names) ? names : [names];
-        this.slash_config = new Array(this.names.length).fill(true);
-    }
-
-    set_description(raw_descriptions: string | MoreThanOne<string>): CommandBuilder<Args, true, HasHandler> {
-        const descriptions = Array.isArray(raw_descriptions) ? raw_descriptions : [raw_descriptions];
-        if(descriptions.length == this.names.length) {
-            this.descriptions = descriptions;
-        } else {
-            assert(descriptions.length == 1);
-            this.descriptions = new Array(this.names.length).fill(descriptions[0]);
-        }
-        return this as unknown as CommandBuilder<Args, true, HasHandler>;
-    }
-
-    add_string_option(option: CommandOption): CommandBuilder<Append<Args, string>, HasDescriptions, HasHandler> {
-        assert(!this.options.has(option.title));
-        this.options.set(option.title, {
-            ...option,
-            type: "string"
-        });
-        return this as unknown as CommandBuilder<Append<Args, string>, HasDescriptions, HasHandler>;
-    }
-
-    set_handler(handler: (x: Command, ...args: Args) => any): CommandBuilder<Args, HasDescriptions, true> {
-        this.handler = handler;
-        return this as unknown as CommandBuilder<Args, HasDescriptions, true>;
-    }
-
-    set_slash(...config: boolean[]) {
-        if(config.length == this.names.length) {
-            this.slash_config = config;
-        } else {
-            assert(config.length == 1);
-            this.slash_config = new Array(this.names.length).fill(config[0]);
-        }
-        return this;
-    }
-}
-
-export class BotCommand<Args extends unknown[] = []> {
-    options = new Discord.Collection<string, CommandOption & {type: CommandOptionType}>();
-    handler: (x: Command, ...args: Args) => any;
-
-    constructor(public readonly name: string,
-                public readonly description: string | undefined,
-                public readonly slash: boolean,
-                builder: CommandBuilder<Args, true, true>) {
-        this.options = builder.options;
-        this.handler = builder.handler;
-    }
-}
 
 export type CommandAbstractionReplyOptions = {
     // default: false
@@ -99,7 +34,74 @@ const default_allowed_mentions: Discord.MessageMentionOptions = {
     parse: ["users"]
 };
 
-export class Command {
+export class TextBasedCommandBuilder<
+    Args extends unknown[] = [],
+    HasDescriptions extends boolean = false,
+    HasHandler extends boolean = false>
+{
+    readonly names: string[];
+    descriptions: ConditionalOptional<HasDescriptions, string[]>;
+    options = new Discord.Collection<string, TextBasedCommandOption & {type: TextBasedCommandOptionType}>();
+    handler: ConditionalOptional<HasHandler, (x: TextBasedCommand, ...args: Args) => any>;
+    slash_config: boolean[];
+
+    constructor(names: string | MoreThanOne<string>) {
+        this.names = Array.isArray(names) ? names : [names];
+        this.slash_config = new Array(this.names.length).fill(true);
+    }
+
+    set_description(raw_descriptions: string | MoreThanOne<string>): TextBasedCommandBuilder<Args, true, HasHandler> {
+        const descriptions = Array.isArray(raw_descriptions) ? raw_descriptions : [raw_descriptions];
+        if(descriptions.length == this.names.length) {
+            this.descriptions = descriptions;
+        } else {
+            assert(descriptions.length == 1);
+            this.descriptions = new Array(this.names.length).fill(descriptions[0]);
+        }
+        return this as unknown as TextBasedCommandBuilder<Args, true, HasHandler>;
+    }
+
+    add_string_option(option: TextBasedCommandOption):
+        TextBasedCommandBuilder<Append<Args, string>, HasDescriptions, HasHandler> {
+        assert(!this.options.has(option.title));
+        this.options.set(option.title, {
+            ...option,
+            type: "string"
+        });
+        return this as unknown as TextBasedCommandBuilder<Append<Args, string>, HasDescriptions, HasHandler>;
+    }
+
+    set_handler(handler: (x: TextBasedCommand, ...args: Args) => any):
+        TextBasedCommandBuilder<Args, HasDescriptions, true> {
+        this.handler = handler;
+        return this as unknown as TextBasedCommandBuilder<Args, HasDescriptions, true>;
+    }
+
+    set_slash(...config: boolean[]) {
+        if(config.length == this.names.length) {
+            this.slash_config = config;
+        } else {
+            assert(config.length == 1);
+            this.slash_config = new Array(this.names.length).fill(config[0]);
+        }
+        return this;
+    }
+}
+
+export class BotCommand<Args extends unknown[] = []> {
+    options = new Discord.Collection<string, TextBasedCommandOption & {type: TextBasedCommandOptionType}>();
+    handler: (x: TextBasedCommand, ...args: Args) => any;
+
+    constructor(public readonly name: string,
+                public readonly description: string | undefined,
+                public readonly slash: boolean,
+                builder: TextBasedCommandBuilder<Args, true, true>) {
+        this.options = builder.options;
+        this.handler = builder.handler;
+    }
+}
+
+export class TextBasedCommand {
     public readonly name: string;
     private readonly wheatley: Wheatley;
     private readonly reply_object: Discord.ChatInputCommandInteraction | Discord.Message;
@@ -118,13 +120,13 @@ export class Command {
     // normal constructor
     constructor(name: string, reply_object: Discord.ChatInputCommandInteraction | Discord.Message, wheatley: Wheatley);
     // copy constructor - used for edit
-    constructor(command: Command, name: string, reply_object: Discord.Message);
+    constructor(command: TextBasedCommand, name: string, reply_object: Discord.Message);
     // impl
     constructor(..._args: [string, Discord.ChatInputCommandInteraction | Discord.Message, Wheatley]
-                        | [Command, string, Discord.Message]) {
+                        | [TextBasedCommand, string, Discord.Message]) {
         const args = is_string(_args[0]) ?
             [ "n", ..._args ] as ["n", string, Discord.ChatInputCommandInteraction | Discord.Message, Wheatley]
-            : [ "c", ..._args ] as ["c", Command, string, Discord.Message];
+            : [ "c", ..._args ] as ["c", TextBasedCommand, string, Discord.Message];
         if(args[0] == "n") {
             // construct new command
             const [ _, name, reply_object, wheatley ] = args;

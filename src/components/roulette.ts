@@ -4,7 +4,7 @@ import { critical_error, M, SelfClearingMap, SelfClearingSet } from "../utils";
 import { bot_spam_id, MINUTE } from "../common";
 import { BotComponent } from "../bot_component";
 import { Wheatley } from "../wheatley";
-import { Command, CommandBuilder } from "../command";
+import { TextBasedCommand, TextBasedCommandBuilder } from "../command";
 
 const green = 0x31ea6c;
 const red = 0xed2d2d;
@@ -35,13 +35,13 @@ export class Roulette extends BotComponent {
         }
 
         this.add_command(
-            new CommandBuilder("roulette")
+            new TextBasedCommandBuilder("roulette")
                 .set_description("roulette")
                 .set_handler(this.roulette.bind(this))
         );
 
         this.add_command(
-            new CommandBuilder("leaderboard")
+            new TextBasedCommandBuilder("leaderboard")
                 .set_description("leaderboard")
                 .set_handler(this.leaderboard.bind(this))
         );
@@ -60,7 +60,7 @@ export class Roulette extends BotComponent {
             .setDescription(`BANG. <@${author.id}> is dead <a:saber:851241060553326652>`);
     }
 
-    make_ban_embed(command: Command) {
+    make_ban_embed(command: TextBasedCommand) {
         const author = command.user;
         return new Discord.EmbedBuilder()
             .setColor(red)
@@ -89,7 +89,7 @@ export class Roulette extends BotComponent {
         await this.wheatley.database.update();
     }
 
-    async roulette(command: Command) {
+    async roulette(command: TextBasedCommand) {
         if(command.channel_id != bot_spam_id) {
             await command.reply(`Must be used in <#${bot_spam_id}>`, true);
             return;
@@ -136,7 +136,7 @@ export class Roulette extends BotComponent {
         }
     }
 
-    async leaderboard(command: Command) {
+    async leaderboard(command: TextBasedCommand) {
         const embed = new Discord.EmbedBuilder()
             .setColor(green)
             .setTitle("Roulette Leaderboard");

@@ -11,7 +11,7 @@ import { Index } from "../algorithm/search";
 import { BotComponent } from "../bot_component";
 import { Wheatley } from "../wheatley";
 import { colors } from "../common";
-import { Command, CommandBuilder } from "../command";
+import { TextBasedCommand, TextBasedCommandBuilder } from "../command";
 
 function eliminate_aliases_and_duplicates(pages: cppref_page[]) {
     // There's this annoying thing where multiple pages are really the same page
@@ -150,7 +150,7 @@ export class Cppref extends BotComponent {
         super(wheatley);
 
         this.add_command(
-            new CommandBuilder([ "cref", "cppref" ])
+            new TextBasedCommandBuilder([ "cref", "cppref" ])
                 .set_description([ "Query C reference pages", "Query C++ reference pages" ])
                 .add_string_option({
                     title: "query",
@@ -171,7 +171,7 @@ export class Cppref extends BotComponent {
         this.index.load_data();
     }
 
-    async cppref(command: Command, query: string) {
+    async cppref(command: TextBasedCommand, query: string) {
         const result = this.index.lookup(query.trim(), command.name == "cref" ? CpprefSubIndex.C : CpprefSubIndex.CPP);
         M.log(`${command.name} query`, query, result ? `https://${result.path}` : null);
 

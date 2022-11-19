@@ -4,7 +4,7 @@ import { critical_error, M } from "../utils";
 import { no_off_topic } from "../common";
 import { BotComponent } from "../bot_component";
 import { Wheatley } from "../wheatley";
-import { Command, CommandBuilder } from "../command";
+import { TextBasedCommand, TextBasedCommandBuilder } from "../command";
 
 /*
  * !nodistractions
@@ -96,7 +96,7 @@ export class Nodistractions extends BotComponent {
         }
 
         this.add_command(
-            new CommandBuilder("nodistractions")
+            new TextBasedCommandBuilder("nodistractions")
                 .set_description("Turns on nodistractions")
                 .add_string_option({
                     title: "time",
@@ -106,7 +106,7 @@ export class Nodistractions extends BotComponent {
         );
 
         this.add_command(
-            new CommandBuilder("removenodistractions")
+            new TextBasedCommandBuilder("removenodistractions")
                 .set_description("Removes nodistractions")
                 .set_handler(this.removenodistractions.bind(this))
         );
@@ -158,7 +158,7 @@ export class Nodistractions extends BotComponent {
         this.timer = setTimeout(this.handle_timer.bind(this), Math.min(sleep_time, INT_MAX));
     }
 
-    async apply_no_distractions(command: Command, target: Discord.GuildMember, start: number,
+    async apply_no_distractions(command: TextBasedCommand, target: Discord.GuildMember, start: number,
         duration: number) {
         M.log("Applying !nodistractions", target.user.id, target.user.tag);
         // error handling
@@ -214,7 +214,7 @@ export class Nodistractions extends BotComponent {
         }
     }
 
-    async early_remove_nodistractions(command: Command, target: Discord.GuildMember) {
+    async early_remove_nodistractions(command: TextBasedCommand, target: Discord.GuildMember) {
         // checks
         assert(target.id in this.wheatley.database.get<database_schema>("nodistractions"));
         // timer
@@ -241,7 +241,7 @@ export class Nodistractions extends BotComponent {
         }
     }
 
-    async nodistractions(command: Command, arg: string) {
+    async nodistractions(command: TextBasedCommand, arg: string) {
         if(arg == "") {
             M.debug("Received !nodistractions", command.user.id, command.user.tag);
             await command.reply("`!nodistractions <time>` where time is an integer followed by one of the following"
@@ -273,7 +273,7 @@ export class Nodistractions extends BotComponent {
         }
     }
 
-    async removenodistractions(command: Command) {
+    async removenodistractions(command: TextBasedCommand) {
         M.log("Received !removenodistractions", command.user.id, command.user.tag);
         const member = await command.get_member(this.wheatley.TCCPP);
         if(!member.roles.cache.some(r => r.id == no_off_topic)) {

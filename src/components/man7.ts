@@ -11,7 +11,7 @@ import { man7_entry, man7_index } from "../../indexes/man7/types";
 import { BotComponent } from "../bot_component";
 import { Wheatley } from "../wheatley";
 import { colors } from "../common";
-import { Command, CommandBuilder } from "../command";
+import { TextBasedCommand, TextBasedCommandBuilder } from "../command";
 
 type augmented_man7_entry = man7_entry & IndexEntry
 
@@ -93,7 +93,7 @@ export class Man7 extends BotComponent {
         super(wheatley);
 
         this.add_command(
-            new CommandBuilder("man")
+            new TextBasedCommandBuilder("man")
                 .set_description("Query linux man pages")
                 .add_string_option({
                     title: "query",
@@ -112,7 +112,7 @@ export class Man7 extends BotComponent {
         this.index.load_data();
     }
 
-    async man(command: Command, query: string) {
+    async man(command: TextBasedCommand, query: string) {
         const result = this.index.lookup(query);
         M.log("man7 query", query,
               result ? `https://man7.org/linux/man-pages/${result.path}` : null);

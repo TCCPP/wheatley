@@ -1,7 +1,7 @@
 import { strict as assert } from "assert";
 
 import * as Discord from "discord.js";
-import { CommandBuilder } from "./command";
+import { TextBasedCommandBuilder } from "./command";
 import { critical_error, M } from "./utils";
 
 import { Wheatley } from "./wheatley";
@@ -46,7 +46,7 @@ export class BotComponent {
         this.on_ready();
     }
 
-    add_command<T extends unknown[]>(command: CommandBuilder<T, true, true>) {
+    add_command<T extends unknown[]>(command: TextBasedCommandBuilder<T, true, true>) {
         this.wheatley.add_command(command);
     }
 

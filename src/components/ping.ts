@@ -6,20 +6,20 @@ import { M } from "../utils";
 import { colors } from "../common";
 import { BotComponent } from "../bot_component";
 import { Wheatley } from "../wheatley";
-import { Command, CommandBuilder } from "../command";
+import { TextBasedCommand, TextBasedCommandBuilder } from "../command";
 
 export class Ping extends BotComponent {
     constructor(wheatley: Wheatley) {
         super(wheatley);
 
         this.add_command(
-            new CommandBuilder([ "ping", "wstatus" ])
+            new TextBasedCommandBuilder([ "ping", "wstatus" ])
                 .set_description("ping")
                 .set_handler(this.ping.bind(this))
         );
 
         this.add_command(
-            new CommandBuilder("echo")
+            new TextBasedCommandBuilder("echo")
                 .set_description("echo")
                 .add_string_option({
                     title: "input",
@@ -30,7 +30,7 @@ export class Ping extends BotComponent {
         );
     }
 
-    async ping(command: Command) {
+    async ping(command: TextBasedCommand) {
         M.log("Received ping command");
         await command.reply({
             embeds: [
@@ -41,7 +41,7 @@ export class Ping extends BotComponent {
         });
     }
 
-    async echo(command: Command, input: string) {
+    async echo(command: TextBasedCommand, input: string) {
         M.debug("Received echo command", input);
         await command.reply(input, true);
     }
