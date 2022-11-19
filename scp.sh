@@ -1,5 +1,5 @@
 #!/bin/bash
 
 #scp -r package.json package-lock.json tsconfig.json src d0:Projects/Wheatley
-rsync -av --checksum package.json package-lock.json tsconfig.json indexes src test wiki_articles d0:Projects/Wheatley --exclude={"indexes/cppref/*.txt","indexes/cppref/*cppreference*","*.js"}
+rsync -av --checksum db_backup.sh package.json package-lock.json start.sh tsconfig.json indexes src test wiki_articles d0:Projects/Wheatley --exclude={"indexes/cppref/*.txt","indexes/cppref/*cppreference*","*.js"}
 #rsync -av -I package.json package-lock.json tsconfig.json cppref src test d0:Projects/Wheatley --exclude={"cppref/*.txt","cppref/*cppreference*"}

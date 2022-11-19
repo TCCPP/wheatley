@@ -14,11 +14,11 @@
         "xxhashjs": "^0.2.2"
     },
     "scripts": {
-        "start": "tsc && unbuffer node src/main.js 2>&1 | tee -a log.txt",
+        "start": "tsc && unbuffer node build/src/main.js 2>&1 | tee -a log.txt",
         "lint": "eslint .",
         "lint-files": "eslint --color",
         "prepare": "husky install",
-        "test": "cd test && tsc --skipLibCheck && cd .. && mocha"
+        "test": "tsc && mocha build/test"
     },
     "devDependencies": {
         "@types/chai": "^4.3.3",
