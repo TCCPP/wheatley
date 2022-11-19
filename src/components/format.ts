@@ -87,6 +87,8 @@ const code_begin = [
 
     "char",
     "int",
+    "void",
+    "bool",
     "unsigned",
     "long",
 ];
