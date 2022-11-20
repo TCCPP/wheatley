@@ -199,12 +199,12 @@ export class TextBasedCommand extends Command {
     private readonly wheatley: Wheatley;
     private readonly reply_object: Discord.ChatInputCommandInteraction | Discord.Message;
 
-    public readonly guild: Discord.Guild | null;
+    public guild: Discord.Guild | null;
     public readonly guild_id: string | null;
-    public readonly channel: Discord.TextBasedChannel | null;
+    public channel: Discord.TextBasedChannel | null;
     public readonly channel_id: string;
 
-    public readonly member: Discord.GuildMember | Discord.APIInteractionGuildMember | null;
+    public member: Discord.GuildMember | Discord.APIInteractionGuildMember | null;
     public readonly user: Discord.User;
 
     private response: Discord.Message | Discord.InteractionResponse | null = null;
@@ -270,7 +270,7 @@ export class TextBasedCommand extends Command {
             return this.guild;
         } else {
             if(this.guild_id) {
-                return await this.wheatley.client.guilds.fetch(this.guild_id);
+                return this.guild = await this.wheatley.client.guilds.fetch(this.guild_id);
             } else {
                 throw Error("No guild");
             }
@@ -281,7 +281,8 @@ export class TextBasedCommand extends Command {
         if(this.channel) {
             return this.channel;
         } else {
-            return <Discord.TextBasedChannel>unwrap(await (await this.get_guild()).channels.fetch(this.channel_id));
+            return this.channel =
+                <Discord.TextBasedChannel>unwrap(await (await this.get_guild()).channels.fetch(this.channel_id));
         }
     }
 
@@ -291,7 +292,7 @@ export class TextBasedCommand extends Command {
         } else if(this.member instanceof Discord.GuildMember) {
             return this.member;
         } else {
-            return await (await this.get_guild()).members.fetch(this.user.id);
+            return this.member = await (await this.get_guild()).members.fetch(this.user.id);
         }
     }
 
