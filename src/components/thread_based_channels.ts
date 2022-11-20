@@ -1,6 +1,6 @@
 import * as Discord from "discord.js";
 import { strict as assert } from "assert";
-import { denullify } from "../utils";
+import { unwrap } from "../utils";
 import { colors, thread_based_channel_ids } from "../common";
 import { BotComponent } from "../bot_component";
 import { Wheatley } from "../wheatley";
@@ -13,7 +13,7 @@ import { Wheatley } from "../wheatley";
  */
 
 async function get_owner(thread: Discord.ThreadChannel) {
-    if(denullify(thread.parent) instanceof Discord.ForumChannel) {
+    if(unwrap(thread.parent) instanceof Discord.ForumChannel) {
         return thread.ownerId!;/*TODO*/
     } else {
         return thread.type == Discord.ChannelType.PrivateThread ? thread.ownerId!/*TODO*/
@@ -58,7 +58,7 @@ export class ThreadBasedChannels extends BotComponent {
         if(thread.ownerId == this.wheatley.id) { // wheatley threads are either modlogs or thread help threads
             return;
         }
-        if(!(denullify(thread.parent) instanceof Discord.ForumChannel)) {
+        if(!(unwrap(thread.parent) instanceof Discord.ForumChannel)) {
             const owner_id = await get_owner(thread);
             await thread.send({
                 content: `<@${owner_id}>`,

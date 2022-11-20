@@ -1,6 +1,6 @@
 import * as Discord from "discord.js";
 import { strict as assert } from "assert";
-import { denullify, M } from "../utils";
+import { unwrap, M } from "../utils";
 import { is_authorized_admin, rules_channel_id } from "../common";
 import { BotComponent } from "../bot_component";
 import { Wheatley } from "../wheatley";
@@ -36,7 +36,7 @@ export class ThreadControl extends BotComponent {
     }
 
     async get_owner(thread: Discord.ThreadChannel) {
-        if(denullify(thread.parent) instanceof Discord.ForumChannel) {
+        if(unwrap(thread.parent) instanceof Discord.ForumChannel) {
             return thread.ownerId!;/*TODO*/
         } else {
             return thread.type == Discord.ChannelType.PrivateThread ? thread.ownerId!/*TODO*/

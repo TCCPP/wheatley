@@ -41,6 +41,7 @@ export const message_log_channel_id = "467729928956411914";
 export const action_log_channel_id =
     "845290775692443699"; // TCCPP #staff_action_log
 //    "542042995147407375"; // test server #1
+export const staff_flag_log_id = "1026972603019169842";
 export const bot_spam_id = "506274405500977153";
 export const tutoring_id = "922603597294870609";
 export const tutoring_requests_id = "915271477559984160";

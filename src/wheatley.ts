@@ -12,8 +12,8 @@ import { BotComponent } from "./bot_component";
 
 import { action_log_channel_id, bot_spam_id, colors, cpp_help_id, c_help_id, member_log_channel_id,
          message_log_channel_id, MINUTE, mods_channel_id, rules_channel_id, server_suggestions_channel_id,
-         suggestion_action_log_thread_id, suggestion_dashboard_thread_id, TCCPP_ID, welcome_channel_id, zelis_id }
-    from "./common";
+         staff_flag_log_id, suggestion_action_log_thread_id, suggestion_dashboard_thread_id, TCCPP_ID,
+         welcome_channel_id, zelis_id } from "./common";
 import { critical_error, fetch_forum_channel, fetch_text_channel, fetch_thread_channel, M, SelfClearingMap,
          zip } from "./utils";
 
@@ -51,8 +51,10 @@ import { TrackedMentions } from "./components/tracked_mentions";
 import { UsernameManager } from "./components/username_manager";
 import { UtilityTools } from "./components/utility_tools";
 import { Wiki } from "./components/wiki";
-import { BotCommand, TextBasedCommand, TextBasedCommandBuilder } from "./command";
+import { BotCommand, BotModalHandler, BotTextBasedCommand, MessageContextMenuCommandBuilder, ModalHandler,
+         TextBasedCommand, TextBasedCommandBuilder } from "./command";
 import { DiscordAPIError, SlashCommandBuilder } from "discord.js";
+import { Report } from "./components/report";
 
 function create_basic_embed(title: string | undefined, color: number, content: string) {
     const embed = new Discord.EmbedBuilder()
@@ -74,6 +76,7 @@ export class Wheatley extends EventEmitter {
     readonly guild_command_manager;
     readonly tracker: MemberTracker; // TODO: Rename
     action_log_channel: Discord.TextChannel;
+    staff_flag_log: Discord.TextChannel;
     staff_message_log: Discord.TextChannel;
     TCCPP: Discord.Guild;
     zelis: Discord.User;
@@ -90,7 +93,8 @@ export class Wheatley extends EventEmitter {
 
     link_blacklist: LinkBlacklist;
 
-    commands: Record<string, BotCommand<any>> = {};
+    text_commands: Record<string, BotTextBasedCommand<any>> = {};
+    other_commands: Record<string, BotCommand<any>> = {};
 
     // map of message snowflakes -> commands, used for making text commands deletable and editable
     text_command_map = new SelfClearingMap<string, text_command_map_target>(30 * MINUTE);
@@ -125,6 +129,9 @@ export class Wheatley extends EventEmitter {
             const promises = [
                 (async () => {
                     this.action_log_channel = await fetch_text_channel(action_log_channel_id);
+                })(),
+                (async () => {
+                    this.staff_flag_log = await fetch_text_channel(staff_flag_log_id);
                 })(),
                 (async () => {
                     this.staff_message_log = await fetch_text_channel(message_log_channel_id);
@@ -196,6 +203,7 @@ export class Wheatley extends EventEmitter {
         await this.add_component(RaidPurge);
         await this.add_component(ReadTutoring);
         await this.add_component(RoleManager);
+        await this.add_component(Report);
         await this.add_component(Roulette);
         await this.add_component(ServerSuggestionReactions);
         await this.add_component(ServerSuggestionTracker);
@@ -242,29 +250,41 @@ export class Wheatley extends EventEmitter {
 
     // command stuff
 
-    add_command<T extends unknown[]>(command: TextBasedCommandBuilder<T, true, true>) {
-        assert(command.names.length > 0);
-        assert(command.names.length == command.descriptions.length);
-        for(const [ name, description, slash ] of zip(command.names, command.descriptions, command.slash_config)) {
-            assert(!(name in this.commands));
-            this.commands[name] = new BotCommand(name, description, slash, command);
-            if(slash) {
-                const djs_command = new SlashCommandBuilder()
-                    .setName(name)
-                    .setDescription(description);
-                for(const option of command.options.values()) {
-                    // NOTE: Temp for now
-                    // eslint-disable-next-line @typescript-eslint/no-unnecessary-condition
-                    if(option.type == "string") {
-                        djs_command.addStringOption(slash_option =>
-                            slash_option.setName(option.title)
-                                .setDescription(option.description)
-                                .setAutocomplete(!!option.autocomplete)
-                                .setRequired(!!option.required));
-                    } else {
-                        assert(false, "unhandled option type");
+    add_command<T extends unknown[]>(
+        command: TextBasedCommandBuilder<T, true, true>
+            | MessageContextMenuCommandBuilder<true> | ModalHandler<true>
+    ) {
+        if(command instanceof TextBasedCommandBuilder<T, true, true>) {
+            assert(command.names.length > 0);
+            assert(command.names.length == command.descriptions.length);
+            for(const [ name, description, slash ] of zip(command.names, command.descriptions, command.slash_config)) {
+                assert(!(name in this.text_commands));
+                this.text_commands[name] = new BotTextBasedCommand(name, description, slash, command);
+                if(slash) {
+                    const djs_command = new SlashCommandBuilder()
+                        .setName(name)
+                        .setDescription(description);
+                    for(const option of command.options.values()) {
+                        // NOTE: Temp for now
+                        // eslint-disable-next-line @typescript-eslint/no-unnecessary-condition
+                        if(option.type == "string") {
+                            djs_command.addStringOption(slash_option =>
+                                slash_option.setName(option.title)
+                                    .setDescription(option.description)
+                                    .setAutocomplete(!!option.autocomplete)
+                                    .setRequired(!!option.required));
+                        } else {
+                            assert(false, "unhandled option type");
+                        }
                     }
+                    this.guild_command_manager.register(djs_command);
                 }
+            }
+        } else {
+            assert(!(command.name in this.other_commands));
+            const [ bot_command, djs_command ] = command.to_command_descriptors();
+            this.other_commands[command.name] = bot_command;
+            if(djs_command) {
                 this.guild_command_manager.register(djs_command);
             }
         }
@@ -276,8 +296,8 @@ export class Wheatley extends EventEmitter {
         const match = message.content.match(Wheatley.command_regex);
         if(match) {
             const command_name = match[1];
-            if(command_name in this.commands) {
-                const command = this.commands[command_name];
+            if(command_name in this.text_commands) {
+                const command = this.text_commands[command_name];
                 const command_options: unknown[] = [];
                 const command_obj = prev_command_obj ? new TextBasedCommand(
                     prev_command_obj,
@@ -383,8 +403,8 @@ export class Wheatley extends EventEmitter {
     async on_interaction(interaction: Discord.Interaction) {
         try {
             if(interaction.isChatInputCommand()) {
-                if(interaction.commandName in this.commands) {
-                    const command = this.commands[interaction.commandName];
+                if(interaction.commandName in this.text_commands) {
+                    const command = this.text_commands[interaction.commandName];
                     const command_options: unknown[] = [];
                     const command_object = new TextBasedCommand(
                         interaction.commandName,
@@ -411,21 +431,36 @@ export class Wheatley extends EventEmitter {
                             assert(false, "unhandled option type");
                         }
                     }
-                    command.handler(command_object, ...command_options);
+                    await command.handler(command_object, ...command_options);
                 } else {
                     // TODO unknown command
                 }
             } else if(interaction.isAutocomplete()) {
-                if(interaction.commandName in this.commands) {
-                    const command = this.commands[interaction.commandName];
+                if(interaction.commandName in this.text_commands) {
+                    const command = this.text_commands[interaction.commandName];
                     const field = interaction.options.getFocused(true);
                     assert(command.options.has(field.name));
                     const option = command.options.get(field.name)!;
                     assert(option.autocomplete);
-                    await interaction.respond(option.autocomplete(field.value, interaction.commandName));
+                    await interaction.respond(
+                        option.autocomplete(field.value, interaction.commandName)
+                            .map(({ name, value }) => ({
+                                name: name.substring(0, 100),
+                                value: value.substring(0, 100)
+                            }))
+                    );
                 } else {
                     // TODO unknown command
                 }
+            } else if(interaction.isMessageContextMenuCommand()) {
+                assert(interaction.commandName in this.other_commands);
+                await this.other_commands[interaction.commandName].handler(interaction);
+            } else if(interaction.isModalSubmit()) {
+                const [ command_name, id ] = interaction.customId.split("--") as [string, string | undefined];
+                assert(command_name in this.other_commands);
+                const command = this.other_commands[command_name] as BotModalHandler;
+                const fields = command.fields.map(id => interaction.fields.getTextInputValue(id));
+                await command.handler(interaction, ...(id ? [ id, ...fields ] : fields));
             }
         } catch(e) {
             // TODO....

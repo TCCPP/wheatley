@@ -1,7 +1,7 @@
 import * as Discord from "discord.js";
 import { strict as assert } from "assert";
 import { MINUTE, pink_role_id, skill_role_ids } from "../common";
-import { critical_error, denullify, M } from "../utils";
+import { critical_error, unwrap, M } from "../utils";
 import { BotComponent } from "../bot_component";
 import { Wheatley } from "../wheatley";
 
@@ -17,7 +17,7 @@ export class RoleManager extends BotComponent {
     }
 
     override async on_ready() {
-        this.pink_role = denullify(await this.wheatley.TCCPP.roles.fetch(pink_role_id));
+        this.pink_role = unwrap(await this.wheatley.TCCPP.roles.fetch(pink_role_id));
         setInterval(this.check_users.bind(this), 30 * MINUTE);
     }
 

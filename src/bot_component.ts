@@ -1,7 +1,7 @@
 import { strict as assert } from "assert";
 
 import * as Discord from "discord.js";
-import { TextBasedCommandBuilder } from "./command";
+import { MessageContextMenuCommandBuilder, ModalHandler, TextBasedCommandBuilder } from "./command";
 import { critical_error, M } from "./utils";
 
 import { Wheatley } from "./wheatley";
@@ -24,8 +24,9 @@ export class BotComponent {
 
     async setup() {} // eslint-disable-line @typescript-eslint/no-empty-function
 
-    private setup_listener<E extends keyof Discord.ClientEvents>
-    (event: E, f: undefined | ((...args: Discord.ClientEvents[E]) => Promise<void>)) {
+    private setup_listener<E extends keyof Discord.ClientEvents>(
+        event: E, f: undefined | ((...args: Discord.ClientEvents[E]) => Promise<void>)
+    ) {
         if(f) {
             M.log("Adding listener", event, this.constructor.name);
             this.wheatley.client.on(event, wrap(f.bind(this)));
@@ -46,7 +47,9 @@ export class BotComponent {
         this.on_ready();
     }
 
-    add_command<T extends unknown[]>(command: TextBasedCommandBuilder<T, true, true>) {
+    add_command<T extends unknown[]>(
+        command: TextBasedCommandBuilder<T, true, true> | MessageContextMenuCommandBuilder<true> | ModalHandler<true>
+    ) {
         this.wheatley.add_command(command);
     }
 

@@ -1,9 +1,11 @@
 import { strict as assert } from "assert";
 
 import * as Discord from "discord.js";
+import { ContextMenuCommandBuilder } from "discord.js";
+import { ApplicationCommandTypeMessage } from "./common";
 import { forge_snowflake } from "./components/snowflake";
 
-import { denullify, is_string } from "./utils";
+import { unwrap, is_string } from "./utils";
 import { Wheatley } from "./wheatley";
 
 export type TextBasedCommandOptionType = "string";
@@ -34,18 +36,24 @@ const default_allowed_mentions: Discord.MessageMentionOptions = {
     parse: ["users"]
 };
 
+// Command builder stuff
+
+export abstract class CommandBuilder<HasHandler extends boolean = false, HandlerArgs extends unknown[] = []> {
+    handler: ConditionalOptional<HasHandler, (...args: HandlerArgs) => any>;
+}
+
 export class TextBasedCommandBuilder<
     Args extends unknown[] = [],
     HasDescriptions extends boolean = false,
-    HasHandler extends boolean = false>
+    HasHandler extends boolean = false> extends CommandBuilder<HasHandler, [TextBasedCommand, ...Args]>
 {
     readonly names: string[];
     descriptions: ConditionalOptional<HasDescriptions, string[]>;
     options = new Discord.Collection<string, TextBasedCommandOption & {type: TextBasedCommandOptionType}>();
-    handler: ConditionalOptional<HasHandler, (x: TextBasedCommand, ...args: Args) => any>;
     slash_config: boolean[];
 
     constructor(names: string | MoreThanOne<string>) {
+        super();
         this.names = Array.isArray(names) ? names : [names];
         this.slash_config = new Array(this.names.length).fill(true);
     }
@@ -88,20 +96,105 @@ export class TextBasedCommandBuilder<
     }
 }
 
-export class BotCommand<Args extends unknown[] = []> {
-    options = new Discord.Collection<string, TextBasedCommandOption & {type: TextBasedCommandOptionType}>();
-    handler: (x: TextBasedCommand, ...args: Args) => any;
+export abstract class OtherCommandBuilder<HasHandler extends boolean = false, HandlerArgs extends unknown[] = []>
+    extends CommandBuilder<HasHandler, HandlerArgs> {
+    // returns botcommand and djs command to register, if applicable
+    abstract to_command_descriptors(): [ConditionalOptional<HasHandler, BotCommand<any>>, unknown | undefined];
+}
 
-    constructor(public readonly name: string,
-                public readonly description: string | undefined,
-                public readonly slash: boolean,
-                builder: TextBasedCommandBuilder<Args, true, true>) {
-        this.options = builder.options;
-        this.handler = builder.handler;
+export class MessageContextMenuCommandBuilder<HasHandler extends boolean = false>
+    extends OtherCommandBuilder<HasHandler, [Discord.MessageContextMenuCommandInteraction]> {
+    // TODO: Permissions?
+
+    constructor(public readonly name: string) {
+        super();
+    }
+
+    set_handler(handler: (x: Discord.MessageContextMenuCommandInteraction) => any):
+        MessageContextMenuCommandBuilder<true> {
+        this.handler = handler;
+        return this as unknown as MessageContextMenuCommandBuilder<true>;
+    }
+
+    override to_command_descriptors(): [ConditionalOptional<HasHandler, BotCommand<any>>, unknown] {
+        if(!this.handler) {
+            return [ undefined as ConditionalOptional<HasHandler, BotCommand<any>>, undefined ];
+        } else {
+            return [
+                new BotCommand(this.name, this.handler) as ConditionalOptional<HasHandler, BotCommand<any>>,
+                new ContextMenuCommandBuilder()
+                    .setName(this.name)
+                    .setType(ApplicationCommandTypeMessage) // TODO: Permissions?
+            ];
+        }
     }
 }
 
-export class TextBasedCommand {
+export class ModalHandler<HasHandler extends boolean = false>
+    extends OtherCommandBuilder<HasHandler, [Discord.ModalSubmitInteraction, ...string[]]> {
+    readonly name: string;
+    readonly fields: string[];
+
+    constructor(
+        modal: Discord.ModalBuilder,
+        handler: (x: Discord.ModalSubmitInteraction, ...args: string[]) => any
+    ) {
+        super();
+        assert(modal.data.custom_id);
+        this.name = unwrap(modal.data.custom_id);
+        this.fields = modal.components.map(row =>
+            row.components.map(component => unwrap(component.data.custom_id))).flat();
+        this.handler = handler;
+    }
+
+    override to_command_descriptors(): [ConditionalOptional<HasHandler, BotModalHandler>, undefined] {
+        if(!this.handler) {
+            return [ undefined as ConditionalOptional<HasHandler, BotModalHandler>, undefined ];
+        } else {
+            return [
+                new BotModalHandler(this.name, this as ModalHandler<true>) as
+                    ConditionalOptional<HasHandler, BotModalHandler>,
+                undefined
+            ];
+        }
+    }
+}
+
+// Command descriptors for the bot to store
+
+export class BotCommand<Args extends unknown[] = []> {
+    constructor(public readonly name: string,
+                public readonly handler: (...args: Args) => any) {}
+}
+
+export class BotTextBasedCommand<Args extends unknown[] = []> extends BotCommand<[TextBasedCommand, ...Args]> {
+    options = new Discord.Collection<string, TextBasedCommandOption & {type: TextBasedCommandOptionType}>();
+
+    constructor(name: string,
+                public readonly description: string | undefined,
+                public readonly slash: boolean,
+                builder: TextBasedCommandBuilder<Args, true, true>) {
+        super(name, builder.handler);
+        this.options = builder.options;
+    }
+}
+
+export class BotModalHandler extends BotCommand<[Discord.ModalSubmitInteraction, ...string[]]> {
+    fields: string[];
+
+    constructor(name: string, modal: ModalHandler<true>) {
+        super(name, modal.handler);
+        this.fields = modal.fields;
+    }
+}
+
+// Command abstractions themselves
+
+export class Command {
+
+}
+
+export class TextBasedCommand extends Command {
     public readonly name: string;
     private readonly wheatley: Wheatley;
     private readonly reply_object: Discord.ChatInputCommandInteraction | Discord.Message;
@@ -110,6 +203,7 @@ export class TextBasedCommand {
     public readonly guild_id: string | null;
     public readonly channel: Discord.TextBasedChannel | null;
     public readonly channel_id: string;
+
     public readonly member: Discord.GuildMember | Discord.APIInteractionGuildMember | null;
     public readonly user: Discord.User;
 
@@ -124,6 +218,7 @@ export class TextBasedCommand {
     // impl
     constructor(..._args: [string, Discord.ChatInputCommandInteraction | Discord.Message, Wheatley]
                         | [TextBasedCommand, string, Discord.Message]) {
+        super();
         const args = is_string(_args[0]) ?
             [ "n", ..._args ] as ["n", string, Discord.ChatInputCommandInteraction | Discord.Message, Wheatley]
             : [ "c", ..._args ] as ["c", TextBasedCommand, string, Discord.Message];
@@ -186,7 +281,7 @@ export class TextBasedCommand {
         if(this.channel) {
             return this.channel;
         } else {
-            return <Discord.TextBasedChannel>denullify(await (await this.get_guild()).channels.fetch(this.channel_id));
+            return <Discord.TextBasedChannel>unwrap(await (await this.get_guild()).channels.fetch(this.channel_id));
         }
     }
 

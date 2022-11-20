@@ -21,6 +21,67 @@ type QuoteDescriptor = {
     block: boolean;
 };
 
+// TODO: Redundant with server_suggestion_tracker
+async function get_display_name(thing: Discord.Message | Discord.User, wheatley: Wheatley): Promise<string> {
+    if(thing instanceof Discord.User) {
+        const user = thing;
+        try {
+            return (await wheatley.TCCPP.members.fetch(user.id)).displayName;
+        } catch {
+            // user could potentially not be in the server
+            return user.tag;
+        }
+    } else if(thing instanceof Discord.Message) {
+        const message = thing;
+        if(message.member == null) {
+            return get_display_name(message.author, wheatley);
+        } else {
+            return message.member.displayName;
+        }
+    } else {
+        assert(false);
+    }
+}
+
+export async function make_quote_embeds(
+    messages: Discord.Message[], requested_by: Discord.GuildMember | undefined, wheatley: Wheatley
+) {
+    assert(messages.length >= 1);
+    const head = messages[0];
+    const contents = messages.map(m => m.content).join("\n");
+    const embed = new Discord.EmbedBuilder()
+        .setColor(color)
+        .setAuthor({
+            name: `${await get_display_name(head, wheatley)}`,
+            iconURL: head.member?.avatarURL() ?? head.author.displayAvatarURL()
+        })
+        .setDescription(contents + `\n\nFrom <#${head.channel.id}> [[Jump to message]](${head.url})`)
+        .setTimestamp(head.createdAt);
+    if(requested_by) {
+        embed.setFooter({
+            text: `Quoted by ${requested_by.displayName}`,
+            iconURL: requested_by.user.displayAvatarURL()
+        });
+    }
+    const images = messages.map(message => [
+        ...message.attachments.filter(a => a.contentType?.indexOf("image") == 0).map(a => a.url),
+        ...message.embeds.filter(is_image_link_embed).map(e => e.url!)
+    ]).flat();
+    const other_embeds = messages.map(message => message.embeds.filter(e => !is_image_link_embed(e))).flat();
+    const image_embeds: Discord.EmbedBuilder[] = [];
+    if(images.length > 0) {
+        embed.setImage(images[0]);
+        for(const image of images.slice(1)) {
+            image_embeds.push(new Discord.EmbedBuilder({
+                image: {
+                    url: image
+                }
+            }));
+        }
+    }
+    return [ embed, ...image_embeds, ...other_embeds ];
+}
+
 export class Quote extends BotComponent {
     constructor(wheatley: Wheatley) {
         super(wheatley);
@@ -88,63 +149,6 @@ export class Quote extends BotComponent {
         }
     }
 
-    // TODO: Redundant with server_suggestion_tracker
-    async get_display_name(thing: Discord.Message | Discord.User): Promise<string> {
-        if(thing instanceof Discord.User) {
-            const user = thing;
-            try {
-                return (await this.wheatley.TCCPP.members.fetch(user.id)).displayName;
-            } catch {
-                // user could potentially not be in the server
-                return user.tag;
-            }
-        } else if(thing instanceof Discord.Message) {
-            const message = thing;
-            if(message.member == null) {
-                return this.get_display_name(message.author);
-            } else {
-                return message.member.displayName;
-            }
-        } else {
-            assert(false);
-        }
-    }
-
-    async make_quote(messages: Discord.Message[], requested_by: Discord.GuildMember) {
-        assert(messages.length >= 1);
-        const head = messages[0];
-        const contents = messages.map(m => m.content).join("\n");
-        const embed = new Discord.EmbedBuilder()
-            .setColor(color)
-            .setAuthor({
-                name: `${await this.get_display_name(head)}`,
-                iconURL: head.author.displayAvatarURL()
-            })
-            .setDescription(contents + `\n\nFrom <#${head.channel.id}> [[Jump to message]](${head.url})`)
-            .setTimestamp(head.createdAt)
-            .setFooter({
-                text: `Quoted by ${requested_by.displayName}`,
-                iconURL: requested_by.user.displayAvatarURL()
-            });
-        const images = messages.map(message => [
-            ...message.attachments.filter(a => a.contentType?.indexOf("image") == 0).map(a => a.url),
-            ...message.embeds.filter(is_image_link_embed).map(e => e.url!)
-        ]).flat();
-        const other_embeds = messages.map(message => message.embeds.filter(e => !is_image_link_embed(e))).flat();
-        const image_embeds: Discord.EmbedBuilder[] = [];
-        if(images.length > 0) {
-            embed.setImage(images[0]);
-            for(const image of images.slice(1)) {
-                image_embeds.push(new Discord.EmbedBuilder({
-                    image: {
-                        url: image
-                    }
-                }));
-            }
-        }
-        return [ embed, ...image_embeds, ...other_embeds ];
-    }
-
     async do_quote(command: TextBasedCommand, messages: QuoteDescriptor[]) {
         const embeds: (Discord.EmbedBuilder | Discord.Embed)[] = [];
         for(const { channel_id, message_id, block } of messages) {
@@ -168,7 +172,7 @@ export class Quote extends BotComponent {
                     messages = [quote_message];
                 }
                 assert(messages.length >= 1);
-                const quote_embeds = await this.make_quote(messages, await command.get_member());
+                const quote_embeds = await make_quote_embeds(messages, await command.get_member(), this.wheatley);
                 embeds.push(...quote_embeds);
             } else {
                 embeds.push(new Discord.EmbedBuilder().setDescription("Error: Channel not a text channel"));

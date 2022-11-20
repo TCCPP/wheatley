@@ -298,8 +298,8 @@ export async function critical_error(...args: any[]) {
     } catch { void(0); }
 }
 
-export function denullify<T>(x: T | null): T {
-    assert(x !== null);
+export function unwrap<T>(x: T | null | undefined): T {
+    assert(x !== null && x !== undefined);
     return x;
 }
 
@@ -352,7 +352,7 @@ export async function fetch_inactive_threads_time_limit(forum: Discord.ForumChan
         // https://github.com/microsoft/TypeScript/issues/51115
         const last: Discord.ThreadChannel = threads.last()!;
         before = last.id;
-        if(!hasMore || (soft_limit && Math.abs(now - denullify(last.createdAt).getTime()) >= soft_limit)) {
+        if(!hasMore || (soft_limit && Math.abs(now - unwrap(last.createdAt).getTime()) >= soft_limit)) {
             break;
         }
     }
