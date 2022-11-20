@@ -46,7 +46,7 @@ export class Report extends BotComponent {
             });
             return;
         }
-        M.log("Received report command");
+        M.log("Received report command", interaction.user.tag, interaction.user.id, interaction.targetId);
         this.target_map.set(interaction.targetMessage.id, interaction.targetMessage);
         const modal = new Discord.ModalBuilder()
             .setCustomId(`report-modal--${interaction.targetMessage.id}`)
@@ -67,6 +67,7 @@ export class Report extends BotComponent {
     async modal_handler(interaction: Discord.ModalSubmitInteraction, id: string, message: string) {
         const reporter = interaction.member instanceof Discord.GuildMember ? interaction.member
             : await this.wheatley.TCCPP.members.fetch(interaction.user.id);
+        M.log("Received report modal submit", id);
         if(this.target_map.has(id)) {
             message = message.trim();
             const target_message = this.target_map.get(id)!;

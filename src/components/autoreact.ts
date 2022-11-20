@@ -26,7 +26,7 @@ export class Autoreact extends BotComponent {
             try {
                 member = await message.guild!.members.fetch(message.author.id);
             } catch(error) {
-                M.warn("failed to get user", message.author.id);
+                M.warn("Failed to get user", message.author.id);
                 return false;
             }
         } else {
@@ -48,10 +48,10 @@ export class Autoreact extends BotComponent {
                 await message.react("👋");
             }
         } else if(message.channel.id == memes_channel_id && has_media(message)) {
-            M.log("adding star reaction", message.author.tag, message.author.id, message.url);
+            M.log("Adding star reaction", message.author.tag, message.author.id, message.url);
             await message.react("⭐");
         } else if(message.channel.id == server_suggestions_channel_id) {
-            M.log("adding server suggestion reactions", message.author.tag, message.author.id, message.url);
+            M.log("Adding server suggestion reactions", message.author.tag, message.author.id, message.url);
             await message.react("👍");
             await message.react("👎");
             await message.react("🤷");
@@ -68,11 +68,11 @@ export class Autoreact extends BotComponent {
             const bot_starred = new_message.reactions.cache.get("⭐")?.users.cache.has(this.wheatley.id);
             // If we haven't stared (or don't know if we've starred) and the new message has media, star
             if(!bot_starred && has_media(new_message)) {
-                M.log("adding star reaction on message update", new_message.reactions.cache.has(this.wheatley.id),
+                M.log("Adding star reaction on message update", new_message.reactions.cache.has(this.wheatley.id),
                       new_message.author?.tag, new_message.author?.id, new_message.url);
                 await new_message.react("⭐");
             } else if(bot_starred && !has_media(new_message)) { // if we starred and there's no longer media, remove
-                M.log("removing star reaction on message update", new_message.reactions.cache.has(this.wheatley.id),
+                M.log("Removing star reaction on message update", new_message.reactions.cache.has(this.wheatley.id),
                       new_message.author?.tag, new_message.author?.id, new_message.url);
                 await new_message.reactions.cache.get("⭐")?.users.remove(this.wheatley.id);
             }
@@ -91,6 +91,6 @@ export class Autoreact extends BotComponent {
                 message.react("👋");
             }
         }
-        M.log("finished catching up on introduction messages");
+        M.log("Finished catching up on introduction messages");
     }
 }
