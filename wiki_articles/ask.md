@@ -1,10 +1,23 @@
-[[[user author]]]
-[[[alias ask]]]
+# How to Ask A Programming Question
 
-# Just Post Your Question
+Anyone can ask a question in our programming channels.
+Following the guide
+[Writing The Perfect Question](https://codeblog.jonskeet.uk/2010/08/29/writing-the-perfect-question/)
+is recommended.
 
-Don't ask to ask a question, don't ask if anyone is familiar with XYZ. Just ask your question.
+## [What To Post]
+State your problem clearly and provide all necessary details:
+- the relevant portion of your code, or all of it
+- the expected output
+- the actual output (or the **full** error)
+🏆 **Gold Standard:** Minimal Reproducible Example
 
-Someone is bound to know the answer and will be happy to help.
+## [Where To Post]
+Provide the relevant code in the message, and format it nicely with a code block\*.
+If it's too much for one message, you can upload it:
+- [Compiler Explorer](https://godbolt.org/) for most C/C++ snippets
+- [OnlineGDB](https://www.onlinegdb.com/) for interaction, debugging
+⛔ **Do not post screenshots, let alone photos of your screen!**
 
-[Learn why asking to ask is not a good idea](https://dontasktoask.com/)
+[[[footer]]]
+* Use /code if you don't know how to format code blocks
