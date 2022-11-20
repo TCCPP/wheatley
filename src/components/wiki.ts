@@ -29,6 +29,7 @@ type WikiArticle = {
     fields: {name: string, value: string, inline: boolean}[],
     footer?: string;
     set_author?: true;
+    no_embed?: true;
 };
 
 // TODO: Make not global
@@ -68,6 +69,8 @@ export function parse_article(name: string | null, content: string): WikiArticle
             current_state = state.footer;
         } else if(line.trim() == "[[[user author]]]" && !code) {
             data.set_author = true;
+        } else if(line.trim() == "[[[no embed]]]" && !code) {
+            data.no_embed = true;
         } else if(line.trim().match(/^\[\[\[alias .+\]\]\]$/) && !code) {
             const match = line.trim().match(/^\[\[\[alias (.+)\]\]\]$/)!;
             const aliases = match[1].split(",").map(alias => alias.trim());
@@ -98,12 +101,17 @@ export function parse_article(name: string | null, content: string): WikiArticle
         data.body = null;
     }
     data.footer = data.footer?.trim();
-    assert(data.title, "Wiki article must have a title");
     assert(data.fields); // will always be true
+    if(data.no_embed) {
+        assert(data.body, "Must have a body if it's not an embed");
+        assert(!data.footer, "Can't have a footer if it's not an embed");
+        assert(data.fields.length == 0, "Can't have fields if it's not an embed");
+    }
+    assert(data.title, "Wiki article must have a title"); // title will just be for search purposes in no embed mode
     // need to do this nonsense for TS....
-    const { title, body, fields, footer, set_author } = data;
+    const { title, body, fields, footer, set_author, no_embed } = data;
     return {
-        title, body, fields, footer, set_author
+        title, body, fields, footer, set_author, no_embed
     };
 }
 
@@ -167,20 +175,35 @@ export class Wiki extends BotComponent {
     }
 
     async send_wiki_article(article: WikiArticle, command: TextBasedCommand) {
-        const embed = new Discord.EmbedBuilder()
-            .setColor(colors.color)
-            .setTitle(article.title)
-            .setDescription(article.body)
-            .setFields(article.fields);
-        if(article.footer) {
-            embed.setFooter({
-                text: article.footer
+        if(article.no_embed) {
+            assert(article.body);
+            await command.reply({
+                content: article.body,
+                should_text_reply: true
+            });
+        } else {
+            const embed = new Discord.EmbedBuilder()
+                .setColor(colors.color)
+                .setTitle(article.title)
+                .setDescription(article.body)
+                .setFields(article.fields);
+            if(article.set_author) {
+                const member = await command.get_member();
+                embed.setAuthor({
+                    name: member.displayName,
+                    iconURL: member.avatarURL() ?? command.user.displayAvatarURL()
+                });
+            }
+            if(article.footer) {
+                embed.setFooter({
+                    text: article.footer
+                });
+            }
+            await command.reply({
+                embeds: [embed],
+                should_text_reply: true
             });
         }
-        await command.reply({
-            embeds: [embed],
-            should_text_reply: true
-        });
     }
 
     async wiki(command: TextBasedCommand, query: string) {
