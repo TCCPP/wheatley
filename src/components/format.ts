@@ -7,10 +7,10 @@ const fetch = (url: RequestInfo, init?: RequestInit) =>
     import("node-fetch").then(({ default: fetch }) => fetch(url, init));
 
 import { async_exec_file, critical_error, M } from "../utils";
-import { ApplicationCommandTypeMessage, MINUTE } from "../common";
-import { ContextMenuCommandBuilder, MessageFlags } from "discord.js";
 import { BotComponent } from "../bot_component";
 import { Wheatley } from "../wheatley";
+import { MessageContextMenuCommandBuilder } from "../command";
+import { MINUTE } from "../common";
 
 const color = 0x7E78FE; //0xA931FF;
 
@@ -198,7 +198,7 @@ async function format(replying_to: Discord.Message) {
 function should_replace_original(replying_to: Discord.Message, request_timestamp: Date) {
     return request_timestamp.getTime() - replying_to.createdAt.getTime() < 30 * MINUTE
         && replying_to.id != replying_to.channel.id // Don't delete if it's a forum thread starter message
-        && !replying_to.flags.has(MessageFlags.HasThread)
+        && !replying_to.flags.has(Discord.MessageFlags.HasThread)
         && replying_to.attachments.size <= 2 // Also don't delete if it has additional/non-txt attachments
         && !replying_to.attachments.some(({ contentType }) => contentType?.startsWith("text/") ?? false)
     // and not a ;compile, ;asm, or other bot command
@@ -209,10 +209,10 @@ export class Format extends BotComponent {
     constructor(wheatley: Wheatley) {
         super(wheatley);
 
-        const format = new ContextMenuCommandBuilder()
-            .setName("format")
-            .setType(ApplicationCommandTypeMessage);
-        this.wheatley.guild_command_manager.register(format);
+        this.add_command(
+            new MessageContextMenuCommandBuilder("Format")
+                .set_handler(this.format_ctxmenu.bind(this))
+        );
     }
 
     // TODO: More refactoring needed
@@ -281,65 +281,63 @@ export class Format extends BotComponent {
         }
     }
 
-    override async on_interaction_create(interaction: Discord.Interaction) {
-        if(interaction.isMessageContextMenuCommand() && interaction.commandName == "format") {
-            const replying_to = interaction.targetMessage;
+    async format_ctxmenu(interaction: Discord.MessageContextMenuCommandInteraction) {
+        const replying_to = interaction.targetMessage;
 
-            M.debug("Received format command", interaction.user.tag, interaction.user.id, replying_to.url);
+        M.debug("Received format command", interaction.user.tag, interaction.user.id, replying_to.url);
 
-            if(replying_to.author.bot) {
-                await interaction.reply({
-                    content: "Can't format a bot message",
-                    ephemeral: true
-                });
-                return;
+        if(replying_to.author.bot) {
+            await interaction.reply({
+                content: "Can't format a bot message",
+                ephemeral: true
+            });
+            return;
+        }
+
+        // Out of caution
+        // It might already be the case users can't use context menu commands on messages in channels they don't
+        // have permissions for
+        const channel = await interaction.guild!.channels.fetch(interaction.channelId);
+        const member = await interaction.guild!.members.fetch(interaction.user.id);
+        assert(channel);
+        if(!channel.permissionsFor(member).has(Discord.PermissionsBitField.Flags.SendMessages)) {
+            await interaction.reply({
+                content: "You don't have permissions here.",
+                ephemeral: true
+            });
+            return;
+        }
+
+        const { content, attachments, found_code_blocks } = await format(replying_to);
+
+        if(attachments.length || found_code_blocks) {
+            let embeds: Discord.EmbedBuilder[] | undefined;
+            if(interaction.user.id != replying_to.author.id) {
+                embeds = [
+                    new Discord.EmbedBuilder()
+                        .setColor(color)
+                        .setAuthor({
+                            name: replying_to.member?.displayName ?? replying_to.author.tag,
+                            iconURL: replying_to.member?.avatarURL() ?? replying_to.author.displayAvatarURL()
+                        })
+                ];
             }
-
-            // Out of caution
-            // It might already be the case users can't use context menu commands on messages in channels they don't
-            // have permissions for
-            const channel = await interaction.guild!.channels.fetch(interaction.channelId);
-            const member = await interaction.guild!.members.fetch(interaction.user.id);
-            assert(channel);
-            if(!channel.permissionsFor(member).has(Discord.PermissionsBitField.Flags.SendMessages)) {
-                await interaction.reply({
-                    content: "You don't have permissions here.",
-                    ephemeral: true
-                });
-                return;
-            }
-
-            const { content, attachments, found_code_blocks } = await format(replying_to);
-
-            if(attachments.length || found_code_blocks) {
-                let embeds: Discord.EmbedBuilder[] | undefined;
-                if(interaction.user.id != replying_to.author.id) {
-                    embeds = [
-                        new Discord.EmbedBuilder()
-                            .setColor(color)
-                            .setAuthor({
-                                name: replying_to.member?.displayName ?? replying_to.author.tag,
-                                iconURL: replying_to.member?.avatarURL() ?? replying_to.author.displayAvatarURL()
-                            })
-                    ];
+            await interaction.reply({
+                embeds,
+                content,
+                files: attachments.filter(x => x != null) as Discord.AttachmentBuilder[],
+                allowedMentions: {
+                    parse: ["users"]
                 }
-                await interaction.reply({
-                    embeds,
-                    content,
-                    files: attachments.filter(x => x != null) as Discord.AttachmentBuilder[],
-                    allowedMentions: {
-                        parse: ["users"]
-                    }
-                });
-                if(should_replace_original(replying_to, interaction.createdAt)) {
-                    await replying_to.delete();
-                }
-            } else {
-                await interaction.reply({
-                    content: "Nothing to format",
-                    ephemeral: true
-                });
+            });
+            if(should_replace_original(replying_to, interaction.createdAt)) {
+                await replying_to.delete();
             }
+        } else {
+            await interaction.reply({
+                content: "Nothing to format",
+                ephemeral: true
+            });
         }
     }
 }
