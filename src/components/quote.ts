@@ -1,7 +1,7 @@
 import * as Discord from "discord.js";
 import { strict as assert } from "assert";
 import { critical_error, index_of_first_not_satisfying, is_image_link_embed, M } from "../utils";
-import { MINUTE, TCCPP_ID } from "../common";
+import { colors, MINUTE, TCCPP_ID } from "../common";
 import { decode_snowflake, forge_snowflake } from "./snowflake";
 import { BotComponent } from "../bot_component";
 import { Wheatley } from "../wheatley";
@@ -110,10 +110,26 @@ export class Quote extends BotComponent {
                     message_id,
                     block: command.name == "quoteb"
                 }]);
+            } else {
+                await command.reply({
+                    embeds: [
+                        new Discord.EmbedBuilder()
+                            .setDescription("Error: Can only quote from TCCPP")
+                            .setColor(colors.red)
+                    ],
+                    ephemeral_if_possible: true
+                });
             }
         } else {
-            command.reply("Usage: `!quote <url>`\n"
-                        + "`!quoteb` can be used to quote a continuous block of messages", true);
+            await command.reply({
+                embeds: [
+                    new Discord.EmbedBuilder()
+                        .setDescription("Usage: `!quote <url>`\n"
+                                      + "`!quoteb` can be used to quote a continuous block of messages")
+                        .setColor(colors.red)
+                ],
+                ephemeral_if_possible: true
+            });
         }
     }
 
@@ -156,6 +172,20 @@ export class Quote extends BotComponent {
             if(channel instanceof Discord.TextChannel
             || channel instanceof Discord.ThreadChannel
             || channel instanceof Discord.NewsChannel) {
+                const member = await command.get_member();
+                const permissions = [
+                    channel.permissionsFor(member).has(Discord.PermissionsBitField.Flags.ViewChannel),
+                    channel.permissionsFor(member).has(Discord.PermissionsBitField.Flags.ReadMessageHistory),
+                ];
+                if(!permissions.every(b => b)) {
+                    embeds.push(
+                        new Discord.EmbedBuilder()
+                            .setColor(colors.red)
+                            .setDescription("Error: You don't have permissions for that channel")
+                    );
+                    this.wheatley.zelis.send("quote exploit attempt");
+                    continue;
+                }
                 let messages: Discord.Message[] = [];
                 if(block) {
                     const fetched_messages = (await channel.messages.fetch({
@@ -172,10 +202,14 @@ export class Quote extends BotComponent {
                     messages = [quote_message];
                 }
                 assert(messages.length >= 1);
-                const quote_embeds = await make_quote_embeds(messages, await command.get_member(), this.wheatley);
+                const quote_embeds = await make_quote_embeds(messages, member, this.wheatley);
                 embeds.push(...quote_embeds);
             } else {
-                embeds.push(new Discord.EmbedBuilder().setDescription("Error: Channel not a text channel"));
+                embeds.push(
+                    new Discord.EmbedBuilder()
+                        .setColor(colors.red)
+                        .setDescription("Error: Channel not a text channel")
+                );
                 critical_error("Error: Channel not a text channel");
             }
         }
