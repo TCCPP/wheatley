@@ -11,7 +11,9 @@ jobs:
     - name: checkout
       uses: actions/checkout@v3
     - name: dependencies
-      run: npm i --dev
+      run: |
+           npm install -g typescript
+           npm i
     - name: build bot
       run: tsc
     - name: build cppref scraper
