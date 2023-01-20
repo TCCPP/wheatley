@@ -9,13 +9,27 @@ import { TextBasedCommand, TextBasedCommandBuilder } from "../command";
 
 // https://discord.com/channels/331718482485837825/802541516655951892/877257002584252426
 //                              guild              channel            message
-const raw_url_re = /https:\/\/discord\.com\/channels\/(\d+)\/(\d+)\/(\d+)/;
+// Discord uses many domains and subdomains:
+// - discord.com
+// - ptb.discord.com
+// - canary.discord.com
+// - discordapp.com
+// - and maybe more and I'm sure they'll use others in the future
+// We'll just match anything containing `discord` followed by /channels/id/id/id
+const raw_url_re = /https:\/\/(.*discord.*)\/channels\/(\d+)\/(\d+)\/(\d+)/;
+const known_domains = new Set([
+    "discord.com",
+    "ptb.discord.com",
+    "canary.discord.com",
+    "discordapp.com",
+]);
 const url_re = new RegExp(`^${raw_url_re.source}$`, "i");
 const implicit_quote_re = new RegExp(`\\[${raw_url_re.source}(b?)\\]`, "gi");
 
 const color = 0x7E78FE; //0xA931FF;
 
 type QuoteDescriptor = {
+    domain: string;
     channel_id: string;
     message_id: string;
     block: boolean;
@@ -44,7 +58,7 @@ async function get_display_name(thing: Discord.Message | Discord.User, wheatley:
 }
 
 export async function make_quote_embeds(
-    messages: Discord.Message[], requested_by: Discord.GuildMember | undefined, wheatley: Wheatley
+    messages: Discord.Message[], requested_by: Discord.GuildMember | undefined, wheatley: Wheatley, safe_link: boolean
 ) {
     assert(messages.length >= 1);
     const head = messages[0];
@@ -55,7 +69,9 @@ export async function make_quote_embeds(
             name: `${await get_display_name(head, wheatley)}`,
             iconURL: head.member?.avatarURL() ?? head.author.displayAvatarURL()
         })
-        .setDescription(contents + `\n\nFrom <#${head.channel.id}> [[Jump to message]](${head.url})`)
+        .setDescription(contents + `\n\nFrom <#${head.channel.id}> [[Jump to message]](${head.url})` + (
+            safe_link ? "" : " ⚠️ Unexpected domain, be careful clicking this link"
+        ))
         .setTimestamp(head.createdAt);
     if(requested_by) {
         embed.setFooter({
@@ -102,10 +118,11 @@ export class Quote extends BotComponent {
         const match = url.trim().match(url_re);
         if(match != null) {
             M.log("Received quote command", command.user.tag, command.user.id, url, command.get_or_forge_url());
-            assert(match.length == 4);
-            const [ guild_id, channel_id, message_id ] = match.slice(1);
+            assert(match.length == 5);
+            const [ domain, guild_id, channel_id, message_id ] = match.slice(1);
             if(guild_id == TCCPP_ID) {
                 await this.do_quote(command, [{
+                    domain,
                     channel_id,
                     message_id,
                     block: command.name == "quoteb"
@@ -142,7 +159,8 @@ export class Quote extends BotComponent {
             const quote_descriptors = [...message.content.matchAll(implicit_quote_re)]
                 .filter(([ _, guild_id ]) => guild_id == TCCPP_ID)
                 .map(arr => arr.slice(2))
-                .map(([ channel_id, message_id, block_flag ]) => ({
+                .map(([ domain, channel_id, message_id, block_flag ]) => ({
+                    domain,
                     channel_id,
                     message_id,
                     block: block_flag == "b"
@@ -167,7 +185,7 @@ export class Quote extends BotComponent {
 
     async do_quote(command: TextBasedCommand, messages: QuoteDescriptor[]) {
         const embeds: (Discord.EmbedBuilder | Discord.Embed)[] = [];
-        for(const { channel_id, message_id, block } of messages) {
+        for(const { domain, channel_id, message_id, block } of messages) {
             const channel = await this.wheatley.TCCPP.channels.fetch(channel_id);
             if(channel instanceof Discord.TextChannel
             || channel instanceof Discord.ThreadChannel
@@ -202,7 +220,12 @@ export class Quote extends BotComponent {
                     messages = [quote_message];
                 }
                 assert(messages.length >= 1);
-                const quote_embeds = await make_quote_embeds(messages, member, this.wheatley);
+                const quote_embeds = await make_quote_embeds(
+                    messages,
+                    member,
+                    this.wheatley,
+                    known_domains.has(domain)
+                );
                 embeds.push(...quote_embeds);
             } else {
                 embeds.push(
