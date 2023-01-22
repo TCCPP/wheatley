@@ -5,7 +5,7 @@ import { introductions_channel_id, memes_channel_id, MINUTE, server_suggestions_
 import { BotComponent } from "../bot_component";
 import { Wheatley } from "../wheatley";
 
-function has_media(message: Discord.Message | Discord.PartialMessage) {
+export function has_media(message: Discord.Message | Discord.PartialMessage) {
     return message.attachments.some(
         a => a.contentType?.startsWith("image/") || a.contentType?.startsWith("video/") || false
     ) || message.embeds.some(is_image_link_embed);
