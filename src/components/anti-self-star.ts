@@ -1,6 +1,6 @@
 import * as Discord from "discord.js";
 import { strict as assert } from "assert";
-import { M } from "../utils";
+import { M, departialize } from "../utils";
 import { memes_channel_id, TCCPP_ID } from "../common";
 import { BotComponent } from "../bot_component";
 import { Wheatley } from "../wheatley";
@@ -18,7 +18,7 @@ export class AntiSelfStar extends BotComponent {
     override async on_reaction_add(
         reaction: Discord.MessageReaction | Discord.PartialMessageReaction,
         user: Discord.User | Discord.PartialUser
-    ): Promise<void> {
+    ) {
         const message = reaction.message;
         if(!message.author) {
             M.warn("message.author is null");
@@ -29,14 +29,9 @@ export class AntiSelfStar extends BotComponent {
         }
     }
 
-    async catch_up() {
-        const TCCPP = await this.wheatley.client.guilds.fetch(TCCPP_ID);
-        const memes_channel = await TCCPP.channels.fetch(memes_channel_id);
-        assert(memes_channel);
-        assert(memes_channel.type == Discord.ChannelType.GuildText);
-        const messages = await memes_channel.messages.fetch({ limit: 100, cache: false });
-        for(const [ _, message ] of messages) {
-            message.reactions.cache.forEach(async reaction => {
+    async check_message(message: Discord.Message) {
+        if(message.channelId == memes_channel_id) {
+            for(const [ _, reaction ] of message.reactions.cache) {
                 const users = await reaction.users.fetch();
                 for(const [ id, _ ] of users) {
                     if(id == message.author.id && has_media(message)) {
@@ -44,7 +39,25 @@ export class AntiSelfStar extends BotComponent {
                         await message.delete();
                     }
                 }
-            });
+            }
+        }
+    }
+
+    override async on_message_update(
+        old_message: Discord.Message<boolean> | Discord.PartialMessage,
+        new_message: Discord.Message<boolean> | Discord.PartialMessage
+    ) {
+        await this.check_message(await departialize(new_message));
+    }
+
+    async catch_up() {
+        const TCCPP = await this.wheatley.client.guilds.fetch(TCCPP_ID);
+        const memes_channel = await TCCPP.channels.fetch(memes_channel_id);
+        assert(memes_channel);
+        assert(memes_channel.type == Discord.ChannelType.GuildText);
+        const messages = await memes_channel.messages.fetch({ limit: 100, cache: false });
+        for(const [ _, message ] of messages) {
+            await this.check_message(message);
         }
         M.log("Finished catching up on #memes messages");
     }
