@@ -55,7 +55,6 @@ import { BotCommand, BotModalHandler, BotTextBasedCommand, MessageContextMenuCom
          TextBasedCommand, TextBasedCommandBuilder } from "./command";
 import { DiscordAPIError, SlashCommandBuilder } from "discord.js";
 import { Report } from "./components/report";
-import { AntiSelfStar } from "./components/anti-self-star";
 
 function create_basic_embed(title: string | undefined, color: number, content: string) {
     const embed = new Discord.EmbedBuilder()

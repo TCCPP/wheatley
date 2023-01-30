@@ -44,7 +44,7 @@ export class AntiForumPostDelete extends BotComponent {
                 });
                 if(!thread.appliedTags.includes(stale_tag)) {
                     await thread.setAppliedTags(
-                        [stale_tag].concat(thread.appliedTags.filter(t => ![open_tag, solved_tag].includes(t)))
+                        [stale_tag].concat(thread.appliedTags.filter(t => ![ open_tag, solved_tag ].includes(t)))
                     );
                 }
                 await thread.setArchived(true);
