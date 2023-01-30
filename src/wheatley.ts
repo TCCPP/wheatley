@@ -187,7 +187,7 @@ export class Wheatley extends EventEmitter {
         await this.add_component(AntiRaid);
         await this.add_component(AntiScambot);
         await this.add_component(AntiScreenshot);
-        await this.add_component(AntiSelfStar);
+        //await this.add_component(AntiSelfStar);
         await this.add_component(Autoreact);
         await this.add_component(Cppref);
         await this.add_component(Format);
