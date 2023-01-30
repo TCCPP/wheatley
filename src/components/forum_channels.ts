@@ -55,13 +55,14 @@ export class ForumChannels extends BotComponent {
         for(const forum of [ this.wheatley.cpp_help, this.wheatley.c_help ]) {
             const open_tag = get_tag(forum, "Open").id;
             const solved_tag = get_tag(forum, "Solved").id;
+            const stale_tag = get_tag(forum, "Stale").id;
             const threads = await fetch_all_threads_archive_count(forum, cleanup_limit);
             M.debug("Cleaning up", threads.size, "threads");
             for(const [ _, thread ] of threads) {
                 assert(thread.parentId);
                 if(forum_help_channels.has(thread.parentId)) {
                     await this.misc_checks(thread, open_tag, solved_tag);
-                    await this.check_thread_activity(thread, open_tag, solved_tag);
+                    await this.check_thread_activity(thread, open_tag, solved_tag, stale_tag);
                 }
             }
         }
@@ -81,7 +82,12 @@ export class ForumChannels extends BotComponent {
         }
     }
 
-    async check_thread_activity(thread: Discord.ThreadChannel, open_tag: string, solved_tag: string) {
+    async check_thread_activity(
+        thread: Discord.ThreadChannel,
+        open_tag: string,
+        solved_tag: string,
+        stale_tag: string
+    ) {
         // thread.lastMessageId can be null if there are no messages (possibly and the forum starter has been deleted)
         // if the thread author hasn't sent an initial message it'll mess things up, this needs manual review
         if(thread.lastMessageId == null) {
@@ -90,15 +96,15 @@ export class ForumChannels extends BotComponent {
         }
         const now = Date.now();
         const last_message = decode_snowflake(thread.lastMessageId);
-        // if the thread is solved and needs to be re-archived
-        if(thread.appliedTags.includes(solved_tag)
+        // if the thread is solved or stale and needs to be re-archived
+        if((thread.appliedTags.includes(solved_tag) || thread.appliedTags.includes(stale_tag))
         && !thread.archived
         && now - last_message >= solved_archive_timeout) {
             M.log("Archiving solved channel", thread.id, thread.name, thread.url);
             thread.setArchived(true);
         }
         // if the thread is open has been inactive
-        else if(!thread.appliedTags.includes(solved_tag)
+        else if(thread.appliedTags.includes(open_tag)
         && !thread.archived
         && now - last_message >= inactive_timeout) {
             M.log("Archiving inactive channel", thread.id, thread.name, thread.url);
@@ -111,8 +117,8 @@ export class ForumChannels extends BotComponent {
             });
             await thread.setArchived(true);
         }
-        // if the thread is open and is inactive after initially being archived - mark it solved
-        else if(!thread.appliedTags.includes(solved_tag)
+        // if the thread is open and is inactive after initially being archived - mark it stale
+        else if(thread.appliedTags.includes(open_tag)
         && thread.archived
         && now - last_message >= resolution_timeout) {
             M.log("Resolving channel", thread.id, thread.name, thread.url);
@@ -120,10 +126,10 @@ export class ForumChannels extends BotComponent {
             await thread.send({
                 embeds: [
                     create_embed(undefined, colors.color,
-                                 "This question thread is being automatically marked as solved.")
+                                 "This question thread is being automatically marked as stale.")
                 ]
             });
-            await thread.setAppliedTags([solved_tag].concat(thread.appliedTags.filter(t => t != open_tag)));
+            await thread.setAppliedTags([stale_tag].concat(thread.appliedTags.filter(t => t != open_tag)));
             await thread.setArchived(true);
         }
     }
