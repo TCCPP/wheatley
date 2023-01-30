@@ -49,7 +49,8 @@ const client = new Discord.Client({
         Discord.Partials.Channel
     ],
     makeCache: Discord.Options.cacheWithLimits({
-        MessageManager: 1000
+        ...Discord.Options.DefaultMakeCacheSettings,
+        MessageManager: 5000
     })
 });
 
