@@ -1,10 +1,13 @@
 [[[alias code]]]
-[[[no embed]]]
 
 # How to Format Code on Discord
 
+## [Markup]
 \`\`\`cpp
-int main() {
-    return 0;
-}
+int main() {}
 \`\`\`
+
+## [Result]
+```cpp
+int main() {}
+```
