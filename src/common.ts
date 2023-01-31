@@ -49,6 +49,7 @@ export const rules_channel_id = "659868782877212723";
 export const mods_channel_id = "847993258600038460";
 export const introductions_channel_id = "933113495304679494";
 export const memes_channel_id = "526518219549442071";
+export const the_button_channel_id = "1069678919667687455";
 
 // Thread-based help channels
 

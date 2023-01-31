@@ -13,7 +13,7 @@ import { BotComponent } from "./bot_component";
 import { action_log_channel_id, bot_spam_id, colors, cpp_help_id, c_help_id, member_log_channel_id,
          message_log_channel_id, MINUTE, mods_channel_id, rules_channel_id, server_suggestions_channel_id,
          staff_flag_log_id, suggestion_action_log_thread_id, suggestion_dashboard_thread_id, TCCPP_ID,
-         welcome_channel_id, zelis_id } from "./common";
+         welcome_channel_id, zelis_id, the_button_channel_id } from "./common";
 import { critical_error, fetch_forum_channel, fetch_text_channel, fetch_thread_channel, M, SelfClearingMap,
          zip } from "./utils";
 
@@ -55,6 +55,7 @@ import { BotCommand, BotModalHandler, BotTextBasedCommand, MessageContextMenuCom
          TextBasedCommand, TextBasedCommandBuilder } from "./command";
 import { DiscordAPIError, SlashCommandBuilder } from "discord.js";
 import { Report } from "./components/report";
+import { TheButton } from "./components/the_button";
 
 function create_basic_embed(title: string | undefined, color: number, content: string) {
     const embed = new Discord.EmbedBuilder()
@@ -90,6 +91,7 @@ export class Wheatley extends EventEmitter {
     server_suggestions_channel: Discord.TextChannel;
     suggestion_dashboard_thread: Discord.ThreadChannel;
     suggestion_action_log_thread: Discord.ThreadChannel;
+    the_button_channel: Discord.TextChannel;
 
     link_blacklist: LinkBlacklist;
 
@@ -169,6 +171,9 @@ export class Wheatley extends EventEmitter {
                         await fetch_thread_channel(this.server_suggestions_channel, suggestion_dashboard_thread_id);
                     this.suggestion_action_log_thread =
                         await fetch_thread_channel(this.server_suggestions_channel, suggestion_action_log_thread_id);
+                })(),
+                (async () => {
+                    this.the_button_channel = await fetch_text_channel(the_button_channel_id);
                 })()
             ];
             await Promise.all(promises);
@@ -217,6 +222,7 @@ export class Wheatley extends EventEmitter {
         await this.add_component(UsernameManager);
         await this.add_component(UtilityTools);
         await this.add_component(Wiki);
+        await this.add_component(TheButton);
 
         const token = await fs.promises.readFile("auth.key", { encoding: "utf-8" });
 
