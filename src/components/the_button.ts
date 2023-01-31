@@ -173,6 +173,8 @@ export class TheButton extends BotComponent {
             }
             const delta = this.time_until_doomsday();
             this.data.last_reset = Date.now() - 1;
+            M.debug(`The Button was reset with ${Math.round(delta)} ms until doomsday`,
+                    [ interaction.user.id, interaction.user.tag ]);
             const scoreboard = this.data.scoreboard;
             if(!(interaction.user.id in scoreboard)) {
                 scoreboard[interaction.user.id] = 0;
