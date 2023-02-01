@@ -258,7 +258,7 @@ export class TheButton extends BotComponent {
             );
             const days = (Date.now() - BUTTON_EPOCH) / DAY;
             const embed = new Discord.EmbedBuilder()
-                .setTitle("Scoreboard");
+                .setTitle("Stats");
             embed.setDescription(
                 `The Button has been up for \`${fmt(days, "day")}\`\n`
                 + `Total points collected: \`${round(total_points_assigned, 1)}\`\n`
