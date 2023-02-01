@@ -76,8 +76,13 @@ export function send_long_message(channel: Discord.TextChannel, msg: string) {
     }
 }
 
-function round(n: number, p: number) {
+// Round n to p decimal places
+export function round(n: number, p: number) {
     return Math.round(n * Math.pow(10, p)) / Math.pow(10, p);
+}
+
+export function floor(n: number, p: number) {
+    return Math.floor(n * Math.pow(10, p)) / Math.pow(10, p);
 }
 
 function pluralize(n: number, word: string) {
@@ -89,7 +94,14 @@ function pluralize(n: number, word: string) {
 }
 
 export function diff_to_human(diff: number) {
-    if(diff >= MINUTE) {
+    if(diff >= 60 * MINUTE) {
+        const hours = Math.floor(diff / (60 * MINUTE));
+        diff %= 60 * MINUTE;
+        const minutes = Math.floor(diff / MINUTE);
+        diff %= MINUTE;
+        const seconds = Math.round(diff / 1000);
+        return `${pluralize(hours, "hour")} ${pluralize(minutes, "minute")} ${pluralize(seconds, "second")}`;
+    } if(diff >= MINUTE) {
         return `${pluralize(Math.floor(diff / MINUTE), "minute")} ${pluralize(diff % MINUTE / 1000, "second")}`;
     } else {
         return `${pluralize(diff / 1000, "second")}`;

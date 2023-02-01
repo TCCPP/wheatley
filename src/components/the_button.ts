@@ -1,7 +1,7 @@
 import * as Discord from "discord.js";
 import { strict as assert } from "assert";
-import { M } from "../utils";
-import { colors, is_authorized_admin } from "../common";
+import { M, diff_to_human, floor, round } from "../utils";
+import { MINUTE, colors, is_authorized_admin } from "../common";
 import { BotComponent } from "../bot_component";
 import { Wheatley } from "../wheatley";
 
@@ -15,6 +15,7 @@ type scoreboard_entry = {
 type database_schema = {
     last_reset: number;
     scoreboard: Record<string, number | scoreboard_entry>;
+    longest_time_without_reset: number;
 }
 
 function dissectDelta(delta: number) {
@@ -26,22 +27,16 @@ function dissectDelta(delta: number) {
     return [ hours, minutes, seconds ];
 }
 
-function fmt(n: number, unit: string) {
-    n = Math.floor(n);
+function fmt(n: number, unit: string, p = 0) {
+    n = floor(n, p);
     return `${n} ${unit}${n != 1 ? "s" : ""}`;
-}
-
-function round1(n: number) {
-    return Math.round(n * 10) / 10;
 }
 
 const B = BezierEasing(0.6, 0.35, 0.96, 0.74);
 
-assert(B(0) == 0);
-assert(B(1) == 1);
-assert(B(0.7) == 0.523597936538993);
+const DAY = 24 * 60 * MINUTE;
 
-const day = 24 * 60 * 60 * 1000;
+const BUTTON_EPOCH = 1675142409000;
 
 export class TheButton extends BotComponent {
     data: database_schema;
@@ -59,11 +54,16 @@ export class TheButton extends BotComponent {
         if(!this.wheatley.database.has("the_button")) {
             this.data = {
                 last_reset: Date.now(),
-                scoreboard: {}
+                scoreboard: {},
+                longest_time_without_reset: 0
             };
             this.update_database();
         } else {
             this.data = this.wheatley.database.get<database_schema>("the_button");
+            // fix to add new member
+            if(!("longest_time_without_reset" in (this.data as unknown as any))) {
+                this.data.longest_time_without_reset = 0;
+            }
         }
     }
 
@@ -78,6 +78,10 @@ export class TheButton extends BotComponent {
                 new Discord.ButtonBuilder()
                     .setCustomId("the-button-scoreboard")
                     .setLabel("Scoreboard")
+                    .setStyle(Discord.ButtonStyle.Secondary),
+                new Discord.ButtonBuilder()
+                    .setCustomId("the-button-stats")
+                    .setLabel("Stats")
                     .setStyle(Discord.ButtonStyle.Secondary)
             );
         return {
@@ -100,7 +104,7 @@ export class TheButton extends BotComponent {
     }
 
     time_until_doomsday() {
-        const doomsday = this.data.last_reset + day;
+        const doomsday = this.data.last_reset + DAY;
         const delta = doomsday - Date.now();
         return delta;
     }
@@ -212,16 +216,18 @@ export class TheButton extends BotComponent {
                 };
             }
             this.update_message();
-            const points = B((day - delta) / day) * day / 1000 / 60;
+            const time_since_reset = DAY - delta;
+            const points = B((time_since_reset) / DAY) * DAY / 1000 / 60;
             const total_score = (scoreboard[interaction.user.id] as scoreboard_entry).score += points;
+            this.data.longest_time_without_reset = Math.max(this.data.longest_time_without_reset, time_since_reset);
             const scoreboard_index = this
                 .get_scoreboard_entries()
                 .findIndex(([ key, _ ]) => key == interaction.user.id);
             await interaction.reply({
                 embeds: [
                     new Discord.EmbedBuilder()
-                        .setDescription(`Points: ${round1(points)}\n`
-                            + `Your total score: ${round1(total_score)}\n`
+                        .setDescription(`Points: ${round(points, 1)}\n`
+                            + `Your total score: ${round(total_score, 1)}\n`
                             + `Position on the scoreboard: ${scoreboard_index + 1}`
                         )
                         .setColor(colors.color)
@@ -237,9 +243,28 @@ export class TheButton extends BotComponent {
             let description = "";
             for(const [ key, value ] of scores) {
                 const tag = typeof value == "number" ? `<@${key}>` : value.tag;
-                description += `${tag}: ${round1(this.get_score(value))}\n`;
+                description += `${tag}: ${round(this.get_score(value), 1)}\n`;
             }
             embed.setDescription(description);
+            await interaction.reply({
+                embeds: [embed],
+                ephemeral: true
+            });
+        }
+        if(interaction.isButton() && interaction.customId == "the-button-stats") {
+            const values = Object.values(this.data.scoreboard);
+            const total_points_assigned = values.reduce(
+                (partial: number, val) => partial + this.get_score(val), 0
+            );
+            const days = (Date.now() - BUTTON_EPOCH) / DAY;
+            const embed = new Discord.EmbedBuilder()
+                .setTitle("Scoreboard");
+            embed.setDescription(
+                `The Button has been up for \`${fmt(days, "day")}\`\n`
+                + `Total points collected: \`${round(total_points_assigned, 1)}\`\n`
+                + `Players: \`${values.length}\`\n`
+                + `Longest time since reset: \`${diff_to_human(this.data.longest_time_without_reset)}\``
+            );
             await interaction.reply({
                 embeds: [embed],
                 ephemeral: true
