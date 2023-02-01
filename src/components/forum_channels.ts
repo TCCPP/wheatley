@@ -61,7 +61,7 @@ export class ForumChannels extends BotComponent {
             for(const [ _, thread ] of threads) {
                 assert(thread.parentId);
                 if(forum_help_channels.has(thread.parentId)) {
-                    await this.misc_checks(thread, open_tag, solved_tag);
+                    await this.misc_checks(thread, open_tag, solved_tag, stale_tag);
                     await this.check_thread_activity(thread, open_tag, solved_tag, stale_tag);
                 }
             }
@@ -129,14 +129,17 @@ export class ForumChannels extends BotComponent {
                                  "This question thread is being automatically marked as stale.")
                 ]
             });
-            await thread.setAppliedTags([stale_tag].concat(thread.appliedTags.filter(t => t != open_tag)));
+            await thread.setAppliedTags([stale_tag].concat(thread.appliedTags.filter(
+                t => ![ open_tag, solved_tag ].includes(t)
+            )));
             await thread.setArchived(true);
         }
     }
 
-    async misc_checks(thread: Discord.ThreadChannel, open_tag: string, solved_tag: string) {
-        // Ensure there is exactly one solved/open tag
-        const solved_open_count = thread.appliedTags.filter(tag => [ solved_tag, open_tag ].includes(tag)).length;
+    async misc_checks(thread: Discord.ThreadChannel, open_tag: string, solved_tag: string, stale_tag: string) {
+        const status_tags = [ open_tag, solved_tag, stale_tag ];
+        // Ensure there is exactly one solved/open/stale tag
+        const solved_open_count = thread.appliedTags.filter(tag => status_tags.includes(tag)).length;
         if(solved_open_count != 1) {
             M.log("Setting thread with", solved_open_count, "solved/open tags to have one such tag",
                   thread.id, thread.name, thread.url);
@@ -144,7 +147,7 @@ export class ForumChannels extends BotComponent {
             if(archived) await thread.setArchived(false);
             const tag = thread.appliedTags.includes(solved_tag) ? solved_tag : open_tag;
             await thread.setAppliedTags(
-                [tag].concat(thread.appliedTags.filter(tag => ![ solved_tag, open_tag ].includes(tag)).slice(0, 4))
+                [tag].concat(thread.appliedTags.filter(tag => !status_tags.includes(tag)).slice(0, 4))
             );
             if(archived) await thread.setArchived(true);
         }
