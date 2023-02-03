@@ -7,7 +7,8 @@ import { Wheatley } from "../wheatley";
 
 type scoreboard_entry = {
     tag: string,
-    score: number
+    score: number,
+    last_press: number
 };
 
 type database_schema = {
@@ -36,6 +37,8 @@ const F = (x: number) => 2/3 * x + 1/3 * Math.pow(x, 2);
 const DAY = 24 * 60 * MINUTE;
 
 const BUTTON_EPOCH = 1675142409000;
+
+const PRESS_TIMEOUT = DAY;
 
 export class TheButton extends BotComponent {
     data: database_schema;
@@ -68,6 +71,10 @@ export class TheButton extends BotComponent {
                         score: scoreboard[key]
                     };
                 }
+            }
+            // fix to add new member to the scoreboard entries
+            for(const key in scoreboard) {
+                scoreboard[key].last_press = scoreboard[key].last_press ?? 0;
             }
             // fix to add new member
             if(!("longest_time_without_reset" in (this.data as unknown as any))) {
@@ -208,17 +215,28 @@ export class TheButton extends BotComponent {
                 });
                 return;
             }
-            const delta = this.time_until_doomsday();
-            this.data.last_reset = Date.now() - 1;
-            M.debug(`The Button was reset with ${Math.round(delta)} ms until doomsday`,
-                    [ interaction.user.id, interaction.user.tag ]);
+            // add user to the scoreboard if needed
             const scoreboard = this.data.scoreboard;
             if(!(interaction.user.id in scoreboard)) {
                 scoreboard[interaction.user.id] = {
                     tag: interaction.user.tag,
-                    score: 0
+                    score: 0,
+                    last_press: 0
                 };
             }
+            // check to see if the user has pressed it within the last 24 hours
+            if(Date.now() - scoreboard[interaction.user.id].last_press <= PRESS_TIMEOUT) {
+                await interaction.reply({
+                    content: "Your may only press the button once per 24 hours",
+                    ephemeral: true
+                });
+                return;
+            }
+            scoreboard[interaction.user.id].last_press = Date.now();
+            const delta = this.time_until_doomsday();
+            this.data.last_reset = Date.now() - 1;
+            M.debug(`The Button was reset with ${Math.round(delta)} ms until doomsday`,
+                    [ interaction.user.id, interaction.user.tag ]);
             // Fill in tags as needed, deals with migration from a previous schema
             if(scoreboard[interaction.user.id].tag == "") {
                 scoreboard[interaction.user.id].tag = interaction.user.tag;
