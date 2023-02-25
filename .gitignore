@@ -3,3 +3,4 @@ auth.key
 *.js
 ./W*/
 .vscode
+build
