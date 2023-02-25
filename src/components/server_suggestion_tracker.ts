@@ -6,6 +6,7 @@ import { is_root, MINUTE, server_suggestions_channel_id, suggestion_action_log_t
 import { forge_snowflake } from "./snowflake";
 import { BotComponent } from "../bot_component";
 import { Wheatley } from "../wheatley";
+import { TextBasedCommandBuilder } from "../command";
 
 export const TRACKER_START_TIME = 1625112000000; // Thu Jul 01 2021 00:00:00 GMT-0400 (Eastern Daylight Time)
 // export const TRACKER_START_TIME = 1630468800000; // Wed Sep 01 2021 00:00:00 GMT-0400 (Eastern Daylight Time)
@@ -332,14 +333,25 @@ export class ServerSuggestionTracker extends BotComponent {
         }
     }
 
+    async handle_suggestion_channel_message(message: Discord.Message) {
+        await this.mutex.lock(message.id);
+        await this.open_suggestion(message);
+        this.mutex.unlock(message.id);
+    }
+
     override async on_message_create(message: Discord.Message) {
         if(this.recovering) return;
         if(this.isnt_actually_a_message(message)) return;
-        if(message.channel.id != server_suggestions_channel_id) return;
         try {
-            await this.mutex.lock(message.id);
-            await this.open_suggestion(message);
-            this.mutex.unlock(message.id);
+            if(message.channel.id == server_suggestions_channel_id) {
+                await this.handle_suggestion_channel_message(message);
+            } else if(message.content == "!suggestions-stats") {
+                await message.reply({
+                    content: `${
+                        Object.keys(this.wheatley.database.get<db_schema>("suggestion_tracker").suggestions).length
+                    } open suggestions`
+                });
+            }
         } catch(e) {
             critical_error(e);
         }
@@ -395,8 +407,10 @@ export class ServerSuggestionTracker extends BotComponent {
         }
     }
 
-    async process_vote(_reaction: Discord.MessageReaction | Discord.PartialMessageReaction,
-        _: Discord.User                    | Discord.PartialUser) {
+    async process_vote(
+        _reaction: Discord.MessageReaction | Discord.PartialMessageReaction,
+        _: Discord.User                    | Discord.PartialUser
+    ) {
         const reaction = await departialize(_reaction);
         if(reaction.emoji.name! == "👍" || reaction.emoji.name! == "👎" || reaction.emoji.name! == "🤷") {
             const message = await departialize(reaction.message);
@@ -425,8 +439,10 @@ export class ServerSuggestionTracker extends BotComponent {
 
     // Process a reaction, known to be a resolution reaction
     // Is root checked here
-    async process_reaction(_reaction: Discord.MessageReaction | Discord.PartialMessageReaction,
-        user: Discord.User                 | Discord.PartialUser) {
+    async process_reaction(
+        _reaction: Discord.MessageReaction | Discord.PartialMessageReaction,
+        user: Discord.User                 | Discord.PartialUser
+    ) {
         const reaction = await departialize(_reaction);
         if(resolution_reactions_set.has(reaction.emoji.name!)) {
             if(is_root(user)) {
@@ -438,8 +454,10 @@ export class ServerSuggestionTracker extends BotComponent {
         }
     }
 
-    async process_reaction_remove(reaction: Discord.MessageReaction | Discord.PartialMessageReaction,
-        user: Discord.User                | Discord.PartialUser) {
+    async process_reaction_remove(
+        reaction: Discord.MessageReaction | Discord.PartialMessageReaction,
+        user: Discord.User                | Discord.PartialUser
+    ) {
         if(resolution_reactions_set.has(reaction.emoji.name!) && is_root(user)) {
             const message = await departialize(reaction.message);
             if(!await this.message_has_resolution_from_root(message)) {
@@ -450,8 +468,10 @@ export class ServerSuggestionTracker extends BotComponent {
         }
     }
 
-    override async on_reaction_add(reaction: Discord.MessageReaction | Discord.PartialMessageReaction,
-        user: Discord.User                | Discord.PartialUser) {
+    override async on_reaction_add(
+        reaction: Discord.MessageReaction | Discord.PartialMessageReaction,
+        user: Discord.User                | Discord.PartialUser
+    ) {
         if(this.recovering) return;
         try {
             if(reaction.message.channel.id == server_suggestions_channel_id) {
@@ -502,8 +522,10 @@ export class ServerSuggestionTracker extends BotComponent {
         }
     }
 
-    override async on_reaction_remove(reaction: Discord.MessageReaction | Discord.PartialMessageReaction,
-        user: Discord.User                | Discord.PartialUser) {
+    override async on_reaction_remove(
+        reaction: Discord.MessageReaction | Discord.PartialMessageReaction,
+        user: Discord.User                | Discord.PartialUser
+    ) {
         if(this.recovering) return;
         if(reaction.message.channel.id != server_suggestions_channel_id) return;
         try {
