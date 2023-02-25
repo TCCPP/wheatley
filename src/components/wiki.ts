@@ -84,12 +84,19 @@ export function parse_article(name: string | null, content: string): WikiArticle
         } else if(line.trim().match(/\[\[\[.*\]\]\]/) && !code) {
             throw `Parse error on line ${i + 1}, unrecognized [[[]]] directive`;
         } else {
+            const line_with_newline = (() => {
+                if(code || line.startsWith("- ")) {
+                    return "\n" + line;
+                } else {
+                    return line.trim() == "" ? "\n" : " " + line;
+                }
+            })();
             if(current_state == state.body) {
-                data.body += `\n${line}`;
+                data.body += line_with_newline;
             } else if(current_state == state.field) {
-                data.fields[data.fields.length - 1].value += `\n${line}`;
+                data.fields[data.fields.length - 1].value += line_with_newline;
             } else if(current_state == state.footer) { //eslint-disable-line @typescript-eslint/no-unnecessary-condition
-                data.footer = (data.footer ?? "") + `\n${line}`;
+                data.footer = (data.footer ?? "") + line_with_newline;
             } else {
                 assert(false);
             }
@@ -212,6 +219,7 @@ export class Wiki extends BotComponent {
             .filter(([ name, { title }]) => name == query.replaceAll("-", "_") || title == query)
             .map(([ _, article ]) => article);
         const article = matching_articles.length > 0 ? matching_articles[0] : undefined;
+        M.log(`Received !wiki command for ${article}`);
         if(article) {
             await this.send_wiki_article(article, command);
         } else {
