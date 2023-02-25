@@ -91,7 +91,6 @@ export const authorized_admin_roles = [
 
 export const root_ids = new Set([
     "199943082441965577", // zelis
-    "272564879716646914", // aspi
     "162964325823283200", // eisen
     "110756651694297088", // vincent
     "89441674844995584",  // styx
@@ -101,23 +100,21 @@ export const root_ids = new Set([
 
 export const root_mod_ids = [
     "199943082441965577", // zelis
-    "272564879716646914", // aspi
-    "551519630578024468", // swyde
     "230282234085638155", // cas
     "310536456647081985", // lumi
     "719255892813545502", // sampersand
-    "360166880733822976", // desgroup
-    "194315619217178624", // headline
-    "287714848601538561", // iunave
     "162964325823283200", // eisenwave
     "89441674844995584",  // styx
     "110756651694297088", // vincent
     "138014214093668353", // dxpower
+    "313597351262683138", // dot
+    "413463039145410560", // karnage
+    "512649489300062228", // quicknir
 ];
 
 export const root_mod_ids_set = new Set(root_mod_ids);
 
-export let root_mod_list = "jr-#6677, easyaspi314#1497, Eisenwave#7675, Styxs#7557, or Vin¢#1293";
+export let root_mod_list = "jr-#6677, Eisenwave#7675, Styxs#7557, or Vin¢#1293";
 
 export async function fetch_root_mod_list(client: Discord.Client) {
     const tags = [];
