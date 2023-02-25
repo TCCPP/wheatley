@@ -15,6 +15,10 @@ Everything discord supports plus the following:
 - `[[[user author]]]`: Set the discord embed's author to the command invoker
 - `[[[alias x, y, z]]]`: Make `!x`, `!y`, and `!z` commands for pulling up the article
 
+A note about whitespace: You can split a paragraph's text over multiple source lines. For an actual newline, write an
+empty line. The one exception is bullet points (`- foobar`). Code blocks start/stop directives (\`\`\`) must appear at
+the start of a line.
+
 ## Previewing wiki articles
 
 To test out a wiki article use `!wiki-preview <entire article content>` on the server.
