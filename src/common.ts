@@ -50,6 +50,7 @@ export const mods_channel_id = "847993258600038460";
 export const introductions_channel_id = "933113495304679494";
 export const memes_channel_id = "526518219549442071";
 export const the_button_channel_id = "1069678919667687455";
+export const skill_role_suggestion_log_id = "1079085485298815058";
 
 // Thread-based help channels
 
@@ -72,17 +73,17 @@ export const thread_based_channel_ids = new Set([
 
 // General config
 
-export const non_beginner_skill_role_ids = new Set([
-    "331719591405551616", // expert
-    "331719590990184450", // advanced
+export const non_beginner_skill_role_ids = [
+    "331876085820030978", // intermediate
     "849399021838925834", // proficient
-    "331876085820030978" // intermediate
-]);
+    "331719590990184450", // advanced
+    "331719591405551616", // expert
+];
 
-export const skill_role_ids = new Set([
+export const skill_role_ids = [
+    "784733371275673600",  // beginner
     ...non_beginner_skill_role_ids,
-    "784733371275673600"  // beginner
-]);
+];
 
 export const authorized_admin_roles = [
     moderators_role_id,
@@ -151,5 +152,5 @@ export function is_forum_help_thread(thread: Discord.ThreadChannel) {
 }
 
 export function has_skill_roles_other_than_beginner(member: Discord.GuildMember) {
-    return member.roles.cache.some(role => non_beginner_skill_role_ids.has(role.id));
+    return member.roles.cache.some(role => non_beginner_skill_role_ids.includes(role.id));
 }

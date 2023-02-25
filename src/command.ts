@@ -2,7 +2,7 @@ import { strict as assert } from "assert";
 
 import * as Discord from "discord.js";
 import { ContextMenuCommandBuilder } from "discord.js";
-import { ApplicationCommandTypeMessage } from "./common";
+import { ApplicationCommandTypeMessage, ApplicationCommandTypeUser } from "./common";
 import { forge_snowflake } from "./components/snowflake";
 
 import { unwrap, is_string } from "./utils";
@@ -125,6 +125,34 @@ export class MessageContextMenuCommandBuilder<HasHandler extends boolean = false
                 new ContextMenuCommandBuilder()
                     .setName(this.name)
                     .setType(ApplicationCommandTypeMessage) // TODO: Permissions?
+            ];
+        }
+    }
+}
+
+export class UserContextMenuCommandBuilder<HasHandler extends boolean = false>
+    extends OtherCommandBuilder<HasHandler, [Discord.UserContextMenuCommandInteraction]> {
+    // TODO: Permissions?
+
+    constructor(public readonly name: string) {
+        super();
+    }
+
+    set_handler(handler: (x: Discord.UserContextMenuCommandInteraction) => any):
+        MessageContextMenuCommandBuilder<true> {
+        this.handler = handler;
+        return this as unknown as MessageContextMenuCommandBuilder<true>;
+    }
+
+    override to_command_descriptors(): [ConditionalOptional<HasHandler, BotCommand<any>>, unknown] {
+        if(!this.handler) {
+            return [ undefined as ConditionalOptional<HasHandler, BotCommand<any>>, undefined ];
+        } else {
+            return [
+                new BotCommand(this.name, this.handler) as ConditionalOptional<HasHandler, BotCommand<any>>,
+                new ContextMenuCommandBuilder()
+                    .setName(this.name)
+                    .setType(ApplicationCommandTypeUser) // TODO: Permissions?
             ];
         }
     }

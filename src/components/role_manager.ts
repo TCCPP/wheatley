@@ -33,7 +33,7 @@ export class RoleManager extends BotComponent {
                     }
                 }
                 // skill roles
-                const s = m.roles.cache.filter(r => skill_role_ids.has(r.id));
+                const s = m.roles.cache.filter(r => skill_role_ids.includes(r.id));
                 if(s.size > 1) {
                     M.log("removing duplicate skill roles for", m.user.tag);
                     M.debug(m.user.tag);

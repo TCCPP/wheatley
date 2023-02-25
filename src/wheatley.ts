@@ -13,7 +13,7 @@ import { BotComponent } from "./bot_component";
 import { action_log_channel_id, bot_spam_id, colors, cpp_help_id, c_help_id, member_log_channel_id,
          message_log_channel_id, MINUTE, mods_channel_id, rules_channel_id, server_suggestions_channel_id,
          staff_flag_log_id, suggestion_action_log_thread_id, suggestion_dashboard_thread_id, TCCPP_ID,
-         welcome_channel_id, zelis_id, the_button_channel_id } from "./common";
+         welcome_channel_id, zelis_id, the_button_channel_id, skill_role_suggestion_log_id } from "./common";
 import { critical_error, fetch_forum_channel, fetch_text_channel, fetch_thread_channel, M, SelfClearingMap,
          zip } from "./utils";
 
@@ -55,6 +55,7 @@ import { BotCommand, BotModalHandler, BotTextBasedCommand, MessageContextMenuCom
          TextBasedCommand, TextBasedCommandBuilder } from "./command";
 import { DiscordAPIError, SlashCommandBuilder } from "discord.js";
 import { Report } from "./components/report";
+import { SkillRoleSuggestion } from "./components/skill_role_suggestion";
 import { TheButton } from "./components/the_button";
 
 function create_basic_embed(title: string | undefined, color: number, content: string) {
@@ -92,6 +93,7 @@ export class Wheatley extends EventEmitter {
     suggestion_dashboard_thread: Discord.ThreadChannel;
     suggestion_action_log_thread: Discord.ThreadChannel;
     the_button_channel: Discord.TextChannel;
+    skill_role_suggestion_log: Discord.ThreadChannel;
 
     link_blacklist: LinkBlacklist;
 
@@ -155,6 +157,10 @@ export class Wheatley extends EventEmitter {
                 })(),
                 (async () => {
                     this.mods_channel = await fetch_text_channel(mods_channel_id);
+                    this.skill_role_suggestion_log = await fetch_thread_channel(
+                        this.mods_channel,
+                        skill_role_suggestion_log_id
+                    );
                 })(),
                 (async () => {
                     this.staff_member_log_channel = await fetch_text_channel(member_log_channel_id);
@@ -213,6 +219,7 @@ export class Wheatley extends EventEmitter {
         await this.add_component(Roulette);
         await this.add_component(ServerSuggestionReactions);
         await this.add_component(ServerSuggestionTracker);
+        await this.add_component(SkillRoleSuggestion);
         await this.add_component(Snowflake);
         await this.add_component(Speedrun);
         await this.add_component(Status);
@@ -462,13 +469,19 @@ export class Wheatley extends EventEmitter {
             } else if(interaction.isMessageContextMenuCommand()) {
                 assert(interaction.commandName in this.other_commands);
                 await this.other_commands[interaction.commandName].handler(interaction);
+            } else if(interaction.isUserContextMenuCommand()) {
+                assert(interaction.commandName in this.other_commands);
+                await this.other_commands[interaction.commandName].handler(interaction);
             } else if(interaction.isModalSubmit()) {
                 const [ command_name, id ] = interaction.customId.split("--") as [string, string | undefined];
-                assert(command_name in this.other_commands);
-                const command = this.other_commands[command_name] as BotModalHandler;
-                const fields = command.fields.map(id => interaction.fields.getTextInputValue(id));
-                await command.handler(interaction, ...(id ? [ id, ...fields ] : fields));
+                // TODO: Can't assert atm
+                if(command_name in this.other_commands) {
+                    const command = this.other_commands[command_name] as BotModalHandler;
+                    const fields = command.fields.map(id => interaction.fields.getTextInputValue(id));
+                    await command.handler(interaction, ...(id ? [ id, ...fields ] : fields));
+                }
             }
+            // TODO: Notify if errors occur in the handler....
         } catch(e) {
             // TODO....
             critical_error(e);
