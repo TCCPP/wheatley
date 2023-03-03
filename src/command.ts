@@ -380,6 +380,13 @@ export class TextBasedCommand extends Command {
         this.editing = false;
     }
 
+    async edit(
+        raw_message_options: string | (Discord.BaseMessageOptions & CommandAbstractionReplyOptions)
+    ) {
+        this.editing = true;
+        this.reply(raw_message_options);
+    }
+
     is_slash() {
         return this.reply_object instanceof Discord.ChatInputCommandInteraction;
     }

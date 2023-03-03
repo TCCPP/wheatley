@@ -15,6 +15,7 @@ import { action_log_channel_id, bot_spam_id, colors, cpp_help_id, c_help_id, mem
          staff_flag_log_id, suggestion_action_log_thread_id, suggestion_dashboard_thread_id, TCCPP_ID,
          welcome_channel_id, zelis_id, the_button_channel_id, skill_role_suggestion_log_id } from "./common";
 import { critical_error, fetch_forum_channel, fetch_text_channel, fetch_thread_channel, M, SelfClearingMap,
+         string_split,
          zip } from "./utils";
 
 import { AntiAutoreact } from "./components/anti_autoreact";
@@ -57,6 +58,7 @@ import { DiscordAPIError, SlashCommandBuilder } from "discord.js";
 import { Report } from "./components/report";
 import { SkillRoleSuggestion } from "./components/skill_role_suggestion";
 import { TheButton } from "./components/the_button";
+import { Composite } from "./components/composite";
 
 function create_basic_embed(title: string | undefined, color: number, content: string) {
     const embed = new Discord.EmbedBuilder()
@@ -230,6 +232,7 @@ export class Wheatley extends EventEmitter {
         await this.add_component(UtilityTools);
         await this.add_component(Wiki);
         await this.add_component(TheButton);
+        await this.add_component(Composite);
 
         const token = await fs.promises.readFile("auth.key", { encoding: "utf-8" });
 
@@ -265,8 +268,7 @@ export class Wheatley extends EventEmitter {
     // command stuff
 
     add_command<T extends unknown[]>(
-        command: TextBasedCommandBuilder<T, true, true>
-            | MessageContextMenuCommandBuilder<true> | ModalHandler<true>
+        command: TextBasedCommandBuilder<T, true, true> | MessageContextMenuCommandBuilder<true> | ModalHandler<true>
     ) {
         if(command instanceof TextBasedCommandBuilder<T, true, true>) {
             assert(command.names.length > 0);
@@ -324,7 +326,30 @@ export class Wheatley extends EventEmitter {
                 );
                 this.register_text_command(message, command_obj);
                 // TODO: Handle unexpected input?
-                for(const option of command.options.values()) {
+                // NOTE: For now only able to take text input
+                assert(
+                    [...command.options.values()].every(option => option.type as any == "string"),
+                    "unhandled option type"
+                );
+                const parts = string_split(
+                    message.content.substring(match[0].length).trim(),
+                    " ",
+                    command.options.size
+                );
+                for(const [ i, option ] of [...command.options.values()].entries()) {
+                    if(i >= parts.length && option.required) {
+                        await command_obj.reply({
+                            embeds: [
+                                create_basic_embed(
+                                    undefined, colors.red, `Required argument "${option.title}" not found`
+                                )
+                            ]
+                        });
+                        return;
+                    }
+                    command_options.push(parts[i]);
+                }
+                /*for(const option of command.options.values()) {
                     // NOTE: Temp for now
                     // eslint-disable-next-line @typescript-eslint/no-unnecessary-condition
                     if(option.type == "string") {
@@ -333,7 +358,9 @@ export class Wheatley extends EventEmitter {
                         if(rest == "" && option.required) {
                             await command_obj.reply({
                                 embeds: [
-                                    create_basic_embed(undefined, colors.red, "Required argument not found")
+                                    create_basic_embed(
+                                        undefined, colors.red, `Required argument "${option.title}" not found`
+                                    )
                                 ]
                             });
                             return;
@@ -342,7 +369,7 @@ export class Wheatley extends EventEmitter {
                     } else {
                         assert(false, "unhandled option type");
                     }
-                }
+                }*/
                 await command.handler(command_obj, ...command_options);
                 return true;
             } else {

@@ -476,3 +476,11 @@ export function* zip<Ts extends Arr>(...args: Iterables<Ts>): Generator<Ts> {
 export function is_string(value: string | unknown): value is string {
     return typeof value === "string" || value instanceof String;
 }
+
+export function string_split(str: string, delim: string, limit: number) {
+    const parts = str.split(delim);
+    if(parts.length > limit) {
+        parts.splice(limit - 1, parts.length - limit + 1, parts.slice(limit - 1).join(delim));
+    }
+    return parts;
+}

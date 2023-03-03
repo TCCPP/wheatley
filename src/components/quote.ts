@@ -23,7 +23,7 @@ const known_domains = new Set([
     "canary.discord.com",
     "discordapp.com",
 ]);
-const url_re = new RegExp(`^${raw_url_re.source}$`, "i");
+export const url_re = new RegExp(`^${raw_url_re.source}$`, "i");
 const implicit_quote_re = new RegExp(`\\[${raw_url_re.source}(b?)\\]`, "gi");
 
 const color = 0x7E78FE; //0xA931FF;

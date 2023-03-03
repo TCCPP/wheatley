@@ -2,12 +2,11 @@ import * as Discord from "discord.js";
 
 import { strict as assert } from "assert";
 
-import { critical_error, M, SelfClearingMap, unwrap } from "../utils";
+import { M, SelfClearingMap, unwrap } from "../utils";
 import { colors, MINUTE, TCCPP_ID } from "../common";
 import { BotComponent } from "../bot_component";
 import { Wheatley } from "../wheatley";
-import { MessageContextMenuCommandBuilder, ModalHandler, UserContextMenuCommandBuilder } from "../command";
-import { make_quote_embeds } from "./quote";
+import { UserContextMenuCommandBuilder } from "../command";
 
 export class SkillRoleSuggestion extends BotComponent {
     // string -> initial target message from context menu interaction
