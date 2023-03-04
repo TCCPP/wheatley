@@ -1,9 +1,9 @@
 import * as Discord from "discord.js";
 import { strict as assert } from "assert";
-import { critical_error, M } from "../utils";
-import { colors, is_authorized_admin, pepereally, TCCPP_ID } from "../common";
-import { BotComponent } from "../bot-component";
-import { Wheatley } from "../wheatley";
+import { critical_error, M } from "../utils.js";
+import { colors, is_authorized_admin, pepereally, TCCPP_ID } from "../common.js";
+import { BotComponent } from "../bot-component.js";
+import { Wheatley } from "../wheatley.js";
 
 const snowflake_re = /\b\d{10,}\b/g;
 

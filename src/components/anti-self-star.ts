@@ -1,10 +1,10 @@
 import * as Discord from "discord.js";
 import { strict as assert } from "assert";
-import { M, departialize } from "../utils";
-import { memes_channel_id, TCCPP_ID } from "../common";
-import { BotComponent } from "../bot-component";
-import { Wheatley } from "../wheatley";
-import { has_media } from "./autoreact";
+import { M, departialize } from "../utils.js";
+import { memes_channel_id, TCCPP_ID } from "../common.js";
+import { BotComponent } from "../bot-component.js";
+import { Wheatley } from "../wheatley.js";
+import { has_media } from "./autoreact.js";
 
 export class AntiSelfStar extends BotComponent {
     constructor(wheatley: Wheatley) {

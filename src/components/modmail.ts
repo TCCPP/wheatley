@@ -1,10 +1,10 @@
 import { strict as assert } from "assert";
 import * as Discord from "discord.js";
 
-import { critical_error, get_url_for, M } from "../utils";
-import { colors, is_authorized_admin, is_root, MINUTE, moderators_role_id } from "../common";
-import { BotComponent } from "../bot-component";
-import { Wheatley } from "../wheatley";
+import { critical_error, get_url_for, M } from "../utils.js";
+import { colors, is_authorized_admin, is_root, MINUTE, moderators_role_id } from "../common.js";
+import { BotComponent } from "../bot-component.js";
+import { Wheatley } from "../wheatley.js";
 
 /*
  * Flow:

@@ -1,7 +1,7 @@
 import { assert, expect } from "chai";
 
-import { CpprefSubIndex } from "../indexes/cppref/types";
-import { CpprefIndex } from "../src/components/cppref";
+import { CpprefSubIndex } from "../indexes/cppref/types.js";
+import { CpprefIndex } from "../src/components/cppref.js";
 
 type TestCase = {
     query: string | string[];

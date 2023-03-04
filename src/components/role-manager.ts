@@ -1,9 +1,9 @@
 import * as Discord from "discord.js";
 import { strict as assert } from "assert";
-import { MINUTE, pink_role_id, skill_role_ids } from "../common";
-import { critical_error, unwrap, M } from "../utils";
-import { BotComponent } from "../bot-component";
-import { Wheatley } from "../wheatley";
+import { MINUTE, pink_role_id, skill_role_ids } from "../common.js";
+import { critical_error, unwrap, M } from "../utils.js";
+import { BotComponent } from "../bot-component.js";
+import { Wheatley } from "../wheatley.js";
 
 // Role cleanup
 // Auto-remove pink roles when members are no longer boosting

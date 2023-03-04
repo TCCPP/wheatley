@@ -1,9 +1,9 @@
 import * as Discord from "discord.js";
 import { strict as assert } from "assert";
-import { M } from "../utils";
-import { is_authorized_admin } from "../common";
-import { BotComponent } from "../bot-component";
-import { Wheatley } from "../wheatley";
+import { M } from "../utils.js";
+import { is_authorized_admin } from "../common.js";
+import { BotComponent } from "../bot-component.js";
+import { Wheatley } from "../wheatley.js";
 
 export class UtilityTools extends BotComponent {
     constructor(wheatley: Wheatley) {

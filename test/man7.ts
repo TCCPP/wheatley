@@ -1,6 +1,6 @@
 import { assert, expect } from "chai";
 
-import { Man7Index } from "../src/components/man7";
+import { Man7Index } from "../src/components/man7.js";
 
 type TestCase = {
     query: string | string[];

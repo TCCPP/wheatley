@@ -1,10 +1,10 @@
 import * as Discord from "discord.js";
 import { strict as assert } from "assert";
-import { unwrap, get_tag, M } from "../utils";
-import { colors, forum_help_channels, is_authorized_admin } from "../common";
-import { BotComponent } from "../bot-component";
-import { Wheatley } from "../wheatley";
-import { TextBasedCommand, TextBasedCommandBuilder } from "../command";
+import { unwrap, get_tag, M } from "../utils.js";
+import { colors, forum_help_channels, is_authorized_admin } from "../common.js";
+import { BotComponent } from "../bot-component.js";
+import { Wheatley } from "../wheatley.js";
+import { TextBasedCommand, TextBasedCommandBuilder } from "../command.js";
 
 /*
  * Forum thread handling:

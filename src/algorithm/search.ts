@@ -1,6 +1,6 @@
 import { strict as assert } from "assert";
-import { M } from "../utils";
-import { weighted_levenshtein } from "./levenshtein";
+import { M } from "../utils.js";
+import { weighted_levenshtein } from "./levenshtein.js";
 
 export interface IndexEntry {
     title: string;

@@ -1,9 +1,9 @@
 import * as Discord from "discord.js";
 import { strict as assert } from "assert";
-import { M } from "../utils";
-import { tutoring_id, tutoring_requests_id } from "../common";
-import { BotComponent } from "../bot-component";
-import { Wheatley } from "../wheatley";
+import { M } from "../utils.js";
+import { tutoring_id, tutoring_requests_id } from "../common.js";
+import { BotComponent } from "../bot-component.js";
+import { Wheatley } from "../wheatley.js";
 
 const color = 0xF34A39;
 

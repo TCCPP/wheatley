@@ -1,9 +1,9 @@
 import * as Discord from "discord.js";
 import { strict as assert } from "assert";
-import { critical_error, diff_to_human, M } from "../utils";
-import { colors, MINUTE } from "../common";
-import { BotComponent } from "../bot-component";
-import { Wheatley } from "../wheatley";
+import { critical_error, diff_to_human, M } from "../utils.js";
+import { colors, MINUTE } from "../common.js";
+import { BotComponent } from "../bot-component.js";
+import { Wheatley } from "../wheatley.js";
 
 const NEW_USER_THRESHOLD = MINUTE * 30;
 

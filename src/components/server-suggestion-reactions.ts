@@ -1,12 +1,12 @@
 import * as Discord from "discord.js";
 import { strict as assert } from "assert";
-import { is_root, MINUTE, server_suggestions_channel_id, suggestion_dashboard_thread_id } from "../common";
-import { delay, M } from "../utils";
-import { TRACKER_START_TIME } from "./server-suggestion-tracker";
-import { forge_snowflake } from "./snowflake";
-import { react_blacklist } from "../config";
-import { BotComponent } from "../bot-component";
-import { Wheatley } from "../wheatley";
+import { is_root, MINUTE, server_suggestions_channel_id, suggestion_dashboard_thread_id } from "../common.js";
+import { delay, M } from "../utils.js";
+import { TRACKER_START_TIME } from "./server-suggestion-tracker.js";
+import { forge_snowflake } from "./snowflake.js";
+import { react_blacklist } from "../config.js";
+import { BotComponent } from "../bot-component.js";
+import { Wheatley } from "../wheatley.js";
 
 const root_only_reacts = new Set([
     "🟢", "🔴", "🟡", "🔵",

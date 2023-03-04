@@ -1,9 +1,10 @@
 import * as Discord from "discord.js";
 import { strict as assert } from "assert";
-import { delay, is_image_link_embed, M } from "../utils";
-import { introductions_channel_id, memes_channel_id, MINUTE, server_suggestions_channel_id, TCCPP_ID } from "../common";
-import { BotComponent } from "../bot-component";
-import { Wheatley } from "../wheatley";
+import { delay, is_image_link_embed, M } from "../utils.js";
+import { introductions_channel_id, memes_channel_id, MINUTE, server_suggestions_channel_id, TCCPP_ID }
+    from "../common.js";
+import { BotComponent } from "../bot-component.js";
+import { Wheatley } from "../wheatley.js";
 
 export function has_media(message: Discord.Message | Discord.PartialMessage) {
     return message.attachments.some(

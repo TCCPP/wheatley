@@ -2,10 +2,10 @@ import { strict as assert } from "assert";
 
 import * as Discord from "discord.js";
 
-import { delay, M } from "../utils";
-import { colors, has_skill_roles_other_than_beginner, is_forum_help_thread } from "../common";
-import { BotComponent } from "../bot-component";
-import { Wheatley } from "../wheatley";
+import { delay, M } from "../utils.js";
+import { colors, has_skill_roles_other_than_beginner, is_forum_help_thread } from "../common.js";
+import { BotComponent } from "../bot-component.js";
+import { Wheatley } from "../wheatley.js";
 
 const DISMISS_TIME = 30 * 1000;
 

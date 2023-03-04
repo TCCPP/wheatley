@@ -1,5 +1,5 @@
 import { strict as assert } from "assert";
-import { M, Mutex } from "../utils";
+import { M, Mutex } from "../utils.js";
 import * as fs from "fs";
 
 export class DatabaseInterface {

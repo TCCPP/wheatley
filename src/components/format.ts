@@ -6,11 +6,11 @@ import { RequestInfo, RequestInit } from "node-fetch";
 const fetch = (url: RequestInfo, init?: RequestInit) =>
     import("node-fetch").then(({ default: fetch }) => fetch(url, init));
 
-import { async_exec_file, critical_error, M } from "../utils";
-import { BotComponent } from "../bot-component";
-import { Wheatley } from "../wheatley";
-import { MessageContextMenuCommandBuilder } from "../command";
-import { MINUTE } from "../common";
+import { async_exec_file, critical_error, M } from "../utils.js";
+import { BotComponent } from "../bot-component.js";
+import { Wheatley } from "../wheatley.js";
+import { MessageContextMenuCommandBuilder } from "../command.js";
+import { MINUTE } from "../common.js";
 
 const color = 0x7E78FE; //0xA931FF;
 

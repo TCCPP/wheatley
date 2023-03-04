@@ -4,14 +4,14 @@ import { strict as assert } from "assert";
 
 import * as fs from "fs";
 
-import { format_list, M } from "../utils";
+import { format_list, M } from "../utils.js";
 
-import { cppref_index, cppref_page, CpprefSubIndex } from "../../indexes/cppref/types";
-import { Index } from "../algorithm/search";
-import { BotComponent } from "../bot-component";
-import { Wheatley } from "../wheatley";
-import { colors } from "../common";
-import { TextBasedCommand, TextBasedCommandBuilder } from "../command";
+import { cppref_index, cppref_page, CpprefSubIndex } from "../../indexes/cppref/types.js";
+import { Index } from "../algorithm/search.js";
+import { BotComponent } from "../bot-component.js";
+import { Wheatley } from "../wheatley.js";
+import { colors } from "../common.js";
+import { TextBasedCommand, TextBasedCommandBuilder } from "../command.js";
 
 function eliminate_aliases_and_duplicates(pages: cppref_page[]) {
     // There's this annoying thing where multiple pages are really the same page

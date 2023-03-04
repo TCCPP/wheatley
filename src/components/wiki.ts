@@ -4,11 +4,11 @@ import * as Discord from "discord.js";
 import * as fs from "fs";
 import * as path from "path";
 
-import { M } from "../utils";
-import { bot_spam_id, colors } from "../common";
-import { BotComponent } from "../bot-component";
-import { Wheatley } from "../wheatley";
-import { TextBasedCommand, TextBasedCommandBuilder } from "../command";
+import { M } from "../utils.js";
+import { bot_spam_id, colors } from "../common.js";
+import { BotComponent } from "../bot-component.js";
+import { Wheatley } from "../wheatley.js";
+import { TextBasedCommand, TextBasedCommandBuilder } from "../command.js";
 
 export const wiki_dir = "wiki_articles";
 

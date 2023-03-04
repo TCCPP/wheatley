@@ -1,10 +1,10 @@
 import { strict as assert } from "assert";
 
 import * as Discord from "discord.js";
-import { MessageContextMenuCommandBuilder, ModalHandler, TextBasedCommandBuilder } from "./command";
-import { critical_error, M } from "./utils";
+import { MessageContextMenuCommandBuilder, ModalHandler, TextBasedCommandBuilder } from "./command.js";
+import { critical_error, M } from "./utils.js";
 
-import { Wheatley } from "./wheatley";
+import { Wheatley } from "./wheatley.js";
 
 type Arr = readonly unknown[];
 const wrap = <T extends Arr>(f: ((...args: [...T]) => (void | Promise<void>))) => {

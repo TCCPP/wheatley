@@ -3,9 +3,9 @@ import { Routes } from "discord.js";
 
 import * as util from "util";
 
-import { critical_error, M } from "../utils";
-import { TCCPP_ID } from "../common";
-import { Wheatley } from "../wheatley";
+import { critical_error, M } from "../utils.js";
+import { TCCPP_ID } from "../common.js";
+import { Wheatley } from "../wheatley.js";
 
 export class GuildCommandManager {
     commands: any = [];

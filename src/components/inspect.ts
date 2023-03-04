@@ -2,10 +2,10 @@ import { strict as assert } from "assert";
 
 import * as Discord from "discord.js";
 
-import { M } from "../utils";
-import { BotComponent } from "../bot-component";
-import { Wheatley } from "../wheatley";
-import { MessageContextMenuCommandBuilder } from "../command";
+import { M } from "../utils.js";
+import { BotComponent } from "../bot-component.js";
+import { Wheatley } from "../wheatley.js";
+import { MessageContextMenuCommandBuilder } from "../command.js";
 
 export class Inspect extends BotComponent {
     constructor(wheatley: Wheatley) {

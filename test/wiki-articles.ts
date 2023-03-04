@@ -3,7 +3,7 @@ import { assert } from "chai";
 import * as fs from "fs";
 import * as path from "path";
 
-import { parse_article, wiki_dir } from "../src/components/wiki";
+import { parse_article, wiki_dir } from "../src/components/wiki.js";
 
 function* walk_dir(dir: string): Generator<string> { // todo: duplicate
     for(const f of fs.readdirSync(dir)) {

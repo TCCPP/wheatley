@@ -1,5 +1,5 @@
 import { assert, expect } from "chai";
-import { calculate_nonlinear_substitution_cost, weighted_levenshtein_raw } from "../src/algorithm/levenshtein";
+import { calculate_nonlinear_substitution_cost, weighted_levenshtein_raw } from "../src/algorithm/levenshtein.js";
 
 describe("levenshtein subst cost fn", () => {
     it("should be correct for s=1", done => {

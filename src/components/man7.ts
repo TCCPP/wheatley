@@ -4,14 +4,14 @@ import { strict as assert } from "assert";
 
 import * as fs from "fs";
 
-import { M } from "../utils";
+import { M } from "../utils.js";
 
-import { Index, IndexEntry } from "../algorithm/search";
-import { man7_entry, man7_index } from "../../indexes/man7/types";
-import { BotComponent } from "../bot-component";
-import { Wheatley } from "../wheatley";
-import { colors } from "../common";
-import { TextBasedCommand, TextBasedCommandBuilder } from "../command";
+import { Index, IndexEntry } from "../algorithm/search.js";
+import { man7_entry, man7_index } from "../../indexes/man7/types.js";
+import { BotComponent } from "../bot-component.js";
+import { Wheatley } from "../wheatley.js";
+import { colors } from "../common.js";
+import { TextBasedCommand, TextBasedCommandBuilder } from "../command.js";
 
 type augmented_man7_entry = man7_entry & IndexEntry
 

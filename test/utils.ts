@@ -1,6 +1,6 @@
 import { assert, expect } from "chai";
 
-import { diff_to_human, string_split } from "../src/utils";
+import { diff_to_human, string_split } from "../src/utils.js";
 
 describe("Diff to Human Tests", () => {
     it("should compute the right values for sub-minute diffs", done => {

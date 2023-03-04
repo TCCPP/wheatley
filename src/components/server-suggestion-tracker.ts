@@ -1,11 +1,11 @@
 import * as Discord from "discord.js";
 import { strict as assert } from "assert";
-import { critical_error, departialize, M, KeyedMutexSet, SelfClearingSet, xxh3 } from "../utils";
+import { critical_error, departialize, M, KeyedMutexSet, SelfClearingSet, xxh3 } from "../utils.js";
 import { is_root, MINUTE, server_suggestions_channel_id, suggestion_action_log_thread_id,
-         suggestion_dashboard_thread_id } from "../common";
-import { forge_snowflake } from "./snowflake";
-import { BotComponent } from "../bot-component";
-import { Wheatley } from "../wheatley";
+         suggestion_dashboard_thread_id } from "../common.js";
+import { forge_snowflake } from "./snowflake.js";
+import { BotComponent } from "../bot-component.js";
+import { Wheatley } from "../wheatley.js";
 
 export const TRACKER_START_TIME = 1625112000000; // Thu Jul 01 2021 00:00:00 GMT-0400 (Eastern Daylight Time)
 // export const TRACKER_START_TIME = 1630468800000; // Wed Sep 01 2021 00:00:00 GMT-0400 (Eastern Daylight Time)

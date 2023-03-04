@@ -1,7 +1,7 @@
 import * as Discord from "discord.js";
 
 import { strict as assert } from "assert";
-import { is_string, M } from "./utils";
+import { is_string, M } from "./utils.js";
 
 // Common constants
 export const MINUTE = 1000 * 60;

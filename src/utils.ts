@@ -1,12 +1,12 @@
 import * as Discord from "discord.js";
-import * as moment from "moment";
-import * as chalk from "chalk";
-import * as XXH from "xxhashjs";
+import moment from "moment";
+import chalk from "chalk";
+import XXH from "xxhashjs";
 
 import * as fs from "fs";
 import { execFile, ExecFileOptions } from "child_process";
 
-import { MINUTE, zelis_id } from "./common";
+import { MINUTE, zelis_id } from "./common.js";
 import { strict as assert } from "assert";
 
 function get_caller_location() { // https://stackoverflow.com/a/53339452/15675011

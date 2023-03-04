@@ -1,8 +1,8 @@
 import * as Discord from "discord.js";
 import { strict as assert } from "assert";
-import { critical_error, M } from "../utils";
-import { MINUTE } from "../common";
-import { Wheatley } from "../wheatley";
+import { critical_error, M } from "../utils.js";
+import { MINUTE } from "../common.js";
+import { Wheatley } from "../wheatley.js";
 
 type member_entry = {
     tag: string,

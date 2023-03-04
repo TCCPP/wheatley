@@ -1,6 +1,6 @@
 import { assert, expect } from "chai";
 import { smart_split_list, strip_parentheses, normalize_and_sanitize_title,
-         normalize_and_split_cppref_title } from "../src/algorithm/search";
+         normalize_and_split_cppref_title } from "../src/algorithm/search.js";
 
 describe("nested parentheses handling", () => {
     it("should handle unbalanced parentheses 1", done => {

@@ -1,10 +1,10 @@
 import * as Discord from "discord.js";
 import { strict as assert } from "assert";
-import { critical_error, M, SelfClearingMap, SelfClearingSet } from "../utils";
-import { bot_spam_id, MINUTE } from "../common";
-import { BotComponent } from "../bot-component";
-import { Wheatley } from "../wheatley";
-import { TextBasedCommand, TextBasedCommandBuilder } from "../command";
+import { critical_error, M, SelfClearingMap, SelfClearingSet } from "../utils.js";
+import { bot_spam_id, MINUTE } from "../common.js";
+import { BotComponent } from "../bot-component.js";
+import { Wheatley } from "../wheatley.js";
+import { TextBasedCommand, TextBasedCommandBuilder } from "../command.js";
 
 const green = 0x31ea6c;
 const red = 0xed2d2d;

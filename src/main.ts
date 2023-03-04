@@ -19,12 +19,12 @@
 import * as Discord from "discord.js";
 
 import { strict as assert } from "assert";
-import { critical_error, init_debugger, M } from "./utils";
+import { critical_error, init_debugger, M } from "./utils.js";
 
-import { DatabaseInterface } from "./infra/database-interface";
-import { fetch_root_mod_list } from "./common";
+import { DatabaseInterface } from "./infra/database-interface.js";
+import { fetch_root_mod_list } from "./common.js";
 
-import { Wheatley } from "./wheatley";
+import { Wheatley } from "./wheatley.js";
 
 // Setup client
 const client = new Discord.Client({

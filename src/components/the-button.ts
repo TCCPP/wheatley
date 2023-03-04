@@ -1,9 +1,9 @@
 import * as Discord from "discord.js";
 import { strict as assert } from "assert";
-import { M, diff_to_human, floor, round } from "../utils";
-import { MINUTE, colors, is_authorized_admin } from "../common";
-import { BotComponent } from "../bot-component";
-import { Wheatley } from "../wheatley";
+import { M, diff_to_human, floor, round } from "../utils.js";
+import { MINUTE, colors, is_authorized_admin } from "../common.js";
+import { BotComponent } from "../bot-component.js";
+import { Wheatley } from "../wheatley.js";
 
 type scoreboard_entry = {
     tag: string,

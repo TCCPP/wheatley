@@ -2,12 +2,12 @@ import * as Discord from "discord.js";
 
 import { strict as assert } from "assert";
 
-import { critical_error, M, SelfClearingMap } from "../utils";
-import { colors, MINUTE, moderators_role_id, TCCPP_ID } from "../common";
-import { BotComponent } from "../bot-component";
-import { Wheatley } from "../wheatley";
-import { MessageContextMenuCommandBuilder, ModalHandler } from "../command";
-import { make_quote_embeds } from "./quote";
+import { critical_error, M, SelfClearingMap } from "../utils.js";
+import { colors, MINUTE, moderators_role_id, TCCPP_ID } from "../common.js";
+import { BotComponent } from "../bot-component.js";
+import { Wheatley } from "../wheatley.js";
+import { MessageContextMenuCommandBuilder, ModalHandler } from "../command.js";
+import { make_quote_embeds } from "./quote.js";
 
 export class Report extends BotComponent {
     private readonly report_modal = new Discord.ModalBuilder()

@@ -1,11 +1,11 @@
 import * as Discord from "discord.js";
 import { strict as assert } from "assert";
-import { critical_error, index_of_first_not_satisfying, is_image_link_embed, M } from "../utils";
-import { colors, MINUTE, TCCPP_ID } from "../common";
-import { decode_snowflake, forge_snowflake } from "./snowflake";
-import { BotComponent } from "../bot-component";
-import { Wheatley } from "../wheatley";
-import { TextBasedCommand, TextBasedCommandBuilder } from "../command";
+import { critical_error, index_of_first_not_satisfying, is_image_link_embed, M } from "../utils.js";
+import { colors, MINUTE, TCCPP_ID } from "../common.js";
+import { decode_snowflake, forge_snowflake } from "./snowflake.js";
+import { BotComponent } from "../bot-component.js";
+import { Wheatley } from "../wheatley.js";
+import { TextBasedCommand, TextBasedCommandBuilder } from "../command.js";
 
 // https://discord.com/channels/331718482485837825/802541516655951892/877257002584252426
 //                              guild              channel            message

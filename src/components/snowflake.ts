@@ -1,8 +1,8 @@
 import { strict as assert } from "assert";
-import { M } from "../utils";
-import { BotComponent } from "../bot-component";
-import { Wheatley } from "../wheatley";
-import { TextBasedCommand, TextBasedCommandBuilder } from "../command";
+import { M } from "../utils.js";
+import { BotComponent } from "../bot-component.js";
+import { Wheatley } from "../wheatley.js";
+import { TextBasedCommand, TextBasedCommandBuilder } from "../command.js";
 
 const snowflakes_re = /\d+/g;
 

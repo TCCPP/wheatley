@@ -1,9 +1,9 @@
 import * as Discord from "discord.js";
 import { strict as assert } from "assert";
-import { unwrap } from "../utils";
-import { colors, thread_based_channel_ids } from "../common";
-import { BotComponent } from "../bot-component";
-import { Wheatley } from "../wheatley";
+import { unwrap } from "../utils.js";
+import { colors, thread_based_channel_ids } from "../common.js";
+import { BotComponent } from "../bot-component.js";
+import { Wheatley } from "../wheatley.js";
 
 /*
  * Thread-based channel logic (non-forum)

@@ -4,61 +4,61 @@ import * as Discord from "discord.js";
 import { EventEmitter } from "events";
 import * as fs from "fs";
 
-import { DatabaseInterface } from "./infra/database-interface";
-import { GuildCommandManager } from "./infra/guild-command-manager";
-import { MemberTracker } from "./infra/member-tracker";
+import { DatabaseInterface } from "./infra/database-interface.js";
+import { GuildCommandManager } from "./infra/guild-command-manager.js";
+import { MemberTracker } from "./infra/member-tracker.js";
 
-import { BotComponent } from "./bot-component";
+import { BotComponent } from "./bot-component.js";
 
 import { action_log_channel_id, bot_spam_id, colors, cpp_help_id, c_help_id, member_log_channel_id,
          message_log_channel_id, MINUTE, mods_channel_id, rules_channel_id, server_suggestions_channel_id,
          staff_flag_log_id, suggestion_action_log_thread_id, suggestion_dashboard_thread_id, TCCPP_ID,
-         welcome_channel_id, zelis_id, the_button_channel_id, skill_role_suggestion_log_id } from "./common";
+         welcome_channel_id, zelis_id, the_button_channel_id, skill_role_suggestion_log_id } from "./common.js";
 import { critical_error, fetch_forum_channel, fetch_text_channel, fetch_thread_channel, M, SelfClearingMap,
          string_split,
-         zip } from "./utils";
+         zip } from "./utils.js";
 
-import { AntiAutoreact } from "./components/anti-autoreact";
-import { AntiForumPostDelete } from "./components/anti-forum-post-delete";
-import { AntiRaid } from "./components/anti-raid";
-import { AntiScambot } from "./components/anti-scambot";
-import { AntiScreenshot } from "./components/anti-screenshot";
-import { Autoreact } from "./components/autoreact";
-import { Cppref } from "./components/cppref";
-import { Format } from "./components/format";
-import { ForumChannels } from "./components/forum-channels";
-import { ForumControl } from "./components/forum-control";
-import { Inspect } from "./components/inspect";
-import { LinkBlacklist } from "./components/link-blacklist";
-import { Man7 } from "./components/man7";
-import { Massban } from "./components/massban";
-import { Modmail } from "./components/modmail";
-import { Nodistractions } from "./components/nodistractions";
-import { NotifyAboutBrandNewUsers } from "./components/notify-about-brand-new-users";
-import { Ping } from "./components/ping";
-import { Quote } from "./components/quote";
-import { RaidPurge } from "./components/raidpurge";
-import { ReadTutoring } from "./components/read-tutoring";
-import { RoleManager } from "./components/role-manager";
-import { Roulette } from "./components/roulette";
-import { ServerSuggestionReactions } from "./components/server-suggestion-reactions";
-import { ServerSuggestionTracker } from "./components/server-suggestion-tracker";
-import { Snowflake } from "./components/snowflake";
-import { Speedrun } from "./components/speedrun";
-import { Status } from "./components/status";
-import { ThreadBasedChannels } from "./components/thread-based-channels";
-import { ThreadControl } from "./components/thread-control";
-import { TrackedMentions } from "./components/tracked-mentions";
-import { UsernameManager } from "./components/username-manager";
-import { UtilityTools } from "./components/utility-tools";
-import { Wiki } from "./components/wiki";
+import { AntiAutoreact } from "./components/anti-autoreact.js";
+import { AntiForumPostDelete } from "./components/anti-forum-post-delete.js";
+import { AntiRaid } from "./components/anti-raid.js";
+import { AntiScambot } from "./components/anti-scambot.js";
+import { AntiScreenshot } from "./components/anti-screenshot.js";
+import { Autoreact } from "./components/autoreact.js";
+import { Cppref } from "./components/cppref.js";
+import { Format } from "./components/format.js";
+import { ForumChannels } from "./components/forum-channels.js";
+import { ForumControl } from "./components/forum-control.js";
+import { Inspect } from "./components/inspect.js";
+import { LinkBlacklist } from "./components/link-blacklist.js";
+import { Man7 } from "./components/man7.js";
+import { Massban } from "./components/massban.js";
+import { Modmail } from "./components/modmail.js";
+import { Nodistractions } from "./components/nodistractions.js";
+import { NotifyAboutBrandNewUsers } from "./components/notify-about-brand-new-users.js";
+import { Ping } from "./components/ping.js";
+import { Quote } from "./components/quote.js";
+import { RaidPurge } from "./components/raidpurge.js";
+import { ReadTutoring } from "./components/read-tutoring.js";
+import { RoleManager } from "./components/role-manager.js";
+import { Roulette } from "./components/roulette.js";
+import { ServerSuggestionReactions } from "./components/server-suggestion-reactions.js";
+import { ServerSuggestionTracker } from "./components/server-suggestion-tracker.js";
+import { Snowflake } from "./components/snowflake.js";
+import { Speedrun } from "./components/speedrun.js";
+import { Status } from "./components/status.js";
+import { ThreadBasedChannels } from "./components/thread-based-channels.js";
+import { ThreadControl } from "./components/thread-control.js";
+import { TrackedMentions } from "./components/tracked-mentions.js";
+import { UsernameManager } from "./components/username-manager.js";
+import { UtilityTools } from "./components/utility-tools.js";
+import { Wiki } from "./components/wiki.js";
 import { BotCommand, BotModalHandler, BotTextBasedCommand, MessageContextMenuCommandBuilder, ModalHandler,
-         TextBasedCommand, TextBasedCommandBuilder } from "./command";
+         TextBasedCommand, TextBasedCommandBuilder } from "./command.js";
 import { DiscordAPIError, SlashCommandBuilder } from "discord.js";
-import { Report } from "./components/report";
-import { SkillRoleSuggestion } from "./components/skill-role-suggestion";
-import { TheButton } from "./components/the-button";
-import { Composite } from "./components/composite";
+import { Report } from "./components/report.js";
+import { SkillRoleSuggestion } from "./components/skill-role-suggestion.js";
+import { TheButton } from "./components/the-button.js";
+import { Composite } from "./components/composite.js";
 
 function create_basic_embed(title: string | undefined, color: number, content: string) {
     const embed = new Discord.EmbedBuilder()
