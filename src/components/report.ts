@@ -3,7 +3,7 @@ import * as Discord from "discord.js";
 import { strict as assert } from "assert";
 
 import { critical_error, M, SelfClearingMap } from "../utils";
-import { colors, MINUTE, TCCPP_ID } from "../common";
+import { colors, MINUTE, moderators_role_id, TCCPP_ID } from "../common";
 import { BotComponent } from "../bot_component";
 import { Wheatley } from "../wheatley";
 import { MessageContextMenuCommandBuilder, ModalHandler } from "../command";
@@ -90,6 +90,7 @@ export class Report extends BotComponent {
                 text: `ID: ${target_message.author.id}`
             });
             await this.wheatley.staff_flag_log.send({
+                content: `<@&${moderators_role_id}>`,
                 embeds: [ report_embed, ...quote_embeds ]
             });
             await interaction.reply({
