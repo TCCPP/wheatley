@@ -2,10 +2,10 @@ import * as Discord from "discord.js";
 import { strict as assert } from "assert";
 import { is_root, MINUTE, server_suggestions_channel_id, suggestion_dashboard_thread_id } from "../common";
 import { delay, M } from "../utils";
-import { TRACKER_START_TIME } from "./server_suggestion_tracker";
+import { TRACKER_START_TIME } from "./server-suggestion-tracker";
 import { forge_snowflake } from "./snowflake";
 import { react_blacklist } from "../config";
-import { BotComponent } from "../bot_component";
+import { BotComponent } from "../bot-component";
 import { Wheatley } from "../wheatley";
 
 const root_only_reacts = new Set([

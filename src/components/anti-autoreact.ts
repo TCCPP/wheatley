@@ -2,7 +2,7 @@ import * as Discord from "discord.js";
 import { strict as assert } from "assert";
 import { M } from "../utils";
 import { zelis_id } from "../common";
-import { BotComponent } from "../bot_component";
+import { BotComponent } from "../bot-component";
 
 const obnoxious_autoreact_ids = new Set([
     "841482328693669900" // "eisie"

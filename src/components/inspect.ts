@@ -3,7 +3,7 @@ import { strict as assert } from "assert";
 import * as Discord from "discord.js";
 
 import { M } from "../utils";
-import { BotComponent } from "../bot_component";
+import { BotComponent } from "../bot-component";
 import { Wheatley } from "../wheatley";
 import { MessageContextMenuCommandBuilder } from "../command";
 

@@ -2,7 +2,7 @@ import * as Discord from "discord.js";
 import { strict as assert } from "assert";
 import { M, departialize } from "../utils";
 import { memes_channel_id, TCCPP_ID } from "../common";
-import { BotComponent } from "../bot_component";
+import { BotComponent } from "../bot-component";
 import { Wheatley } from "../wheatley";
 import { has_media } from "./autoreact";
 

@@ -8,7 +8,7 @@ import { M } from "../utils";
 
 import { Index, IndexEntry } from "../algorithm/search";
 import { man7_entry, man7_index } from "../../indexes/man7/types";
-import { BotComponent } from "../bot_component";
+import { BotComponent } from "../bot-component";
 import { Wheatley } from "../wheatley";
 import { colors } from "../common";
 import { TextBasedCommand, TextBasedCommandBuilder } from "../command";

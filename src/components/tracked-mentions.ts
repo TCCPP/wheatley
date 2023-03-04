@@ -2,7 +2,7 @@ import * as Discord from "discord.js";
 import { strict as assert } from "assert";
 import { format_list, M } from "../utils";
 import { colors, moderators_role_id, root_role_id, TCCPP_ID } from "../common";
-import { BotComponent } from "../bot_component";
+import { BotComponent } from "../bot-component";
 import { Wheatley } from "../wheatley";
 
 const tracked_mentions = new Set([

@@ -2,7 +2,7 @@ import * as Discord from "discord.js";
 import { strict as assert } from "assert";
 import { critical_error, M, SelfClearingMap, SelfClearingSet } from "../utils";
 import { bot_spam_id, MINUTE } from "../common";
-import { BotComponent } from "../bot_component";
+import { BotComponent } from "../bot-component";
 import { Wheatley } from "../wheatley";
 import { TextBasedCommand, TextBasedCommandBuilder } from "../command";
 

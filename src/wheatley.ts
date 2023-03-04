@@ -4,11 +4,11 @@ import * as Discord from "discord.js";
 import { EventEmitter } from "events";
 import * as fs from "fs";
 
-import { DatabaseInterface } from "./infra/database_interface";
-import { GuildCommandManager } from "./infra/guild_command_manager";
-import { MemberTracker } from "./infra/member_tracker";
+import { DatabaseInterface } from "./infra/database-interface";
+import { GuildCommandManager } from "./infra/guild-command-manager";
+import { MemberTracker } from "./infra/member-tracker";
 
-import { BotComponent } from "./bot_component";
+import { BotComponent } from "./bot-component";
 
 import { action_log_channel_id, bot_spam_id, colors, cpp_help_id, c_help_id, member_log_channel_id,
          message_log_channel_id, MINUTE, mods_channel_id, rules_channel_id, server_suggestions_channel_id,
@@ -18,46 +18,46 @@ import { critical_error, fetch_forum_channel, fetch_text_channel, fetch_thread_c
          string_split,
          zip } from "./utils";
 
-import { AntiAutoreact } from "./components/anti_autoreact";
-import { AntiForumPostDelete } from "./components/anti_forum_post_delete";
-import { AntiRaid } from "./components/anti_raid";
-import { AntiScambot } from "./components/anti_scambot";
-import { AntiScreenshot } from "./components/anti_screenshot";
+import { AntiAutoreact } from "./components/anti-autoreact";
+import { AntiForumPostDelete } from "./components/anti-forum-post-delete";
+import { AntiRaid } from "./components/anti-raid";
+import { AntiScambot } from "./components/anti-scambot";
+import { AntiScreenshot } from "./components/anti-screenshot";
 import { Autoreact } from "./components/autoreact";
 import { Cppref } from "./components/cppref";
 import { Format } from "./components/format";
-import { ForumChannels } from "./components/forum_channels";
-import { ForumControl } from "./components/forum_control";
+import { ForumChannels } from "./components/forum-channels";
+import { ForumControl } from "./components/forum-control";
 import { Inspect } from "./components/inspect";
-import { LinkBlacklist } from "./components/link_blacklist";
+import { LinkBlacklist } from "./components/link-blacklist";
 import { Man7 } from "./components/man7";
 import { Massban } from "./components/massban";
 import { Modmail } from "./components/modmail";
 import { Nodistractions } from "./components/nodistractions";
-import { NotifyAboutBrandNewUsers } from "./components/notify_about_brand_new_users";
+import { NotifyAboutBrandNewUsers } from "./components/notify-about-brand-new-users";
 import { Ping } from "./components/ping";
 import { Quote } from "./components/quote";
 import { RaidPurge } from "./components/raidpurge";
-import { ReadTutoring } from "./components/read_tutoring";
-import { RoleManager } from "./components/role_manager";
+import { ReadTutoring } from "./components/read-tutoring";
+import { RoleManager } from "./components/role-manager";
 import { Roulette } from "./components/roulette";
-import { ServerSuggestionReactions } from "./components/server_suggestion_reactions";
-import { ServerSuggestionTracker } from "./components/server_suggestion_tracker";
+import { ServerSuggestionReactions } from "./components/server-suggestion-reactions";
+import { ServerSuggestionTracker } from "./components/server-suggestion-tracker";
 import { Snowflake } from "./components/snowflake";
 import { Speedrun } from "./components/speedrun";
 import { Status } from "./components/status";
-import { ThreadBasedChannels } from "./components/thread_based_channels";
-import { ThreadControl } from "./components/thread_control";
-import { TrackedMentions } from "./components/tracked_mentions";
-import { UsernameManager } from "./components/username_manager";
-import { UtilityTools } from "./components/utility_tools";
+import { ThreadBasedChannels } from "./components/thread-based-channels";
+import { ThreadControl } from "./components/thread-control";
+import { TrackedMentions } from "./components/tracked-mentions";
+import { UsernameManager } from "./components/username-manager";
+import { UtilityTools } from "./components/utility-tools";
 import { Wiki } from "./components/wiki";
 import { BotCommand, BotModalHandler, BotTextBasedCommand, MessageContextMenuCommandBuilder, ModalHandler,
          TextBasedCommand, TextBasedCommandBuilder } from "./command";
 import { DiscordAPIError, SlashCommandBuilder } from "discord.js";
 import { Report } from "./components/report";
-import { SkillRoleSuggestion } from "./components/skill_role_suggestion";
-import { TheButton } from "./components/the_button";
+import { SkillRoleSuggestion } from "./components/skill-role-suggestion";
+import { TheButton } from "./components/the-button";
 import { Composite } from "./components/composite";
 
 function create_basic_embed(title: string | undefined, color: number, content: string) {

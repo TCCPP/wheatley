@@ -3,7 +3,7 @@ import * as Discord from "discord.js";
 
 import { critical_error, get_url_for, M } from "../utils";
 import { colors, is_authorized_admin, is_root, MINUTE, moderators_role_id } from "../common";
-import { BotComponent } from "../bot_component";
+import { BotComponent } from "../bot-component";
 import { Wheatley } from "../wheatley";
 
 /*

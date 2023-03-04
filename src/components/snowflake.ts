@@ -1,6 +1,6 @@
 import { strict as assert } from "assert";
 import { M } from "../utils";
-import { BotComponent } from "../bot_component";
+import { BotComponent } from "../bot-component";
 import { Wheatley } from "../wheatley";
 import { TextBasedCommand, TextBasedCommandBuilder } from "../command";
 

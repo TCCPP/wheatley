@@ -2,7 +2,7 @@ import * as Discord from "discord.js";
 import { strict as assert } from "assert";
 import { unwrap, M } from "../utils";
 import { is_authorized_admin, rules_channel_id } from "../common";
-import { BotComponent } from "../bot_component";
+import { BotComponent } from "../bot-component";
 import { Wheatley } from "../wheatley";
 import { TextBasedCommand, TextBasedCommandBuilder } from "../command";
 

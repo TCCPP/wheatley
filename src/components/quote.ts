@@ -3,7 +3,7 @@ import { strict as assert } from "assert";
 import { critical_error, index_of_first_not_satisfying, is_image_link_embed, M } from "../utils";
 import { colors, MINUTE, TCCPP_ID } from "../common";
 import { decode_snowflake, forge_snowflake } from "./snowflake";
-import { BotComponent } from "../bot_component";
+import { BotComponent } from "../bot-component";
 import { Wheatley } from "../wheatley";
 import { TextBasedCommand, TextBasedCommandBuilder } from "../command";
 

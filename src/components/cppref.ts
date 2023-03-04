@@ -8,7 +8,7 @@ import { format_list, M } from "../utils";
 
 import { cppref_index, cppref_page, CpprefSubIndex } from "../../indexes/cppref/types";
 import { Index } from "../algorithm/search";
-import { BotComponent } from "../bot_component";
+import { BotComponent } from "../bot-component";
 import { Wheatley } from "../wheatley";
 import { colors } from "../common";
 import { TextBasedCommand, TextBasedCommandBuilder } from "../command";

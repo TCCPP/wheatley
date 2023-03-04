@@ -4,7 +4,7 @@ import * as Discord from "discord.js";
 
 import { delay, M } from "../utils";
 import { colors, has_skill_roles_other_than_beginner, is_forum_help_thread } from "../common";
-import { BotComponent } from "../bot_component";
+import { BotComponent } from "../bot-component";
 import { Wheatley } from "../wheatley";
 
 const DISMISS_TIME = 30 * 1000;

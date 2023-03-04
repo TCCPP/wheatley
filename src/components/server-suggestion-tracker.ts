@@ -4,7 +4,7 @@ import { critical_error, departialize, M, KeyedMutexSet, SelfClearingSet, xxh3 }
 import { is_root, MINUTE, server_suggestions_channel_id, suggestion_action_log_thread_id,
          suggestion_dashboard_thread_id } from "../common";
 import { forge_snowflake } from "./snowflake";
-import { BotComponent } from "../bot_component";
+import { BotComponent } from "../bot-component";
 import { Wheatley } from "../wheatley";
 
 export const TRACKER_START_TIME = 1625112000000; // Thu Jul 01 2021 00:00:00 GMT-0400 (Eastern Daylight Time)

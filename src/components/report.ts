@@ -4,7 +4,7 @@ import { strict as assert } from "assert";
 
 import { critical_error, M, SelfClearingMap } from "../utils";
 import { colors, MINUTE, moderators_role_id, TCCPP_ID } from "../common";
-import { BotComponent } from "../bot_component";
+import { BotComponent } from "../bot-component";
 import { Wheatley } from "../wheatley";
 import { MessageContextMenuCommandBuilder, ModalHandler } from "../command";
 import { make_quote_embeds } from "./quote";

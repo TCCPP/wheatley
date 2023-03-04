@@ -6,7 +6,7 @@ import * as path from "path";
 
 import { M } from "../utils";
 import { bot_spam_id, colors } from "../common";
-import { BotComponent } from "../bot_component";
+import { BotComponent } from "../bot-component";
 import { Wheatley } from "../wheatley";
 import { TextBasedCommand, TextBasedCommandBuilder } from "../command";
 

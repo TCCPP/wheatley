@@ -3,7 +3,7 @@ import { strict as assert } from "assert";
 import * as Discord from "discord.js";
 
 import { get_tag, M } from "../utils";
-import { BotComponent } from "../bot_component";
+import { BotComponent } from "../bot-component";
 import { colors, is_forum_help_thread, MINUTE } from "../common";
 
 function create_embed(title: string | undefined, color: number, msg: string) {

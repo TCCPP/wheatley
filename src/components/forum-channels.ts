@@ -3,7 +3,7 @@ import { strict as assert } from "assert";
 import { delay, fetch_all_threads_archive_count, get_tag, M, SelfClearingSet } from "../utils";
 import { colors, forum_help_channels, is_forum_help_thread, MINUTE } from "../common";
 import { decode_snowflake } from "./snowflake"; // todo: eliminate decode_snowflake
-import { BotComponent } from "../bot_component";
+import { BotComponent } from "../bot-component";
 import { Wheatley } from "../wheatley";
 
 // TODO: Take into account thread's inactivity setting

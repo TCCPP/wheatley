@@ -7,7 +7,7 @@ const fetch = (url: RequestInfo, init?: RequestInit) =>
     import("node-fetch").then(({ default: fetch }) => fetch(url, init));
 
 import { async_exec_file, critical_error, M } from "../utils";
-import { BotComponent } from "../bot_component";
+import { BotComponent } from "../bot-component";
 import { Wheatley } from "../wheatley";
 import { MessageContextMenuCommandBuilder } from "../command";
 import { MINUTE } from "../common";
