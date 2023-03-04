@@ -7,8 +7,41 @@ import { MINUTE } from "../common.js";
 
 import anyAscii from "any-ascii";
 
+function is_valid_codepoint(c: string) {
+    return (c.codePointAt(0) ?? 0) < 128;
+}
+
 function is_all_ascii(str: string) {
-    return [...str].every(c => (c.codePointAt(0) ?? 0) < 128);
+    return [...str].every(is_valid_codepoint);
+}
+
+// based on https://coolaj86.com/articles/how-to-count-unicode-characters-in-javascript/
+function has_three_continuous_valid_asciis(str: string) {
+    let index: number;
+    let consecutive_count = 0;
+    for(index = 0; index < str.length;) {
+        let point = str.codePointAt(index);
+        assert(point !== undefined);
+        if(point > 32 && point < 127) {
+            consecutive_count++;
+            if(consecutive_count >= 3) {
+                return true;
+            }
+        } else {
+            consecutive_count = 0;
+        }
+        let width = 0;
+        while(point) {
+            width += 1;
+            point = point >> 8;
+        }
+        index += Math.round(width/2);
+    }
+    return false;
+}
+
+function is_valid_name(name: string) {
+    return is_all_ascii(name) || has_three_continuous_valid_asciis(name);
 }
 
 export class UsernameManager extends BotComponent {
@@ -38,12 +71,12 @@ export class UsernameManager extends BotComponent {
     }
 
     async check_member(member: Discord.GuildMember) {
-        if(!is_all_ascii(member.displayName)) {
+        if(!is_valid_name(member.displayName)) {
             // Invalid nickname, valid username: Just remove nickname
-            const new_name = anyAscii(member.displayName);
+            const new_name = anyAscii(member.displayName).substring(0, 32);
             M.log(
                 "Username management: Changing display name",
-                member.id, member.user.tag, member.nickname, "to:", new_name
+                member.id, member.user.tag, member.displayName, "to:", new_name
             );
             await member.setNickname(new_name);
         } else {
