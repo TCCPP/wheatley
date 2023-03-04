@@ -41,7 +41,7 @@ function has_three_continuous_valid_asciis(str: string) {
 }
 
 function is_valid_name(name: string) {
-    return is_all_ascii(name) || has_three_continuous_valid_asciis(name);
+    return is_all_ascii(name) || is_valid_codepoint(name[0]) || has_three_continuous_valid_asciis(name);
 }
 
 export class UsernameManager extends BotComponent {
