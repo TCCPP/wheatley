@@ -5,6 +5,11 @@ import { BotComponent } from "../bot-component.js";
 import { Wheatley } from "../wheatley.js";
 import { MINUTE } from "../common.js";
 
+import anyAscii from "any-ascii";
+
+function is_all_ascii(str: string) {
+    return [...str].every(c => (c.codePointAt(0) ?? 0) < 128);
+}
 
 export class UsernameManager extends BotComponent {
     constructor(wheatley: Wheatley) {
@@ -33,7 +38,17 @@ export class UsernameManager extends BotComponent {
     }
 
     async check_member(member: Discord.GuildMember) {
-        //
+        if(!is_all_ascii(member.displayName)) {
+            // Invalid nickname, valid username: Just remove nickname
+            const new_name = anyAscii(member.displayName);
+            M.log(
+                "Username management: Changing display name",
+                member.id, member.user.tag, member.nickname, "to:", new_name
+            );
+            await member.setNickname(new_name);
+        } else {
+            return;
+        }
     }
 
     async cleanup() {

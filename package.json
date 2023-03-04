@@ -9,6 +9,7 @@
         "@types/node": "^18.14.1",
         "@types/ws": "^8.5.4",
         "@types/xxhashjs": "^0.2.2",
+        "any-ascii": "^0.3.1",
         "chalk": "<5.0.0",
         "discord.js": "^14.7.1",
         "moment": "^2.29.4",
