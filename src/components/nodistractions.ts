@@ -132,10 +132,20 @@ export class Nodistractions extends BotComponent {
             }
             // pop entry and remove role
             const entry = this.undistract_queue.shift()!;
-            const member = await this.wheatley.TCCPP.members.fetch(entry.id);
-            M.log("removing !nodistractions", member.id, member.user.tag);
-            if(member.roles.cache.some(r => r.id == no_off_topic)) { // might have been removed externally
-                await member.roles.remove(no_off_topic);
+            try {
+                const member = await this.wheatley.TCCPP.members.fetch(entry.id);
+                M.log("removing !nodistractions", member.id, member.user.tag);
+                if(member.roles.cache.some(r => r.id == no_off_topic)) { // might have been removed externally
+                    await member.roles.remove(no_off_topic);
+                }
+            } catch(e) {
+                if(e instanceof Discord.DiscordAPIError && e.code == 10007) {
+                    // unknown member - just silently continue removing from the database as the user  of course now no
+                    // longer has the role
+                } else {
+                    // rethrow, handle below
+                    throw e;
+                }
             }
             // remove database entry
             delete this.wheatley.database.get<database_schema>("nodistractions")[entry.id];
