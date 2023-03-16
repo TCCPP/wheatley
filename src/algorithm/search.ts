@@ -453,7 +453,7 @@ class NgramIndex<T extends IndexEntry> extends BaseIndex<T> {
 
 // eslint-disable-next-line @typescript-eslint/no-unused-vars
 class IDFNgramIndex<T extends IndexEntry> extends NgramIndex<T> {
-    ngram_idf: Record<string, number>;
+    ngram_idf: Record<string, number> = {};
     default_idf: number; // idf for something we haven't seen, important for weighting the cosine
     keyword_count: number;
     posix_count: number;
