@@ -9,6 +9,7 @@
         "strictPropertyInitialization": false,
         "noImplicitOverride": true,
         "outDir": "build",
+        "esModuleInterop": true
     },
     "exclude": ["node_modules", "build", "indexes/"]
 }

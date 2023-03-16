@@ -8,7 +8,8 @@
         "allowJs": true,
         "skipLibCheck": true,
         "strictPropertyInitialization": false,
-        "noImplicitOverride": true
+        "noImplicitOverride": true,
+        "esModuleInterop": true
     },
     "exclude": ["cppref/en.cppreference.com", "cppref/upload.cppreference.com"]
 }
