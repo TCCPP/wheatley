@@ -21,7 +21,6 @@ export class AntiForumPostDelete extends BotComponent {
         if(message.channel.id == message.id) {
             assert(message.channel.isThread());
             const thread = message.channel;
-            console.log(thread.messageCount);
             if(is_forum_help_thread(thread)
             && (Date.now() - thread.createdTimestamp! > 2 * MINUTE || thread.messageCount! > 0)) {
                 const forum = thread.parent;

@@ -8,9 +8,7 @@ import { Wheatley } from "../wheatley.js";
 
 // TODO: Take into account thread's inactivity setting
 
-const solved_archive_timeout = 12 * 60 * MINUTE; // 12 hours for a solved thread that's reopened
-const inactive_timeout = 12 * 60 * MINUTE; // 12 hours for a thread that's seen no activity, archive
-const resolution_timeout = 12 * 60 * MINUTE; // after another 12 hours, open -> solved
+const inactive_timeout = 12 * 60 * MINUTE; // 12 hours for a thread that's seen no activity, mark it stale
 
 const cleanup_limit = 400; // how many messages back in the archive to go
 
@@ -96,43 +94,23 @@ export class ForumChannels extends BotComponent {
         }
         const now = Date.now();
         const last_message = decode_snowflake(thread.lastMessageId);
-        // if the thread is solved or stale and needs to be re-archived
-        if((thread.appliedTags.includes(solved_tag) || thread.appliedTags.includes(stale_tag))
-        && !thread.archived
-        && now - last_message >= solved_archive_timeout) {
-            M.log("Archiving solved channel", thread.id, thread.name, thread.url);
-            thread.setArchived(true);
-        }
-        // if the thread is open has been inactive
-        else if(thread.appliedTags.includes(open_tag)
+        // if the thread is open has been inactive mark it stale
+        if(thread.appliedTags.includes(open_tag)
         && !thread.archived
         && now - last_message >= inactive_timeout) {
-            M.log("Archiving inactive channel", thread.id, thread.name, thread.url);
+            M.log("Handling inactive channel", thread.id, thread.name, thread.url);
+            //await thread.setArchived(true);
             await thread.send({
                 embeds: [
-                    create_embed(undefined, colors.color, "This question thread is being automatically closed."
-                        + " If your question is not answered feel free to bump the post or re-ask. Take a look"
-                        + " at `!howto ask` for tips on improving your question.")
-                ]
-            });
-            await thread.setArchived(true);
-        }
-        // if the thread is open and is inactive after initially being archived - mark it stale
-        else if(thread.appliedTags.includes(open_tag)
-        && thread.archived
-        && now - last_message >= resolution_timeout) {
-            M.log("Resolving channel", thread.id, thread.name, thread.url);
-            await thread.setArchived(false);
-            await thread.send({
-                embeds: [
-                    create_embed(undefined, colors.color,
-                                 "This question thread is being automatically marked as stale.")
+                    create_embed(undefined, colors.color, "This question is being automatically marked as stale.\n"
+                        + " If your question has been answered, run `!solved`.\n"
+                        + "If your question is not answered feel free to bump the post or re-ask.\n"
+                        + "Take a look at `!howto ask` for tips on improving your question.")
                 ]
             });
             await thread.setAppliedTags([stale_tag].concat(thread.appliedTags.filter(
                 t => ![ open_tag, solved_tag ].includes(t)
             )));
-            await thread.setArchived(true);
         }
     }
 

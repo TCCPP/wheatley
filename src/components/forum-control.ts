@@ -90,14 +90,17 @@ export class ForumControl extends BotComponent {
                     M.log("Marking thread as solved", thread.id, thread.name);
                     await command.reply({
                         embeds: [
-                            create_embed(undefined, colors.color, "Thank you and let us know if you have any more "
-                                + "questions!")
+                            create_embed(undefined, colors.color,
+                                         "Thank you and let us know if you have any more questions!\n\n"
+                                         + "This thread is now set to auto-hide after an hour of inactivity"
+                            )
                         ]
                     });
                     await thread.setAppliedTags(
                         [solved_tag].concat(thread.appliedTags.filter(tag => ![ open_tag, stale_tag ].includes(tag)))
                     );
-                    await thread.setArchived(true);
+                    //await thread.setArchived(true);
+                    await thread.setAutoArchiveDuration(Discord.ThreadAutoArchiveDuration.OneHour, "Solved");
                 } else {
                     await command.reply({
                         content: "Message is already solved",
