@@ -84,6 +84,7 @@ export class ForumControl extends BotComponent {
             assert(forum instanceof Discord.ForumChannel);
             const solved_tag = get_tag(forum, "Solved").id;
             const open_tag = get_tag(forum, "Open").id;
+            const stale_tag = get_tag(forum, "Stale").id;
             if(thread.parentId && forum_help_channels.has(thread.parentId)) { // TODO
                 if(!thread.appliedTags.some(tag => tag == solved_tag)) {
                     M.log("Marking thread as solved", thread.id, thread.name);
@@ -94,7 +95,7 @@ export class ForumControl extends BotComponent {
                         ]
                     });
                     await thread.setAppliedTags(
-                        [solved_tag].concat(thread.appliedTags.filter(tag => tag != open_tag))
+                        [solved_tag].concat(thread.appliedTags.filter(tag => ![ open_tag, stale_tag ].includes(tag)))
                     );
                     await thread.setArchived(true);
                 } else {

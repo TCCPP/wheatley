@@ -171,67 +171,64 @@ export class ForumChannels extends BotComponent {
     override async on_message_create(message: Discord.Message) {
         if(message.author.bot) return; // Ignore bots
         if(message.type == Discord.MessageType.ThreadCreated) return; // ignore message create messages
-        if(message.id == message.channelId) return; // forum start message
         const channel = message.channel;
-        if(channel instanceof Discord.ThreadChannel) {
+        if(message.id == message.channelId) {
+            // forum start message
+            assert(channel instanceof Discord.ThreadChannel);
             const thread = channel;
+            if(thread.ownerId == this.wheatley.id) { // wheatley threads are either modlogs or thread help threads
+                return;
+            }
             if(is_forum_help_thread(thread)) {
-                // solved prompt logic
                 const forum = thread.parent;
                 assert(forum instanceof Discord.ForumChannel);
-                const solved_tag = get_tag(forum, "Solved").id;
-                if(!thread.appliedTags.includes(solved_tag)) {
-                    // if this is an unsolved help forum post... check if we need to start or restart a timeout
-                    const op = thread.ownerId;
-                    assert(op, "Assumption: Can only happen if uncached.");
-                    if(message.author.id == op) {
-                        const content = message.content.toLowerCase();
-                        if(content.match(thank_you_re) != null) {
-                            if(!this.possibly_resolved.has(thread.id)) {
-                                M.debug("Setting !solved prompt timeout for thread", thread.id, thread.name, thread.url,
-                                        "based off of", message.url);
-                                this.timeout_map.set(thread.id, setTimeout(async () => {
-                                    await this.prompt_close(thread);
-                                }, thank_you_timeout));
-                                this.possibly_resolved.insert(thread.id);
-                                return;
+                const open_tag = get_tag(forum, "Open").id;
+                // at most 5 tags
+                await thread.setAppliedTags([open_tag].concat(thread.appliedTags.slice(0, 4)));
+                await thread.send({
+                    embeds: [create_embed(undefined, colors.red, "When your question is answered use **`!solved`** to "
+                        + "mark the question as resolved.\n\nRemember to ask __specific questions__, provide "
+                        + "__necessary details__, and reduce your question to its __simplest form__. For tips on how "
+                        + "to ask a good question run `!howto ask`.")]
+                });
+            }
+        } else {
+            if(channel instanceof Discord.ThreadChannel) {
+                const thread = channel;
+                if(is_forum_help_thread(thread)) {
+                    // solved prompt logic
+                    const forum = thread.parent;
+                    assert(forum instanceof Discord.ForumChannel);
+                    const solved_tag = get_tag(forum, "Solved").id;
+                    if(!thread.appliedTags.includes(solved_tag)) {
+                        // if this is an unsolved help forum post... check if we need to start or restart a timeout
+                        const op = thread.ownerId;
+                        assert(op, "Assumption: Can only happen if uncached.");
+                        if(message.author.id == op) {
+                            const content = message.content.toLowerCase();
+                            if(content.match(thank_you_re) != null) {
+                                if(!this.possibly_resolved.has(thread.id)) {
+                                    M.debug("Setting !solved prompt timeout for thread", thread.id, thread.name,
+                                            thread.url, "based off of", message.url);
+                                    this.timeout_map.set(thread.id, setTimeout(async () => {
+                                        await this.prompt_close(thread);
+                                    }, thank_you_timeout));
+                                    this.possibly_resolved.insert(thread.id);
+                                    return;
+                                }
                             }
                         }
-                    }
-                    // if we reach here, it's a non-thank message
-                    // might need to restart the timeout
-                    if(this.timeout_map.has(thread.id)) {
-                        clearTimeout(this.timeout_map.get(thread.id));
-                        this.timeout_map.set(thread.id, setTimeout(async () => {
-                            await this.prompt_close(thread);
-                        }, thank_you_timeout));
+                        // if we reach here, it's a non-thank message
+                        // might need to restart the timeout
+                        if(this.timeout_map.has(thread.id)) {
+                            clearTimeout(this.timeout_map.get(thread.id));
+                            this.timeout_map.set(thread.id, setTimeout(async () => {
+                                await this.prompt_close(thread);
+                            }, thank_you_timeout));
+                        }
                     }
                 }
             }
-        }
-    }
-
-    override async on_thread_create(thread: Discord.ThreadChannel) {
-        if(thread.ownerId == this.wheatley.id) { // wheatley threads are either modlogs or thread help threads
-            return;
-        }
-        if(is_forum_help_thread(thread)) { // TODO
-            // Somehow it's a problem to send this message too quickly:
-            //  Critical error occurred: unhandledRejection DiscordAPIError: Cannot message this thread until after the
-            //  post author has sent an initial message. [object Promise]
-            // TODO: revisit once api kinks are worked out
-            const forum = thread.parent;
-            assert(forum instanceof Discord.ForumChannel);
-            const open_tag = get_tag(forum, "Open").id;
-            // at most 5 tags
-            await thread.setAppliedTags([open_tag].concat(thread.appliedTags.slice(0, 4)));
-            await delay(100);
-            await thread.send({
-                embeds: [create_embed(undefined, colors.red, "When your question is answered use **`!solved`** to mark "
-                    + "the question as resolved.\n\nRemember to ask __specific questions__, provide __necessary "
-                    + "details__, and reduce your question to its __simplest form__. For tips on how to ask a good "
-                    + "question run `!howto ask`.")]
-            });
         }
     }
 }
