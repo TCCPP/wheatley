@@ -88,7 +88,7 @@ export class TheButton extends BotComponent {
         this.update_database();
     }
 
-    make_message(delta: number): Discord.MessageCreateOptions {
+    make_message(delta: number): Discord.MessageEditOptions & Discord.MessageCreateOptions {
         const [ hours, minutes, seconds ] = dissectDelta(delta);
         const row = new Discord.ActionRowBuilder<Discord.MessageActionRowComponentBuilder>()
             .addComponents(
