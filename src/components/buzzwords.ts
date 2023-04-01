@@ -405,6 +405,32 @@ export class Buzzwords extends BotComponent {
             });
             return;
         }
+        if(message.content.trim() == "!bottom") {
+            const entries = Object.entries(this.data.scores).sort((a, b) => a[1].score - b[1].score);
+            const scores = entries.slice(0, 15);
+            const embed = new Discord.EmbedBuilder()
+                .setTitle("Scoreboard");
+            let description = "";
+            for(const [ key, value ] of scores) {
+                const tag = value.tag == "" ? `<@${key}>` : value.tag;
+                description += `${tag}: ${round(value.score, 1)}\n`;
+            }
+            embed.setDescription(description);
+            await message.reply({
+                embeds: [embed]
+            });
+            return;
+        }
+        if(message.content.trim() == "!score") {
+            const score = message.author.id in this.data.scores ? this.data.scores[message.author.id].score : 0;
+            await message.reply({
+                embeds: [
+                    new Discord.EmbedBuilder()
+                        .setColor(colors.color)
+                        .setDescription(`Score: ${score}`)
+                ]
+            });
+        }
         // check the message for buzzwords
         if(!this.slowmode.has(message.author.id)) {
             let total_score = 0;
