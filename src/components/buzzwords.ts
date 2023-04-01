@@ -5,8 +5,8 @@ export class Buzzwords extends BotComponent {}
 
 import * as Discord from "discord.js";
 import { strict as assert } from "assert";
-import { M, diff_to_human, floor, round, unwrap } from "../utils.js";
-import { MINUTE, colors, is_authorized_admin } from "../common.js";
+import { M, SelfClearingSet, round, unwrap } from "../utils.js";
+import { MINUTE, TCCPP_ID, colors, is_authorized_admin } from "../common.js";
 import { BotComponent } from "../bot-component.js";
 import { Wheatley } from "../wheatley.js";
 
@@ -179,6 +179,7 @@ export class Buzzwords extends BotComponent {
         timestamp: 0,
         remaining_seconds: 0
     };
+    slowmode: SelfClearingSet<string>;
 
     constructor(wheatley: Wheatley) {
         super(wheatley);
@@ -189,6 +190,8 @@ export class Buzzwords extends BotComponent {
         } else {
             this.data = this.wheatley.database.get<database_schema>("buzzword-scoreboard");
         }
+
+        this.slowmode = new SelfClearingSet<string>(MINUTE / 2, MINUTE / 4);
     }
 
     override async on_ready() {
@@ -221,7 +224,7 @@ export class Buzzwords extends BotComponent {
     async reflowRoles() {
         M.log("Reflowing roles");
         const members = await this.wheatley.TCCPP.members.fetch();
-        const scores = Object.entries(this.data.scores).map(entry => entry[1].score).sort((a, b) => b - a);
+        const scores = Object.entries(this.data.scores).map(entry => entry[1].score).sort((a, b) => a - b);
         const p90 = Buzzwords.quantile(scores, .9);
         const p80 = Buzzwords.quantile(scores, .7);
         const p70 = Buzzwords.quantile(scores, .5);
@@ -252,7 +255,7 @@ export class Buzzwords extends BotComponent {
     }
 
     async updateRolesSingle(member: Discord.GuildMember) {
-        const scores = Object.entries(this.data.scores).map(entry => entry[1].score).sort((a, b) => b - a);
+        const scores = Object.entries(this.data.scores).map(entry => entry[1].score).sort((a, b) => a - b);
         const p90 = Buzzwords.quantile(scores, .9);
         const p80 = Buzzwords.quantile(scores, .7);
         const p70 = Buzzwords.quantile(scores, .5);
@@ -293,8 +296,22 @@ export class Buzzwords extends BotComponent {
         }
     }
 
+    set_points(id: string, tag: string, points: number) {
+        if(!(id in this.data.scores)) {
+            this.data.scores[id] = {
+                tag,
+                score: points,
+                count: 0
+            };
+        } else {
+            this.data.scores[id].score = points;
+            this.data.scores[id].count++;
+        }
+    }
+
     override async on_message_create(message: Discord.Message) {
         if(message.author.bot) return; // Ignore bots
+        if(message.guildId != TCCPP_ID) return; // Ignore DMs
         //if(message.channel.id != "1091502908241084436") return; // for now, for testing
         if(is_authorized_admin(message.author)) {
             if(message.content.trim().startsWith("!derailed")) {
@@ -322,16 +339,48 @@ export class Buzzwords extends BotComponent {
                     const member = await this.wheatley.TCCPP.members.fetch(id);
                     const tag = member.user.tag;
                     this.give_points(id, tag, derail_points);
-                    this.updateRolesSingle(member);
+                    await this.updateRolesSingle(member);
                 }
                 return;
+            }
+            if(message.content.trim().startsWith("!setscore")) {
+                const match = message.content.match(/\d{10,}\s+-?\d+/);
+                if(match) {
+                    const [ id, amount ] = match[0].split(" ");
+                    const member = await this.wheatley.TCCPP.members.fetch(id);
+                    const tag = member.user.tag;
+                    this.set_points(id, tag, parseInt(amount));
+                    await this.updateRolesSingle(member);
+                    await message.reply("Done");
+                } else {
+                    await message.reply({
+                        embeds: [
+                            new Discord.EmbedBuilder()
+                                .setColor(colors.color)
+                                .setDescription(
+                                    "Error: Must mention exactly one member (either a mention or snowflake)"
+                                    + " and an amount"
+                                )
+                        ]
+                    });
+                }
             }
             if(message.content.trim() == "!clearbuzzscores" && message.author.id == "199943082441965577") {
                 this.data.scores = {};
                 return;
             }
+            if(message.content.trim() == "!testbuzzquartile" && message.author.id == "199943082441965577") {
+                const scores = Object.entries(this.data.scores).map(entry => entry[1].score).sort((a, b) => a - b);
+                const p90 = Buzzwords.quantile(scores, .9);
+                const p80 = Buzzwords.quantile(scores, .7);
+                const p70 = Buzzwords.quantile(scores, .5);
+                const p60 = Buzzwords.quantile(scores, .3);
+                await message.reply(`90: ${p90}\n80: ${p80}\n70: ${p70}\n60: ${p60}`);
+                return;
+            }
             if(message.content.trim() == "!initbuzzscoresystem" && message.author.id == "199943082441965577") {
                 const members = await this.wheatley.TCCPP.members.fetch();
+                M.log(members.size, "members");
                 members.map((member, _) => {
                     if(!member.roles.cache.has(beginner)) {
                         member.roles.add(beginner);
@@ -357,22 +406,32 @@ export class Buzzwords extends BotComponent {
             return;
         }
         // check the message for buzzwords
-        let total_score = 0;
-        for(const [ re, score ] of buzzwords) {
-            if(message.content.match(re)) {
-                total_score += score;
+        if(!this.slowmode.has(message.author.id)) {
+            let total_score = 0;
+            let count = 0;
+            for(const [ re, score ] of buzzwords) {
+                if(message.content.match(re)) {
+                    total_score += score;
+                    count++;
+                }
             }
-        }
-        if(total_score > 0) {
-            await message.reply({
-                embeds: [
-                    new Discord.EmbedBuilder()
-                        .setColor(colors.color)
-                        .setDescription(`You've earned ${Math.round(total_score * 10) / 10} points!`)
-                ]
-            });
-            this.give_points(message.author.id, message.author.tag, total_score);
-            this.updateRolesSingle(unwrap(message.member));
+            if(total_score > 0) {
+                if(count > 10) {
+                    total_score *= -10;
+                } else if(count > 5) {
+                    total_score *= -2;
+                }
+                await message.reply({
+                    embeds: [
+                        new Discord.EmbedBuilder()
+                            .setColor(colors.color)
+                            .setDescription(`You've earned ${Math.round(total_score * 10) / 10} points!`)
+                    ]
+                });
+                this.give_points(message.author.id, message.author.tag, total_score);
+                this.updateRolesSingle(unwrap(message.member));
+                this.slowmode.insert(message.author.id);
+            }
         }
     }
 }
