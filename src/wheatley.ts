@@ -59,6 +59,7 @@ import { Report } from "./components/report.js";
 import { SkillRoleSuggestion } from "./components/skill-role-suggestion.js";
 import { TheButton } from "./components/the-button.js";
 import { Composite } from "./components/composite.js";
+import { Buzzwords } from "./components/buzzwords.js";
 
 function create_basic_embed(title: string | undefined, color: number, content: string) {
     const embed = new Discord.EmbedBuilder()
@@ -233,6 +234,7 @@ export class Wheatley extends EventEmitter {
         await this.add_component(Wiki);
         await this.add_component(TheButton);
         await this.add_component(Composite);
+        await this.add_component(Buzzwords);
 
         const token = await fs.promises.readFile("auth.key", { encoding: "utf-8" });
 
