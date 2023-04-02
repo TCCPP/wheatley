@@ -195,14 +195,14 @@ export class Buzzwords extends BotComponent {
     }
 
     override async on_ready() {
-        this.update_database();
-        setTimeout(() => {
-            this.update_database();
-        }, MINUTE);
-        this.reflowRoles();
-        setTimeout(() => {
-            this.reflowRoles();
-        }, 10 * MINUTE);
+        //this.update_database();
+        //setTimeout(() => {
+        //    this.update_database();
+        //}, MINUTE);
+        //this.reflowRoles();
+        //setTimeout(() => {
+        //    this.reflowRoles();
+        //}, 10 * MINUTE);
     }
 
     async update_database() {
@@ -255,7 +255,7 @@ export class Buzzwords extends BotComponent {
     }
 
     async updateRolesSingle(member: Discord.GuildMember) {
-        const scores = Object.entries(this.data.scores).map(entry => entry[1].score).sort((a, b) => a - b);
+        /*const scores = Object.entries(this.data.scores).map(entry => entry[1].score).sort((a, b) => a - b);
         const p90 = Buzzwords.quantile(scores, .9);
         const p80 = Buzzwords.quantile(scores, .7);
         const p70 = Buzzwords.quantile(scores, .5);
@@ -280,7 +280,7 @@ export class Buzzwords extends BotComponent {
                 await member.roles.remove(roles);
                 await member.roles.add(new_role);
             }
-        }
+        }*/
     }
 
     give_points(id: string, tag: string, points: number) {
@@ -439,7 +439,7 @@ export class Buzzwords extends BotComponent {
             });
         }
         // check the message for buzzwords
-        if(!this.slowmode.has(message.author.id)) {
+        /*if(!this.slowmode.has(message.author.id)) {
             let total_score = 0;
             let count = 0;
             for(const [ re, score ] of buzzwords) {
@@ -465,6 +465,6 @@ export class Buzzwords extends BotComponent {
                 this.updateRolesSingle(unwrap(message.member));
                 this.slowmode.insert(message.author.id);
             }
-        }
+        }*/
     }
 }
