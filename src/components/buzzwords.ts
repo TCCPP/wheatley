@@ -347,11 +347,18 @@ export class Buzzwords extends BotComponent {
                 const match = message.content.match(/\d{10,}\s+-?\d+/);
                 if(match) {
                     const [ id, amount ] = match[0].split(" ");
-                    const member = await this.wheatley.TCCPP.members.fetch(id);
+                    const member = await (async () => {
+                        try {
+                            return await this.wheatley.TCCPP.members.fetch(id);
+                        } catch {
+                            return { user: { tag: "" } };
+                        }
+                    })();
                     const tag = member.user.tag;
                     this.set_points(id, tag, parseInt(amount));
-                    await this.updateRolesSingle(member);
+                    if(member instanceof Discord.GuildMember) await this.updateRolesSingle(member);
                     await message.reply("Done");
+                    this.update_database();
                 } else {
                     await message.reply({
                         embeds: [
