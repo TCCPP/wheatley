@@ -1,8 +1,3 @@
-/** sensitive
-import { BotComponent } from "../bot-component.js";
-export class Buzzwords extends BotComponent {}
-*/
-
 import * as Discord from "discord.js";
 import { strict as assert } from "assert";
 import { M, SelfClearingSet, round, unwrap } from "../utils.js";
@@ -19,6 +14,8 @@ type scoreboard_entry = {
 type database_schema = {
     scores: Record<string, scoreboard_entry>;
 }
+
+const ENABLED = false;
 
 const buzzwords = `
 adl|argument[ -]dependent(?: name)? lookup;3
@@ -195,14 +192,16 @@ export class Buzzwords extends BotComponent {
     }
 
     override async on_ready() {
-        //this.update_database();
-        //setTimeout(() => {
-        //    this.update_database();
-        //}, MINUTE);
-        //this.reflowRoles();
-        //setTimeout(() => {
-        //    this.reflowRoles();
-        //}, 10 * MINUTE);
+        if(ENABLED) { // eslint-disable-line @typescript-eslint/no-unnecessary-condition
+            this.update_database();
+            setTimeout(() => {
+                this.update_database();
+            }, MINUTE);
+            this.reflowRoles();
+            setTimeout(() => {
+                this.reflowRoles();
+            }, 10 * MINUTE);
+        }
     }
 
     async update_database() {
@@ -255,32 +254,34 @@ export class Buzzwords extends BotComponent {
     }
 
     async updateRolesSingle(member: Discord.GuildMember) {
-        /*const scores = Object.entries(this.data.scores).map(entry => entry[1].score).sort((a, b) => a - b);
-        const p90 = Buzzwords.quantile(scores, .9);
-        const p80 = Buzzwords.quantile(scores, .7);
-        const p70 = Buzzwords.quantile(scores, .5);
-        const p60 = Buzzwords.quantile(scores, .3);
-        if(member.id in this.data.scores) {
-            const score = this.data.scores[member.id].score;
-            const current_role_raw = [...member.roles.cache.filter(r => roles.includes(r.id)).keys()];
-            const current_role = current_role_raw.length > 0 ? current_role_raw[0] : null;
-            let new_role: string;
-            if(score >= p90) {
-                new_role = expert;
-            } else if(score >= p80) {
-                new_role = advanced;
-            } else if(score >= p70) {
-                new_role = proficient;
-            } else if(score >= p60) {
-                new_role = intermediate;
-            } else {
-                new_role = beginner;
+        if(ENABLED) { // eslint-disable-line @typescript-eslint/no-unnecessary-condition
+            const scores = Object.entries(this.data.scores).map(entry => entry[1].score).sort((a, b) => a - b);
+            const p90 = Buzzwords.quantile(scores, .9);
+            const p80 = Buzzwords.quantile(scores, .7);
+            const p70 = Buzzwords.quantile(scores, .5);
+            const p60 = Buzzwords.quantile(scores, .3);
+            if(member.id in this.data.scores) {
+                const score = this.data.scores[member.id].score;
+                const current_role_raw = [...member.roles.cache.filter(r => roles.includes(r.id)).keys()];
+                const current_role = current_role_raw.length > 0 ? current_role_raw[0] : null;
+                let new_role: string;
+                if(score >= p90) {
+                    new_role = expert;
+                } else if(score >= p80) {
+                    new_role = advanced;
+                } else if(score >= p70) {
+                    new_role = proficient;
+                } else if(score >= p60) {
+                    new_role = intermediate;
+                } else {
+                    new_role = beginner;
+                }
+                if(current_role != new_role) {
+                    await member.roles.remove(roles);
+                    await member.roles.add(new_role);
+                }
             }
-            if(current_role != new_role) {
-                await member.roles.remove(roles);
-                await member.roles.add(new_role);
-            }
-        }*/
+        }
     }
 
     give_points(id: string, tag: string, points: number) {
@@ -439,32 +440,34 @@ export class Buzzwords extends BotComponent {
             });
         }
         // check the message for buzzwords
-        /*if(!this.slowmode.has(message.author.id)) {
-            let total_score = 0;
-            let count = 0;
-            for(const [ re, score ] of buzzwords) {
-                if(message.content.match(re)) {
-                    total_score += score;
-                    count++;
+        if(ENABLED) { // eslint-disable-line @typescript-eslint/no-unnecessary-condition
+            if(!this.slowmode.has(message.author.id)) {
+                let total_score = 0;
+                let count = 0;
+                for(const [ re, score ] of buzzwords) {
+                    if(message.content.match(re)) {
+                        total_score += score;
+                        count++;
+                    }
+                }
+                if(total_score > 0) {
+                    if(count > 10) {
+                        total_score *= -10;
+                    } else if(count > 5) {
+                        total_score *= -2;
+                    }
+                    await message.reply({
+                        embeds: [
+                            new Discord.EmbedBuilder()
+                                .setColor(colors.color)
+                                .setDescription(`You've earned ${Math.round(total_score * 10) / 10} points!`)
+                        ]
+                    });
+                    this.give_points(message.author.id, message.author.tag, total_score);
+                    this.updateRolesSingle(unwrap(message.member));
+                    this.slowmode.insert(message.author.id);
                 }
             }
-            if(total_score > 0) {
-                if(count > 10) {
-                    total_score *= -10;
-                } else if(count > 5) {
-                    total_score *= -2;
-                }
-                await message.reply({
-                    embeds: [
-                        new Discord.EmbedBuilder()
-                            .setColor(colors.color)
-                            .setDescription(`You've earned ${Math.round(total_score * 10) / 10} points!`)
-                    ]
-                });
-                this.give_points(message.author.id, message.author.tag, total_score);
-                this.updateRolesSingle(unwrap(message.member));
-                this.slowmode.insert(message.author.id);
-            }
-        }*/
+        }
     }
 }
