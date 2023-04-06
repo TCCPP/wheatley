@@ -6,7 +6,7 @@ import { M, SelfClearingMap, unwrap } from "../utils.js";
 import { colors, MINUTE, TCCPP_ID } from "../common.js";
 import { BotComponent } from "../bot-component.js";
 import { Wheatley } from "../wheatley.js";
-import { UserContextMenuCommandBuilder } from "../command.js";
+import { MessageContextMenuCommandBuilder, UserContextMenuCommandBuilder } from "../command.js";
 
 export class SkillRoleSuggestion extends BotComponent {
     // string -> initial target message from context menu interaction
@@ -16,12 +16,18 @@ export class SkillRoleSuggestion extends BotComponent {
         super(wheatley);
 
         this.add_command(
-            new UserContextMenuCommandBuilder("Suggest Skill Role")
+            new UserContextMenuCommandBuilder("Suggest Skill Role User")
+                .set_handler(this.skill_suggestion.bind(this))
+        );
+        this.add_command(
+            new MessageContextMenuCommandBuilder("Suggest Skill Role Message")
                 .set_handler(this.skill_suggestion.bind(this))
         );
     }
 
-    async skill_suggestion(interaction: Discord.UserContextMenuCommandInteraction) {
+    async skill_suggestion(
+        interaction: Discord.UserContextMenuCommandInteraction | Discord.MessageContextMenuCommandInteraction
+    ) {
         if(interaction.guildId != TCCPP_ID) {
             await interaction.reply({
                 ephemeral: true,
@@ -29,7 +35,9 @@ export class SkillRoleSuggestion extends BotComponent {
             });
             return;
         }
-        const member = interaction.targetMember instanceof Discord.GuildMember ? interaction.targetMember
+        const target_member = interaction instanceof Discord.UserContextMenuCommandInteraction
+            ? interaction.targetMember : interaction.targetMessage.member;
+        const member = target_member instanceof Discord.GuildMember ? target_member
             : await this.wheatley.TCCPP.members.fetch(interaction.targetId);
         assert(member);
         M.log("Received skill suggest interaction", interaction.user.tag, interaction.user.id, interaction.targetId);
