@@ -436,9 +436,8 @@ export function xxh3(message: string) {
     return XXH.h64().update(message).digest().toString(16);
 }
 
-export function is_image_link_embed(embed: Discord.Embed) {
-    assert(embed.data.type);
-    return embed.data.type == "image" || embed.data.type == "video";
+export function is_media_link_embed(embed: Discord.Embed) {
+    return embed.image || embed.video;
 }
 
 export function index_of_first_not_satisfying<T>(arr: T[], fn: (_: T) => boolean) {

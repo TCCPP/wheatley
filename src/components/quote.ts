@@ -1,6 +1,6 @@
 import * as Discord from "discord.js";
 import { strict as assert } from "assert";
-import { critical_error, index_of_first_not_satisfying, is_image_link_embed, M } from "../utils.js";
+import { critical_error, index_of_first_not_satisfying, is_media_link_embed, M, unwrap } from "../utils.js";
 import { colors, MINUTE, TCCPP_ID } from "../common.js";
 import { decode_snowflake, forge_snowflake } from "./snowflake.js";
 import { BotComponent } from "../bot-component.js";
@@ -57,19 +57,31 @@ async function get_display_name(thing: Discord.Message | Discord.User, wheatley:
     }
 }
 
+function filename(url: string) {
+    return url.split("/").at(-1);
+}
+
 export async function make_quote_embeds(
-    messages: Discord.Message[], requested_by: Discord.GuildMember | undefined, wheatley: Wheatley, safe_link: boolean
-) {
+    messages: Discord.Message[],
+    requested_by: Discord.GuildMember | undefined,
+    wheatley: Wheatley,
+    safe_link: boolean,
+    template = "\n\nFrom <##> [[Jump to message]]($$)"
+): Promise<{
+    embeds: (Discord.EmbedBuilder | Discord.Embed)[],
+    files?: Discord.AttachmentPayload[]
+}> {
     assert(messages.length >= 1);
     const head = messages[0];
     const contents = messages.map(m => m.content).join("\n");
+    const template_string = template.replaceAll("##", "#" + head.channel.id).replaceAll("$$", head.url);
     const embed = new Discord.EmbedBuilder()
         .setColor(color)
         .setAuthor({
             name: `${await get_display_name(head, wheatley)}`,
             iconURL: head.member?.avatarURL() ?? head.author.displayAvatarURL()
         })
-        .setDescription(contents + `\n\nFrom <#${head.channel.id}> [[Jump to message]](${head.url})` + (
+        .setDescription(contents + template_string + (
             safe_link ? "" : " ⚠️ Unexpected domain, be careful clicking this link"
         ))
         .setTimestamp(head.createdAt);
@@ -79,23 +91,76 @@ export async function make_quote_embeds(
             iconURL: requested_by.user.displayAvatarURL()
         });
     }
-    const images = messages.map(message => [
-        ...message.attachments.filter(a => a.contentType?.indexOf("image") == 0).map(a => a.url),
-        ...message.embeds.filter(is_image_link_embed).map(e => e.url!)
+    type MediaDescriptor = {
+        type: "image" | "video";
+        url: string;
+    };
+    const media: MediaDescriptor[] = messages.map(message => [
+        ...message.attachments.filter(a => a.contentType?.indexOf("image") == 0).map(a => ({
+            type: "image",
+            url: a.url,
+        })),
+        ...message.attachments.filter(a => a.contentType?.indexOf("video") == 0).map(a => ({
+            type: "video",
+            url: a.url,
+            additional_data: {
+                width: a.width,
+                height: a.height,
+            }
+        })),
+        ...message.embeds.filter(is_media_link_embed).map(e => {
+            if(e.image) {
+                return {
+                    type: "image",
+                    url: unwrap(e.image.url)
+                };
+            } else if(e.video) {
+                return {
+                    type: "video",
+                    url: unwrap(e.video.url)
+                };
+            } else {
+                assert(false);
+            }
+        })
+    ] as MediaDescriptor[]).flat();
+    const other_embeds = messages.map(message => message.embeds.filter(e => !is_media_link_embed(e))).flat();
+    const media_embeds: Discord.EmbedBuilder[] = [];
+    const attachments: Discord.AttachmentPayload[] = [];
+    const other_attachments: Discord.AttachmentPayload[] = messages.map(message => [
+        ...message.attachments
+            .filter(a => !(a.contentType?.indexOf("image") == 0 || a.contentType?.indexOf("video") == 0))
+            .map(a => ({
+                attachment: a.url,
+                name: filename(a.url)
+            }))
     ]).flat();
-    const other_embeds = messages.map(message => message.embeds.filter(e => !is_image_link_embed(e))).flat();
-    const image_embeds: Discord.EmbedBuilder[] = [];
-    if(images.length > 0) {
-        embed.setImage(images[0]);
-        for(const image of images.slice(1)) {
-            image_embeds.push(new Discord.EmbedBuilder({
-                image: {
-                    url: image
+    let set_primary_image = false;
+    if(media.length > 0) {
+        for(const medium of media) {
+            if(medium.type == "image") {
+                if(!set_primary_image) {
+                    embed.setImage(medium.url);
+                    set_primary_image = true;
+                } else {
+                    media_embeds.push(new Discord.EmbedBuilder({
+                        image: {
+                            url: medium.url
+                        }
+                    }));
                 }
-            }));
+            } else { // video
+                attachments.push({
+                    attachment: medium.url,
+                    name: filename(medium.url)
+                });
+            }
         }
     }
-    return [ embed, ...image_embeds, ...other_embeds ];
+    return {
+        embeds: [ embed, ...media_embeds, ...other_embeds ],
+        files: attachments.length + other_attachments.length == 0 ? undefined : [ ...attachments, ...other_attachments ]
+    };
 }
 
 export class Quote extends BotComponent {
@@ -185,6 +250,7 @@ export class Quote extends BotComponent {
 
     async do_quote(command: TextBasedCommand, messages: QuoteDescriptor[]) {
         const embeds: (Discord.EmbedBuilder | Discord.Embed)[] = [];
+        const files: Discord.AttachmentPayload[] = [];
         for(const { domain, channel_id, message_id, block } of messages) {
             const channel = await this.wheatley.TCCPP.channels.fetch(channel_id);
             if(channel instanceof Discord.TextChannel
@@ -226,7 +292,8 @@ export class Quote extends BotComponent {
                     this.wheatley,
                     known_domains.has(domain)
                 );
-                embeds.push(...quote_embeds);
+                embeds.push(...quote_embeds.embeds);
+                if(quote_embeds.files) files.push(...quote_embeds.files);
             } else {
                 embeds.push(
                     new Discord.EmbedBuilder()
@@ -237,7 +304,10 @@ export class Quote extends BotComponent {
             }
         }
         if(embeds.length > 0) {
-            await command.reply({ embeds: embeds });
+            await command.reply({
+                embeds: embeds,
+                files: files.length == 0 ? undefined : files
+            });
             // log
             // TODO: Can probably improve how this is done. Figure out later.
             /*this.wheatley.staff_message_log.send({

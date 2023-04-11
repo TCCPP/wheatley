@@ -86,12 +86,13 @@ export class Report extends BotComponent {
             }
             const quote_embeds = await make_quote_embeds([target_message], undefined, this.wheatley, true);
             // ninja in a custom footer
-            (quote_embeds[0] as Discord.EmbedBuilder).setFooter({
+            (quote_embeds.embeds[0] as Discord.EmbedBuilder).setFooter({
                 text: `ID: ${target_message.author.id}`
             });
             await this.wheatley.staff_flag_log.send({
                 content: `<@&${moderators_role_id}>`,
-                embeds: [ report_embed, ...quote_embeds ]
+                embeds: [ report_embed, ...quote_embeds.embeds ],
+                files: quote_embeds.files
             });
             await interaction.reply({
                 ephemeral: true,

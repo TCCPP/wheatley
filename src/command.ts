@@ -51,6 +51,7 @@ export class TextBasedCommandBuilder<
     descriptions: ConditionalOptional<HasDescriptions, string[]>;
     options = new Discord.Collection<string, TextBasedCommandOption & {type: TextBasedCommandOptionType}>();
     slash_config: boolean[];
+    permissions: undefined | bigint = undefined;
 
     constructor(names: string | MoreThanOne<string>) {
         super();
@@ -94,6 +95,13 @@ export class TextBasedCommandBuilder<
         }
         return this;
     }
+
+    set_permissions(permissions: bigint) {
+        this.permissions = permissions;
+        return this;
+    }
+
+    // TODO: to_command_descriptors?
 }
 
 export abstract class OtherCommandBuilder<HasHandler extends boolean = false, HandlerArgs extends unknown[] = []>
@@ -201,6 +209,7 @@ export class BotTextBasedCommand<Args extends unknown[] = []> extends BotCommand
     constructor(name: string,
                 public readonly description: string | undefined,
                 public readonly slash: boolean,
+                public readonly permissions: undefined | bigint,
                 builder: TextBasedCommandBuilder<Args, true, true>) {
         super(name, builder.handler);
         this.options = builder.options;
@@ -378,6 +387,47 @@ export class TextBasedCommand extends Command {
         }
         this.replied = true;
         this.editing = false;
+    }
+
+    async followUp(
+        raw_message_options: string | (Discord.BaseMessageOptions & CommandAbstractionReplyOptions),
+        positional_ephemeral_if_possible = false,
+        positional_should_text_reply = false
+    ) {
+        // TODO: Duplicate
+        if(is_string(raw_message_options)) {
+            raw_message_options = {
+                content: raw_message_options
+            };
+        }
+        const message_options: Discord.BaseMessageOptions & CommandAbstractionReplyOptions = {
+            deletable: true,
+            allowedMentions: default_allowed_mentions,
+            embeds: [],
+            files: [],
+            components: [],
+            content: "",
+            ...raw_message_options
+        };
+        message_options.ephemeral_if_possible =
+            message_options.ephemeral_if_possible || positional_ephemeral_if_possible;
+        message_options.should_text_reply =
+            message_options.should_text_reply || positional_should_text_reply;
+        /// -----
+        assert(this.replied && !this.editing);
+        // TODO: Better handling for this kind of thing
+        if(this.reply_object instanceof Discord.ChatInputCommandInteraction) {
+            this.response = await this.reply_object.followUp({
+                ephemeral: !!message_options.ephemeral_if_possible,
+                ...message_options
+            });
+        } else {
+            if(message_options.should_text_reply) {
+                this.response = await this.reply_object.reply(message_options);
+            } else {
+                this.response = await this.reply_object.channel.send(message_options);
+            }
+        }
     }
 
     async edit(

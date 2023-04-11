@@ -13,10 +13,10 @@ import { BotComponent } from "./bot-component.js";
 import { action_log_channel_id, bot_spam_id, colors, cpp_help_id, c_help_id, member_log_channel_id,
          message_log_channel_id, MINUTE, mods_channel_id, rules_channel_id, server_suggestions_channel_id,
          staff_flag_log_id, suggestion_action_log_thread_id, suggestion_dashboard_thread_id, TCCPP_ID,
-         welcome_channel_id, zelis_id, the_button_channel_id, skill_role_suggestion_log_id } from "./common.js";
+         welcome_channel_id, zelis_id, the_button_channel_id, skill_role_suggestion_log_id,
+         starboard_channel_id } from "./common.js";
 import { critical_error, fetch_forum_channel, fetch_text_channel, fetch_thread_channel, M, SelfClearingMap,
-         string_split,
-         zip } from "./utils.js";
+         string_split, zip } from "./utils.js";
 
 import { AntiAutoreact } from "./components/anti-autoreact.js";
 import { AntiForumPostDelete } from "./components/anti-forum-post-delete.js";
@@ -43,7 +43,7 @@ import { RoleManager } from "./components/role-manager.js";
 import { Roulette } from "./components/roulette.js";
 import { ServerSuggestionReactions } from "./components/server-suggestion-reactions.js";
 import { ServerSuggestionTracker } from "./components/server-suggestion-tracker.js";
-import { Snowflake } from "./components/snowflake.js";
+import { Snowflake, forge_snowflake } from "./components/snowflake.js";
 import { Speedrun } from "./components/speedrun.js";
 import { Status } from "./components/status.js";
 import { ThreadBasedChannels } from "./components/thread-based-channels.js";
@@ -60,6 +60,7 @@ import { SkillRoleSuggestion } from "./components/skill-role-suggestion.js";
 import { TheButton } from "./components/the-button.js";
 import { Composite } from "./components/composite.js";
 import { Buzzwords } from "./components/buzzwords.js";
+import { Starboard } from "./components/starboard.js";
 
 function create_basic_embed(title: string | undefined, color: number, content: string) {
     const embed = new Discord.EmbedBuilder()
@@ -97,6 +98,7 @@ export class Wheatley extends EventEmitter {
     suggestion_action_log_thread: Discord.ThreadChannel;
     the_button_channel: Discord.TextChannel;
     skill_role_suggestion_log: Discord.ThreadChannel;
+    starboard_channel: Discord.TextChannel;
 
     link_blacklist: LinkBlacklist;
 
@@ -183,6 +185,9 @@ export class Wheatley extends EventEmitter {
                 })(),
                 (async () => {
                     this.the_button_channel = await fetch_text_channel(the_button_channel_id);
+                })(),
+                (async () => {
+                    this.starboard_channel = await fetch_text_channel(starboard_channel_id);
                 })()
             ];
             await Promise.all(promises);
@@ -193,6 +198,8 @@ export class Wheatley extends EventEmitter {
             this.client.on("interactionCreate", this.on_interaction.bind(this));
             this.client.on("messageDelete", this.on_message_delete.bind(this));
             this.client.on("messageUpdate", this.on_message_update.bind(this));
+
+            this.populate_caches();
         });
 
         await this.add_component(AntiAutoreact);
@@ -235,6 +242,7 @@ export class Wheatley extends EventEmitter {
         await this.add_component(TheButton);
         await this.add_component(Composite);
         await this.add_component(Buzzwords);
+        await this.add_component(Starboard);
 
         const token = await fs.promises.readFile("auth.key", { encoding: "utf-8" });
 
@@ -257,6 +265,47 @@ export class Wheatley extends EventEmitter {
         return instance;
     }
 
+    async populate_caches() {
+        // Load a couple hundred messages for every channel we're in
+        const channels: Record<string, {channel: Discord.TextBasedChannel, last_seen: number, done: boolean}> = {};
+        for(const [ _, channel ] of await this.TCCPP.channels.fetch()) {
+            if(channel?.isTextBased() && !channel.name.includes("archived-")) {
+                M.debug(`Loading recent messages from ${channel.name}`);
+                //await channel.messages.fetch({
+                //    limit: 100,
+                //    cache: true
+                //});
+                channels[channel.id] = {
+                    channel,
+                    last_seen: Date.now(),
+                    done: false
+                };
+            }
+        }
+        for(let i = 0; i < 3; i++) {
+            M.log("Fetches round", i);
+            const promises: Promise<any>[] = [];
+            for(const [ id, { channel, last_seen, done }] of Object.entries(channels)) {
+                if(!done) {
+                    promises.push((async () => {
+                        const messages = await channel.messages.fetch({
+                            limit: 100,
+                            cache: true,
+                            before: forge_snowflake(last_seen - 1)
+                        });
+                        channels[id].last_seen = Math.min(
+                            ...[...messages.values()].map(message => message.createdTimestamp)
+                        );
+                        if(messages.size == 0) {
+                            channels[id].done = true;
+                        }
+                    })());
+                }
+            }
+            await Promise.all(promises);
+        }
+    }
+
     // command edit/deletion
 
     register_text_command(trigger: Discord.Message, command: TextBasedCommand, deletable = true) {
@@ -277,7 +326,13 @@ export class Wheatley extends EventEmitter {
             assert(command.names.length == command.descriptions.length);
             for(const [ name, description, slash ] of zip(command.names, command.descriptions, command.slash_config)) {
                 assert(!(name in this.text_commands));
-                this.text_commands[name] = new BotTextBasedCommand(name, description, slash, command);
+                this.text_commands[name] = new BotTextBasedCommand(
+                    name,
+                    description,
+                    slash,
+                    command.permissions,
+                    command
+                );
                 if(slash) {
                     const djs_command = new SlashCommandBuilder()
                         .setName(name)
@@ -294,6 +349,9 @@ export class Wheatley extends EventEmitter {
                         } else {
                             assert(false, "unhandled option type");
                         }
+                    }
+                    if(command.permissions !== undefined) {
+                        djs_command.setDefaultMemberPermissions(command.permissions);
                     }
                     this.guild_command_manager.register(djs_command);
                 }
@@ -312,8 +370,10 @@ export class Wheatley extends EventEmitter {
 
     async handle_command(message: Discord.Message, prev_command_obj?: TextBasedCommand) {
         const match = message.content.match(Wheatley.command_regex);
+        M.debug(message.content, match);
         if(match) {
             const command_name = match[1];
+            M.debug(command_name in this.text_commands);
             if(command_name in this.text_commands) {
                 const command = this.text_commands[command_name];
                 const command_options: unknown[] = [];
@@ -327,6 +387,20 @@ export class Wheatley extends EventEmitter {
                     this
                 );
                 this.register_text_command(message, command_obj);
+                if(command.permissions !== undefined) {
+                    M.debug((await command_obj.get_member()).permissions.has(command.permissions));
+                    if(!(await command_obj.get_member()).permissions.has(command.permissions)) {
+                        await command_obj.reply({
+                            embeds: [
+                                create_basic_embed(
+                                    undefined, colors.red, "Invalid permissions"
+                                )
+                            ],
+                            should_text_reply: true
+                        });
+                        return;
+                    }
+                }
                 // TODO: Handle unexpected input?
                 // NOTE: For now only able to take text input
                 assert(
@@ -454,6 +528,9 @@ export class Wheatley extends EventEmitter {
                         interaction,
                         this
                     );
+                    if(command.permissions !== undefined) {
+                        assert((await command_object.get_member()).permissions.has(command.permissions));
+                    }
                     for(const option of command.options.values()) {
                         // NOTE: Temp for now
                         // eslint-disable-next-line @typescript-eslint/no-unnecessary-condition
@@ -481,6 +558,7 @@ export class Wheatley extends EventEmitter {
             } else if(interaction.isAutocomplete()) {
                 if(interaction.commandName in this.text_commands) {
                     const command = this.text_commands[interaction.commandName];
+                    // TODO: permissions sanity check?
                     const field = interaction.options.getFocused(true);
                     assert(command.options.has(field.name));
                     const option = command.options.get(field.name)!;
