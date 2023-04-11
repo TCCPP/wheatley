@@ -58,16 +58,24 @@ export class BotComponent {
     async on_ready() {} // actually on wheatley ready
     async on_message_create?(message: Discord.Message): Promise<void>;
     async on_message_delete?(message: Discord.Message | Discord.PartialMessage): Promise<void>;
-    async on_message_update?(old_message: Discord.Message | Discord.PartialMessage,
-        new_message: Discord.Message | Discord.PartialMessage): Promise<void>;
+    async on_message_update?(
+        old_message: Discord.Message | Discord.PartialMessage,
+        new_message: Discord.Message | Discord.PartialMessage
+    ): Promise<void>;
     async on_interaction_create?(interaction: Discord.Interaction): Promise<void>;
     async on_guild_member_add?(member: Discord.GuildMember): Promise<void>;
-    async on_guild_member_update?(old_member: Discord.GuildMember | Discord.PartialGuildMember,
-        new_member: Discord.GuildMember): Promise<void>;
-    async on_reaction_add?(reaction: Discord.MessageReaction | Discord.PartialMessageReaction,
-        user: Discord.User                | Discord.PartialUser): Promise<void>;
-    async on_reaction_remove?(reaction: Discord.MessageReaction | Discord.PartialMessageReaction,
-        user: Discord.User                | Discord.PartialUser): Promise<void>;
+    async on_guild_member_update?(
+        old_member: Discord.GuildMember | Discord.PartialGuildMember,
+        new_member: Discord.GuildMember
+    ): Promise<void>;
+    async on_reaction_add?(
+        reaction: Discord.MessageReaction | Discord.PartialMessageReaction,
+        user: Discord.User                | Discord.PartialUser
+    ): Promise<void>;
+    async on_reaction_remove?(
+        reaction: Discord.MessageReaction | Discord.PartialMessageReaction,
+        user: Discord.User                | Discord.PartialUser
+    ): Promise<void>;
     async on_thread_create?(thread: Discord.ThreadChannel): Promise<void>;
     /* eslint-enable @typescript-eslint/no-empty-function, @typescript-eslint/no-unused-vars */
 }
