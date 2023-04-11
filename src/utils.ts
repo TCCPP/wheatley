@@ -437,7 +437,7 @@ export function xxh3(message: string) {
 }
 
 export function is_media_link_embed(embed: Discord.Embed) {
-    return embed.image || embed.video;
+    return embed.image || embed.video || embed.thumbnail;
 }
 
 export function index_of_first_not_satisfying<T>(arr: T[], fn: (_: T) => boolean) {

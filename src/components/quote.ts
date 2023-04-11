@@ -109,10 +109,11 @@ export async function make_quote_embeds(
             }
         })),
         ...message.embeds.filter(is_media_link_embed).map(e => {
-            if(e.image) {
+            if(e.image || e.thumbnail) {
+                // Webp can be thumbnail only, no image. Very weird.
                 return {
                     type: "image",
-                    url: unwrap(e.image.url)
+                    url: unwrap(unwrap(e.image || e.thumbnail).url)
                 };
             } else if(e.video) {
                 return {
