@@ -37,6 +37,7 @@ export class Inspect extends BotComponent {
     ) {
         await command_object.reply({
             ephemeral: true,
+            ephemeral_if_possible: true,
             content: message.content.length > 0 ?
                 Discord.escapeMarkdown(message.content).replace(/[<>/]/g, c => `\\${c}`)
                 : "<empty>"
@@ -44,6 +45,7 @@ export class Inspect extends BotComponent {
         if(message.attachments.size > 0) {
             await command_object.followUp({
                 ephemeral: true,
+                ephemeral_if_possible: true,
                 content: "Attachments: " + JSON.stringify(message.attachments.map(
                     // This looks silly, but it is the best way I can think of to call all the getters and re-package
                     ({ contentType, description, ephemeral, height, id, name, proxyURL, size, spoiler, url, width }) =>
@@ -54,6 +56,7 @@ export class Inspect extends BotComponent {
         if(message.embeds.length > 0) {
             await command_object.followUp({
                 ephemeral: true,
+                ephemeral_if_possible: true,
                 content: "Embeds: " + JSON.stringify(message.embeds.map(
                     // This looks silly, but it is the best way I can think of to call all the getters and re-package
                     ({
