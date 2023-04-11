@@ -60,7 +60,7 @@ export class AntiScreenshot extends BotComponent {
                             interaction.channel?.url, interaction.user.id, interaction.user.tag);
                     await interaction.reply({
                         ephemeral: true,
-                        content: "Please read before dismissing"
+                        content: "Please read before dismissing. You will be allowed to dismiss in a few seconds."
                     });
                 } else {
                     M.debug("anti_screenshot_acknowledge received",
