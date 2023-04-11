@@ -370,10 +370,8 @@ export class Wheatley extends EventEmitter {
 
     async handle_command(message: Discord.Message, prev_command_obj?: TextBasedCommand) {
         const match = message.content.match(Wheatley.command_regex);
-        M.debug(message.content, match);
         if(match) {
             const command_name = match[1];
-            M.debug(command_name in this.text_commands);
             if(command_name in this.text_commands) {
                 const command = this.text_commands[command_name];
                 const command_options: unknown[] = [];
@@ -388,7 +386,6 @@ export class Wheatley extends EventEmitter {
                 );
                 this.register_text_command(message, command_obj);
                 if(command.permissions !== undefined) {
-                    M.debug((await command_obj.get_member()).permissions.has(command.permissions));
                     if(!(await command_obj.get_member()).permissions.has(command.permissions)) {
                         await command_obj.reply({
                             embeds: [
