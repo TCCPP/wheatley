@@ -19,7 +19,7 @@ const memes_star_threshold = 14;
 const other_threshold = 7;
 const memes_other_threshold = 10;
 
-const auto_delete_threshold = 14;
+const auto_delete_threshold = 10;
 
 const excluded_channels = new Set([
     rules_channel_id,
@@ -30,6 +30,10 @@ const excluded_channels = new Set([
     introductions_channel_id,
     starboard_channel_id
 ]);
+
+// https://stackoverflow.com/questions/64053658/get-emojis-from-message-discord-js-v12
+// https://www.reddit.com/r/Discord_Bots/comments/gteo6t/discordjs_is_there_a_way_to_detect_emojis_in_a/
+const EMOJIREGEX = /((?<!\\)<a?:[^:]+:(\d+)>)|\p{Emoji_Presentation}|\p{Extended_Pictographic}/gmu;
 
 export class Starboard extends BotComponent {
     data: database_schema;
@@ -49,7 +53,7 @@ export class Starboard extends BotComponent {
         this.update_database();
 
         this.add_command(
-            new TextBasedCommandBuilder("negative-emoji")
+            new TextBasedCommandBuilder("add-negative-emoji")
                 .set_description("Register a negative emoji")
                 .add_string_option({
                     title: "emojis",
@@ -58,6 +62,25 @@ export class Starboard extends BotComponent {
                 })
                 .set_permissions(Discord.PermissionFlagsBits.Administrator)
                 .set_handler(this.add_negative_emoji.bind(this))
+        );
+
+        this.add_command(
+            new TextBasedCommandBuilder("add-delete-emoji")
+                .set_description("Register a delete emoji")
+                .add_string_option({
+                    title: "emojis",
+                    description: "emojis",
+                    required: true
+                })
+                .set_permissions(Discord.PermissionFlagsBits.Administrator)
+                .set_handler(this.add_delete_emoji.bind(this))
+        );
+
+        this.add_command(
+            new TextBasedCommandBuilder("list-starboard-config")
+                .set_description("List starboard config")
+                .set_permissions(Discord.PermissionFlagsBits.Administrator)
+                .set_handler(this.list_config.bind(this))
         );
     }
 
@@ -140,6 +163,14 @@ export class Starboard extends BotComponent {
         if(!await this.is_valid_channel(reaction.message.channel)) {
             return;
         }
+        // Check delete emojis
+        if(
+            reaction.emoji.name && this.data.delete_emojis.includes(reaction.emoji.name)
+            && reaction.count && reaction.count >= auto_delete_threshold
+        ) {
+            M.log(`Auto-deleting ${reaction.message.content} for ${reaction.count} ${reaction.emoji.name} reactions`);
+            await reaction.message.delete();
+        }
         if(reaction.message.id in this.data.starboard) {
             // Update counts
             await this.update_starboard(await departialize(reaction.message));
@@ -190,6 +221,29 @@ export class Starboard extends BotComponent {
     }
 
     async add_negative_emoji(command: TextBasedCommand, arg: string) {
-        //command.reply("Hello " + arg);
+        const emojis = arg.match(EMOJIREGEX);
+        if(emojis) {
+            const names = emojis.map(emoji => emoji.startsWith("<") ? emoji.split(":")[1] : emoji);
+            this.data.negative_emojis.push(...names);
+            await command.reply(`Added ${names.join(", ")} to the negative emojis`);
+            await this.update_database();
+        }
+    }
+
+    async add_delete_emoji(command: TextBasedCommand, arg: string) {
+        const emojis = arg.match(EMOJIREGEX);
+        if(emojis) {
+            const names = emojis.map(emoji => emoji.startsWith("<") ? emoji.split(":")[1] : emoji);
+            this.data.delete_emojis.push(...names);
+            await command.reply(`Added ${names.join(", ")} to the delete emojis`);
+            await this.update_database();
+        }
+    }
+
+    async list_config(command: TextBasedCommand) {
+        await command.reply([
+            `Negative emojis: ${this.data.negative_emojis.join(", ")}`,
+            `Delete emojis: ${this.data.delete_emojis.join(", ")}`
+        ].join("\n"));
     }
 }
