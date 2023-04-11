@@ -35,11 +35,18 @@ export class UtilityTools extends BotComponent {
                 await message.reply("Done");
             } else if(message.content == "!prefix-archive-channels") {
                 M.info("got !prefix-archive-channels");
-                const archive = await this.wheatley.TCCPP.channels.fetch("910306041969913938");
-                assert(archive instanceof Discord.CategoryChannel);
-                for(const [ _, channel ] of archive.children.cache) {
-                    if(!channel.name.startsWith("archived-")) {
-                        await channel.setName(`archived-${channel.name}`);
+                for(const id of [
+                    "910306041969913938",
+                    "455278783352537099",
+                    "429594248099135488",
+                    "910308747929321492"
+                ]) {
+                    const archive = await this.wheatley.TCCPP.channels.fetch(id);
+                    assert(archive instanceof Discord.CategoryChannel);
+                    for(const [ _, channel ] of archive.children.cache) {
+                        if(!channel.name.startsWith("archived-")) {
+                            await channel.setName(`archived-${channel.name}`);
+                        }
                     }
                 }
                 await message.reply("Done");
