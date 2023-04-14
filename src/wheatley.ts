@@ -14,7 +14,8 @@ import { action_log_channel_id, bot_spam_id, colors, cpp_help_id, c_help_id, mem
          message_log_channel_id, MINUTE, mods_channel_id, rules_channel_id, server_suggestions_channel_id,
          staff_flag_log_id, suggestion_action_log_thread_id, suggestion_dashboard_thread_id, TCCPP_ID,
          welcome_channel_id, zelis_id, the_button_channel_id, skill_role_suggestion_log_id,
-         starboard_channel_id } from "./common.js";
+         starboard_channel_id,
+         staff_action_log_channel_id } from "./common.js";
 import { critical_error, fetch_forum_channel, fetch_text_channel, fetch_thread_channel, M, SelfClearingMap,
          string_split, zip } from "./utils.js";
 
@@ -99,6 +100,7 @@ export class Wheatley extends EventEmitter {
     the_button_channel: Discord.TextChannel;
     skill_role_suggestion_log: Discord.ThreadChannel;
     starboard_channel: Discord.TextChannel;
+    staff_action_log_channel: Discord.TextChannel;
 
     link_blacklist: LinkBlacklist;
 
@@ -188,6 +190,9 @@ export class Wheatley extends EventEmitter {
                 })(),
                 (async () => {
                     this.starboard_channel = await fetch_text_channel(starboard_channel_id);
+                })(),
+                (async () => {
+                    this.staff_action_log_channel = await fetch_text_channel(staff_action_log_channel_id);
                 })()
             ];
             await Promise.all(promises);

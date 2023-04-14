@@ -1,8 +1,9 @@
 import * as Discord from "discord.js";
 import { strict as assert } from "assert";
 import { KeyedMutexSet, M, departialize } from "../utils.js";
-import { announcements_channel_id, introductions_channel_id, memes_channel_id, resources_channel_id, rules_channel_id,
-         server_suggestions_channel_id, starboard_channel_id, the_button_channel_id } from "../common.js";
+import { announcements_channel_id, introductions_channel_id, is_authorized_admin, memes_channel_id,
+         resources_channel_id, rules_channel_id, server_suggestions_channel_id, starboard_channel_id,
+         the_button_channel_id } from "../common.js";
 import { BotComponent } from "../bot-component.js";
 import { Wheatley } from "../wheatley.js";
 import { make_quote_embeds } from "./quote.js";
@@ -17,7 +18,7 @@ type database_schema = {
 const star_threshold = 5;
 const memes_star_threshold = 14;
 const other_threshold = 7;
-const memes_other_threshold = 10;
+const memes_other_threshold = 14;
 
 const auto_delete_threshold = 10;
 
@@ -123,7 +124,7 @@ export class Starboard extends BotComponent {
         return !excluded_channels.has(channel.id) && !(channel instanceof Discord.ForumChannel) && !channel.isDMBased();
     }
 
-    async update_starboard(message: Discord.Message, should_update_embeds = true) {
+    async update_starboard(message: Discord.Message) {
         this.mutex.lock(message.id);
         try {
             const make_embeds = () => make_quote_embeds(
@@ -140,7 +141,7 @@ export class Starboard extends BotComponent {
                 );
                 await starboard_message.edit({
                     content: this.reactions_string(message),
-                    ...(should_update_embeds ? await make_embeds() : {})
+                    ...await make_embeds()
                 });
             } else {
                 // send
@@ -156,6 +157,22 @@ export class Starboard extends BotComponent {
         await this.update_database();
     }
 
+    async handle_auto_delete(reaction: Discord.MessageReaction | Discord.PartialMessageReaction) {
+        M.log(`Auto-deleting ${reaction.message.content} for ${reaction.count} ${reaction.emoji.name} reactions`);
+        const message = await departialize(reaction.message);
+        await this.wheatley.staff_action_log_channel.send({
+            content: `Auto-deleting message from <@${message.author.id}> for `
+                +`${reaction.count} ${reaction.emoji.name} reactions`,
+            ...await make_quote_embeds(
+                [message],
+                undefined,
+                this.wheatley,
+                true
+            )
+        });
+        await reaction.message.delete();
+    }
+
     override async on_reaction_add(
         reaction: Discord.MessageReaction | Discord.PartialMessageReaction,
         user: Discord.User                | Discord.PartialUser
@@ -167,9 +184,11 @@ export class Starboard extends BotComponent {
         if(
             reaction.emoji.name && this.data.delete_emojis.includes(reaction.emoji.name)
             && reaction.count && reaction.count >= auto_delete_threshold
+            && reaction.message.channel.id == memes_channel_id // just in #memes, for now
+            && !is_authorized_admin((await departialize(reaction.message)).author.id)
         ) {
-            M.log(`Auto-deleting ${reaction.message.content} for ${reaction.count} ${reaction.emoji.name} reactions`);
-            await reaction.message.delete();
+            await this.handle_auto_delete(reaction);
+            return;
         }
         if(reaction.message.id in this.data.starboard) {
             // Update counts
@@ -203,7 +222,7 @@ export class Starboard extends BotComponent {
         assert(old_message.id == new_message.id);
         if(old_message.id in this.data.starboard) {
             // Update content
-            await this.update_starboard(await departialize(new_message), true);
+            await this.update_starboard(await departialize(new_message));
         }
     }
 
