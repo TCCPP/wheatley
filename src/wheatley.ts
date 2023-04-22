@@ -98,7 +98,7 @@ export class Wheatley extends EventEmitter {
     suggestion_dashboard_thread: Discord.ThreadChannel;
     suggestion_action_log_thread: Discord.ThreadChannel;
     the_button_channel: Discord.TextChannel;
-    skill_role_suggestion_log: Discord.ThreadChannel;
+    skill_role_suggestion_log: Discord.TextChannel;
     starboard_channel: Discord.TextChannel;
     staff_action_log_channel: Discord.TextChannel;
 
@@ -164,10 +164,7 @@ export class Wheatley extends EventEmitter {
                 })(),
                 (async () => {
                     this.mods_channel = await fetch_text_channel(mods_channel_id);
-                    this.skill_role_suggestion_log = await fetch_thread_channel(
-                        this.mods_channel,
-                        skill_role_suggestion_log_id
-                    );
+                    this.skill_role_suggestion_log = await fetch_text_channel(skill_role_suggestion_log_id);
                 })(),
                 (async () => {
                     this.staff_member_log_channel = await fetch_text_channel(member_log_channel_id);
