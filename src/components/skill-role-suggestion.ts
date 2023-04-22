@@ -97,15 +97,15 @@ export class SkillRoleSuggestion extends BotComponent {
             const suggestion_modal = new Discord.EmbedBuilder()
                 .setColor(colors.green)
                 .setAuthor({
-                    name: suggester.displayName,
-                    iconURL: suggester.avatarURL() ?? suggester.user.displayAvatarURL()
+                    name: member.displayName,
+                    iconURL: member.avatarURL() ?? member.user.displayAvatarURL()
                 })
                 .setFooter({
-                    text: `Suggested for ${member.displayName} ${member.user.id} by ${interaction.user.id}`,
-                    iconURL: member.avatarURL() ?? member.user.displayAvatarURL()
+                    text: `Suggested by ${suggester.displayName} ${suggester.user.id} for ${member.user.id}`,
+                    iconURL: suggester.avatarURL() ?? suggester.user.displayAvatarURL()
                 });
             const comments = interaction.fields.getTextInputValue("skill-role-suggestion-modal-comments");
-            let description = `Skill role suggestion for <@${member.user.id}>: ${role}`;
+            let description = `Skill role suggestion for <@${member.user.id}> by <@${suggester.user.id}>: ${role}`;
             if(comments.length > 0) {
                 description += `\nComments: ${comments}`;
             }
