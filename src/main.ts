@@ -46,11 +46,13 @@ const client = new Discord.Client({
         Discord.GatewayIntentBits.DirectMessageTyping,
     ],
     partials: [
-        Discord.Partials.Channel
+        Discord.Partials.Channel,
+        Discord.Partials.Message,
+        Discord.Partials.Reaction,
     ],
     makeCache: Discord.Options.cacheWithLimits({
         ...Discord.Options.DefaultMakeCacheSettings,
-        MessageManager: 5000
+        MessageManager: 1000
     })
 });
 

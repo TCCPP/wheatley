@@ -1,7 +1,7 @@
 import * as Discord from "discord.js";
 import { strict as assert } from "assert";
-import { KeyedMutexSet, M, departialize } from "../utils.js";
-import { announcements_channel_id, introductions_channel_id, is_authorized_admin, memes_channel_id,
+import { KeyedMutexSet, M, SelfClearingSet, departialize, unwrap } from "../utils.js";
+import { MINUTE, announcements_channel_id, introductions_channel_id, is_authorized_admin, memes_channel_id,
          resources_channel_id, rules_channel_id, server_suggestions_channel_id, starboard_channel_id,
          the_button_channel_id } from "../common.js";
 import { BotComponent } from "../bot-component.js";
@@ -39,6 +39,7 @@ const EMOJIREGEX = /((?<!\\)<a?:[^:]+:(\d+)>)|\p{Emoji_Presentation}|\p{Extended
 export class Starboard extends BotComponent {
     data: database_schema;
     mutex = new KeyedMutexSet<string>();
+    notified_about_auto_delete_threshold = new SelfClearingSet<string>(24 * 60 * MINUTE);
 
     constructor(wheatley: Wheatley) {
         super(wheatley);
@@ -157,20 +158,32 @@ export class Starboard extends BotComponent {
         await this.update_database();
     }
 
-    async handle_auto_delete(reaction: Discord.MessageReaction | Discord.PartialMessageReaction) {
-        M.log(`Auto-deleting ${reaction.message.content} for ${reaction.count} ${reaction.emoji.name} reactions`);
-        const message = await departialize(reaction.message);
-        await this.wheatley.staff_action_log_channel.send({
-            content: `Auto-deleting message from <@${message.author.id}> for `
-                +`${reaction.count} ${reaction.emoji.name} reactions`,
-            ...await make_quote_embeds(
-                [message],
-                undefined,
-                this.wheatley,
-                true
-            )
-        });
-        await reaction.message.delete();
+    async handle_auto_delete(message: Discord.Message, delete_reaction: Discord.MessageReaction) {
+        const reactions = message.reactions.cache.map(r => [ r.emoji, r.count ] as [Discord.Emoji, number]);
+        const non_negative_reactions = reactions.filter(
+            ([ emoji, _ ]) => !this.data.negative_emojis.includes(unwrap(emoji.name))
+                && !this.data.delete_emojis.includes(unwrap(emoji.name))
+        );
+        const max_non_negative = Math.max(...non_negative_reactions.map(([ emoji, count ]) => count)); // -inf if |a|=0
+        const do_delete = message.channel.id == memes_channel_id && delete_reaction.count > max_non_negative;
+        const action = do_delete ? "Auto-deleting" : "Auto-delete threshold reached";
+        M.log(`${action} ${message.url} for ${delete_reaction.count} ${delete_reaction.emoji.name} reactions`);
+        if(do_delete || !this.notified_about_auto_delete_threshold.has(message.id)) {
+            await this.wheatley.staff_action_log_channel.send({
+                content: `${action} message from <@${message.author.id}> for `
+                    +`${delete_reaction.count} ${delete_reaction.emoji.name} reactions`,
+                ...await make_quote_embeds(
+                    [message],
+                    undefined,
+                    this.wheatley,
+                    true
+                )
+            });
+            this.notified_about_auto_delete_threshold.insert(message.id);
+        }
+        if(do_delete) {
+            await message.delete();
+        }
     }
 
     override async on_reaction_add(
@@ -180,14 +193,16 @@ export class Starboard extends BotComponent {
         if(!await this.is_valid_channel(reaction.message.channel)) {
             return;
         }
+        if(reaction.partial) {
+            reaction = await reaction.fetch();
+        }
         // Check delete emojis
         if(
             reaction.emoji.name && this.data.delete_emojis.includes(reaction.emoji.name)
-            && reaction.count && reaction.count >= auto_delete_threshold
-            && reaction.message.channel.id == memes_channel_id // just in #memes, for now
+            && reaction.count >= auto_delete_threshold
             && !is_authorized_admin((await departialize(reaction.message)).author.id)
         ) {
-            await this.handle_auto_delete(reaction);
+            await this.handle_auto_delete(await departialize(reaction.message), reaction);
             return;
         }
         if(reaction.message.id in this.data.starboard) {
