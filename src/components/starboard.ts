@@ -92,6 +92,7 @@ export class Starboard extends BotComponent {
     }
 
     reactions_string(message: Discord.Message) {
+        M.info("reactions string:", message.url, message.reactions.cache.map(reaction => reaction));
         return [
             ...message.reactions.cache
                 .map(reaction => reaction)
@@ -171,7 +172,8 @@ export class Starboard extends BotComponent {
         if(do_delete || !this.notified_about_auto_delete_threshold.has(message.id)) {
             await this.wheatley.staff_action_log_channel.send({
                 content: `${action} message from <@${message.author.id}> for `
-                    +`${delete_reaction.count} ${delete_reaction.emoji.name} reactions`,
+                    + `${delete_reaction.count} ${delete_reaction.emoji.name} reactions`
+                    + `\n${await this.reactions_string(message)}`,
                 ...await make_quote_embeds(
                     [message],
                     undefined,
@@ -183,6 +185,12 @@ export class Starboard extends BotComponent {
         }
         if(do_delete) {
             await message.delete();
+            await message.channel.send(
+                `<@${message.author.id}> A message of yours was automatically deleted because a threshold for
+                <:delet_this:669598943117836312> reactions (or similar) was reached.\n\n`
+                + "FAQ: How can I avoid this in the future?\n"
+                + "Answer: Post less cringe"
+            );
         }
     }
 
