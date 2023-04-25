@@ -166,7 +166,16 @@ export class Starboard extends BotComponent {
                 && !this.data.delete_emojis.includes(unwrap(emoji.name))
         );
         const max_non_negative = Math.max(...non_negative_reactions.map(([ emoji, count ]) => count)); // -inf if |a|=0
-        const do_delete = message.channel.id == memes_channel_id && delete_reaction.count > max_non_negative;
+        let do_delete = true;
+        if(message.channel.id != memes_channel_id) {
+            do_delete = false;
+        }
+        if(delete_reaction.count <= max_non_negative) {
+            do_delete = false;
+        }
+        if(is_authorized_admin(message.author.id) || message.author.bot) {
+            do_delete = false;
+        }
         const action = do_delete ? "Auto-deleting" : "Auto-delete threshold reached";
         M.log(`${action} ${message.url} for ${delete_reaction.count} ${delete_reaction.emoji.name} reactions`);
         if(do_delete || !this.notified_about_auto_delete_threshold.has(message.id)) {
@@ -186,8 +195,8 @@ export class Starboard extends BotComponent {
         if(do_delete) {
             await message.delete();
             await message.channel.send(
-                `<@${message.author.id}> A message of yours was automatically deleted because a threshold for
-                <:delet_this:669598943117836312> reactions (or similar) was reached.\n\n`
+                `<@${message.author.id}> A message of yours was automatically deleted because a threshold for`
+                + " <:delet_this:669598943117836312> reactions (or similar) was reached.\n\n"
                 + "FAQ: How can I avoid this in the future?\n"
                 + "Answer: Post less cringe"
             );
@@ -208,7 +217,7 @@ export class Starboard extends BotComponent {
         if(
             reaction.emoji.name && this.data.delete_emojis.includes(reaction.emoji.name)
             && reaction.count >= auto_delete_threshold
-            && !is_authorized_admin((await departialize(reaction.message)).author.id)
+            //&& !is_authorized_admin((await departialize(reaction.message)).author.id)
         ) {
             await this.handle_auto_delete(await departialize(reaction.message), reaction);
             return;
