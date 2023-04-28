@@ -204,13 +204,15 @@ export class Starboard extends BotComponent {
             await this.wheatley.staff_action_log_channel.send({
                 content: `${action} message from <@${message.author.id}> for `
                     + `${delete_reaction.count} ${delete_reaction.emoji.name} reactions`
-                    + `\n${await this.reactions_string(message)}`,
+                    + `\n${await this.reactions_string(message)}`
+                    + "\n" + (await delete_reaction.users.fetch()).map(user => `<@${user.id}> ${user.tag}`).join("\n"),
                 ...await make_quote_embeds(
                     [message],
                     undefined,
                     this.wheatley,
                     true
-                )
+                ),
+                allowedMentions: { parse: [] }
             });
             this.notified_about_auto_delete_threshold.insert(message.id);
         }
