@@ -120,7 +120,7 @@ export class AntiScreenshot extends BotComponent {
                     name: starter_message.author.tag,
                     iconURL: starter_message.author.avatarURL()!
                 })
-                .setDescription(starter_message.content);
+                .setDescription(starter_message.content || "<empty>");
             await this.wheatley.staff_message_log.send({
                 content: "Anti-screenshot message sent",
                 embeds: [log_embed],
