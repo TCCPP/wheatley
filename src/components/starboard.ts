@@ -12,6 +12,7 @@ import { TextBasedCommand, TextBasedCommandBuilder } from "../command.js";
 type database_schema = {
     negative_emojis: string[];
     delete_emojis: string[];
+    ignored_emojis: string[];
     starboard: Record<string, string>;
 };
 
@@ -47,10 +48,15 @@ export class Starboard extends BotComponent {
             this.data = {
                 negative_emojis: [],
                 delete_emojis: [],
+                ignored_emojis: [],
                 starboard: {}
             };
         } else {
             this.data = this.wheatley.database.get<database_schema>("starboard");
+            // add new fields as the schema evolves
+            if((this.data as any).ignored_emojis === undefined) {
+                this.data.ignored_emojis = [];
+            }
         }
         this.update_database();
 
@@ -79,6 +85,18 @@ export class Starboard extends BotComponent {
         );
 
         this.add_command(
+            new TextBasedCommandBuilder("add-ignored-emoji")
+                .set_description("Register an ignored emoji")
+                .add_string_option({
+                    title: "emojis",
+                    description: "emojis",
+                    required: true
+                })
+                .set_permissions(Discord.PermissionFlagsBits.Administrator)
+                .set_handler(this.add_ignored_emoji.bind(this))
+        );
+
+        this.add_command(
             new TextBasedCommandBuilder("list-starboard-config")
                 .set_description("List starboard config")
                 .set_permissions(Discord.PermissionFlagsBits.Administrator)
@@ -97,6 +115,7 @@ export class Starboard extends BotComponent {
             ...message.reactions.cache
                 .map(reaction => reaction)
                 .filter(({ emoji }) => emoji instanceof Discord.GuildEmoji || emoji.id === null)
+                .filter(({ emoji }) => !(emoji.name && this.data.ignored_emojis.includes(emoji.name)))
                 .sort((a, b) => b.count - a.count)
                 .map(({ emoji, count }) => `${emoji.id ? `<:${emoji.name}:${emoji.id}>` : emoji.name} **${count}**`),
             `<#${message.channel.id}>`
@@ -112,7 +131,10 @@ export class Starboard extends BotComponent {
             } else {
                 return reaction.count >= star_threshold;
             }
-        } else if(!this.data.negative_emojis.includes(reaction.emoji.name)) {
+        } else if(!(
+            this.data.negative_emojis.includes(reaction.emoji.name)
+            || this.data.ignored_emojis.includes(reaction.emoji.name)
+        )) {
             if(reaction.message.channel.id == memes_channel_id) {
                 return reaction.count >= memes_other_threshold;
             } else {
@@ -287,6 +309,16 @@ export class Starboard extends BotComponent {
             const names = emojis.map(emoji => emoji.startsWith("<") ? emoji.split(":")[1] : emoji);
             this.data.delete_emojis.push(...names);
             await command.reply(`Added ${names.join(", ")} to the delete emojis`);
+            await this.update_database();
+        }
+    }
+
+    async add_ignored_emoji(command: TextBasedCommand, arg: string) {
+        const emojis = arg.match(EMOJIREGEX);
+        if(emojis) {
+            const names = emojis.map(emoji => emoji.startsWith("<") ? emoji.split(":")[1] : emoji);
+            this.data.ignored_emojis.push(...names);
+            await command.reply(`Added ${names.join(", ")} to the ignored emojis`);
             await this.update_database();
         }
     }
