@@ -326,7 +326,8 @@ export class Starboard extends BotComponent {
     async list_config(command: TextBasedCommand) {
         await command.reply([
             `Negative emojis: ${this.data.negative_emojis.join(", ")}`,
-            `Delete emojis: ${this.data.delete_emojis.join(", ")}`
+            `Delete emojis: ${this.data.delete_emojis.join(", ")}`,
+            `Ignored emojis: ${this.data.ignored_emojis.join(", ")}`
         ].join("\n"));
     }
 }
