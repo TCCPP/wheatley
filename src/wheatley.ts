@@ -325,7 +325,7 @@ export class Wheatley extends EventEmitter {
     add_command<T extends unknown[]>(
         command: TextBasedCommandBuilder<T, true, true> | MessageContextMenuCommandBuilder<true> | ModalHandler<true>
     ) {
-        if(command instanceof TextBasedCommandBuilder<T, true, true>) {
+        if(command instanceof TextBasedCommandBuilder) {
             assert(command.names.length > 0);
             assert(command.names.length == command.descriptions.length);
             for(const [ name, description, slash ] of zip(command.names, command.descriptions, command.slash_config)) {
