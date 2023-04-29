@@ -1,6 +1,6 @@
 import * as Discord from "discord.js";
 import { strict as assert } from "assert";
-import { KeyedMutexSet, M, SelfClearingSet, departialize, unwrap } from "../utils.js";
+import { KeyedMutexSet, M, departialize, unwrap } from "../utils.js";
 import { MINUTE, announcements_channel_id, introductions_channel_id, is_authorized_admin, memes_channel_id,
          resources_channel_id, rules_channel_id, server_suggestions_channel_id, starboard_channel_id,
          the_button_channel_id } from "../common.js";
@@ -14,6 +14,15 @@ type database_schema = {
     delete_emojis: string[];
     ignored_emojis: string[];
     starboard: Record<string, string>;
+    notified_about_auto_delete_threshold: string[];
+};
+
+type component_data = {
+    negative_emojis: string[];
+    delete_emojis: string[];
+    ignored_emojis: string[];
+    starboard: Record<string, string>;
+    notified_about_auto_delete_threshold: Set<string>;
 };
 
 const star_threshold = 5;
@@ -38,9 +47,8 @@ const excluded_channels = new Set([
 const EMOJIREGEX = /((?<!\\)<a?:[^:]+:(\d+)>)|\p{Emoji_Presentation}|\p{Extended_Pictographic}/gmu;
 
 export class Starboard extends BotComponent {
-    data: database_schema;
+    data: component_data;
     mutex = new KeyedMutexSet<string>();
-    notified_about_auto_delete_threshold = new SelfClearingSet<string>(24 * 60 * MINUTE);
 
     constructor(wheatley: Wheatley) {
         super(wheatley);
@@ -49,14 +57,23 @@ export class Starboard extends BotComponent {
                 negative_emojis: [],
                 delete_emojis: [],
                 ignored_emojis: [],
-                starboard: {}
+                starboard: {},
+                notified_about_auto_delete_threshold: new Set()
             };
         } else {
-            this.data = this.wheatley.database.get<database_schema>("starboard");
+            const database = this.wheatley.database.get<database_schema>("starboard");
             // add new fields as the schema evolves
-            if((this.data as any).ignored_emojis === undefined) {
-                this.data.ignored_emojis = [];
+            if((database as any).ignored_emojis === undefined) {
+                database.ignored_emojis = [];
             }
+            if((database as any).notified_about_auto_delete_threshold === undefined) {
+                database.notified_about_auto_delete_threshold = [];
+            }
+            // transform
+            this.data = {
+                ...database,
+                notified_about_auto_delete_threshold: new Set(...database.notified_about_auto_delete_threshold)
+            };
         }
         this.update_database();
 
@@ -105,7 +122,11 @@ export class Starboard extends BotComponent {
     }
 
     async update_database() {
-        this.wheatley.database.set<database_schema>("starboard", this.data);
+        this.wheatley.database.set<database_schema>("starboard", {
+            ...this.data,
+            // transform set to array
+            notified_about_auto_delete_threshold: [...this.data.notified_about_auto_delete_threshold]
+        });
         await this.wheatley.database.update();
     }
 
@@ -200,8 +221,8 @@ export class Starboard extends BotComponent {
         }
         const action = do_delete ? "Auto-deleting" : "Auto-delete threshold reached";
         M.log(`${action} ${message.url} for ${delete_reaction.count} ${delete_reaction.emoji.name} reactions`);
-        if(do_delete || !this.notified_about_auto_delete_threshold.has(message.id)) {
-            await this.wheatley.staff_action_log_channel.send({
+        if(do_delete || !this.data.notified_about_auto_delete_threshold.has(message.id)) {
+            await this.wheatley.staff_flag_log.send({
                 content: `${action} message from <@${message.author.id}> for `
                     + `${delete_reaction.count} ${delete_reaction.emoji.name} reactions`
                     + `\n${await this.reactions_string(message)}`
@@ -214,7 +235,8 @@ export class Starboard extends BotComponent {
                 ),
                 allowedMentions: { parse: [] }
             });
-            this.notified_about_auto_delete_threshold.insert(message.id);
+            this.data.notified_about_auto_delete_threshold.add(message.id);
+            await this.update_database();
         }
         if(do_delete) {
             await message.delete();
