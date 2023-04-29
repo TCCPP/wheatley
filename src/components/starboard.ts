@@ -72,7 +72,7 @@ export class Starboard extends BotComponent {
             // transform
             this.data = {
                 ...database,
-                notified_about_auto_delete_threshold: new Set(...database.notified_about_auto_delete_threshold)
+                notified_about_auto_delete_threshold: new Set([...database.notified_about_auto_delete_threshold])
             };
         }
         this.update_database();
@@ -131,7 +131,7 @@ export class Starboard extends BotComponent {
     }
 
     reactions_string(message: Discord.Message) {
-        M.info("reactions string:", message.url, message.reactions.cache.map(reaction => reaction));
+        //M.info("reactions string:", message.url, message.reactions.cache.map(reaction => reaction));
         return [
             ...message.reactions.cache
                 .map(reaction => reaction)
