@@ -144,6 +144,7 @@ export function get_url_for(channel: Discord.GuildChannel | Discord.TextChannel 
     return `https://discord.com/channels/${channel.guildId}/${channel.id}`;
 }
 
+// wait n milliseconds
 export async function delay(n: number): Promise<void> {
     return new Promise<void>(resolve => setTimeout(resolve, n));
 }

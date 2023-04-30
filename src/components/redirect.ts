@@ -1,0 +1,47 @@
+import * as Discord from "discord.js";
+import { strict as assert } from "assert";
+import { BotComponent } from "../bot-component.js";
+import { Wheatley } from "../wheatley.js";
+import { TextBasedCommand, TextBasedCommandBuilder } from "../command.js";
+import { TCCPP_ID, colors } from "../common.js";
+import { M, delay, unwrap } from "../utils.js";
+
+export class Redirect extends BotComponent {
+    constructor(wheatley: Wheatley) {
+        super(wheatley);
+
+        this.add_command(
+            new TextBasedCommandBuilder("redirect")
+                .set_description("Redirect a conversation")
+                .add_string_option({
+                    title: "channel",
+                    description: "channel",
+                    required: true
+                })
+                .set_permissions(Discord.PermissionFlagsBits.Administrator)
+                .set_handler(this.redirect.bind(this))
+        );
+    }
+
+    async redirect(command: TextBasedCommand, arg: string) {
+        M.log("Redirect command received");
+        assert(command.channel);
+        assert(command.channel instanceof Discord.GuildChannel);
+        const initial_permissions = command.channel.permissionOverwrites.cache.clone();
+        await command.channel.permissionOverwrites.edit(TCCPP_ID, { SendMessages: false });
+        await command.reply({
+            embeds: [
+                new Discord.EmbedBuilder()
+                    .setTitle("Channel Locked")
+                    .setDescription(
+                        `Please move the current conversation to ${arg}.`
+                        + "\nThe channel will be unlocked in 30 seconds."
+                    )
+                    .setColor(colors.color)
+            ]
+        });
+        await delay(30 * 1000);
+        await command.channel.permissionOverwrites.set(initial_permissions);
+        //await command.channel.permissionOverwrites.edit(TCCPP_ID, { SendMessages: null });
+    }
+}

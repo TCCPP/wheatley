@@ -63,6 +63,7 @@ import { Composite } from "./components/composite.js";
 import { Buzzwords } from "./components/buzzwords.js";
 import { Starboard } from "./components/starboard.js";
 import { ThreadCreatedMessage } from "./components/thread-created-message.js";
+import { Redirect } from "./components/redirect.js";
 
 function create_basic_embed(title: string | undefined, color: number, content: string) {
     const embed = new Discord.EmbedBuilder()
@@ -247,6 +248,7 @@ export class Wheatley extends EventEmitter {
         await this.add_component(Buzzwords);
         await this.add_component(Starboard);
         await this.add_component(ThreadCreatedMessage);
+        await this.add_component(Redirect);
 
         const token = await fs.promises.readFile("auth.key", { encoding: "utf-8" });
 
