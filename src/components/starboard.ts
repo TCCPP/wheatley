@@ -1,7 +1,7 @@
 import * as Discord from "discord.js";
 import { strict as assert } from "assert";
 import { KeyedMutexSet, M, departialize, unwrap } from "../utils.js";
-import { MINUTE, announcements_channel_id, introductions_channel_id, is_authorized_admin, memes_channel_id,
+import { MINUTE, announcements_channel_id, introductions_channel_id, is_authorized_admin, is_root, memes_channel_id,
          resources_channel_id, rules_channel_id, server_suggestions_channel_id, starboard_channel_id,
          the_button_channel_id } from "../common.js";
 import { BotComponent } from "../bot-component.js";
@@ -42,6 +42,10 @@ const excluded_channels = new Set([
     starboard_channel_id
 ]);
 
+const max_deletes_in_24h = 5;
+
+const starboard_epoch = new Date("2023-04-01T00:00:00.000Z").getTime();
+
 // https://stackoverflow.com/questions/64053658/get-emojis-from-message-discord-js-v12
 // https://www.reddit.com/r/Discord_Bots/comments/gteo6t/discordjs_is_there_a_way_to_detect_emojis_in_a/
 const EMOJIREGEX = /((?<!\\)<a?:[^:]+:(\d+)>)|\p{Emoji_Presentation}|\p{Extended_Pictographic}/gmu;
@@ -49,6 +53,8 @@ const EMOJIREGEX = /((?<!\\)<a?:[^:]+:(\d+)>)|\p{Emoji_Presentation}|\p{Extended
 export class Starboard extends BotComponent {
     data: component_data;
     mutex = new KeyedMutexSet<string>();
+
+    deletes: number[] = [];
 
     constructor(wheatley: Wheatley) {
         super(wheatley);
@@ -202,6 +208,12 @@ export class Starboard extends BotComponent {
         await this.update_database();
     }
 
+    deletes_in_last_24h() {
+        const last_24h = Date.now() - 60 * MINUTE * 24;
+        this.deletes = this.deletes.filter(timestamp => timestamp >= last_24h);
+        return this.deletes.length;
+    }
+
     async handle_auto_delete(message: Discord.Message, delete_reaction: Discord.MessageReaction) {
         const reactions = message.reactions.cache.map(r => [ r.emoji, r.count ] as [Discord.Emoji, number]);
         const non_negative_reactions = reactions.filter(
@@ -216,8 +228,12 @@ export class Starboard extends BotComponent {
         if(delete_reaction.count <= max_non_negative) {
             do_delete = false;
         }
-        if(is_authorized_admin(message.author.id) || message.author.bot) {
+        if(is_root(message.author) || message.author.bot) {
             do_delete = false;
+        }
+        if(this.deletes_in_last_24h() >= max_deletes_in_24h) {
+            do_delete = false;
+            M.info(">> DELETE IN 24H THRESHOLD EXCEEDED");
         }
         const action = do_delete ? "Auto-deleting" : "Auto-delete threshold reached";
         M.log(`${action} ${message.url} for ${delete_reaction.count} ${delete_reaction.emoji.name} reactions`);
@@ -246,6 +262,7 @@ export class Starboard extends BotComponent {
                 + "FAQ: How can I avoid this in the future?\n"
                 + "Answer: Post less cringe"
             );
+            this.deletes.push(Date.now());
         }
     }
 
@@ -271,7 +288,10 @@ export class Starboard extends BotComponent {
         if(reaction.message.id in this.data.starboard) {
             // Update counts
             await this.update_starboard(await departialize(reaction.message));
-        } else if(this.meets_threshold(await departialize(reaction))) {
+        } else if(
+            this.meets_threshold(await departialize(reaction))
+            && reaction.message.createdTimestamp >= starboard_epoch
+        ) {
             // Send
             await this.update_starboard(await departialize(reaction.message));
         }
