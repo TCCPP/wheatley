@@ -226,8 +226,12 @@ export class TheButton extends BotComponent {
             }
             // check to see if the user has pressed it within the last 24 hours
             if(Date.now() - scoreboard[interaction.user.id].last_press <= PRESS_TIMEOUT) {
+                // ~~x converts the float x to an integer
+                // next_possible is the unix-time for the next possible button press
+                const next_possible = ~~((scoreboard[interaction.user.id].last_press + DAY) / 1000)
                 await interaction.reply({
-                    content: "Your may only press the button once per 24 hours",
+                    // string highlighting is screwed, because of the '<' and '>' characters
+                    content: `You can press the button again <t:${next_possible}:R>`,
                     ephemeral: true
                 });
                 return;
