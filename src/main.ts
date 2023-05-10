@@ -31,7 +31,7 @@ const client = new Discord.Client({
     intents: [ // fuck it, everything (almost)
         Discord.GatewayIntentBits.Guilds,
         Discord.GatewayIntentBits.GuildMembers,
-        Discord.GatewayIntentBits.GuildBans,
+        Discord.GatewayIntentBits.GuildModeration,
         Discord.GatewayIntentBits.GuildEmojisAndStickers,
         Discord.GatewayIntentBits.GuildIntegrations,
         Discord.GatewayIntentBits.GuildWebhooks,
@@ -49,6 +49,7 @@ const client = new Discord.Client({
         Discord.Partials.Channel,
         Discord.Partials.Message,
         Discord.Partials.Reaction,
+        Discord.Partials.User,
     ],
     makeCache: Discord.Options.cacheWithLimits({
         ...Discord.Options.DefaultMakeCacheSettings,
