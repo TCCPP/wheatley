@@ -41,30 +41,42 @@ export class ForumChannels extends BotComponent {
     // don't prompt twice within 2 hours - that's just annoying
     readonly possibly_resolved = new SelfClearingSet<string>(2 * 60 * MINUTE);
     readonly timeout_map = new Map<string, NodeJS.Timeout>();
+    interval: NodeJS.Timer;
 
     constructor(wheatley: Wheatley) {
         super(wheatley);
     }
 
-    async forum_cleanup() {
-        M.debug("Running forum cleanup");
-        // Routinely archive threads
-        // Ensure no thread has both the solved and open tag?
-        for(const forum of [ this.wheatley.cpp_help, this.wheatley.c_help ]) {
-            const open_tag = get_tag(forum, "Open").id;
-            const solved_tag = get_tag(forum, "Solved").id;
-            const stale_tag = get_tag(forum, "Stale").id;
-            const threads = await fetch_all_threads_archive_count(forum, cleanup_limit);
-            M.debug("Cleaning up", threads.size, "threads");
-            for(const [ _, thread ] of threads) {
-                assert(thread.parentId);
-                if(forum_help_channels.has(thread.parentId)) {
-                    await this.misc_checks(thread, open_tag, solved_tag, stale_tag);
-                    await this.check_thread_activity(thread, open_tag, solved_tag, stale_tag);
-                }
-            }
+    override destroy() {
+        super.destroy();
+        this.possibly_resolved.destroy();
+        clearInterval(this.interval);
+        for(const [ _, timeout ] of this.timeout_map) {
+            clearTimeout(timeout);
         }
-        M.debug("Finished forum cleanup");
+    }
+
+    async forum_cleanup() {
+        // TODO: Temporarily turned off
+        //M.debug("Running forum cleanup");
+        //// Routinely archive threads
+        //// Ensure no thread has both the solved and open tag?
+        //for(const forum of [ this.wheatley.cpp_help, this.wheatley.c_help ]) {
+        //    const open_tag = get_tag(forum, "Open").id;
+        //    const solved_tag = get_tag(forum, "Solved").id;
+        //    const stale_tag = get_tag(forum, "Stale").id;
+        //    M.info("-------------------------->", get_tag(forum, "Stale"));
+        //    const threads = await fetch_all_threads_archive_count(forum, cleanup_limit);
+        //    M.debug("Cleaning up", threads.size, "threads");
+        //    for(const [ _, thread ] of threads) {
+        //        assert(thread.parentId);
+        //        if(forum_help_channels.has(thread.parentId)) {
+        //            await this.misc_checks(thread, open_tag, solved_tag, stale_tag);
+        //            await this.check_thread_activity(thread, open_tag, solved_tag, stale_tag);
+        //        }
+        //    }
+        //}
+        //M.debug("Finished forum cleanup");
     }
 
     async prompt_close(thread: Discord.ThreadChannel) {
@@ -117,9 +129,10 @@ export class ForumChannels extends BotComponent {
     async misc_checks(thread: Discord.ThreadChannel, open_tag: string, solved_tag: string, stale_tag: string) {
         const status_tags = [ open_tag, solved_tag, stale_tag ];
         // Ensure there is exactly one solved/open/stale tag
+        M.debug(thread.appliedTags, status_tags);
         const solved_open_count = thread.appliedTags.filter(tag => status_tags.includes(tag)).length;
         if(solved_open_count != 1) {
-            M.log("Setting thread with", solved_open_count, "solved/open tags to have one such tag",
+            M.log("Setting thread with", solved_open_count, "solved/open/stale tags to have one such tag",
                   thread.id, thread.name, thread.url);
             const { archived } = thread;
             if(archived) await thread.setArchived(false);
@@ -143,7 +156,7 @@ export class ForumChannels extends BotComponent {
         //await get_initial_active();
         await this.forum_cleanup();
         // every hour try to cleanup
-        setInterval(this.forum_cleanup.bind(this), 60 * MINUTE);
+        this.interval = setInterval(this.forum_cleanup.bind(this), 60 * MINUTE);
     }
 
     override async on_message_create(message: Discord.Message) {

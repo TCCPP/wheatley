@@ -45,14 +45,21 @@ function is_valid_name(name: string) {
 }
 
 export class UsernameManager extends BotComponent {
+    interval: NodeJS.Timer | null = null;
+
     constructor(wheatley: Wheatley) {
         super(wheatley);
+    }
+
+    override destroy() {
+        super.destroy();
+        if(this.interval) clearInterval(this.interval);
     }
 
     override async on_ready() {
         await this.cleanup();
         // Every hour give it a scan
-        setInterval(async () => {
+        this.interval = setInterval(async () => {
             await this.cleanup();
         }, 60 * MINUTE);
     }

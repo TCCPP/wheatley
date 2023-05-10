@@ -220,6 +220,11 @@ export class ServerSuggestionTracker extends BotComponent {
     readonly mutex = new KeyedMutexSet<string>();
     readonly status_lock = new SelfClearingSet<string>(5 * MINUTE, 5 * MINUTE);
 
+    override destroy() {
+        super.destroy();
+        this.status_lock.destroy();
+    }
+
     async open_suggestion(message: Discord.Message) {
         try {
             M.log("New suggestion", message.author.tag, message.author.id, message.url);

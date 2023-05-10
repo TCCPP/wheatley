@@ -11,14 +11,22 @@ import { Wheatley } from "../wheatley.js";
 
 export class RoleManager extends BotComponent {
     pink_role: Discord.Role;
+    interval: NodeJS.Timer | null = null;
 
     constructor(wheatley: Wheatley) {
         super(wheatley);
     }
 
+    override destroy() {
+        super.destroy();
+        if(this.interval) {
+            clearInterval(this.interval);
+        }
+    }
+
     override async on_ready() {
         this.pink_role = unwrap(await this.wheatley.TCCPP.roles.fetch(pink_role_id));
-        setInterval(this.check_users.bind(this), 30 * MINUTE);
+        this.interval = setInterval(this.check_users.bind(this), 30 * MINUTE);
     }
 
     async check_users() {

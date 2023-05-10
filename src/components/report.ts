@@ -38,6 +38,11 @@ export class Report extends BotComponent {
         this.add_command(new ModalHandler(this.report_modal, this.modal_handler.bind(this)));
     }
 
+    override destroy() {
+        super.destroy();
+        this.target_map.destroy();
+    }
+
     async report(interaction: Discord.MessageContextMenuCommandInteraction) {
         if(interaction.guildId != TCCPP_ID) {
             await interaction.reply({

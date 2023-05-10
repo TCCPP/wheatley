@@ -49,6 +49,7 @@ export class TheButton extends BotComponent {
         timestamp: 0,
         remaining_seconds: 0
     };
+    interval: NodeJS.Timer | null = null;
 
     constructor(wheatley: Wheatley) {
         super(wheatley);
@@ -86,6 +87,11 @@ export class TheButton extends BotComponent {
             }
         }
         this.update_database();
+    }
+
+    override destroy() {
+        super.destroy();
+        if(this.interval) clearInterval(this.interval);
     }
 
     make_message(delta: number): Discord.MessageEditOptions & Discord.MessageCreateOptions {
@@ -158,7 +164,7 @@ export class TheButton extends BotComponent {
     override async on_ready() {
         this.button_message = await this.wheatley.the_button_channel.messages.fetch(this.button_message_id);
         let waiting = false;
-        setInterval(async () => {
+        this.interval = setInterval(async () => {
             if(this.last_update.epoch != this.data.last_reset
             || Date.now() - this.last_update.timestamp - this.last_update.remaining_seconds * 1000 >= -1500) {
                 if(waiting) return;

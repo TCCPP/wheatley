@@ -259,6 +259,16 @@ export class Wheatley extends EventEmitter {
         this.client.login(token);
     }
 
+    destroy() {
+        this.client.destroy();
+        this.text_command_map.destroy();
+        this.deletable_map.destroy();
+        this.tracker.destroy();
+        for(const component of this.components) {
+            component.destroy();
+        }
+    }
+
     async add_component<T extends BotComponent>(component: { new(w: Wheatley): T }) {
         M.log(`Initializing ${component.name}`);
         const instance = new component(this);

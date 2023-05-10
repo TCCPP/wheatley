@@ -24,12 +24,22 @@ export class BotComponent {
 
     async setup() {} // eslint-disable-line @typescript-eslint/no-empty-function
 
+    listeners: [keyof Discord.ClientEvents, (...args: any[]) => any][] = [];
+
     private setup_listener<E extends keyof Discord.ClientEvents>(
         event: E, f: undefined | ((...args: Discord.ClientEvents[E]) => Promise<void>)
     ) {
         if(f) {
             M.log("Adding listener", event, this.constructor.name);
-            this.wheatley.client.on(event, wrap(f.bind(this)));
+            const listener = wrap(f.bind(this));
+            this.wheatley.client.on(event, listener);
+            this.listeners.push([ event, listener ]);
+        }
+    }
+
+    destroy() {
+        for(const [ event, listener ] of this.listeners) {
+            this.wheatley.client.off(event, listener);
         }
     }
 

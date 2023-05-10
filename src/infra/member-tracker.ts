@@ -35,12 +35,18 @@ export class MemberTracker {
     currently_banning: Map<string, number> = new Map();
     // modules that rely on on_join and on_ban
     submodules: submodule[] = [];
+    interval: NodeJS.Timer;
     constructor(readonly wheatley: Wheatley) {
         // every 10 minutes, trim extraneous entries
-        setInterval(this.trim.bind(this), 10 * MINUTE);
+        this.interval = setInterval(this.trim.bind(this), 10 * MINUTE);
         wheatley.client.on("guildMemberAdd", this.on_join.bind(this));
         wheatley.client.on("guildBanAdd", this.on_ban.bind(this));
     }
+
+    destroy() {
+        clearInterval(this.interval);
+    }
+
     // Bookkeeping
     trim() {
         const now = Date.now();

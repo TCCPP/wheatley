@@ -112,6 +112,13 @@ export class Nodistractions extends BotComponent {
         );
     }
 
+    override destroy() {
+        super.destroy();
+        if(this.timer) {
+            clearTimeout(this.timer);
+        }
+    }
+
     override async on_ready() {
         if(this.undistract_queue.length > 0) {
             this.undistract_queue.sort((a, b) => (a.start + a.duration) - (b.start + b.duration));

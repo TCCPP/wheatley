@@ -152,9 +152,13 @@ export async function delay(n: number): Promise<void> {
 export class SelfClearingSet<T> {
     contents = new Map<T, number>();
     duration: number;
+    interval: NodeJS.Timer;
     constructor(duration: number, interval?: number) {
         this.duration = duration;
-        setInterval(this.sweep.bind(this), interval ?? this.duration);
+        this.interval = setInterval(this.sweep.bind(this), interval ?? this.duration);
+    }
+    destroy() {
+        clearInterval(this.interval);
     }
     sweep() {
         const now = Date.now();
@@ -178,9 +182,13 @@ export class SelfClearingSet<T> {
 export class SelfClearingMap<K, V> {
     contents = new Map<K, [number, V]>();
     duration: number;
+    interval: NodeJS.Timer;
     constructor(duration: number, interval?: number) {
         this.duration = duration;
-        setInterval(this.sweep.bind(this), interval ?? this.duration);
+        this.interval = setInterval(this.sweep.bind(this), interval ?? this.duration);
+    }
+    destroy() {
+        clearInterval(this.interval);
     }
     sweep() {
         const now = Date.now();

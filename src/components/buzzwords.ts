@@ -177,6 +177,8 @@ export class Buzzwords extends BotComponent {
         remaining_seconds: 0
     };
     slowmode: SelfClearingSet<string>;
+    timeout: NodeJS.Timeout | null = null;
+    interval: NodeJS.Timer | null = null;
 
     constructor(wheatley: Wheatley) {
         super(wheatley);
@@ -191,14 +193,21 @@ export class Buzzwords extends BotComponent {
         this.slowmode = new SelfClearingSet<string>(MINUTE / 2, MINUTE / 4);
     }
 
+    override destroy() {
+        super.destroy();
+        this.slowmode.destroy();
+        if(this.timeout) clearTimeout(this.timeout);
+        if(this.interval) clearInterval(this.interval);
+    }
+
     override async on_ready() {
         if(ENABLED) { // eslint-disable-line @typescript-eslint/no-unnecessary-condition
             this.update_database();
-            setTimeout(() => {
+            this.timeout = setTimeout(() => {
                 this.update_database();
             }, MINUTE);
             this.reflowRoles();
-            setTimeout(() => {
+            this.interval = setInterval(() => {
                 this.reflowRoles();
             }, 10 * MINUTE);
         }
