@@ -228,7 +228,7 @@ export class TheButton extends BotComponent {
             if(Date.now() - scoreboard[interaction.user.id].last_press <= PRESS_TIMEOUT) {
                 // ~~x converts the float x to an integer
                 // next_possible is the unix-time for the next possible button press
-                const next_possible = ~~((scoreboard[interaction.user.id].last_press + DAY) / 1000)
+                const next_possible = ~~((scoreboard[interaction.user.id].last_press + PRESS_TIMEOUT) / 1000)
                 await interaction.reply({
                     // string highlighting is screwed, because of the '<' and '>' characters
                     content: `You can press the button again <t:${next_possible}:R>`,
