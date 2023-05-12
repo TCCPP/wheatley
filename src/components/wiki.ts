@@ -32,12 +32,7 @@ type WikiArticle = {
     no_embed?: true;
 };
 
-// TODO: Make not global
-const articles: Record<string, WikiArticle> = {};
-
-const article_aliases: Map<string, string> = new Map();
-
-export function parse_article(name: string | null, content: string): WikiArticle {
+export function parse_article(name: string | null, content: string): [WikiArticle, Map<string, string>] {
     const data: Partial<WikiArticle> = {};
     data.body = "";
     data.fields = [];
@@ -45,6 +40,7 @@ export function parse_article(name: string | null, content: string): WikiArticle
     enum state { body, field, footer }
     let code = false;
     let current_state = state.body;
+    const article_aliases: Map<string, string> = new Map();
     for(const [ i, line ] of lines.entries()) {
         if(line.trim().startsWith("```")) {
             code = !code;
@@ -75,6 +71,7 @@ export function parse_article(name: string | null, content: string): WikiArticle
             const match = line.trim().match(/^\[\[\[alias (.+)\]\]\]$/)!;
             const aliases = match[1].split(",").map(alias => alias.trim());
             // null is passed by the preview command, don't actually want to set aliases in for
+            // TODO: Now obsolete since we aren't directly inserting into a global map?
             if(name != null) {
                 for(const alias of aliases) {
                     assert(!article_aliases.has(alias));
@@ -117,24 +114,18 @@ export function parse_article(name: string | null, content: string): WikiArticle
     assert(data.title, "Wiki article must have a title"); // title will just be for search purposes in no embed mode
     // need to do this nonsense for TS....
     const { title, body, fields, footer, set_author, no_embed } = data;
-    return {
-        title, body, fields, footer, set_author, no_embed
-    };
-}
-
-async function load_wiki_pages() {
-    for await(const file_path of walk_dir(wiki_dir)) {
-        const name = path.basename(file_path, path.extname(file_path));
-        //M.debug(file_path, name);
-        if(name == "README") {
-            continue;
-        }
-        const content = await fs.promises.readFile(file_path, { encoding: "utf-8" });
-        articles[name] = parse_article(name, content);
-    }
+    return [
+        {
+            title, body, fields, footer, set_author, no_embed
+        },
+        article_aliases
+    ];
 }
 
 export class Wiki extends BotComponent {
+    articles: Record<string, WikiArticle> = {};
+    article_aliases: Map<string, string> = new Map();
+
     constructor(wheatley: Wheatley) {
         super(wheatley);
 
@@ -146,7 +137,7 @@ export class Wiki extends BotComponent {
                     description: "Query",
                     required: true,
                     autocomplete: query =>
-                        Object.values(articles)
+                        Object.values(this.articles)
                             .map(article => article.title)
                             .filter(title => title.toLowerCase().includes(query))
                             .map(title => ({ name: title, value: title }))
@@ -169,15 +160,31 @@ export class Wiki extends BotComponent {
     }
 
     override async setup() {
-        await load_wiki_pages();
+        await this.load_wiki_pages();
         // setup slash commands for aliases
-        for(const [ alias, article_name ] of article_aliases.entries()) {
-            const article = articles[article_name];
+        for(const [ alias, article_name ] of this.article_aliases.entries()) {
+            const article = this.articles[article_name];
             this.add_command(
                 new TextBasedCommandBuilder(alias)
                     .set_description(article.title)
                     .set_handler(this.wiki_alias.bind(this))
             );
+        }
+    }
+
+    async load_wiki_pages() {
+        for await(const file_path of walk_dir(wiki_dir)) {
+            const name = path.basename(file_path, path.extname(file_path));
+            //M.debug(file_path, name);
+            if(name == "README") {
+                continue;
+            }
+            const content = await fs.promises.readFile(file_path, { encoding: "utf-8" });
+            const [article, aliases] = parse_article(name, content);
+            this.articles[name] = article;
+            for(const [k, v] of aliases) {
+                this.article_aliases.set(k, v);
+            }
         }
     }
 
@@ -215,7 +222,7 @@ export class Wiki extends BotComponent {
 
     async wiki(command: TextBasedCommand, query: string) {
         const matching_articles = Object
-            .entries(articles)
+            .entries(this.articles)
             .filter(([ name, { title }]) => name == query.replaceAll("-", "_") || title == query)
             .map(([ _, article ]) => article);
         const article = matching_articles.length > 0 ? matching_articles[0] : undefined;
@@ -229,10 +236,10 @@ export class Wiki extends BotComponent {
     }
 
     async wiki_alias(command: TextBasedCommand) {
-        assert(article_aliases.has(command.name));
+        assert(this.article_aliases.has(command.name));
         M.log(`Received ${command.name} (wiki alias)`, command.user.id, command.user.tag, command.get_or_forge_url());
-        const article_name = article_aliases.get(command.name)!;
-        await this.send_wiki_article(articles[article_name], command);
+        const article_name = this.article_aliases.get(command.name)!;
+        await this.send_wiki_article(this.articles[article_name], command);
     }
 
     async wiki_preview(command: TextBasedCommand, content: string) {
@@ -243,7 +250,7 @@ export class Wiki extends BotComponent {
         }
         let article: WikiArticle;
         try {
-            article = parse_article(null, content);
+            article = parse_article(null, content)[0];
         } catch(e) {
             await command.reply("Parse error: " + e, true, true);
             return;
