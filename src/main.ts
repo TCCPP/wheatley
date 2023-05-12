@@ -26,65 +26,62 @@ import { fetch_root_mod_list } from "./common.js";
 
 import { Wheatley } from "./wheatley.js";
 
-// Setup client
-const client = new Discord.Client({
-    intents: [ // fuck it, everything (almost)
-        Discord.GatewayIntentBits.Guilds,
-        Discord.GatewayIntentBits.GuildMembers,
-        Discord.GatewayIntentBits.GuildModeration,
-        Discord.GatewayIntentBits.GuildEmojisAndStickers,
-        Discord.GatewayIntentBits.GuildIntegrations,
-        Discord.GatewayIntentBits.GuildWebhooks,
-        Discord.GatewayIntentBits.GuildInvites,
-        Discord.GatewayIntentBits.GuildVoiceStates,
-        Discord.GatewayIntentBits.GuildMessages,
-        Discord.GatewayIntentBits.GuildMessageReactions,
-        Discord.GatewayIntentBits.GuildMessageTyping,
-        Discord.GatewayIntentBits.MessageContent,
-        Discord.GatewayIntentBits.DirectMessages,
-        Discord.GatewayIntentBits.DirectMessageReactions,
-        Discord.GatewayIntentBits.DirectMessageTyping,
-    ],
-    partials: [
-        Discord.Partials.Channel,
-        Discord.Partials.Message,
-        Discord.Partials.Reaction,
-        Discord.Partials.User,
-    ],
-    makeCache: Discord.Options.cacheWithLimits({
-        ...Discord.Options.DefaultMakeCacheSettings,
-        MessageManager: 1000
-    })
-});
-
-// Suggestion tracking
-// deleted suggestion -> wastebin
-// log resolution in suggestions_log thread
-// if changed to unresolved put back in suggestion tracker thread
-// new suggestions -> suggestion tracker
-// maintain database of ids
-// suggestion tracker: Content, author, votes, link.
-
-client.on("ready", async () => {
-    M.log(`Logged in as ${client.user!.tag}`);
-    //client.user!.setStatus("invisible");
-    fetch_root_mod_list(client); // fetch list of roots and mods, replace hard-coded list
-});
-
-M.debug("Setting up services");
-
-init_debugger(client);
-
-M.debug("Setting up modules");
-
-// Last line of defense
-process.on("unhandledRejection", (reason, promise) => {
-    critical_error("unhandledRejection", reason, promise);
-});
+let wheatley: Wheatley;
 
 async function main() {
+    // Setup client
+    const client = new Discord.Client({
+        intents: [ // fuck it, everything (almost)
+            Discord.GatewayIntentBits.Guilds,
+            Discord.GatewayIntentBits.GuildMembers,
+            Discord.GatewayIntentBits.GuildModeration,
+            Discord.GatewayIntentBits.GuildEmojisAndStickers,
+            Discord.GatewayIntentBits.GuildIntegrations,
+            Discord.GatewayIntentBits.GuildWebhooks,
+            Discord.GatewayIntentBits.GuildInvites,
+            Discord.GatewayIntentBits.GuildVoiceStates,
+            Discord.GatewayIntentBits.GuildMessages,
+            Discord.GatewayIntentBits.GuildMessageReactions,
+            Discord.GatewayIntentBits.GuildMessageTyping,
+            Discord.GatewayIntentBits.MessageContent,
+            Discord.GatewayIntentBits.DirectMessages,
+            Discord.GatewayIntentBits.DirectMessageReactions,
+            Discord.GatewayIntentBits.DirectMessageTyping,
+        ],
+        partials: [
+            Discord.Partials.Channel,
+            Discord.Partials.Message,
+            Discord.Partials.Reaction,
+            Discord.Partials.User,
+        ],
+        makeCache: Discord.Options.cacheWithLimits({
+            ...Discord.Options.DefaultMakeCacheSettings,
+            MessageManager: 1000
+        })
+    });
+
+    // Suggestion tracking
+    // deleted suggestion -> wastebin
+    // log resolution in suggestions_log thread
+    // if changed to unresolved put back in suggestion tracker thread
+    // new suggestions -> suggestion tracker
+    // maintain database of ids
+    // suggestion tracker: Content, author, votes, link.
+
+    client.on("ready", async () => {
+        M.log(`Logged in as ${client.user!.tag}`);
+        //client.user!.setStatus("invisible");
+        fetch_root_mod_list(client); // fetch list of roots and mods, replace hard-coded list
+    });
+
+    M.debug("Setting up services");
+
+    init_debugger(client);
+
+    M.debug("Setting up modules");
+
     try {
-        new Wheatley(client, await DatabaseInterface.create());
+        wheatley = new Wheatley(client, await DatabaseInterface.create());
     } catch(e) {
         critical_error(e);
     }
@@ -97,5 +94,11 @@ async function main() {
 // don't crash, try to restart
 process.on("uncaughtException", error => {
     critical_error("uncaughtException", error);
+    wheatley.destroy();
     main();
+});
+
+// Last line of defense
+process.on("unhandledRejection", (reason, promise) => {
+    critical_error("unhandledRejection", reason, promise);
 });

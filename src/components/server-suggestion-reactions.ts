@@ -21,8 +21,14 @@ const monitored_channels_ids = [ server_suggestions_channel_id, suggestion_dashb
 
 export class ServerSuggestionReactions extends BotComponent {
     readonly monitored_channels = new Map<string, Discord.TextChannel | Discord.AnyThreadChannel>();
+    stop = false;
+
     constructor(wheatley: Wheatley) {
         super(wheatley);
+    }
+
+    override destroy() {
+        this.stop = true;
     }
 
     async handle_fetched_message(message: Discord.Message) {
@@ -62,6 +68,7 @@ export class ServerSuggestionReactions extends BotComponent {
         assert(server_suggestions_channel != undefined);
         while(true) {
             await delay(3 * MINUTE);
+            if(this.stop) return;
             const messages = await server_suggestions_channel.messages.fetch({
                 limit: 100,
                 before: forge_snowflake(oldest_seen - 1)
