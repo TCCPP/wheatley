@@ -20,9 +20,8 @@ cmake --build build # output is now in build/
 build/my_exe # run (file suffix may vary)
 ```
 
-## Also See
-• [Installing CMake](https://cmake.org/install/)
-• [Latest CMake Documentation](https://cmake.org/cmake/help/latest/)
-• [Introduction to modern CMake](https://cliutils.gitlab.io/modern-cmake/)
-<:stackoverflow:874353689031233606>
-[Difference between using Makefile and CMake [...]](https://stackoverflow.com/q/25789644/5740428)
+## See Also
+- [Installing CMake](https://cmake.org/install/)
+- [Latest CMake Documentation](https://cmake.org/cmake/help/latest/)
+- [Introduction to modern CMake](https://cliutils.gitlab.io/modern-cmake/)
+- <:stackoverflow:1074747016644661258> [Difference between using Makefile and CMake [...]](https://stackoverflow.com/q/25789644/5740428)
