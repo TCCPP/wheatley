@@ -22,7 +22,7 @@ chr::duration x;
 
 - <:tccpp:865354975629279232>
 [Why is "using namespace std;" considered bad practice?](https://64.github.io/cpp-faq/using-namespace-std/)
-- <:stackoverflow:874353689031233606>
-_[Example of error caused by "using namespace std"](https://stackoverflow.com/a/2712125/5740428)_
-- <:stackoverflow:874353689031233606>
-_[Yet another example of an error](https://stackoverflow.com/a/13402851/5740428)_
+- <:stackoverflow:1074747016644661258>
+_[Example of compile and runtime errors caused by it](https://cplusplus.com/forum/beginner/24960/)_
+- <:stackoverflow:1074747016644661258>
+_[Confusion Caused by "using namespace std"](https://stackoverflow.com/a/13402851/5740428)_
