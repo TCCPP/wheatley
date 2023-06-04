@@ -51,7 +51,7 @@ export class ServerSuggestionTracker extends BotComponent {
             channel.messages.fetch({ message: id, cache: true })
                 .then(m => resolve(m))
                 .catch(e => {
-                    if(e.httpStatus == 404) {
+                    if(e.status == 404) {
                         resolve(undefined);
                     } else {
                         reject(e);
@@ -611,41 +611,48 @@ export class ServerSuggestionTracker extends BotComponent {
         this.recovering = false;
         // check this.wheatley.database entries and fetch since last_scanned_timestamp
         M.debug("server_suggestion tracker checking this.wheatley.database entries");
-        for(const id in   this.wheatley.database.get<db_schema>("suggestion_tracker").suggestions) {
-            await this.mutex.lock(id);
-            const entry = this.wheatley.database.get<db_schema>("suggestion_tracker").suggestions[id];
-            const message = await this.get_message(this.wheatley.server_suggestions_channel, id);
-            let suggestion_was_resolved = false;
-            if(message == undefined) { // check if deleted
-                // deleted
-                M.debug("server_suggestion tracker state recovery: Message was deleted:", entry);
-                this.status_lock.insert(entry.status_message);
-                await this.delete_suggestion(id);
-            } else {
-                // check if message updated
-                if(await this.update_message_if_needed(message)) {
-                    M.debug("server_suggestion tracker state recovery: Message was updated:", entry);
-                }
-                // check reactions
-                //M.debug(message.content, message.reactions.cache.map(r => [r.emoji.name, r.count]));
-                const root_resolve = await this.message_has_resolution_from_root(message);
-                if(root_resolve) {
-                    M.warn("server_suggestion tracker state recovery: resolving message");
-                    suggestion_was_resolved = true;
-                    await this.resolve_suggestion(message, root_resolve);
+        try {
+            for(const id in this.wheatley.database.get<db_schema>("suggestion_tracker").suggestions) {
+                await this.mutex.lock(id);
+                const entry = this.wheatley.database.get<db_schema>("suggestion_tracker").suggestions[id];
+                const message = await this.get_message(this.wheatley.server_suggestions_channel, id);
+                let suggestion_was_resolved = false;
+                if(message == undefined) { // check if deleted
+                    // deleted
+                    M.debug("server_suggestion tracker state recovery: Message was deleted:", entry);
+                    this.status_lock.insert(entry.status_message);
+                    await this.delete_suggestion(id);
                 } else {
-                    // no action needed
+                    // check if message updated
+                    if(await this.update_message_if_needed(message)) {
+                        M.debug("server_suggestion tracker state recovery: Message was updated:", entry);
+                    }
+                    // check reactions
+                    //M.debug(message.content, message.reactions.cache.map(r => [r.emoji.name, r.count]));
+                    const root_resolve = await this.message_has_resolution_from_root(message);
+                    if(root_resolve) {
+                        M.warn("server_suggestion tracker state recovery: resolving message");
+                        suggestion_was_resolved = true;
+                        await this.resolve_suggestion(message, root_resolve);
+                    } else {
+                        // no action needed
+                    }
                 }
+                // check if the status message was deleted (if we didn't just delete it with resolve_suggestion)
+                if(
+                    !suggestion_was_resolved
+                    && await this.get_message(this.wheatley.suggestion_dashboard_thread, entry.status_message)
+                        == undefined
+                ) {
+                    // just delete from this.wheatley.database - no longer tracking
+                    M.info("server_suggestion tracker state recovery: Manual status delete", id, entry);
+                    delete this.wheatley.database.get<db_schema>("suggestion_tracker").suggestions[id];
+                }
+                // not currently checking root reactions on it - TODO?
+                this.mutex.unlock(id);
             }
-            // check if the status message was deleted (if we didn't just delete it with resolve_suggestion)
-            if(!suggestion_was_resolved
-            && await this.get_message(this.wheatley.suggestion_dashboard_thread, entry.status_message) == undefined) {
-                // just delete from this.wheatley.database - no longer tracking
-                M.info("server_suggestion tracker state recovery: Manual status delete", id, entry);
-                delete this.wheatley.database.get<db_schema>("suggestion_tracker").suggestions[id];
-            }
-            // not currently checking root reactions on it - TODO?
-            this.mutex.unlock(id);
+        } catch(e) {
+            critical_error(e);
         }
         this.wheatley.database.update();
         M.debug("server_suggestion tracker finished checking this.wheatley.database entries");
