@@ -36,7 +36,7 @@ export function parse_article(name: string | null, content: string): [WikiArticl
     const data: Partial<WikiArticle> = {};
     data.body = "";
     data.fields = [];
-    const lines = content.split("\n");
+    const lines = content.split(/\r?\n/);
     enum state { body, field, footer }
     let code = false;
     let current_state = state.body;
