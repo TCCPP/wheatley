@@ -107,7 +107,7 @@ export class Inspect extends BotComponent {
         M.log("Received inspect text command");
         const match = url.trim().match(url_re);
         if(match) {
-            const [ domain, guild_id, channel_id, message_id ] = match.slice(1);
+            const [ _, guild_id, channel_id, message_id ] = match.slice(1);
             assert(guild_id == this.wheatley.TCCPP.id);
             const channel = await this.wheatley.TCCPP.channels.fetch(channel_id);
             assert(channel?.isTextBased());

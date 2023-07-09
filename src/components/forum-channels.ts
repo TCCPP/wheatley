@@ -1,7 +1,7 @@
 import * as Discord from "discord.js";
 import { strict as assert } from "assert";
-import { delay, fetch_all_threads_archive_count, get_tag, M, SelfClearingSet } from "../utils.js";
-import { colors, forum_help_channels, is_forum_help_thread, MINUTE } from "../common.js";
+import { get_tag, M, SelfClearingSet } from "../utils.js";
+import { colors, is_forum_help_thread, MINUTE } from "../common.js";
 import { decode_snowflake } from "./snowflake.js"; // todo: eliminate decode_snowflake
 import { BotComponent } from "../bot-component.js";
 import { Wheatley } from "../wheatley.js";

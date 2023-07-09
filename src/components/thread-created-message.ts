@@ -4,7 +4,7 @@ import { strict as assert } from "assert";
 
 import { BotComponent } from "../bot-component.js";
 import { Wheatley } from "../wheatley.js";
-import { M, fetch_thread_channel, unwrap } from "../utils.js";
+import { M, unwrap } from "../utils.js";
 
 export class ThreadCreatedMessage extends BotComponent {
     constructor(wheatley: Wheatley) {

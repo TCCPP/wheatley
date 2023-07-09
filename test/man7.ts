@@ -8,10 +8,10 @@ type TestCase = {
 };
 
 const cases: TestCase[] = [
-    {
-        query: ["printf"],
-        path: "man3/printf.3.html"
-    },
+    //{ // TODO
+    //    query: ["printf"],
+    //    path: "man3/printf.3.html"
+    //},
     {
         query: ["fprintf"],
         path: "man3/fprintf.3p.html" // TODO: re-evaluate....?

@@ -4,7 +4,7 @@ import { BotComponent } from "../bot-component.js";
 import { Wheatley } from "../wheatley.js";
 import { TextBasedCommand, TextBasedCommandBuilder } from "../command.js";
 import { TCCPP_ID, colors } from "../common.js";
-import { M, delay, unwrap } from "../utils.js";
+import { M, delay } from "../utils.js";
 
 export class Redirect extends BotComponent {
     constructor(wheatley: Wheatley) {

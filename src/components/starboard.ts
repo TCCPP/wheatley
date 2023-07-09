@@ -1,7 +1,7 @@
 import * as Discord from "discord.js";
 import { strict as assert } from "assert";
 import { KeyedMutexSet, M, departialize, unwrap } from "../utils.js";
-import { MINUTE, announcements_channel_id, introductions_channel_id, is_authorized_admin, is_root, memes_channel_id,
+import { MINUTE, announcements_channel_id, introductions_channel_id, is_root, memes_channel_id,
          resources_channel_id, rules_channel_id, server_suggestions_channel_id, starboard_channel_id,
          the_button_channel_id } from "../common.js";
 import { BotComponent } from "../bot-component.js";
@@ -220,7 +220,7 @@ export class Starboard extends BotComponent {
             ([ emoji, _ ]) => !this.data.negative_emojis.includes(unwrap(emoji.name))
                 && !this.data.delete_emojis.includes(unwrap(emoji.name))
         );
-        const max_non_negative = Math.max(...non_negative_reactions.map(([ emoji, count ]) => count)); // -inf if |a|=0
+        const max_non_negative = Math.max(...non_negative_reactions.map(([ _, count ]) => count)); // -inf if |a|=0
         let do_delete = true;
         if(message.channel.id != memes_channel_id) {
             do_delete = false;
@@ -266,10 +266,7 @@ export class Starboard extends BotComponent {
         }
     }
 
-    override async on_reaction_add(
-        reaction: Discord.MessageReaction | Discord.PartialMessageReaction,
-        user: Discord.User                | Discord.PartialUser
-    ) {
+    override async on_reaction_add(reaction: Discord.MessageReaction | Discord.PartialMessageReaction) {
         if(!await this.is_valid_channel(reaction.message.channel)) {
             return;
         }
@@ -297,10 +294,7 @@ export class Starboard extends BotComponent {
         }
     }
 
-    override async on_reaction_remove(
-        reaction: Discord.MessageReaction | Discord.PartialMessageReaction,
-        user: Discord.User                | Discord.PartialUser
-    ) {
+    override async on_reaction_remove(reaction: Discord.MessageReaction | Discord.PartialMessageReaction) {
         if(!await this.is_valid_channel(reaction.message.channel)) {
             return;
         }

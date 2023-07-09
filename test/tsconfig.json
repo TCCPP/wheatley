@@ -8,6 +8,7 @@
         "allowJs": true,
         "strictPropertyInitialization": false,
         "noImplicitOverride": true,
-        "skipLibCheck": true
+        "skipLibCheck": true,
+        "esModuleInterop": true
     }
 }

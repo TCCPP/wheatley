@@ -180,9 +180,9 @@ export class Wiki extends BotComponent {
                 continue;
             }
             const content = await fs.promises.readFile(file_path, { encoding: "utf-8" });
-            const [article, aliases] = parse_article(name, content);
+            const [ article, aliases ] = parse_article(name, content);
             this.articles[name] = article;
-            for(const [k, v] of aliases) {
+            for(const [ k, v ] of aliases) {
                 this.article_aliases.set(k, v);
             }
         }
