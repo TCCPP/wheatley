@@ -72,6 +72,16 @@ rules:
     - error
   computed-property-spacing:
     - error
+  brace-style:
+    - error
+    - 1tbs
+    - allowSingleLine:
+        true
+  eol-last:
+    - error
+  semi-style:
+    - error
+    - last
   "@typescript-eslint/no-unused-vars":
     - warn
     - destructuredArrayIgnorePattern:

@@ -45,8 +45,8 @@ export abstract class CommandBuilder<HasHandler extends boolean = false, Handler
 export class TextBasedCommandBuilder<
     Args extends unknown[] = [],
     HasDescriptions extends boolean = false,
-    HasHandler extends boolean = false> extends CommandBuilder<HasHandler, [TextBasedCommand, ...Args]>
-{
+    HasHandler extends boolean = false
+> extends CommandBuilder<HasHandler, [TextBasedCommand, ...Args]> {
     readonly names: string[];
     descriptions: ConditionalOptional<HasDescriptions, string[]>;
     options = new Discord.Collection<string, TextBasedCommandOption & {type: TextBasedCommandOptionType}>();
