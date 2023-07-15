@@ -12,6 +12,11 @@ export function has_media(message: Discord.Message | Discord.PartialMessage) {
     ) || message.embeds.some(is_media_link_embed);
 }
 
+/**
+ * Adds automatic reactions to some messages.
+ *
+ * Not freestanding.
+ */
 export class Autoreact extends BotComponent {
     constructor(wheatley: Wheatley) {
         super(wheatley);

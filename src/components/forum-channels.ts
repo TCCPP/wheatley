@@ -10,7 +10,7 @@ import { Wheatley } from "../wheatley.js";
 
 const inactive_timeout = 12 * 60 * MINUTE; // 12 hours for a thread that's seen no activity, mark it stale
 
-const cleanup_limit = 400; // how many messages back in the archive to go
+//const cleanup_limit = 400; // how many messages back in the archive to go
 
 // if the op says thank you remind them to close the thread after 15 minutes
 const thank_you_timeout = 5 * MINUTE;
@@ -35,9 +35,15 @@ function create_embed(title: string | undefined, color: number, msg: string) {
     return embed;
 }
 
-// TODO: Improve initial message, make it more friendly to the eye
-// reduce time of initial message
+/**
+ * Support for marking threads as solved and other features.
+ *
+ * Not freestanding.
+ */
 export class ForumChannels extends BotComponent {
+    // TODO: Improve initial message, make it more friendly to the eye
+    //       reduce time of initial message
+
     // don't prompt twice within 2 hours - that's just annoying
     readonly possibly_resolved = new SelfClearingSet<string>(2 * 60 * MINUTE);
     readonly timeout_map = new Map<string, NodeJS.Timeout>();

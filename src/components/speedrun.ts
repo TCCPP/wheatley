@@ -5,6 +5,11 @@ import { colors } from "../common.js";
 import { BotComponent } from "../bot-component.js";
 import { Wheatley } from "../wheatley.js";
 
+/**
+ * Tracks "getting banned speedruns".
+ *
+ * Not freestanding.
+ */
 export class Speedrun extends BotComponent {
     constructor(wheatley: Wheatley) {
         super(wheatley);

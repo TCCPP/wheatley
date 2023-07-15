@@ -40,6 +40,11 @@ const BUTTON_EPOCH = 1675142409000;
 
 const PRESS_TIMEOUT = DAY;
 
+/**
+ * Provides "the button" minigame.
+ *
+ * Not freestanding.
+ */
 export class TheButton extends BotComponent {
     data: database_schema;
     readonly button_message_id = "1069819685786370108";

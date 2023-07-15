@@ -33,6 +33,11 @@ function message_might_have_code(message: string) {
     return message.includes("```") || message.match(/[{};]/g);
 }
 
+/**
+ * Informs users that they shouldn't post screenshots of their code in threads.
+ *
+ * Not freestanding.
+ */
 export class AntiScreenshot extends BotComponent {
     constructor(wheatley: Wheatley) {
         super(wheatley);

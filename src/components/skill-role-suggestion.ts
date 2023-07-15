@@ -8,6 +8,11 @@ import { BotComponent } from "../bot-component.js";
 import { Wheatley } from "../wheatley.js";
 import { MessageContextMenuCommandBuilder, UserContextMenuCommandBuilder } from "../command.js";
 
+/**
+ * Adds commands for users to suggest skill roles for other members.
+ *
+ * Not freestanding.
+ */
 export class SkillRoleSuggestion extends BotComponent {
     // string -> initial target message from context menu interaction
     readonly target_map = new SelfClearingMap<string, {member: Discord.GuildMember, role?: string}>(5 * MINUTE);

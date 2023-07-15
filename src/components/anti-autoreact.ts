@@ -17,6 +17,11 @@ const obnoxious_autoreact_immunity = new Set([
     "551519630578024468" // Swyde
 ]);
 
+/**
+ * Prevents some auto-reactions being placed on some users.
+ *
+ * Not freestanding.
+ */
 export class AntiAutoreact extends BotComponent {
     override async on_reaction_add(reaction: Discord.MessageReaction | Discord.PartialMessageReaction) {
         const emoji_name = reaction.emoji.name?.toLowerCase();

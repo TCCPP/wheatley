@@ -9,6 +9,11 @@ import { Wheatley } from "../wheatley.js";
 import { MessageContextMenuCommandBuilder, ModalHandler } from "../command.js";
 import { make_quote_embeds } from "./quote.js";
 
+/**
+ * Provides a command for reporting other users' messages.
+ *
+ * Not freestanding.
+ */
 export class Report extends BotComponent {
     private readonly report_modal = new Discord.ModalBuilder()
         .setCustomId("report-modal")

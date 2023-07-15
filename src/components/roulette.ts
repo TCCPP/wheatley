@@ -18,6 +18,11 @@ type leaderboard_schema = {
 
 const LEADERBOARD_ENTRIES = 20;
 
+/**
+ * "Russian roulette" game where users risk timing themselves out.
+ *
+ * Not freestanding.
+ */
 export class Roulette extends BotComponent {
     readonly warned_users = new SelfClearingSet<string>(60 * MINUTE);
     // user id -> streak count

@@ -5,6 +5,11 @@ import { is_authorized_admin } from "../common.js";
 import { BotComponent } from "../bot-component.js";
 import { Wheatley } from "../wheatley.js";
 
+/**
+ * Provides TCCPP-specific utilities for renaming channels etc.
+ *
+ * Not freestanding.
+ */
 export class UtilityTools extends BotComponent {
     constructor(wheatley: Wheatley) {
         super(wheatley);

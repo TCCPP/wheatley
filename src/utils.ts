@@ -300,10 +300,10 @@ export function init_debugger(_client: Discord.Client) {
     client = _client;
 }
 
-export async function critical_error(...args: any[]) {
+export function critical_error(...args: any[]) {
     M.error(...args);
-    try {
-        if(await get_zelis()) {
+    get_zelis().then(zelis_found => {
+        if (zelis_found) {
             const strs = [];
             for(const arg of args) {
                 try {
@@ -314,9 +314,10 @@ export async function critical_error(...args: any[]) {
                     } catch { void(0); }
                 }
             }
-            zelis!.send(`Critical error occurred: ${strs.join(" ")}`);
+            zelis!.send(`Critical error occurred: ${strs.join(" ")}`)
+                .catch(() => void(0));
         }
-    } catch { void(0); }
+    }).catch(() => void(0));
 }
 
 export function unwrap<T>(x: T | null | undefined): T {

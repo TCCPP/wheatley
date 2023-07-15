@@ -205,6 +205,11 @@ function should_replace_original(replying_to: Discord.Message, request_timestamp
         && !ignore_prefixes.some(prefix => replying_to.content.startsWith(prefix));
 }
 
+/**
+ * Adds formatting commands.
+ *
+ * Freestanding.
+ */
 export class Format extends BotComponent {
     constructor(wheatley: Wheatley) {
         super(wheatley);

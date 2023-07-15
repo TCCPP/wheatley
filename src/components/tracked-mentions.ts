@@ -14,6 +14,11 @@ const tracked_mentions = new Set([
     "1013953887029444678", // dyno
 ]);
 
+/**
+ * Tracks certain mentions, such as mentions of root, moderators, Wheatley, etc.
+ *
+ * Not freestanding.
+ */
 export class TrackedMentions extends BotComponent {
     constructor(wheatley: Wheatley) {
         super(wheatley);

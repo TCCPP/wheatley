@@ -122,6 +122,11 @@ export function parse_article(name: string | null, content: string): [WikiArticl
     ];
 }
 
+/**
+ * Parses wiki articles and adds the /wiki or /howto command for displaying them.
+ *
+ * Freestanding.
+ */
 export class Wiki extends BotComponent {
     articles: Record<string, WikiArticle> = {};
     article_aliases: Map<string, string> = new Map();

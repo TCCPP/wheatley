@@ -164,6 +164,11 @@ export async function make_quote_embeds(
     };
 }
 
+/**
+ * Adds a /quote command for quoting messages within TCCPP.
+ *
+ * Not freestanding.
+ */
 export class Quote extends BotComponent {
     constructor(wheatley: Wheatley) {
         super(wheatley);

@@ -143,6 +143,11 @@ export class CpprefIndex {
     }
 }
 
+/**
+ * Adds /cref and /cppref commands.
+ *
+ * Freestanding.
+ */
 export class Cppref extends BotComponent {
     readonly index = new CpprefIndex;
 

@@ -2,7 +2,6 @@ import { strict as assert } from "assert";
 
 import * as Discord from "discord.js";
 import { EventEmitter } from "events";
-import * as fs from "fs";
 
 import { DatabaseInterface } from "./infra/database-interface.js";
 import { GuildCommandManager } from "./infra/guild-command-manager.js";
@@ -10,12 +9,14 @@ import { MemberTracker } from "./infra/member-tracker.js";
 
 import { BotComponent } from "./bot-component.js";
 
-import { action_log_channel_id, bot_spam_id, colors, cpp_help_id, c_help_id, member_log_channel_id,
-         message_log_channel_id, MINUTE, mods_channel_id, rules_channel_id, server_suggestions_channel_id,
-         staff_flag_log_id, suggestion_action_log_thread_id, suggestion_dashboard_thread_id, TCCPP_ID,
-         welcome_channel_id, zelis_id, the_button_channel_id, skill_role_suggestion_log_id,
-         starboard_channel_id,
-         staff_action_log_channel_id } from "./common.js";
+import {
+    action_log_channel_id, bot_spam_id, colors, cpp_help_id, c_help_id, member_log_channel_id,
+    message_log_channel_id, MINUTE, mods_channel_id, rules_channel_id, server_suggestions_channel_id,
+    staff_flag_log_id, suggestion_action_log_thread_id, suggestion_dashboard_thread_id, TCCPP_ID,
+    welcome_channel_id, zelis_id, the_button_channel_id, skill_role_suggestion_log_id,
+    starboard_channel_id,
+    staff_action_log_channel_id, fetch_root_mod_list
+} from "./common.js";
 import { critical_error, fetch_forum_channel, fetch_text_channel, fetch_thread_channel, M, SelfClearingMap,
          string_split, zip } from "./utils.js";
 
@@ -80,9 +81,16 @@ type text_command_map_target = {
     deletable: boolean;
 };
 
+export type authentication = {
+    id: string;
+    guild?: string;
+    token: string;
+    freestanding?: boolean;
+};
+
 export class Wheatley extends EventEmitter {
     private components: BotComponent[] = [];
-    readonly guild_command_manager;
+    readonly guild_command_manager: GuildCommandManager;
     readonly tracker: MemberTracker; // TODO: Rename
     action_log_channel: Discord.TextChannel;
     staff_flag_log: Discord.TextChannel;
@@ -117,15 +125,24 @@ export class Wheatley extends EventEmitter {
     // whether wheatley is ready (client is ready + wheatley has set up)
     ready = false;
 
-    readonly id = "597216680271282192";
+    // Application ID, must be provided in auth.json
+    readonly id: string;
+    // Guild ID, falls back onto TCCPP if not provided in auth.json.
+    readonly guildId: string;
+    // True if freestanding mode is enabled. Defaults to false.
+    readonly freestanding: boolean;
 
-    constructor(readonly client: Discord.Client, readonly database: DatabaseInterface) {
+    constructor(readonly client: Discord.Client, readonly database: DatabaseInterface, auth: authentication) {
         super();
 
-        this.guild_command_manager = new GuildCommandManager(this);
+        this.id = auth.id;
+        this.freestanding = auth.freestanding ?? false;
+        this.guildId = auth.guild ?? TCCPP_ID;
 
+        this.guild_command_manager = new GuildCommandManager(this);
         this.tracker = new MemberTracker(this);
-        this.setup();
+
+        this.setup(auth.token);
 
         this.client.on("error", error => {
             M.error(error);
@@ -136,8 +153,40 @@ export class Wheatley extends EventEmitter {
         this.setMaxListeners(35);
     }
 
-    async setup() {
+    async setup(token: string) {
+        if (!this.freestanding) {
+            await this.nonFreestandingSetup();
+        }
+
+        this.client.on("messageCreate", this.on_message.bind(this));
+        this.client.on("interactionCreate", this.on_interaction.bind(this));
+        this.client.on("messageDelete", this.on_message_delete.bind(this));
+        this.client.on("messageUpdate", this.on_message_update.bind(this));
+        this.client.on("ready", () => {
+            this.emit("wheatley_ready");
+            this.ready = true;
+        });
+
+        await this.add_component(Cppref);
+        await this.add_component(Format);
+        await this.add_component(Inspect);
+        await this.add_component(Man7);
+        await this.add_component(Ping);
+        await this.add_component(Snowflake);
+        await this.add_component(Wiki);
+
+        await this.guild_command_manager.finalize(token);
+
+        M.debug("Logging in");
+
+        await this.client.login(token);
+    }
+
+    async nonFreestandingSetup() {
         this.client.on("ready", async () => {
+            // fetch list of roots and mods, replace hard-coded list
+            await fetch_root_mod_list(this.client);
+
             // TODO: Log everything?
             const promises = [
                 (async () => {
@@ -195,15 +244,8 @@ export class Wheatley extends EventEmitter {
                 })()
             ];
             await Promise.all(promises);
-            this.emit("wheatley_ready");
-            this.ready = true;
 
-            this.client.on("messageCreate", this.on_message.bind(this));
-            this.client.on("interactionCreate", this.on_interaction.bind(this));
-            this.client.on("messageDelete", this.on_message_delete.bind(this));
-            this.client.on("messageUpdate", this.on_message_update.bind(this));
-
-            this.populate_caches();
+            await this.populate_caches();
         });
 
         await this.add_component(AntiAutoreact);
@@ -213,18 +255,13 @@ export class Wheatley extends EventEmitter {
         await this.add_component(AntiScreenshot);
         //await this.add_component(AntiSelfStar);
         await this.add_component(Autoreact);
-        await this.add_component(Cppref);
-        await this.add_component(Format);
         await this.add_component(ForumChannels);
         await this.add_component(ForumControl);
-        await this.add_component(Inspect);
         this.link_blacklist = await this.add_component(LinkBlacklist);
-        await this.add_component(Man7);
         await this.add_component(Massban);
         await this.add_component(Modmail);
         await this.add_component(Nodistractions);
         await this.add_component(NotifyAboutBrandNewUsers);
-        await this.add_component(Ping);
         await this.add_component(Quote);
         await this.add_component(RaidPurge);
         await this.add_component(ReadTutoring);
@@ -234,7 +271,6 @@ export class Wheatley extends EventEmitter {
         await this.add_component(ServerSuggestionReactions);
         await this.add_component(ServerSuggestionTracker);
         await this.add_component(SkillRoleSuggestion);
-        await this.add_component(Snowflake);
         await this.add_component(Speedrun);
         await this.add_component(Status);
         await this.add_component(ThreadBasedChannels);
@@ -242,21 +278,12 @@ export class Wheatley extends EventEmitter {
         await this.add_component(TrackedMentions);
         await this.add_component(UsernameManager);
         await this.add_component(UtilityTools);
-        await this.add_component(Wiki);
         await this.add_component(TheButton);
         await this.add_component(Composite);
         await this.add_component(Buzzwords);
         await this.add_component(Starboard);
         await this.add_component(ThreadCreatedMessage);
         await this.add_component(Redirect);
-
-        const token = await fs.promises.readFile("auth.key", { encoding: "utf-8" });
-
-        await this.guild_command_manager.finalize(token);
-
-        M.debug("Logging in");
-
-        this.client.login(token);
     }
 
     destroy() {

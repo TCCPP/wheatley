@@ -167,6 +167,11 @@ const roles = [
     beginner,
 ];
 
+/**
+ * 2023 April Fool's day event. Bases the skill roles on how many C++ buzzwords people use.
+ *
+ * Not freestanding.
+ */
 export class Buzzwords extends BotComponent {
     data: database_schema;
     readonly button_message_id = "1069819685786370108";

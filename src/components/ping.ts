@@ -8,6 +8,11 @@ import { BotComponent } from "../bot-component.js";
 import { Wheatley } from "../wheatley.js";
 import { TextBasedCommand, TextBasedCommandBuilder } from "../command.js";
 
+/**
+ * Adds a /ping command.
+ *
+ * Freestanding.
+ */
 export class Ping extends BotComponent {
     constructor(wheatley: Wheatley) {
         super(wheatley);

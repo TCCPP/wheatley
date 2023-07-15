@@ -50,6 +50,11 @@ const starboard_epoch = new Date("2023-04-01T00:00:00.000Z").getTime();
 // https://www.reddit.com/r/Discord_Bots/comments/gteo6t/discordjs_is_there_a_way_to_detect_emojis_in_a/
 const EMOJIREGEX = /((?<!\\)<a?:[^:]+:(\d+)>)|\p{Emoji_Presentation}|\p{Extended_Pictographic}/gmu;
 
+/**
+ * Reaction highscores.
+ *
+ * Not freestanding.
+ */
 export class Starboard extends BotComponent {
     data: component_data;
     mutex = new KeyedMutexSet<string>();

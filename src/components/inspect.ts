@@ -9,6 +9,12 @@ import { MessageContextMenuCommandBuilder, TextBasedCommand, TextBasedCommandBui
 import { url_re } from "./quote.js";
 import { colors } from "../common.js";
 
+/**
+ * Adds an /inspect application command for displaying the markdown used to
+ * generate a message.
+ *
+ * Freestanding.
+ */
 export class Inspect extends BotComponent {
     constructor(wheatley: Wheatley) {
         super(wheatley);

@@ -19,6 +19,11 @@ export function forge_snowflake(timestamp: number) {
     return snowflake.toString();
 }
 
+/**
+ * Adds the /snowflake command.
+ *
+ * Freestanding.
+ */
 export class Snowflake extends BotComponent {
     constructor(wheatley: Wheatley) {
         super(wheatley);

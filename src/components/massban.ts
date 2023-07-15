@@ -7,6 +7,11 @@ import { Wheatley } from "../wheatley.js";
 
 const snowflake_re = /\b\d{10,}\b/g;
 
+/**
+ * Mass ban command.
+ *
+ * Not freestanding.
+ */
 export class Massban extends BotComponent {
     constructor(wheatley: Wheatley) {
         super(wheatley);
@@ -22,7 +27,7 @@ export class Massban extends BotComponent {
                 if(is_authorized_admin(message.member)) {
                     this.do_mass_ban(message);
                 } else {
-                    message.reply(`Unauthorized ${pepereally}`);
+                    await message.reply(`Unauthorized ${pepereally}`);
                 }
             }
         } catch(e) {

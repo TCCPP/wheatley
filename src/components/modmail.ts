@@ -30,6 +30,11 @@ function create_embed(title: string, msg: string) {
 
 type database_schema = number;
 
+/**
+ * Modmail system.
+ *
+ * Not freestanding.
+ */
 export class Modmail extends BotComponent {
     // Spam prevention, user is added to the timeout set when clicking the modmail_continue button,
     readonly timeout_set = new Set<string>();

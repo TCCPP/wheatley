@@ -71,6 +71,11 @@ type database_schema = {
     [key: string]: database_entry
 };
 
+/**
+ * Adds /nodistractions command, allowing users to give themselves a no-off-topic role.
+ *
+ * Not freestanding.
+ */
 export class Nodistractions extends BotComponent {
     // Sorted by !nodistractions end time
     undistract_queue: no_distraction_entry[] = [];

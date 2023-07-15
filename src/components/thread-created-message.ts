@@ -6,6 +6,11 @@ import { BotComponent } from "../bot-component.js";
 import { Wheatley } from "../wheatley.js";
 import { M, unwrap } from "../utils.js";
 
+/**
+ * Deletes thread creation messages.
+ *
+ * Not freestanding.
+ */
 export class ThreadCreatedMessage extends BotComponent {
     constructor(wheatley: Wheatley) {
         super(wheatley);

@@ -7,6 +7,11 @@ import { Wheatley } from "../wheatley.js";
 
 const color = 0xF34A39;
 
+/**
+ * Informs a user how to use the tutoring service.
+ *
+ * Not freestanding.
+ */
 export class ReadTutoring extends BotComponent {
     constructor(wheatley: Wheatley) {
         super(wheatley);

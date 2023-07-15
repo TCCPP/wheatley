@@ -6,13 +6,14 @@ import { BotComponent } from "../bot-component.js";
 import { Wheatley } from "../wheatley.js";
 import { TextBasedCommand, TextBasedCommandBuilder } from "../command.js";
 
-/*
+/**
  * Thread control for threads in thread-based (non-forum) channels
  * Really just:
  * - !rename
  * - !archive
+ *
+ * Not freestanding.
  */
-
 export class ThreadControl extends BotComponent {
     constructor(wheatley: Wheatley) {
         super(wheatley);
