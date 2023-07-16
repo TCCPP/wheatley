@@ -9,7 +9,8 @@ must have a `++i`, and `*i` operator.
 Not all iterators are pointers, but they are modeled after pointers.
 `++i`, `*i`, `i == j`, etc. for iterators should have the same semantics as operations between pointers.
 
-## [Named Requirements]
+<!-- inline -->
+## Named Requirements
 - *[InputIterator](https://en.cppreference.com/w/cpp/named_req/InputIterator)*
 - *[ForwardIterator](https://en.cppreference.com/w/cpp/named_req/ForwardIterator)*
 - *[BidirectionalIterator](https://en.cppreference.com/w/cpp/named_req/BidirectionalIterator)*
@@ -17,7 +18,8 @@ Not all iterators are pointers, but they are modeled after pointers.
 - *[ContiguousIterator](https://en.cppreference.com/w/cpp/named_req/ContiguousIterator)*
 - *[OutputIterator](https://en.cppreference.com/w/cpp/named_req/OutputIterator)*
 
-## [Concepts (since C++20)]
+<!-- inline -->
+## Concepts (since C++20)
 - **[std::input_iterator](https://en.cppreference.com/w/cpp/iterator/input_iterator)**
 - **[std::forward_iterator](https://en.cppreference.com/w/cpp/iterator/forward_iterator)**
 - **[std::bidirectional_iterator](https://en.cppreference.com/w/cpp/iterator/bidirectional_iterator)**
@@ -36,12 +38,9 @@ is often implemented like this
 - you can use pointers in algorithms like **[std::sort](https://en.cppreference.com/w/cpp/algorithm/sort)**
 
 ## See Also
-<:cppreference:875716540929015908>
-[Iterator Categories](https://en.cppreference.com/w/cpp/iterator)
-<:cppreference:875716540929015908>
-[C++20 Iterator Concepts](https://en.cppreference.com/w/cpp/iterator#C.2B.2B20_iterator_concepts)
-<:cppreference:875716540929015908>
-**[std::iterator_traits](https://en.cppreference.com/w/cpp/iterator/iterator_traits)**
+- [Iterator Categories](https://en.cppreference.com/w/cpp/iterator)
+- [C++20 Iterator Concepts](https://en.cppreference.com/w/cpp/iterator#C.2B.2B20_iterator_concepts)
+- **[std::iterator_traits](https://en.cppreference.com/w/cpp/iterator/iterator_traits)**
 
-## [Footer]
+<!-- footer -->
 Note: The Iterator named req. is only used as a base for Input/OutputIterator

@@ -19,4 +19,4 @@ Note: use **[nullptr](https://en.cppreference.com/w/cpp/language/nullptr)** inst
 - [learncpp.com: Introduction to pointers](https://www.learncpp.com/cpp-tutorial/introduction-to-pointers/)
 - [cppreference.com: Pointer declaration](https://en.cppreference.com/w/cpp/language/pointer)
 - [stackoverflow.com: What exactly is nullptr?](https://stackoverflow.com/q/1282295/5740428)
-- `howto pointer`
+- `!howto pointer-arithmetic`

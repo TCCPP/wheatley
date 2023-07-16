@@ -5,7 +5,8 @@ You can change your C++ standard using compiler flags or project settings.
 **Note:** Depending on your compiler version, some standards may not be available.
 Updating to a newer compiler is recommended.
 
-## [GCC and clang]
+<!-- inline -->
+## GCC and clang
 - `-std=c++98`
 - `-std=c++11`
 - **...**
@@ -13,7 +14,8 @@ Updating to a newer compiler is recommended.
 - `-std=c++2b`
 (`2b` is working draft C++23)
 
-## [MSVC]
+<!-- inline -->
+## MSVC
 - `/std:c++98`
 - `/std:c++11`
 - **...**
@@ -21,7 +23,8 @@ Updating to a newer compiler is recommended.
 - `/std:c++latest`
 (`latest` is working draft C++23)
 
-## [Visual Studio]
+<!-- inline -->
+## Visual Studio
 Project → <name> → Settings → C/C++ → Language →  C++ Language Standard
 
 ## CMake

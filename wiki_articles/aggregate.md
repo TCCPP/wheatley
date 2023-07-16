@@ -1,3 +1,4 @@
+<!-- title -->
 # What is an Aggregate Type in C++?
 
 An aggregate type is a class with no constructors (since C++20, not even explicitly defaulted ones).

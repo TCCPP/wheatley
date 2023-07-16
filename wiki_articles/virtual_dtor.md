@@ -19,7 +19,6 @@ int main() {
   delete b; // undefined behaviour
 }
 ```
-
 The problem is that `derived` has a `str` member.
 When we `delete b`, this calls the destructor of `base`, because `p` is `base*`,
 but `~base()` doesn't call `~derived()`, so `str` is leaked.

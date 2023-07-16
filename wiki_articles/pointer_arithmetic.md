@@ -1,30 +1,37 @@
 # Pointer Arithmetic Cheatsheet
 
-## [Address-Of]
+<!-- inline -->
+## Address-Of
 `&x`
 **⇒** pointer to `x`
 
-## [Indirection]
+<!-- inline -->
+## Indirection
 `*p`
 **⇒** what `p` points to
 
-## [Comparison]
+<!-- inline -->
+## Comparison
 `p0 < p1`
 **⇒** `true` iff `p0` comes before `p1` in array
 
-## [Difference]
+<!-- inline -->
+## Difference
 `p0 - p1`
 **⇒** distance, in elements, `ptrdiff_t`
 
-## [Offset]
+<!-- inline -->
+## Offset
 `p + offset`
 **⇒** Nth pointer after/before `p`
 
-## [Subscript]
+<!-- inline -->
+## Subscript
 `p[offset]`
 **⇒** Nth object after/before `p[0]`
 
-## [Equivalences]
+<!-- inline -->
+## Equivalences
 ```c
   &*p == p
  p[i] == *(p + i)
@@ -32,10 +39,11 @@
    *p == p[0]
 ```
 
-## [General Advice]
+<!-- inline -->
+## General Advice
 To better understand, you can think of pointers as memory addresses.
 At a hardware level, they are indices in a huge byte array that makes up your computer's memory.
 
-## [Footer]
-Note: Using the indirection operator * is called "dereferencing"
+<!-- footer -->
+Note: Using the indirection operator * is called "dereferencing"<br>
 Note: p + 1 will offset p by one element, which can be an offset of multiple bytes

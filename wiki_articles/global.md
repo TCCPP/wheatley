@@ -7,18 +7,20 @@ However, if you really need them:
 ## Small Constants
 ```cpp
 // header, or source (add static)
+// if in header, make it inline (since C++17)
 constexpr int x = 0;
 ```
-
 Use `const` for [non-literal types](https://en.cppreference.com/w/cpp/named_req/LiteralType).
 
-## [Extern (Header File)]
+<!-- inline -->
+## Extern (Header File)
 ```cpp
 // header
 extern int x;
 ```
 
-## [Extern (Source File)]
+<!-- inline -->
+## Extern (Source File)
 ```cpp
 // source
 int x = 0;
@@ -30,15 +32,16 @@ int x = 0;
 inline int x = 0;
 ```
 
-## [General Advice]
+<!-- inline -->
+## General Advice
 Use `static` or an [unnamed namespace](https://en.cppreference.com/w/cpp/language/namespace#Unnamed_namespaces) for any
 globals that are TU-local (used only in one cpp file).
 
-## [Common Mistake]
+<!-- inline -->
+## :warning: Common Mistake
 If you put `int x = 0;` into a header, you may get linker errors.
 `x` is `extern` by default, so the linker would see multiple conflicting definitions when the header is included in
 multiple source files.
 
-## Also See
-<:cppreference:875716540929015908>
-[Storage class specifiers](https://en.cppreference.com/w/cpp/language/storage_duration)
+## See also
+- [Storage class specifiers](https://en.cppreference.com/w/cpp/language/storage_duration)

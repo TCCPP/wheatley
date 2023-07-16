@@ -2,32 +2,38 @@
 Compile your program with `-g` flag and run your program using gdb: `gdb yourprogname`.
 From there, you can debug using GDB commands. Use `help` to list commands and their options.
 
-## [Break]
+<!-- inline -->
+## Break
 Set a breakpoint to pause execution at a certain line or a function:
 - `break main`
 - `b 42`
 
-## [Run]
+<!-- inline -->
+## Run
 Run your program inside gdb after setting breakpoints:
 - `run`
 - `r`
 
-## [Print]
+<!-- inline -->
+## Print
 Print value of expression:
 - `print my_var`
 - `p (char) ch`
 
-## [Walk & Step]
+<!-- inline -->
+## Walk & Step
 Execute next line of code, where `next` stays in the function and `step` enters functions:
 - `n`
 - `s`
 
-## [Continue]
+<!-- inline -->
+## Continue
 Continue execution until (Nth) next breakpoint
 - `continue`
 - `c 3`
 
-## [Backtrace]
+<!-- inline -->
+## Backtrace
 Print backtrace of all or N stack frames:
 - `backtrace -full`
 - `bt 3`

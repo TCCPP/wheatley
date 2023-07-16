@@ -21,5 +21,4 @@ point operator*(point a, point b) {
     return a *= b;
 }
 ```
-
 Note: for large types, pass as `const&` and not by value

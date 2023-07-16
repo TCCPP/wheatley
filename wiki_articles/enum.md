@@ -13,12 +13,14 @@ enum class Fruit : char {
 Fruit apple = Fruit::APPLE;
 ```
 
-## [Scoped Enumeration (C++-only)]
+<!-- inline -->
+## Scoped Enumeration (C++-only)
 - underlying type is `int`
 - requires *enum-name::* to access
 - only `=`, `==` and `!=` defined (operator overloading possible)
 
-## [Unscoped Enumeration]
+<!-- inline -->
+## Unscoped Enumeration
 - underlying type is impl.-defined
 - access without *enum-name*
 - behaves like list of constants in surrounding scope
@@ -26,11 +28,11 @@ Fruit apple = Fruit::APPLE;
 
 ## See Also
 <:cppreference:875716540929015908>
-[Enumeration Declaration](https://en.cppreference.com/w/cpp/language/enum)
+[Enumeration Declaration](https://en.cppreference.com/w/cpp/language/enum)<br>
 <:cppreference:875716540929015908>
-[Using-enum-declaration](https://en.cppreference.com/w/cpp/language/enum#Using-enum-declaration) (since C++20)
+[Using-enum-declaration](https://en.cppreference.com/w/cpp/language/enum#Using-enum-declaration) (since C++20)<br>
 <:cppreference:875716540929015908>
-**[std::underlying_type](https://en.cppreference.com/w/cpp/types/underlying_type)** (since C++11)
+**[std::underlying_type](https://en.cppreference.com/w/cpp/types/underlying_type)** (since C++11)<br>
 <:cppreference:875716540929015908>
-**[std::to_underlying](https://en.cppreference.com/w/cpp/utility/to_underlying)** (since C++23)
-• [learncpp.com: Enumerated Types](https://www.learncpp.com/cpp-tutorial/enumerated-types/)
+**[std::to_underlying](https://en.cppreference.com/w/cpp/utility/to_underlying)** (since C++23)<br>
+- [learncpp.com: Enumerated Types](https://www.learncpp.com/cpp-tutorial/enumerated-types/)

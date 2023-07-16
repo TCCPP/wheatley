@@ -1,5 +1,5 @@
-[[[user author]]]
-[[[alias screenshots, sc]]]
+<!-- user author -->
+<!-- alias screenshots, sc -->
 
 # Please Do Not Send Screenshots!
 

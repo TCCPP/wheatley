@@ -12,5 +12,4 @@ std::ostream& operator<<(std::ostream& out,
     return out << p.x << ' ' << p.y;
 }
 ```
-
 Here, `p.x` and `p.y` will be inserted into the stream, separated by a space.

@@ -3,14 +3,16 @@
 In C and C++, the results of boolean operators like `==`, `<`, can be used as `1` or `0` in arithmetic.
 For example, `a == b` results in `1` if a and b are equal, otherwise `0`.
 
-## [Conditional Increment]
+<!-- inline -->
+## Conditional Increment
 ```cpp
 if (condition) a++;
 // is equivalent to
 a += condition;
 ```
 
-## [Conditional Addition]
+<!-- inline -->
+## Conditional Addition
 ```cpp
 if (condition) a += b;
 // is equivalent to
@@ -32,7 +34,7 @@ There are many more examples where these branchless operations are useful.
 They can sometimes be more efficient than using an if-statement, but often,
 modern compilers transform code into these branchless versions automatically, so there is no difference.
 
-⚠️ **Keep readability in mind; others may find branchless code to be unintuitive and unreadable.**
+:warning: **Keep readability in mind; others may find branchless code to be unintuitive and unreadable.**
 
 ## See Also
 - [Creel - Branchless Programming](https://www.youtube.com/watch?v=bVJ-mWWL7cE)

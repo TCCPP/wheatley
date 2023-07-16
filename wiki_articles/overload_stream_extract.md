@@ -12,5 +12,4 @@ std::istream& operator>>(std::istream& in,
     return in >> p.x >> p.y;
 }
 ```
-
 Here, `p.x` and `p.y` will be extracted from the input stream.

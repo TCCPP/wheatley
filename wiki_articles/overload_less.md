@@ -22,5 +22,4 @@ bool operator<(point a, point b) {
 
 ## See Also
 
-<:cppreference:875716540929015908>
-[Comparison Operators](https://en.cppreference.com/w/cpp/language/operator_comparison)
+- [Comparison Operators](https://en.cppreference.com/w/cpp/language/operator_comparison)

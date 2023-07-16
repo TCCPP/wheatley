@@ -19,13 +19,16 @@ void print_num(int x) {
   printf("%d", x);
 }
 ```
-## [Declaration]
+
+<!-- inline -->
+## Declaration
 - ends with semicolon
 - defines default parameters (C++), if any
 - can have parameter names, but optional
 - usually in header
 
-## [Definition]
+<!-- inline -->
+## Definition
 - ends with function body
 - defines default parameters (C++) if forward-decl. does not
 - often in source file, but may be in header (with `inline` linkage)

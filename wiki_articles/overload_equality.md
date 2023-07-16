@@ -17,10 +17,8 @@ bool operator==(point a, point b) {
     return a.x == b.x && a.y == b.y;
 }
 ```
-
 Note: `!=` is often implemented as a wrapper for `==`
 
 ## See Also
 
-<:cppreference:875716540929015908>
-[Comparison Operators](https://en.cppreference.com/w/cpp/language/operator_comparison)
+- [Comparison Operators](https://en.cppreference.com/w/cpp/language/operator_comparison)

@@ -3,7 +3,8 @@
 C and C++ are very powerful languages, but you need to be careful when using them.
 Here are some crucial practices:
 
-## [Compiler Warnings!!!]
+<!-- inline -->
+## Compiler Warnings!!!
 - `-Wall`
 - `-Wpedantic`
 - `-Wextra`
@@ -13,13 +14,15 @@ You can also use [clang-tidy](https://clang.llvm.org/extra/clang-tidy/),
 [IntelliSense](https://code.visualstudio.com/docs/editor/intellisense),
 and other diagnostics (often integrated into IDEs).
 
-## [No Unsafe Functions]
+<!-- inline -->
+## No Unsafe Functions
 `scanf("%s", str)`, `gets()`, and others can lead to mistakes like
 [buffer overflows](https://en.wikipedia.org/wiki/Buffer_overflow).
 
 Accessing arrays out of bounds can be caught in C++ by using `.at(x)` instead of `[x]` for some containers.
 
-## [Prefer Smart Pointers]
+<!-- inline -->
+## Prefer Smart Pointers
 Since C++11, prefer smart pointers like
 **[std::unique_ptr](https://en.cppreference.com/w/cpp/memory/unique_ptr)** and
 **[std::shared_ptr](https://en.cppreference.com/w/cpp/memory/shared_ptr)**

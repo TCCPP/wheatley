@@ -1,11 +1,13 @@
 # How To Name Your Variables
+
 - names should be short, but descriptive
 - avoid single-character names like `a`
-- ... but sometimes they are okay, like `i` for loop indices
-- avoid abbreviations like `tok` for `tokenize`, `cpy` for `copy`
+  - sometimes they are okay, like `i` for loop indices
+- avoid excessive abbreviations like `tok` for `tokenize`, `cpy` for `copy`
 - choose a consistent style
 
-## [Bad Example]
+<!-- inline -->
+## Bad Example
 ```c
 int a;
 int rct =
@@ -15,7 +17,8 @@ if (rct != 1)
 printf("age: %d", a);
 ```
 
-## [Good Example]
+<!-- inline -->
+## Good Example
 ```c
 int age;
 int readCount =

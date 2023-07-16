@@ -3,7 +3,8 @@
 There is no "best" editor for C/C++.
 Each has its strengths and weaknesses.
 
-## [IDEs (Integrated Dev. Envs.)]
+<!-- inline -->
+## IDEs (Integrated Dev. Envs.)
 
 Specialized editors with built-in tools for building, running, debugging, etc.
 Heavier, but also much more powerful out of the box.
@@ -13,7 +14,8 @@ Heavier, but also much more powerful out of the box.
 - **[CLion](https://www.jetbrains.com/clion/download/)** (free for students, open-source, any OS)
 - **[repl.it](https://replit.com/)** (free for open-source, in-browser)
 
-## [Code Editors]
+<!-- inline -->
+## Code Editors
 
 Less language-specific editors, which are more lightweight.
 Extra tools for building, running, etc. can be installed via plugins.

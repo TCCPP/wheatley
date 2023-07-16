@@ -19,3 +19,6 @@ Instead of reading `f`, we read a space, because `%c` does not skip leading whit
 scanf(" %c", &c);
 ```
 The leading space before `%c` matches any whitespace of any length.
+
+## See Also
+- [cdecl+ - online tool for explaining `scanf`](https://cdecl.plus/?q=scanf(%22%20%25c%22,%20%26c))

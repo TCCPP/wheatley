@@ -3,15 +3,17 @@
 Neither language is better, neither language is faster.
 There are good reasons for using both languages:
 
-## [Reasons To Use C]
-✅ relatively low-level language
-✅ much simpler language (no classes, templates, ...)
-✅ portable to a wide variety of systems
+<!-- inline -->
+## Reasons To Use C
+:white_check_mark: relatively low-level language<br>
+:white_check_mark: much simpler language (no classes, templates, ...)<br>
+:white_check_mark: portable to a wide variety of systems
 
-## [Reasons To Use C++]
-✅ lots of helpful abstractions (classes, templates, ...)
-✅ feature-rich language (function overloads, `constexpr`, ...)
-✅ extensive standard library
+<!-- inline -->
+## Reasons To Use C++
+:white_check_mark: lots of helpful abstractions (classes, templates, ...)<br>
+:white_check_mark: feature-rich language (function overloads, `constexpr`, ...)<br>
+:white_check_mark: extensive standard library
 
 ## Which Is Faster?
 Neither language is inherently faster than the other.

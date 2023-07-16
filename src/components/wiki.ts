@@ -25,101 +25,198 @@ async function* walk_dir(dir: string): AsyncGenerator<string> { // todo: duplica
 
 type WikiArticle = {
     title: string;
-    body: string | null;
-    fields: {name: string, value: string, inline: boolean}[],
+    body?: string;
+    fields: WikiField[],
     footer?: string;
-    set_author?: true;
-    no_embed?: true;
+    image?: string;
+    set_author: boolean;
+    no_embed: boolean;
 };
 
-export function parse_article(name: string | null, content: string): [WikiArticle, Map<string, string>] {
-    const data: Partial<WikiArticle> = {};
-    data.body = "";
-    data.fields = [];
-    const lines = content.split(/\r?\n/);
-    enum state { body, field, footer }
-    let code = false;
-    let current_state = state.body;
-    const article_aliases: Map<string, string> = new Map();
-    for(const [ i, line ] of lines.entries()) {
-        if(line.trim().startsWith("```")) {
-            code = !code;
+type WikiField = {
+    name: string;
+    value: string;
+    inline: boolean;
+};
+
+enum parse_state { body, field, footer, before_inline_field, done }
+
+/**
+ * One-time use class for parsing articles.
+ */
+class ArticleParser {
+    private readonly _article_aliases = new Set<string>();
+
+    private title: string;
+    private body?: string;
+    private fields: WikiField[] = [];
+    private footer?: string;
+    private image?: string;
+    private set_author?: true;
+    private no_embed?: true;
+
+    private current_state = parse_state.body;
+    private in_code = false;
+
+    parse(content: string) {
+        this.body = "";
+        for(const line of content.split(/\r?\n/)) {
+            this.parse_line(line);
         }
-        if(line.match(/^#(?!#).+$/) && !code) { // H1
-            assert(!data.title, "More than one title (# H1) provided");
-            data.title = line.substring(1).trim();
-        } else if(line.match(/^##(?!#).+$/) && !code) { // H2
-            let name = line.substring(2).trim();
-            let inline = false;
-            if(name.match(/^\[.+\]$/)) {
-                name = name.substring(1, name.length - 1).trim();
-                inline = true;
-            }
-            data.fields.push({
-                name,
-                value: "",
-                inline
-            });
-            current_state = state.field;
-        } else if(line.trim().toLowerCase() == "[[[footer]]]" && !code) {
-            current_state = state.footer;
-        } else if(line.trim() == "[[[user author]]]" && !code) {
-            data.set_author = true;
-        } else if(line.trim() == "[[[no embed]]]" && !code) {
-            data.no_embed = true;
-        } else if(line.trim().match(/^\[\[\[alias .+\]\]\]$/) && !code) {
-            const match = line.trim().match(/^\[\[\[alias (.+)\]\]\]$/)!;
-            const aliases = match[1].split(",").map(alias => alias.trim());
-            // null is passed by the preview command, don't actually want to set aliases in for
-            // TODO: Now obsolete since we aren't directly inserting into a global map?
-            if(name != null) {
-                for(const alias of aliases) {
-                    assert(!article_aliases.has(alias));
-                    article_aliases.set(alias, name);
-                }
-            }
-        } else if(line.trim().match(/\[\[\[.*\]\]\]/) && !code) {
-            throw `Parse error on line ${i + 1}, unrecognized [[[]]] directive`;
+        assert(!this.in_code, "Unclosed code block in wiki article");
+        assert(this.current_state !== parse_state.before_inline_field, "Trailing inline field directive");
+
+        this.body = this.body.trim();
+        if(this.body === "") {
+            this.body = undefined;
+        }
+
+        // title will just be for search purposes in no embed mode
+        assert(this.title, "Wiki article must have a title");
+
+        this.footer = this.footer?.trim();
+        assert(this.fields); // will always be true
+
+        if(this.no_embed) {
+            assert(this.body, "Must have a body if it's not an embed");
+            assert(!this.footer, "Can't have a footer if it's not an embed");
+            assert(this.fields.length == 0, "Can't have fields if it's not an embed");
+        }
+
+        this.current_state = parse_state.done;
+    }
+
+    parse_line(line: string): void {
+        const trimmed = line.trim();
+        if(trimmed.startsWith("```")) {
+            this.in_code = !this.in_code;
+            this.parse_regular_line(line);
+        } else if(!this.in_code && line.startsWith("#")) {
+            this.parse_heading(line);
+        } else if(!this.in_code && trimmed.startsWith("<!--") && trimmed.endsWith("-->")) {
+            const directive = trimmed.match(/^<!--+(.*?)-+->$/)![1].trim();
+            this.parse_directive(directive);
         } else {
-            const line_with_newline = (() => {
-                if(code || line.startsWith("- ")) {
-                    return "\n" + line;
-                } else {
-                    return line.trim() == "" ? "\n" : " " + line;
-                }
-            })();
-            if(current_state == state.body) {
-                data.body += line_with_newline;
-            } else if(current_state == state.field) {
-                data.fields[data.fields.length - 1].value += line_with_newline;
-            } else if(current_state == state.footer) { //eslint-disable-line @typescript-eslint/no-unnecessary-condition
-                data.footer = (data.footer ?? "") + line_with_newline;
-            } else {
-                assert(false);
+            this.parse_regular_line(line);
+        }
+    }
+
+    /**
+     * Parses one line, starting with #.
+     * @param line the line
+     */
+    parse_heading(line: string): void {
+        const level = line.search(/[^#]/);
+        assert(level >= 1, "Cannot parse heading that has no heading level");
+
+        if(level === 1) {
+            this.title = line.substring(1).trim();
+            this.current_state = parse_state.body;
+        } else if(level === 2) {
+            const name = line.substring(2).trim();
+            const inline = this.current_state === parse_state.before_inline_field;
+            const field = { name, value: "", inline };
+            this.fields.push(field);
+            this.current_state = parse_state.field;
+            return;
+        } else {
+            this.parse_regular_line(line);
+        }
+    }
+
+    /**
+     * Parses a directive. Directives are HTML comments in Markdown with special meaning.
+     * This function accepts the contents of such a comment, without the opening `<!--` and closing `-->`.
+     * @param directive the directive to parse
+     */
+    parse_directive(directive: string): void {
+        if(directive === "inline") {
+            this.current_state = parse_state.before_inline_field;
+        } else if(directive === "footer") {
+            this.current_state = parse_state.footer;
+        } else if(directive === "user author") {
+            this.set_author = true;
+        } else if(directive === "no embed") {
+            this.no_embed = true;
+        } else if (directive.startsWith("image ")) {
+            this.image = directive.substring("image ".length).trim();
+        } else if(directive.startsWith("alias ")) {
+            const aliases = directive
+                .substring("alias ".length)
+                .split(",")
+                .map(alias => alias.trim());
+            for(const alias of aliases) {
+                assert(!this._article_aliases.has(alias));
+                this._article_aliases.add(alias);
             }
         }
     }
-    assert(!code, "Unclosed code block in wiki article");
-    data.body = data.body.trim();
-    if(data.body == "") {
-        data.body = null;
+
+    parse_regular_line(line: string): void {
+        const requires_line_break = this.in_code ||
+            line.startsWith("```") ||
+            line.startsWith("#") ||
+            line.trim() === "" ||
+            line.trim().startsWith("- ") ||
+            line.trim().match(/^\d+.*$/);
+        const terminated_line = (requires_line_break ? line + "\n" : line)
+            .replace(/<br>\n|<br\/>\n/, "\n")
+            .replaceAll(/<br>|<br\/>/g, "\n");
+
+        const plus_line = (prefix: string) => {
+            if (prefix.length !== 0) {
+                const tail = prefix[prefix.length - 1];
+                if (requires_line_break) {
+                    if (tail !== "\n") {
+                        prefix += "\n";
+                    }
+                } else if (!/\s/.test(tail)) {
+                    prefix += " ";
+                }
+            }
+            return prefix + terminated_line;
+        };
+
+        if(this.current_state === parse_state.body) {
+            this.body = plus_line(this.body!);
+        } else if(this.current_state === parse_state.field) {
+            this.fields[this.fields.length - 1].value
+                = plus_line(this.fields[this.fields.length - 1].value);
+        } else if(this.current_state === parse_state.footer) {
+            this.footer = plus_line(this.footer ?? "");
+        } else {
+            assert(false);
+        }
     }
-    data.footer = data.footer?.trim();
-    assert(data.fields); // will always be true
-    if(data.no_embed) {
-        assert(data.body, "Must have a body if it's not an embed");
-        assert(!data.footer, "Can't have a footer if it's not an embed");
-        assert(data.fields.length == 0, "Can't have fields if it's not an embed");
+
+    get is_done(): boolean {
+        return this.current_state === parse_state.done;
     }
-    assert(data.title, "Wiki article must have a title"); // title will just be for search purposes in no embed mode
-    // need to do this nonsense for TS....
-    const { title, body, fields, footer, set_author, no_embed } = data;
-    return [
-        {
-            title, body, fields, footer, set_author, no_embed
-        },
-        article_aliases
-    ];
+
+    get article(): WikiArticle {
+        assert(this.is_done, "Attempting to access article of a parser without success");
+        return {
+            title: this.title,
+            body: this.body,
+            fields: this.fields,
+            footer: this.footer,
+            image: this.image,
+            set_author: this.set_author ?? false,
+            no_embed: this.no_embed ?? false,
+        };
+    }
+
+    get article_aliases(): Set<string> {
+        assert(this.is_done, "Attempting to access aliases of a parser without success");
+        return this._article_aliases;
+    }
+
+}
+
+export function parse_article(content: string): [WikiArticle, Set<string>] {
+    const parser = new ArticleParser();
+    parser.parse(content);
+    return [ parser.article, parser.article_aliases ];
 }
 
 /**
@@ -141,12 +238,11 @@ export class Wiki extends BotComponent {
                     title: "query",
                     description: "Query",
                     required: true,
-                    autocomplete: query =>
-                        Object.values(this.articles)
-                            .map(article => article.title)
-                            .filter(title => title.toLowerCase().includes(query))
-                            .map(title => ({ name: title, value: title }))
-                            .slice(0, 25)
+                    autocomplete: query => Object.values(this.articles)
+                        .map(article => article.title)
+                        .filter(title => title.toLowerCase().includes(query))
+                        .map(title => ({ name: title, value: title }))
+                        .slice(0, 25)
                 })
                 .set_handler(this.wiki.bind(this))
         );
@@ -185,10 +281,17 @@ export class Wiki extends BotComponent {
                 continue;
             }
             const content = await fs.promises.readFile(file_path, { encoding: "utf-8" });
-            const [ article, aliases ] = parse_article(name, content);
+            let parsed;
+            try {
+                parsed = parse_article(content);
+            } catch (e: any) {
+                M.error(`Failed to parse article ${file_path}: ${e.message}`);
+                continue;
+            }
+            const [ article, aliases ] = parsed;
             this.articles[name] = article;
-            for(const [ k, v ] of aliases) {
-                this.article_aliases.set(k, v);
+            for(const alias of aliases) {
+                this.article_aliases.set(alias, name);
             }
         }
     }
@@ -204,7 +307,8 @@ export class Wiki extends BotComponent {
             const embed = new Discord.EmbedBuilder()
                 .setColor(colors.color)
                 .setTitle(article.title)
-                .setDescription(article.body)
+                .setImage(article.image ?? null)
+                .setDescription(article.body ?? null)
                 .setFields(article.fields);
             if(article.set_author) {
                 const member = await command.get_member();
@@ -249,13 +353,13 @@ export class Wiki extends BotComponent {
 
     async wiki_preview(command: TextBasedCommand, content: string) {
         M.log("Received wiki preview command", command.user.id, command.user.tag, command.get_or_forge_url());
-        if(command.channel_id != bot_spam_id) {
+        if(!this.wheatley.freestanding && command.channel_id !== bot_spam_id) {
             await command.reply(`!wiki-preview must be used in <#${bot_spam_id}>`, true, true);
             return;
         }
         let article: WikiArticle;
         try {
-            article = parse_article(null, content)[0];
+            article = parse_article(content)[0];
         } catch(e) {
             await command.reply("Parse error: " + e, true, true);
             return;

@@ -7,13 +7,15 @@ The keywords
 The declared class will have different properties, such as default
 [member access](https://en.cppreference.com/w/cpp/language/access), depending on whether `class` or `struct` was used.
 
-## [class]
+<!-- inline -->
+## `class`
 - members `private` by default
 - `private` [inheritance](https://en.cppreference.com/w/cpp/language/derived_class) from base class by default
 - incompatible with C
 - typically used for larger classes
 
-## [struct]
+<!-- inline -->
+## `struct`
 - members `public` by default
 - `public` [inheritance](https://en.cppreference.com/w/cpp/language/derived_class) from base class by default
 - compatible with C

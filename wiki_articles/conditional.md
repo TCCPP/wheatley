@@ -15,12 +15,13 @@ int min(int a, int b) {
     return a < b ? a : b;
 }
 ```
-
 This function chooses `a` if `a` is lower than `b`, or `b` otherwise.
 
-## [Benefits Over If-Statements]
+<!-- inline -->
+## Benefits Over If-Statements
 - more concise code
 - makes it easier to be `const`-correct
 
-## [Downsides]
+<!-- inline -->
+## Downsides
 - can be hard to read, especially when nested and formatted poorly

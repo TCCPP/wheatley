@@ -22,9 +22,11 @@ struct compare_abs {
 // ordered set containing {2, 3, -7}
 std::set<int, compare_abs> s{-7, 2, 3, -2};
 ```
+
 ## Alternative: Closure Type as *Compare* (since C++20)
 ```cpp
-std::set<int, decltype([](int x, int y) {
+using compare_abs = decltype([](int x, int y) {
     return std::abs(x) < std::abs(y);
-})> s;
+});
+std::set<int, compare_abs> s;
 ```
