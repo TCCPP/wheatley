@@ -13,8 +13,6 @@ import { Wheatley } from "../wheatley.js";
  * Performs automated role management tasks, such as:
  * - removing @Pink roles for non-boosting members
  * - removing duplicate skill roles
- *
- * Not freestanding.
  */
 export class RoleManager extends BotComponent {
     pink_role: Discord.Role;

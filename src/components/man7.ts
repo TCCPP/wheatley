@@ -88,10 +88,12 @@ export class Man7Index {
 
 /**
  * Adds the /man command for searching manual pages.
- *
- * Freestanding.
  */
 export class Man7 extends BotComponent {
+    static override get is_freestanding() {
+        return true;
+    }
+
     index = new Man7Index();
 
     constructor(wheatley: Wheatley) {

@@ -154,17 +154,15 @@ export class Wheatley extends EventEmitter {
     }
 
     async setup(token: string) {
-        if (!this.freestanding) {
-            await this.nonFreestandingSetup();
-        }
-
-        this.client.on("messageCreate", this.on_message.bind(this));
-        this.client.on("interactionCreate", this.on_interaction.bind(this));
-        this.client.on("messageDelete", this.on_message_delete.bind(this));
-        this.client.on("messageUpdate", this.on_message_update.bind(this));
-        this.client.on("ready", () => {
+        this.client.on("ready", async () => {
+            await this.fetch_guild_info();
             this.emit("wheatley_ready");
             this.ready = true;
+            this.client.on("messageCreate", this.on_message.bind(this));
+            this.client.on("interactionCreate", this.on_interaction.bind(this));
+            this.client.on("messageDelete", this.on_message_delete.bind(this));
+            this.client.on("messageUpdate", this.on_message_update.bind(this));
+            await this.populate_caches();
         });
 
         await this.add_component(Cppref);
@@ -174,80 +172,6 @@ export class Wheatley extends EventEmitter {
         await this.add_component(Ping);
         await this.add_component(Snowflake);
         await this.add_component(Wiki);
-
-        await this.guild_command_manager.finalize(token);
-
-        M.debug("Logging in");
-
-        await this.client.login(token);
-    }
-
-    async nonFreestandingSetup() {
-        this.client.on("ready", async () => {
-            // fetch list of roots and mods, replace hard-coded list
-            await fetch_root_mod_list(this.client);
-
-            // TODO: Log everything?
-            const promises = [
-                (async () => {
-                    this.action_log_channel = await fetch_text_channel(action_log_channel_id);
-                })(),
-                (async () => {
-                    this.staff_flag_log = await fetch_text_channel(staff_flag_log_id);
-                })(),
-                (async () => {
-                    this.staff_message_log = await fetch_text_channel(message_log_channel_id);
-                })(),
-                (async () => {
-                    this.TCCPP = await this.client.guilds.fetch(TCCPP_ID);
-                })(),
-                (async () => {
-                    this.cpp_help = await fetch_forum_channel(cpp_help_id);
-                })(),
-                (async () => {
-                    this.c_help = await fetch_forum_channel(c_help_id);
-                })(),
-                (async () => {
-                    this.zelis = await this.client.users.fetch(zelis_id);
-                })(),
-                (async () => {
-                    this.rules_channel = await fetch_text_channel(rules_channel_id);
-                })(),
-                (async () => {
-                    this.mods_channel = await fetch_text_channel(mods_channel_id);
-                    this.skill_role_suggestion_log = await fetch_text_channel(skill_role_suggestion_log_id);
-                })(),
-                (async () => {
-                    this.staff_member_log_channel = await fetch_text_channel(member_log_channel_id);
-                })(),
-                (async () => {
-                    this.welcome_channel = await fetch_text_channel(welcome_channel_id);
-                })(),
-                (async () => {
-                    this.bot_spam = await fetch_text_channel(bot_spam_id);
-                })(),
-                (async () => {
-                    this.server_suggestions_channel = await fetch_text_channel(server_suggestions_channel_id);
-                    this.suggestion_dashboard_thread =
-                        await fetch_thread_channel(this.server_suggestions_channel, suggestion_dashboard_thread_id);
-                    this.suggestion_action_log_thread =
-                        await fetch_thread_channel(this.server_suggestions_channel, suggestion_action_log_thread_id);
-                })(),
-                (async () => {
-                    this.the_button_channel = await fetch_text_channel(the_button_channel_id);
-                })(),
-                (async () => {
-                    this.starboard_channel = await fetch_text_channel(starboard_channel_id);
-                })(),
-                (async () => {
-                    this.staff_action_log_channel = await fetch_text_channel(staff_action_log_channel_id);
-                })()
-            ];
-            await Promise.all(promises);
-
-            await this.populate_caches();
-        });
-
         await this.add_component(AntiAutoreact);
         await this.add_component(AntiForumPostDelete);
         await this.add_component(AntiRaid);
@@ -257,7 +181,7 @@ export class Wheatley extends EventEmitter {
         await this.add_component(Autoreact);
         await this.add_component(ForumChannels);
         await this.add_component(ForumControl);
-        this.link_blacklist = await this.add_component(LinkBlacklist);
+        this.link_blacklist = (await this.add_component(LinkBlacklist))!; // todo, a little ugly
         await this.add_component(Massban);
         await this.add_component(Modmail);
         await this.add_component(Nodistractions);
@@ -284,6 +208,75 @@ export class Wheatley extends EventEmitter {
         await this.add_component(Starboard);
         await this.add_component(ThreadCreatedMessage);
         await this.add_component(Redirect);
+
+        await this.guild_command_manager.finalize(token);
+
+        M.debug("Logging in");
+
+        await this.client.login(token);
+    }
+
+    async fetch_guild_info() {
+        // fetch list of roots and mods, replace hard-coded list
+        await fetch_root_mod_list(this.client);
+
+        // TODO: Log everything?
+        const promises = [
+            (async () => {
+                this.action_log_channel = await fetch_text_channel(action_log_channel_id);
+            })(),
+            (async () => {
+                this.staff_flag_log = await fetch_text_channel(staff_flag_log_id);
+            })(),
+            (async () => {
+                this.staff_message_log = await fetch_text_channel(message_log_channel_id);
+            })(),
+            (async () => {
+                this.TCCPP = await this.client.guilds.fetch(TCCPP_ID);
+            })(),
+            (async () => {
+                this.cpp_help = await fetch_forum_channel(cpp_help_id);
+            })(),
+            (async () => {
+                this.c_help = await fetch_forum_channel(c_help_id);
+            })(),
+            (async () => {
+                this.zelis = await this.client.users.fetch(zelis_id);
+            })(),
+            (async () => {
+                this.rules_channel = await fetch_text_channel(rules_channel_id);
+            })(),
+            (async () => {
+                this.mods_channel = await fetch_text_channel(mods_channel_id);
+                this.skill_role_suggestion_log = await fetch_text_channel(skill_role_suggestion_log_id);
+            })(),
+            (async () => {
+                this.staff_member_log_channel = await fetch_text_channel(member_log_channel_id);
+            })(),
+            (async () => {
+                this.welcome_channel = await fetch_text_channel(welcome_channel_id);
+            })(),
+            (async () => {
+                this.bot_spam = await fetch_text_channel(bot_spam_id);
+            })(),
+            (async () => {
+                this.server_suggestions_channel = await fetch_text_channel(server_suggestions_channel_id);
+                this.suggestion_dashboard_thread =
+                    await fetch_thread_channel(this.server_suggestions_channel, suggestion_dashboard_thread_id);
+                this.suggestion_action_log_thread =
+                    await fetch_thread_channel(this.server_suggestions_channel, suggestion_action_log_thread_id);
+            })(),
+            (async () => {
+                this.the_button_channel = await fetch_text_channel(the_button_channel_id);
+            })(),
+            (async () => {
+                this.starboard_channel = await fetch_text_channel(starboard_channel_id);
+            })(),
+            (async () => {
+                this.staff_action_log_channel = await fetch_text_channel(staff_action_log_channel_id);
+            })()
+        ];
+        await Promise.all(promises);
     }
 
     destroy() {
@@ -296,16 +289,20 @@ export class Wheatley extends EventEmitter {
         }
     }
 
-    async add_component<T extends BotComponent>(component: { new(w: Wheatley): T }) {
-        M.log(`Initializing ${component.name}`);
-        const instance = new component(this);
-        try {
-            await instance.setup();
-        } catch(e) {
-            critical_error(e);
+    async add_component<T extends BotComponent>(component: { new(w: Wheatley): T; get is_freestanding(): boolean; }) {
+        if(!this.freestanding || component.is_freestanding) {
+            M.log(`Initializing ${component.name}`);
+            const instance = new component(this);
+            try {
+                await instance.setup();
+            } catch(e) {
+                critical_error(e);
+            }
+            this.components.push(instance);
+            return instance;
+        } else {
+            return null;
         }
-        this.components.push(instance);
-        return instance;
     }
 
     async populate_caches() {

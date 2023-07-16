@@ -7,8 +7,6 @@ import { Wheatley } from "../wheatley.js";
 
 /**
  * Controls Wheatley's activity.
- *
- * Not freestanding.
  */
 export class Status extends BotComponent {
     constructor(wheatley: Wheatley) {

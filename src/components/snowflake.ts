@@ -21,10 +21,12 @@ export function forge_snowflake(timestamp: number) {
 
 /**
  * Adds the /snowflake command.
- *
- * Freestanding.
  */
 export class Snowflake extends BotComponent {
+    static override get is_freestanding() {
+        return true;
+    }
+
     constructor(wheatley: Wheatley) {
         super(wheatley);
 

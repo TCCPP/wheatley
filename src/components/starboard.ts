@@ -52,8 +52,6 @@ const EMOJIREGEX = /((?<!\\)<a?:[^:]+:(\d+)>)|\p{Emoji_Presentation}|\p{Extended
 
 /**
  * Reaction highscores.
- *
- * Not freestanding.
  */
 export class Starboard extends BotComponent {
     data: component_data;

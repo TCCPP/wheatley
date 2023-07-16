@@ -11,8 +11,6 @@ import { TextBasedCommand, TextBasedCommandBuilder } from "../command.js";
  * Really just:
  * - !rename
  * - !archive
- *
- * Not freestanding.
  */
 export class ThreadControl extends BotComponent {
     constructor(wheatley: Wheatley) {

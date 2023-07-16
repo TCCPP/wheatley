@@ -8,8 +8,6 @@ import { M, delay } from "../utils.js";
 
 /**
  * Adds the /redirect command for redirecting conversations between channels.
- *
- * Not freestanding.
  */
 export class Redirect extends BotComponent {
     constructor(wheatley: Wheatley) {

@@ -9,8 +9,6 @@ const snowflake_re = /\b\d{10,}\b/g;
 
 /**
  * Mass ban command.
- *
- * Not freestanding.
  */
 export class Massban extends BotComponent {
     constructor(wheatley: Wheatley) {

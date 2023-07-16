@@ -145,10 +145,12 @@ export class CpprefIndex {
 
 /**
  * Adds /cref and /cppref commands.
- *
- * Freestanding.
  */
 export class Cppref extends BotComponent {
+    static override get is_freestanding() {
+        return true;
+    }
+
     readonly index = new CpprefIndex;
 
     constructor(wheatley: Wheatley) {

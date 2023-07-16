@@ -10,8 +10,6 @@ import { MessageContextMenuCommandBuilder, UserContextMenuCommandBuilder } from 
 
 /**
  * Adds commands for users to suggest skill roles for other members.
- *
- * Not freestanding.
  */
 export class SkillRoleSuggestion extends BotComponent {
     // string -> initial target message from context menu interaction

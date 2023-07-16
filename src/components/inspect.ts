@@ -12,10 +12,12 @@ import { colors } from "../common.js";
 /**
  * Adds an /inspect application command for displaying the markdown used to
  * generate a message.
- *
- * Freestanding.
  */
 export class Inspect extends BotComponent {
+    static override get is_freestanding() {
+        return true;
+    }
+
     constructor(wheatley: Wheatley) {
         super(wheatley);
 

@@ -18,6 +18,10 @@ const wrap = <T extends Arr>(f: ((...args: [...T]) => (void | Promise<void>))) =
 };
 
 export class BotComponent {
+    static get is_freestanding() {
+        return false;
+    }
+
     constructor(protected readonly wheatley: Wheatley) {
         wheatley.on("wheatley_ready", wrap(this.on_wheatley_ready.bind(this)));
     }

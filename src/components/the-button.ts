@@ -42,8 +42,6 @@ const PRESS_TIMEOUT = DAY;
 
 /**
  * Provides "the button" minigame.
- *
- * Not freestanding.
  */
 export class TheButton extends BotComponent {
     data: database_schema;

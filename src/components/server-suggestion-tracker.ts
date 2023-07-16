@@ -39,8 +39,6 @@ type reaction = {
 
 /**
  * Provides a dashboard for server suggestions.
- *
- * Not freestanding.
  */
 export class ServerSuggestionTracker extends BotComponent {
     recovering = true;

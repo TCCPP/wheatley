@@ -35,8 +35,6 @@ function create_embed(title: string | undefined, color: number, msg: string) {
  * Handles logic for thread-based channels (not forums), such as:
  * - thread auto-creation
  * - thread creation info messages
- *
- * Not freestanding.
  */
 export class ThreadBasedChannels extends BotComponent {
     constructor(wheatley: Wheatley) {
