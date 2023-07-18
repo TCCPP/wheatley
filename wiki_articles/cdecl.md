@@ -1,4 +1,4 @@
-# How do I read C Declaration/Type Syntax?
+# How Do I Read C Declaration/Type Syntax?
 
 Start at the identifier, and apply postfix operators first, then prefix.
 Append whatever is left in the end.
@@ -29,11 +29,12 @@ int const _ _____ _ _  // const int
 
 ## Example 3 - Abstract Declarators: When There Is No Identifier
 ```cpp
-void *(*)()
-      (*)    // pointer to
-      ___()  // function returning
-     *_____  // pointer to
-void ______  // void
+char *(*)(int)
+      (*)       // pointer to
+      ___(int)  // function with int parameter, returning
+     *________  // pointer to
+char _________  // char
+// usage:  char c = *(*f)(123)  or  *f(123)
 ```
 
 ## See Also
