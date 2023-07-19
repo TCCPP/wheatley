@@ -155,14 +155,18 @@ export class Wheatley extends EventEmitter {
 
     async setup(token: string) {
         this.client.on("ready", async () => {
-            await this.fetch_guild_info();
+            if (!this.freestanding) {
+                await this.fetch_guild_info();
+            }
             this.emit("wheatley_ready");
             this.ready = true;
             this.client.on("messageCreate", this.on_message.bind(this));
             this.client.on("interactionCreate", this.on_interaction.bind(this));
             this.client.on("messageDelete", this.on_message_delete.bind(this));
             this.client.on("messageUpdate", this.on_message_update.bind(this));
-            await this.populate_caches();
+            if (!this.freestanding) {
+                await this.populate_caches();
+            }
         });
 
         await this.add_component(Cppref);
