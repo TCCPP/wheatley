@@ -7,7 +7,7 @@ Append whatever is left in the end.
 - `*` means *pointer to*; `* const` means *const pointer to*
 - parentheses can be used to apply `*` before `()` or `[]`
 
-## Example 1 - Array of Pointers, Or Pointer to Array?
+## Example 1 - Array of Pointers, or Pointer to Array?
 ```cpp
 int (*ptr)[10]; // declare
       ptr       // ptr as
@@ -17,7 +17,7 @@ int __________  // int
 // note: int *arr[10] would be an array of pointers
 ```
 
-## Example 2 - Nested Pointers With `const`
+## Example 2 - Nested Pointers with `const`
 ```cpp
 int const * const * p; // declare
                     p  // p as

@@ -1,4 +1,4 @@
-# How To Write Safer C/C++ Code
+# How to Write Safer C/C++ Code
 
 C and C++ are very powerful languages, but you need to be careful when using them.
 Here are some crucial practices:

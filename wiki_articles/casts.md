@@ -1,4 +1,4 @@
-# What are the different casts in C++
+# What Are the different casts in C++
 
 **[static_cast](https://en.cppreference.com/w/cpp/language/static_cast)**<br>
 Converts using implicit and user-defined conversions.

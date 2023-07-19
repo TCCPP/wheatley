@@ -1,9 +1,9 @@
 <!-- user author -->
 <!-- alias cheats -->
 
-# We do not help with anything pertaining to cheating/hacking/malware.
+# We Do Not Help with Anything Pertaining to Cheating/Hacking/Malware
 Aside from ethics and simply not caring for helping script kiddies,
-this content violates Discord's terms of service and we do not tolerate it.
+this content violates Discord's terms of service, and we do not tolerate it.
 
 ## See Also
 - Our <#659868782877212723>, 6.

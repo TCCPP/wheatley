@@ -1,4 +1,4 @@
-# What is the Difference Between class and struct?
+# What Is the Difference Between class and struct?
 
 The keywords
 **[class](https://en.cppreference.com/w/cpp/keyword/class)** and

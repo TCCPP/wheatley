@@ -18,7 +18,7 @@ int min(int a, int b) {
 This function chooses `a` if `a` is lower than `b`, or `b` otherwise.
 
 <!-- inline -->
-## Benefits Over If-Statements
+## Benefits over If-Statements
 - more concise code
 - makes it easier to be `const`-correct
 

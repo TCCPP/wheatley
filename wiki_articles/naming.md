@@ -1,4 +1,4 @@
-# How To Name Your Variables
+# How to Name Your Variables
 
 - names should be short, but descriptive
 - avoid single-character names like `a`

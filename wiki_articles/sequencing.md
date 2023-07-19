@@ -1,4 +1,4 @@
-# What Is Sequencing, And What Are Sequence Points?
+# What Is Sequencing, and What Are Sequence Points?
 
 Some operations in C++ are *sequenced* before others, meaning that they happen
 first.

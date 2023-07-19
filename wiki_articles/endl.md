@@ -1,4 +1,4 @@
-# About `std::endl`, Buffers, And Flushing
+# About `std::endl`, Buffers, and Flushing
 
 I/O in C++ (`std::cout`, i.e.`std::ostream`) is *buffered*,
 which means that not every byte you write to the stream is instantly written through to the terminal/disk.
@@ -9,7 +9,7 @@ all data is written through to the OS (flushed) in one syscall.
 This is much more efficient.
 
 <!-- inline -->
-## What is *flushing*?
+## What Is *flushing*?
 *Flushing* means that all bytes currently in the buffer are written through, and the buffer is cleared.
 
 Use `<< std::flush` to flush, or use `std::cerr`, which is unbuffered.

@@ -1,4 +1,4 @@
-# Asking Your Question In the Right Channel
+# Asking Your Question in the Right Channel
 
 Welcome to Together C & C++.
 We have many channels on various topics, and encourage you to explore the channel list.

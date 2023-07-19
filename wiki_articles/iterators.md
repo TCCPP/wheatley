@@ -1,4 +1,4 @@
-# Iterators And Pointers
+# Iterators and Pointers
 
 Iterators in C++ are lightweight, non-owning types which provide a view into a range of elements.
 They must satisfy [named requirements](https://en.cppreference.com/w/cpp/named_req), or

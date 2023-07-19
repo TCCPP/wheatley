@@ -1,4 +1,4 @@
-# Why Should I Format My Code, And How Do I Do It?
+# Why Should I Format My Code, and How Do I Do It?
 
 Well-formatted code is much easier to read, especially for people who haven't
 written it themselves.
@@ -11,13 +11,13 @@ while (is_waiting) { } // good, empty statement
 std::cout << "hi\n";   // is clearly visible
 ```
 
-## Rules For Code Formatting
+## Rules for Code Formatting
 1. Stay consistent! (much easier when using auto-formatters)
 2. Don't use exotic styles that surprise readers.
 3. The rest is up to personal preference.
 
 <!-- inline -->
-## Auto-Formatting With clang-format
+## Auto-Formatting with clang-format
 For C/C++, you can use
 **[clang-format](https://clang.llvm.org/docs/ClangFormat.html)**
 to decide on a style, and apply it automatically to your files.

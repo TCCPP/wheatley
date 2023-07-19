@@ -1,6 +1,6 @@
 <!-- alias vla -->
 
-# What Is a VLA And Why Is It "Bad"?
+# What Is a VLA, and Why Is It "Bad"?
 
 A [Variable Length Array (VLA)](https://en.cppreference.com/w/c/language/array#Variable-length_arrays)
 is an array where the size is not constant and depends on a variable.
@@ -14,7 +14,7 @@ constexpr int size = 10;
 int arr[size]; // also not a VLA, of type int[10]
 ```
 
-## Why are VLAs "Bad"?
+## Why Are VLAs "Bad"?
 VLAs have poor compiler support and can lead to unsafe code.
 The core issue with VLAs is that the compiler doesn't know the size of the stack frame.
 Without warning flags like `-Wvla`, it can be easy to create a VLA by accident, even in C++ with some compilers.
