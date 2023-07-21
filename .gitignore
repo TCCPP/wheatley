@@ -5,3 +5,5 @@ auth.*
 ./W*/
 .vscode
 build
+_bot.json
+bot.json
