@@ -5,7 +5,7 @@ import * as fs from "fs";
 import * as path from "path";
 
 import { M } from "../utils.js";
-import { bot_spam_id, colors } from "../common.js";
+import { bot_spam_id, colors, resources_channel_id, rules_channel_id, stackoverflow_emote } from "../common.js";
 import { BotComponent } from "../bot-component.js";
 import { Wheatley } from "../wheatley.js";
 import { TextBasedCommand, TextBasedCommandBuilder } from "../command.js";
@@ -86,7 +86,7 @@ class ArticleParser {
         this.current_state = parse_state.done;
     }
 
-    parse_line(line: string): void {
+    private parse_line(line: string): void {
         const trimmed = line.trim();
         if(trimmed.startsWith("```")) {
             this.in_code = !this.in_code;
@@ -105,7 +105,7 @@ class ArticleParser {
      * Parses one line, starting with #.
      * @param line the line
      */
-    parse_heading(line: string): void {
+    private parse_heading(line: string): void {
         const level = line.search(/[^#]/);
         assert(level >= 1, "Cannot parse heading that has no heading level");
 
@@ -129,7 +129,7 @@ class ArticleParser {
      * This function accepts the contents of such a comment, without the opening `<!--` and closing `-->`.
      * @param directive the directive to parse
      */
-    parse_directive(directive: string): void {
+    private parse_directive(directive: string): void {
         if(directive === "inline") {
             this.current_state = parse_state.before_inline_field;
         } else if(directive === "footer") {
@@ -152,16 +152,15 @@ class ArticleParser {
         }
     }
 
-    parse_regular_line(line: string): void {
+    private parse_regular_line(line: string): void {
         const requires_line_break = this.in_code ||
             line.startsWith("```") ||
             line.startsWith("#") ||
             line.trim() === "" ||
             line.trim().startsWith("- ") ||
             line.trim().match(/^\d+.*$/);
-        const terminated_line = (requires_line_break ? line + "\n" : line)
-            .replace(/<br>\n|<br\/>\n/, "\n")
-            .replaceAll(/<br>|<br\/>/g, "\n");
+        const terminator = requires_line_break ? "\n" : "";
+        const terminated_line = this.substitute_placeholders(line + terminator);
 
         const plus_line = (prefix: string) => {
             if (prefix.length !== 0) {
@@ -187,6 +186,47 @@ class ArticleParser {
         } else {
             assert(false);
         }
+    }
+
+    /**
+     * Substitutes placeholders such as <br> in the string, but only outside
+     * inline code.
+     * @param line the line, possibly containing backticks for inline code
+     */
+    private substitute_placeholders(line: string): string {
+        if(this.in_code) return line;
+        let result = "";
+        let piece = "";
+        let in_inline_code = false;
+        for(const c of line) {
+            if (c === "`") {
+                if (in_inline_code) {
+                    result += piece + c;
+                    piece = "";
+                } else  {
+                    result += this.substitute_placeholders_no_code(piece);
+                    piece = c;
+                }
+                in_inline_code = !in_inline_code;
+            } else {
+                piece += c;
+            }
+        }
+        return result + (in_inline_code ? piece : this.substitute_placeholders_no_code(piece));
+    }
+
+    /**
+     * Substitutes placeholders in a string with no backticks, i.e. no
+     * possibility of having inline code.
+     * @param str the string to substitute in
+     */
+    private substitute_placeholders_no_code(str: string): string {
+        return str
+            .replace(/<br>\n|<br\/>\n/, "\n")
+            .replaceAll(/<br>|<br\/>/g, "\n")
+            .replaceAll(/#resources(?![a-zA-Z0-9_])/g, `<#${resources_channel_id}>`)
+            .replaceAll(/#rules(?![a-zA-Z0-9_])/g, `<#${rules_channel_id}>`)
+            .replaceAll(/(?<!<):stackoverflow:/g, stackoverflow_emote);
     }
 
     get is_done(): boolean {
