@@ -99,8 +99,8 @@ export default class ServerSuggestionReactions extends BotComponent {
     }
 
     override async on_ready() {
-        if(await file_exists("src/config.ts")) {
-            const config = "../config.js";
+        if(await file_exists("src/wheatley-private/config.ts")) {
+            const config = "../wheatley-private/config.js";
             react_blacklist = (await import(config)).react_blacklist;
         }
         for(const channel_id of monitored_channels_ids) {

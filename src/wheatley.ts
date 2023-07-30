@@ -132,10 +132,10 @@ export class Wheatley extends EventEmitter {
             await this.add_component((await import(`./components/${file.replace(".ts", ".js")}`)).default);
         }
 
-        if(await directory_exists("src/private-components")) {
-            for(const file of await fs.readdir("src/private-components")) {
+        if(await directory_exists("src/wheatley-private/components")) {
+            for(const file of await fs.readdir("src/wheatley-private/components")) {
                 const component = await this.add_component(
-                    (await import(`./components/${file.replace(".ts", ".js")}`)).default
+                    (await import(`./wheatley-private/components/${file.replace(".ts", ".js")}`)).default
                 );
                 if(file.endsWith("link-blacklist.ts")) {
                     this.link_blacklist = component;
