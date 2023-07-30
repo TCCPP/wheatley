@@ -5,7 +5,6 @@ import { is_string, M } from "./utils.js";
 
 // Common constants
 export const MINUTE = 1000 * 60;
-export const MINUTE = 1000 * 60;
 
 export const pepereally = "<:pepereally:643881257624666112>";
 export const stackoverflow_emote = "<:stackoverflow:1074747016644661258>";
@@ -58,17 +57,6 @@ export const resources_channel_id = "1124619767542718524";
 export const staff_action_log_channel_id = "845290775692443699";
 
 // Thread-based help channels
-
-export const thread_based_help_channel_ids = new Set([
-    "976315803634925578", // cpp-help-threads
-    "976315954965381170", // c-help-threads
-    "873682069325217802", // today-i-learned
-]);
-
-export const thread_based_channel_ids = new Set([
-    "802541516655951892", // server-suggestions
-    "594212045621035030", // showcase
-]);
 
 export const thread_based_channel_ids = new Set([
     "802541516655951892", // server-suggestions
