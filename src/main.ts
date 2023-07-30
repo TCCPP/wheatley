@@ -91,11 +91,9 @@ async function main() {
     return main();
 })().catch(critical_error);
 
-// don't crash, try to restart
 process.on("uncaughtException", (error) => {
-    critical_error("uncaughtException", error);
-    wheatley.destroy();
-    return main();
+    M.error("uncaughtException", error);
+    process.exit(1);
 });
 
 // Last line of defense
