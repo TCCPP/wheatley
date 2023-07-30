@@ -89,7 +89,7 @@ async function main() {
 
 (async () => {
     return main();
-})();
+})().catch(critical_error);
 
 // don't crash, try to restart
 process.on("uncaughtException", (error) => {

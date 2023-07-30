@@ -1,7 +1,7 @@
 import * as Discord from "discord.js";
 import { strict as assert } from "assert";
 import { is_root, MINUTE, server_suggestions_channel_id, suggestion_dashboard_thread_id } from "../common.js";
-import { delay, file_exists, M } from "../utils.js";
+import { critical_error, delay, file_exists, M } from "../utils.js";
 import { TRACKER_START_TIME } from "./server-suggestion-tracker.js";
 import { forge_snowflake } from "./snowflake.js";
 import { BotComponent } from "../bot-component.js";
@@ -36,7 +36,7 @@ export default class ServerSuggestionReactions extends BotComponent {
     }
 
     async handle_fetched_message(message: Discord.Message) {
-        message.reactions.cache.forEach(async reaction => {
+        for(const [ _, reaction ] of message.reactions.cache) {
             const users = await reaction.users.fetch();
             ///M.debug(reaction.emoji.name, users.map(u => [u.id, u.tag]));
             for(const [ id, user ] of users) {
@@ -47,7 +47,7 @@ export default class ServerSuggestionReactions extends BotComponent {
                         time: reaction.message.createdAt,
                         user: [ user.tag, user.id ]
                     });
-                    reaction.users.remove(id);
+                    await reaction.users.remove(id);
                 } else if(root_only_reacts.has(reaction.emoji.name!)) {
                     if(!is_root(user)) {
                         M.log("removing non-root reaction", {
@@ -56,11 +56,11 @@ export default class ServerSuggestionReactions extends BotComponent {
                             time: reaction.message.createdAt,
                             user: [ user.tag, user.id ]
                         });
-                        reaction.users.remove(id);
+                        await reaction.users.remove(id);
                     }
                 }
             }
-        });
+        }
     }
 
     // handle *everything* since TRACKER_START_TIME
@@ -133,7 +133,7 @@ export default class ServerSuggestionReactions extends BotComponent {
                         time: reaction.message.createdAt,
                         user: [ user.tag, user.id ]
                     });
-                    reaction.users.remove(user.id);
+                    reaction.users.remove(user.id).catch(critical_error);
                 }, 5 * MINUTE);
             } else if(root_only_reacts.has(reaction.emoji.name!)) {
                 if(!is_root(user)) {
@@ -143,7 +143,7 @@ export default class ServerSuggestionReactions extends BotComponent {
                         time: reaction.message.createdAt,
                         user: [ user.tag, user.id ]
                     });
-                    reaction.users.remove(user.id);
+                    reaction.users.remove(user.id).catch(critical_error);
                 }
             }
         }

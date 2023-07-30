@@ -1,6 +1,6 @@
 import * as Discord from "discord.js";
 import { strict as assert } from "assert";
-import { M, diff_to_human, floor, round } from "../utils.js";
+import { M, critical_error, diff_to_human, floor, round } from "../utils.js";
 import { MINUTE, colors, is_authorized_admin } from "../common.js";
 import { BotComponent } from "../bot-component.js";
 import { Wheatley } from "../wheatley.js";
@@ -89,7 +89,7 @@ export default class TheButton extends BotComponent {
                 this.data.button_presses = 3609; // count at time of adding this stat
             }
         }
-        this.update_database();
+        this.update_database().catch(critical_error);
     }
 
     override destroy() {
@@ -167,13 +167,12 @@ export default class TheButton extends BotComponent {
     override async on_ready() {
         this.button_message = await this.wheatley.the_button_channel.messages.fetch(this.button_message_id);
         let waiting = false;
-        this.interval = setInterval(async () => {
+        this.interval = setInterval(() => {
             if(this.last_update.epoch != this.data.last_reset
             || Date.now() - this.last_update.timestamp - this.last_update.remaining_seconds * 1000 >= -1500) {
                 if(waiting) return;
                 waiting = true;
-                await this.update_message();
-                waiting = false;
+                this.update_message().catch(critical_error).finally(() => waiting = false);
             }
         }, 1000);
         // do an update right away
@@ -254,7 +253,7 @@ export default class TheButton extends BotComponent {
             if(scoreboard[interaction.user.id].tag == "") {
                 scoreboard[interaction.user.id].tag = interaction.user.tag;
             }
-            this.update_message();
+            await this.update_message();
             const time_since_reset = DAY - delta;
             const points = F(time_since_reset / DAY) * DAY / 1000 / 60;
             scoreboard[interaction.user.id].score += points;

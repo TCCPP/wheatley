@@ -246,7 +246,7 @@ export default class ServerSuggestionTracker extends BotComponent {
                 down: 0,
                 maybe: 0
             };
-            this.wheatley.database.update();
+            await this.wheatley.database.update();
             // add react options
             for(const r of resolution_reactions) {
                 await status_message.react(r);
@@ -265,7 +265,7 @@ export default class ServerSuggestionTracker extends BotComponent {
             this.status_lock.insert(entry.status_message);
             await status_message.delete();
             delete this.wheatley.database.get<db_schema>("suggestion_tracker").suggestions[message_id];
-            this.wheatley.database.update();
+            await this.wheatley.database.update();
         } catch(e) {
             critical_error("error during delete_suggestion", e);
         }
@@ -327,10 +327,10 @@ export default class ServerSuggestionTracker extends BotComponent {
                 this.status_lock.insert(entry.status_message);
                 await status_message.delete();
                 delete this.wheatley.database.get<db_schema>("suggestion_tracker").suggestions[message.id];
-                this.wheatley.database.update();
+                await this.wheatley.database.update();
                 // if wheatley then this is logged when the reaction is done on the dashboard
                 if(reaction.user.id != this.wheatley.id) {
-                    this.log_resolution(message, reaction);
+                    await this.log_resolution(message, reaction);
                 }
             } else {
                 // already resolved
@@ -390,7 +390,7 @@ export default class ServerSuggestionTracker extends BotComponent {
                                suggestion_id,
                                this.wheatley.database.get<db_schema>("suggestion_tracker").suggestions[suggestion_id]);
                         delete this.wheatley.database.get<db_schema>("suggestion_tracker").suggestions[suggestion_id];
-                        this.wheatley.database.update();
+                        await this.wheatley.database.update();
                     }
                 }
             } else if(message.channel.id == suggestion_action_log_thread_id && message.author!.id == this.wheatley.id) {
@@ -453,7 +453,7 @@ export default class ServerSuggestionTracker extends BotComponent {
         const reaction = await departialize(_reaction);
         if(resolution_reactions_set.has(reaction.emoji.name!)) {
             if(is_root(user)) {
-                this.resolve_suggestion(await departialize(reaction.message), {
+                await this.resolve_suggestion(await departialize(reaction.message), {
                     user: await departialize(user),
                     emoji: reaction.emoji
                 });
@@ -469,8 +469,8 @@ export default class ServerSuggestionTracker extends BotComponent {
             const message = await departialize(reaction.message);
             if(!await this.message_has_resolution_from_root(message)) {
                 // reopen
-                this.open_suggestion(message);
-                this.log_reopen(message);
+                await this.open_suggestion(message);
+                await this.log_reopen(message);
             }
         }
     }
@@ -484,11 +484,11 @@ export default class ServerSuggestionTracker extends BotComponent {
             if(reaction.message.channel.id == server_suggestions_channel_id) {
                 if(resolution_reactions_set.has(reaction.emoji.name!)) {
                     await this.mutex.lock(reaction.message.id);
-                    this.process_reaction(reaction, user);
+                    await this.process_reaction(reaction, user);
                     this.mutex.unlock(reaction.message.id);
                 } else if(vote_reaction_set.has(reaction.emoji.name!)) {
                     await this.mutex.lock(reaction.message.id);
-                    this.process_vote(reaction, user);
+                    await this.process_vote(reaction, user);
                     this.mutex.unlock(reaction.message.id);
                 }
             } else if(reaction.message.channel.id == suggestion_dashboard_thread_id) {
@@ -505,8 +505,8 @@ export default class ServerSuggestionTracker extends BotComponent {
                         // NOTE: Assuming no identical snowflakes between channels, this should be pretty safe though
                         await this.mutex.lock(reaction.message.id);
                         const suggestion = await this.wheatley.server_suggestions_channel.messages.fetch(suggestion_id);
-                        suggestion.react(reaction.emoji.name!);
-                        this.log_resolution(suggestion, {
+                        await suggestion.react(reaction.emoji.name!);
+                        await this.log_resolution(suggestion, {
                             user: await departialize(user),
                             emoji: reaction.emoji
                         });
@@ -521,7 +521,7 @@ export default class ServerSuggestionTracker extends BotComponent {
             try {
                 if(is_root(user)) { // only send diagnostics to root
                     const member = await this.wheatley.TCCPP.members.fetch(user.id);
-                    member.send("Error while resolving suggestion");
+                    await member.send("Error while resolving suggestion");
                 }
             } catch(e) {
                 critical_error(e);
@@ -538,11 +538,11 @@ export default class ServerSuggestionTracker extends BotComponent {
         try {
             if(resolution_reactions_set.has(reaction.emoji.name!)) {
                 await this.mutex.lock(reaction.message.id);
-                this.process_reaction_remove(reaction, user);
+                await this.process_reaction_remove(reaction, user);
                 this.mutex.unlock(reaction.message.id);
             } else if(vote_reaction_set.has(reaction.emoji.name!)) {
                 await this.mutex.lock(reaction.message.id);
-                this.process_vote(reaction, user);
+                await this.process_vote(reaction, user);
                 this.mutex.unlock(reaction.message.id);
             }
         } catch(e) {
@@ -575,7 +575,7 @@ export default class ServerSuggestionTracker extends BotComponent {
                 const root_resolve = await this.message_has_resolution_from_root(message);
                 if(root_resolve) {
                     // already resolved, just log
-                    this.log_resolution(message, root_resolve);
+                    await this.log_resolution(message, root_resolve);
                     // update last seen
                     const last_scanned = this.wheatley.database.get<db_schema>("suggestion_tracker")
                         .last_scanned_timestamp;
@@ -657,7 +657,7 @@ export default class ServerSuggestionTracker extends BotComponent {
         } catch(e) {
             critical_error(e);
         }
-        this.wheatley.database.update();
+        await this.wheatley.database.update();
         M.debug("server_suggestion tracker finished checking this.wheatley.database entries");
     }
 }

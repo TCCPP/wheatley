@@ -108,29 +108,29 @@ export default class Roulette extends BotComponent {
             M.log("Received !roulette", command.user.id, command.user.tag, roll);
             if(roll == 0) {
                 let ok = true;
-                (await command.get_member()).timeout(30 * MINUTE, "Bang")
-                    .catch((...args: any[]) => {
-                        critical_error("promise failed for timeout of roulette loser",
-                                       [ command.user.id, command.user.tag ]);
-                        M.error(...args);
-                        ok = false;
-                    })
-                    .finally(() => {
-                        // Send bang message
-                        const m = { embeds: [this.make_bang_embed(command.user)] };
-                        command.reply(m);
-                        this.wheatley.staff_member_log_channel.send(m);
-                        // Setup ban message
-                        const ban_embed = this.make_ban_embed(command);
-                        if(!ok) {
-                            ban_embed.setFooter({
-                                text: "Error: Timeout failed "
-                            });
-                        }
-                        this.wheatley.staff_member_log_channel.send({ embeds: [ban_embed] });
-                    });
                 this.streaks.set(command.user.id, 0);
                 await this.update_scoreboard(command.user.id); // TODO: I forget why this is here
+                try {
+                    await (await command.get_member()).timeout(30 * MINUTE, "Bang");
+                } catch(error) {
+                    critical_error("promise failed for timeout of roulette loser",
+                                   [ command.user.id, command.user.tag ]);
+                    M.error(error);
+                    ok = false;
+                } finally {
+                    // Send bang message
+                    const m = { embeds: [this.make_bang_embed(command.user)] };
+                    await command.reply(m);
+                    await this.wheatley.staff_member_log_channel.send(m);
+                    // Setup ban message
+                    const ban_embed = this.make_ban_embed(command);
+                    if(!ok) {
+                        ban_embed.setFooter({
+                            text: "Error: Timeout failed "
+                        });
+                    }
+                    await this.wheatley.staff_member_log_channel.send({ embeds: [ban_embed] });
+                }
             } else {
                 const m = { embeds: [this.make_click_embed(command.user)] };
                 this.streaks.set(command.user.id, (this.streaks.get(command.user.id) ?? 0) + 1);
@@ -139,7 +139,7 @@ export default class Roulette extends BotComponent {
                 await this.update_scoreboard(command.user.id);
             }
         } else {
-            command.reply("Warning: This is __Russian Roulette__. Losing will result in a 30 minute timeout."
+            await command.reply("Warning: This is __Russian Roulette__. Losing will result in a 30 minute timeout."
                         + " Proceed at your own risk.");
             this.warned_users.insert(command.user.id);
         }

@@ -1,6 +1,6 @@
 import * as Discord from "discord.js";
 import { strict as assert } from "assert";
-import { KeyedMutexSet, M, departialize, unwrap } from "../utils.js";
+import { KeyedMutexSet, M, critical_error, departialize, unwrap } from "../utils.js";
 import { MINUTE, announcements_channel_id, introductions_channel_id, is_root, memes_channel_id,
          resources_channel_id, rules_channel_id, server_suggestions_channel_id, starboard_channel_id,
          the_button_channel_id } from "../common.js";
@@ -84,7 +84,7 @@ export default class Starboard extends BotComponent {
                 notified_about_auto_delete_threshold: new Set([...database.notified_about_auto_delete_threshold])
             };
         }
-        this.update_database();
+        this.update_database().catch(critical_error);
 
         this.add_command(
             new TextBasedCommandBuilder("add-negative-emoji")
@@ -179,7 +179,7 @@ export default class Starboard extends BotComponent {
     }
 
     async update_starboard(message: Discord.Message) {
-        this.mutex.lock(message.id);
+        await this.mutex.lock(message.id);
         try {
             const make_embeds = () => make_quote_embeds(
                 [message],
@@ -323,7 +323,7 @@ export default class Starboard extends BotComponent {
 
     override async on_message_delete(message: Discord.Message<boolean> | Discord.PartialMessage) {
         if(message.id in this.data.starboard) {
-            this.mutex.lock(message.id);
+            await this.mutex.lock(message.id);
             try {
                 await this.wheatley.starboard_channel.messages.delete(this.data.starboard[message.id]);
                 delete this.data.starboard[message.id];

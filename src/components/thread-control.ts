@@ -97,7 +97,7 @@ export default class ThreadControl extends BotComponent {
             }
             await thread.setName(name);
             if(command.is_slash()) {
-                command.reply("✅", true);
+                await command.reply("✅", true);
             } else {
                 await command.delete_invocation();
             }
@@ -108,7 +108,7 @@ export default class ThreadControl extends BotComponent {
             });
             for(const [ _, message ] of messages) {
                 if(message.type == Discord.MessageType.Default && message.author.id == this.wheatley.id) {
-                    message.delete();
+                    await message.delete();
                 }
             }
         }

@@ -4,7 +4,7 @@ import { strict as assert } from "assert";
 
 import * as fs from "fs";
 
-import { format_list, M } from "../utils.js";
+import { critical_error, format_list, M } from "../utils.js";
 
 import { cppref_index, cppref_page, CpprefSubIndex } from "../../indexes/cppref/types.js";
 import { Index } from "../algorithm/search.js";
@@ -175,7 +175,7 @@ export default class Cppref extends BotComponent {
         );
 
         // Ok if the bot spins up while this is loading
-        this.index.load_data();
+        this.index.load_data().catch(critical_error);
     }
 
     async cppref(command: TextBasedCommand, query: string) {

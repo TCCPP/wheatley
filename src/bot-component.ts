@@ -8,12 +8,14 @@ import { Wheatley } from "./wheatley.js";
 
 type Arr = readonly unknown[];
 const wrap = <T extends Arr>(f: ((...args: [...T]) => (void | Promise<void>))) => {
-    return async (...args: [...T]) => {
-        try {
-            await f(...args);
-        } catch(e) {
-            critical_error(e);
-        }
+    return (...args: [...T]) => {
+        (async () => {
+            try {
+                await f(...args);
+            } catch(e) {
+                critical_error(e);
+            }
+        })().catch(critical_error);
     };
 };
 
@@ -58,7 +60,7 @@ export class BotComponent {
         this.setup_listener("guildMemberUpdate", this.on_guild_member_update);
         this.setup_listener("threadCreate", this.on_thread_create);
 
-        this.on_ready();
+        this.on_ready().catch(critical_error);
     }
 
     add_command<T extends unknown[]>(

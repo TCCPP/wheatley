@@ -27,7 +27,7 @@ export default class UtilityTools extends BotComponent {
                     await channel.setName(r);
                 }
                 M.info("Done");
-                m.edit(":+1:");
+                await m.edit(":+1:");
             } else if(message.content == "!sync-archive-permissions") {
                 M.info("got !sync-archive-permissions");
                 const archive = await this.wheatley.TCCPP.channels.fetch("910306041969913938");

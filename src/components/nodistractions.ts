@@ -159,7 +159,7 @@ export default class Nodistractions extends BotComponent {
             }
             // remove database entry
             delete this.wheatley.database.get<database_schema>("nodistractions")[entry.id];
-            this.wheatley.database.update();
+            await this.wheatley.database.update();
             // reschedule, intentionally not rescheduling
             if(this.undistract_queue.length > 0) {
                 this.set_timer();
@@ -175,7 +175,9 @@ export default class Nodistractions extends BotComponent {
         const next = this.undistract_queue[0];
         // next.start + next.duration - Date.now() but make sure overflow is prevented
         const sleep_time = (next.start - Date.now()) + next.duration;
-        this.timer = setTimeout(this.handle_timer.bind(this), Math.min(sleep_time, INT_MAX));
+        this.timer = setTimeout(() => {
+            this.handle_timer().catch(critical_error);
+        }, Math.min(sleep_time, INT_MAX));
     }
 
     async apply_no_distractions(command: TextBasedCommand, target: Discord.GuildMember, start: number,
@@ -184,17 +186,17 @@ export default class Nodistractions extends BotComponent {
         // error handling
         if(target.roles.cache.some(r => r.id == no_off_topic)) {
             if(target.id in this.wheatley.database.get<database_schema>("nodistractions")) {
-                command.reply("You're already in !nodistractions", true, true);
+                await command.reply("You're already in !nodistractions", true, true);
             } else {
-                command.reply("Nice try.", true, true);
-                this.wheatley.zelis.send(
+                await command.reply("Nice try.", true, true);
+                await this.wheatley.zelis.send(
                     "Exploit attempt" + (command.is_slash() ? "" : " " + command.get_or_forge_url())
                 );
             }
             return;
         }
         if(duration >= Number.MAX_SAFE_INTEGER) { // prevent timer overflow
-            command.reply("Invalid timeframe", true, true);
+            await command.reply("Invalid timeframe", true, true);
             return;
         }
         // apply role, dm, react
@@ -223,8 +225,9 @@ export default class Nodistractions extends BotComponent {
             start,
             duration
         };
-        this.wheatley.database.update();
+        await this.wheatley.database.update();
         // apply
+        i = this.undistract_queue.findIndex(entry => entry.id == target.id); // index may have changed
         if(i == 0 && this.timer != null) {
             clearTimeout(this.timer);
             this.timer = null;
@@ -253,7 +256,7 @@ export default class Nodistractions extends BotComponent {
         // remove entry
         delete this.wheatley.database.get<database_schema>("nodistractions")[target.id];
         this.undistract_queue = this.undistract_queue.filter(e => e.id != target.id);
-        this.wheatley.database.update();
+        await this.wheatley.database.update();
         command.react("✅").catch(M.error);
         // reschedule if necessary
         if(reschedule && this.undistract_queue.length > 0) {
@@ -275,21 +278,21 @@ export default class Nodistractions extends BotComponent {
             const n = parseInt(match[1]);
             const u = match[2];
             if(isNaN(n)) {
-                command.reply("Empty time field", true, true);
+                await command.reply("Empty time field", true, true);
                 return;
             }
             if(u == "") {
-                command.reply("Missing units", true, true);
+                await command.reply("Missing units", true, true);
                 return;
             }
             const factor = parse_unit(u);
             if(factor == -1) {
-                command.reply("Unknown units", true, true);
+                await command.reply("Unknown units", true, true);
                 return;
             }
             M.debug("Timeframe: ", n, u, factor);
             const member = await command.get_member(this.wheatley.TCCPP);
-            this.apply_no_distractions(command, member, Date.now(), n * factor);
+            await this.apply_no_distractions(command, member, Date.now(), n * factor);
         }
     }
 
@@ -307,7 +310,6 @@ export default class Nodistractions extends BotComponent {
             );
             return;
         }
-        this.early_remove_nodistractions(command, member);
-        return;
+        await this.early_remove_nodistractions(command, member);
     }
 }

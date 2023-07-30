@@ -1,6 +1,6 @@
 import * as Discord from "discord.js";
 import { strict as assert } from "assert";
-import { get_tag, M, SelfClearingSet } from "../utils.js";
+import { critical_error, get_tag, M, SelfClearingSet } from "../utils.js";
 import { colors, is_forum_help_thread, MINUTE } from "../common.js";
 import { decode_snowflake } from "./snowflake.js"; // todo: eliminate decode_snowflake
 import { BotComponent } from "../bot-component.js";
@@ -92,7 +92,7 @@ export default class ForumChannels extends BotComponent {
             // no action needed - has been marked !solved
         } else {
             M.log("Sending !solved prompt timeout for thread", thread.id, thread.name, thread.url);
-            thread.send(`<@${thread.ownerId}> Has your question been resolved? If so, run \`!solved\` :)`);
+            await thread.send(`<@${thread.ownerId}> Has your question been resolved? If so, run \`!solved\` :)`);
         }
     }
 
@@ -105,7 +105,7 @@ export default class ForumChannels extends BotComponent {
         // thread.lastMessageId can be null if there are no messages (possibly and the forum starter has been deleted)
         // if the thread author hasn't sent an initial message it'll mess things up, this needs manual review
         if(thread.lastMessageId == null) {
-            this.wheatley.zelis.send(`thread.lastMessageId is null for ${thread.url}`);
+            await this.wheatley.zelis.send(`thread.lastMessageId is null for ${thread.url}`);
             return;
         }
         const now = Date.now();
@@ -160,7 +160,9 @@ export default class ForumChannels extends BotComponent {
         //await get_initial_active();
         await this.forum_cleanup();
         // every hour try to cleanup
-        this.interval = setInterval(this.forum_cleanup.bind(this), 60 * MINUTE);
+        this.interval = setInterval(() => {
+            this.forum_cleanup().catch(critical_error);
+        }, 60 * MINUTE);
     }
 
     override async on_message_create(message: Discord.Message) {
@@ -205,8 +207,8 @@ export default class ForumChannels extends BotComponent {
                                 if(!this.possibly_resolved.has(thread.id)) {
                                     M.debug("Setting !solved prompt timeout for thread", thread.id, thread.name,
                                             thread.url, "based off of", message.url);
-                                    this.timeout_map.set(thread.id, setTimeout(async () => {
-                                        await this.prompt_close(thread);
+                                    this.timeout_map.set(thread.id, setTimeout(() => {
+                                        this.prompt_close(thread).catch(critical_error);
                                     }, thank_you_timeout));
                                     this.possibly_resolved.insert(thread.id);
                                     return;
@@ -217,8 +219,8 @@ export default class ForumChannels extends BotComponent {
                         // might need to restart the timeout
                         if(this.timeout_map.has(thread.id)) {
                             clearTimeout(this.timeout_map.get(thread.id));
-                            this.timeout_map.set(thread.id, setTimeout(async () => {
-                                await this.prompt_close(thread);
+                            this.timeout_map.set(thread.id, setTimeout(() => {
+                                this.prompt_close(thread).catch(critical_error);
                             }, thank_you_timeout));
                         }
                     }

@@ -1,6 +1,6 @@
 import * as Discord from "discord.js";
 import { strict as assert } from "assert";
-import { M } from "../utils.js";
+import { M, critical_error } from "../utils.js";
 import { BotComponent } from "../bot-component.js";
 import { Wheatley } from "../wheatley.js";
 import { MINUTE } from "../common.js";
@@ -62,8 +62,8 @@ export default class UsernameManager extends BotComponent {
     override async on_ready() {
         await this.cleanup();
         // Every hour give it a scan
-        this.interval = setInterval(async () => {
-            await this.cleanup();
+        this.interval = setInterval(() => {
+            this.cleanup().catch(critical_error);
         }, 60 * MINUTE);
     }
 

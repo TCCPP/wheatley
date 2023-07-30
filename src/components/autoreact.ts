@@ -92,7 +92,7 @@ export default class Autoreact extends BotComponent {
         for(const [ _, message ] of messages) {
             if(await this.is_new_member(message)) {
                 M.log("Waving to new user", message.author.tag, message.author.id, message.url);
-                message.react("👋");
+                await message.react("👋");
             }
         }
         M.log("Finished catching up on introduction messages");

@@ -101,15 +101,15 @@ export class Wheatley extends EventEmitter {
         this.guild_command_manager = new GuildCommandManager(this);
         this.tracker = new MemberTracker(this);
 
-        this.setup(auth.token);
+        // Every module sets a lot of listeners. This is not a leak.
+        this.client.setMaxListeners(35);
+        this.setMaxListeners(35);
 
         this.client.on("error", error => {
             M.error(error);
         });
 
-        // Every module sets a lot of listeners. This is not a leak.
-        this.client.setMaxListeners(35);
-        this.setMaxListeners(35);
+        this.setup(auth.token).catch(critical_error);
     }
 
     async setup(token: string) {
@@ -435,7 +435,7 @@ export class Wheatley extends EventEmitter {
                 const { command, deletable } = this.text_command_map.get(message.id)!;
                 this.text_command_map.remove(message.id);
                 if(deletable) {
-                    command.delete_replies_if_replied();
+                    await command.delete_replies_if_replied();
                 }
             } else if(this.deletable_map.has(message.id)) {
                 const target = this.deletable_map.get(message.id)!;
@@ -465,7 +465,7 @@ export class Wheatley extends EventEmitter {
                 const message = !new_message.partial ? new_message : await new_message.fetch();
                 if(!await this.handle_command(message, command)) {
                     // returns false if the message was not a wheatley command; delete replies and remove from map
-                    command.delete_replies_if_replied();
+                    await command.delete_replies_if_replied();
                     this.text_command_map.remove(new_message.id);
                 }
             }

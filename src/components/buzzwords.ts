@@ -1,6 +1,6 @@
 import * as Discord from "discord.js";
 import { strict as assert } from "assert";
-import { M, SelfClearingSet, round, unwrap } from "../utils.js";
+import { M, SelfClearingSet, critical_error, round, unwrap } from "../utils.js";
 import { MINUTE, TCCPP_ID, colors, is_authorized_admin } from "../common.js";
 import { BotComponent } from "../bot-component.js";
 import { Wheatley } from "../wheatley.js";
@@ -205,13 +205,13 @@ export default class Buzzwords extends BotComponent {
 
     override async on_ready() {
         if(ENABLED) { // eslint-disable-line @typescript-eslint/no-unnecessary-condition
-            this.update_database();
+            await this.update_database();
             this.timeout = setTimeout(() => {
-                this.update_database();
+                this.update_database().catch(critical_error);
             }, MINUTE);
-            this.reflowRoles();
+            await this.reflowRoles();
             this.interval = setInterval(() => {
-                this.reflowRoles();
+                this.reflowRoles().catch(critical_error);
             }, 10 * MINUTE);
         }
     }
@@ -371,7 +371,7 @@ export default class Buzzwords extends BotComponent {
                     this.set_points(id, tag, parseInt(amount));
                     if(member instanceof Discord.GuildMember) await this.updateRolesSingle(member);
                     await message.reply("Done");
-                    this.update_database();
+                    await this.update_database();
                 } else {
                     await message.reply({
                         embeds: [
@@ -401,11 +401,11 @@ export default class Buzzwords extends BotComponent {
             if(message.content.trim() == "!initbuzzscoresystem" && message.author.id == "199943082441965577") {
                 const members = await this.wheatley.TCCPP.members.fetch();
                 M.log(members.size, "members");
-                members.map((member, _) => {
-                    if(!member.roles.cache.has(beginner)) {
-                        member.roles.add(beginner);
-                    }
-                });
+                await Promise.all(
+                    members
+                        .filter(member => !member.roles.cache.has(beginner))
+                        .map(member => member.roles.add(beginner))
+                );
                 return;
             }
         }
@@ -476,7 +476,7 @@ export default class Buzzwords extends BotComponent {
                         ]
                     });
                     this.give_points(message.author.id, message.author.tag, total_score);
-                    this.updateRolesSingle(unwrap(message.member));
+                    await this.updateRolesSingle(unwrap(message.member));
                     this.slowmode.insert(message.author.id);
                 }
             }

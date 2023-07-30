@@ -1,6 +1,6 @@
 import * as Discord from "discord.js";
 import { strict as assert } from "assert";
-import { diff_to_human, M } from "../utils.js";
+import { critical_error, diff_to_human, M } from "../utils.js";
 import { colors } from "../common.js";
 import { BotComponent } from "../bot-component.js";
 import { Wheatley } from "../wheatley.js";
@@ -51,6 +51,6 @@ export default class Speedrun extends BotComponent {
                 text: `ID: ${user.id}`
             })
             .setTimestamp();
-        this.wheatley.action_log_channel.send({ embeds: [embed] });
+        this.wheatley.action_log_channel.send({ embeds: [embed] }).catch(critical_error);
     }
 }

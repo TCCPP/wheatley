@@ -58,7 +58,7 @@ export default class Modmail extends BotComponent {
                 const member = await this.wheatley.TCCPP.members.fetch(interaction.member.user.id);
                 // make the thread
                 const id = this.modmail_id_counter++;
-                this.update_db();
+                await this.update_db();
                 const thread =  await this.wheatley.rules_channel.threads.create({
                     type: Discord.ChannelType.PrivateThread,
                     invitable: false,
@@ -119,7 +119,7 @@ export default class Modmail extends BotComponent {
                         .setLabel("Start a modmail thread")
                         .setStyle(Discord.ButtonStyle.Danger),
                 );
-            message.channel.send({
+            await message.channel.send({
                 embeds: [
                     create_embed("Modmail", "If you have a **moderation** or **administration** related issue you "
                         + "can reach out to the staff team by pressing the modmail thread button below.\n\nBecause, in "
@@ -217,7 +217,7 @@ export default class Modmail extends BotComponent {
                     await this.log_action(interaction.member, "Modmail submit");
                 } else {
                     assert(interaction.isFromMessage());
-                    interaction.update({
+                    await interaction.update({
                         content: "Codeword was incorrect, do you really mean to start a modmail thread?",
                         components: []
                     });

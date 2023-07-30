@@ -31,7 +31,9 @@ export default class RoleManager extends BotComponent {
 
     override async on_ready() {
         this.pink_role = unwrap(await this.wheatley.TCCPP.roles.fetch(pink_role_id));
-        this.interval = setInterval(this.check_users.bind(this), 30 * MINUTE);
+        this.interval = setInterval(() => {
+            this.check_users().catch(critical_error);
+        }, 30 * MINUTE);
     }
 
     async check_users() {

@@ -4,7 +4,7 @@ import { strict as assert } from "assert";
 
 import * as fs from "fs";
 
-import { M } from "../utils.js";
+import { M, critical_error } from "../utils.js";
 
 import { Index, IndexEntry } from "../algorithm/search.js";
 import { man7_entry, man7_index } from "../../indexes/man7/types.js";
@@ -116,7 +116,7 @@ export default class Man7 extends BotComponent {
         );
 
         // Ok if the bot spins up while this is loading
-        this.index.load_data();
+        this.index.load_data().catch(critical_error);
     }
 
     async man(command: TextBasedCommand, query: string) {

@@ -5,7 +5,7 @@ import { ContextMenuCommandBuilder } from "discord.js";
 import { ApplicationCommandTypeMessage, ApplicationCommandTypeUser } from "./common.js";
 import { forge_snowflake } from "./components/snowflake.js";
 
-import { unwrap, is_string } from "./utils.js";
+import { unwrap, is_string, critical_error } from "./utils.js";
 import { Wheatley } from "./wheatley.js";
 
 export type TextBasedCommandOptionType = "string";
@@ -434,7 +434,7 @@ export class TextBasedCommand extends Command {
         raw_message_options: string | (Discord.BaseMessageOptions & CommandAbstractionReplyOptions)
     ) {
         this.editing = true;
-        this.reply(raw_message_options);
+        await this.reply(raw_message_options);
     }
 
     is_slash() {
@@ -463,7 +463,7 @@ export class TextBasedCommand extends Command {
 
     async delete_invocation() {
         assert(this.reply_object instanceof Discord.Message);
-        this.reply_object.delete();
+        await this.reply_object.delete();
     }
 
     async delete_replies_if_replied() {
