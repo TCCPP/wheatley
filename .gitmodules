@@ -1,3 +1,4 @@
-[submodule "src/wheatley-private"]
+[submodule "wheatley-private"]
 	path = src/wheatley-private
-	url = git@github.com:jeremy-rifkin/wheatley-private.git
+	url = https://github.com/jeremy-rifkin/empty.git
+    #url = git@github.com:jeremy-rifkin/wheatley-private.git
