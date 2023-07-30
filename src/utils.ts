@@ -4,7 +4,6 @@ import chalk from "chalk";
 import XXH from "xxhashjs";
 
 import * as fs from "fs";
-import * as fspromises from "fs/promises"
 import { execFile, ExecFileOptions } from "child_process";
 
 import { MINUTE, zelis_id } from "./common.js";
@@ -511,6 +510,15 @@ export async function directory_exists(path: string) {
     try {
         const stats = await fs.promises.stat(path);
         return stats.isDirectory();
+    } catch(error) {
+        return false;
+    }
+}
+
+export async function file_exists(path: string) {
+    try {
+        const stats = await fs.promises.stat(path);
+        return stats.isFile();
     } catch(error) {
         return false;
     }

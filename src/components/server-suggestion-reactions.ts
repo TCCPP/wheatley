@@ -1,12 +1,13 @@
 import * as Discord from "discord.js";
 import { strict as assert } from "assert";
 import { is_root, MINUTE, server_suggestions_channel_id, suggestion_dashboard_thread_id } from "../common.js";
-import { delay, M } from "../utils.js";
+import { delay, file_exists, M } from "../utils.js";
 import { TRACKER_START_TIME } from "./server-suggestion-tracker.js";
 import { forge_snowflake } from "./snowflake.js";
-import { react_blacklist } from "../config.js";
 import { BotComponent } from "../bot-component.js";
 import { Wheatley } from "../wheatley.js";
+
+let react_blacklist = new Set<string>();
 
 const root_only_reacts = new Set([
     "🟢", "🔴", "🟡", "🔵",
@@ -98,6 +99,10 @@ export default class ServerSuggestionReactions extends BotComponent {
     }
 
     override async on_ready() {
+        if(await file_exists("src/config.ts")) {
+            const config = "../config.js";
+            react_blacklist = (await import(config)).react_blacklist;
+        }
         for(const channel_id of monitored_channels_ids) {
             const channel = await this.wheatley.client.channels.fetch(channel_id);
             assert(channel && (channel instanceof Discord.TextChannel || channel instanceof Discord.ThreadChannel));

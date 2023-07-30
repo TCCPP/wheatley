@@ -23,7 +23,6 @@ import { DatabaseInterface } from "./infra/database-interface.js";
 import { GuildCommandManager } from "./infra/guild-command-manager.js";
 import { MemberTracker } from "./infra/member-tracker.js";
 
-import LinkBlacklist from "./private-components/link-blacklist.js";
 import { forge_snowflake } from "./components/snowflake.js";
 
 function create_basic_embed(title: string | undefined, color: number, content: string) {
@@ -72,7 +71,7 @@ export class Wheatley extends EventEmitter {
     starboard_channel: Discord.TextChannel;
     staff_action_log_channel: Discord.TextChannel;
 
-    link_blacklist: LinkBlacklist;
+    link_blacklist: any;
 
     text_commands: Record<string, BotTextBasedCommand<any>> = {};
     other_commands: Record<string, BotCommand<any>> = {};
@@ -139,7 +138,7 @@ export class Wheatley extends EventEmitter {
                     (await import(`./components/${file.replace(".ts", ".js")}`)).default
                 );
                 if(file.endsWith("link-blacklist.ts")) {
-                    this.link_blacklist = component as LinkBlacklist;
+                    this.link_blacklist = component;
                 }
             }
         }
