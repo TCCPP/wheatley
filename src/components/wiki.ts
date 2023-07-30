@@ -96,6 +96,8 @@ class ArticleParser {
         } else if(!this.in_code && trimmed.startsWith("<!--") && trimmed.endsWith("-->")) {
             const directive = trimmed.match(/^<!--+(.*?)-+->$/)![1].trim();
             this.parse_directive(directive);
+        } else if(trimmed === "---") {
+            this.parse_directive(trimmed);
         } else {
             this.parse_regular_line(line);
         }
@@ -132,7 +134,7 @@ class ArticleParser {
     private parse_directive(directive: string): void {
         if(directive === "inline") {
             this.current_state = parse_state.before_inline_field;
-        } else if(directive === "footer") {
+        } else if(directive === "---") {
             this.current_state = parse_state.footer;
         } else if(directive === "user author") {
             this.set_author = true;

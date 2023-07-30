@@ -23,5 +23,5 @@ Everything managed automatically.
 - [move assignment](https://en.cppreference.com/w/cpp/language/move_assignment)
 - [destructor](https://en.cppreference.com/w/cpp/language/destructor)
 
-<!-- footer -->
+---
 Red cells in the image are deprecated behaviour

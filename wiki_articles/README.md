@@ -43,7 +43,7 @@ This section is displayed above all fields.
 
 ### Footers
 ```md
-<!-- footer -->
+---
 Footer here.
 ```
 Everything after a `footer` HTML comment will turn into the footer of the embed.

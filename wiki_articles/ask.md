@@ -21,5 +21,5 @@ If it's too much for one message, you can upload it:
 - [OnlineGDB](https://www.onlinegdb.com/) for interaction, debugging<br>
 :no_entry: **Do not post screenshots, let alone photos of your screen!**
 
-<!-- footer -->
+---
 * Use /code if you don't know how to format code blocks

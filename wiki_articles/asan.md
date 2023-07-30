@@ -51,5 +51,5 @@ int main(void) {
 
 (`3:5` is line and column of `return`)
 
-<!-- footer -->
+---
 Note: The sanitizer lists for GCC and clang are not exhaustive

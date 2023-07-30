@@ -44,6 +44,6 @@
 To better understand, you can think of pointers as memory addresses.
 At a hardware level, they are indices in a huge byte array that makes up your computer's memory.
 
-<!-- footer -->
+---
 Note: Using the indirection operator * is called "dereferencing"<br>
 Note: p + 1 will offset p by one element, which can be an offset of multiple bytes

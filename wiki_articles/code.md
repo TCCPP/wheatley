@@ -14,5 +14,5 @@ int main() {}<br>
 int main() {}
 ```
 
-<!-- footer -->
+---
 Note: Back-tick (`) not quotes (')

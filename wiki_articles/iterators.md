@@ -42,5 +42,5 @@ is often implemented like this
 - [C++20 Iterator Concepts](https://en.cppreference.com/w/cpp/iterator#C.2B.2B20_iterator_concepts)
 - **[std::iterator_traits](https://en.cppreference.com/w/cpp/iterator/iterator_traits)**
 
-<!-- footer -->
+---
 Note: The Iterator named req. is only used as a base for Input/OutputIterator
