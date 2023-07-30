@@ -45,7 +45,7 @@ enum parse_state { body, field, footer, before_inline_field, done }
  * One-time use class for parsing articles.
  */
 class ArticleParser {
-    private readonly _article_aliases = new Set<string>();
+    private readonly aliases = new Set<string>();
 
     private title: string;
     private body?: string;
@@ -146,8 +146,8 @@ class ArticleParser {
                 .split(",")
                 .map(alias => alias.trim());
             for(const alias of aliases) {
-                assert(!this._article_aliases.has(alias));
-                this._article_aliases.add(alias);
+                assert(!this.aliases.has(alias));
+                this.aliases.add(alias);
             }
         }
     }
@@ -248,7 +248,7 @@ class ArticleParser {
 
     get article_aliases(): Set<string> {
         assert(this.is_done, "Attempting to access aliases of a parser without success");
-        return this._article_aliases;
+        return this.aliases;
     }
 
 }
