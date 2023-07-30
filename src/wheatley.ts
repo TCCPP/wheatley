@@ -13,8 +13,8 @@ import {
     starboard_channel_id,
     staff_action_log_channel_id, fetch_root_mod_list
 } from "./common.js";
-import { critical_error, fetch_forum_channel, fetch_text_channel, fetch_thread_channel, M, directory_exists, SelfClearingMap,
-         string_split, zip } from "./utils.js";
+import { critical_error, fetch_forum_channel, fetch_text_channel, fetch_thread_channel, M, directory_exists,
+         SelfClearingMap, string_split, zip } from "./utils.js";
 import { BotComponent } from "./bot-component.js";
 import { BotCommand, BotModalHandler, BotTextBasedCommand, MessageContextMenuCommandBuilder, ModalHandler,
          TextBasedCommand, TextBasedCommandBuilder } from "./command.js";
