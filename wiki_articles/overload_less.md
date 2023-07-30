@@ -23,3 +23,4 @@ bool operator<(point a, point b) {
 ## See Also
 
 - [Comparison Operators](https://en.cppreference.com/w/cpp/language/operator_comparison)
+- `!wiki strict-weak`
