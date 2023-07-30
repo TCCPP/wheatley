@@ -74,7 +74,7 @@ type database_schema = {
 /**
  * Adds /nodistractions command, allowing users to give themselves a no-off-topic role.
  */
-export class Nodistractions extends BotComponent {
+export default class Nodistractions extends BotComponent {
     // Sorted by !nodistractions end time
     undistract_queue: no_distraction_entry[] = [];
     timer: NodeJS.Timer | null = null;

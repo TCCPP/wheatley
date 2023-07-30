@@ -1,13 +1,9 @@
 import { strict as assert } from "assert";
 
 import * as Discord from "discord.js";
+
 import { EventEmitter } from "events";
-
-import { DatabaseInterface } from "./infra/database-interface.js";
-import { GuildCommandManager } from "./infra/guild-command-manager.js";
-import { MemberTracker } from "./infra/member-tracker.js";
-
-import { BotComponent } from "./bot-component.js";
+import * as fs from "fs/promises";
 
 import {
     action_log_channel_id, bot_spam_id, colors, cpp_help_id, c_help_id, member_log_channel_id,
@@ -17,54 +13,18 @@ import {
     starboard_channel_id,
     staff_action_log_channel_id, fetch_root_mod_list
 } from "./common.js";
-import { critical_error, fetch_forum_channel, fetch_text_channel, fetch_thread_channel, M, SelfClearingMap,
+import { critical_error, fetch_forum_channel, fetch_text_channel, fetch_thread_channel, M, directory_exists, SelfClearingMap,
          string_split, zip } from "./utils.js";
-
-import { AntiAutoreact } from "./components/anti-autoreact.js";
-import { AntiForumPostDelete } from "./components/anti-forum-post-delete.js";
-import { AntiRaid } from "./components/anti-raid.js";
-import { AntiScambot } from "./components/anti-scambot.js";
-import { AntiScreenshot } from "./components/anti-screenshot.js";
-import { Autoreact } from "./components/autoreact.js";
-import { Cppref } from "./components/cppref.js";
-import { Format } from "./components/format.js";
-import { ForumChannels } from "./components/forum-channels.js";
-import { ForumControl } from "./components/forum-control.js";
-import { Inspect } from "./components/inspect.js";
-import { LinkBlacklist } from "./components/link-blacklist.js";
-import { Man7 } from "./components/man7.js";
-import { Massban } from "./components/massban.js";
-import { Modmail } from "./components/modmail.js";
-import { Nodistractions } from "./components/nodistractions.js";
-import { NotifyAboutBrandNewUsers } from "./components/notify-about-brand-new-users.js";
-import { Ping } from "./components/ping.js";
-import { Quote } from "./components/quote.js";
-import { RaidPurge } from "./components/raidpurge.js";
-import { ReadTutoring } from "./components/read-tutoring.js";
-import { RoleManager } from "./components/role-manager.js";
-import { Roulette } from "./components/roulette.js";
-import { ServerSuggestionReactions } from "./components/server-suggestion-reactions.js";
-import { ServerSuggestionTracker } from "./components/server-suggestion-tracker.js";
-import { Snowflake, forge_snowflake } from "./components/snowflake.js";
-import { Speedrun } from "./components/speedrun.js";
-import { Status } from "./components/status.js";
-import { ThreadBasedChannels } from "./components/thread-based-channels.js";
-import { ThreadControl } from "./components/thread-control.js";
-import { TrackedMentions } from "./components/tracked-mentions.js";
-import { UsernameManager } from "./components/username-manager.js";
-import { UtilityTools } from "./components/utility-tools.js";
-import { Wiki } from "./components/wiki.js";
+import { BotComponent } from "./bot-component.js";
 import { BotCommand, BotModalHandler, BotTextBasedCommand, MessageContextMenuCommandBuilder, ModalHandler,
          TextBasedCommand, TextBasedCommandBuilder } from "./command.js";
-import { DiscordAPIError, SlashCommandBuilder } from "discord.js";
-import { Report } from "./components/report.js";
-import { SkillRoleSuggestion } from "./components/skill-role-suggestion.js";
-import { TheButton } from "./components/the-button.js";
-import { Composite } from "./components/composite.js";
-import { Buzzwords } from "./components/buzzwords.js";
-import { Starboard } from "./components/starboard.js";
-import { ThreadCreatedMessage } from "./components/thread-created-message.js";
-import { Redirect } from "./components/redirect.js";
+
+import { DatabaseInterface } from "./infra/database-interface.js";
+import { GuildCommandManager } from "./infra/guild-command-manager.js";
+import { MemberTracker } from "./infra/member-tracker.js";
+
+import LinkBlacklist from "./private-components/link-blacklist.js";
+import { forge_snowflake } from "./components/snowflake.js";
 
 function create_basic_embed(title: string | undefined, color: number, content: string) {
     const embed = new Discord.EmbedBuilder()
@@ -169,49 +129,20 @@ export class Wheatley extends EventEmitter {
             }
         });
 
-        await this.add_component(Cppref);
-        await this.add_component(Format);
-        await this.add_component(Inspect);
-        await this.add_component(Man7);
-        await this.add_component(Ping);
-        await this.add_component(Snowflake);
-        await this.add_component(Wiki);
-        await this.add_component(AntiAutoreact);
-        await this.add_component(AntiForumPostDelete);
-        await this.add_component(AntiRaid);
-        await this.add_component(AntiScambot);
-        await this.add_component(AntiScreenshot);
-        //await this.add_component(AntiSelfStar);
-        await this.add_component(Autoreact);
-        await this.add_component(ForumChannels);
-        await this.add_component(ForumControl);
-        this.link_blacklist = (await this.add_component(LinkBlacklist))!; // todo, a little ugly
-        await this.add_component(Massban);
-        await this.add_component(Modmail);
-        await this.add_component(Nodistractions);
-        await this.add_component(NotifyAboutBrandNewUsers);
-        await this.add_component(Quote);
-        await this.add_component(RaidPurge);
-        await this.add_component(ReadTutoring);
-        await this.add_component(RoleManager);
-        await this.add_component(Report);
-        await this.add_component(Roulette);
-        await this.add_component(ServerSuggestionReactions);
-        await this.add_component(ServerSuggestionTracker);
-        await this.add_component(SkillRoleSuggestion);
-        await this.add_component(Speedrun);
-        await this.add_component(Status);
-        await this.add_component(ThreadBasedChannels);
-        await this.add_component(ThreadControl);
-        await this.add_component(TrackedMentions);
-        await this.add_component(UsernameManager);
-        await this.add_component(UtilityTools);
-        await this.add_component(TheButton);
-        await this.add_component(Composite);
-        await this.add_component(Buzzwords);
-        await this.add_component(Starboard);
-        await this.add_component(ThreadCreatedMessage);
-        await this.add_component(Redirect);
+        for(const file of await fs.readdir("src/components")) {
+            await this.add_component((await import(`./components/${file.replace(".ts", ".js")}`)).default);
+        }
+
+        if(await directory_exists("src/private-components")) {
+            for(const file of await fs.readdir("src/private-components")) {
+                const component = await this.add_component(
+                    (await import(`./components/${file.replace(".ts", ".js")}`)).default
+                );
+                if(file.endsWith("link-blacklist.ts")) {
+                    this.link_blacklist = component as LinkBlacklist;
+                }
+            }
+        }
 
         await this.guild_command_manager.finalize(token);
 
@@ -378,7 +309,7 @@ export class Wheatley extends EventEmitter {
                     command
                 );
                 if(slash) {
-                    const djs_command = new SlashCommandBuilder()
+                    const djs_command = new Discord.SlashCommandBuilder()
                         .setName(name)
                         .setDescription(description);
                     for(const option of command.options.values()) {
@@ -513,7 +444,7 @@ export class Wheatley extends EventEmitter {
                 try {
                     await target.delete();
                 } catch(e) {
-                    if(e instanceof DiscordAPIError && e.code == 10008) {
+                    if(e instanceof Discord.DiscordAPIError && e.code == 10008) {
                         // pass, ignore - response deleted before trigger
                     } else {
                         throw e;

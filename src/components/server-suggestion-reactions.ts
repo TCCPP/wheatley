@@ -22,7 +22,7 @@ const monitored_channels_ids = [ server_suggestions_channel_id, suggestion_dashb
 /**
  * Adds reactions to server suggestions and allows root users to approve/reject suggestions via reactions.
  */
-export class ServerSuggestionReactions extends BotComponent {
+export default class ServerSuggestionReactions extends BotComponent {
     readonly monitored_channels = new Map<string, Discord.TextChannel | Discord.AnyThreadChannel>();
     stop = false;
 

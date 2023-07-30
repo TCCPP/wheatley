@@ -11,7 +11,7 @@ import { TextBasedCommand, TextBasedCommandBuilder } from "../command.js";
 /**
  * Adds a /ping command.
  */
-export class Ping extends BotComponent {
+export default class Ping extends BotComponent {
     static override get is_freestanding() {
         return true;
     }

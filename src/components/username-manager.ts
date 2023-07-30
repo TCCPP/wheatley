@@ -47,7 +47,7 @@ function is_valid_name(name: string) {
 /**
  * Manages users with invalid names, such as unicode spam.
  */
-export class UsernameManager extends BotComponent {
+export default class UsernameManager extends BotComponent {
     interval: NodeJS.Timer | null = null;
 
     constructor(wheatley: Wheatley) {

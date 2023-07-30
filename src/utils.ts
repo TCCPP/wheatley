@@ -4,6 +4,7 @@ import chalk from "chalk";
 import XXH from "xxhashjs";
 
 import * as fs from "fs";
+import * as fspromises from "fs/promises"
 import { execFile, ExecFileOptions } from "child_process";
 
 import { MINUTE, zelis_id } from "./common.js";
@@ -504,4 +505,13 @@ export function max<T, U>(fn: (x: T) => U, ...items: [T, ...T[]]) {
         }
     }
     return items[max_i];
+}
+
+export async function directory_exists(path: string) {
+    try {
+        const stats = await fs.promises.stat(path);
+        return stats.isDirectory();
+    } catch(error) {
+        return false;
+    }
 }

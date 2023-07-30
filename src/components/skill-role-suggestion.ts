@@ -11,7 +11,7 @@ import { MessageContextMenuCommandBuilder, UserContextMenuCommandBuilder } from 
 /**
  * Adds commands for users to suggest skill roles for other members.
  */
-export class SkillRoleSuggestion extends BotComponent {
+export default class SkillRoleSuggestion extends BotComponent {
     // string -> initial target message from context menu interaction
     readonly target_map = new SelfClearingMap<string, {member: Discord.GuildMember, role?: string}>(5 * MINUTE);
 

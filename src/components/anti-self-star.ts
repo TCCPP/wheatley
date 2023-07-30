@@ -6,12 +6,12 @@ import { BotComponent } from "../bot-component.js";
 import { Wheatley } from "../wheatley.js";
 import { has_media } from "./autoreact.js";
 
-export class AntiSelfStar extends BotComponent {
+export default class AntiSelfStar extends BotComponent {
     constructor(wheatley: Wheatley) {
         super(wheatley);
     }
 
-    override async on_ready() {
+    /*override async on_ready() {
         await this.catch_up();
     }
 
@@ -60,5 +60,5 @@ export class AntiSelfStar extends BotComponent {
             await this.check_message(message);
         }
         M.log("Finished catching up on #memes messages");
-    }
+    }*/
 }

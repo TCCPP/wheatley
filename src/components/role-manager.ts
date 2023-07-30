@@ -14,7 +14,7 @@ import { Wheatley } from "../wheatley.js";
  * - removing @Pink roles for non-boosting members
  * - removing duplicate skill roles
  */
-export class RoleManager extends BotComponent {
+export default class RoleManager extends BotComponent {
     pink_role: Discord.Role;
     interval: NodeJS.Timer | null = null;
 

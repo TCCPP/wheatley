@@ -53,7 +53,7 @@ const EMOJIREGEX = /((?<!\\)<a?:[^:]+:(\d+)>)|\p{Emoji_Presentation}|\p{Extended
 /**
  * Reaction highscores.
  */
-export class Starboard extends BotComponent {
+export default class Starboard extends BotComponent {
     data: component_data;
     mutex = new KeyedMutexSet<string>();
 

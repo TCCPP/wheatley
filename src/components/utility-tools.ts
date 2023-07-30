@@ -8,7 +8,7 @@ import { Wheatley } from "../wheatley.js";
 /**
  * Provides TCCPP-specific utilities for renaming channels etc.
  */
-export class UtilityTools extends BotComponent {
+export default class UtilityTools extends BotComponent {
     constructor(wheatley: Wheatley) {
         super(wheatley);
     }

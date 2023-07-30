@@ -21,7 +21,7 @@ const LEADERBOARD_ENTRIES = 20;
 /**
  * "Russian roulette" game where users risk timing themselves out.
  */
-export class Roulette extends BotComponent {
+export default class Roulette extends BotComponent {
     readonly warned_users = new SelfClearingSet<string>(60 * MINUTE);
     // user id -> streak count
     readonly streaks = new SelfClearingMap<string, number>(60 * MINUTE);

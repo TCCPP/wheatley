@@ -9,7 +9,7 @@ import { M, unwrap } from "../utils.js";
 /**
  * Deletes thread creation messages.
  */
-export class ThreadCreatedMessage extends BotComponent {
+export default class ThreadCreatedMessage extends BotComponent {
     constructor(wheatley: Wheatley) {
         super(wheatley);
     }

@@ -8,7 +8,7 @@ import { Wheatley } from "../wheatley.js";
 /**
  * Tracks "getting banned speedruns".
  */
-export class Speedrun extends BotComponent {
+export default class Speedrun extends BotComponent {
     constructor(wheatley: Wheatley) {
         super(wheatley);
 

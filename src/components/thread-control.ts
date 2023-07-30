@@ -12,7 +12,7 @@ import { TextBasedCommand, TextBasedCommandBuilder } from "../command.js";
  * - !rename
  * - !archive
  */
-export class ThreadControl extends BotComponent {
+export default class ThreadControl extends BotComponent {
     constructor(wheatley: Wheatley) {
         super(wheatley);
 

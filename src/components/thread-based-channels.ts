@@ -36,7 +36,7 @@ function create_embed(title: string | undefined, color: number, msg: string) {
  * - thread auto-creation
  * - thread creation info messages
  */
-export class ThreadBasedChannels extends BotComponent {
+export default class ThreadBasedChannels extends BotComponent {
     constructor(wheatley: Wheatley) {
         super(wheatley);
     }

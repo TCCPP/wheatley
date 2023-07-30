@@ -15,7 +15,7 @@ export function has_media(message: Discord.Message | Discord.PartialMessage) {
 /**
  * Adds automatic reactions to some messages.
  */
-export class Autoreact extends BotComponent {
+export default class Autoreact extends BotComponent {
     constructor(wheatley: Wheatley) {
         super(wheatley);
     }

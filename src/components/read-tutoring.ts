@@ -10,7 +10,7 @@ const color = 0xF34A39;
 /**
  * Informs a user how to use the tutoring service.
  */
-export class ReadTutoring extends BotComponent {
+export default class ReadTutoring extends BotComponent {
     constructor(wheatley: Wheatley) {
         super(wheatley);
     }

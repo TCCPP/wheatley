@@ -22,7 +22,7 @@ export function forge_snowflake(timestamp: number) {
 /**
  * Adds the /snowflake command.
  */
-export class Snowflake extends BotComponent {
+export default class Snowflake extends BotComponent {
     static override get is_freestanding() {
         return true;
     }

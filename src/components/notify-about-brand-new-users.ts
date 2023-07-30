@@ -10,7 +10,7 @@ const NEW_USER_THRESHOLD = MINUTE * 30;
 /**
  * Warns about fresh Discord accounts joining the server.
  */
-export class NotifyAboutBrandNewUsers extends BotComponent {
+export default class NotifyAboutBrandNewUsers extends BotComponent {
     constructor(wheatley: Wheatley) {
         super(wheatley);
     }

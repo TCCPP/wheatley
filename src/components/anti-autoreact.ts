@@ -20,7 +20,7 @@ const obnoxious_autoreact_immunity = new Set([
 /**
  * Prevents some auto-reactions being placed on some users.
  */
-export class AntiAutoreact extends BotComponent {
+export default class AntiAutoreact extends BotComponent {
     override async on_reaction_add(reaction: Discord.MessageReaction | Discord.PartialMessageReaction) {
         const emoji_name = reaction.emoji.name?.toLowerCase();
         assert(emoji_name != null);

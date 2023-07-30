@@ -262,7 +262,7 @@ export function parse_article(content: string): [WikiArticle, Set<string>] {
 /**
  * Parses wiki articles and adds the /wiki or /howto command for displaying them.
  */
-export class Wiki extends BotComponent {
+export default class Wiki extends BotComponent {
     static override get is_freestanding() {
         return true;
     }

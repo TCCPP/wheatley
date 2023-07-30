@@ -36,7 +36,7 @@ function message_might_have_code(message: string) {
 /**
  * Informs users that they shouldn't post screenshots of their code in threads.
  */
-export class AntiScreenshot extends BotComponent {
+export default class AntiScreenshot extends BotComponent {
     constructor(wheatley: Wheatley) {
         super(wheatley);
     }

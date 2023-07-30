@@ -38,7 +38,7 @@ function create_embed(title: string | undefined, color: number, msg: string) {
 /**
  * Support for marking threads as solved and other features.
  */
-export class ForumChannels extends BotComponent {
+export default class ForumChannels extends BotComponent {
     // TODO: Improve initial message, make it more friendly to the eye
     //       reduce time of initial message
 

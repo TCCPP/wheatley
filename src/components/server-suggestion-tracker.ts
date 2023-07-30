@@ -40,7 +40,7 @@ type reaction = {
 /**
  * Provides a dashboard for server suggestions.
  */
-export class ServerSuggestionTracker extends BotComponent {
+export default class ServerSuggestionTracker extends BotComponent {
     recovering = true;
 
     constructor(wheatley: Wheatley) {

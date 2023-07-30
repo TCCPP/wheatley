@@ -17,7 +17,7 @@ const tracked_mentions = new Set([
 /**
  * Tracks certain mentions, such as mentions of root, moderators, Wheatley, etc.
  */
-export class TrackedMentions extends BotComponent {
+export default class TrackedMentions extends BotComponent {
     constructor(wheatley: Wheatley) {
         super(wheatley);
     }
