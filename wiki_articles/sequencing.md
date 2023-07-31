@@ -1,7 +1,6 @@
 # What Is Sequencing, and What Are Sequence Points?
 
-Some operations in C++ are *sequenced* before others, meaning that they happen
-first.
+Some operations in C++ are *sequenced* before others, meaning that they happen first.
 Unless otherwise stated, operations are *unsequenced*.
 
 <!-- inline -->
@@ -37,7 +36,7 @@ When two operations are unsequenced, and this can change the result, it's UB:
 ```cpp
 int i = 0;
 int r = ++i + i;
-// r == 1, or r == 2 ?! 
+// r == 1, or r == 2 ?!
 ```
 
 <!-- inline -->

@@ -13,8 +13,7 @@ long long │  ≤ -2^63 * │ ≥ 2^63 - 1 │  ≥ 2^64 - 1
 
 <!-- inline -->
 ## :interrobang: Are Bytes Not Always 8 Bits?
-A *[byte](https://eel.is/c++draft/intro.memory#def:byte)*
-, which has the same size as `char` is the
+A *[byte](https://eel.is/c++draft/intro.memory#def:byte)*, which has the same size as `char` is the
 smallest addressable unit of memory.
 
 It must be 8 bits at least, and is exactly 8 bits on

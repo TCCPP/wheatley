@@ -1,16 +1,16 @@
 # What Is a Strict Weak Ordering in C++?
 
-Algorithms like
-**[std::sort](https://en.cppreference.com/w/cpp/algorithm/sort)**
-and containers like
-**[std::set](https://en.cppreference.com/w/cpp/container/map)** require a
-*[Compare](https://en.cppreference.com/w/cpp/named_req/Compare)* function,
-which induces a *[strict weak ordering](https://en.wikipedia.org/wiki/Weak_ordering#Strict_weak_orderings)*.
-This means that the comparison `comp(x, y)` has to behave similar to `x < y`:
+Algorithms like **[std::sort][sort]** and containers like **[std::set]()** require a *[Compare][cmp]* function, which
+induces a *[strict weak ordering][sw]*. This means that the comparison `comp(x, y)` has to behave similar to `x < y`:
 1. `x < x` is false (*Irreflexivity*) (this makes it *strict*)
 2. `x < y && y < z` implies `x < z` (*Transitivity*)
 3. `x < y` implies `!(y < x)` (*Asymmetry*)
 4. (see below)
+
+[sort]: https://en.cppreference.com/w/cpp/algorithm/sort
+[set]: https://en.cppreference.com/w/cpp/container/set
+[cmp]: https://en.cppreference.com/w/cpp/named_req/Compare
+[sw]: https://en.wikipedia.org/wiki/Weak_ordering#Strict_weak_orderings
 
 ## 4. Transitivity of Equivalence
 Elements are allowed to be equivalent, i.e. `equiv(x, y)` is similar to `x == y`:

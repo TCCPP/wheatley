@@ -18,13 +18,13 @@ std::cout << "hi\n";   // is clearly visible
 
 <!-- inline -->
 ## Auto-Formatting with clang-format
-For C/C++, you can use
-**[clang-format](https://clang.llvm.org/docs/ClangFormat.html)**
-to decide on a style, and apply it automatically to your files.
-You can use it in the terminal, or through an editor plugin.
+For C/C++, you can use **[clang-format][cf]** to decide on a style, and apply it automatically to your files. You can
+use it in the terminal, or through an editor plugin.
 
 Most IDEs will also let you configure a style in their settings, but
 clang-format is universal.
+
+[cf]: https://clang.llvm.org/docs/ClangFormat.html
 
 <!-- inline -->
 ## See Support/Plugins

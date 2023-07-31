@@ -42,6 +42,8 @@ type WikiField = {
 enum parse_state { body, field, footer, before_inline_field, done }
 
 const image_regex = /!\[[^\]]*\]\(([^)]*)\)/;
+const reference_definition_regex = /\s*\[([^\]]*)\]: (.+)/;
+const reference_link_regex = /\[([^\]]*)\]\[([^\]]*)\]/g;
 
 /**
  * One-time use class for parsing articles.
@@ -56,13 +58,16 @@ class ArticleParser {
     private image?: string;
     private set_author?: true;
     private no_embed?: true;
+    private readonly reference_definitions = new Map<string, string>();
 
     private current_state = parse_state.body;
     private in_code = false;
 
     parse(content: string) {
         this.body = "";
-        for(const line of content.split(/\r?\n/)) {
+        const lines = content.split(/\r?\n/);
+        this.collect_references(lines);
+        for(const line of lines) {
             this.parse_line(line);
         }
         assert(!this.in_code, "Unclosed code block in wiki article");
@@ -102,6 +107,8 @@ class ArticleParser {
             this.parse_directive(trimmed);
         } else if(trimmed.match(image_regex)) {
             this.parse_directive(trimmed);
+        } else if(trimmed.match(reference_definition_regex)) {
+            // ignore
         } else {
             this.parse_regular_line(line);
         }
@@ -196,8 +203,8 @@ class ArticleParser {
     }
 
     /**
-     * Substitutes placeholders such as <br> in the string, but only outside
-     * inline code.
+     * Substitutes placeholders such as <br> or reference-style links in the
+     * string, but only outside inline code.
      * @param line the line, possibly containing backticks for inline code
      */
     private substitute_placeholders(line: string): string {
@@ -233,7 +240,20 @@ class ArticleParser {
             .replaceAll(/<br>|<br\/>/g, "\n")
             .replaceAll(/#resources(?![a-zA-Z0-9_])/g, `<#${resources_channel_id}>`)
             .replaceAll(/#rules(?![a-zA-Z0-9_])/g, `<#${rules_channel_id}>`)
-            .replaceAll(/(?<!<):stackoverflow:/g, stackoverflow_emote);
+            .replaceAll(/(?<!<):stackoverflow:/g, stackoverflow_emote)
+            .replaceAll(reference_link_regex, (_, text: string, ref: string) => {
+                assert(this.reference_definitions.has(ref), "Unknown reference in reference-style link");
+                return `[${text}](${this.reference_definitions.get(ref)})`;
+            });
+    }
+
+    private collect_references(lines: string[]) {
+        for(const line of lines) {
+            if(line.match(reference_definition_regex)) {
+                const [ _, key, value ] = unwrap(line.match(reference_definition_regex));
+                this.reference_definitions.set(key.trim(), value.trim());
+            }
+        }
     }
 
     get is_done(): boolean {
@@ -297,7 +317,7 @@ export default class Wiki extends BotComponent {
         );
 
         this.add_command(
-            new TextBasedCommandBuilder("wiki-preview")
+            new TextBasedCommandBuilder([ "wiki-preview", "wp" ])
                 .set_slash(false)
                 .set_description("Preview a wiki article")
                 .add_string_option({

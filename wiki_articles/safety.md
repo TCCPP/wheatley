@@ -10,9 +10,10 @@ Here are some crucial practices:
 - `-Wextra`
 for GCC and clang catch most common mistakes.
 
-You can also use [clang-tidy](https://clang.llvm.org/extra/clang-tidy/),
-[IntelliSense](https://code.visualstudio.com/docs/editor/intellisense),
-and other diagnostics (often integrated into IDEs).
+You can also use [clang-tidy][1], [IntelliSense][2], and other diagnostics (often integrated into IDEs).
+
+[1]: https://clang.llvm.org/extra/clang-tidy/
+[2]: https://code.visualstudio.com/docs/editor/intellisense
 
 <!-- inline -->
 ## No Unsafe Functions

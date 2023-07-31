@@ -1,9 +1,9 @@
 # How to Ask a Programming Question
 
-Anyone can ask a question in our programming channels.
-Following the guide
-[Writing The Perfect Question](https://codeblog.jonskeet.uk/2010/08/29/writing-the-perfect-question/)
-is recommended.
+Anyone can ask a question in our programming channels. Following the guide [Writing The Perfect Question][1] is
+recommended.
+
+[1]: https://codeblog.jonskeet.uk/2010/08/29/writing-the-perfect-question/
 
 <!-- inline -->
 ## What to Post

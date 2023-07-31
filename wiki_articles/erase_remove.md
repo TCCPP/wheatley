@@ -1,10 +1,9 @@
 # Erase-Remove Idiom
 
-Elements from
-**[std::string](https://en.cppreference.com/w/cpp/string/basic_string)**
-and
-**[std::vector](https://en.cppreference.com/w/cpp/container/vector)**
-can be removed using the erase-remove idiom.
+Elements from **[std::string][string]** and **[std::vector][vector]** can be removed using the erase-remove idiom.
+
+[string]: https://en.cppreference.com/w/cpp/string/basic_string
+[vector]: https://en.cppreference.com/w/cpp/container/vector
 
 ## Example: Removing Every Zero From A Vector
 ```cpp

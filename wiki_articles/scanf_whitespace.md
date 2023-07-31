@@ -1,11 +1,11 @@
 # Handling Whitespace in scanf
 
-When the user presses space or enter in the console,
-this puts `' '` and `'\n'` *[whitespace](https://en.wikipedia.org/wiki/Whitespace_character)*
-characters into `stdio` respectively.
-When reading an `int*` with `%d` or `float*` with `%f`, **[scanf](https://en.cppreference.com/w/c/io/fscanf)**
-skips any leading whitespace.
-However, `%c` for `char*` extracts whitespace characters.
+When the user presses space or enter in the console, this puts `' '` and `'\n'` *[whitespace][whitespace]* characters
+into `stdio` respectively. When reading an `int*` with `%d` or `float*` with `%f`, **[scanf][scanf]** skips any leading
+whitespace. However, `%c` for `char*` extracts whitespace characters.
+
+[whitespace]: https://en.wikipedia.org/wiki/Whitespace_character
+[scanf]: https://en.cppreference.com/w/c/io/fscanf
 
 ## Example Problem
 Say the user enters `"  70 f"`, and we want to read `70` and `f` into `int` and `char` respectively:
