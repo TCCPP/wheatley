@@ -1,10 +1,9 @@
 # _BitInt and Extended Integers in C/C++
 
-**[_BitInt(N)](https://en.cppreference.com/w/c/language/arithmetic_types#Integer_types)**
-is an N-bit integer available since
-[C23](https://en.cppreference.com/w/c/23),
-but may not be available in C++.
-Major compilers have limited support for extended integers.
+**[_BitInt(N)][1]** is an N-bit integer available since [C23](https://en.cppreference.com/w/c/23), but may not be
+available in C++. Major compilers have limited support for extended integers.
+
+[1]: https://en.cppreference.com/w/c/language/arithmetic_types#Integer_types
 
 <!-- inline -->
 ## GCC

@@ -1,11 +1,12 @@
 # What Is the Conditional Operator?
 
-The [conditional operator](https://en.cppreference.com/w/cpp/language/operator_other#Conditional_operator),
-(colloquially called _ternary operator_)
-of the form `Condition ? T : F` evaluates `T` if the `Condition` is true, otherwise `F`.
+The [conditional operator][1], (colloquially called _ternary operator_) of the form `Condition ? T : F` evaluates `T` if
+the `Condition` is true, otherwise `F`.
 
 The result of the whole expression is either the expression `T` or `F`.
 This also means that `T` and `F` must have compatible types.
+
+[1]: https://en.cppreference.com/w/cpp/language/operator_other#Conditional_operator
 
 ## Example
 

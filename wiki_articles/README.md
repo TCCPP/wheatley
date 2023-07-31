@@ -9,10 +9,8 @@ issue about an article.
 
 ## Wiki Markdown
 
-The articles are written in a GitHub-flavored Markdown.
-Generally, what you see as a GitHub preview is what you should be getting in the
-output embed, more or less.
-However, there are some extra nuances:
+The articles are written in a GitHub-flavored Markdown. Generally, what you see as a GitHub preview is what you should
+be getting in the output embed, more or less. However, there are some extra nuances:
 
 ### Article Title
 
@@ -49,7 +47,16 @@ Footer here.
 Everything after a `footer` HTML comment will turn into the footer of the embed.
 This is a part of the embed at the bottom, displayed with small font.
 
-### Image
+### Links
+```md
+[text](url)
+[tex][ref]
+
+[ref]: url
+```
+Inline and reference-style links are supported. On discord the text cannot contain any newlines.
+
+### Images
 ```md
 ![](https://xyz.xyz/image.png)
 ```

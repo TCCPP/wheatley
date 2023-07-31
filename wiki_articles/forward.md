@@ -1,9 +1,7 @@
 # Perfect Forwarding and Forwarding References
 
-References of the form `T&&` are
-*[forwarding references](https://en.cppreference.com/w/cpp/language/reference#Forwarding_references)*
-if `T` is a template parameter of the current function template.
-These references have special deduction rules:
+References of the form `T&&` are *[forwarding references][fr]* if `T` is a template parameter of the current function
+template. These references have special deduction rules:
 ```cpp
 template <class T>
 void f(T&& r); // r is a forwarding reference
@@ -17,17 +15,18 @@ f(x);                    // (reference collapsing)
 auto&& a = x; // decltype(a) = int&
 ```
 
+[fr]: https://en.cppreference.com/w/cpp/language/reference#Forwarding_references
+
 ## Perfectly Forwarding Function Arguments With `std::forward`
-No matter what `T` deduces to, the expression `r`
-is an
-*[lvalue](https://en.cppreference.com/w/cpp/language/value_category#lvalue)*
-when used inside the function `f`.
-**[std::forward](https://en.cppreference.com/w/cpp/utility/forward)**
-recovers the reference type:
+No matter what `T` deduces to, the expression `r` is an *[lvalue][lvalue]* when used inside the function `f`.
+**[std::forward][forward]** recovers the reference type:
 ```cpp
 std::forward<T>(r) // yields int&& if T = int
 std::forward<T>(r) // yields int&  if T = int&
 ```
+
+[lvalue]: https://en.cppreference.com/w/cpp/language/value_category#lvalue
+[forward]: https://en.cppreference.com/w/cpp/utility/forward
 
 ## See Also
 <:stackoverflow:1074747016644661258>

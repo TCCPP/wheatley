@@ -1,8 +1,7 @@
 # Smart Pointers in C++
 
-Smart pointers are types which manage a raw pointer in their constructors and destructors.
-This way, you don't have to use `new`/`delete` manually,
-which is easy to forget and hard to do correctly, especially when handling exceptions.
+Smart pointers are types which manage a raw pointer in their constructors and destructors. This way, you don't have to
+use `new`/`delete` manually, which is easy to forget and hard to do correctly, especially when handling exceptions.
 
 <!-- inline -->
 ## std::unique_ptr
@@ -33,8 +32,12 @@ std::unique_ptr<int[]> =
 ```
 
 ## Relevant Links
-- **[std::unique_ptr](https://en.cppreference.com/w/cpp/memory/unique_ptr)**, **[std::shared_ptr](https://en.cppreference.com/w/cpp/memory/shared_ptr)**, **[std::weak_ptr](https://en.cppreference.com/w/cpp/memory/weak_ptr)**
+- **[std::unique_ptr][1]**, **[std::shared_ptr][2]**, **[std::weak_ptr][3]**
 - *[Smart Pointer Casts](https://en.cppreference.com/w/cpp/memory/shared_ptr/pointer_cast)*
 - [Standard library header <memory>](https://en.cppreference.com/w/cpp/header/memory)<br>
 <:stackoverflow:1074747016644661258>
 [What is a smart pointer and when should I use one?](https://stackoverflow.com/q/106508/5740428)
+
+[1]: https://en.cppreference.com/w/cpp/memory/unique_ptr
+[2]: https://en.cppreference.com/w/cpp/memory/shared_ptr
+[3]: https://en.cppreference.com/w/cpp/memory/weak_ptr

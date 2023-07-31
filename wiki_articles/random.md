@@ -1,9 +1,12 @@
 # Generating Random Numbers in C++
 
-The [<random>](https://en.cppreference.com/w/cpp/header/random)
-header in C++ provides (pseudo-)random number generation (PRNG):
-- *[UniformRandomBitGenerators](https://en.cppreference.com/w/cpp/named_req/UniformRandomBitGenerators)* produce random bits (entropy)
-- *[RandomNumberDistributions](https://en.cppreference.com/w/cpp/named_req/RandomNumberDistribution)* use entropy to generate random numbers
+The [<random>][1] header in C++ provides (pseudo-)random number generation (PRNG):
+- *[UniformRandomBitGenerators][2]* produce random bits (entropy)
+- *[RandomNumberDistributions][3]* use entropy to generate random numbers
+
+[1]: https://en.cppreference.com/w/cpp/header/random
+[2]: https://en.cppreference.com/w/cpp/named_req/UniformRandomBitGenerators
+[3]: https://en.cppreference.com/w/cpp/named_req/RandomNumberDistribution
 
 ## Example: Printing Ten Random Dice Rolls
 ```cpp

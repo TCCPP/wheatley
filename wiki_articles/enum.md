@@ -1,9 +1,7 @@
 # Scoped and Unscoped Enumerations
 
-In C++, `enum` introduces an
-[unscoped enumeration](https://en.cppreference.com/w/cpp/language/enum#Unscoped_enumerations),
-and `enum class` or `enum struct` introduce a
-[scoped enumeration](https://en.cppreference.com/w/cpp/language/enum#Scoped_enumerations).
+In C++, `enum` introduces an [unscoped enumeration][enum], and `enum class` or `enum struct` introduce a
+[scoped enumeration][enumclass].
 ```cpp
 enum class Fruit : char {
     NONE, // enumerator-list, NONE = 0
@@ -12,6 +10,9 @@ enum class Fruit : char {
 };
 Fruit apple = Fruit::APPLE;
 ```
+
+[enum]: https://en.cppreference.com/w/cpp/language/enum#Unscoped_enumerations
+[enumclass]: https://en.cppreference.com/w/cpp/language/enum#Scoped_enumerations
 
 <!-- inline -->
 ## Scoped Enumeration (C++-only)

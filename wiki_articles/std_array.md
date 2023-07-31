@@ -4,9 +4,13 @@ C-style arrays have important shortcomings:<br/>
 
 :no_entry: cannot be returned from functions<br>
 :no_entry: are not assignable with `=`<br>
-:no_entry: can only be initialized via `""`, `{}`, or *[default initialization](https://en.cppreference.com/w/cpp/language/default_initialization)*<br>
-:warning: might implicitly [decay to pointers](https://64.github.io/cpp-faq/decay/), notably C arrays are not passed by value to functions<br>
-:warning: might be [variable-length arrays](https://en.wikipedia.org/wiki/Variable-length_array) (VLAs), if the developer makes a mistake
+:no_entry: can only be initialized via `""`, `{}`, or *[default initialization][1]*<br>
+:warning: might implicitly [decay to pointers][2], notably C arrays are not passed by value to functions<br>
+:warning: might be [variable-length arrays][3] (VLAs), if the developer makes a mistake
+
+[1]: https://en.cppreference.com/w/cpp/language/default_initialization
+[2]: https://64.github.io/cpp-faq/decay/
+[3]: https://en.wikipedia.org/wiki/Variable-length_array
 
 **[std::array](https://en.cppreference.com/w/cpp/container/array)** is a standard library container and
 *[aggregate type](https://en.cppreference.com/w/cpp/language/aggregate_initialization)*
