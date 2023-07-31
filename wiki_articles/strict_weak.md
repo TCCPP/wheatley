@@ -21,8 +21,8 @@ For example, when ordering strings by length, strings of the same length are
 equivalent to each other, but not to other strings.
 This satisfies **4.**.
 
-It is **not okay** to have elements like `NaN`, which are equivalent to
-`1` and `2`, but `1` and `2` are not equivalent to each other.
+It is **not okay** to have elements like `NaN` because by the transitive definition `equiv(NAN, 1)` and `equiv(NAN, 2)`
+are true; but `1` is not equal to `2`.
 `NaN` is equivalent to everything because `NaN < x` is always false.
 
 ## See Also
