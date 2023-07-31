@@ -17,7 +17,7 @@ export enum colors {
     alert_color = 0xf5a53e,
     speedrun_color = 0x0fc644,
     red = 0x0,
-    green = 0x0
+    green = 0x0 // eslint-disable-line @typescript-eslint/no-duplicate-enum-values
 }
 
 // User IDs
