@@ -229,7 +229,7 @@ export default class Cppref extends BotComponent {
         if(header_part.endsWith(".h")) {
             return header;
         } else {
-            return `[${header}](en.cppreference.com/w/cpp/header/${header_part}.html)`;
+            return `[${header}](https://en.cppreference.com/w/cpp/header/${header_part}.html)`;
         }
     }
 }
