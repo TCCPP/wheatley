@@ -1,5 +1,5 @@
 # Special Member Functions in C++
-<!-- image https://cdn.discordapp.com/attachments/861906541823918101/877150143089098792/b2VBV.png -->
+![](https://cdn.discordapp.com/attachments/861906541823918101/877150143089098792/b2VBV.png)
 
 Special member functions in C++, such as constructors must be handled carefully to manage resources of a class.
 The C++ community has agreed on three guidelines:

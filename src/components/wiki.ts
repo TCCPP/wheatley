@@ -4,7 +4,7 @@ import * as Discord from "discord.js";
 import * as fs from "fs";
 import * as path from "path";
 
-import { M } from "../utils.js";
+import { M, unwrap } from "../utils.js";
 import { bot_spam_id, colors, resources_channel_id, rules_channel_id, stackoverflow_emote } from "../common.js";
 import { BotComponent } from "../bot-component.js";
 import { Wheatley } from "../wheatley.js";
@@ -40,6 +40,8 @@ type WikiField = {
 };
 
 enum parse_state { body, field, footer, before_inline_field, done }
+
+const image_regex = /!\[[^\]]*\]\(([^)]*)\)/;
 
 /**
  * One-time use class for parsing articles.
@@ -98,6 +100,8 @@ class ArticleParser {
             this.parse_directive(directive);
         } else if(trimmed === "---") {
             this.parse_directive(trimmed);
+        } else if(trimmed.match(image_regex)) {
+            this.parse_directive(trimmed);
         } else {
             this.parse_regular_line(line);
         }
@@ -140,8 +144,9 @@ class ArticleParser {
             this.set_author = true;
         } else if(directive === "no embed") {
             this.no_embed = true;
-        } else if (directive.startsWith("image ")) {
-            this.image = directive.substring("image ".length).trim();
+        } else if(directive.match(image_regex)) {
+            const match = unwrap(directive.match(image_regex))[1];
+            this.image = match.trim();
         } else if(directive.startsWith("alias ")) {
             const aliases = directive
                 .substring("alias ".length)

@@ -51,7 +51,7 @@ This is a part of the embed at the bottom, displayed with small font.
 
 ### Image
 ```md
-<!-- image https://xyz.xyz/image.png -->
+![](https://xyz.xyz/image.png)
 ```
 Any embed can contain exactly one image.
 This image is displayed at the bottom of the embed, after any fields.
