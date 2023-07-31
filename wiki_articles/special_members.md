@@ -24,4 +24,4 @@ Everything managed automatically.
 - [destructor](https://en.cppreference.com/w/cpp/language/destructor)
 
 ---
-Red cells in the image are deprecated behaviour
+Red cells in the image are deprecated behavior

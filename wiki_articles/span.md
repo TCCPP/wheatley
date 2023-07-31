@@ -22,7 +22,7 @@ A span with *static extent* can be created from
 ```
 
 
-## Use Case - Avoid Passing Reference to `std::vector` 
+## Use Case - Avoid Passing Reference to `std::vector`
 A span with *dynamic extent* can be created from
 **[std::vector](https://en.cppreference.com/w/cpp/container/vector)**,
 **[std::array](https://en.cppreference.com/w/cpp/container/array)**, etc.
@@ -34,4 +34,3 @@ A span with *dynamic extent* can be created from
 ## See Also
 <:stackoverflow:1074747016644661258>
 [What is a "span" and when should I use one?](https://stackoverflow.com/q/45723819/5740428)
-
