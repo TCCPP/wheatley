@@ -1,6 +1,6 @@
 import * as Discord from "discord.js";
 import { strict as assert } from "assert";
-import { critical_error, get_tag, M, SelfClearingSet } from "../utils.js";
+import { critical_error, fetch_all_threads_archive_count, get_tag, M, SelfClearingSet } from "../utils.js";
 import { colors, is_forum_help_thread, MINUTE } from "../common.js";
 import { decode_snowflake } from "./snowflake.js"; // todo: eliminate decode_snowflake
 import { BotComponent } from "../bot-component.js";
@@ -8,9 +8,11 @@ import { Wheatley } from "../wheatley.js";
 
 // TODO: Take into account thread's inactivity setting
 
-const inactive_timeout = 12 * 60 * MINUTE; // 12 hours for a thread that's seen no activity, mark it stale
+const inactive_timeout = 48 * 60 * MINUTE; // 48 hours for a thread that's seen no activity, mark it stale
+const solved_archive_timeout = 48 * 60 * MINUTE; // after 48 hours hide solved threads
+const stale_rearchive_timeout = 12 * 60 * MINUTE; // after 12 hours hide stale threads
 
-//const cleanup_limit = 400; // how many messages back in the archive to go
+const cleanup_limit = 400; // how many posts back in the archive to go
 
 // if the op says thank you remind them to close the thread after 15 minutes
 const thank_you_timeout = 5 * MINUTE;
@@ -62,25 +64,22 @@ export default class ForumChannels extends BotComponent {
 
     async forum_cleanup() {
         // TODO: Temporarily turned off
-        //M.debug("Running forum cleanup");
-        //// Routinely archive threads
-        //// Ensure no thread has both the solved and open tag?
-        //for(const forum of [ this.wheatley.cpp_help, this.wheatley.c_help ]) {
-        //    const open_tag = get_tag(forum, "Open").id;
-        //    const solved_tag = get_tag(forum, "Solved").id;
-        //    const stale_tag = get_tag(forum, "Stale").id;
-        //    M.info("-------------------------->", get_tag(forum, "Stale"));
-        //    const threads = await fetch_all_threads_archive_count(forum, cleanup_limit);
-        //    M.debug("Cleaning up", threads.size, "threads");
-        //    for(const [ _, thread ] of threads) {
-        //        assert(thread.parentId);
-        //        if(forum_help_channels.has(thread.parentId)) {
-        //            await this.misc_checks(thread, open_tag, solved_tag, stale_tag);
-        //            await this.check_thread_activity(thread, open_tag, solved_tag, stale_tag);
-        //        }
-        //    }
-        //}
-        //M.debug("Finished forum cleanup");
+        M.debug("Running forum cleanup");
+        // Routinely archive threads
+        // Ensure no thread has both the solved and open tag?
+        for(const forum of [ this.wheatley.cpp_help, this.wheatley.c_help ]) {
+            const open_tag = get_tag(forum, "Open").id;
+            const solved_tag = get_tag(forum, "Solved").id;
+            const stale_tag = get_tag(forum, "Stale").id;
+            const threads = await fetch_all_threads_archive_count(forum, cleanup_limit);
+            M.debug("Cleaning up", threads.size, "threads in", forum.name);
+            for(const [ _, thread ] of threads) {
+                assert(thread.parentId && thread.parentId == forum.id);
+                await this.misc_checks(thread, open_tag, solved_tag, stale_tag);
+                await this.check_thread_activity(thread, open_tag, solved_tag, stale_tag);
+            }
+        }
+        M.debug("Finished forum cleanup");
     }
 
     async prompt_close(thread: Discord.ThreadChannel) {
@@ -111,10 +110,11 @@ export default class ForumChannels extends BotComponent {
         const now = Date.now();
         const last_message = decode_snowflake(thread.lastMessageId);
         // if the thread is open has been inactive mark it stale
-        if(thread.appliedTags.includes(open_tag)
-        && !thread.archived
-        && now - last_message >= inactive_timeout) {
-            M.log("Handling inactive channel", thread.id, thread.name, thread.url);
+        if(
+            thread.appliedTags.includes(open_tag)
+            && now - last_message >= inactive_timeout
+        ) {
+            M.log("Marking inactive thread as stale and archiving", thread.id, thread.name, thread.url);
             //await thread.setArchived(true);
             await thread.send({
                 embeds: [
@@ -127,16 +127,30 @@ export default class ForumChannels extends BotComponent {
             await thread.setAppliedTags([stale_tag].concat(thread.appliedTags.filter(
                 t => ![ open_tag, solved_tag ].includes(t)
             )));
+            await thread.setArchived(true, "Automatically archiving: Stale");
+        } else if(
+            thread.appliedTags.includes(stale_tag)
+            && !thread.archived
+            && now - last_message >= stale_rearchive_timeout
+        ) { // Ensure stale threads are archived
+            M.log("Archiving thread", thread.id, thread.name);
+            await thread.setArchived(true, "Automatically archiving: Stale");
+        } else if(
+            thread.appliedTags.includes(solved_tag)
+            && !thread.archived
+            && now - last_message >= solved_archive_timeout
+        ) { // if the thread is solved and isn't being talked about anymore, archive it
+            M.log("Archiving solved thread", thread.id, thread.name, thread.url);
+            await thread.setArchived(true, "Automatically archiving: Solved");
         }
     }
 
     async misc_checks(thread: Discord.ThreadChannel, open_tag: string, solved_tag: string, stale_tag: string) {
         const status_tags = [ open_tag, solved_tag, stale_tag ];
         // Ensure there is exactly one solved/open/stale tag
-        M.debug(thread.appliedTags, status_tags);
-        const solved_open_count = thread.appliedTags.filter(tag => status_tags.includes(tag)).length;
-        if(solved_open_count != 1) {
-            M.log("Setting thread with", solved_open_count, "solved/open/stale tags to have one such tag",
+        const status_tag_count = thread.appliedTags.filter(tag => status_tags.includes(tag)).length;
+        if(status_tag_count != 1) {
+            M.log("Setting thread with", status_tag_count, "solved/open/stale tags to have one such tag",
                   thread.id, thread.name, thread.url);
             const { archived } = thread;
             if(archived) await thread.setArchived(false);

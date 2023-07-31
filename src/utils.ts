@@ -359,7 +359,8 @@ export function get_tag(channel: Discord.ForumChannel, name: string) {
 
 export async function fetch_active_threads(forum: Discord.ForumChannel) {
     const { threads } = await forum.threads.fetchActive();
-    return threads;
+    // Workaround discord api / discord.js bug where fetchActive returns all threads, not just in the forum requested
+    return threads.filter(thread => thread.parentId === forum.id);
 }
 
 export async function fetch_inactive_threads_time_limit(forum: Discord.ForumChannel, soft_limit?: number) {
