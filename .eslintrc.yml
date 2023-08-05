@@ -108,3 +108,5 @@ rules:
     - "error"
   "@typescript-eslint/no-misused-promises":
     - "error"
+  "@typescript-eslint/await-thenable":
+    - "error"
