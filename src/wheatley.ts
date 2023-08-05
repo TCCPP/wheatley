@@ -19,7 +19,7 @@ import { BotComponent } from "./bot-component.js";
 import { BotCommand, BotModalHandler, BotTextBasedCommand, MessageContextMenuCommandBuilder, ModalHandler,
          TextBasedCommand, TextBasedCommandBuilder } from "./command.js";
 
-import { DatabaseInterface } from "./infra/database-interface.js";
+import { WheatleyDatabase, WheatleyDatabaseProxy } from "./infra/database-interface.js";
 import { GuildCommandManager } from "./infra/guild-command-manager.js";
 import { MemberTracker } from "./infra/member-tracker.js";
 
@@ -40,11 +40,31 @@ type text_command_map_target = {
     deletable: boolean;
 };
 
-export type authentication = {
+export type wheatley_auth = {
     id: string;
     guild?: string;
     token: string;
     freestanding?: boolean;
+    mongouser: string; // TODO
+    mongopassword: string; // TODO
+};
+
+export type wheatley_db_info = {
+    id: string;
+    server_suggestions: {
+        last_scanned_timestamp: number;
+    };
+    modmail_id_counter: number;
+    the_button: {
+        button_presses: number;
+        last_reset: number;
+        longest_time_without_reset: number;
+    };
+    starboard: {
+        delete_emojis: string[];
+        ignored_emojis: string[];
+        negative_emojis: string[];
+    };
 };
 
 export class Wheatley extends EventEmitter {
@@ -71,6 +91,8 @@ export class Wheatley extends EventEmitter {
     starboard_channel: Discord.TextChannel;
     staff_action_log_channel: Discord.TextChannel;
 
+    database: WheatleyDatabaseProxy;
+
     link_blacklist: any;
 
     text_commands: Record<string, BotTextBasedCommand<any>> = {};
@@ -91,7 +113,7 @@ export class Wheatley extends EventEmitter {
     // True if freestanding mode is enabled. Defaults to false.
     readonly freestanding: boolean;
 
-    constructor(readonly client: Discord.Client, readonly database: DatabaseInterface, auth: authentication) {
+    constructor(readonly client: Discord.Client, auth: wheatley_auth) {
         super();
 
         this.id = auth.id;
@@ -109,10 +131,12 @@ export class Wheatley extends EventEmitter {
             M.error(error);
         });
 
-        this.setup(auth.token).catch(critical_error);
+        this.setup(auth).catch(critical_error);
     }
 
-    async setup(token: string) {
+    async setup(auth: wheatley_auth) {
+        this.database = await WheatleyDatabase.create(auth);
+
         this.client.on("ready", async () => {
             if (!this.freestanding) {
                 await this.fetch_guild_info();
@@ -143,11 +167,11 @@ export class Wheatley extends EventEmitter {
             }
         }
 
-        await this.guild_command_manager.finalize(token);
+        await this.guild_command_manager.finalize(auth.token);
 
         M.debug("Logging in");
 
-        await this.client.login(token);
+        await this.client.login(auth.token);
     }
 
     async fetch_guild_info() {
@@ -214,13 +238,14 @@ export class Wheatley extends EventEmitter {
     }
 
     destroy() {
-        this.client.destroy();
-        this.text_command_map.destroy();
-        this.deletable_map.destroy();
-        this.tracker.destroy();
+        this.database.close().catch(critical_error);
         for(const component of this.components) {
             component.destroy();
         }
+        this.text_command_map.destroy();
+        this.deletable_map.destroy();
+        this.tracker.destroy();
+        this.client.destroy();
     }
 
     async add_component<T extends BotComponent>(component: { new(w: Wheatley): T; get is_freestanding(): boolean; }) {

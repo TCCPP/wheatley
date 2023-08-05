@@ -20,9 +20,7 @@ import * as Discord from "discord.js";
 
 import { critical_error, init_debugger, M } from "./utils.js";
 
-import { DatabaseInterface } from "./infra/database-interface.js";
-
-import { authentication, Wheatley } from "./wheatley.js";
+import { wheatley_auth, Wheatley } from "./wheatley.js";
 import fs from "fs";
 
 let wheatley: Wheatley;
@@ -78,10 +76,10 @@ async function main() {
     M.debug("Setting up modules");
 
     // reading sync is okay here, we can't do anything in parallel anyway
-    const auth: authentication = JSON.parse(fs.readFileSync("auth.json", { encoding: "utf-8" }));
+    const auth: wheatley_auth = JSON.parse(fs.readFileSync("auth.json", { encoding: "utf-8" }));
 
     try {
-        wheatley = new Wheatley(client, await DatabaseInterface.create(), auth);
+        wheatley = new Wheatley(client, auth);
     } catch(e) {
         critical_error(e);
     }

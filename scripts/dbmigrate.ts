@@ -119,9 +119,11 @@ async function main() {
         // starboard
         await wheatley.updateOne({ id: "main" }, {
             $set: {
-                "negative_emojis": botjson.starboard.negative_emojis,
-                "delete_emojis": botjson.starboard.delete_emojis,
-                "ignored_emojis": botjson.starboard.ignored_emojis
+                starboard: {
+                    negative_emojis: botjson.starboard.negative_emojis,
+                    delete_emojis: botjson.starboard.delete_emojis,
+                    ignored_emojis: botjson.starboard.ignored_emojis
+                }
             }
         });
         const auto_delete_threshold_notifications = db.collection("auto_delete_threshold_notifications");
@@ -131,14 +133,14 @@ async function main() {
             });
         }
         await auto_delete_threshold_notifications.createIndex({ message: 1 }, { unique: true });
-        const starboard = db.collection("starboard");
+        const starboard_entries = db.collection("starboard_entries");
         for(const [ k, v ] of Object.entries(botjson.starboard.starboard)) {
-            await starboard.insertOne({
+            await starboard_entries.insertOne({
                 message: k,
                 starboard_entry: v,
             });
         }
-        await starboard.createIndex({ message: 1 }, { unique: true });
+        await starboard_entries.createIndex({ message: 1 }, { unique: true });
     } catch(e) {
         console.error(e);
     } finally {

@@ -524,3 +524,12 @@ export async function file_exists(path: string) {
         return false;
     }
 }
+
+export type JSONValue =
+    | string
+    | number
+    | boolean
+    | null
+    | undefined
+    | {[x: string]: JSONValue}
+    | Array<JSONValue>;

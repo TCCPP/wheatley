@@ -28,24 +28,25 @@ function create_embed(title: string, msg: string) {
     return embed;
 }
 
-type database_schema = number;
-
 /**
  * Modmail system.
  */
 export default class Modmail extends BotComponent {
     // Spam prevention, user is added to the timeout set when clicking the modmail_continue button,
     readonly timeout_set = new Set<string>();
-    modmail_id_counter = 0;
+    modmail_id_counter = -1;
 
     constructor(wheatley: Wheatley) {
         super(wheatley);
+    }
 
-        if(!this.wheatley.database.has("modmail_id_counter")) {
-            this.wheatley.database.set<database_schema>("modmail_id_counter", this.modmail_id_counter);
+    override async on_ready() {
+        const singleton = await this.wheatley.database.get_bot_singleton();
+        if(!singleton.modmail_id_counter) {
+            await this.wheatley.database.update_bot_singleton({ modmail_id_counter: this.modmail_id_counter });
         } else {
             // load entries
-            this.modmail_id_counter = this.wheatley.database.get<database_schema>("modmail_id_counter");
+            this.modmail_id_counter = singleton.modmail_id_counter;
         }
     }
 
@@ -228,8 +229,7 @@ export default class Modmail extends BotComponent {
     }
 
     async update_db() {
-        this.wheatley.database.set<database_schema>("modmail_id_counter", this.modmail_id_counter);
-        await this.wheatley.database.update();
+        await this.wheatley.database.update_bot_singleton({ modmail_id_counter: this.modmail_id_counter });
     }
 
     async log_action(interaction_member: Discord.GuildMember | Discord.APIInteractionGuildMember | null,

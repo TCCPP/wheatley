@@ -5,15 +5,12 @@ import { MINUTE, TCCPP_ID, colors, is_authorized_admin } from "../common.js";
 import { BotComponent } from "../bot-component.js";
 import { Wheatley } from "../wheatley.js";
 
-type scoreboard_entry = {
+export type buzzword_scoreboard_entry = {
+    user: string;
     tag: string;
     score: number;
     count: number;
 };
-
-type database_schema = {
-    scores: Record<string, scoreboard_entry>;
-}
 
 const ENABLED = false;
 
@@ -171,7 +168,6 @@ const roles = [
  * 2023 April Fool's day event. Bases the skill roles on how many C++ buzzwords people use.
  */
 export default class Buzzwords extends BotComponent {
-    data: database_schema;
     readonly button_message_id = "1069819685786370108";
     button_message: Discord.Message | undefined;
     last_update = {
@@ -185,14 +181,6 @@ export default class Buzzwords extends BotComponent {
 
     constructor(wheatley: Wheatley) {
         super(wheatley);
-        if(!this.wheatley.database.has("buzzword-scoreboard")) {
-            this.data = {
-                scores: {}
-            };
-        } else {
-            this.data = this.wheatley.database.get<database_schema>("buzzword-scoreboard");
-        }
-
         this.slowmode = new SelfClearingSet<string>(MINUTE / 2, MINUTE / 4);
     }
 
@@ -205,20 +193,15 @@ export default class Buzzwords extends BotComponent {
 
     override async on_ready() {
         if(ENABLED) { // eslint-disable-line @typescript-eslint/no-unnecessary-condition
-            await this.update_database();
-            this.timeout = setTimeout(() => {
-                this.update_database().catch(critical_error);
-            }, MINUTE);
+            //await this.update_database();
+            //this.timeout = setTimeout(() => {
+            //    this.update_database().catch(critical_error);
+            //}, MINUTE);
             await this.reflowRoles();
             this.interval = setInterval(() => {
                 this.reflowRoles().catch(critical_error);
             }, 10 * MINUTE);
         }
-    }
-
-    async update_database() {
-        this.wheatley.database.set<database_schema>("buzzword-scoreboard", this.data);
-        await this.wheatley.database.update();
     }
 
     static quantile(sorted: number[], q: number) { // from so, gets the job done
@@ -235,14 +218,16 @@ export default class Buzzwords extends BotComponent {
     async reflowRoles() {
         M.log("Reflowing roles");
         const members = await this.wheatley.TCCPP.members.fetch();
-        const scores = Object.entries(this.data.scores).map(entry => entry[1].score).sort((a, b) => a - b);
+        const entries = await this.wheatley.database.buzzword_scoreboard.find().toArray();
+        const scores = entries.map(entry => entry.score).sort((a, b) => a - b);
         const p90 = Buzzwords.quantile(scores, .9);
         const p80 = Buzzwords.quantile(scores, .7);
         const p70 = Buzzwords.quantile(scores, .5);
         const p60 = Buzzwords.quantile(scores, .3);
         members.map(async (member, _) => {
-            if(member.id in this.data.scores) {
-                const score = this.data.scores[member.id].score;
+            const member_entry = await this.wheatley.database.buzzword_scoreboard.findOne({ user: member.id });
+            if(member_entry) {
+                const score = member_entry.score;
                 const current_role_raw = [...member.roles.cache.filter(r => roles.includes(r.id)).keys()];
                 const current_role = current_role_raw.length > 0 ? current_role_raw[0] : null;
                 let new_role: string;
@@ -267,13 +252,15 @@ export default class Buzzwords extends BotComponent {
 
     async updateRolesSingle(member: Discord.GuildMember) {
         if(ENABLED) { // eslint-disable-line @typescript-eslint/no-unnecessary-condition
-            const scores = Object.entries(this.data.scores).map(entry => entry[1].score).sort((a, b) => a - b);
+            const entries = await this.wheatley.database.buzzword_scoreboard.find().toArray();
+            const scores = entries.map(entry => entry.score).sort((a, b) => a - b);
             const p90 = Buzzwords.quantile(scores, .9);
             const p80 = Buzzwords.quantile(scores, .7);
             const p70 = Buzzwords.quantile(scores, .5);
             const p60 = Buzzwords.quantile(scores, .3);
-            if(member.id in this.data.scores) {
-                const score = this.data.scores[member.id].score;
+            const member_entry = await this.wheatley.database.buzzword_scoreboard.findOne({ user: member.id });
+            if(member_entry) {
+                const score = member_entry.score;
                 const current_role_raw = [...member.roles.cache.filter(r => roles.includes(r.id)).keys()];
                 const current_role = current_role_raw.length > 0 ? current_role_raw[0] : null;
                 let new_role: string;
@@ -296,30 +283,32 @@ export default class Buzzwords extends BotComponent {
         }
     }
 
-    give_points(id: string, tag: string, points: number) {
-        if(!(id in this.data.scores)) {
-            this.data.scores[id] = {
+    async give_points(id: string, tag: string, points: number) {
+        await this.wheatley.database.buzzword_scoreboard.updateOne({ user: id }, {
+            $set: {
+                user: id,
                 tag,
+            },
+            $inc: {
                 score: points,
-                count: 0
-            };
-        } else {
-            this.data.scores[id].score += points;
-            this.data.scores[id].count++;
-        }
+                count: 1,
+            }
+        }, { upsert: true });
     }
 
-    set_points(id: string, tag: string, points: number) {
-        if(!(id in this.data.scores)) {
-            this.data.scores[id] = {
+    async set_points(id: string, tag: string, points: number) {
+        await this.wheatley.database.buzzword_scoreboard.updateOne({ user: id }, {
+            $set: {
+                user: id,
                 tag,
+            },
+            $max: {
                 score: points,
-                count: 0
-            };
-        } else {
-            this.data.scores[id].score = points;
-            this.data.scores[id].count++;
-        }
+            },
+            $inc: {
+                count: 1,
+            }
+        }, { upsert: true });
     }
 
     override async on_message_create(message: Discord.Message) {
@@ -351,7 +340,7 @@ export default class Buzzwords extends BotComponent {
                     });
                     const member = await this.wheatley.TCCPP.members.fetch(id);
                     const tag = member.user.tag;
-                    this.give_points(id, tag, derail_points);
+                    await this.give_points(id, tag, derail_points);
                     await this.updateRolesSingle(member);
                 }
                 return;
@@ -368,10 +357,10 @@ export default class Buzzwords extends BotComponent {
                         }
                     })();
                     const tag = member.user.tag;
-                    this.set_points(id, tag, parseInt(amount));
+                    await this.set_points(id, tag, parseInt(amount));
                     if(member instanceof Discord.GuildMember) await this.updateRolesSingle(member);
                     await message.reply("Done");
-                    await this.update_database();
+                    //await this.update_database();
                 } else {
                     await message.reply({
                         embeds: [
@@ -386,11 +375,12 @@ export default class Buzzwords extends BotComponent {
                 }
             }
             if(message.content.trim() == "!clearbuzzscores" && message.author.id == "199943082441965577") {
-                this.data.scores = {};
+                await this.wheatley.database.buzzword_scoreboard.deleteMany({});
                 return;
             }
             if(message.content.trim() == "!testbuzzquartile" && message.author.id == "199943082441965577") {
-                const scores = Object.entries(this.data.scores).map(entry => entry[1].score).sort((a, b) => a - b);
+                const scoreboard_entries = await this.wheatley.database.buzzword_scoreboard.find().toArray();
+                const scores = scoreboard_entries.map(entry => entry.score).sort((a, b) => a - b);
                 const p90 = Buzzwords.quantile(scores, .9);
                 const p80 = Buzzwords.quantile(scores, .7);
                 const p70 = Buzzwords.quantile(scores, .5);
@@ -410,14 +400,15 @@ export default class Buzzwords extends BotComponent {
             }
         }
         if(message.content.trim() == "!scoreboard") {
-            const entries = Object.entries(this.data.scores).sort((a, b) => b[1].score - a[1].score);
+            const scoreboard_entries = await this.wheatley.database.buzzword_scoreboard.find().toArray();
+            const entries = scoreboard_entries.sort((a, b) => b.score - a.score);
             const scores = entries.slice(0, 15);
             const embed = new Discord.EmbedBuilder()
                 .setTitle("Scoreboard");
             let description = "";
-            for(const [ key, value ] of scores) {
-                const tag = value.tag == "" ? `<@${key}>` : value.tag;
-                description += `${tag}: ${round(value.score, 1)}\n`;
+            for(const entry of scores) {
+                const tag = entry.tag == "" ? `<@${entry.user}>` : entry.tag;
+                description += `${tag}: ${round(entry.score, 1)}\n`;
             }
             embed.setDescription(description);
             await message.reply({
@@ -426,14 +417,15 @@ export default class Buzzwords extends BotComponent {
             return;
         }
         if(message.content.trim() == "!bottom") {
-            const entries = Object.entries(this.data.scores).sort((a, b) => a[1].score - b[1].score);
+            const scoreboard_entries = await this.wheatley.database.buzzword_scoreboard.find().toArray();
+            const entries = scoreboard_entries.sort((a, b) => a.score - b.score);
             const scores = entries.slice(0, 15);
             const embed = new Discord.EmbedBuilder()
                 .setTitle("Scoreboard");
             let description = "";
-            for(const [ key, value ] of scores) {
-                const tag = value.tag == "" ? `<@${key}>` : value.tag;
-                description += `${tag}: ${round(value.score, 1)}\n`;
+            for(const entry of scores) {
+                const tag = entry.tag == "" ? `<@${entry.user}>` : entry.tag;
+                description += `${tag}: ${round(entry.score, 1)}\n`;
             }
             embed.setDescription(description);
             await message.reply({
@@ -442,12 +434,12 @@ export default class Buzzwords extends BotComponent {
             return;
         }
         if(message.content.trim() == "!score") {
-            const score = message.author.id in this.data.scores ? this.data.scores[message.author.id].score : 0;
+            const member_entry = await this.wheatley.database.buzzword_scoreboard.findOne({ user: message.author.id });
             await message.reply({
                 embeds: [
                     new Discord.EmbedBuilder()
                         .setColor(colors.color)
-                        .setDescription(`Score: ${score}`)
+                        .setDescription(`Score: ${member_entry ? member_entry.score : 0}`)
                 ]
             });
         }
@@ -475,7 +467,7 @@ export default class Buzzwords extends BotComponent {
                                 .setDescription(`You've earned ${Math.round(total_score * 10) / 10} points!`)
                         ]
                     });
-                    this.give_points(message.author.id, message.author.tag, total_score);
+                    await this.give_points(message.author.id, message.author.tag, total_score);
                     await this.updateRolesSingle(unwrap(message.member));
                     this.slowmode.insert(message.author.id);
                 }
