@@ -9,14 +9,10 @@ import { TextBasedCommand, TextBasedCommandBuilder } from "../command.js";
 const green = 0x31ea6c;
 const red = 0xed2d2d;
 
-type leaderboard_entry = number;
-
-type leaderboard_schema = {
-    // map of user id -> leaderboard_entry
-    [key: string]: leaderboard_entry
-};
-
-const LEADERBOARD_ENTRIES = 20;
+export type roulette_leaderboard_entry = {
+    user: string;
+    highscore: number;
+}
 
 /**
  * "Russian roulette" game where users risk timing themselves out.
@@ -28,14 +24,6 @@ export default class Roulette extends BotComponent {
 
     constructor(wheatley: Wheatley) {
         super(wheatley);
-
-        if(!this.wheatley.database.has("roulette_leaderboard")) {
-            this.wheatley.database.set<leaderboard_schema>("roulette_leaderboard", {
-                /*
-                 * map of user id -> leaderboard_entry
-                 */
-            });
-        }
 
         this.add_command(
             new TextBasedCommandBuilder("roulette")
@@ -78,24 +66,23 @@ export default class Roulette extends BotComponent {
                           + ` <a:saber:851241060553326652>.\nID: ${author.id}`);
     }
 
-    async update_scoreboard(user_id: string) {
+    async update_score(user_id: string) {
         // todo: not efficient at all
         const score = this.streaks.get(user_id)!;
-        const db = this.wheatley.database.get<leaderboard_schema>("roulette_leaderboard");
+        const user_entry = await this.wheatley.database.roulette_leaderboard.findOne({ user: user_id });
         // add / update entry
-        if(!(user_id in db)) {
-            db[user_id] = score;
+        if(!user_entry) {
+            await this.wheatley.database.roulette_leaderboard.insertOne({
+                user: user_id,
+                highscore: score
+            });
         } else {
-            if(score > db[user_id]) {
-                db[user_id] = score;
-            }
+            await this.wheatley.database.roulette_leaderboard.updateOne({ user: user_id }, {
+                $max: {
+                    highscore: score
+                }
+            });
         }
-        // trim
-        const scores = Object.values(db).sort((a, b) => b - a);
-        const cutoff = scores[scores.length < LEADERBOARD_ENTRIES ? scores.length - 1 : LEADERBOARD_ENTRIES - 1];
-        const new_db = Object.fromEntries(Object.entries(db).filter(pair => pair[1] >= cutoff));
-        this.wheatley.database.set<leaderboard_schema>("roulette_leaderboard", new_db);
-        await this.wheatley.database.update();
     }
 
     async roulette(command: TextBasedCommand) {
@@ -109,7 +96,7 @@ export default class Roulette extends BotComponent {
             if(roll == 0) {
                 let ok = true;
                 this.streaks.set(command.user.id, 0);
-                await this.update_scoreboard(command.user.id); // TODO: I forget why this is here
+                await this.update_score(command.user.id); // TODO: I forget why this is here
                 try {
                     await (await command.get_member()).timeout(30 * MINUTE, "Bang");
                 } catch(error) {
@@ -136,7 +123,7 @@ export default class Roulette extends BotComponent {
                 this.streaks.set(command.user.id, (this.streaks.get(command.user.id) ?? 0) + 1);
                 await command.reply(m);
                 await this.wheatley.staff_member_log_channel.send(m);
-                await this.update_scoreboard(command.user.id);
+                await this.update_score(command.user.id);
             }
         } else {
             await command.reply("Warning: This is __Russian Roulette__. Losing will result in a 30 minute timeout."
@@ -150,10 +137,12 @@ export default class Roulette extends BotComponent {
             .setColor(green)
             .setTitle("Roulette Leaderboard");
         let description = "";
-        for(const [ key, value ] of
-            Object.entries(this.wheatley.database.get<leaderboard_schema>("roulette_leaderboard"))
-                .sort((a, b) => b[1] - a[1])) {
-            description += `<@${key}>: ${value} roll${value == 1 ? "" : "s"} before death\n`;
+        for(const { user, highscore } of (
+            (
+                await this.wheatley.database.roulette_leaderboard.find().toArray()
+            ) as unknown as roulette_leaderboard_entry[]
+        ).sort((a, b) => b.highscore - a.highscore)) {
+            description += `<@${user}>: ${highscore} roll${highscore == 1 ? "" : "s"} before death\n`;
         }
         embed.setDescription(description);
         await command.reply({ embeds: [embed] });
