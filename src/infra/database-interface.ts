@@ -8,8 +8,8 @@ import { roulette_leaderboard_entry } from "../components/roulette.js";
 import { buzzword_scoreboard_entry } from "../components/buzzwords.js";
 import { auto_delete_threshold_notifications, starboard_entry } from "../components/starboard.js";
 import { button_scoreboard_entry } from "../components/the-button.js";
-import { link_blacklist_entry } from "../wheatley-private/components/link-blacklist.js";
 import { suggestion_entry } from "../components/server-suggestion-tracker.js";
+import { link_blacklist_entry } from "../private-types.js";
 
 export class WheatleyDatabase {
     private mutex = new Mutex();
