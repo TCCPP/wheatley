@@ -9,7 +9,9 @@ export type button_scoreboard_entry = {
     user: string,
     tag: string,
     score: number,
+    presses: number,
     last_press: number
+    legacy_score: number,
 };
 
 function dissectDelta(delta: number) {
@@ -26,7 +28,15 @@ function fmt(n: number, unit: string, p = 0) {
     return `${n} ${unit}${n != 1 ? "s" : ""}`;
 }
 
-const F = (x: number) => 2/3 * x + 1/3 * Math.pow(x, 2);
+// points, as a function of milliseconds since the last press
+function F(ms: number) {
+    const minutes = ms / 1000 / 60;
+    let sum = 0;
+    for(let i = 0; i < minutes; i++) {
+        sum += 1440 / (1440 - i);
+    }
+    return sum;
+}
 
 const DAY = 24 * 60 * MINUTE;
 
@@ -60,8 +70,8 @@ export default class TheButton extends BotComponent {
         if(this.interval) clearInterval(this.interval);
     }
 
-    make_message(delta: number): Discord.MessageEditOptions & Discord.MessageCreateOptions {
-        const [ hours, minutes, seconds ] = dissectDelta(delta);
+    make_message(time_until_doomsday: number): Discord.MessageEditOptions & Discord.MessageCreateOptions {
+        const [ hours, minutes, seconds ] = dissectDelta(time_until_doomsday);
         const row = new Discord.ActionRowBuilder<Discord.MessageActionRowComponentBuilder>()
             .addComponents(
                 new Discord.ButtonBuilder()
@@ -77,8 +87,8 @@ export default class TheButton extends BotComponent {
                     .setLabel("Stats")
                     .setStyle(Discord.ButtonStyle.Secondary)
             );
-        const points = round(F((DAY - delta) / DAY) * DAY / 1000 / 60, 1);
-        const points_next = round(F((DAY - (delta - 1000 * 60)) / DAY) * DAY / 1000 / 60, 1);
+        const points = round(F(DAY - time_until_doomsday), 1);
+        const points_next = round(F(DAY - time_until_doomsday + MINUTE), 1);
         return {
             content: "",
             embeds: [
@@ -95,31 +105,26 @@ export default class TheButton extends BotComponent {
         };
     }
 
-    time_until_doomsday() {
-        const doomsday = this.last_reset + DAY;
-        const delta = doomsday - Date.now();
-        return delta;
-    }
-
     async update_message() {
-        const delta = this.time_until_doomsday();
+        const time_since_last_reset = Date.now() - this.last_reset;
+        const time_until_doomsday = Math.max(0, DAY - time_since_last_reset);
         if(!this.button_message) {
-            assert(delta <= 0);
+            assert(time_until_doomsday <= 0);
             return;
         }
-        if(delta <= 0) {
+        if(time_until_doomsday <= 0) {
             // self destruct
             await this.button_message.delete();
             this.button_message = undefined;
             return;
         }
-        const [ _hours, _minutes, seconds ] = dissectDelta(delta);
+        const [ _hours, _minutes, seconds ] = dissectDelta(time_until_doomsday);
         this.last_update = {
             epoch: this.last_reset,
             timestamp: Date.now(),
             remaining_seconds: seconds
         };
-        await this.button_message.edit(this.make_message(delta));
+        await this.button_message.edit(this.make_message(time_until_doomsday));
     }
 
     override async on_ready() {
@@ -146,7 +151,9 @@ export default class TheButton extends BotComponent {
         if(message.author.bot) return; // Ignore bots
         if(message.content == "!wsetupthebutton"
         && is_authorized_admin(message.member!)) {
-            await message.channel.send(this.make_message(this.time_until_doomsday()));
+            const time_since_last_reset = Date.now() - this.last_reset;
+            const time_until_doomsday = Math.max(0, DAY - time_since_last_reset);
+            await message.channel.send(this.make_message(time_until_doomsday));
             await message.delete();
         }
         if(message.content == "!wresetthebutton"
@@ -195,13 +202,13 @@ export default class TheButton extends BotComponent {
                 });
                 return;
             }
-            const delta = this.time_until_doomsday();
+            const time_since_last_reset = Date.now() - this.last_reset;
+            const time_until_doomsday = Math.max(0, DAY - time_since_last_reset);
             this.last_reset = Date.now() - 1;
-            M.debug(`The Button was reset with ${Math.round(delta)} ms until doomsday`,
+            M.debug(`The Button was reset with ${Math.round(time_until_doomsday)} ms until doomsday`,
                     [ interaction.user.id, interaction.user.tag ]);
             await this.update_message();
-            const time_since_reset = DAY - delta;
-            const points = F(time_since_reset / DAY) * DAY / 1000 / 60;
+            const points = F(time_since_last_reset);
             const res = unwrap(
                 (await this.wheatley.database.button_scoreboard.findOneAndUpdate(
                     {
@@ -216,7 +223,8 @@ export default class TheButton extends BotComponent {
                             last_press: Date.now()
                         },
                         $inc: {
-                            score: points
+                            score: points,
+                            presses: 1
                         },
                     },
                     {
@@ -225,7 +233,7 @@ export default class TheButton extends BotComponent {
                     }
                 )).value
             );
-            this.longest_time_without_reset = Math.max(this.longest_time_without_reset, time_since_reset);
+            this.longest_time_without_reset = Math.max(this.longest_time_without_reset, time_since_last_reset);
             this.button_presses++;
             const scoreboard_index = await this.wheatley.database.button_scoreboard.countDocuments(
                 { score: { "$gt" : res.score } }
