@@ -14,6 +14,8 @@ export type roulette_leaderboard_entry = {
     highscore: number;
 }
 
+const LEADERBOARD_ENTRIES = 20;
+
 /**
  * "Russian roulette" game where users risk timing themselves out.
  */
@@ -69,20 +71,15 @@ export default class Roulette extends BotComponent {
     async update_score(user_id: string) {
         // todo: not efficient at all
         const score = this.streaks.get(user_id)!;
-        const user_entry = await this.wheatley.database.roulette_leaderboard.findOne({ user: user_id });
         // add / update entry
-        if(!user_entry) {
-            await this.wheatley.database.roulette_leaderboard.insertOne({
-                user: user_id,
+        await this.wheatley.database.roulette_leaderboard.updateOne({ user: user_id }, {
+            $setOnInsert: {
+                user: user_id
+            },
+            $max: {
                 highscore: score
-            });
-        } else {
-            await this.wheatley.database.roulette_leaderboard.updateOne({ user: user_id }, {
-                $max: {
-                    highscore: score
-                }
-            });
-        }
+            }
+        }, { upsert: true });
     }
 
     async roulette(command: TextBasedCommand) {
@@ -137,11 +134,12 @@ export default class Roulette extends BotComponent {
             .setColor(green)
             .setTitle("Roulette Leaderboard");
         let description = "";
-        for(const { user, highscore } of (
-            (
-                await this.wheatley.database.roulette_leaderboard.find().toArray()
-            ) as unknown as roulette_leaderboard_entry[]
-        ).sort((a, b) => b.highscore - a.highscore)) {
+        for(const { user, highscore } of await this.wheatley.database.roulette_leaderboard.aggregate(
+            [
+                { $sort: { highscore: -1 } },
+                { $limit: LEADERBOARD_ENTRIES }
+            ]).toArray() as unknown as roulette_leaderboard_entry[]
+        ) {
             description += `<@${user}>: ${highscore} roll${highscore == 1 ? "" : "s"} before death\n`;
         }
         embed.setDescription(description);
