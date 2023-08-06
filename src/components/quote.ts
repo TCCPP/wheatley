@@ -17,16 +17,11 @@ import { TextBasedCommand, TextBasedCommandBuilder } from "../command.js";
 // - and maybe more and I'm sure they'll use others in the future
 // We'll just match anything containing `discord` followed by /channels/id/id/id
 const raw_url_re = /https:\/\/(.*discord.*)\/channels\/(\d+)\/(\d+)\/(\d+)/;
-const known_domains = new Set([
-    "discord.com",
-    "ptb.discord.com",
-    "canary.discord.com",
-    "discordapp.com",
-]);
+const known_domains = new Set(["discord.com", "ptb.discord.com", "canary.discord.com", "discordapp.com"]);
 export const url_re = new RegExp(`^${raw_url_re.source}$`, "i");
 const implicit_quote_re = new RegExp(`\\[${raw_url_re.source}(b?)\\]`, "gi");
 
-const color = 0x7E78FE; //0xA931FF;
+const color = 0x7e78fe; //0xA931FF;
 
 type QuoteDescriptor = {
     domain: string;
@@ -37,7 +32,7 @@ type QuoteDescriptor = {
 
 // TODO: Redundant with server_suggestion_tracker
 async function get_display_name(thing: Discord.Message | Discord.User, wheatley: Wheatley): Promise<string> {
-    if(thing instanceof Discord.User) {
+    if (thing instanceof Discord.User) {
         const user = thing;
         try {
             return (await wheatley.TCCPP.members.fetch(user.id)).displayName;
@@ -45,9 +40,9 @@ async function get_display_name(thing: Discord.Message | Discord.User, wheatley:
             // user could potentially not be in the server
             return user.tag;
         }
-    } else if(thing instanceof Discord.Message) {
+    } else if (thing instanceof Discord.Message) {
         const message = thing;
-        if(message.member == null) {
+        if (message.member == null) {
             return get_display_name(message.author, wheatley);
         } else {
             return message.member.displayName;
@@ -66,10 +61,10 @@ export async function make_quote_embeds(
     requested_by: Discord.GuildMember | undefined,
     wheatley: Wheatley,
     safe_link: boolean,
-    template = "\n\nFrom <##> [[Jump to message]]($$)"
+    template = "\n\nFrom <##> [[Jump to message]]($$)",
 ): Promise<{
-    embeds: (Discord.EmbedBuilder | Discord.Embed)[],
-    files?: Discord.AttachmentPayload[]
+    embeds: (Discord.EmbedBuilder | Discord.Embed)[];
+    files?: Discord.AttachmentPayload[];
 }> {
     assert(messages.length >= 1);
     const head = messages[0];
@@ -79,88 +74,102 @@ export async function make_quote_embeds(
         .setColor(color)
         .setAuthor({
             name: `${await get_display_name(head, wheatley)}`,
-            iconURL: head.member?.avatarURL() ?? head.author.displayAvatarURL()
+            iconURL: head.member?.avatarURL() ?? head.author.displayAvatarURL(),
         })
-        .setDescription(contents + template_string + (
-            safe_link ? "" : " ⚠️ Unexpected domain, be careful clicking this link"
-        ))
+        .setDescription(
+            contents + template_string + (safe_link ? "" : " ⚠️ Unexpected domain, be careful clicking this link"),
+        )
         .setTimestamp(head.createdAt);
-    if(requested_by) {
+    if (requested_by) {
         embed.setFooter({
             text: `Quoted by ${requested_by.displayName}`,
-            iconURL: requested_by.user.displayAvatarURL()
+            iconURL: requested_by.user.displayAvatarURL(),
         });
     }
     type MediaDescriptor = {
         type: "image" | "video";
         url: string;
     };
-    const media: MediaDescriptor[] = messages.map(message => [
-        ...message.attachments.filter(a => a.contentType?.indexOf("image") == 0).map(a => ({
-            type: "image",
-            url: a.url,
-        })),
-        ...message.attachments.filter(a => a.contentType?.indexOf("video") == 0).map(a => ({
-            type: "video",
-            url: a.url,
-            additional_data: {
-                width: a.width,
-                height: a.height,
-            }
-        })),
-        ...message.embeds.filter(is_media_link_embed).map(e => {
-            if(e.image || e.thumbnail) {
-                // Webp can be thumbnail only, no image. Very weird.
-                return {
-                    type: "image",
-                    url: unwrap(unwrap(e.image || e.thumbnail).url)
-                };
-            } else if(e.video) {
-                return {
-                    type: "video",
-                    url: unwrap(e.video.url)
-                };
-            } else {
-                assert(false);
-            }
-        })
-    ] as MediaDescriptor[]).flat();
+    const media: MediaDescriptor[] = messages
+        .map(
+            message =>
+                [
+                    ...message.attachments
+                        .filter(a => a.contentType?.indexOf("image") == 0)
+                        .map(a => ({
+                            type: "image",
+                            url: a.url,
+                        })),
+                    ...message.attachments
+                        .filter(a => a.contentType?.indexOf("video") == 0)
+                        .map(a => ({
+                            type: "video",
+                            url: a.url,
+                            additional_data: {
+                                width: a.width,
+                                height: a.height,
+                            },
+                        })),
+                    ...message.embeds.filter(is_media_link_embed).map(e => {
+                        if (e.image || e.thumbnail) {
+                            // Webp can be thumbnail only, no image. Very weird.
+                            return {
+                                type: "image",
+                                url: unwrap(unwrap(e.image || e.thumbnail).url),
+                            };
+                        } else if (e.video) {
+                            return {
+                                type: "video",
+                                url: unwrap(e.video.url),
+                            };
+                        } else {
+                            assert(false);
+                        }
+                    }),
+                ] as MediaDescriptor[],
+        )
+        .flat();
     const other_embeds = messages.map(message => message.embeds.filter(e => !is_media_link_embed(e))).flat();
     const media_embeds: Discord.EmbedBuilder[] = [];
     const attachments: Discord.AttachmentPayload[] = [];
-    const other_attachments: Discord.AttachmentPayload[] = messages.map(message => [
-        ...message.attachments
-            .filter(a => !(a.contentType?.indexOf("image") == 0 || a.contentType?.indexOf("video") == 0))
-            .map(a => ({
-                attachment: a.url,
-                name: filename(a.url)
-            }))
-    ]).flat();
+    const other_attachments: Discord.AttachmentPayload[] = messages
+        .map(message => [
+            ...message.attachments
+                .filter(a => !(a.contentType?.indexOf("image") == 0 || a.contentType?.indexOf("video") == 0))
+                .map(a => ({
+                    attachment: a.url,
+                    name: filename(a.url),
+                })),
+        ])
+        .flat();
     let set_primary_image = false;
-    if(media.length > 0) {
-        for(const medium of media) {
-            if(medium.type == "image") {
-                if(!set_primary_image) {
+    if (media.length > 0) {
+        for (const medium of media) {
+            if (medium.type == "image") {
+                if (!set_primary_image) {
                     embed.setImage(medium.url);
                     set_primary_image = true;
                 } else {
-                    media_embeds.push(new Discord.EmbedBuilder({
-                        image: {
-                            url: medium.url
-                        }
-                    }));
+                    media_embeds.push(
+                        new Discord.EmbedBuilder({
+                            image: {
+                                url: medium.url,
+                            },
+                        }),
+                    );
                 }
-            } else { // video
+            } else {
+                // video
                 attachments.push({
                     attachment: medium.url,
-                    name: filename(medium.url)
+                    name: filename(medium.url),
                 });
             }
         }
     }
     return {
-        embeds: [ embed, ...media_embeds, ...other_embeds ],
-        files: attachments.length + other_attachments.length == 0 ? undefined : [ ...attachments, ...other_attachments ]
+        embeds: [embed, ...media_embeds, ...other_embeds],
+        files: attachments.length + other_attachments.length == 0 ? undefined : [...attachments, ...other_attachments],
     };
 }
 
@@ -172,75 +181,78 @@ export default class Quote extends BotComponent {
         super(wheatley);
 
         this.add_command(
-            new TextBasedCommandBuilder([ "quote", "quoteb" ])
-                .set_description([ "Quote a message", "Quote a block of messages" ])
+            new TextBasedCommandBuilder(["quote", "quoteb"])
+                .set_description(["Quote a message", "Quote a block of messages"])
                 .add_string_option({
                     title: "url",
                     description: "url",
-                    required: true
+                    required: true,
                 })
-                .set_handler(this.quote.bind(this))
+                .set_handler(this.quote.bind(this)),
         );
     }
 
     async quote(command: TextBasedCommand, url: string) {
         const match = url.trim().match(url_re);
-        if(match != null) {
+        if (match != null) {
             M.log("Received quote command", command.user.tag, command.user.id, url, command.get_or_forge_url());
             assert(match.length == 5);
-            const [ domain, guild_id, channel_id, message_id ] = match.slice(1);
-            if(guild_id == TCCPP_ID) {
-                await this.do_quote(command, [{
-                    domain,
-                    channel_id,
-                    message_id,
-                    block: command.name == "quoteb"
-                }]);
+            const [domain, guild_id, channel_id, message_id] = match.slice(1);
+            if (guild_id == TCCPP_ID) {
+                await this.do_quote(command, [
+                    {
+                        domain,
+                        channel_id,
+                        message_id,
+                        block: command.name == "quoteb",
+                    },
+                ]);
             } else {
                 await command.reply({
                     embeds: [
                         new Discord.EmbedBuilder()
                             .setDescription("Error: Can only quote from TCCPP")
-                            .setColor(colors.red)
+                            .setColor(colors.red),
                     ],
-                    ephemeral_if_possible: true
+                    ephemeral_if_possible: true,
                 });
             }
         } else {
             await command.reply({
                 embeds: [
                     new Discord.EmbedBuilder()
-                        .setDescription("Usage: `!quote <url>`\n"
-                                      + "`!quoteb` can be used to quote a continuous block of messages")
-                        .setColor(colors.red)
+                        .setDescription(
+                            "Usage: `!quote <url>`\n" + "`!quoteb` can be used to quote a continuous block of messages",
+                        )
+                        .setColor(colors.red),
                 ],
-                ephemeral_if_possible: true
+                ephemeral_if_possible: true,
             });
         }
     }
 
     override async on_message_create(message: Discord.Message) {
-        if(message.author.id == this.wheatley.client.user!.id) return; // Ignore self
-        if(message.author.bot) return; // Ignore bots
-        if(message.guildId != TCCPP_ID) return; // Ignore messages outside TCCPP (e.g. dm's)
-        if(message.content.includes("[https://")) {
+        if (message.author.id == this.wheatley.client.user!.id) return; // Ignore self
+        if (message.author.bot) return; // Ignore bots
+        if (message.guildId != TCCPP_ID) return; // Ignore messages outside TCCPP (e.g. dm's)
+        if (message.content.includes("[https://")) {
             // if the message might contain a link, look at it
             const quote_descriptors = [...message.content.matchAll(implicit_quote_re)]
-                .filter(([ _, guild_id ]) => guild_id == TCCPP_ID)
+                .filter(([_, guild_id]) => guild_id == TCCPP_ID)
                 .map(arr => arr.slice(2))
-                .map(([ domain, channel_id, message_id, block_flag ]) => ({
+                .map(([domain, channel_id, message_id, block_flag]) => ({
                     domain,
                     channel_id,
                     message_id,
-                    block: block_flag == "b"
+                    block: block_flag == "b",
                 }));
-            if(quote_descriptors.length >= 1) {
+            if (quote_descriptors.length >= 1) {
                 M.log(
                     "Implicit quote request",
                     message.author.tag,
                     message.author.id,
                     ...quote_descriptors.map(d => `${d.channel_id}/${d.message_id}` + (d.block ? " block" : "")),
-                    message.url
+                    message.url,
                 );
                 const command = new TextBasedCommand("quote", message, this.wheatley);
                 await this.do_quote(command, quote_descriptors);
@@ -255,35 +267,44 @@ export default class Quote extends BotComponent {
     async do_quote(command: TextBasedCommand, messages: QuoteDescriptor[]) {
         const embeds: (Discord.EmbedBuilder | Discord.Embed)[] = [];
         const files: Discord.AttachmentPayload[] = [];
-        for(const { domain, channel_id, message_id, block } of messages) {
+        for (const { domain, channel_id, message_id, block } of messages) {
             const channel = await this.wheatley.TCCPP.channels.fetch(channel_id);
-            if(channel instanceof Discord.TextChannel
-            || channel instanceof Discord.ThreadChannel
-            || channel instanceof Discord.NewsChannel) {
+            if (
+                channel instanceof Discord.TextChannel ||
+                channel instanceof Discord.ThreadChannel ||
+                channel instanceof Discord.NewsChannel
+            ) {
                 const member = await command.get_member();
                 const permissions = [
                     channel.permissionsFor(member).has(Discord.PermissionsBitField.Flags.ViewChannel),
                     channel.permissionsFor(member).has(Discord.PermissionsBitField.Flags.ReadMessageHistory),
                 ];
-                if(!permissions.every(b => b)) {
+                if (!permissions.every(b => b)) {
                     embeds.push(
                         new Discord.EmbedBuilder()
                             .setColor(colors.red)
-                            .setDescription("Error: You don't have permissions for that channel")
+                            .setDescription("Error: You don't have permissions for that channel"),
                     );
                     await this.wheatley.zelis.send("quote exploit attempt");
                     continue;
                 }
                 let messages: Discord.Message[] = [];
-                if(block) {
-                    const fetched_messages = (await channel.messages.fetch({
-                        after: forge_snowflake(decode_snowflake(message_id) - 1),
-                        limit: 50
-                    })).map(m => m).reverse();
+                if (block) {
+                    const fetched_messages = (
+                        await channel.messages.fetch({
+                            after: forge_snowflake(decode_snowflake(message_id) - 1),
+                            limit: 50,
+                        })
+                    )
+                        .map(m => m)
+                        .reverse();
                     const start_time = fetched_messages.length > 0 ? fetched_messages[0].createdTimestamp : undefined;
-                    const end = index_of_first_not_satisfying(fetched_messages,
-                                                              m => m.author.id == fetched_messages[0].author.id
-                                                                   && m.createdTimestamp - start_time! <= 60 * MINUTE);
+                    const end = index_of_first_not_satisfying(
+                        fetched_messages,
+                        m =>
+                            m.author.id == fetched_messages[0].author.id &&
+                            m.createdTimestamp - start_time! <= 60 * MINUTE,
+                    );
                     messages = fetched_messages.slice(0, end == -1 ? fetched_messages.length : end);
                 } else {
                     const quote_message = await channel.messages.fetch(message_id);
@@ -294,23 +315,21 @@ export default class Quote extends BotComponent {
                     messages,
                     member,
                     this.wheatley,
-                    known_domains.has(domain)
+                    known_domains.has(domain),
                 );
                 embeds.push(...quote_embeds.embeds);
-                if(quote_embeds.files) files.push(...quote_embeds.files);
+                if (quote_embeds.files) files.push(...quote_embeds.files);
             } else {
                 embeds.push(
-                    new Discord.EmbedBuilder()
-                        .setColor(colors.red)
-                        .setDescription("Error: Channel not a text channel")
+                    new Discord.EmbedBuilder().setColor(colors.red).setDescription("Error: Channel not a text channel"),
                 );
                 critical_error("Error: Channel not a text channel");
             }
         }
-        if(embeds.length > 0) {
+        if (embeds.length > 0) {
             await command.reply({
                 embeds: embeds,
-                files: files.length == 0 ? undefined : files
+                files: files.length == 0 ? undefined : files,
             });
             // log
             // TODO: Can probably improve how this is done. Figure out later.

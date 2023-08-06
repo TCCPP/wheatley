@@ -6,18 +6,50 @@ import { EventEmitter } from "events";
 import * as fs from "fs/promises";
 
 import {
-    action_log_channel_id, bot_spam_id, colors, cpp_help_id, c_help_id, member_log_channel_id,
-    message_log_channel_id, MINUTE, mods_channel_id, rules_channel_id, server_suggestions_channel_id,
-    staff_flag_log_id, suggestion_action_log_thread_id, suggestion_dashboard_thread_id, TCCPP_ID,
-    welcome_channel_id, zelis_id, the_button_channel_id, skill_role_suggestion_log_id,
+    action_log_channel_id,
+    bot_spam_id,
+    colors,
+    cpp_help_id,
+    c_help_id,
+    member_log_channel_id,
+    message_log_channel_id,
+    MINUTE,
+    mods_channel_id,
+    rules_channel_id,
+    server_suggestions_channel_id,
+    staff_flag_log_id,
+    suggestion_action_log_thread_id,
+    suggestion_dashboard_thread_id,
+    TCCPP_ID,
+    welcome_channel_id,
+    zelis_id,
+    the_button_channel_id,
+    skill_role_suggestion_log_id,
     starboard_channel_id,
-    staff_action_log_channel_id, fetch_root_mod_list
+    staff_action_log_channel_id,
+    fetch_root_mod_list,
 } from "./common.js";
-import { critical_error, fetch_forum_channel, fetch_text_channel, fetch_thread_channel, M, directory_exists,
-         SelfClearingMap, string_split, zip } from "./utils.js";
+import {
+    critical_error,
+    fetch_forum_channel,
+    fetch_text_channel,
+    fetch_thread_channel,
+    M,
+    directory_exists,
+    SelfClearingMap,
+    string_split,
+    zip,
+} from "./utils.js";
 import { BotComponent } from "./bot-component.js";
-import { BotCommand, BotModalHandler, BotTextBasedCommand, MessageContextMenuCommandBuilder, ModalHandler,
-         TextBasedCommand, TextBasedCommandBuilder } from "./command.js";
+import {
+    BotCommand,
+    BotModalHandler,
+    BotTextBasedCommand,
+    MessageContextMenuCommandBuilder,
+    ModalHandler,
+    TextBasedCommand,
+    TextBasedCommandBuilder,
+} from "./command.js";
 
 import { WheatleyDatabase, WheatleyDatabaseProxy } from "./infra/database-interface.js";
 import { GuildCommandManager } from "./infra/guild-command-manager.js";
@@ -26,10 +58,8 @@ import { MemberTracker } from "./infra/member-tracker.js";
 import { forge_snowflake } from "./components/snowflake.js";
 
 function create_basic_embed(title: string | undefined, color: number, content: string) {
-    const embed = new Discord.EmbedBuilder()
-        .setColor(color)
-        .setDescription(content);
-    if(title) {
+    const embed = new Discord.EmbedBuilder().setColor(color).setDescription(content);
+    if (title) {
         embed.setTitle(title);
     }
     return embed;
@@ -113,7 +143,10 @@ export class Wheatley extends EventEmitter {
     // True if freestanding mode is enabled. Defaults to false.
     readonly freestanding: boolean;
 
-    constructor(readonly client: Discord.Client, auth: wheatley_auth) {
+    constructor(
+        readonly client: Discord.Client,
+        auth: wheatley_auth,
+    ) {
         super();
 
         this.id = auth.id;
@@ -152,16 +185,16 @@ export class Wheatley extends EventEmitter {
             }
         });
 
-        for(const file of await fs.readdir("src/components")) {
+        for (const file of await fs.readdir("src/components")) {
             await this.add_component((await import(`./components/${file.replace(".ts", ".js")}`)).default);
         }
 
-        if(await directory_exists("src/wheatley-private/components")) {
-            for(const file of await fs.readdir("src/wheatley-private/components")) {
+        if (await directory_exists("src/wheatley-private/components")) {
+            for (const file of await fs.readdir("src/wheatley-private/components")) {
                 const component = await this.add_component(
-                    (await import(`./wheatley-private/components/${file.replace(".ts", ".js")}`)).default
+                    (await import(`./wheatley-private/components/${file.replace(".ts", ".js")}`)).default,
                 );
-                if(file.endsWith("link-blacklist.ts")) {
+                if (file.endsWith("link-blacklist.ts")) {
                     this.link_blacklist = component;
                 }
             }
@@ -219,10 +252,14 @@ export class Wheatley extends EventEmitter {
             })(),
             (async () => {
                 this.server_suggestions_channel = await fetch_text_channel(server_suggestions_channel_id);
-                this.suggestion_dashboard_thread =
-                    await fetch_thread_channel(this.server_suggestions_channel, suggestion_dashboard_thread_id);
-                this.suggestion_action_log_thread =
-                    await fetch_thread_channel(this.server_suggestions_channel, suggestion_action_log_thread_id);
+                this.suggestion_dashboard_thread = await fetch_thread_channel(
+                    this.server_suggestions_channel,
+                    suggestion_dashboard_thread_id,
+                );
+                this.suggestion_action_log_thread = await fetch_thread_channel(
+                    this.server_suggestions_channel,
+                    suggestion_action_log_thread_id,
+                );
             })(),
             (async () => {
                 this.the_button_channel = await fetch_text_channel(the_button_channel_id);
@@ -232,14 +269,14 @@ export class Wheatley extends EventEmitter {
             })(),
             (async () => {
                 this.staff_action_log_channel = await fetch_text_channel(staff_action_log_channel_id);
-            })()
+            })(),
         ];
         await Promise.all(promises);
     }
 
     destroy() {
         this.database.close().catch(critical_error);
-        for(const component of this.components) {
+        for (const component of this.components) {
             component.destroy();
         }
         this.text_command_map.destroy();
@@ -248,13 +285,13 @@ export class Wheatley extends EventEmitter {
         this.client.destroy().catch(critical_error);
     }
 
-    async add_component<T extends BotComponent>(component: { new(w: Wheatley): T; get is_freestanding(): boolean; }) {
-        if(!this.freestanding || component.is_freestanding) {
+    async add_component<T extends BotComponent>(component: { new (w: Wheatley): T; get is_freestanding(): boolean }) {
+        if (!this.freestanding || component.is_freestanding) {
             M.log(`Initializing ${component.name}`);
             const instance = new component(this);
             try {
                 await instance.setup();
-            } catch(e) {
+            } catch (e) {
                 critical_error(e);
             }
             this.components.push(instance);
@@ -266,9 +303,9 @@ export class Wheatley extends EventEmitter {
 
     async populate_caches() {
         // Load a couple hundred messages for every channel we're in
-        const channels: Record<string, {channel: Discord.TextBasedChannel, last_seen: number, done: boolean}> = {};
-        for(const [ _, channel ] of await this.TCCPP.channels.fetch()) {
-            if(channel?.isTextBased() && !channel.name.includes("archived-")) {
+        const channels: Record<string, { channel: Discord.TextBasedChannel; last_seen: number; done: boolean }> = {};
+        for (const [_, channel] of await this.TCCPP.channels.fetch()) {
+            if (channel?.isTextBased() && !channel.name.includes("archived-")) {
                 M.debug(`Loading recent messages from ${channel.name}`);
                 //await channel.messages.fetch({
                 //    limit: 100,
@@ -277,28 +314,30 @@ export class Wheatley extends EventEmitter {
                 channels[channel.id] = {
                     channel,
                     last_seen: Date.now(),
-                    done: false
+                    done: false,
                 };
             }
         }
-        for(let i = 0; i < 3; i++) {
+        for (let i = 0; i < 3; i++) {
             M.log("Fetches round", i);
             const promises: Promise<any>[] = [];
-            for(const [ id, { channel, last_seen, done }] of Object.entries(channels)) {
-                if(!done) {
-                    promises.push((async () => {
-                        const messages = await channel.messages.fetch({
-                            limit: 100,
-                            cache: true,
-                            before: forge_snowflake(last_seen - 1)
-                        });
-                        channels[id].last_seen = Math.min(
-                            ...[...messages.values()].map(message => message.createdTimestamp)
-                        );
-                        if(messages.size == 0) {
-                            channels[id].done = true;
-                        }
-                    })());
+            for (const [id, { channel, last_seen, done }] of Object.entries(channels)) {
+                if (!done) {
+                    promises.push(
+                        (async () => {
+                            const messages = await channel.messages.fetch({
+                                limit: 100,
+                                cache: true,
+                                before: forge_snowflake(last_seen - 1),
+                            });
+                            channels[id].last_seen = Math.min(
+                                ...[...messages.values()].map(message => message.createdTimestamp),
+                            );
+                            if (messages.size == 0) {
+                                channels[id].done = true;
+                            }
+                        })(),
+                    );
                 }
             }
             await Promise.all(promises);
@@ -318,38 +357,38 @@ export class Wheatley extends EventEmitter {
     // command stuff
 
     add_command<T extends unknown[]>(
-        command: TextBasedCommandBuilder<T, true, true> | MessageContextMenuCommandBuilder<true> | ModalHandler<true>
+        command: TextBasedCommandBuilder<T, true, true> | MessageContextMenuCommandBuilder<true> | ModalHandler<true>,
     ) {
-        if(command instanceof TextBasedCommandBuilder) {
+        if (command instanceof TextBasedCommandBuilder) {
             assert(command.names.length > 0);
             assert(command.names.length == command.descriptions.length);
-            for(const [ name, description, slash ] of zip(command.names, command.descriptions, command.slash_config)) {
+            for (const [name, description, slash] of zip(command.names, command.descriptions, command.slash_config)) {
                 assert(!(name in this.text_commands));
                 this.text_commands[name] = new BotTextBasedCommand(
                     name,
                     description,
                     slash,
                     command.permissions,
-                    command
+                    command,
                 );
-                if(slash) {
-                    const djs_command = new Discord.SlashCommandBuilder()
-                        .setName(name)
-                        .setDescription(description);
-                    for(const option of command.options.values()) {
+                if (slash) {
+                    const djs_command = new Discord.SlashCommandBuilder().setName(name).setDescription(description);
+                    for (const option of command.options.values()) {
                         // NOTE: Temp for now
                         // eslint-disable-next-line @typescript-eslint/no-unnecessary-condition
-                        if(option.type == "string") {
+                        if (option.type == "string") {
                             djs_command.addStringOption(slash_option =>
-                                slash_option.setName(option.title)
+                                slash_option
+                                    .setName(option.title)
                                     .setDescription(option.description)
                                     .setAutocomplete(!!option.autocomplete)
-                                    .setRequired(!!option.required));
+                                    .setRequired(!!option.required),
+                            );
                         } else {
                             assert(false, "unhandled option type");
                         }
                     }
-                    if(command.permissions !== undefined) {
+                    if (command.permissions !== undefined) {
                         djs_command.setDefaultMemberPermissions(command.permissions);
                     }
                     this.guild_command_manager.register(djs_command);
@@ -357,9 +396,9 @@ export class Wheatley extends EventEmitter {
             }
         } else {
             assert(!(command.name in this.other_commands));
-            const [ bot_command, djs_command ] = command.to_command_descriptors();
+            const [bot_command, djs_command] = command.to_command_descriptors();
             this.other_commands[command.name] = bot_command;
-            if(djs_command) {
+            if (djs_command) {
                 this.guild_command_manager.register(djs_command);
             }
         }
@@ -369,30 +408,20 @@ export class Wheatley extends EventEmitter {
 
     async handle_command(message: Discord.Message, prev_command_obj?: TextBasedCommand) {
         const match = message.content.match(Wheatley.command_regex);
-        if(match) {
+        if (match) {
             const command_name = match[1];
-            if(command_name in this.text_commands) {
+            if (command_name in this.text_commands) {
                 const command = this.text_commands[command_name];
                 const command_options: unknown[] = [];
-                const command_obj = prev_command_obj ? new TextBasedCommand(
-                    prev_command_obj,
-                    command_name,
-                    message
-                ) : new TextBasedCommand(
-                    command_name,
-                    message,
-                    this
-                );
+                const command_obj = prev_command_obj
+                    ? new TextBasedCommand(prev_command_obj, command_name, message)
+                    : new TextBasedCommand(command_name, message, this);
                 this.register_text_command(message, command_obj);
-                if(command.permissions !== undefined) {
-                    if(!(await command_obj.get_member()).permissions.has(command.permissions)) {
+                if (command.permissions !== undefined) {
+                    if (!(await command_obj.get_member()).permissions.has(command.permissions)) {
                         await command_obj.reply({
-                            embeds: [
-                                create_basic_embed(
-                                    undefined, colors.red, "Invalid permissions"
-                                )
-                            ],
-                            should_text_reply: true
+                            embeds: [create_basic_embed(undefined, colors.red, "Invalid permissions")],
+                            should_text_reply: true,
                         });
                         return;
                     }
@@ -400,22 +429,24 @@ export class Wheatley extends EventEmitter {
                 // TODO: Handle unexpected input?
                 // NOTE: For now only able to take text input
                 assert(
-                    [...command.options.values()].every(option => option.type as any == "string"),
-                    "unhandled option type"
+                    [...command.options.values()].every(option => (option.type as any) == "string"),
+                    "unhandled option type",
                 );
                 const parts = string_split(
                     message.content.substring(match[0].length).trim(),
                     " ",
-                    command.options.size
+                    command.options.size,
                 );
-                for(const [ i, option ] of [...command.options.values()].entries()) {
-                    if(i >= parts.length && option.required) {
+                for (const [i, option] of [...command.options.values()].entries()) {
+                    if (i >= parts.length && option.required) {
                         await command_obj.reply({
                             embeds: [
                                 create_basic_embed(
-                                    undefined, colors.red, `Required argument "${option.title}" not found`
-                                )
-                            ]
+                                    undefined,
+                                    colors.red,
+                                    `Required argument "${option.title}" not found`,
+                                ),
+                            ],
                         });
                         return;
                     }
@@ -456,45 +487,47 @@ export class Wheatley extends EventEmitter {
 
     async on_message_delete(message: Discord.Message<boolean> | Discord.PartialMessage) {
         try {
-            if(this.text_command_map.has(message.id)) {
+            if (this.text_command_map.has(message.id)) {
                 const { command, deletable } = this.text_command_map.get(message.id)!;
                 this.text_command_map.remove(message.id);
-                if(deletable) {
+                if (deletable) {
                     await command.delete_replies_if_replied();
                 }
-            } else if(this.deletable_map.has(message.id)) {
+            } else if (this.deletable_map.has(message.id)) {
                 const target = this.deletable_map.get(message.id)!;
                 this.deletable_map.remove(message.id);
                 try {
                     await target.delete();
-                } catch(e) {
-                    if(e instanceof Discord.DiscordAPIError && e.code == 10008) {
+                } catch (e) {
+                    if (e instanceof Discord.DiscordAPIError && e.code == 10008) {
                         // pass, ignore - response deleted before trigger
                     } else {
                         throw e;
                     }
                 }
             }
-        } catch(e) {
+        } catch (e) {
             // TODO....
             critical_error(e);
         }
     }
 
-    async on_message_update(old_message: Discord.Message | Discord.PartialMessage,
-        new_message: Discord.Message | Discord.PartialMessage) {
+    async on_message_update(
+        old_message: Discord.Message | Discord.PartialMessage,
+        new_message: Discord.Message | Discord.PartialMessage,
+    ) {
         try {
-            if(this.text_command_map.has(new_message.id)) {
+            if (this.text_command_map.has(new_message.id)) {
                 const { command } = this.text_command_map.get(new_message.id)!;
                 command.set_editing();
                 const message = !new_message.partial ? new_message : await new_message.fetch();
-                if(!await this.handle_command(message, command)) {
+                if (!(await this.handle_command(message, command))) {
                     // returns false if the message was not a wheatley command; delete replies and remove from map
                     await command.delete_replies_if_replied();
                     this.text_command_map.remove(new_message.id);
                 }
             }
-        } catch(e) {
+        } catch (e) {
             // TODO....
             critical_error(e);
         }
@@ -503,11 +536,11 @@ export class Wheatley extends EventEmitter {
     // TODO: Notify about critical errors.....
     async on_message(message: Discord.Message) {
         try {
-            if(message.author.bot) return; // skip bots
-            if(message.content.startsWith("!")) {
+            if (message.author.bot) return; // skip bots
+            if (message.content.startsWith("!")) {
                 await this.handle_command(message);
             }
-        } catch(e) {
+        } catch (e) {
             // TODO....
             critical_error(e);
         }
@@ -515,29 +548,23 @@ export class Wheatley extends EventEmitter {
 
     async on_interaction(interaction: Discord.Interaction) {
         try {
-            if(interaction.isChatInputCommand()) {
-                if(interaction.commandName in this.text_commands) {
+            if (interaction.isChatInputCommand()) {
+                if (interaction.commandName in this.text_commands) {
                     const command = this.text_commands[interaction.commandName];
                     const command_options: unknown[] = [];
-                    const command_object = new TextBasedCommand(
-                        interaction.commandName,
-                        interaction,
-                        this
-                    );
-                    if(command.permissions !== undefined) {
+                    const command_object = new TextBasedCommand(interaction.commandName, interaction, this);
+                    if (command.permissions !== undefined) {
                         assert((await command_object.get_member()).permissions.has(command.permissions));
                     }
-                    for(const option of command.options.values()) {
+                    for (const option of command.options.values()) {
                         // NOTE: Temp for now
                         // eslint-disable-next-line @typescript-eslint/no-unnecessary-condition
-                        if(option.type == "string") {
+                        if (option.type == "string") {
                             const option_value = interaction.options.getString(option.title);
-                            if(!option_value && option.required) {
+                            if (!option_value && option.required) {
                                 await command_object.reply({
-                                    embeds: [
-                                        create_basic_embed(undefined, colors.red, "Required argument not found")
-                                    ],
-                                    ephemeral_if_possible: true
+                                    embeds: [create_basic_embed(undefined, colors.red, "Required argument not found")],
+                                    ephemeral_if_possible: true,
                                 });
                                 critical_error("this shouldn't happen");
                                 return;
@@ -551,8 +578,8 @@ export class Wheatley extends EventEmitter {
                 } else {
                     // TODO unknown command
                 }
-            } else if(interaction.isAutocomplete()) {
-                if(interaction.commandName in this.text_commands) {
+            } else if (interaction.isAutocomplete()) {
+                if (interaction.commandName in this.text_commands) {
                     const command = this.text_commands[interaction.commandName];
                     // TODO: permissions sanity check?
                     const field = interaction.options.getFocused(true);
@@ -560,32 +587,31 @@ export class Wheatley extends EventEmitter {
                     const option = command.options.get(field.name)!;
                     assert(option.autocomplete);
                     await interaction.respond(
-                        option.autocomplete(field.value, interaction.commandName)
-                            .map(({ name, value }) => ({
-                                name: name.substring(0, 100),
-                                value: value.substring(0, 100)
-                            }))
+                        option.autocomplete(field.value, interaction.commandName).map(({ name, value }) => ({
+                            name: name.substring(0, 100),
+                            value: value.substring(0, 100),
+                        })),
                     );
                 } else {
                     // TODO unknown command
                 }
-            } else if(interaction.isMessageContextMenuCommand()) {
+            } else if (interaction.isMessageContextMenuCommand()) {
                 assert(interaction.commandName in this.other_commands);
                 await this.other_commands[interaction.commandName].handler(interaction);
-            } else if(interaction.isUserContextMenuCommand()) {
+            } else if (interaction.isUserContextMenuCommand()) {
                 assert(interaction.commandName in this.other_commands);
                 await this.other_commands[interaction.commandName].handler(interaction);
-            } else if(interaction.isModalSubmit()) {
-                const [ command_name, id ] = interaction.customId.split("--") as [string, string | undefined];
+            } else if (interaction.isModalSubmit()) {
+                const [command_name, id] = interaction.customId.split("--") as [string, string | undefined];
                 // TODO: Can't assert atm
-                if(command_name in this.other_commands) {
+                if (command_name in this.other_commands) {
                     const command = this.other_commands[command_name] as BotModalHandler;
                     const fields = command.fields.map(id => interaction.fields.getTextInputValue(id));
-                    await command.handler(interaction, ...(id ? [ id, ...fields ] : fields));
+                    await command.handler(interaction, ...(id ? [id, ...fields] : fields));
                 }
             }
             // TODO: Notify if errors occur in the handler....
-        } catch(e) {
+        } catch (e) {
             // TODO....
             critical_error(e);
         }

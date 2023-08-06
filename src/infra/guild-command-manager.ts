@@ -11,7 +11,7 @@ export class GuildCommandManager {
     finalized = false;
     constructor(readonly wheatley: Wheatley) {}
     register(builder: any) {
-        if(this.finalized) {
+        if (this.finalized) {
             throw Error("Commands registered too late");
         }
         this.commands.push(builder);
@@ -27,7 +27,7 @@ export class GuildCommandManager {
             M.log("Sending application commands");
             await rest.put(route, { body: this.commands });
             M.log("Finished sending commands");
-        } catch(e) {
+        } catch (e) {
             M.log(util.inspect({ body: this.commands }, { showHidden: false, depth: null, colors: true }));
             critical_error(e);
         }

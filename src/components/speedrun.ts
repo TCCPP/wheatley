@@ -20,14 +20,14 @@ export default class Speedrun extends BotComponent {
         const user = ban.user;
         // get user info
         const avatar = user.displayAvatarURL();
-        if(!this.wheatley.tracker.id_map.has(user.id)) {
+        if (!this.wheatley.tracker.id_map.has(user.id)) {
             return; // If not in tracker, been in the server longer than 30 minutes
         }
         const entry = this.wheatley.tracker.id_map.get(user.id)!;
-        if(entry.purged) {
+        if (entry.purged) {
             return; // ignore bans from !raidpurge
         }
-        if(entry.joined_at == 0) {
+        if (entry.joined_at == 0) {
             // ignore pseudo entries from anti-scambot, pseudo entries added when the user isn't in
             // the tracker already (i.e. longer than 30 minutes, not a speedrun)
             return;
@@ -41,14 +41,16 @@ export default class Speedrun extends BotComponent {
             .setColor(colors.speedrun_color)
             .setAuthor({
                 name: `Speedrun attempt: ${user.tag}`,
-                iconURL: avatar
+                iconURL: avatar,
             })
-            .setDescription(`User <@${user.id}> joined at <t:${Math.round(entry.joined_at / 1000)}:T> and`
-                            + ` banned at <t:${Math.round(now / 1000)}:T>.\n`
-                            + `Final timer: ${diff_to_human(now - entry.joined_at)}.`
-                            + (is_auto_ban ? "\n**AUTO BAN**" : ""))
+            .setDescription(
+                `User <@${user.id}> joined at <t:${Math.round(entry.joined_at / 1000)}:T> and` +
+                    ` banned at <t:${Math.round(now / 1000)}:T>.\n` +
+                    `Final timer: ${diff_to_human(now - entry.joined_at)}.` +
+                    (is_auto_ban ? "\n**AUTO BAN**" : ""),
+            )
             .setFooter({
-                text: `ID: ${user.id}`
+                text: `ID: ${user.id}`,
             })
             .setTimestamp();
         this.wheatley.action_log_channel.send({ embeds: [embed] }).catch(critical_error);

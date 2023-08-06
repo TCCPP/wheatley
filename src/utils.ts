@@ -9,9 +9,10 @@ import { execFile, ExecFileOptions } from "child_process";
 import { MINUTE, zelis_id } from "./common.js";
 import { strict as assert } from "assert";
 
-function get_caller_location() { // https://stackoverflow.com/a/53339452/15675011
+function get_caller_location() {
+    // https://stackoverflow.com/a/53339452/15675011
     const e = new Error();
-    if(!e.stack) {
+    if (!e.stack) {
         return "<error>";
     }
     const frame = e.stack.split("\n")[3];
@@ -48,31 +49,28 @@ export class M {
 }
 
 export function send_long_message(channel: Discord.TextChannel, msg: string) {
-    if(msg.length > 2000) {
+    if (msg.length > 2000) {
         const lines = msg.split("\n");
         let partial = "";
         const queue: string[] = [];
-        while(lines.length > 0) {
-            if(partial.length + lines[0].length + 1 <= 2000) {
-                if(partial != "") partial += "\n";
+        while (lines.length > 0) {
+            if (partial.length + lines[0].length + 1 <= 2000) {
+                if (partial != "") partial += "\n";
                 partial += lines.shift();
             } else {
                 queue.push(partial);
                 partial = "";
             }
         }
-        if(partial != "") queue.push(partial);
+        if (partial != "") queue.push(partial);
         const send_next = () => {
-            if(queue.length > 0) {
-                channel.send(queue.shift()!)
-                    .then(send_next)
-                    .catch(M.error);
+            if (queue.length > 0) {
+                channel.send(queue.shift()!).then(send_next).catch(M.error);
             }
         };
         send_next();
     } else {
-        channel.send(msg)
-            .catch(M.error);
+        channel.send(msg).catch(M.error);
     }
 }
 
@@ -86,7 +84,7 @@ export function floor(n: number, p: number) {
 }
 
 function pluralize(n: number, word: string) {
-    if(n == 1) {
+    if (n == 1) {
         return `${round(n, 2)} ${word}`;
     } else {
         return `${round(n, 2)} ${word}s`;
@@ -94,15 +92,16 @@ function pluralize(n: number, word: string) {
 }
 
 export function diff_to_human(diff: number) {
-    if(diff >= 60 * MINUTE) {
+    if (diff >= 60 * MINUTE) {
         const hours = Math.floor(diff / (60 * MINUTE));
         diff %= 60 * MINUTE;
         const minutes = Math.floor(diff / MINUTE);
         diff %= MINUTE;
         const seconds = Math.round(diff / 1000);
         return `${pluralize(hours, "hour")} ${pluralize(minutes, "minute")} ${pluralize(seconds, "second")}`;
-    } if(diff >= MINUTE) {
-        return `${pluralize(Math.floor(diff / MINUTE), "minute")} ${pluralize(diff % MINUTE / 1000, "second")}`;
+    }
+    if (diff >= MINUTE) {
+        return `${pluralize(Math.floor(diff / MINUTE), "minute")} ${pluralize((diff % MINUTE) / 1000, "second")}`;
     } else {
         return `${pluralize(diff / 1000, "second")}`;
     }
@@ -121,20 +120,26 @@ export function exists_sync(path: string) {
     let exists = true;
     try {
         fs.accessSync(path, fs.constants.F_OK);
-    } catch(e) {
+    } catch (e) {
         exists = false;
     }
     return exists;
 }
 
-type PotentiallyPartial = Discord.User | Discord.PartialUser
-                        | Discord.GuildMember | Discord.PartialGuildMember
-                        | Discord.Message | Discord.PartialMessage
-                        | Discord.MessageReaction | Discord.PartialMessageReaction;
-export async function departialize<T extends PotentiallyPartial,
-                                   R extends ReturnType<T["fetch"]>>(thing: T): Promise<R> {
-    if(thing.partial) {
-        return await thing.fetch() as R;
+type PotentiallyPartial =
+    | Discord.User
+    | Discord.PartialUser
+    | Discord.GuildMember
+    | Discord.PartialGuildMember
+    | Discord.Message
+    | Discord.PartialMessage
+    | Discord.MessageReaction
+    | Discord.PartialMessageReaction;
+export async function departialize<T extends PotentiallyPartial, R extends ReturnType<T["fetch"]>>(
+    thing: T,
+): Promise<R> {
+    if (thing.partial) {
+        return (await thing.fetch()) as R;
     } else {
         return thing as any as R;
     }
@@ -162,8 +167,8 @@ export class SelfClearingSet<T> {
     }
     sweep() {
         const now = Date.now();
-        for(const [ value, timestamp ] of this.contents) {
-            if(now - timestamp >= this.duration) {
+        for (const [value, timestamp] of this.contents) {
+            if (now - timestamp >= this.duration) {
                 this.contents.delete(value);
             }
         }
@@ -192,18 +197,18 @@ export class SelfClearingMap<K, V> {
     }
     sweep() {
         const now = Date.now();
-        for(const [ key, [ timestamp, _ ]] of this.contents) {
-            if(now - timestamp >= this.duration) {
+        for (const [key, [timestamp, _]] of this.contents) {
+            if (now - timestamp >= this.duration) {
                 this.contents.delete(key);
             }
         }
     }
     set(key: K, value: V) {
-        this.contents.set(key, [ Date.now(), value ]);
+        this.contents.set(key, [Date.now(), value]);
     }
     get(key: K) {
         const p = this.contents.get(key);
-        if(p == undefined) return undefined;
+        if (p == undefined) return undefined;
         return p[1];
     }
     /*
@@ -233,8 +238,9 @@ export class Mutex {
     locked = false;
     waiting: (() => void)[] = [];
     async lock() {
-        if(this.locked) {
-            await new Promise<void>(resolve => {// TODO: Is there an async break between promise call and callback call?
+        if (this.locked) {
+            await new Promise<void>(resolve => {
+                // TODO: Is there an async break between promise call and callback call?
                 this.waiting.push(resolve);
             });
             // entry in locks will remain, no need to re-add
@@ -243,7 +249,7 @@ export class Mutex {
         }
     }
     unlock() {
-        if(this.waiting.length > 0) {
+        if (this.waiting.length > 0) {
             this.waiting.shift()!();
         } else {
             this.locked = false;
@@ -256,11 +262,12 @@ export class KeyedMutexSet<T> {
     locks = new Set<T>();
     waiting = new Map<T, (() => void)[]>();
     async lock(value: T) {
-        if(this.locks.has(value)) {
-            if(!this.waiting.has(value)) {
+        if (this.locks.has(value)) {
+            if (!this.waiting.has(value)) {
                 this.waiting.set(value, []);
             }
-            await new Promise<void>(resolve => {// TODO: Is there an async break between promise call and callback call?
+            await new Promise<void>(resolve => {
+                // TODO: Is there an async break between promise call and callback call?
                 this.waiting.get(value)!.push(resolve);
             });
             // entry in locks will remain, no need to re-add
@@ -269,10 +276,10 @@ export class KeyedMutexSet<T> {
         }
     }
     unlock(value: T) {
-        if(this.waiting.has(value)) {
+        if (this.waiting.has(value)) {
             assert(this.waiting.get(value)!.length > 0); // If this fails, see TODO above ^^
             const resolve = this.waiting.get(value)!.shift()!;
-            if(this.waiting.get(value)!.length == 0) {
+            if (this.waiting.get(value)!.length == 0) {
                 this.waiting.delete(value);
             }
             resolve();
@@ -283,13 +290,13 @@ export class KeyedMutexSet<T> {
 }
 
 let client: Discord.Client;
-let zelis : Discord.User | undefined | null;
+let zelis: Discord.User | undefined | null;
 let has_tried_fetch_zelis = false;
 
 // FIXME: eliminate this hackery
 
 async function get_zelis() {
-    if(!has_tried_fetch_zelis) {
+    if (!has_tried_fetch_zelis) {
         zelis = await client.users.fetch(zelis_id);
         has_tried_fetch_zelis = true;
     }
@@ -302,22 +309,25 @@ export function init_debugger(_client: Discord.Client) {
 
 export function critical_error(...args: any[]) {
     M.error(...args);
-    get_zelis().then(zelis_found => {
-        if (zelis_found) {
-            const strs = [];
-            for(const arg of args) {
-                try {
-                    strs.push(arg.toString());
-                } catch {
+    get_zelis()
+        .then(zelis_found => {
+            if (zelis_found) {
+                const strs = [];
+                for (const arg of args) {
                     try {
-                        strs.push(String(arg));
-                    } catch { void(0); }
+                        strs.push(arg.toString());
+                    } catch {
+                        try {
+                            strs.push(String(arg));
+                        } catch {
+                            void 0;
+                        }
+                    }
                 }
+                zelis!.send(`Critical error occurred: ${strs.join(" ")}`).catch(() => void 0);
             }
-            zelis!.send(`Critical error occurred: ${strs.join(" ")}`)
-                .catch(() => void(0));
-        }
-    }).catch(() => void(0));
+        })
+        .catch(() => void 0);
 }
 
 export function unwrap<T>(x: T | null | undefined): T {
@@ -367,14 +377,14 @@ export async function fetch_inactive_threads_time_limit(forum: Discord.ForumChan
     let before: string | undefined = undefined;
     const now = Date.now();
     const thread_entries: [string, Discord.ThreadChannel][] = [];
-    while(true) {
+    while (true) {
         const { threads, hasMore } = await forum.threads.fetchArchived({ before });
         thread_entries.push(...threads);
         // The type annotation is needed because of a typescript bug
         // https://github.com/microsoft/TypeScript/issues/51115
         const last: Discord.ThreadChannel = threads.last()!;
         before = last.id;
-        if(!hasMore || (soft_limit && Math.abs(now - unwrap(last.createdAt).getTime()) >= soft_limit)) {
+        if (!hasMore || (soft_limit && Math.abs(now - unwrap(last.createdAt).getTime()) >= soft_limit)) {
             break;
         }
     }
@@ -383,8 +393,8 @@ export async function fetch_inactive_threads_time_limit(forum: Discord.ForumChan
 
 export async function fetch_all_threads_time_limit(forum: Discord.ForumChannel, soft_limit?: number) {
     const threads = new Discord.Collection([
-        ...await fetch_active_threads(forum),
-        ...await fetch_inactive_threads_time_limit(forum, soft_limit)
+        ...(await fetch_active_threads(forum)),
+        ...(await fetch_inactive_threads_time_limit(forum, soft_limit)),
     ]);
     return threads;
 }
@@ -392,7 +402,7 @@ export async function fetch_all_threads_time_limit(forum: Discord.ForumChannel, 
 export async function fetch_inactive_threads_count(forum: Discord.ForumChannel, count: number) {
     let before: string | undefined = undefined;
     const thread_entries: [string, Discord.ThreadChannel][] = [];
-    while(true) {
+    while (true) {
         const { threads, hasMore } = await forum.threads.fetchArchived({ before, limit: Math.min(count, 100) });
         thread_entries.push(...threads);
         // The type annotation is needed because of a typescript bug
@@ -400,7 +410,7 @@ export async function fetch_inactive_threads_count(forum: Discord.ForumChannel, 
         const last: Discord.ThreadChannel = threads.last()!;
         before = last.id;
         count -= threads.size;
-        if(!hasMore || count <= 0) {
+        if (!hasMore || count <= 0) {
             break;
         }
     }
@@ -409,31 +419,35 @@ export async function fetch_inactive_threads_count(forum: Discord.ForumChannel, 
 
 export async function fetch_all_threads_archive_count(forum: Discord.ForumChannel, count: number) {
     const threads = new Discord.Collection([
-        ...await fetch_active_threads(forum),
-        ...await fetch_inactive_threads_count(forum, count)
+        ...(await fetch_active_threads(forum)),
+        ...(await fetch_inactive_threads_count(forum, count)),
     ]);
     return threads;
 }
 
 export function format_list(items: string[]) {
-    if(items.length <= 2) {
+    if (items.length <= 2) {
         return items.join(" and ");
     } else {
         return `${items.slice(0, items.length - 1).join(", ")}, and ${items[items.length - 1]}`;
     }
 }
 
-export async function async_exec_file(file: string, args?: string[],
-                                      options?: fs.ObjectEncodingOptions & ExecFileOptions, input?: string) {
-    return new Promise<{stdout: string | Buffer, stderr: string | Buffer}>((resolve, reject) => {
+export async function async_exec_file(
+    file: string,
+    args?: string[],
+    options?: fs.ObjectEncodingOptions & ExecFileOptions,
+    input?: string,
+) {
+    return new Promise<{ stdout: string | Buffer; stderr: string | Buffer }>((resolve, reject) => {
         const child = execFile(file, args, options, (error, stdout, stderr) => {
-            if(error) {
+            if (error) {
                 reject(error);
             } else {
                 resolve({ stdout, stderr });
             }
         });
-        if(!child.stdin) {
+        if (!child.stdin) {
             reject("!child.stdin");
             assert(false);
         }
@@ -451,8 +465,8 @@ export function is_media_link_embed(embed: Discord.Embed) {
 }
 
 export function index_of_first_not_satisfying<T>(arr: T[], fn: (_: T) => boolean) {
-    for(let i = 0; i < arr.length; i++) {
-        if(!fn(arr[i])) {
+    for (let i = 0; i < arr.length; i++) {
+        if (!fn(arr[i])) {
             return i;
         }
     }
@@ -471,7 +485,7 @@ type Iterables<Ts> = { [K in keyof Ts]: Iterable<Ts[K]> };
 export function* zip<Ts extends Arr>(...args: Iterables<Ts>): Generator<Ts> {
     const iterators = args.map(arg => arg[Symbol.iterator]());
     let values = iterators.map(it => it.next());
-    while(!values.some(value => value.done)) {
+    while (!values.some(value => value.done)) {
         yield values.map(value => value.value) as unknown as Ts;
         values = iterators.map(it => it.next());
     }
@@ -488,7 +502,7 @@ export function is_string(value: string | unknown): value is string {
 
 export function string_split(str: string, delim: string, limit: number) {
     const parts = str.split(delim);
-    if(parts.length > limit) {
+    if (parts.length > limit) {
         parts.splice(limit - 1, parts.length - limit + 1, parts.slice(limit - 1).join(delim));
     }
     return parts;
@@ -497,9 +511,9 @@ export function string_split(str: string, delim: string, limit: number) {
 export function max<T, U>(fn: (x: T) => U, ...items: [T, ...T[]]) {
     let max_i = 0;
     let max_v = fn(items[0]);
-    for(let i = 1; i < items.length; i++) {
+    for (let i = 1; i < items.length; i++) {
         const v = fn(items[i]);
-        if(v > max_v) {
+        if (v > max_v) {
             max_i = i;
             max_v = v;
         }
@@ -511,7 +525,7 @@ export async function directory_exists(path: string) {
     try {
         const stats = await fs.promises.stat(path);
         return stats.isDirectory();
-    } catch(error) {
+    } catch (error) {
         return false;
     }
 }
@@ -520,11 +534,12 @@ export async function file_exists(path: string) {
     try {
         const stats = await fs.promises.stat(path);
         return stats.isFile();
-    } catch(error) {
+    } catch (error) {
         return false;
     }
 }
 
+// prettier-ignore
 export type JSONValue =
     | string
     | number

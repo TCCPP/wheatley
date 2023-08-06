@@ -36,20 +36,20 @@ export default class Snowflake extends BotComponent {
                 .add_string_option({
                     title: "input",
                     description: "Input",
-                    required: true
+                    required: true,
                 })
-                .set_handler(this.snowflake.bind(this))
+                .set_handler(this.snowflake.bind(this)),
         );
     }
 
     async snowflake(command: TextBasedCommand, input: string) {
         const match = input.match(snowflakes_re);
-        if(match != null) {
+        if (match != null) {
             await command.reply(
                 match
                     .map(snowflake => `${snowflake}: <t:${Math.round(decode_snowflake(snowflake) / 1000)}>`)
                     .join("\n"),
-                true
+                true,
             );
         }
     }

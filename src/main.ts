@@ -28,7 +28,8 @@ let wheatley: Wheatley;
 async function main() {
     // Setup client
     const client = new Discord.Client({
-        intents: [ // fuck it, everything (almost)
+        intents: [
+            // fuck it, everything (almost)
             Discord.GatewayIntentBits.Guilds,
             Discord.GatewayIntentBits.GuildMembers,
             Discord.GatewayIntentBits.GuildModeration,
@@ -53,8 +54,8 @@ async function main() {
         ],
         makeCache: Discord.Options.cacheWithLimits({
             ...Discord.Options.DefaultMakeCacheSettings,
-            MessageManager: 1000
-        })
+            MessageManager: 1000,
+        }),
     });
 
     // Suggestion tracking
@@ -80,7 +81,7 @@ async function main() {
 
     try {
         wheatley = new Wheatley(client, auth);
-    } catch(e) {
+    } catch (e) {
         critical_error(e);
     }
 }
@@ -89,7 +90,7 @@ async function main() {
     return main();
 })().catch(critical_error);
 
-process.on("uncaughtException", (error) => {
+process.on("uncaughtException", error => {
     M.error("uncaughtException", error);
     process.exit(1);
 });

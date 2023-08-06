@@ -20,23 +20,26 @@ export default class NotifyAboutBrandNewUsers extends BotComponent {
             .setColor(colors.alert_color)
             .setAuthor({
                 name: `New User Warning: ${member.user.tag}`,
-                iconURL: member.user.displayAvatarURL()
+                iconURL: member.user.displayAvatarURL(),
             })
-            .setDescription(`User <@${member.user.id}>'s account was created at created at:`
-                          + ` <t:${Math.round(member.user.createdTimestamp / 1000)}>\n`
-                          + `Account age: ${diff_to_human(Date.now() - member.user.createdTimestamp)}`)
+            .setDescription(
+                `User <@${member.user.id}>'s account was created at created at:` +
+                    ` <t:${Math.round(member.user.createdTimestamp / 1000)}>\n` +
+                    `Account age: ${diff_to_human(Date.now() - member.user.createdTimestamp)}`,
+            )
             .setFooter({
-                text: `ID: ${member.id}`
+                text: `ID: ${member.id}`,
             })
             .setTimestamp();
-        await this.wheatley.welcome_channel.send({ embeds: [embed] })
+        await this.wheatley.welcome_channel
+            .send({ embeds: [embed] })
             .catch((...args: any[]) => critical_error(...args));
         //member_log_channel!.send(`<@!${zelis_id}>`);
     }
 
     override async on_guild_member_add(member: Discord.GuildMember) {
         assert(Date.now() - member.user.createdTimestamp >= 0);
-        if(Date.now() - member.user.createdTimestamp <= NEW_USER_THRESHOLD) {
+        if (Date.now() - member.user.createdTimestamp <= NEW_USER_THRESHOLD) {
             await this.notify_about_brand_new_user(member);
         }
     }

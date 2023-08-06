@@ -7,67 +7,45 @@ extends:
 ignorePatterns:
   - scratch
   - "*.js"
-parser: '@typescript-eslint/parser'
+parser: "@typescript-eslint/parser"
 parserOptions:
   ecmaVersion: latest
   sourceType: module
   project: ./tsconfig.json
 plugins:
-  - '@typescript-eslint'
+  - "@typescript-eslint"
+  - prettier
 rules:
   indent:
     - error
     - 4
     - FunctionDeclaration:
-        parameters:
-          first
+        parameters: first
       CallExpression:
-        arguments:
-          first
-      MemberExpression:
-        1
-      SwitchCase:
-        1
-      ImportDeclaration:
-        first
+        arguments: first
+      MemberExpression: 1
+      SwitchCase: 1
+      ImportDeclaration: first
   max-len:
     - error
     - 120
   semi:
     - error
     - always
-  quotes:
-    - error
-    - double
   no-unused-vars:
     - off
   no-constant-condition:
     - off
   semi-spacing:
     - error
-    - before:
-        false
-      after:
-        true
+    - before: false
+      after: true
   no-empty:
     - error
-    - allowEmptyCatch:
-        true
+    - allowEmptyCatch: true
   object-curly-spacing:
     - error
     - always
-  array-bracket-spacing:
-    - error
-    - always
-    - singleValue:
-        false
-      objectsInArrays:
-        false
-      arraysInArrays:
-        false
-  space-in-parens:
-    - error
-    - never
   comma-spacing:
     - error
   computed-property-spacing:
@@ -75,21 +53,21 @@ rules:
   brace-style:
     - error
     - 1tbs
-    - allowSingleLine:
-        true
+    - allowSingleLine: true
   eol-last:
     - error
   semi-style:
     - error
     - last
+  prefer-const:
+    - error
+    - destructuring: all
+  "prettier/prettier": "error"
   "@typescript-eslint/no-unused-vars":
     - warn
-    - destructuredArrayIgnorePattern:
-        ^_
-      argsIgnorePattern:
-        ^_
-      varsIgnorePattern:
-        ^assert$|^M$
+    - destructuredArrayIgnorePattern: ^_
+      argsIgnorePattern: ^_
+      varsIgnorePattern: ^assert$|^M$
   "@typescript-eslint/no-non-null-assertion":
     - off
   "@typescript-eslint/no-explicit-any":
@@ -98,12 +76,11 @@ rules:
     - error
   "@typescript-eslint/no-unnecessary-condition":
     - error
-    - allowConstantLoopConditions:
-        true
+    - allowConstantLoopConditions: true
   "@typescript-eslint/no-this-alias":
     - error
     - allowedNames:
-      - self
+        - self
   "@typescript-eslint/no-floating-promises":
     - "error"
   "@typescript-eslint/no-misused-promises":

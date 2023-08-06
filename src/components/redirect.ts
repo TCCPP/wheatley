@@ -19,10 +19,10 @@ export default class Redirect extends BotComponent {
                 .add_string_option({
                     title: "channel",
                     description: "channel",
-                    required: true
+                    required: true,
                 })
                 .set_permissions(Discord.PermissionFlagsBits.Administrator)
-                .set_handler(this.redirect.bind(this))
+                .set_handler(this.redirect.bind(this)),
         );
     }
 
@@ -37,11 +37,11 @@ export default class Redirect extends BotComponent {
                 new Discord.EmbedBuilder()
                     .setTitle("Channel Locked")
                     .setDescription(
-                        `Please move the current conversation to ${arg}.`
-                        + "\nThe channel will be unlocked in 30 seconds."
+                        `Please move the current conversation to ${arg}.` +
+                            "\nThe channel will be unlocked in 30 seconds.",
                     )
-                    .setColor(colors.color)
-            ]
+                    .setColor(colors.color),
+            ],
         });
         await delay(30 * 1000);
         await command.channel.permissionOverwrites.set(initial_permissions);

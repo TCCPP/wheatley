@@ -15,12 +15,12 @@ export default class ThreadCreatedMessage extends BotComponent {
     }
 
     override async on_message_create(message: Discord.Message) {
-        if(message.type == Discord.MessageType.ThreadCreated) {
+        if (message.type == Discord.MessageType.ThreadCreated) {
             //M.log(message);
             //assert(message.channel instanceof Discord.TextChannel);
             //const thread = await fetch_thread_channel(message.channel, unwrap(message.reference).channelId);
             //M.log(thread, thread.parentId);
-            if(unwrap(message.reference).channelId != message.id) {
+            if (unwrap(message.reference).channelId != message.id) {
                 M.debug("Deleting thread created message");
                 await message.delete();
             }

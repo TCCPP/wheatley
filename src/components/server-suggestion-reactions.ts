@@ -9,16 +9,17 @@ import { Wheatley } from "../wheatley.js";
 
 let react_blacklist = new Set<string>();
 
+// prettier-ignore
 const root_only_reacts = new Set([
     "🟢", "🔴", "🟡", "🔵",
     "🟩", "🟥", "🟨",
     "🚫",
     "❎", "✅",
     "🅾️", "⛔", "⭕", "❌", "🛑",
-    "🫑", "🍏", "🎾", "🍅", "🍎", "🏮"
+    "🫑", "🍏", "🎾", "🍅", "🍎", "🏮",
 ]);
 
-const monitored_channels_ids = [ server_suggestions_channel_id, suggestion_dashboard_thread_id ];
+const monitored_channels_ids = [server_suggestions_channel_id, suggestion_dashboard_thread_id];
 
 /**
  * Adds reactions to server suggestions and allows root users to approve/reject suggestions via reactions.
@@ -36,25 +37,25 @@ export default class ServerSuggestionReactions extends BotComponent {
     }
 
     async handle_fetched_message(message: Discord.Message) {
-        for(const [ _, reaction ] of message.reactions.cache) {
+        for (const [_, reaction] of message.reactions.cache) {
             const users = await reaction.users.fetch();
             ///M.debug(reaction.emoji.name, users.map(u => [u.id, u.tag]));
-            for(const [ id, user ] of users) {
-                if(react_blacklist.has(id)) {
+            for (const [id, user] of users) {
+                if (react_blacklist.has(id)) {
                     M.log("removing reaction by blacklisted user from", {
                         content: reaction.message.content,
                         reaction: reaction.emoji.name,
                         time: reaction.message.createdAt,
-                        user: [ user.tag, user.id ]
+                        user: [user.tag, user.id],
                     });
                     await reaction.users.remove(id);
-                } else if(root_only_reacts.has(reaction.emoji.name!)) {
-                    if(!is_root(user)) {
+                } else if (root_only_reacts.has(reaction.emoji.name!)) {
+                    if (!is_root(user)) {
                         M.log("removing non-root reaction", {
                             content: reaction.message.content,
                             reaction: reaction.emoji.name,
                             time: reaction.message.createdAt,
-                            user: [ user.tag, user.id ]
+                            user: [user.tag, user.id],
                         });
                         await reaction.users.remove(id);
                     }
@@ -70,28 +71,28 @@ export default class ServerSuggestionReactions extends BotComponent {
         const server_suggestions_channel = this.monitored_channels.get(server_suggestions_channel_id);
         let oldest_seen = Date.now();
         assert(server_suggestions_channel != undefined);
-        while(true) {
+        while (true) {
             await delay(3 * MINUTE);
-            if(this.stop) return;
+            if (this.stop) return;
             const messages = await server_suggestions_channel.messages.fetch({
                 limit: 100,
-                before: forge_snowflake(oldest_seen - 1)
+                before: forge_snowflake(oldest_seen - 1),
             });
             M.debug("fetched during root only reactions HARD CATCH UP", messages.size);
-            if(messages.size == 0) {
+            if (messages.size == 0) {
                 break;
             }
-            for(const [ _, message ] of messages) {
-                if(message.createdTimestamp < TRACKER_START_TIME) {
+            for (const [_, message] of messages) {
+                if (message.createdTimestamp < TRACKER_START_TIME) {
                     oldest_seen = TRACKER_START_TIME;
                     continue;
                 }
                 await this.handle_fetched_message(message);
-                if(message.createdTimestamp < oldest_seen) {
+                if (message.createdTimestamp < oldest_seen) {
                     oldest_seen = message.createdTimestamp;
                 }
             }
-            if(oldest_seen <= TRACKER_START_TIME) {
+            if (oldest_seen <= TRACKER_START_TIME) {
                 break;
             }
         }
@@ -99,20 +100,20 @@ export default class ServerSuggestionReactions extends BotComponent {
     }
 
     override async on_ready() {
-        if(await file_exists("src/wheatley-private/config.ts")) {
+        if (await file_exists("src/wheatley-private/config.ts")) {
             const config = "../wheatley-private/config.js";
             react_blacklist = (await import(config)).react_blacklist;
         }
-        for(const channel_id of monitored_channels_ids) {
+        for (const channel_id of monitored_channels_ids) {
             const channel = await this.wheatley.client.channels.fetch(channel_id);
             assert(channel && (channel instanceof Discord.TextChannel || channel instanceof Discord.ThreadChannel));
             this.monitored_channels.set(channel_id, channel);
         }
         M.debug("server_suggestion reactions handler got channels");
         // recover from down time: fetch last 100 messages (and add to cache)
-        for(const [ _, channel ] of this.monitored_channels) {
+        for (const [_, channel] of this.monitored_channels) {
             const messages = await channel.messages.fetch({ limit: 100, cache: true });
-            for(const [ _, message ] of messages) {
+            for (const [_, message] of messages) {
                 await this.handle_fetched_message(message);
             }
         }
@@ -120,10 +121,12 @@ export default class ServerSuggestionReactions extends BotComponent {
         await this.hard_catch_up();
     }
 
-    override async on_reaction_add(reaction: Discord.MessageReaction | Discord.PartialMessageReaction,
-        user: Discord.User                | Discord.PartialUser) {
-        if(monitored_channels_ids.indexOf(reaction.message.channel.id) > -1) {
-            if(reaction.users.cache.some(user => react_blacklist.has(user.id))) {
+    override async on_reaction_add(
+        reaction: Discord.MessageReaction | Discord.PartialMessageReaction,
+        user: Discord.User | Discord.PartialUser,
+    ) {
+        if (monitored_channels_ids.indexOf(reaction.message.channel.id) > -1) {
+            if (reaction.users.cache.some(user => react_blacklist.has(user.id))) {
                 // Remove but not immediately
                 M.debug("scheduling blacklisted user reaction removal");
                 setTimeout(() => {
@@ -131,17 +134,17 @@ export default class ServerSuggestionReactions extends BotComponent {
                         content: reaction.message.content,
                         reaction: reaction.emoji.name,
                         time: reaction.message.createdAt,
-                        user: [ user.tag, user.id ]
+                        user: [user.tag, user.id],
                     });
                     reaction.users.remove(user.id).catch(critical_error);
                 }, 5 * MINUTE);
-            } else if(root_only_reacts.has(reaction.emoji.name!)) {
-                if(!is_root(user)) {
+            } else if (root_only_reacts.has(reaction.emoji.name!)) {
+                if (!is_root(user)) {
                     M.log("removing non-root reaction", {
                         content: reaction.message.content,
                         reaction: reaction.emoji.name,
                         time: reaction.message.createdAt,
-                        user: [ user.tag, user.id ]
+                        user: [user.tag, user.id],
                     });
                     reaction.users.remove(user.id).catch(critical_error);
                 }

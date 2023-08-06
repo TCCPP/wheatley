@@ -24,7 +24,7 @@ export default class RoleManager extends BotComponent {
 
     override destroy() {
         super.destroy();
-        if(this.interval) {
+        if (this.interval) {
             clearInterval(this.interval);
         }
     }
@@ -41,27 +41,27 @@ export default class RoleManager extends BotComponent {
             const members = await this.wheatley.TCCPP.members.fetch();
             members.map((m, _) => {
                 // pink
-                if(m.roles.cache.some(r => r.id == pink_role_id)) {
-                    if(m.premiumSince == null) {
+                if (m.roles.cache.some(r => r.id == pink_role_id)) {
+                    if (m.premiumSince == null) {
                         M.log("removing pink for", m.user.tag);
                         m.roles.remove(this.pink_role).catch(M.error);
                     }
                 }
                 // skill roles
                 const s = m.roles.cache.filter(r => skill_role_ids.includes(r.id));
-                if(s.size > 1) {
+                if (s.size > 1) {
                     M.log("removing duplicate skill roles for", m.user.tag);
                     M.debug(m.user.tag);
                     //M.debug(s);
                     s.sort((a, b) => b.rawPosition - a.rawPosition);
                     M.debug(s.map(x => x.name));
                     M.debug(s.map(x => x.name).slice(1));
-                    for(const role of s.map(x => x).slice(1)) {
+                    for (const role of s.map(x => x).slice(1)) {
                         m.roles.remove(role).catch(M.error);
                     }
                 }
             });
-        } catch(e) {
+        } catch (e) {
             critical_error(e);
         }
     }

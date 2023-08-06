@@ -144,25 +144,20 @@ open-std.org;5
 timsong-cpp.github.io;5
 raii|resource acquisition is initialization;5
 decltype(auto);5
-`   .trim()
+`
+    .trim()
     .split("\n")
     .map(line => line.split(";"))
-    .map(([ re, score ]) => [ new RegExp("\\b(" + re + ")\\b", "gi"), parseInt(score) ] as [RegExp, number]);
+    .map(([re, score]) => [new RegExp("\\b(" + re + ")\\b", "gi"), parseInt(score)] as [RegExp, number]);
 
 const derail_points = 100;
 
-const expert       = "1091601126551461919";
-const advanced     = "1091601243585118210";
-const proficient   = "1091601346525929552";
+const expert = "1091601126551461919";
+const advanced = "1091601243585118210";
+const proficient = "1091601346525929552";
 const intermediate = "1091601365018619936";
-const beginner     = "1091601379719643207";
-const roles = [
-    expert,
-    advanced,
-    proficient,
-    intermediate,
-    beginner,
-];
+const beginner = "1091601379719643207";
+const roles = [expert, advanced, proficient, intermediate, beginner];
 
 /**
  * 2023 April Fool's day event. Bases the skill roles on how many C++ buzzwords people use.
@@ -173,7 +168,7 @@ export default class Buzzwords extends BotComponent {
     last_update = {
         epoch: 0,
         timestamp: 0,
-        remaining_seconds: 0
+        remaining_seconds: 0,
     };
     slowmode: SelfClearingSet<string>;
     timeout: NodeJS.Timeout | null = null;
@@ -187,12 +182,13 @@ export default class Buzzwords extends BotComponent {
     override destroy() {
         super.destroy();
         this.slowmode.destroy();
-        if(this.timeout) clearTimeout(this.timeout);
-        if(this.interval) clearInterval(this.interval);
+        if (this.timeout) clearTimeout(this.timeout);
+        if (this.interval) clearInterval(this.interval);
     }
 
     override async on_ready() {
-        if(ENABLED) { // eslint-disable-line @typescript-eslint/no-unnecessary-condition
+        // eslint-disable-next-line @typescript-eslint/no-unnecessary-condition
+        if (ENABLED) {
             //await this.update_database();
             //this.timeout = setTimeout(() => {
             //    this.update_database().catch(critical_error);
@@ -204,7 +200,8 @@ export default class Buzzwords extends BotComponent {
         }
     }
 
-    static quantile(sorted: number[], q: number) { // from so, gets the job done
+    static quantile(sorted: number[], q: number) {
+        // from so, gets the job done
         const pos = (sorted.length - 1) * q;
         const base = Math.floor(pos);
         const rest = pos - base;
@@ -220,29 +217,29 @@ export default class Buzzwords extends BotComponent {
         const members = await this.wheatley.TCCPP.members.fetch();
         const entries = await this.wheatley.database.buzzword_scoreboard.find().toArray();
         const scores = entries.map(entry => entry.score).sort((a, b) => a - b);
-        const p90 = Buzzwords.quantile(scores, .9);
-        const p80 = Buzzwords.quantile(scores, .7);
-        const p70 = Buzzwords.quantile(scores, .5);
-        const p60 = Buzzwords.quantile(scores, .3);
+        const p90 = Buzzwords.quantile(scores, 0.9);
+        const p80 = Buzzwords.quantile(scores, 0.7);
+        const p70 = Buzzwords.quantile(scores, 0.5);
+        const p60 = Buzzwords.quantile(scores, 0.3);
         members.map(async (member, _) => {
             const member_entry = await this.wheatley.database.buzzword_scoreboard.findOne({ user: member.id });
-            if(member_entry) {
+            if (member_entry) {
                 const score = member_entry.score;
                 const current_role_raw = [...member.roles.cache.filter(r => roles.includes(r.id)).keys()];
                 const current_role = current_role_raw.length > 0 ? current_role_raw[0] : null;
                 let new_role: string;
-                if(score >= p90) {
+                if (score >= p90) {
                     new_role = expert;
-                } else if(score >= p80) {
+                } else if (score >= p80) {
                     new_role = advanced;
-                } else if(score >= p70) {
+                } else if (score >= p70) {
                     new_role = proficient;
-                } else if(score >= p60) {
+                } else if (score >= p60) {
                     new_role = intermediate;
                 } else {
                     new_role = beginner;
                 }
-                if(current_role != new_role) {
+                if (current_role != new_role) {
                     await member.roles.remove(roles);
                     await member.roles.add(new_role);
                 }
@@ -251,33 +248,34 @@ export default class Buzzwords extends BotComponent {
     }
 
     async updateRolesSingle(member: Discord.GuildMember) {
-        if(ENABLED) { // eslint-disable-line @typescript-eslint/no-unnecessary-condition
+        // eslint-disable-next-line @typescript-eslint/no-unnecessary-condition
+        if (ENABLED) {
             // TODO: If we ever do this joke again, cache the quantiles from reflowRoles to save an expensive database
             // query and computation here
             const entries = await this.wheatley.database.buzzword_scoreboard.find().toArray();
             const scores = entries.map(entry => entry.score).sort((a, b) => a - b);
-            const p90 = Buzzwords.quantile(scores, .9);
-            const p80 = Buzzwords.quantile(scores, .7);
-            const p70 = Buzzwords.quantile(scores, .5);
-            const p60 = Buzzwords.quantile(scores, .3);
+            const p90 = Buzzwords.quantile(scores, 0.9);
+            const p80 = Buzzwords.quantile(scores, 0.7);
+            const p70 = Buzzwords.quantile(scores, 0.5);
+            const p60 = Buzzwords.quantile(scores, 0.3);
             const member_entry = await this.wheatley.database.buzzword_scoreboard.findOne({ user: member.id });
-            if(member_entry) {
+            if (member_entry) {
                 const score = member_entry.score;
                 const current_role_raw = [...member.roles.cache.filter(r => roles.includes(r.id)).keys()];
                 const current_role = current_role_raw.length > 0 ? current_role_raw[0] : null;
                 let new_role: string;
-                if(score >= p90) {
+                if (score >= p90) {
                     new_role = expert;
-                } else if(score >= p80) {
+                } else if (score >= p80) {
                     new_role = advanced;
-                } else if(score >= p70) {
+                } else if (score >= p70) {
                     new_role = proficient;
-                } else if(score >= p60) {
+                } else if (score >= p60) {
                     new_role = intermediate;
                 } else {
                     new_role = beginner;
                 }
-                if(current_role != new_role) {
+                if (current_role != new_role) {
                     await member.roles.remove(roles);
                     await member.roles.add(new_role);
                 }
@@ -286,47 +284,55 @@ export default class Buzzwords extends BotComponent {
     }
 
     async give_points(id: string, tag: string, points: number) {
-        await this.wheatley.database.buzzword_scoreboard.updateOne({ user: id }, {
-            $set: {
-                user: id,
-                tag,
+        await this.wheatley.database.buzzword_scoreboard.updateOne(
+            { user: id },
+            {
+                $set: {
+                    user: id,
+                    tag,
+                },
+                $inc: {
+                    score: points,
+                    count: 1,
+                },
             },
-            $inc: {
-                score: points,
-                count: 1,
-            }
-        }, { upsert: true });
+            { upsert: true },
+        );
     }
 
     async set_points(id: string, tag: string, points: number) {
-        await this.wheatley.database.buzzword_scoreboard.updateOne({ user: id }, {
-            $set: {
-                user: id,
-                tag,
-                score: points,
+        await this.wheatley.database.buzzword_scoreboard.updateOne(
+            { user: id },
+            {
+                $set: {
+                    user: id,
+                    tag,
+                    score: points,
+                },
+                $inc: {
+                    count: 1,
+                },
             },
-            $inc: {
-                count: 1,
-            }
-        }, { upsert: true });
+            { upsert: true },
+        );
     }
 
     override async on_message_create(message: Discord.Message) {
-        if(message.author.bot) return; // Ignore bots
-        if(message.guildId != TCCPP_ID) return; // Ignore DMs
+        if (message.author.bot) return; // Ignore bots
+        if (message.guildId != TCCPP_ID) return; // Ignore DMs
         //if(message.channel.id != "1091502908241084436") return; // for now, for testing
-        if(is_authorized_admin(message.author)) {
-            if(message.content.trim().startsWith("!derailed")) {
+        if (is_authorized_admin(message.author)) {
+            if (message.content.trim().startsWith("!derailed")) {
                 const ids = message.content.match(/\d{10,}/g);
-                if(!ids || ids.length != 1) {
+                if (!ids || ids.length != 1) {
                     await message.reply({
                         embeds: [
                             new Discord.EmbedBuilder()
                                 .setColor(colors.color)
                                 .setDescription(
-                                    "Error: Must mention exactly one member (either a mention or snowflake)"
-                                )
-                        ]
+                                    "Error: Must mention exactly one member (either a mention or snowflake)",
+                                ),
+                        ],
                     });
                 } else {
                     const id = ids[0];
@@ -335,8 +341,8 @@ export default class Buzzwords extends BotComponent {
                         embeds: [
                             new Discord.EmbedBuilder()
                                 .setColor(colors.color)
-                                .setDescription(`You've earned ${derail_points} points!`)
-                        ]
+                                .setDescription(`You've earned ${derail_points} points!`),
+                        ],
                     });
                     const member = await this.wheatley.TCCPP.members.fetch(id);
                     const tag = member.user.tag;
@@ -345,10 +351,10 @@ export default class Buzzwords extends BotComponent {
                 }
                 return;
             }
-            if(message.content.trim().startsWith("!setscore")) {
+            if (message.content.trim().startsWith("!setscore")) {
                 const match = message.content.match(/\d{10,}\s+-?\d+/);
-                if(match) {
-                    const [ id, amount ] = match[0].split(" ");
+                if (match) {
+                    const [id, amount] = match[0].split(" ");
                     const member = await (async () => {
                         try {
                             return await this.wheatley.TCCPP.members.fetch(id);
@@ -358,7 +364,7 @@ export default class Buzzwords extends BotComponent {
                     })();
                     const tag = member.user.tag;
                     await this.set_points(id, tag, parseInt(amount));
-                    if(member instanceof Discord.GuildMember) await this.updateRolesSingle(member);
+                    if (member instanceof Discord.GuildMember) await this.updateRolesSingle(member);
                     await message.reply("Done");
                     //await this.update_database();
                 } else {
@@ -367,106 +373,104 @@ export default class Buzzwords extends BotComponent {
                             new Discord.EmbedBuilder()
                                 .setColor(colors.color)
                                 .setDescription(
-                                    "Error: Must mention exactly one member (either a mention or snowflake)"
-                                    + " and an amount"
-                                )
-                        ]
+                                    "Error: Must mention exactly one member (either a mention or snowflake)" +
+                                        " and an amount",
+                                ),
+                        ],
                     });
                 }
             }
-            if(message.content.trim() == "!clearbuzzscores" && message.author.id == "199943082441965577") {
+            if (message.content.trim() == "!clearbuzzscores" && message.author.id == "199943082441965577") {
                 await this.wheatley.database.buzzword_scoreboard.deleteMany({});
                 return;
             }
-            if(message.content.trim() == "!testbuzzquartile" && message.author.id == "199943082441965577") {
+            if (message.content.trim() == "!testbuzzquartile" && message.author.id == "199943082441965577") {
                 const scoreboard_entries = await this.wheatley.database.buzzword_scoreboard.find().toArray();
                 const scores = scoreboard_entries.map(entry => entry.score).sort((a, b) => a - b);
-                const p90 = Buzzwords.quantile(scores, .9);
-                const p80 = Buzzwords.quantile(scores, .7);
-                const p70 = Buzzwords.quantile(scores, .5);
-                const p60 = Buzzwords.quantile(scores, .3);
+                const p90 = Buzzwords.quantile(scores, 0.9);
+                const p80 = Buzzwords.quantile(scores, 0.7);
+                const p70 = Buzzwords.quantile(scores, 0.5);
+                const p60 = Buzzwords.quantile(scores, 0.3);
                 await message.reply(`90: ${p90}\n80: ${p80}\n70: ${p70}\n60: ${p60}`);
                 return;
             }
-            if(message.content.trim() == "!initbuzzscoresystem" && message.author.id == "199943082441965577") {
+            if (message.content.trim() == "!initbuzzscoresystem" && message.author.id == "199943082441965577") {
                 const members = await this.wheatley.TCCPP.members.fetch();
                 M.log(members.size, "members");
                 await Promise.all(
                     members
                         .filter(member => !member.roles.cache.has(beginner))
-                        .map(member => member.roles.add(beginner))
+                        .map(member => member.roles.add(beginner)),
                 );
                 return;
             }
         }
-        if(message.content.trim() == "!scoreboard") {
-            const scoreboard_entries = await this.wheatley.database.buzzword_scoreboard.aggregate([
-                { $sort: { score: -1 } },
-                { $limit: 15 }
-            ]).toArray() as unknown as buzzword_scoreboard_entry[];
-            const embed = new Discord.EmbedBuilder()
-                .setTitle("Scoreboard");
+        if (message.content.trim() == "!scoreboard") {
+            const scoreboard_entries = (await this.wheatley.database.buzzword_scoreboard
+                .aggregate([{ $sort: { score: -1 } }, { $limit: 15 }])
+                .toArray()) as unknown as buzzword_scoreboard_entry[];
+            const embed = new Discord.EmbedBuilder().setTitle("Scoreboard");
             let description = "";
-            for(const entry of scoreboard_entries) {
+            for (const entry of scoreboard_entries) {
                 const tag = entry.tag == "" ? `<@${entry.user}>` : entry.tag;
                 description += `${tag}: ${round(entry.score, 1)}\n`;
             }
             embed.setDescription(description);
             await message.reply({
-                embeds: [embed]
+                embeds: [embed],
             });
             return;
         }
-        if(message.content.trim() == "!bottom") {
+        if (message.content.trim() == "!bottom") {
             const scoreboard_entries = await this.wheatley.database.buzzword_scoreboard.find().toArray();
             const entries = scoreboard_entries.sort((a, b) => a.score - b.score);
             const scores = entries.slice(0, 15);
-            const embed = new Discord.EmbedBuilder()
-                .setTitle("Scoreboard");
+            const embed = new Discord.EmbedBuilder().setTitle("Scoreboard");
             let description = "";
-            for(const entry of scores) {
+            for (const entry of scores) {
                 const tag = entry.tag == "" ? `<@${entry.user}>` : entry.tag;
                 description += `${tag}: ${round(entry.score, 1)}\n`;
             }
             embed.setDescription(description);
             await message.reply({
-                embeds: [embed]
+                embeds: [embed],
             });
             return;
         }
-        if(message.content.trim() == "!score") {
+        if (message.content.trim() == "!score") {
             const member_entry = await this.wheatley.database.buzzword_scoreboard.findOne({ user: message.author.id });
             await message.reply({
                 embeds: [
                     new Discord.EmbedBuilder()
                         .setColor(colors.color)
-                        .setDescription(`Score: ${member_entry ? member_entry.score : 0}`)
-                ]
+                        .setDescription(`Score: ${member_entry ? member_entry.score : 0}`),
+                ],
             });
         }
         // check the message for buzzwords
-        if(ENABLED) { // eslint-disable-line @typescript-eslint/no-unnecessary-condition
-            if(!this.slowmode.has(message.author.id)) {
+        // eslint-disable-next-line @typescript-eslint/no-unnecessary-condition
+        if (ENABLED) {
+            if (!this.slowmode.has(message.author.id)) {
                 let total_score = 0;
                 let count = 0;
-                for(const [ re, score ] of buzzwords) {
-                    if(message.content.match(re)) {
+                for (const [re, score] of buzzwords) {
+                    if (message.content.match(re)) {
                         total_score += score;
                         count++;
                     }
                 }
-                if(total_score > 0) {
-                    if(count > 10) {
+                if (total_score > 0) {
+                    if (count > 10) {
                         total_score *= -10;
-                    } else if(count > 5) {
+                    } else if (count > 5) {
                         total_score *= -2;
                     }
                     await message.reply({
                         embeds: [
                             new Discord.EmbedBuilder()
                                 .setColor(colors.color)
-                                .setDescription(`You've earned ${Math.round(total_score * 10) / 10} points!`)
-                        ]
+                                .setDescription(`You've earned ${Math.round(total_score * 10) / 10} points!`),
+                        ],
                     });
                     await this.give_points(message.author.id, message.author.tag, total_score);
                     await this.updateRolesSingle(unwrap(message.member));

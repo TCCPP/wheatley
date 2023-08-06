@@ -14,7 +14,7 @@ export type TextBasedCommandOption = {
     title: string;
     description: string;
     required?: boolean;
-    autocomplete?: (partial: string, command_name: string) => { name: string, value: string }[];
+    autocomplete?: (partial: string, command_name: string) => { name: string; value: string }[];
 };
 
 type Append<T extends unknown[], U> = [...T, U];
@@ -30,10 +30,10 @@ export type CommandAbstractionReplyOptions = {
     ephemeral_if_possible?: boolean;
     // default: true
     deletable?: boolean;
-}
+};
 
 const default_allowed_mentions: Discord.MessageMentionOptions = {
-    parse: ["users"]
+    parse: ["users"],
 };
 
 // Command builder stuff
@@ -45,11 +45,11 @@ export abstract class CommandBuilder<HasHandler extends boolean = false, Handler
 export class TextBasedCommandBuilder<
     Args extends unknown[] = [],
     HasDescriptions extends boolean = false,
-    HasHandler extends boolean = false
+    HasHandler extends boolean = false,
 > extends CommandBuilder<HasHandler, [TextBasedCommand, ...Args]> {
     readonly names: string[];
     descriptions: ConditionalOptional<HasDescriptions, string[]>;
-    options = new Discord.Collection<string, TextBasedCommandOption & {type: TextBasedCommandOptionType}>();
+    options = new Discord.Collection<string, TextBasedCommandOption & { type: TextBasedCommandOptionType }>();
     slash_config: boolean[];
     permissions: undefined | bigint = undefined;
 
@@ -61,7 +61,7 @@ export class TextBasedCommandBuilder<
 
     set_description(raw_descriptions: string | MoreThanOne<string>): TextBasedCommandBuilder<Args, true, HasHandler> {
         const descriptions = Array.isArray(raw_descriptions) ? raw_descriptions : [raw_descriptions];
-        if(descriptions.length == this.names.length) {
+        if (descriptions.length == this.names.length) {
             this.descriptions = descriptions;
         } else {
             assert(descriptions.length == 1);
@@ -70,24 +70,26 @@ export class TextBasedCommandBuilder<
         return this as unknown as TextBasedCommandBuilder<Args, true, HasHandler>;
     }
 
-    add_string_option(option: TextBasedCommandOption):
-        TextBasedCommandBuilder<Append<Args, string>, HasDescriptions, HasHandler> {
+    add_string_option(
+        option: TextBasedCommandOption,
+    ): TextBasedCommandBuilder<Append<Args, string>, HasDescriptions, HasHandler> {
         assert(!this.options.has(option.title));
         this.options.set(option.title, {
             ...option,
-            type: "string"
+            type: "string",
         });
         return this as unknown as TextBasedCommandBuilder<Append<Args, string>, HasDescriptions, HasHandler>;
     }
 
-    set_handler(handler: (x: TextBasedCommand, ...args: Args) => any):
-        TextBasedCommandBuilder<Args, HasDescriptions, true> {
+    set_handler(
+        handler: (x: TextBasedCommand, ...args: Args) => any,
+    ): TextBasedCommandBuilder<Args, HasDescriptions, true> {
         this.handler = handler;
         return this as unknown as TextBasedCommandBuilder<Args, HasDescriptions, true>;
     }
 
     set_slash(...config: boolean[]) {
-        if(config.length == this.names.length) {
+        if (config.length == this.names.length) {
             this.slash_config = config;
         } else {
             assert(config.length == 1);
@@ -104,93 +106,101 @@ export class TextBasedCommandBuilder<
     // TODO: to_command_descriptors?
 }
 
-export abstract class OtherCommandBuilder<HasHandler extends boolean = false, HandlerArgs extends unknown[] = []>
-    extends CommandBuilder<HasHandler, HandlerArgs> {
+export abstract class OtherCommandBuilder<
+    HasHandler extends boolean = false,
+    HandlerArgs extends unknown[] = [],
+> extends CommandBuilder<HasHandler, HandlerArgs> {
     // returns botcommand and djs command to register, if applicable
     abstract to_command_descriptors(): [ConditionalOptional<HasHandler, BotCommand<any>>, unknown | undefined];
 }
 
-export class MessageContextMenuCommandBuilder<HasHandler extends boolean = false>
-    extends OtherCommandBuilder<HasHandler, [Discord.MessageContextMenuCommandInteraction]> {
+export class MessageContextMenuCommandBuilder<HasHandler extends boolean = false> extends OtherCommandBuilder<
+    HasHandler,
+    [Discord.MessageContextMenuCommandInteraction]
+> {
     // TODO: Permissions?
 
     constructor(public readonly name: string) {
         super();
     }
 
-    set_handler(handler: (x: Discord.MessageContextMenuCommandInteraction) => any):
-        MessageContextMenuCommandBuilder<true> {
+    set_handler(
+        handler: (x: Discord.MessageContextMenuCommandInteraction) => any,
+    ): MessageContextMenuCommandBuilder<true> {
         this.handler = handler;
         return this as unknown as MessageContextMenuCommandBuilder<true>;
     }
 
     override to_command_descriptors(): [ConditionalOptional<HasHandler, BotCommand<any>>, unknown] {
-        if(!this.handler) {
-            return [ undefined as ConditionalOptional<HasHandler, BotCommand<any>>, undefined ];
+        if (!this.handler) {
+            return [undefined as ConditionalOptional<HasHandler, BotCommand<any>>, undefined];
         } else {
+            // TODO: Permissions?
             return [
                 new BotCommand(this.name, this.handler) as ConditionalOptional<HasHandler, BotCommand<any>>,
-                new ContextMenuCommandBuilder()
-                    .setName(this.name)
-                    .setType(ApplicationCommandTypeMessage) // TODO: Permissions?
+                new ContextMenuCommandBuilder().setName(this.name).setType(ApplicationCommandTypeMessage),
             ];
         }
     }
 }
 
-export class UserContextMenuCommandBuilder<HasHandler extends boolean = false>
-    extends OtherCommandBuilder<HasHandler, [Discord.UserContextMenuCommandInteraction]> {
+export class UserContextMenuCommandBuilder<HasHandler extends boolean = false> extends OtherCommandBuilder<
+    HasHandler,
+    [Discord.UserContextMenuCommandInteraction]
+> {
     // TODO: Permissions?
 
     constructor(public readonly name: string) {
         super();
     }
 
-    set_handler(handler: (x: Discord.UserContextMenuCommandInteraction) => any):
-        MessageContextMenuCommandBuilder<true> {
+    set_handler(
+        handler: (x: Discord.UserContextMenuCommandInteraction) => any,
+    ): MessageContextMenuCommandBuilder<true> {
         this.handler = handler;
         return this as unknown as MessageContextMenuCommandBuilder<true>;
     }
 
     override to_command_descriptors(): [ConditionalOptional<HasHandler, BotCommand<any>>, unknown] {
-        if(!this.handler) {
-            return [ undefined as ConditionalOptional<HasHandler, BotCommand<any>>, undefined ];
+        if (!this.handler) {
+            return [undefined as ConditionalOptional<HasHandler, BotCommand<any>>, undefined];
         } else {
+            // TODO: Permissions?
             return [
                 new BotCommand(this.name, this.handler) as ConditionalOptional<HasHandler, BotCommand<any>>,
-                new ContextMenuCommandBuilder()
-                    .setName(this.name)
-                    .setType(ApplicationCommandTypeUser) // TODO: Permissions?
+                new ContextMenuCommandBuilder().setName(this.name).setType(ApplicationCommandTypeUser),
             ];
         }
     }
 }
 
-export class ModalHandler<HasHandler extends boolean = false>
-    extends OtherCommandBuilder<HasHandler, [Discord.ModalSubmitInteraction, ...string[]]> {
+export class ModalHandler<HasHandler extends boolean = false> extends OtherCommandBuilder<
+    HasHandler,
+    [Discord.ModalSubmitInteraction, ...string[]]
+> {
     readonly name: string;
     readonly fields: string[];
 
-    constructor(
-        modal: Discord.ModalBuilder,
-        handler: (x: Discord.ModalSubmitInteraction, ...args: string[]) => any
-    ) {
+    constructor(modal: Discord.ModalBuilder, handler: (x: Discord.ModalSubmitInteraction, ...args: string[]) => any) {
         super();
         assert(modal.data.custom_id);
         this.name = unwrap(modal.data.custom_id);
-        this.fields = modal.components.map(row =>
-            row.components.map(component => unwrap(component.data.custom_id))).flat();
+        this.fields = modal.components
+            .map(row => row.components.map(component => unwrap(component.data.custom_id)))
+            .flat();
         this.handler = handler;
     }
 
     override to_command_descriptors(): [ConditionalOptional<HasHandler, BotModalHandler>, undefined] {
-        if(!this.handler) {
-            return [ undefined as ConditionalOptional<HasHandler, BotModalHandler>, undefined ];
+        if (!this.handler) {
+            return [undefined as ConditionalOptional<HasHandler, BotModalHandler>, undefined];
         } else {
             return [
-                new BotModalHandler(this.name, this as ModalHandler<true>) as
-                    ConditionalOptional<HasHandler, BotModalHandler>,
-                undefined
+                new BotModalHandler(this.name, this as ModalHandler<true>) as ConditionalOptional<
+                    HasHandler,
+                    BotModalHandler
+                >,
+                undefined,
             ];
         }
     }
@@ -199,18 +209,22 @@ export class ModalHandler<HasHandler extends boolean = false>
 // Command descriptors for the bot to store
 
 export class BotCommand<Args extends unknown[] = []> {
-    constructor(public readonly name: string,
-                public readonly handler: (...args: Args) => any) {}
+    constructor(
+        public readonly name: string,
+        public readonly handler: (...args: Args) => any,
+    ) {}
 }
 
 export class BotTextBasedCommand<Args extends unknown[] = []> extends BotCommand<[TextBasedCommand, ...Args]> {
-    options = new Discord.Collection<string, TextBasedCommandOption & {type: TextBasedCommandOptionType}>();
+    options = new Discord.Collection<string, TextBasedCommandOption & { type: TextBasedCommandOptionType }>();
 
-    constructor(name: string,
-                public readonly description: string | undefined,
-                public readonly slash: boolean,
-                public readonly permissions: undefined | bigint,
-                builder: TextBasedCommandBuilder<Args, true, true>) {
+    constructor(
+        name: string,
+        public readonly description: string | undefined,
+        public readonly slash: boolean,
+        public readonly permissions: undefined | bigint,
+        builder: TextBasedCommandBuilder<Args, true, true>,
+    ) {
         super(name, builder.handler);
         this.options = builder.options;
     }
@@ -227,9 +241,7 @@ export class BotModalHandler extends BotCommand<[Discord.ModalSubmitInteraction,
 
 // Command abstractions themselves
 
-export class Command {
-
-}
+export class Command {}
 
 export class TextBasedCommand extends Command {
     public readonly name: string;
@@ -253,19 +265,22 @@ export class TextBasedCommand extends Command {
     // copy constructor - used for edit
     constructor(command: TextBasedCommand, name: string, reply_object: Discord.Message);
     // impl
-    constructor(..._args: [string, Discord.ChatInputCommandInteraction | Discord.Message, Wheatley]
-                        | [TextBasedCommand, string, Discord.Message]) {
+    constructor(
+        ..._args:
+            | [string, Discord.ChatInputCommandInteraction | Discord.Message, Wheatley]
+            | [TextBasedCommand, string, Discord.Message]
+    ) {
         super();
-        const args = is_string(_args[0]) ?
-            [ "n", ..._args ] as ["n", string, Discord.ChatInputCommandInteraction | Discord.Message, Wheatley]
-            : [ "c", ..._args ] as ["c", TextBasedCommand, string, Discord.Message];
-        if(args[0] == "n") {
+        const args = is_string(_args[0])
+            ? (["n", ..._args] as ["n", string, Discord.ChatInputCommandInteraction | Discord.Message, Wheatley])
+            : (["c", ..._args] as ["c", TextBasedCommand, string, Discord.Message]);
+        if (args[0] == "n") {
             // construct new command
-            const [ _, name, reply_object, wheatley ] = args;
+            const [_, name, reply_object, wheatley] = args;
             this.name = name;
             this.reply_object = reply_object;
             this.wheatley = wheatley;
-            if(reply_object instanceof Discord.ChatInputCommandInteraction) {
+            if (reply_object instanceof Discord.ChatInputCommandInteraction) {
                 this.guild = reply_object.guild;
                 this.guild_id = reply_object.guildId;
                 this.channel = reply_object.channel;
@@ -280,9 +295,10 @@ export class TextBasedCommand extends Command {
                 this.member = reply_object.member;
                 this.user = reply_object.author;
             }
-        } else if(args[0] == "c") { // eslint-disable-line @typescript-eslint/no-unnecessary-condition
+            // eslint-disable-next-line @typescript-eslint/no-unnecessary-condition
+        } else if (args[0] == "c") {
             // construct from copy, used for edit
-            const [ _, command, name, reply_object ] = args;
+            const [_, command, name, reply_object] = args;
             this.name = name;
             this.wheatley = command.wheatley;
             this.reply_object = reply_object;
@@ -303,11 +319,11 @@ export class TextBasedCommand extends Command {
     }
 
     async get_guild() {
-        if(this.guild) {
+        if (this.guild) {
             return this.guild;
         } else {
-            if(this.guild_id) {
-                return this.guild = await this.wheatley.client.guilds.fetch(this.guild_id);
+            if (this.guild_id) {
+                return (this.guild = await this.wheatley.client.guilds.fetch(this.guild_id));
             } else {
                 throw Error("No guild");
             }
@@ -315,32 +331,33 @@ export class TextBasedCommand extends Command {
     }
 
     async get_channel(): Promise<Discord.TextBasedChannel> {
-        if(this.channel) {
+        if (this.channel) {
             return this.channel;
         } else {
-            return this.channel =
-                <Discord.TextBasedChannel>unwrap(await (await this.get_guild()).channels.fetch(this.channel_id));
+            return (this.channel = <Discord.TextBasedChannel>(
+                unwrap(await (await this.get_guild()).channels.fetch(this.channel_id))
+            ));
         }
     }
 
     async get_member(guild_override?: Discord.Guild) {
-        if(guild_override) {
+        if (guild_override) {
             return await guild_override.members.fetch(this.user.id);
-        } else if(this.member instanceof Discord.GuildMember) {
+        } else if (this.member instanceof Discord.GuildMember) {
             return this.member;
         } else {
-            return this.member = await (await this.get_guild()).members.fetch(this.user.id);
+            return (this.member = await (await this.get_guild()).members.fetch(this.user.id));
         }
     }
 
     async reply(
         raw_message_options: string | (Discord.BaseMessageOptions & CommandAbstractionReplyOptions),
         positional_ephemeral_if_possible = false,
-        positional_should_text_reply = false
+        positional_should_text_reply = false,
     ) {
-        if(is_string(raw_message_options)) {
+        if (is_string(raw_message_options)) {
             raw_message_options = {
-                content: raw_message_options
+                content: raw_message_options,
             };
         }
         const message_options: Discord.BaseMessageOptions & CommandAbstractionReplyOptions = {
@@ -350,35 +367,36 @@ export class TextBasedCommand extends Command {
             files: [],
             components: [],
             content: "",
-            ...raw_message_options
+            ...raw_message_options,
         };
         message_options.ephemeral_if_possible =
             message_options.ephemeral_if_possible || positional_ephemeral_if_possible;
-        message_options.should_text_reply =
-            message_options.should_text_reply || positional_should_text_reply;
+        message_options.should_text_reply = message_options.should_text_reply || positional_should_text_reply;
 
         assert(!this.replied || this.editing);
-        if(this.editing) {
-            assert(this.reply_object instanceof Discord.ChatInputCommandInteraction
-                    == this.response instanceof Discord.InteractionResponse);
+        if (this.editing) {
+            assert(
+                this.reply_object instanceof Discord.ChatInputCommandInteraction ==
+                    this.response instanceof Discord.InteractionResponse,
+            );
             assert(this.response);
-            if(this.response instanceof Discord.InteractionResponse) {
+            if (this.response instanceof Discord.InteractionResponse) {
                 assert(this.reply_object instanceof Discord.ChatInputCommandInteraction);
                 await this.reply_object.editReply({
-                    ...message_options
+                    ...message_options,
                 });
             } else {
                 await this.response.edit(message_options);
             }
         } else {
             assert(this.response === null);
-            if(this.reply_object instanceof Discord.ChatInputCommandInteraction) {
+            if (this.reply_object instanceof Discord.ChatInputCommandInteraction) {
                 this.response = await this.reply_object.reply({
                     ephemeral: !!message_options.ephemeral_if_possible,
-                    ...message_options
+                    ...message_options,
                 });
             } else {
-                if(message_options.should_text_reply) {
+                if (message_options.should_text_reply) {
                     this.response = await this.reply_object.reply(message_options);
                 } else {
                     this.response = await this.reply_object.channel.send(message_options);
@@ -392,12 +410,12 @@ export class TextBasedCommand extends Command {
     async followUp(
         raw_message_options: string | (Discord.BaseMessageOptions & CommandAbstractionReplyOptions),
         positional_ephemeral_if_possible = false,
-        positional_should_text_reply = false
+        positional_should_text_reply = false,
     ) {
         // TODO: Duplicate
-        if(is_string(raw_message_options)) {
+        if (is_string(raw_message_options)) {
             raw_message_options = {
-                content: raw_message_options
+                content: raw_message_options,
             };
         }
         const message_options: Discord.BaseMessageOptions & CommandAbstractionReplyOptions = {
@@ -407,22 +425,21 @@ export class TextBasedCommand extends Command {
             files: [],
             components: [],
             content: "",
-            ...raw_message_options
+            ...raw_message_options,
         };
         message_options.ephemeral_if_possible =
             message_options.ephemeral_if_possible || positional_ephemeral_if_possible;
-        message_options.should_text_reply =
-            message_options.should_text_reply || positional_should_text_reply;
+        message_options.should_text_reply = message_options.should_text_reply || positional_should_text_reply;
         /// -----
         assert(this.replied && !this.editing);
         // TODO: Better handling for this kind of thing
-        if(this.reply_object instanceof Discord.ChatInputCommandInteraction) {
+        if (this.reply_object instanceof Discord.ChatInputCommandInteraction) {
             this.response = await this.reply_object.followUp({
                 ephemeral: !!message_options.ephemeral_if_possible,
-                ...message_options
+                ...message_options,
             });
         } else {
-            if(message_options.should_text_reply) {
+            if (message_options.should_text_reply) {
                 this.response = await this.reply_object.reply(message_options);
             } else {
                 this.response = await this.reply_object.channel.send(message_options);
@@ -430,9 +447,7 @@ export class TextBasedCommand extends Command {
         }
     }
 
-    async edit(
-        raw_message_options: string | (Discord.BaseMessageOptions & CommandAbstractionReplyOptions)
-    ) {
+    async edit(raw_message_options: string | (Discord.BaseMessageOptions & CommandAbstractionReplyOptions)) {
         this.editing = true;
         await this.reply(raw_message_options);
     }
@@ -442,7 +457,7 @@ export class TextBasedCommand extends Command {
     }
 
     async react(emoji: string, ephemeral_if_possible = false) {
-        if(this.reply_object instanceof Discord.ChatInputCommandInteraction) {
+        if (this.reply_object instanceof Discord.ChatInputCommandInteraction) {
             await this.reply_object.reply({
                 content: emoji,
                 ephemeral: ephemeral_if_possible,
@@ -454,7 +469,7 @@ export class TextBasedCommand extends Command {
     }
 
     get_or_forge_url() {
-        if(this.reply_object instanceof Discord.Message) {
+        if (this.reply_object instanceof Discord.Message) {
             return this.reply_object.url;
         } else {
             return `https://discord.com/channels/${this.guild_id}/${this.channel_id}/${forge_snowflake(Date.now())}`;
@@ -468,9 +483,9 @@ export class TextBasedCommand extends Command {
 
     async delete_replies_if_replied() {
         // note can be called while editing if edited from a command to a non-command
-        if(this.replied) {
+        if (this.replied) {
             assert(this.response !== null);
-            if(this.response instanceof Discord.InteractionResponse) {
+            if (this.response instanceof Discord.InteractionResponse) {
                 assert(this.reply_object instanceof Discord.ChatInputCommandInteraction);
                 await this.reply_object.deleteReply();
             } else {
