@@ -24,7 +24,7 @@
         "test": "tsc && mocha build/test",
         "format": "prettier . --write",
         "format-files": "prettier --write --ignore-unknown",
-        "ts-compile": "tsc"
+        "ts-check": "tsc --noEmit"
     },
     "devDependencies": {
         "@types/chai": "^4.3.5",
