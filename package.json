@@ -22,7 +22,9 @@
         "lint-files": "eslint --color",
         "prepare": "husky install",
         "test": "tsc && mocha build/test",
-        "format": "prettier . --write"
+        "format": "prettier . --write",
+        "format-files": "prettier --write --ignore-unknown",
+        "ts-compile": "tsc"
     },
     "devDependencies": {
         "@types/chai": "^4.3.5",
