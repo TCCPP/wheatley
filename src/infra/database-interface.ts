@@ -32,19 +32,19 @@ export class WheatleyDatabase {
         const instance = new WheatleyDatabase(client, db);
         return new Proxy(instance, {
             get: (instance, key, _proxy) => {
-                if(key in instance) {
+                if (key in instance) {
                     return (instance as any)[key];
-                } else if(is_string(key)) {
+                } else if (is_string(key)) {
                     return instance.get_collection(key);
                 } else {
                     assert(false);
                 }
-            }
+            },
         }) as WheatleyDatabaseProxy;
     }
 
     get_collection(name: string) {
-        if(this.collections.has(name)) {
+        if (this.collections.has(name)) {
             return unwrap(this.collections.get(name));
         } else {
             const collection = unwrap(this.db).collection(name);
@@ -57,11 +57,11 @@ export class WheatleyDatabase {
     async get_bot_singleton(): Promise<mongo.WithId<wheatley_db_info>> {
         const wheatley = this.get_collection("wheatley");
         const res = await wheatley.findOne();
-        if(res == null) {
+        if (res == null) {
             const document = {
                 id: "main",
                 server_suggestions: {
-                    last_scanned_timestamp: TRACKER_START_TIME
+                    last_scanned_timestamp: TRACKER_START_TIME,
                 },
                 modmail_id_counter: 0,
                 the_button: {
@@ -72,14 +72,14 @@ export class WheatleyDatabase {
                 starboard: {
                     delete_emojis: [],
                     ignored_emojis: [],
-                    negative_emojis: []
-                }
+                    negative_emojis: [],
+                },
             };
             const ires = await wheatley.insertOne(document);
             assert(ires.acknowledged);
             return {
                 _id: ires.insertedId,
-                ...document
+                ...document,
             };
         } else {
             assert(res.id === "main");
@@ -89,9 +89,12 @@ export class WheatleyDatabase {
 
     async update_bot_singleton(update: Partial<wheatley_db_info>) {
         const wheatley = this.get_collection("wheatley");
-        await wheatley.updateOne({ id: "main" }, {
-            $set: update
-        });
+        await wheatley.updateOne(
+            { id: "main" },
+            {
+                $set: update,
+            },
+        );
     }
 
     async lock() {

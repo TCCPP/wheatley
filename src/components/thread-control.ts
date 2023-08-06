@@ -19,7 +19,7 @@ export default class ThreadControl extends BotComponent {
         this.add_command(
             new TextBasedCommandBuilder("archive")
                 .set_description("Archives the thread")
-                .set_handler(this.archive.bind(this))
+                .set_handler(this.archive.bind(this)),
         );
 
         this.add_command(
@@ -28,18 +28,19 @@ export default class ThreadControl extends BotComponent {
                 .add_string_option({
                     title: "name",
                     description: "Name",
-                    required: true
+                    required: true,
                 })
-                .set_handler(this.rename.bind(this))
+                .set_handler(this.rename.bind(this)),
         );
     }
 
     async get_owner(thread: Discord.ThreadChannel) {
-        if(unwrap(thread.parent) instanceof Discord.ForumChannel) {
-            return thread.ownerId!;/*TODO*/
+        if (unwrap(thread.parent) instanceof Discord.ForumChannel) {
+            return thread.ownerId!; /*TODO*/
         } else {
-            return thread.type == Discord.ChannelType.PrivateThread ? thread.ownerId!/*TODO*/
-                : (await thread.fetchStarterMessage())!/*TODO*/.author.id;
+            return thread.type == Discord.ChannelType.PrivateThread
+                ? thread.ownerId! /*TODO*/
+                : (await thread.fetchStarterMessage())! /*TODO*/.author.id;
         }
     }
 
@@ -47,23 +48,23 @@ export default class ThreadControl extends BotComponent {
     // or sends an error message
     async try_to_control_thread(request: TextBasedCommand, action: string) {
         const channel = await request.get_channel();
-        if(channel.isThread()) {
+        if (channel.isThread()) {
             const thread = channel;
-            if(thread.parentId == rules_channel_id) {
+            if (thread.parentId == rules_channel_id) {
                 return true; // just let the user do it, should be fine
             }
             const owner_id = await this.get_owner(thread);
-            if(owner_id == request.user.id || is_authorized_admin(request.user.id)) {
+            if (owner_id == request.user.id || is_authorized_admin(request.user.id)) {
                 return true;
             } else {
                 await request.reply({
-                    content: `You can only ${action} threads you own`
+                    content: `You can only ${action} threads you own`,
                 });
                 return false;
             }
         } else {
             await request.reply({
-                content: `You can only ${action} threads`
+                content: `You can only ${action} threads`,
             });
             return false;
         }
@@ -71,11 +72,10 @@ export default class ThreadControl extends BotComponent {
 
     async archive(command: TextBasedCommand) {
         M.debug("Received archive command", command.user.username, command.get_or_forge_url());
-        if(await this.try_to_control_thread(command, "archive")) {
+        if (await this.try_to_control_thread(command, "archive")) {
             const channel = await command.get_channel();
             assert(channel.isThread());
-            if(channel.parentId == rules_channel_id
-            && channel.type == Discord.ChannelType.PrivateThread) {
+            if (channel.parentId == rules_channel_id && channel.type == Discord.ChannelType.PrivateThread) {
                 await channel.setArchived();
             } else {
                 await command.reply("You can't use that here", true);
@@ -85,18 +85,19 @@ export default class ThreadControl extends BotComponent {
 
     async rename(command: TextBasedCommand, name: string) {
         M.log("Received rename command", command.user.username, command.get_or_forge_url());
-        if(await this.try_to_control_thread(command, "rename")) {
+        if (await this.try_to_control_thread(command, "rename")) {
             const channel = await command.get_channel();
             assert(channel.isThread());
             const thread = channel;
             name = name.trim();
             M.log(`Thread ${thread.id} being renamed to "${name}"`);
-            if(name.length > 100) { // TODO
+            if (name.length > 100) {
+                // TODO
                 await command.reply("Thread names must be 100 characters or shorter", true);
                 return;
             }
             await thread.setName(name);
-            if(command.is_slash()) {
+            if (command.is_slash()) {
                 await command.reply("✅", true);
             } else {
                 await command.delete_invocation();
@@ -104,10 +105,10 @@ export default class ThreadControl extends BotComponent {
             // fetch first message
             const messages = await thread.messages.fetch({
                 after: thread.id,
-                limit: 2 // thread starter message, then wheatley's message
+                limit: 2, // thread starter message, then wheatley's message
             });
-            for(const [ _, message ] of messages) {
-                if(message.type == Discord.MessageType.Default && message.author.id == this.wheatley.id) {
+            for (const [_, message] of messages) {
+                if (message.type == Discord.MessageType.Default && message.author.id == this.wheatley.id) {
                     await message.delete();
                 }
             }

@@ -12,10 +12,11 @@ import { TextBasedCommand, TextBasedCommandBuilder } from "../command.js";
 
 export const wiki_dir = "wiki_articles";
 
-async function* walk_dir(dir: string): AsyncGenerator<string> { // todo: duplicate
-    for(const f of await fs.promises.readdir(dir)) {
+async function* walk_dir(dir: string): AsyncGenerator<string> {
+    // todo: duplicate
+    for (const f of await fs.promises.readdir(dir)) {
         const file_path = path.join(dir, f).replace(/\\/g, "/");
-        if((await fs.promises.stat(file_path)).isDirectory()) {
+        if ((await fs.promises.stat(file_path)).isDirectory()) {
             yield* walk_dir(file_path);
         } else {
             yield file_path;
@@ -26,7 +27,7 @@ async function* walk_dir(dir: string): AsyncGenerator<string> { // todo: duplica
 type WikiArticle = {
     title: string;
     body?: string;
-    fields: WikiField[],
+    fields: WikiField[];
     footer?: string;
     image?: string;
     set_author: boolean;
@@ -39,7 +40,13 @@ type WikiField = {
     inline: boolean;
 };
 
-enum parse_state { body, field, footer, before_inline_field, done }
+enum parse_state {
+    body,
+    field,
+    footer,
+    before_inline_field,
+    done,
+}
 
 const image_regex = /!\[[^\]]*\]\(([^)]*)\)/;
 const reference_definition_regex = /\s*\[([^\]]*)\]: (.+)/;
@@ -67,14 +74,14 @@ class ArticleParser {
         this.body = "";
         const lines = content.split(/\r?\n/);
         this.collect_references(lines);
-        for(const line of lines) {
+        for (const line of lines) {
             this.parse_line(line);
         }
         assert(!this.in_code, "Unclosed code block in wiki article");
         assert(this.current_state !== parse_state.before_inline_field, "Trailing inline field directive");
 
         this.body = this.body.trim();
-        if(this.body === "") {
+        if (this.body === "") {
             this.body = undefined;
         }
 
@@ -84,7 +91,7 @@ class ArticleParser {
         this.footer = this.footer?.trim();
         assert(this.fields); // will always be true
 
-        if(this.no_embed) {
+        if (this.no_embed) {
             assert(this.body, "Must have a body if it's not an embed");
             assert(!this.footer, "Can't have a footer if it's not an embed");
             assert(this.fields.length == 0, "Can't have fields if it's not an embed");
@@ -95,19 +102,19 @@ class ArticleParser {
 
     private parse_line(line: string): void {
         const trimmed = line.trim();
-        if(trimmed.startsWith("```")) {
+        if (trimmed.startsWith("```")) {
             this.in_code = !this.in_code;
             this.parse_regular_line(line);
-        } else if(!this.in_code && line.startsWith("#")) {
+        } else if (!this.in_code && line.startsWith("#")) {
             this.parse_heading(line);
-        } else if(!this.in_code && trimmed.startsWith("<!--") && trimmed.endsWith("-->")) {
+        } else if (!this.in_code && trimmed.startsWith("<!--") && trimmed.endsWith("-->")) {
             const directive = trimmed.match(/^<!--+(.*?)-+->$/)![1].trim();
             this.parse_directive(directive);
-        } else if(trimmed === "---") {
+        } else if (trimmed === "---") {
             this.parse_directive(trimmed);
-        } else if(trimmed.match(image_regex)) {
+        } else if (trimmed.match(image_regex)) {
             this.parse_directive(trimmed);
-        } else if(trimmed.match(reference_definition_regex)) {
+        } else if (trimmed.match(reference_definition_regex)) {
             // ignore
         } else {
             this.parse_regular_line(line);
@@ -122,10 +129,10 @@ class ArticleParser {
         const level = line.search(/[^#]/);
         assert(level >= 1, "Cannot parse heading that has no heading level");
 
-        if(level === 1) {
+        if (level === 1) {
             this.title = line.substring(1).trim();
             this.current_state = parse_state.body;
-        } else if(level === 2) {
+        } else if (level === 2) {
             const name = line.substring(2).trim();
             const inline = this.current_state === parse_state.before_inline_field;
             const field = { name, value: "", inline };
@@ -143,23 +150,23 @@ class ArticleParser {
      * @param directive the directive to parse
      */
     private parse_directive(directive: string): void {
-        if(directive === "inline") {
+        if (directive === "inline") {
             this.current_state = parse_state.before_inline_field;
-        } else if(directive === "---") {
+        } else if (directive === "---") {
             this.current_state = parse_state.footer;
-        } else if(directive === "user author") {
+        } else if (directive === "user author") {
             this.set_author = true;
-        } else if(directive === "no embed") {
+        } else if (directive === "no embed") {
             this.no_embed = true;
-        } else if(directive.match(image_regex)) {
+        } else if (directive.match(image_regex)) {
             const match = unwrap(directive.match(image_regex))[1];
             this.image = match.trim();
-        } else if(directive.startsWith("alias ")) {
+        } else if (directive.startsWith("alias ")) {
             const aliases = directive
                 .substring("alias ".length)
                 .split(",")
                 .map(alias => alias.trim());
-            for(const alias of aliases) {
+            for (const alias of aliases) {
                 assert(!this.aliases.has(alias));
                 this.aliases.add(alias);
             }
@@ -167,7 +174,8 @@ class ArticleParser {
     }
 
     private parse_regular_line(line: string): void {
-        const requires_line_break = this.in_code ||
+        const requires_line_break =
+            this.in_code ||
             line.startsWith("```") ||
             line.startsWith("#") ||
             line.trim() === "" ||
@@ -190,12 +198,11 @@ class ArticleParser {
             return prefix + terminated_line;
         };
 
-        if(this.current_state === parse_state.body) {
+        if (this.current_state === parse_state.body) {
             this.body = plus_line(this.body!);
-        } else if(this.current_state === parse_state.field) {
-            this.fields[this.fields.length - 1].value
-                = plus_line(this.fields[this.fields.length - 1].value);
-        } else if(this.current_state === parse_state.footer) {
+        } else if (this.current_state === parse_state.field) {
+            this.fields[this.fields.length - 1].value = plus_line(this.fields[this.fields.length - 1].value);
+        } else if (this.current_state === parse_state.footer) {
             this.footer = plus_line(this.footer ?? "");
         } else {
             assert(false);
@@ -208,16 +215,16 @@ class ArticleParser {
      * @param line the line, possibly containing backticks for inline code
      */
     private substitute_placeholders(line: string): string {
-        if(this.in_code) return line;
+        if (this.in_code) return line;
         let result = "";
         let piece = "";
         let in_inline_code = false;
-        for(const c of line) {
+        for (const c of line) {
             if (c === "`") {
                 if (in_inline_code) {
                     result += piece + c;
                     piece = "";
-                } else  {
+                } else {
                     result += this.substitute_placeholders_no_code(piece);
                     piece = c;
                 }
@@ -248,9 +255,9 @@ class ArticleParser {
     }
 
     private collect_references(lines: string[]) {
-        for(const line of lines) {
-            if(line.match(reference_definition_regex)) {
-                const [ _, key, value ] = unwrap(line.match(reference_definition_regex));
+        for (const line of lines) {
+            if (line.match(reference_definition_regex)) {
+                const [_, key, value] = unwrap(line.match(reference_definition_regex));
                 this.reference_definitions.set(key.trim(), value.trim());
             }
         }
@@ -277,13 +284,12 @@ class ArticleParser {
         assert(this.is_done, "Attempting to access aliases of a parser without success");
         return this.aliases;
     }
-
 }
 
 export function parse_article(content: string): [WikiArticle, Set<string>] {
     const parser = new ArticleParser();
     parser.parse(content);
-    return [ parser.article, parser.article_aliases ];
+    return [parser.article, parser.article_aliases];
 }
 
 /**
@@ -301,52 +307,53 @@ export default class Wiki extends BotComponent {
         super(wheatley);
 
         this.add_command(
-            new TextBasedCommandBuilder([ "wiki", "howto" ])
-                .set_description([ "Retrieve wiki articles", "Retrieve wiki articles (alternatively /wiki)" ])
+            new TextBasedCommandBuilder(["wiki", "howto"])
+                .set_description(["Retrieve wiki articles", "Retrieve wiki articles (alternatively /wiki)"])
                 .add_string_option({
                     title: "query",
                     description: "Query",
                     required: true,
-                    autocomplete: query => Object.values(this.articles)
-                        .map(article => article.title)
-                        .filter(title => title.toLowerCase().includes(query))
-                        .map(title => ({ name: title, value: title }))
-                        .slice(0, 25)
+                    autocomplete: query =>
+                        Object.values(this.articles)
+                            .map(article => article.title)
+                            .filter(title => title.toLowerCase().includes(query))
+                            .map(title => ({ name: title, value: title }))
+                            .slice(0, 25),
                 })
-                .set_handler(this.wiki.bind(this))
+                .set_handler(this.wiki.bind(this)),
         );
 
         this.add_command(
-            new TextBasedCommandBuilder([ "wiki-preview", "wp" ])
+            new TextBasedCommandBuilder(["wiki-preview", "wp"])
                 .set_slash(false)
                 .set_description("Preview a wiki article")
                 .add_string_option({
                     title: "content",
                     description: "Content",
-                    required: true
+                    required: true,
                 })
-                .set_handler(this.wiki_preview.bind(this))
+                .set_handler(this.wiki_preview.bind(this)),
         );
     }
 
     override async setup() {
         await this.load_wiki_pages();
         // setup slash commands for aliases
-        for(const [ alias, article_name ] of this.article_aliases.entries()) {
+        for (const [alias, article_name] of this.article_aliases.entries()) {
             const article = this.articles[article_name];
             this.add_command(
                 new TextBasedCommandBuilder(alias)
                     .set_description(article.title)
-                    .set_handler(this.wiki_alias.bind(this))
+                    .set_handler(this.wiki_alias.bind(this)),
             );
         }
     }
 
     async load_wiki_pages() {
-        for await(const file_path of walk_dir(wiki_dir)) {
+        for await (const file_path of walk_dir(wiki_dir)) {
             const name = path.basename(file_path, path.extname(file_path));
             //M.debug(file_path, name);
-            if(name == "README") {
+            if (name == "README") {
                 continue;
             }
             const content = await fs.promises.readFile(file_path, { encoding: "utf-8" });
@@ -357,20 +364,20 @@ export default class Wiki extends BotComponent {
                 M.error(`Failed to parse article ${file_path}: ${e.message}`);
                 continue;
             }
-            const [ article, aliases ] = parsed;
+            const [article, aliases] = parsed;
             this.articles[name] = article;
-            for(const alias of aliases) {
+            for (const alias of aliases) {
                 this.article_aliases.set(alias, name);
             }
         }
     }
 
     async send_wiki_article(article: WikiArticle, command: TextBasedCommand) {
-        if(article.no_embed) {
+        if (article.no_embed) {
             assert(article.body);
             await command.reply({
                 content: article.body,
-                should_text_reply: true
+                should_text_reply: true,
             });
         } else {
             const embed = new Discord.EmbedBuilder()
@@ -379,33 +386,32 @@ export default class Wiki extends BotComponent {
                 .setImage(article.image ?? null)
                 .setDescription(article.body ?? null)
                 .setFields(article.fields);
-            if(article.set_author) {
+            if (article.set_author) {
                 const member = await command.get_member();
                 embed.setAuthor({
                     name: member.displayName,
-                    iconURL: member.avatarURL() ?? command.user.displayAvatarURL()
+                    iconURL: member.avatarURL() ?? command.user.displayAvatarURL(),
                 });
             }
-            if(article.footer) {
+            if (article.footer) {
                 embed.setFooter({
-                    text: article.footer
+                    text: article.footer,
                 });
             }
             await command.reply({
                 embeds: [embed],
-                should_text_reply: true
+                should_text_reply: true,
             });
         }
     }
 
     async wiki(command: TextBasedCommand, query: string) {
-        const matching_articles = Object
-            .entries(this.articles)
-            .filter(([ name, { title }]) => name == query.replaceAll("-", "_") || title == query)
-            .map(([ _, article ]) => article);
+        const matching_articles = Object.entries(this.articles)
+            .filter(([name, { title }]) => name == query.replaceAll("-", "_") || title == query)
+            .map(([_, article]) => article);
         const article = matching_articles.length > 0 ? matching_articles[0] : undefined;
         M.log(`Received !wiki command for ${article}`);
-        if(article) {
+        if (article) {
             await this.send_wiki_article(article, command);
         } else {
             await command.reply("Couldn't find article", true, true);
@@ -422,20 +428,20 @@ export default class Wiki extends BotComponent {
 
     async wiki_preview(command: TextBasedCommand, content: string) {
         M.log("Received wiki preview command", command.user.id, command.user.tag, command.get_or_forge_url());
-        if(!this.wheatley.freestanding && command.channel_id !== bot_spam_id) {
+        if (!this.wheatley.freestanding && command.channel_id !== bot_spam_id) {
             await command.reply(`!wiki-preview must be used in <#${bot_spam_id}>`, true, true);
             return;
         }
         let article: WikiArticle;
         try {
             article = parse_article(content)[0];
-        } catch(e) {
+        } catch (e) {
             await command.reply("Parse error: " + e, true, true);
             return;
         }
         try {
             await this.send_wiki_article(article, command);
-        } catch(e) {
+        } catch (e) {
             await command.reply("Error while building / sending: " + e, true, true);
         }
     }

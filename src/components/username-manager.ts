@@ -19,23 +19,23 @@ function is_all_ascii(str: string) {
 function has_three_continuous_valid_asciis(str: string) {
     let index: number;
     let consecutive_count = 0;
-    for(index = 0; index < str.length;) {
+    for (index = 0; index < str.length; ) {
         let point = str.codePointAt(index);
         assert(point !== undefined);
-        if(point > 32 && point < 127) {
+        if (point > 32 && point < 127) {
             consecutive_count++;
-            if(consecutive_count >= 3) {
+            if (consecutive_count >= 3) {
                 return true;
             }
         } else {
             consecutive_count = 0;
         }
         let width = 0;
-        while(point) {
+        while (point) {
             width += 1;
             point = point >> 8;
         }
-        index += Math.round(width/2);
+        index += Math.round(width / 2);
     }
     return false;
 }
@@ -56,7 +56,7 @@ export default class UsernameManager extends BotComponent {
 
     override destroy() {
         super.destroy();
-        if(this.interval) clearInterval(this.interval);
+        if (this.interval) clearInterval(this.interval);
     }
 
     override async on_ready() {
@@ -73,20 +73,24 @@ export default class UsernameManager extends BotComponent {
 
     override async on_guild_member_update(
         old_member: Discord.GuildMember | Discord.PartialGuildMember,
-        new_member: Discord.GuildMember
+        new_member: Discord.GuildMember,
     ) {
-        if(old_member.nickname !== new_member.nickname) {
+        if (old_member.nickname !== new_member.nickname) {
             await this.check_member(new_member);
         }
     }
 
     async check_member(member: Discord.GuildMember) {
-        if(!is_valid_name(member.displayName)) {
+        if (!is_valid_name(member.displayName)) {
             // Invalid nickname, valid username: Just remove nickname
             const new_name = anyAscii(member.displayName).substring(0, 32);
             M.log(
                 "Username management: Changing display name",
-                member.id, member.user.tag, member.displayName, "to:", new_name
+                member.id,
+                member.user.tag,
+                member.displayName,
+                "to:",
+                new_name,
             );
             await member.setNickname(new_name);
         } else {
@@ -96,7 +100,7 @@ export default class UsernameManager extends BotComponent {
 
     async cleanup() {
         const members = await this.wheatley.TCCPP.members.fetch();
-        for(const [ _, member ] of members) {
+        for (const [_, member] of members) {
             // undo my first go
             //if(member.displayName.startsWith("Monke ")) {
             //    const old = member.displayName.slice("Monke ".length);

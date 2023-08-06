@@ -8,19 +8,19 @@ jobs:
   build:
     runs-on: ubuntu-20.04
     steps:
-    - name: checkout
-      uses: actions/checkout@v3
-    - name: dependencies
-      run: |
-           npm install -g typescript
-           npm i
-    - name: build bot
-      run: tsc
-    - name: build cppref scraper
-      run: |
-           cd indexes/cppref
-           tsc
-    - name: build man7 scraper
-      run: |
-           cd indexes/man7
-           tsc
+      - name: checkout
+        uses: actions/checkout@v3
+      - name: dependencies
+        run: |
+          npm install -g typescript
+          npm i
+      - name: build bot
+        run: tsc
+      - name: build cppref scraper
+        run: |
+          cd indexes/cppref
+          tsc
+      - name: build man7 scraper
+        run: |
+          cd indexes/man7
+          tsc

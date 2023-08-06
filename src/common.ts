@@ -17,7 +17,7 @@ export enum colors {
     alert_color = 0xf5a53e,
     speedrun_color = 0x0fc644,
     red = 0x0,
-    green = 0x0 // eslint-disable-line @typescript-eslint/no-duplicate-enum-values
+    green = 0x0, // eslint-disable-line @typescript-eslint/no-duplicate-enum-values
 }
 
 // User IDs
@@ -38,8 +38,7 @@ export const server_suggestions_channel_id = "802541516655951892";
 export const suggestion_dashboard_thread_id = "908928083879415839";
 export const suggestion_action_log_thread_id = "909309608512880681";
 export const message_log_channel_id = "467729928956411914";
-export const action_log_channel_id =
-    "845290775692443699"; // TCCPP #staff_action_log
+export const action_log_channel_id = "845290775692443699"; // TCCPP #staff_action_log
 //    "542042995147407375"; // test server #1
 export const staff_flag_log_id = "1026972603019169842";
 export const bot_spam_id = "506274405500977153";
@@ -74,20 +73,17 @@ export const non_beginner_skill_role_ids = [
 ];
 
 export const skill_role_ids = [
-    "784733371275673600",  // beginner
+    "784733371275673600", // beginner
     ...non_beginner_skill_role_ids,
 ];
 
-export const authorized_admin_roles = [
-    moderators_role_id,
-    root_role_id
-];
+export const authorized_admin_roles = [moderators_role_id, root_role_id];
 
 export const root_ids = new Set([
     "199943082441965577", // zelis
     "162964325823283200", // eisen
     "110756651694297088", // vincent
-    "89441674844995584",  // styx
+    "89441674844995584", // styx
     // prevent Wheatley reactions being removed in server suggestions and also allow some elegant handling
     "597216680271282192", // wheatley
 ]);
@@ -98,7 +94,7 @@ export const root_mod_ids = [
     "310536456647081985", // lumi
     "719255892813545502", // sampersand
     "162964325823283200", // eisenwave
-    "89441674844995584",  // styx
+    "89441674844995584", // styx
     "110756651694297088", // vincent
     "138014214093668353", // dxpower
     "313597351262683138", // dot
@@ -112,7 +108,7 @@ export let root_mod_list = "jr-#6677, Eisenwave#7675, Styxs#7557, or Vin¢#1293"
 
 export async function fetch_root_mod_list(client: Discord.Client) {
     const tags = [];
-    for(const id of root_mod_ids) {
+    for (const id of root_mod_ids) {
         tags.push((await client.users.fetch(id)).tag);
     }
     assert(tags.length > 3);
@@ -127,7 +123,7 @@ export function is_root(user: Discord.User | Discord.PartialUser | Discord.APIUs
 }
 
 export function is_authorized_admin(member: Discord.GuildMember | Discord.User | string): boolean {
-    if(is_string(member)) {
+    if (is_string(member)) {
         return root_mod_ids_set.has(member);
     } else {
         //return member.roles.cache.some(r => authorized_admin_roles.indexOf(r.id) > -1);
@@ -138,7 +134,7 @@ export function is_authorized_admin(member: Discord.GuildMember | Discord.User |
 export const cpp_help_id = "1013107104678162544";
 export const c_help_id = "1013104018739974194";
 
-export const forum_help_channels = new Set([ cpp_help_id, c_help_id ]);
+export const forum_help_channels = new Set([cpp_help_id, c_help_id]);
 
 export function is_forum_help_thread(thread: Discord.ThreadChannel) {
     return thread.parentId != null && forum_help_channels.has(thread.parentId);

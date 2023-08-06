@@ -60,33 +60,33 @@ function eliminate_aliases_and_duplicates(pages: cppref_page[]) {
     // TODO: Could re-add the experimental tag....
     const page_map: Record<string, cppref_page> = {}; // map path to associated page object
     const title_map: Record<string, cppref_page[]> = {}; // map titles -> pages with that conflicting title
-    for(const page of pages) {
+    for (const page of pages) {
         page_map[page.path] = page;
-        if(page.title in title_map) {
+        if (page.title in title_map) {
             title_map[page.title].push(page);
         } else {
             title_map[page.title] = [page];
         }
     }
     // eslint-disable-next-line @typescript-eslint/no-unused-vars
-    for(const [ title, pages ] of Object.entries(title_map)) {
-        if(pages.length > 1) {
-            if(new Set(pages.map(e => e.wgPageName)).size == 1) {
+    for (const [title, pages] of Object.entries(title_map)) {
+        if (pages.length > 1) {
+            if (new Set(pages.map(e => e.wgPageName)).size == 1) {
                 // all wgPageName match - these all alias
                 pages.sort((a, b) => a.path.length - b.path.length);
                 //console.log(title);
                 //console.log(pages.map((e, i) => `    ${i == 0 ? "*" : " "} cppref/${e.path}`).join("\n"));
-                for(const alias of pages.slice(1)) {
+                for (const alias of pages.slice(1)) {
                     //console.log("        --> deleting", alias.path);
                     delete page_map[alias.path];
                 }
             } else {
                 pages.sort((a, b) => {
-                    if(a.path.includes("/experimental/") && b.path.includes("/experimental/")) {
+                    if (a.path.includes("/experimental/") && b.path.includes("/experimental/")) {
                         return 0;
-                    } else if(a.path.includes("/experimental/")) {
+                    } else if (a.path.includes("/experimental/")) {
                         return 1; // sort a after b
-                    } else if(b.path.includes("/experimental/")) {
+                    } else if (b.path.includes("/experimental/")) {
                         return -1; // sort b after a
                     } else {
                         return a.path.length - b.path.length;
@@ -94,7 +94,7 @@ function eliminate_aliases_and_duplicates(pages: cppref_page[]) {
                 });
                 //console.log(title);
                 //console.log(pages.map((e, i) => `    ${i == 0 ? "*" : " "} cppref/${e.path}`).join("\n"));
-                for(const to_delete of pages.slice(1)) {
+                for (const to_delete of pages.slice(1)) {
                     //console.log("    --> deleting", to_delete.path);
                     delete page_map[to_delete.path];
                 }
@@ -115,7 +115,7 @@ export class CpprefIndex {
 
     async load_data() {
         const index_data = JSON.parse(
-            await fs.promises.readFile("indexes/cppref/cppref_index.json", { encoding: "utf-8" })
+            await fs.promises.readFile("indexes/cppref/cppref_index.json", { encoding: "utf-8" }),
         ) as cppref_index;
         this.setup_indexes(index_data);
     }
@@ -151,27 +151,29 @@ export default class Cppref extends BotComponent {
         return true;
     }
 
-    readonly index = new CpprefIndex;
+    readonly index = new CpprefIndex();
 
     constructor(wheatley: Wheatley) {
         super(wheatley);
 
         this.add_command(
-            new TextBasedCommandBuilder([ "cref", "cppref" ])
-                .set_description([ "Query C reference pages", "Query C++ reference pages" ])
+            new TextBasedCommandBuilder(["cref", "cppref"])
+                .set_description(["Query C reference pages", "Query C++ reference pages"])
                 .add_string_option({
                     title: "query",
                     description: "Query",
                     required: true,
-                    autocomplete: (query, name) => this
-                        .index
-                        .lookup_top_5(query, name == "cref" ? CpprefSubIndex.C : CpprefSubIndex.CPP)
-                        .map(page => ({
-                            name: `${page.title.substring(0, 100 - 14)} . . . . ${Math.round(page.score * 100) / 100}`,
-                            value: page.title
-                        }))
+                    autocomplete: (query, name) =>
+                        this.index
+                            .lookup_top_5(query, name == "cref" ? CpprefSubIndex.C : CpprefSubIndex.CPP)
+                            .map(page => ({
+                                name: `${page.title.substring(0, 100 - 14)} . . . . ${
+                                    Math.round(page.score * 100) / 100
+                                }`,
+                                value: page.title,
+                            })),
                 })
-                .set_handler(this.cppref.bind(this))
+                .set_handler(this.cppref.bind(this)),
         );
 
         // Ok if the bot spins up while this is loading
@@ -182,7 +184,7 @@ export default class Cppref extends BotComponent {
         const result = this.index.lookup(query.trim(), command.name == "cref" ? CpprefSubIndex.C : CpprefSubIndex.CPP);
         M.log(`${command.name} query`, query, result ? `https://${result.path}` : null);
 
-        if(result === null) {
+        if (result === null) {
             await command.reply({
                 embeds: [
                     new Discord.EmbedBuilder()
@@ -190,10 +192,10 @@ export default class Cppref extends BotComponent {
                         .setAuthor({
                             name: "cppreference.com",
                             iconURL: "https://en.cppreference.com/favicon.ico",
-                            url: "https://en.cppreference.com"
+                            url: "https://en.cppreference.com",
                         })
-                        .setDescription("No results found")
-                ]
+                        .setDescription("No results found"),
+                ],
             });
         } else {
             // TODO: Clang format.....?
@@ -202,20 +204,22 @@ export default class Cppref extends BotComponent {
                 .setAuthor({
                     name: "cppreference.com",
                     iconURL: "https://en.cppreference.com/favicon.ico",
-                    url: "https://en.cppreference.com"
+                    url: "https://en.cppreference.com",
                 })
                 .setTitle(result.title)
                 .setURL(`https://${result.path}`);
-            if(result.sample_declaration) {
-                embed.setDescription(`\`\`\`cpp\n${
-                    result.sample_declaration
-                    + (result.other_declarations ? `\n// ... and ${result.other_declarations} more` : "")
-                }\n\`\`\``);
+            if (result.sample_declaration) {
+                embed.setDescription(
+                    `\`\`\`cpp\n${
+                        result.sample_declaration +
+                        (result.other_declarations ? `\n// ... and ${result.other_declarations} more` : "")
+                    }\n\`\`\``,
+                );
             }
-            if(result.headers) {
+            if (result.headers) {
                 embed.addFields({
                     name: "Defined in",
-                    value: format_list(result.headers.map(this.link_headers))
+                    value: format_list(result.headers.map(this.link_headers)),
                 });
             }
             await command.reply({ embeds: [embed] });
@@ -226,7 +230,7 @@ export default class Cppref extends BotComponent {
         const matches = [...header.matchAll(/^<(.+)>$/g)];
         assert(matches.length == 1);
         const header_part = matches[0][1];
-        if(header_part.endsWith(".h")) {
+        if (header_part.endsWith(".h")) {
             return header;
         } else {
             return `[${header}](https://en.cppreference.com/w/cpp/header/${header_part}.html)`;

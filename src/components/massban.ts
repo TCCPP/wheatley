@@ -17,18 +17,18 @@ export default class Massban extends BotComponent {
 
     override async on_message_create(message: Discord.Message) {
         try {
-            if(message.author.id == this.wheatley.client.user!.id) return; // Ignore self
-            if(message.author.bot) return; // Ignore bots
-            if(message.guildId != TCCPP_ID) return; // Ignore messages outside TCCPP (e.g. dm's)
-            if(message.content.startsWith("!wban")) {
+            if (message.author.id == this.wheatley.client.user!.id) return; // Ignore self
+            if (message.author.bot) return; // Ignore bots
+            if (message.guildId != TCCPP_ID) return; // Ignore messages outside TCCPP (e.g. dm's)
+            if (message.content.startsWith("!wban")) {
                 assert(message.member != null);
-                if(is_authorized_admin(message.member)) {
+                if (is_authorized_admin(message.member)) {
                     await this.do_mass_ban(message);
                 } else {
                     await message.reply(`Unauthorized ${pepereally}`);
                 }
             }
-        } catch(e) {
+        } catch (e) {
             critical_error(e);
         }
     }
@@ -39,7 +39,7 @@ export default class Massban extends BotComponent {
         M.log("Got massban command");
         assert(msg.guild != null);
         const ids = msg.content.match(snowflake_re);
-        if(ids != null && ids.length > 0) {
+        if (ids != null && ids.length > 0) {
             M.debug("Banning...");
             await msg.channel.send("Banning...");
             M.debug(ids);

@@ -25,11 +25,11 @@ Secrets and other bot info must be configured in the bot.json file. An example l
 
 ```json
 {
-    "id": "<bot id>",
-    "guild": "<guild id>",
-    "token": "<discord api token>",
-    "mongouser": "wheatley",
-    "mongopassword": "<mongo password>"
+  "id": "<bot id>",
+  "guild": "<guild id>",
+  "token": "<discord api token>",
+  "mongouser": "wheatley",
+  "mongopassword": "<mongo password>"
 }
 ```
 
@@ -38,8 +38,8 @@ can be specified to turn on only components which don't rely on channels etc. sp
 
 ## Database
 
-The bot uses MongoDB. It previously used a giant json file (the migration script is located in the scripts folder).
-For local development you likely won't need to setup a mongo database, depending on the components you're working on.
+The bot uses MongoDB. It previously used a giant json file (the migration script is located in the scripts folder). For
+local development you likely won't need to setup a mongo database, depending on the components you're working on.
 However, if you are contributing to components that do need the database here are the installation steps for ubuntu:
 
 https://www.mongodb.com/docs/manual/tutorial/install-mongodb-on-ubuntu/

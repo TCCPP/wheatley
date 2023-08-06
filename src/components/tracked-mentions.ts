@@ -24,19 +24,21 @@ export default class TrackedMentions extends BotComponent {
 
     async check_tracked_mention_and_notify(message: Discord.Message) {
         const mentions = [...new Set(message.mentions.roles.map(v => v.id).filter(id => tracked_mentions.has(id)))];
-        if(mentions.length > 0) {
+        if (mentions.length > 0) {
             M.log("Spotted tracked mention", message.url, message.author.id, message.author.tag);
             const embed = new Discord.EmbedBuilder()
                 .setColor(colors.color)
                 .setAuthor({
                     name: `${message.author.username}#${message.author.discriminator}`,
-                    iconURL: message.author.displayAvatarURL()
+                    iconURL: message.author.displayAvatarURL(),
                 })
-                .setDescription(`${format_list(mentions.map(m => `<@&${m}>`))} mentioned in`
-                                + ` <#${message.channel.id}> by <@${message.author.id}>\n`
-                                + `[click here to jump](${message.url})`)
+                .setDescription(
+                    `${format_list(mentions.map(m => `<@&${m}>`))} mentioned in` +
+                        ` <#${message.channel.id}> by <@${message.author.id}>\n` +
+                        `[click here to jump](${message.url})`,
+                )
                 .setFooter({
-                    text: `ID: ${message.author.id}`
+                    text: `ID: ${message.author.id}`,
                 })
                 .setTimestamp();
             await this.wheatley.action_log_channel.send({ embeds: [embed] });
@@ -44,10 +46,10 @@ export default class TrackedMentions extends BotComponent {
     }
 
     override async on_message_create(message: Discord.Message) {
-        if(message.author.id == this.wheatley.client.user!.id) return; // Ignore self
-        if(message.author.bot) return; // Ignore bots
-        if(message.guildId != TCCPP_ID) return; // Ignore messages outside TCCPP (e.g. dm's)
-        if(message.mentions.roles.size > 0) {
+        if (message.author.id == this.wheatley.client.user!.id) return; // Ignore self
+        if (message.author.bot) return; // Ignore bots
+        if (message.guildId != TCCPP_ID) return; // Ignore messages outside TCCPP (e.g. dm's)
+        if (message.mentions.roles.size > 0) {
             await this.check_tracked_mention_and_notify(message);
         }
     }

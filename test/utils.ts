@@ -29,11 +29,11 @@ describe("Limited string split tests", () => {
         done();
     });
     it("should split the limit", done => {
-        expect(string_split("hello there", " ", 2)).to.deep.equal([ "hello", "there" ]);
+        expect(string_split("hello there", " ", 2)).to.deep.equal(["hello", "there"]);
         done();
     });
     it("should split above the limit", done => {
-        expect(string_split("hello there general kenobi", " ", 2)).to.deep.equal([ "hello", "there general kenobi" ]);
+        expect(string_split("hello there general kenobi", " ", 2)).to.deep.equal(["hello", "there general kenobi"]);
         done();
     });
 });

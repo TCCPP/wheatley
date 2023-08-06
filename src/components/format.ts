@@ -12,13 +12,14 @@ import { Wheatley } from "../wheatley.js";
 import { MessageContextMenuCommandBuilder } from "../command.js";
 import { MINUTE } from "../common.js";
 
-const color = 0x7E78FE; //0xA931FF;
+const color = 0x7e78fe; //0xA931FF;
 
 const clang_format_path = "/usr/bin/clang-format";
 
 const max_attachment_size = 1024 * 10;
 
 // highlight js accepts all
+// prettier-ignore
 const languages = [
     "1c", "4d", "abnf", "accesslog", "actionscript", "ada", "adoc", "alan", "angelscript", "apache", "apacheconf",
     "applescript", "arcade", "arduino", "arm", "armasm", "as", "asc", "asciidoc", "aspectj", "atom", "autohotkey",
@@ -54,13 +55,13 @@ const languages = [
     "zs", "zsh"
 ];
 
-const c_cpp_language_codes = new Set([ "c", "h", "cpp", "hpp", "cc", "hh", "cxx", "cxx", "c++", "h++" ]);
+const c_cpp_language_codes = new Set(["c", "h", "cpp", "hpp", "cc", "hh", "cxx", "cxx", "c++", "h++"]);
 
 const languages_re = new RegExp(
     languages
         .sort((a, b) => b.length - a.length)
         .map(x => x.replaceAll("+", "\\+"))
-        .join("|")
+        .join("|"),
 );
 
 const code_begin = [
@@ -99,11 +100,11 @@ const code_block_re = new RegExp(`(\`\`\`(?:${languages_re.source}\b)?)(.*?)\`\`
 
 const default_clang_format_language = "cpp";
 
-const ignore_prefixes = [ ";compile", ";asm" ];
+const ignore_prefixes = [";compile", ";asm"];
 
 async function clang_format(text: string, args: string[]) {
     const { stdout, stderr } = await async_exec_file(clang_format_path, args, {}, text);
-    if(stderr.toString("utf8").trim().length != 0) {
+    if (stderr.toString("utf8").trim().length != 0) {
         M.debug("Clang format stderr", stderr.toString("utf8"));
         // TODO: Ping zelis?
     }
@@ -114,14 +115,10 @@ const clang_format_style = [
     "BasedOnStyle: Chromium",
     "IndentWidth: 2",
     "SpacesInAngles: false",
-    "SpaceAfterTemplateKeyword: false"
+    "SpaceAfterTemplateKeyword: false",
 ];
 
-const clang_format_style_embed = [
-    ...clang_format_style,
-    "ColumnLimit: 48",
-    "AlignAfterOpenBracket: AlwaysBreak"
-];
+const clang_format_style_embed = [...clang_format_style, "ColumnLimit: 48", "AlignAfterOpenBracket: AlwaysBreak"];
 
 export async function clang_format_embed_code(text: string) {
     return await clang_format(text, [`-style={${clang_format_style_embed.join(", ")}}`]);
@@ -139,32 +136,33 @@ function replace_range(s: string, start: number, end: number, substitute: string
 async function format(replying_to: Discord.Message) {
     let content = replying_to.content;
     // does the message have code blocks?
-    const code_blocks: {language: string, content: string}[] = [];
+    const code_blocks: { language: string; content: string }[] = [];
     content = content.replaceAll(code_block_re, (_, starter: string, block: string) => {
         const language = starter.length > 3 ? starter.substring(3) : "cpp";
         code_blocks.push({ language, content: block });
         return `<[<[<[<[${code_blocks.length - 1}]>]>]>]>`;
     });
     // else ...
-    if(code_blocks.length == 0) {
+    if (code_blocks.length == 0) {
         const start = content.search(code_begin_re);
-        if(start > -1) {
+        if (start > -1) {
             const end = Math.max(...[...";}"].map(c => content.lastIndexOf(c)));
-            if(end > start) {
+            if (end > start) {
                 code_blocks.push({
                     language: default_clang_format_language,
-                    content: content.substring(start, end + 1)
+                    content: content.substring(start, end + 1),
                 });
                 content = replace_range(content, start, end + 1, `<[<[<[<[${code_blocks.length - 1}]>]>]>]>`);
             }
         }
     }
 
-    for(const [ i, block ] of code_blocks.entries()) {
-        if(c_cpp_language_codes.has(block.language)) {
-            content = content.replace(`<[<[<[<[${i}]>]>]>]>`, `\`\`\`${block.language}\n${
-                await clang_format_general(block.content)
-            }\n\`\`\``);
+    for (const [i, block] of code_blocks.entries()) {
+        if (c_cpp_language_codes.has(block.language)) {
+            content = content.replace(
+                `<[<[<[<[${i}]>]>]>]>`,
+                `\`\`\`${block.language}\n${await clang_format_general(block.content)}\n\`\`\``,
+            );
         } else {
             // don't format, just put it back
             content = content.replace(`<[<[<[<[${i}]>]>]>]>`, `\`\`\`${block.language}\n${block.content}\n\`\`\``);
@@ -172,37 +170,37 @@ async function format(replying_to: Discord.Message) {
     }
 
     // does the message have attachments?
-    const attachments = await Promise.all([...replying_to.attachments.values()]
-        .filter(attachment => attachment.contentType?.startsWith("text/") ?? false)
-        .filter(attachment => attachment.size < max_attachment_size)
-        .slice(0, 2) // at most 2 attachments
-        .map(async (attachment) => {
-            const fetch_response = await fetch(attachment.url);
-            if(fetch_response.ok) {
-                const text = await fetch_response.text();
-                return new Discord.AttachmentBuilder(
-                    await clang_format_general(text),
-                    {
-                        name: `${attachment}.cpp`
-                    }
-                );
-            } else {
-                return null;
-            }
-        })
+    const attachments = await Promise.all(
+        [...replying_to.attachments.values()]
+            .filter(attachment => attachment.contentType?.startsWith("text/") ?? false)
+            .filter(attachment => attachment.size < max_attachment_size)
+            .slice(0, 2) // at most 2 attachments
+            .map(async attachment => {
+                const fetch_response = await fetch(attachment.url);
+                if (fetch_response.ok) {
+                    const text = await fetch_response.text();
+                    return new Discord.AttachmentBuilder(await clang_format_general(text), {
+                        name: `${attachment}.cpp`,
+                    });
+                } else {
+                    return null;
+                }
+            }),
     );
 
     return { content, attachments, found_code_blocks: code_blocks.length > 0 };
 }
 
 function should_replace_original(replying_to: Discord.Message, request_timestamp: Date) {
-    return request_timestamp.getTime() - replying_to.createdAt.getTime() < 30 * MINUTE
-        && replying_to.id != replying_to.channel.id // Don't delete if it's a forum thread starter message
-        && !replying_to.flags.has(Discord.MessageFlags.HasThread)
-        && replying_to.attachments.size <= 2 // Also don't delete if it has additional/non-txt attachments
-        && !replying_to.attachments.some(({ contentType }) => contentType?.startsWith("text/") ?? false)
-    // and not a ;compile, ;asm, or other bot command
-        && !ignore_prefixes.some(prefix => replying_to.content.startsWith(prefix));
+    return (
+        request_timestamp.getTime() - replying_to.createdAt.getTime() < 30 * MINUTE &&
+        replying_to.id != replying_to.channel.id && // Don't delete if it's a forum thread starter message
+        !replying_to.flags.has(Discord.MessageFlags.HasThread) &&
+        replying_to.attachments.size <= 2 && // Also don't delete if it has additional/non-txt attachments
+        !replying_to.attachments.some(({ contentType }) => contentType?.startsWith("text/") ?? false) &&
+        // and not a ;compile, ;asm, or other bot command
+        !ignore_prefixes.some(prefix => replying_to.content.startsWith(prefix))
+    );
 }
 
 /**
@@ -216,10 +214,7 @@ export default class Format extends BotComponent {
     constructor(wheatley: Wheatley) {
         super(wheatley);
 
-        this.add_command(
-            new MessageContextMenuCommandBuilder("Format")
-                .set_handler(this.format_ctxmenu.bind(this))
-        );
+        this.add_command(new MessageContextMenuCommandBuilder("Format").set_handler(this.format_ctxmenu.bind(this)));
     }
 
     // TODO: More refactoring needed
@@ -228,14 +223,14 @@ export default class Format extends BotComponent {
         // TODO: Leaving for now, need better way to handle this in the general case. Will probably be part of a larger
         // command abstraction
         try {
-            if(message.author.bot) return; // Ignore bots
-            if(message.content == "!f" || message.content == "!format") {
-                if(message.type == Discord.MessageType.Reply) {
+            if (message.author.bot) return; // Ignore bots
+            if (message.content == "!f" || message.content == "!format") {
+                if (message.type == Discord.MessageType.Reply) {
                     const replying_to = await message.fetchReference();
 
                     M.log(`Received ${message.content}`, message.author.tag, message.author.id, replying_to.url);
 
-                    if(replying_to.author.bot) {
+                    if (replying_to.author.bot) {
                         const reply = await message.reply("Can't format a bot message");
                         this.wheatley.make_deletable(message, reply);
                         return;
@@ -243,17 +238,15 @@ export default class Format extends BotComponent {
 
                     const { content, attachments, found_code_blocks } = await format(replying_to);
 
-                    if(attachments.length || found_code_blocks) {
-                        const embed = new Discord.EmbedBuilder()
-                            .setColor(color)
-                            .setAuthor({
-                                name: replying_to.member?.displayName ?? replying_to.author.tag,
-                                iconURL: replying_to.member?.avatarURL() ?? replying_to.author.displayAvatarURL()
-                            });
-                        if(message.author.id != replying_to.author.id) {
+                    if (attachments.length || found_code_blocks) {
+                        const embed = new Discord.EmbedBuilder().setColor(color).setAuthor({
+                            name: replying_to.member?.displayName ?? replying_to.author.tag,
+                            iconURL: replying_to.member?.avatarURL() ?? replying_to.author.displayAvatarURL(),
+                        });
+                        if (message.author.id != replying_to.author.id) {
                             embed.setFooter({
                                 text: `Formatted by ${message.member?.displayName ?? message.author.tag}`,
-                                iconURL: message.author.displayAvatarURL()
+                                iconURL: message.author.displayAvatarURL(),
                             });
                         }
                         const formatted_message = await message.channel.send({
@@ -261,10 +254,10 @@ export default class Format extends BotComponent {
                             content,
                             files: attachments.filter(x => x != null) as Discord.AttachmentBuilder[],
                             allowedMentions: {
-                                parse: ["users"]
-                            }
+                                parse: ["users"],
+                            },
                         });
-                        if(should_replace_original(replying_to, message.createdAt)) {
+                        if (should_replace_original(replying_to, message.createdAt)) {
                             await replying_to.delete();
                         } else {
                             this.wheatley.make_deletable(message, formatted_message);
@@ -278,11 +271,11 @@ export default class Format extends BotComponent {
                     this.wheatley.make_deletable(message, reply);
                 }
             }
-        } catch(e) {
+        } catch (e) {
             critical_error(e);
             try {
                 await message.reply("Internal error while running !f");
-            } catch(e) {
+            } catch (e) {
                 critical_error(e);
             }
         }
@@ -293,10 +286,10 @@ export default class Format extends BotComponent {
 
         M.debug("Received format command", interaction.user.tag, interaction.user.id, replying_to.url);
 
-        if(replying_to.author.bot) {
+        if (replying_to.author.bot) {
             await interaction.reply({
                 content: "Can't format a bot message",
-                ephemeral: true
+                ephemeral: true,
             });
             return;
         }
@@ -307,26 +300,24 @@ export default class Format extends BotComponent {
         const channel = await interaction.guild!.channels.fetch(interaction.channelId);
         const member = await interaction.guild!.members.fetch(interaction.user.id);
         assert(channel);
-        if(!channel.permissionsFor(member).has(Discord.PermissionsBitField.Flags.SendMessages)) {
+        if (!channel.permissionsFor(member).has(Discord.PermissionsBitField.Flags.SendMessages)) {
             await interaction.reply({
                 content: "You don't have permissions here.",
-                ephemeral: true
+                ephemeral: true,
             });
             return;
         }
 
         const { content, attachments, found_code_blocks } = await format(replying_to);
 
-        if(attachments.length || found_code_blocks) {
+        if (attachments.length || found_code_blocks) {
             let embeds: Discord.EmbedBuilder[] | undefined;
-            if(interaction.user.id != replying_to.author.id) {
+            if (interaction.user.id != replying_to.author.id) {
                 embeds = [
-                    new Discord.EmbedBuilder()
-                        .setColor(color)
-                        .setAuthor({
-                            name: replying_to.member?.displayName ?? replying_to.author.tag,
-                            iconURL: replying_to.member?.avatarURL() ?? replying_to.author.displayAvatarURL()
-                        })
+                    new Discord.EmbedBuilder().setColor(color).setAuthor({
+                        name: replying_to.member?.displayName ?? replying_to.author.tag,
+                        iconURL: replying_to.member?.avatarURL() ?? replying_to.author.displayAvatarURL(),
+                    }),
                 ];
             }
             await interaction.reply({
@@ -334,16 +325,16 @@ export default class Format extends BotComponent {
                 content,
                 files: attachments.filter(x => x != null) as Discord.AttachmentBuilder[],
                 allowedMentions: {
-                    parse: ["users"]
-                }
+                    parse: ["users"],
+                },
             });
-            if(should_replace_original(replying_to, interaction.createdAt)) {
+            if (should_replace_original(replying_to, interaction.createdAt)) {
                 await replying_to.delete();
             }
         } else {
             await interaction.reply({
                 content: "Nothing to format",
-                ephemeral: true
+                ephemeral: true,
             });
         }
     }

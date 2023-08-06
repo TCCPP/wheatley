@@ -21,10 +21,7 @@ export default class Inspect extends BotComponent {
     constructor(wheatley: Wheatley) {
         super(wheatley);
 
-        this.add_command(
-            new MessageContextMenuCommandBuilder("Inspect")
-                .set_handler(this.inspect.bind(this))
-        );
+        this.add_command(new MessageContextMenuCommandBuilder("Inspect").set_handler(this.inspect.bind(this)));
 
         this.add_command(
             new TextBasedCommandBuilder("inspect")
@@ -32,76 +29,111 @@ export default class Inspect extends BotComponent {
                 .add_string_option({
                     title: "url",
                     description: "url",
-                    required: true
+                    required: true,
                 })
                 .set_permissions(Discord.PermissionFlagsBits.Administrator)
-                .set_handler(this.inspect_text.bind(this))
+                .set_handler(this.inspect_text.bind(this)),
         );
     }
 
     async send_inspected_data(
         message: Discord.Message,
-        command_object: Discord.MessageContextMenuCommandInteraction | TextBasedCommand
+        command_object: Discord.MessageContextMenuCommandInteraction | TextBasedCommand,
     ) {
         await command_object.reply({
             ephemeral: true,
             ephemeral_if_possible: true,
-            content: message.content.length > 0 ?
-                Discord.escapeMarkdown(message.content).replace(/[<>/]/g, c => `\\${c}`)
-                : "<empty>"
+            content:
+                message.content.length > 0
+                    ? Discord.escapeMarkdown(message.content).replace(/[<>/]/g, c => `\\${c}`)
+                    : "<empty>",
         });
-        if(message.attachments.size > 0) {
+        if (message.attachments.size > 0) {
             await command_object.followUp({
                 ephemeral: true,
                 ephemeral_if_possible: true,
-                content: "Attachments: " + JSON.stringify(message.attachments.map(
-                    // This looks silly, but it is the best way I can think of to call all the getters and re-package
-                    ({ contentType, description, ephemeral, height, id, name, proxyURL, size, spoiler, url, width }) =>
-                        ({ contentType, description, ephemeral, height, id, name, proxyURL, size, spoiler, url, width })
-                ), null, 4)
+                content:
+                    "Attachments: " +
+                    JSON.stringify(
+                        message.attachments.map(
+                            // This looks silly, but it is the best way I can think of to call all the getters and re-package
+                            ({
+                                contentType,
+                                description,
+                                ephemeral,
+                                height,
+                                id,
+                                name,
+                                proxyURL,
+                                size,
+                                spoiler,
+                                url,
+                                width,
+                            }) => ({
+                                contentType,
+                                description,
+                                ephemeral,
+                                height,
+                                id,
+                                name,
+                                proxyURL,
+                                size,
+                                spoiler,
+                                url,
+                                width,
+                            }),
+                        ),
+                        null,
+                        4,
+                    ),
             });
         }
-        if(message.embeds.length > 0) {
+        if (message.embeds.length > 0) {
             await command_object.followUp({
                 ephemeral: true,
                 ephemeral_if_possible: true,
-                content: "Embeds: " + JSON.stringify(message.embeds.map(
-                    // This looks silly, but it is the best way I can think of to call all the getters and re-package
-                    ({
-                        author,
-                        color,
-                        data,
-                        description,
-                        fields,
-                        footer,
-                        hexColor,
-                        image,
-                        length,
-                        provider,
-                        thumbnail,
-                        timestamp,
-                        title,
-                        url,
-                        video
-                    }) =>
-                        ({
-                            author,
-                            color,
-                            data,
-                            description,
-                            fields,
-                            footer,
-                            hexColor,
-                            image,
-                            length,
-                            provider,
-                            thumbnail,
-                            timestamp,
-                            title,
-                            url,
-                            video
-                        })
-                ), null, 4)
+                content:
+                    "Embeds: " +
+                    JSON.stringify(
+                        message.embeds.map(
+                            // This looks silly, but it is the best way I can think of to call all the getters and re-package
+                            ({
+                                author,
+                                color,
+                                data,
+                                description,
+                                fields,
+                                footer,
+                                hexColor,
+                                image,
+                                length,
+                                provider,
+                                thumbnail,
+                                timestamp,
+                                title,
+                                url,
+                                video,
+                            }) => ({
+                                author,
+                                color,
+                                data,
+                                description,
+                                fields,
+                                footer,
+                                hexColor,
+                                image,
+                                length,
+                                provider,
+                                thumbnail,
+                                timestamp,
+                                title,
+                                url,
+                                video,
+                            }),
+                        ),
+                        null,
+                        4,
+                    ),
             });
         }
     }
@@ -114,8 +146,8 @@ export default class Inspect extends BotComponent {
     async inspect_text(command: TextBasedCommand, url: string) {
         M.log("Received inspect text command");
         const match = url.trim().match(url_re);
-        if(match) {
-            const [ _, guild_id, channel_id, message_id ] = match.slice(1);
+        if (match) {
+            const [_, guild_id, channel_id, message_id] = match.slice(1);
             assert(guild_id == this.wheatley.TCCPP.id);
             const channel = await this.wheatley.TCCPP.channels.fetch(channel_id);
             assert(channel?.isTextBased());
@@ -123,12 +155,8 @@ export default class Inspect extends BotComponent {
             await this.send_inspected_data(message, command);
         } else {
             await command.reply({
-                embeds: [
-                    new Discord.EmbedBuilder()
-                        .setDescription("Error")
-                        .setColor(colors.red)
-                ],
-                ephemeral_if_possible: true
+                embeds: [new Discord.EmbedBuilder().setDescription("Error").setColor(colors.red)],
+                ephemeral_if_possible: true,
             });
         }
     }

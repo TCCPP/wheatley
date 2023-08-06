@@ -1,0 +1,6 @@
+indexes
+build
+.vscode
+.idea
+node_modules
+wiki_articles

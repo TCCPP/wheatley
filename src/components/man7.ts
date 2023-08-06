@@ -13,30 +13,30 @@ import { Wheatley } from "../wheatley.js";
 import { colors } from "../common.js";
 import { TextBasedCommand, TextBasedCommandBuilder } from "../command.js";
 
-type augmented_man7_entry = man7_entry & IndexEntry
+type augmented_man7_entry = man7_entry & IndexEntry;
 
 function eliminate_aliases_and_duplicates_and_set_title(index_data: man7_index) {
     const entry_map: Record<string, augmented_man7_entry> = {}; // map path to associated entry
     const title_map: Record<string, augmented_man7_entry[]> = {}; // map titles -> pages with that conflicting title
-    for(const entry of index_data) {
+    for (const entry of index_data) {
         assert(!(entry.path in entry_map));
         const augmented_entry = {
             ...entry,
-            title: entry.page_title + (entry.page_title.endsWith("p)") ? " (POSIX)" : "")
+            title: entry.page_title + (entry.page_title.endsWith("p)") ? " (POSIX)" : ""),
         };
         entry_map[augmented_entry.path] = augmented_entry;
-        if(augmented_entry.title in title_map) {
+        if (augmented_entry.title in title_map) {
             title_map[augmented_entry.title].push(augmented_entry);
         } else {
             title_map[augmented_entry.title] = [augmented_entry];
         }
     }
-    for(const cluster of Object.values(title_map)) {
-        if(cluster.length > 1) {
+    for (const cluster of Object.values(title_map)) {
+        if (cluster.length > 1) {
             cluster.sort((a, b) => a.path.length - b.path.length);
             //console.log(cluster[0].title);
             //console.log(cluster.map((e, i) => `    ${i == 0 ? "*" : " "} ${e.path}`).join("\n"));
-            for(const to_delete of cluster.slice(1)) {
+            for (const to_delete of cluster.slice(1)) {
                 //console.log("    --> deleting", to_delete.path);
                 delete entry_map[to_delete.path];
             }
@@ -50,15 +50,14 @@ export class Man7Index {
 
     setup_index(index_data: man7_index) {
         // TODO: Prioritize (3), then (2), then (1), then other?
-        this.index = new Index(
-            eliminate_aliases_and_duplicates_and_set_title(index_data),
-            (title: string) => [title.toLowerCase()]
-        );
+        this.index = new Index(eliminate_aliases_and_duplicates_and_set_title(index_data), (title: string) => [
+            title.toLowerCase(),
+        ]);
     }
 
     async load_data() {
         const index_data = JSON.parse(
-            await fs.promises.readFile("indexes/man7/man7_index.json", { encoding: "utf-8" })
+            await fs.promises.readFile("indexes/man7/man7_index.json", { encoding: "utf-8" }),
         ) as man7_index;
         this.setup_index(index_data);
     }
@@ -106,13 +105,13 @@ export default class Man7 extends BotComponent {
                     title: "query",
                     description: "Query",
                     required: true,
-                    autocomplete: query => this.index.lookup_top_5(query)
-                        .map(page => ({
+                    autocomplete: query =>
+                        this.index.lookup_top_5(query).map(page => ({
                             name: `${page.title.substring(0, 100 - 14)} . . . . ${Math.round(page.score * 100) / 100}`,
-                            value: page.title
-                        }))
+                            value: page.title,
+                        })),
                 })
-                .set_handler(this.man.bind(this))
+                .set_handler(this.man.bind(this)),
         );
 
         // Ok if the bot spins up while this is loading
@@ -121,34 +120,33 @@ export default class Man7 extends BotComponent {
 
     async man(command: TextBasedCommand, query: string) {
         const result = this.index.lookup(query);
-        M.log("man7 query", query,
-              result ? `https://man7.org/linux/man-pages/${result.path}` : null);
-        if(result === null) {
+        M.log("man7 query", query, result ? `https://man7.org/linux/man-pages/${result.path}` : null);
+        if (result === null) {
             await command.reply({
                 embeds: [
                     new Discord.EmbedBuilder()
                         .setColor(colors.color)
                         .setAuthor({
                             name: "man7",
-                            url: "https://man7.org/linux/man-pages"
+                            url: "https://man7.org/linux/man-pages",
                         })
-                        .setDescription("No results found")
-                ]
+                        .setDescription("No results found"),
+                ],
             });
         } else {
             const embed = new Discord.EmbedBuilder()
                 .setColor(colors.color)
                 .setAuthor({
                     name: "man7",
-                    url: "https://man7.org/linux/man-pages"
+                    url: "https://man7.org/linux/man-pages",
                 })
                 .setTitle(result.page_title)
                 .setURL(`https://man7.org/linux/man-pages/${result.path}`)
                 .setDescription(result.short_description ?? null);
-            if(result.synopsis) {
+            if (result.synopsis) {
                 embed.addFields({
                     name: "Synopsis",
-                    value: result.synopsis
+                    value: result.synopsis,
                 });
             }
             await command.reply({ embeds: [embed] });

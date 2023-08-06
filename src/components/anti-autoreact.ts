@@ -5,16 +5,14 @@ import { zelis_id } from "../common.js";
 import { BotComponent } from "../bot-component.js";
 
 const obnoxious_autoreact_ids = new Set([
-    "841482328693669900" // "eisie"
+    "841482328693669900", // "eisie"
 ]);
 
-const obnoxious_autoreact_names = [
-    "eisie"
-];
+const obnoxious_autoreact_names = ["eisie"];
 
 const obnoxious_autoreact_immunity = new Set([
     zelis_id,
-    "551519630578024468" // Swyde
+    "551519630578024468", // Swyde
 ]);
 
 /**
@@ -24,10 +22,12 @@ export default class AntiAutoreact extends BotComponent {
     override async on_reaction_add(reaction: Discord.MessageReaction | Discord.PartialMessageReaction) {
         const emoji_name = reaction.emoji.name?.toLowerCase();
         assert(emoji_name != null);
-        if(obnoxious_autoreact_names.some(name => emoji_name.toLowerCase().indexOf(name) > -1)
-        || obnoxious_autoreact_ids.has(reaction.emoji.id!)) {
+        if (
+            obnoxious_autoreact_names.some(name => emoji_name.toLowerCase().indexOf(name) > -1) ||
+            obnoxious_autoreact_ids.has(reaction.emoji.id!)
+        ) {
             const message = await departialize(reaction.message);
-            if(obnoxious_autoreact_immunity.has(message.author.id)) {
+            if (obnoxious_autoreact_immunity.has(message.author.id)) {
                 M.debug("Auto-react being removed");
                 await Promise.all(reaction.users.cache.map(user => reaction.users.remove(user)));
             }
