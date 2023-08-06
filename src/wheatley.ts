@@ -245,7 +245,7 @@ export class Wheatley extends EventEmitter {
         this.text_command_map.destroy();
         this.deletable_map.destroy();
         this.tracker.destroy();
-        this.client.destroy();
+        this.client.destroy().catch(critical_error);
     }
 
     async add_component<T extends BotComponent>(component: { new(w: Wheatley): T; get is_freestanding(): boolean; }) {
