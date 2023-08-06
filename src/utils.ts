@@ -4,6 +4,7 @@ import chalk from "chalk";
 import XXH from "xxhashjs";
 
 import * as fs from "fs";
+import * as path from "path";
 import { execFile, ExecFileOptions } from "child_process";
 
 import { MINUTE, zelis_id } from "./common.js";
@@ -554,3 +555,14 @@ export type JSONValue =
     | undefined
     | {[x: string]: JSONValue}
     | Array<JSONValue>;
+
+export async function* walk_dir(dir: string): AsyncGenerator<string> {
+    for (const f of await fs.promises.readdir(dir)) {
+        const file_path = path.join(dir, f).replace(/\\/g, "/");
+        if ((await fs.promises.stat(file_path)).isDirectory()) {
+            yield* walk_dir(file_path);
+        } else {
+            yield file_path;
+        }
+    }
+}

@@ -4,25 +4,13 @@ import * as Discord from "discord.js";
 import * as fs from "fs";
 import * as path from "path";
 
-import { M, unwrap } from "../utils.js";
+import { M, unwrap, walk_dir } from "../utils.js";
 import { bot_spam_id, colors, resources_channel_id, rules_channel_id, stackoverflow_emote } from "../common.js";
 import { BotComponent } from "../bot-component.js";
 import { Wheatley } from "../wheatley.js";
 import { TextBasedCommand, TextBasedCommandBuilder } from "../command.js";
 
 export const wiki_dir = "wiki_articles";
-
-async function* walk_dir(dir: string): AsyncGenerator<string> {
-    // todo: duplicate
-    for (const f of await fs.promises.readdir(dir)) {
-        const file_path = path.join(dir, f).replace(/\\/g, "/");
-        if ((await fs.promises.stat(file_path)).isDirectory()) {
-            yield* walk_dir(file_path);
-        } else {
-            yield file_path;
-        }
-    }
-}
 
 type WikiArticle = {
     title: string;

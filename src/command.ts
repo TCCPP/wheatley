@@ -8,12 +8,13 @@ import { forge_snowflake } from "./components/snowflake.js";
 import { unwrap, is_string, critical_error } from "./utils.js";
 import { Wheatley } from "./wheatley.js";
 
-export type TextBasedCommandOptionType = "string";
+export type TextBasedCommandOptionType = "string" | "user";
 
 export type TextBasedCommandOption = {
     title: string;
     description: string;
-    required?: boolean;
+    required?: boolean; // TODO: Currently not implemented for text commands
+    regex?: RegExp;
     autocomplete?: (partial: string, command_name: string) => { name: string; value: string }[];
 };
 
@@ -79,6 +80,17 @@ export class TextBasedCommandBuilder<
             type: "string",
         });
         return this as unknown as TextBasedCommandBuilder<Append<Args, string>, HasDescriptions, HasHandler>;
+    }
+
+    add_user_option(
+        option: Omit<TextBasedCommandOption, "autocomplete" | "regex">,
+    ): TextBasedCommandBuilder<Append<Args, Discord.User>, HasDescriptions, HasHandler> {
+        assert(!this.options.has(option.title));
+        this.options.set(option.title, {
+            ...option,
+            type: "user",
+        });
+        return this as unknown as TextBasedCommandBuilder<Append<Args, Discord.User>, HasDescriptions, HasHandler>;
     }
 
     set_handler(
