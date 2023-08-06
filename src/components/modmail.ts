@@ -42,12 +42,7 @@ export default class Modmail extends BotComponent {
 
     override async on_ready() {
         const singleton = await this.wheatley.database.get_bot_singleton();
-        if(!singleton.modmail_id_counter) {
-            await this.wheatley.database.update_bot_singleton({ modmail_id_counter: this.modmail_id_counter });
-        } else {
-            // load entries
-            this.modmail_id_counter = singleton.modmail_id_counter;
-        }
+        this.modmail_id_counter = singleton.modmail_id_counter;
     }
 
     async create_modmail_thread(interaction: Discord.ModalSubmitInteraction) {
@@ -59,7 +54,7 @@ export default class Modmail extends BotComponent {
                 const member = await this.wheatley.TCCPP.members.fetch(interaction.member.user.id);
                 // make the thread
                 const id = this.modmail_id_counter++;
-                await this.update_db();
+                await this.wheatley.database.update_bot_singleton({ modmail_id_counter: this.modmail_id_counter });
                 const thread =  await this.wheatley.rules_channel.threads.create({
                     type: Discord.ChannelType.PrivateThread,
                     invitable: false,
@@ -226,10 +221,6 @@ export default class Modmail extends BotComponent {
                 }
             }
         }
-    }
-
-    async update_db() {
-        await this.wheatley.database.update_bot_singleton({ modmail_id_counter: this.modmail_id_counter });
     }
 
     async log_action(interaction_member: Discord.GuildMember | Discord.APIInteractionGuildMember | null,

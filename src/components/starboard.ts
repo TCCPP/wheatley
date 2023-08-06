@@ -162,7 +162,7 @@ export default class Starboard extends BotComponent {
                 true,
                 "\n\n**[Jump to message!]($$)**"
             );
-            const starboard_entry = await this.wheatley.database.starboard.findOne({ message: message.id });
+            const starboard_entry = await this.wheatley.database.starboard_entries.findOne({ message: message.id });
             if(starboard_entry) {
                 // edit
                 const starboard_message = await this.wheatley.starboard_channel.messages.fetch(
@@ -178,7 +178,7 @@ export default class Starboard extends BotComponent {
                     content: this.reactions_string(message),
                     ...await make_embeds()
                 });
-                await this.wheatley.database.starboard.insertOne({
+                await this.wheatley.database.starboard_entries.insertOne({
                     message: message.id,
                     starboard_entry: starboard_message.id
                 });
@@ -265,7 +265,7 @@ export default class Starboard extends BotComponent {
             await this.handle_auto_delete(await departialize(reaction.message), reaction);
             return;
         }
-        if(await this.wheatley.database.starboard.findOne({ message: reaction.message.id })) {
+        if(await this.wheatley.database.starboard_entries.findOne({ message: reaction.message.id })) {
             // Update counts
             await this.update_starboard(await departialize(reaction.message));
         } else if(
@@ -281,7 +281,7 @@ export default class Starboard extends BotComponent {
         if(!await this.is_valid_channel(reaction.message.channel)) {
             return;
         }
-        if(await this.wheatley.database.starboard.findOne({ message: reaction.message.id })) {
+        if(await this.wheatley.database.starboard_entries.findOne({ message: reaction.message.id })) {
             // Update counts
             await this.update_starboard(await departialize(reaction.message));
         }
@@ -295,19 +295,19 @@ export default class Starboard extends BotComponent {
             return;
         }
         assert(old_message.id == new_message.id);
-        if(await this.wheatley.database.starboard.findOne({ message: old_message.id })) {
+        if(await this.wheatley.database.starboard_entries.findOne({ message: old_message.id })) {
             // Update content
             await this.update_starboard(await departialize(new_message));
         }
     }
 
     override async on_message_delete(message: Discord.Message<boolean> | Discord.PartialMessage) {
-        const entry = await this.wheatley.database.starboard.findOne({ message: message.id });
+        const entry = await this.wheatley.database.starboard_entries.findOne({ message: message.id });
         if(entry) {
             await this.mutex.lock(message.id);
             try {
                 await this.wheatley.starboard_channel.messages.delete(entry.starboard_entry);
-                await this.wheatley.database.starboard.deleteOne({ message: message.id });
+                await this.wheatley.database.starboard_entries.deleteOne({ message: message.id });
             } finally {
                 this.mutex.unlock(message.id);
             }

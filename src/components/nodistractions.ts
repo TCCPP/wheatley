@@ -98,12 +98,8 @@ export default class Nodistractions extends BotComponent {
 
     override async on_ready() {
         // load entries
-        for await(const entry of this.wheatley.database.nodistractions.find()) {
-            this.undistract_queue.push({
-                user: entry.user,
-                start: entry.start,
-                duration: entry.duration
-            });
+        for await(const { user, start, duration } of this.wheatley.database.nodistractions.find()) {
+            this.undistract_queue.push({ user, start, duration });
         }
 
         if(this.undistract_queue.length > 0) {

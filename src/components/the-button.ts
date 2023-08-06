@@ -217,7 +217,11 @@ export default class TheButton extends BotComponent {
                         },
                         $inc: {
                             score: points
-                        }
+                        },
+                    },
+                    {
+                        upsert: true,
+                        returnDocument: "after"
                     }
                 )).value
             );
@@ -241,7 +245,7 @@ export default class TheButton extends BotComponent {
         }
         if(interaction.isButton() && interaction.customId == "the-button-scoreboard") {
             const scores = await this.wheatley.database.button_scoreboard.aggregate([
-                { $sort: { score: 1 } },
+                { $sort: { score: -1 } },
                 { $limit: 15 }
             ]).toArray() as button_scoreboard_entry[];
             const embed = new Discord.EmbedBuilder()

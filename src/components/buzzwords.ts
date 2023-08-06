@@ -252,6 +252,8 @@ export default class Buzzwords extends BotComponent {
 
     async updateRolesSingle(member: Discord.GuildMember) {
         if(ENABLED) { // eslint-disable-line @typescript-eslint/no-unnecessary-condition
+            // TODO: If we ever do this joke again, cache the quantiles from reflowRoles to save an expensive database
+            // query and computation here
             const entries = await this.wheatley.database.buzzword_scoreboard.find().toArray();
             const scores = entries.map(entry => entry.score).sort((a, b) => a - b);
             const p90 = Buzzwords.quantile(scores, .9);
@@ -301,8 +303,6 @@ export default class Buzzwords extends BotComponent {
             $set: {
                 user: id,
                 tag,
-            },
-            $max: {
                 score: points,
             },
             $inc: {
@@ -400,13 +400,14 @@ export default class Buzzwords extends BotComponent {
             }
         }
         if(message.content.trim() == "!scoreboard") {
-            const scoreboard_entries = await this.wheatley.database.buzzword_scoreboard.find().toArray();
-            const entries = scoreboard_entries.sort((a, b) => b.score - a.score);
-            const scores = entries.slice(0, 15);
+            const scoreboard_entries = await this.wheatley.database.buzzword_scoreboard.aggregate([
+                { $sort: { score: -1 } },
+                { $limit: 15 }
+            ]).toArray() as unknown as buzzword_scoreboard_entry[];
             const embed = new Discord.EmbedBuilder()
                 .setTitle("Scoreboard");
             let description = "";
-            for(const entry of scores) {
+            for(const entry of scoreboard_entries) {
                 const tag = entry.tag == "" ? `<@${entry.user}>` : entry.tag;
                 description += `${tag}: ${round(entry.score, 1)}\n`;
             }
