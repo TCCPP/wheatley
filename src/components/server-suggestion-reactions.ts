@@ -9,28 +9,14 @@ import { Wheatley } from "../wheatley.js";
 
 let react_blacklist = new Set<string>();
 
+// prettier-ignore
 const root_only_reacts = new Set([
-    "🟢",
-    "🔴",
-    "🟡",
-    "🔵",
-    "🟩",
-    "🟥",
-    "🟨",
+    "🟢", "🔴", "🟡", "🔵",
+    "🟩", "🟥", "🟨",
     "🚫",
-    "❎",
-    "✅",
-    "🅾️",
-    "⛔",
-    "⭕",
-    "❌",
-    "🛑",
-    "🫑",
-    "🍏",
-    "🎾",
-    "🍅",
-    "🍎",
-    "🏮",
+    "❎", "✅",
+    "🅾️", "⛔", "⭕", "❌", "🛑",
+    "🫑", "🍏", "🎾", "🍅", "🍎", "🏮",
 ]);
 
 const monitored_channels_ids = [server_suggestions_channel_id, suggestion_dashboard_thread_id];
