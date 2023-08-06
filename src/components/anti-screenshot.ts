@@ -40,7 +40,9 @@ export default class AntiScreenshot extends BotComponent {
     }
 
     override async on_message_create(message: Discord.Message) {
-        if (message.author.bot) return;
+        if (message.author.bot) {
+            return;
+        }
         if (message.id == message.channel.id) {
             assert(message.channel instanceof Discord.ThreadChannel);
             if (is_forum_help_thread(message.channel)) {

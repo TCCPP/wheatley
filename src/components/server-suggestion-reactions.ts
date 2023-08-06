@@ -73,7 +73,9 @@ export default class ServerSuggestionReactions extends BotComponent {
         assert(server_suggestions_channel != undefined);
         while (true) {
             await delay(3 * MINUTE);
-            if (this.stop) return;
+            if (this.stop) {
+                return;
+            }
             const messages = await server_suggestions_channel.messages.fetch({
                 limit: 100,
                 before: forge_snowflake(oldest_seen - 1),

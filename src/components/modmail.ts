@@ -101,7 +101,10 @@ export default class Modmail extends BotComponent {
     }
 
     override async on_message_create(message: Discord.Message) {
-        if (message.author.bot) return; // Ignore bots
+        // Ignore bots
+        if (message.author.bot) {
+            return;
+        }
         if (message.content == "!wsetupmodmailsystem" && is_authorized_admin(message.member!)) {
             const row = new Discord.ActionRowBuilder<Discord.MessageActionRowComponentBuilder>().addComponents(
                 new Discord.ButtonBuilder()
@@ -248,7 +251,9 @@ export default class Modmail extends BotComponent {
                 iconURL: avatar,
             })
             .setFooter({ text: `ID: ${interaction_member?.user.id}` });
-        if (body) embed.setDescription(body);
+        if (body) {
+            embed.setDescription(body);
+        }
         await this.wheatley.staff_member_log_channel.send({
             embeds: [embed],
         });

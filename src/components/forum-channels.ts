@@ -160,20 +160,28 @@ export default class ForumChannels extends BotComponent {
                 thread.url,
             );
             const { archived } = thread;
-            if (archived) await thread.setArchived(false);
+            if (archived) {
+                await thread.setArchived(false);
+            }
             const tag = thread.appliedTags.includes(solved_tag) ? solved_tag : open_tag;
             await thread.setAppliedTags(
                 [tag].concat(thread.appliedTags.filter(tag => !status_tags.includes(tag)).slice(0, 4)),
             );
-            if (archived) await thread.setArchived(true);
+            if (archived) {
+                await thread.setArchived(true);
+            }
         }
         // Cleanup the legacy system: If the thread name starts with [SOLVED], remove it
         if (thread.name.startsWith("[SOLVED]")) {
             M.log('Removing "[SOLVED]" from forum thread name', thread.id, thread.name, thread.url);
             const { archived } = thread;
-            if (archived) await thread.setArchived(false);
+            if (archived) {
+                await thread.setArchived(false);
+            }
             await thread.setName(thread.name.slice("[SOLVED]".length).trim());
-            if (archived) await thread.setArchived(true);
+            if (archived) {
+                await thread.setArchived(true);
+            }
         }
     }
 
@@ -187,8 +195,10 @@ export default class ForumChannels extends BotComponent {
     }
 
     override async on_message_create(message: Discord.Message) {
-        if (message.author.bot) return; // Ignore bots
-        if (message.type == Discord.MessageType.ThreadCreated) return; // ignore message create messages
+        // Ignore bots and thread create messages
+        if (message.author.bot || message.type == Discord.MessageType.ThreadCreated) {
+            return;
+        }
         const channel = message.channel;
         if (message.id == message.channelId) {
             // forum start message

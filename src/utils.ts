@@ -55,14 +55,18 @@ export function send_long_message(channel: Discord.TextChannel, msg: string) {
         const queue: string[] = [];
         while (lines.length > 0) {
             if (partial.length + lines[0].length + 1 <= 2000) {
-                if (partial != "") partial += "\n";
+                if (partial != "") {
+                    partial += "\n";
+                }
                 partial += lines.shift();
             } else {
                 queue.push(partial);
                 partial = "";
             }
         }
-        if (partial != "") queue.push(partial);
+        if (partial != "") {
+            queue.push(partial);
+        }
         const send_next = () => {
             if (queue.length > 0) {
                 channel.send(queue.shift()!).then(send_next).catch(M.error);
@@ -208,7 +212,9 @@ export class SelfClearingMap<K, V> {
     }
     get(key: K) {
         const p = this.contents.get(key);
-        if (p == undefined) return undefined;
+        if (p == undefined) {
+            return undefined;
+        }
         return p[1];
     }
     /*

@@ -223,7 +223,10 @@ export default class Format extends BotComponent {
         // TODO: Leaving for now, need better way to handle this in the general case. Will probably be part of a larger
         // command abstraction
         try {
-            if (message.author.bot) return; // Ignore bots
+            // Ignore bots
+            if (message.author.bot) {
+                return;
+            }
             if (message.content == "!f" || message.content == "!format") {
                 if (message.type == Discord.MessageType.Reply) {
                     const replying_to = await message.fetchReference();

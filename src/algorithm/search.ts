@@ -318,7 +318,9 @@ abstract class BaseIndex<T extends IndexEntry, ExtraEntryData = {}> {
         }
         candidates.sort((a, b) => b.score - a.score);
         /* eslint-disable @typescript-eslint/no-unnecessary-condition */
-        if (DEBUG) console.log(query);
+        if (DEBUG) {
+            console.log(query);
+        }
         if (DEBUG) {
             candidates
                 .slice(0, 3)

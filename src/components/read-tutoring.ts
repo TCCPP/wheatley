@@ -16,7 +16,10 @@ export default class ReadTutoring extends BotComponent {
     }
 
     override async on_message_create(message: Discord.Message) {
-        if (message.author.bot) return; // Ignore bots
+        // Ignore bots
+        if (message.author.bot) {
+            return;
+        }
         if (message.channel.id == tutoring_requests_id) {
             M.log("Sending read tutoring message", message.author.id, message.author.tag, message.url);
             const reply = await message.reply({

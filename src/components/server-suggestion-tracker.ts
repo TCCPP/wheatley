@@ -342,8 +342,12 @@ export default class ServerSuggestionTracker extends BotComponent {
     }
 
     override async on_message_create(message: Discord.Message) {
-        if (this.recovering) return;
-        if (this.isnt_actually_a_message(message)) return;
+        if (this.recovering) {
+            return;
+        }
+        if (this.isnt_actually_a_message(message)) {
+            return;
+        }
         try {
             if (message.channel.id == server_suggestions_channel_id) {
                 await this.handle_suggestion_channel_message(message);
@@ -358,8 +362,12 @@ export default class ServerSuggestionTracker extends BotComponent {
     }
 
     override async on_message_delete(message: Discord.Message | Discord.PartialMessage) {
-        if (this.recovering) return;
-        if (this.isnt_actually_a_message(message as Discord.Message)) return;
+        if (this.recovering) {
+            return;
+        }
+        if (this.isnt_actually_a_message(message as Discord.Message)) {
+            return;
+        }
         try {
             if (message.channel.id == server_suggestions_channel_id) {
                 if (!(await this.wheatley.database.server_suggestions.findOne({ suggestion: message.id }))) {
@@ -402,8 +410,12 @@ export default class ServerSuggestionTracker extends BotComponent {
         old_message: Discord.Message | Discord.PartialMessage,
         new_message: Discord.Message | Discord.PartialMessage,
     ) {
-        if (this.recovering) return;
-        if (new_message.channel.id != server_suggestions_channel_id) return;
+        if (this.recovering) {
+            return;
+        }
+        if (new_message.channel.id != server_suggestions_channel_id) {
+            return;
+        }
         try {
             await this.mutex.lock(new_message.id);
             await this.update_message_if_needed(await departialize(new_message));
@@ -479,7 +491,9 @@ export default class ServerSuggestionTracker extends BotComponent {
         reaction: Discord.MessageReaction | Discord.PartialMessageReaction,
         user: Discord.User | Discord.PartialUser,
     ) {
-        if (this.recovering) return;
+        if (this.recovering) {
+            return;
+        }
         try {
             if (reaction.message.channel.id == server_suggestions_channel_id) {
                 if (resolution_reactions_set.has(reaction.emoji.name!)) {
@@ -536,8 +550,12 @@ export default class ServerSuggestionTracker extends BotComponent {
         reaction: Discord.MessageReaction | Discord.PartialMessageReaction,
         user: Discord.User | Discord.PartialUser,
     ) {
-        if (this.recovering) return;
-        if (reaction.message.channel.id != server_suggestions_channel_id) return;
+        if (this.recovering) {
+            return;
+        }
+        if (reaction.message.channel.id != server_suggestions_channel_id) {
+            return;
+        }
         try {
             if (resolution_reactions_set.has(reaction.emoji.name!)) {
                 await this.mutex.lock(reaction.message.id);
@@ -573,7 +591,9 @@ export default class ServerSuggestionTracker extends BotComponent {
             }
             arr.sort((a, b) => a.createdTimestamp - b.createdTimestamp);
             for (const message of arr) {
-                if (this.isnt_actually_a_message(message)) continue;
+                if (this.isnt_actually_a_message(message)) {
+                    continue;
+                }
                 const root_resolve = await this.message_has_resolution_from_root(message);
                 if (root_resolve) {
                     // already resolved, just log

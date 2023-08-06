@@ -137,7 +137,9 @@ export default class Starboard extends BotComponent {
 
     meets_threshold(reaction: Discord.MessageReaction) {
         assert(reaction.emoji.name);
-        if (!(reaction.emoji instanceof Discord.GuildEmoji || reaction.emoji.id === null)) return false;
+        if (!(reaction.emoji instanceof Discord.GuildEmoji || reaction.emoji.id === null)) {
+            return false;
+        }
         if (reaction.emoji.name == "⭐") {
             if (reaction.message.channel.id == memes_channel_id) {
                 return reaction.count >= memes_star_threshold;

@@ -14,7 +14,10 @@ export default class UtilityTools extends BotComponent {
     }
 
     override async on_message_create(message: Discord.Message) {
-        if (message.author.bot) return; // Ignore bots
+        // Ignore bots
+        if (message.author.bot) {
+            return;
+        }
         if (is_authorized_admin(message.author)) {
             if (message.content == "!channel-rename") {
                 M.info("got !channel-rename");

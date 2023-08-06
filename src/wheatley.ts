@@ -536,7 +536,10 @@ export class Wheatley extends EventEmitter {
     // TODO: Notify about critical errors.....
     async on_message(message: Discord.Message) {
         try {
-            if (message.author.bot) return; // skip bots
+            // skip bots
+            if (message.author.bot) {
+                return;
+            }
             if (message.content.startsWith("!")) {
                 await this.handle_command(message);
             }

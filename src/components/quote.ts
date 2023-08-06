@@ -232,9 +232,10 @@ export default class Quote extends BotComponent {
     }
 
     override async on_message_create(message: Discord.Message) {
-        if (message.author.id == this.wheatley.client.user!.id) return; // Ignore self
-        if (message.author.bot) return; // Ignore bots
-        if (message.guildId != TCCPP_ID) return; // Ignore messages outside TCCPP (e.g. dm's)
+        // Ignore self, bots, and messages outside TCCPP (e.g. dm's)
+        if (message.author.id == this.wheatley.client.user!.id || message.author.bot || message.guildId != TCCPP_ID) {
+            return;
+        }
         if (message.content.includes("[https://")) {
             // if the message might contain a link, look at it
             const quote_descriptors = [...message.content.matchAll(implicit_quote_re)]
@@ -318,7 +319,9 @@ export default class Quote extends BotComponent {
                     known_domains.has(domain),
                 );
                 embeds.push(...quote_embeds.embeds);
-                if (quote_embeds.files) files.push(...quote_embeds.files);
+                if (quote_embeds.files) {
+                    files.push(...quote_embeds.files);
+                }
             } else {
                 embeds.push(
                     new Discord.EmbedBuilder().setColor(colors.red).setDescription("Error: Channel not a text channel"),

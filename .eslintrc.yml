@@ -62,6 +62,8 @@ rules:
   prefer-const:
     - error
     - destructuring: all
+  curly:
+    - error
   "prettier/prettier": "error"
   "@typescript-eslint/no-unused-vars":
     - warn

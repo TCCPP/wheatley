@@ -56,7 +56,9 @@ export default class UsernameManager extends BotComponent {
 
     override destroy() {
         super.destroy();
-        if (this.interval) clearInterval(this.interval);
+        if (this.interval) {
+            clearInterval(this.interval);
+        }
     }
 
     override async on_ready() {

@@ -52,7 +52,9 @@ export class MemberTracker {
         const now = Date.now();
         // -- join logs --
         const first_in_timeframe = this.entries.findIndex(entry => now - entry.entry_added_at <= LOG_DURATION);
-        if (first_in_timeframe == -1) return;
+        if (first_in_timeframe == -1) {
+            return;
+        }
         // debugging checks
         // just check sorted order of everything
         for (let i = first_in_timeframe; i < this.entries.length; i++) {

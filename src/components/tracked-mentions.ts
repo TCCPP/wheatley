@@ -46,9 +46,10 @@ export default class TrackedMentions extends BotComponent {
     }
 
     override async on_message_create(message: Discord.Message) {
-        if (message.author.id == this.wheatley.client.user!.id) return; // Ignore self
-        if (message.author.bot) return; // Ignore bots
-        if (message.guildId != TCCPP_ID) return; // Ignore messages outside TCCPP (e.g. dm's)
+        // Ignore self, bots, and messages outside TCCPP (e.g. dm's)
+        if (message.author.id == this.wheatley.client.user!.id || message.author.bot || message.guildId != TCCPP_ID) {
+            return;
+        }
         if (message.mentions.roles.size > 0) {
             await this.check_tracked_mention_and_notify(message);
         }

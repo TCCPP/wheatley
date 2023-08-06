@@ -215,7 +215,9 @@ class ArticleParser {
      * @param line the line, possibly containing backticks for inline code
      */
     private substitute_placeholders(line: string): string {
-        if (this.in_code) return line;
+        if (this.in_code) {
+            return line;
+        }
         let result = "";
         let piece = "";
         let in_inline_code = false;

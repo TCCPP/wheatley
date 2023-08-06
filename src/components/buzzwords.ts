@@ -182,8 +182,12 @@ export default class Buzzwords extends BotComponent {
     override destroy() {
         super.destroy();
         this.slowmode.destroy();
-        if (this.timeout) clearTimeout(this.timeout);
-        if (this.interval) clearInterval(this.interval);
+        if (this.timeout) {
+            clearTimeout(this.timeout);
+        }
+        if (this.interval) {
+            clearInterval(this.interval);
+        }
     }
 
     override async on_ready() {
@@ -318,8 +322,10 @@ export default class Buzzwords extends BotComponent {
     }
 
     override async on_message_create(message: Discord.Message) {
-        if (message.author.bot) return; // Ignore bots
-        if (message.guildId != TCCPP_ID) return; // Ignore DMs
+        // Ignore bots and DMs
+        if (message.author.bot || message.guildId != TCCPP_ID) {
+            return;
+        }
         //if(message.channel.id != "1091502908241084436") return; // for now, for testing
         if (is_authorized_admin(message.author)) {
             if (message.content.trim().startsWith("!derailed")) {
@@ -364,7 +370,9 @@ export default class Buzzwords extends BotComponent {
                     })();
                     const tag = member.user.tag;
                     await this.set_points(id, tag, parseInt(amount));
-                    if (member instanceof Discord.GuildMember) await this.updateRolesSingle(member);
+                    if (member instanceof Discord.GuildMember) {
+                        await this.updateRolesSingle(member);
+                    }
                     await message.reply("Done");
                     //await this.update_database();
                 } else {

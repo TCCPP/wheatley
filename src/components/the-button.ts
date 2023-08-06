@@ -67,7 +67,9 @@ export default class TheButton extends BotComponent {
 
     override destroy() {
         super.destroy();
-        if (this.interval) clearInterval(this.interval);
+        if (this.interval) {
+            clearInterval(this.interval);
+        }
     }
 
     make_message(time_until_doomsday: number): Discord.MessageEditOptions & Discord.MessageCreateOptions {
@@ -139,7 +141,9 @@ export default class TheButton extends BotComponent {
                 this.last_update.epoch != this.last_reset ||
                 Date.now() - this.last_update.timestamp - this.last_update.remaining_seconds * 1000 >= -1500
             ) {
-                if (waiting) return;
+                if (waiting) {
+                    return;
+                }
                 waiting = true;
                 this.update_message()
                     .catch(critical_error)
@@ -151,7 +155,10 @@ export default class TheButton extends BotComponent {
     }
 
     override async on_message_create(message: Discord.Message) {
-        if (message.author.bot) return; // Ignore bots
+        // Ignore bots
+        if (message.author.bot) {
+            return;
+        }
         if (message.content == "!wsetupthebutton" && is_authorized_admin(message.member!)) {
             const time_since_last_reset = Date.now() - this.last_reset;
             const time_until_doomsday = Math.max(0, DAY - time_since_last_reset);

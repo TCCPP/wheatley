@@ -48,11 +48,18 @@ export default class Autoreact extends BotComponent {
     }
 
     override async on_message_create(message: Discord.Message) {
-        if (message.author.id == this.wheatley.client.user!.id) return; // Ignore self
-        if (message.author.bot) return; // Ignore bots
-        if (message.guildId != TCCPP_ID) return; // Ignore messages outside TCCPP (e.g. dm's)
+        if (
+            message.author.id == this.wheatley.client.user!.id || // Ignore self
+            message.author.bot || // Ignore bots
+            message.guildId != TCCPP_ID // Ignore messages outside TCCPP (e.g. dm's)
+        ) {
+            return;
+        }
         if (message.channel.id == introductions_channel_id) {
-            if (message.member == null) M.warn("Why??", message); // TODO: Ping zelis?
+            if (message.member == null) {
+                // TODO: Ping zelis?
+                M.warn("Why??", message);
+            }
             if (await this.is_new_member(message)) {
                 await delay(1 * MINUTE);
                 M.log("Waving to new user", message.author.tag, message.author.id, message.url);
@@ -74,9 +81,13 @@ export default class Autoreact extends BotComponent {
         old_message: Discord.Message<boolean> | Discord.PartialMessage,
         new_message: Discord.Message<boolean> | Discord.PartialMessage,
     ): Promise<void> {
-        if (new_message.author?.id == this.wheatley.client.user!.id) return; // Ignore self
-        if (new_message.author?.bot) return; // Ignore bots
-        if (new_message.guildId != TCCPP_ID) return; // Ignore messages outside TCCPP (e.g. dm's)
+        if (
+            new_message.author?.id == this.wheatley.client.user!.id || // Ignore self
+            new_message.author?.bot || // Ignore bots
+            new_message.guildId != TCCPP_ID // Ignore messages outside TCCPP (e.g. dm's)
+        ) {
+            return;
+        }
         if (new_message.channel.id == memes_channel_id) {
             const bot_starred = new_message.reactions.cache.get("⭐")?.users.cache.has(this.wheatley.id);
             // If we haven't stared (or don't know if we've starred) and the new message has media, star

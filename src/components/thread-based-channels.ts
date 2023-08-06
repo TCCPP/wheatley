@@ -41,8 +41,10 @@ export default class ThreadBasedChannels extends BotComponent {
     }
 
     override async on_message_create(message: Discord.Message) {
-        if (message.author.bot) return; // Ignore bots
-        if (message.type == Discord.MessageType.ThreadCreated) return; // ignore message create messages
+        // Ignore bots and thread create messages
+        if (message.author.bot || message.type == Discord.MessageType.ThreadCreated) {
+            return;
+        }
         if (thread_based_channel_ids.has(message.channel.id)) {
             const s = message.member?.displayName.trim().endsWith("s") ? "" : "s"; // rudimentary
             const thread = await message.startThread({
