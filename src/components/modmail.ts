@@ -118,9 +118,9 @@ export default class Modmail extends BotComponent {
                     create_embed(
                         "Modmail",
                         "If you have a **moderation** or **administration** related issue you " +
-                            "can reach out to the staff team by pressing the modmail thread button below.\n\nBecause, in " +
-                            "our experience, a surprising number of users also can't read, there is also a monkey " +
-                            "button.",
+                            "can reach out to the staff team by pressing the modmail thread button below.\n\n" +
+                            "Because, in our experience, a surprising number of users also can't read, there is also " +
+                            "a monkey button.",
                     ),
                 ],
                 components: [row],

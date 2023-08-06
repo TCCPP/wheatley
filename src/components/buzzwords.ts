@@ -187,8 +187,8 @@ export default class Buzzwords extends BotComponent {
     }
 
     override async on_ready() {
+        // eslint-disable-next-line @typescript-eslint/no-unnecessary-condition
         if (ENABLED) {
-            // eslint-disable-line @typescript-eslint/no-unnecessary-condition
             //await this.update_database();
             //this.timeout = setTimeout(() => {
             //    this.update_database().catch(critical_error);
@@ -248,8 +248,8 @@ export default class Buzzwords extends BotComponent {
     }
 
     async updateRolesSingle(member: Discord.GuildMember) {
+        // eslint-disable-next-line @typescript-eslint/no-unnecessary-condition
         if (ENABLED) {
-            // eslint-disable-line @typescript-eslint/no-unnecessary-condition
             // TODO: If we ever do this joke again, cache the quantiles from reflowRoles to save an expensive database
             // query and computation here
             const entries = await this.wheatley.database.buzzword_scoreboard.find().toArray();
@@ -448,8 +448,8 @@ export default class Buzzwords extends BotComponent {
             });
         }
         // check the message for buzzwords
+        // eslint-disable-next-line @typescript-eslint/no-unnecessary-condition
         if (ENABLED) {
-            // eslint-disable-line @typescript-eslint/no-unnecessary-condition
             if (!this.slowmode.has(message.author.id)) {
                 let total_score = 0;
                 let count = 0;

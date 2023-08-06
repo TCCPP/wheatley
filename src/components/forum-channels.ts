@@ -211,8 +211,8 @@ export default class ForumChannels extends BotComponent {
                             colors.red,
                             "When your question is answered use **`!solved`** to " +
                                 "mark the question as resolved.\n\nRemember to ask __specific questions__, provide " +
-                                "__necessary details__, and reduce your question to its __simplest form__. For tips on how " +
-                                "to ask a good question run `!howto ask`.",
+                                "__necessary details__, and reduce your question to its __simplest form__. For tips " +
+                                "on how to ask a good question run `!howto ask`.",
                         ),
                     ],
                 });

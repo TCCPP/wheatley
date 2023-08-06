@@ -295,8 +295,8 @@ export class TextBasedCommand extends Command {
                 this.member = reply_object.member;
                 this.user = reply_object.author;
             }
+            // eslint-disable-next-line @typescript-eslint/no-unnecessary-condition
         } else if (args[0] == "c") {
-            // eslint-disable-line @typescript-eslint/no-unnecessary-condition
             // construct from copy, used for edit
             const [_, command, name, reply_object] = args;
             this.name = name;

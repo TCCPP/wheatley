@@ -56,7 +56,8 @@ export default class Inspect extends BotComponent {
                     "Attachments: " +
                     JSON.stringify(
                         message.attachments.map(
-                            // This looks silly, but it is the best way I can think of to call all the getters and re-package
+                            // This looks silly, but it is the best way I can think of to call all the getters and
+                            // re-package
                             ({
                                 contentType,
                                 description,
@@ -96,7 +97,8 @@ export default class Inspect extends BotComponent {
                     "Embeds: " +
                     JSON.stringify(
                         message.embeds.map(
-                            // This looks silly, but it is the best way I can think of to call all the getters and re-package
+                            // This looks silly, but it is the best way I can think of to call all the getters and
+                            // re-package
                             ({
                                 author,
                                 color,

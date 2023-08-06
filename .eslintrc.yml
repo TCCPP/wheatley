@@ -32,9 +32,6 @@ rules:
   semi:
     - error
     - always
-  quotes:
-    - error
-    - double
   no-unused-vars:
     - off
   no-constant-condition:
@@ -49,9 +46,6 @@ rules:
   object-curly-spacing:
     - error
     - always
-  space-in-parens:
-    - error
-    - never
   comma-spacing:
     - error
   computed-property-spacing:
@@ -65,6 +59,9 @@ rules:
   semi-style:
     - error
     - last
+  prefer-const:
+    - error
+    - destructuring: all
   "prettier/prettier": "error"
   "@typescript-eslint/no-unused-vars":
     - warn

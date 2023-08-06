@@ -68,7 +68,6 @@ export class MemberTracker {
         // -- ping/link maps --
         for (const map of [this.ping_map, this.link_map]) {
             for (let [k, v] of map) {
-                /* eslint-disable-line prefer-const */
                 v = v.filter(m => now - m.createdTimestamp <= LOG_DURATION);
                 if (v.length == 0) {
                     this.ping_map.delete(k);
