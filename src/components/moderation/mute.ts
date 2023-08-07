@@ -2,18 +2,19 @@ import * as Discord from "discord.js";
 
 import { strict as assert } from "assert";
 
-import { M } from "../../utils.js";
-import { colors } from "../../common.js";
-import { BotComponent } from "../../bot-component.js";
+import { M, unwrap } from "../../utils.js";
 import { Wheatley } from "../../wheatley.js";
-import { TextBasedCommand, TextBasedCommandBuilder } from "../../command.js";
+import { TextBasedCommandBuilder } from "../../command.js";
+import { ModerationComponent, duration_regex, moderation_entry, moderation_type } from "./moderation-common.js";
+
+import * as mongo from "mongodb";
 
 /**
  * Implements !mute
  */
-export default class Mute extends BotComponent {
-    static override get is_freestanding() {
-        return true;
+export default class Mute extends ModerationComponent {
+    get type(): moderation_type {
+        return "mute";
     }
 
     constructor(wheatley: Wheatley) {
@@ -30,7 +31,7 @@ export default class Mute extends BotComponent {
                 .add_string_option({
                     title: "duration",
                     description: "Duration",
-                    regex: /(?:perm\b|\d+\s*[mhdwMy])/,
+                    regex: duration_regex,
                     required: true,
                 })
                 .add_string_option({
@@ -38,11 +39,15 @@ export default class Mute extends BotComponent {
                     description: "Reason",
                     required: true,
                 })
-                .set_handler(this.handler.bind(this)),
+                .set_handler(this.moderation_handler.bind(this)),
         );
     }
 
-    async handler(command: TextBasedCommand, user: Discord.User, time: string, reason: string) {
-        await command.reply(JSON.stringify([user.displayName, time, reason]));
+    async add_moderation(entry: mongo.WithId<moderation_entry>) {
+        // TODO
+    }
+
+    async remove_moderation(entry: mongo.WithId<moderation_entry>) {
+        // TODO
     }
 }

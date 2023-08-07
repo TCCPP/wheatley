@@ -10,6 +10,7 @@ import { auto_delete_threshold_notifications, starboard_entry } from "../compone
 import { button_scoreboard_entry } from "../components/the-button.js";
 import { TRACKER_START_TIME, suggestion_entry } from "../components/server-suggestion-tracker.js";
 import { link_blacklist_entry } from "../private-types.js";
+import { moderation_entry } from "../components/moderation/moderation-common.js";
 
 export class WheatleyDatabase {
     private mutex = new Mutex();
@@ -74,6 +75,7 @@ export class WheatleyDatabase {
                     ignored_emojis: [],
                     negative_emojis: [],
                 },
+                moderation_case_number: 0,
             };
             const ires = await wheatley.insertOne(document);
             assert(ires.acknowledged);
@@ -116,6 +118,7 @@ export type WheatleyDatabaseProxy = WheatleyDatabase & {
     server_suggestions: mongo.Collection<suggestion_entry>;
     starboard_entries: mongo.Collection<starboard_entry>;
     wheatley: mongo.Collection<wheatley_db_info>;
+    moderations: mongo.Collection<moderation_entry>;
 };
 // & {
 //    [key: string] : Promise<mongo.Collection>

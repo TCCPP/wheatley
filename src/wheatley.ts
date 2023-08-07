@@ -96,6 +96,7 @@ export type wheatley_db_info = {
         ignored_emojis: string[];
         negative_emojis: string[];
     };
+    moderation_case_number: number;
 };
 
 export class Wheatley extends EventEmitter {
