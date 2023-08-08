@@ -96,27 +96,30 @@ function pluralize(n: number, word: string) {
     }
 }
 
-export function time_to_human(diff: number): string {
+export function time_to_human(diff: number, seconds_with_higher_precision = true): string {
     if (diff >= YEAR) {
         const years = Math.floor(diff / YEAR);
-        return `${pluralize(years, "year")} ${time_to_human(diff % YEAR)}`;
+        return `${pluralize(years, "year")} ${time_to_human(diff % YEAR, false)}`;
     }
     if (diff >= MONTH) {
         const months = Math.floor(diff / MONTH);
-        return `${pluralize(months, "month")} ${time_to_human(diff % MONTH)}`;
+        return `${pluralize(months, "month")} ${time_to_human(diff % MONTH, false)}`;
     }
     if (diff >= DAY) {
         const days = Math.floor(diff / DAY);
-        return `${pluralize(days, "day")} ${time_to_human(diff % DAY)}`;
+        return `${pluralize(days, "day")} ${time_to_human(diff % DAY, false)}`;
     }
     if (diff >= HOUR) {
         const hours = Math.floor(diff / HOUR);
-        return `${pluralize(hours, "hour")} ${time_to_human(diff % HOUR)}`;
+        return `${pluralize(hours, "hour")} ${time_to_human(diff % HOUR, false)}`;
     }
     if (diff >= MINUTE) {
-        return `${pluralize(Math.floor(diff / MINUTE), "minute")} ${time_to_human(diff % MINUTE)}`;
+        return `${pluralize(Math.floor(diff / MINUTE), "minute")} ${time_to_human(
+            diff % MINUTE,
+            seconds_with_higher_precision && true,
+        )}`;
     }
-    return `${pluralize(diff / 1000, "second")}`;
+    return `${pluralize(round(diff / 1000, seconds_with_higher_precision ? 1 : 0), "second")}`;
 }
 
 const code_re = /`[^`]+`(?!`)/gi;
