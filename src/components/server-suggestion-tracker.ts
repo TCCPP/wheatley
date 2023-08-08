@@ -523,27 +523,28 @@ export default class ServerSuggestionTracker extends BotComponent {
                     this.mutex.unlock(reaction.message.id);
                 }
             } else if (reaction.message.channel.id == suggestion_dashboard_thread_id) {
+                const message = await departialize(reaction.message);
                 if (
-                    reaction.message.author!.id == this.wheatley.id &&
+                    message.author.id == this.wheatley.id &&
                     user.id != this.wheatley.id && // ignore self - this is important for autoreacts
                     resolution_reactions_set.has(reaction.emoji.name!) &&
                     is_root(user)
                 ) {
                     // expensive-ish but this will be rare
-                    const suggestion_id = await this.reverse_lookup(reaction.message.id);
+                    const suggestion_id = await this.reverse_lookup(message.id);
                     if (suggestion_id == null) {
                         throw 0; // untracked  - this is an internal error or a race condition
                     } else {
                         // lock the status message
                         // NOTE: Assuming no identical snowflakes between channels, this should be pretty safe though
-                        await this.mutex.lock(reaction.message.id);
+                        await this.mutex.lock(message.id);
                         const suggestion = await this.wheatley.server_suggestions_channel.messages.fetch(suggestion_id);
                         await suggestion.react(reaction.emoji.name!);
                         await this.log_resolution(suggestion, {
                             user: await departialize(user),
                             emoji: reaction.emoji,
                         });
-                        this.mutex.unlock(reaction.message.id);
+                        this.mutex.unlock(message.id);
                         // No further action done here: process_reaction will run when on_react will fires again as a
                         // result of suggestion.react
                     }
