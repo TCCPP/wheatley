@@ -16,12 +16,12 @@ import { colors } from "../../common.js";
  * !kick
  * !rolepersist add/remove
  * !temprole
- * !warn !delwarn
- * !expunge !unexpunge
+ * !warn
  * !noofftopic
  *
  * !reason
  * !duration
+ * !expunge !unexpunge
  * !modlogs
  * !case
  *
@@ -37,27 +37,36 @@ import { colors } from "../../common.js";
 
 export type moderation_type = "mute" | "warn" | "ban" | "kick" | "no off-topic" | "rolepersist";
 
-export type base_moderation_entry = {
-    case_number: number;
-    user: string;
-    user_name: string;
+export type moderation_edit_info = {
     moderator: string;
+    moderator_name: string;
+    timestamp: number;
+    reason: string | null;
+};
+
+export type basic_moderation =
+    | {
+          type: "mute" | "warn" | "ban" | "kick" | "no off-topic";
+          user: string; // snowflake
+      }
+    | {
+          type: "rolepersist";
+          user: string; // snowflake
+          role: string; // snowflake
+      };
+
+export type moderation_entry = basic_moderation & {
+    case_number: number;
+    user_name: string;
+    moderator: string; // snowflake
     moderator_name: string;
     reason: string | null;
     issued_at: number; // milliseconds since epoch
     duration: number | null; // milliseconds
-    active: boolean;
-    // TODO: Store a ledger of who alters it?
-    removal_mod?: string;
-    removal_mod_name?: string;
-    removal_timestamp?: number; // milliseconds since epoch
-    removal_reason?: string | null;
-    expunged?: boolean;
+    active: boolean; // active and can be deactivated at some point
+    removed: moderation_edit_info | null;
+    expunged: moderation_edit_info | null;
 };
-
-export type moderation_entry =
-    | (base_moderation_entry & { type: "mute" | "warn" | "ban" | "kick" | "no off-topic" })
-    | (base_moderation_entry & { type: "rolepersist"; role: string });
 
 export const duration_regex = /(?:()(perm)\b|(\d+)\s*([mhdwMy]))/;
 
@@ -111,13 +120,16 @@ export abstract class ModerationComponent extends BotComponent {
 
     override async on_ready() {
         const moderations = await this.wheatley.database.moderations.find({ type: this.type, active: true }).toArray();
+        // Any catch up will be done in order
         this.sleep_list.bulk_insert(
             moderations
                 .filter(entry => entry.duration !== null)
                 .map(entry => [entry.issued_at + unwrap(entry.duration), entry]),
         );
         // Ensure moderations are in place
-        for (const moderation of moderations) {
+        for (const moderation of moderations.sort(
+            (a, b) => a.issued_at + unwrap(a.duration) - (b.issued_at + unwrap(b.duration)),
+        )) {
             try {
                 if (!(await this.is_moderation_applied(moderation))) {
                     await this.add_moderation(moderation);
@@ -130,7 +142,7 @@ export abstract class ModerationComponent extends BotComponent {
 
     abstract add_moderation(entry: mongo.WithId<moderation_entry>): Promise<void>;
     abstract remove_moderation(entry: mongo.WithId<moderation_entry>): Promise<void>;
-    abstract is_moderation_applied(entry: mongo.WithId<moderation_entry>): Promise<boolean>;
+    abstract is_moderation_applied(moderation: basic_moderation): Promise<boolean>;
 
     async handle_moderation_expire(entry: mongo.WithId<moderation_entry>) {
         await this.remove_moderation(entry);
@@ -140,10 +152,12 @@ export abstract class ModerationComponent extends BotComponent {
             {
                 $set: {
                     active: false,
-                    removal_mod: this.wheatley.id,
-                    removal_mod_name: "Wheatley",
-                    removal_reason: "Auto",
-                    removal_timestamp: Date.now(),
+                    removed: {
+                        moderator: this.wheatley.id,
+                        moderator_name: "Wheatley",
+                        reason: "Auto",
+                        timestamp: Date.now(),
+                    },
                 },
             },
         );

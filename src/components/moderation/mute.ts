@@ -2,11 +2,12 @@ import * as Discord from "discord.js";
 
 import { strict as assert } from "assert";
 
-import { M, unwrap } from "../../utils.js";
+import { M, critical_error, unwrap } from "../../utils.js";
 import { Wheatley } from "../../wheatley.js";
 import { TextBasedCommand, TextBasedCommandBuilder } from "../../command.js";
 import {
     ModerationComponent,
+    basic_moderation,
     duration_regex,
     moderation_entry,
     moderation_type,
@@ -80,13 +81,18 @@ export default class Mute extends ModerationComponent {
         this.sleep_list.remove(entry._id);
     }
 
-    async is_moderation_applied(entry: mongo.WithId<moderation_entry>) {
-        const member = await this.wheatley.TCCPP.members.fetch(entry.user);
+    async is_moderation_applied(moderation: basic_moderation) {
+        assert(moderation.type == this.type);
+        const member = await this.wheatley.TCCPP.members.fetch(moderation.user);
         return member.roles.cache.filter(role => role.id == this.wheatley.muted_role.id).size > 0;
     }
 
     async mute_handler(command: TextBasedCommand, user: Discord.User, duration: string, reason: string) {
         try {
+            const base_moderation: basic_moderation = { type: "mute", user: user.id };
+            if (await this.is_moderation_applied(base_moderation)) {
+                await this.reply_with_error(command, "User is already muted");
+            }
             await this.wheatley.database.lock();
             const document: moderation_entry = {
                 case_number: await this.get_case_id(),
@@ -99,7 +105,8 @@ export default class Mute extends ModerationComponent {
                 issued_at: Date.now(),
                 duration: parse_duration(duration),
                 active: true,
-                expunged: false,
+                removed: null,
+                expunged: null,
             };
             const res = await this.wheatley.database.moderations.insertOne(document);
             await this.add_moderation({
@@ -107,28 +114,38 @@ export default class Mute extends ModerationComponent {
                 ...document,
             });
             await this.notify(command, user, "muted", document);
+        } catch (e) {
+            await this.reply_with_error(command, "Error applying mute");
+            critical_error(e);
         } finally {
             this.wheatley.database.unlock();
         }
     }
 
     async unmute_handler(command: TextBasedCommand, user: Discord.User, reason: string) {
-        const res = await this.wheatley.database.moderations.findOneAndUpdate(
-            { user: user.id, type: "mute", active: true },
-            {
-                $set: {
-                    active: false,
-                    removal_mod: command.user.id,
-                    removal_mod_name: (await command.get_member()).displayName,
-                    removal_reason: reason,
-                    removal_timestamp: Date.now(),
+        try {
+            const res = await this.wheatley.database.moderations.findOneAndUpdate(
+                { user: user.id, type: "mute", active: true },
+                {
+                    $set: {
+                        active: false,
+                        removed: {
+                            moderator: command.user.id,
+                            moderator_name: (await command.get_member()).displayName,
+                            reason: reason,
+                            timestamp: Date.now(),
+                        },
+                    },
                 },
-            },
-        );
-        if (!res.value) {
-            await this.reply_with_error(command, "User is not muted");
-        } else {
-            await this.remove_moderation(res.value);
+            );
+            if (!res.value || !(await this.is_moderation_applied(res.value))) {
+                await this.reply_with_error(command, "User is not muted");
+            } else {
+                await this.remove_moderation(res.value);
+            }
+        } catch (e) {
+            await this.reply_with_error(command, "Error unmuting");
+            critical_error(e);
         }
     }
 }
