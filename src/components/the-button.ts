@@ -214,12 +214,13 @@ export default class TheButton extends BotComponent {
             const time_since_last_reset = Date.now() - this.last_reset;
             const time_until_doomsday = Math.max(0, DAY - time_since_last_reset);
             this.last_reset = Date.now() - 1;
-            M.debug(`The Button was reset with ${Math.round(time_until_doomsday)} ms until doomsday`, [
-                interaction.user.id,
-                interaction.user.tag,
-            ]);
-            await this.update_message();
             const points = F(time_since_last_reset);
+            M.debug(
+                `The Button was reset with ${Math.round(time_until_doomsday)} ms until doomsday ` +
+                    `for ${points} points`,
+                [interaction.user.id, interaction.user.tag],
+            );
+            await this.update_message();
             const res = unwrap(
                 (
                     await this.wheatley.database.button_scoreboard.findOneAndUpdate(
