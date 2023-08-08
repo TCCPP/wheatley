@@ -83,14 +83,23 @@ export default class UsernameManager extends BotComponent {
     }
 
     async check_member(member: Discord.GuildMember) {
-        if (!is_valid_name(member.displayName)) {
+        //M.debug(
+        //    member.displayName, // server nickname, user display name
+        //    member.user.displayName, // user display name, username
+        //    member.user.globalName, // user display name
+        //    member.user.username,
+        //    member.user.tag, // user display name, possibly with #disc
+        //    member.user.discriminator,
+        //);
+        if (!is_valid_name(member.displayName.trim())) {
             // Invalid nickname, valid username: Just remove nickname
-            const new_name = anyAscii(member.displayName).substring(0, 32);
+            const candidate_1 = anyAscii(member.displayName).trim().substring(0, 32);
+            const candidate_2 = anyAscii(member.user.username).trim().substring(0, 32);
+            const new_name = candidate_1 || candidate_2 || "Monke";
             M.log(
                 "Username management: Changing display name",
                 member.id,
-                member.user.tag,
-                member.displayName,
+                [member.user.tag, member.displayName],
                 "to:",
                 new_name,
             );
