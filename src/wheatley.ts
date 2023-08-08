@@ -198,14 +198,20 @@ export class Wheatley extends EventEmitter {
         });
 
         for await (const file of walk_dir("src/components")) {
-            await this.add_component((await import(`../${file.replace(".ts", ".js")}`)).default);
+            const default_export = (await import(`../${file.replace(".ts", ".js")}`)).default;
+            if (default_export !== undefined) {
+                await this.add_component(default_export);
+            }
         }
 
         if (await directory_exists("src/wheatley-private/components")) {
             for await (const file of walk_dir("src/wheatley-private/components")) {
-                const component = await this.add_component((await import(`../${file.replace(".ts", ".js")}`)).default);
-                if (file.endsWith("link-blacklist.ts")) {
-                    this.link_blacklist = component;
+                const default_export = (await import(`../${file.replace(".ts", ".js")}`)).default;
+                if (default_export !== undefined) {
+                    const component = await this.add_component(default_export);
+                    if (file.endsWith("link-blacklist.ts")) {
+                        this.link_blacklist = component;
+                    }
                 }
             }
         }

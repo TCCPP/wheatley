@@ -624,7 +624,7 @@ export class SleepList<T, ID> {
             const delta = Math.max(this.list[0][0] - Date.now(), 0);
             this.timer = setTimeout(
                 () => {
-                    this.handle_timer().catch(critical_error).finally(this.reset_timer);
+                    this.handle_timer().catch(critical_error).finally(this.reset_timer.bind(this));
                 },
                 Math.min(delta, INT_MAX),
             );

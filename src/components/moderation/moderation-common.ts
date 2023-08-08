@@ -68,7 +68,7 @@ export type moderation_entry = basic_moderation & {
     expunged: moderation_edit_info | null;
 };
 
-export const duration_regex = /(?:()(perm)\b|(\d+)\s*([mhdwMy]))/;
+export const duration_regex = /(?:perm\b|(\d+)\s*([mhdwMy]))/;
 
 function parse_unit(u: string) {
     let factor = 1000; // in ms
@@ -98,10 +98,10 @@ function parse_unit(u: string) {
 export function parse_duration(duration: string) {
     const match = duration.match(duration_regex);
     assert(match);
-    const [_, n, unit] = match;
-    if (n == "" && unit == "perm") {
+    if (duration == "perm") {
         return null;
     } else {
+        const [_, n, unit] = match;
         return parseInt(n) * parse_unit(unit);
     }
 }
@@ -132,7 +132,7 @@ export abstract class ModerationComponent extends BotComponent {
         )) {
             try {
                 if (!(await this.is_moderation_applied(moderation))) {
-                    await this.add_moderation(moderation);
+                    await this.apply_moderation(moderation);
                 }
             } catch (e) {
                 critical_error(e);
@@ -140,27 +140,48 @@ export abstract class ModerationComponent extends BotComponent {
         }
     }
 
-    abstract add_moderation(entry: mongo.WithId<moderation_entry>): Promise<void>;
+    // Address users trying to leave and rejoin
+    override async on_guild_member_add(member: Discord.GuildMember) {
+        const moderations = await this.wheatley.database.moderations
+            .find({ user: member.user.id, type: this.type, active: true })
+            .toArray();
+        for (const moderation of moderations) {
+            if (!(await this.is_moderation_applied(moderation))) {
+                await this.apply_moderation(moderation);
+            }
+        }
+    }
+
+    abstract apply_moderation(entry: mongo.WithId<moderation_entry>): Promise<void>;
     abstract remove_moderation(entry: mongo.WithId<moderation_entry>): Promise<void>;
     abstract is_moderation_applied(moderation: basic_moderation): Promise<boolean>;
 
+    async add_new_moderation(entry: mongo.WithId<moderation_entry>) {
+        await this.apply_moderation(entry);
+        if (entry.duration) {
+            this.sleep_list.insert([entry.issued_at + entry.duration, entry]);
+        }
+    }
+
     async handle_moderation_expire(entry: mongo.WithId<moderation_entry>) {
-        await this.remove_moderation(entry);
-        // remove database entry
-        await this.wheatley.database.moderations.updateOne(
-            { _id: entry._id },
-            {
-                $set: {
-                    active: false,
-                    removed: {
-                        moderator: this.wheatley.id,
-                        moderator_name: "Wheatley",
-                        reason: "Auto",
-                        timestamp: Date.now(),
+        if (await this.is_moderation_applied(entry)) {
+            await this.remove_moderation(entry);
+            // remove database entry
+            await this.wheatley.database.moderations.updateOne(
+                { _id: entry._id },
+                {
+                    $set: {
+                        active: false,
+                        removed: {
+                            moderator: this.wheatley.id,
+                            moderator_name: "Wheatley",
+                            reason: "Auto",
+                            timestamp: Date.now(),
+                        },
                     },
                 },
-            },
-        );
+            );
+        }
     }
 
     async get_case_id() {
@@ -183,11 +204,22 @@ export abstract class ModerationComponent extends BotComponent {
 
     async reply_with_error(command: TextBasedCommand, message: string) {
         await command.reply({
-            embeds: [new Discord.EmbedBuilder().setColor(colors.red).setTitle("Error").setDescription(message)],
+            embeds: [
+                new Discord.EmbedBuilder()
+                    .setColor(colors.alert_color)
+                    .setTitle("Error")
+                    .setDescription(`<:error:1138616562958483496> ***${message}***`),
+            ],
         });
     }
 
-    async notify(command: TextBasedCommand, user: Discord.User, action: string, document: moderation_entry) {
+    async notify(
+        command: TextBasedCommand,
+        user: Discord.User,
+        action: string,
+        document: moderation_entry,
+        show_appeal_info = true,
+    ) {
         await (
             await user.createDM()
         ).send({
@@ -197,15 +229,20 @@ export abstract class ModerationComponent extends BotComponent {
                     .setDescription(
                         `You have been ${action} in Together C & C++.\n` +
                             `Duration: ${document.duration ? time_to_human(document.duration) : "Permanent"}` +
-                            `Reason: ${document.reason}\n` +
-                            `To appeal this you may open a modmail in Server Guide -> #rules ` +
-                            `or reach out to a staff member.`,
+                            `Reason: ${document.reason}` +
+                            (show_appeal_info
+                                ? "\n" +
+                                  `To appeal this you may open a modmail in Server Guide -> #rules ` +
+                                  `or reach out to a staff member.`
+                                : ""),
                     ),
             ],
         });
         await command.reply({
             embeds: [
-                new Discord.EmbedBuilder().setColor(colors.color).setDescription(`${user.displayName} was ${action}`),
+                new Discord.EmbedBuilder()
+                    .setColor(colors.color)
+                    .setDescription(`<:success:1138616548630745088> ***${user.displayName} was ${action}***`),
             ],
         });
     }

@@ -68,7 +68,7 @@ export default class Mute extends ModerationComponent {
         );
     }
 
-    async add_moderation(entry: mongo.WithId<moderation_entry>) {
+    async apply_moderation(entry: mongo.WithId<moderation_entry>) {
         M.info(`Applying mute to ${entry.user_name}`);
         const member = await this.wheatley.TCCPP.members.fetch(entry.user);
         await member.roles.add(this.wheatley.muted_role);
@@ -109,7 +109,7 @@ export default class Mute extends ModerationComponent {
                 expunged: null,
             };
             const res = await this.wheatley.database.moderations.insertOne(document);
-            await this.add_moderation({
+            await this.add_new_moderation({
                 _id: res.insertedId,
                 ...document,
             });
@@ -142,6 +142,7 @@ export default class Mute extends ModerationComponent {
                 await this.reply_with_error(command, "User is not muted");
             } else {
                 await this.remove_moderation(res.value);
+                await this.notify(command, user, "unmuted", res.value, false);
             }
         } catch (e) {
             await this.reply_with_error(command, "Error unmuting");
