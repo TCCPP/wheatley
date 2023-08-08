@@ -68,11 +68,13 @@ export default class Mute extends ModerationComponent {
     }
 
     async add_moderation(entry: mongo.WithId<moderation_entry>) {
+        M.info(`Applying mute to ${entry.user_name}`);
         const member = await this.wheatley.TCCPP.members.fetch(entry.user);
         await member.roles.add(this.wheatley.muted_role);
     }
 
     async remove_moderation(entry: mongo.WithId<moderation_entry>) {
+        M.info(`Removing mute from ${entry.user_name}`);
         const member = await this.wheatley.TCCPP.members.fetch(entry.user);
         await member.roles.remove(this.wheatley.muted_role);
         this.sleep_list.remove(entry._id);

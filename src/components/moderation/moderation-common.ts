@@ -110,13 +110,22 @@ export abstract class ModerationComponent extends BotComponent {
     }
 
     override async on_ready() {
-        // TODO: Implement catch-up / ensuring moderations are in place
         const moderations = await this.wheatley.database.moderations.find({ type: this.type, active: true }).toArray();
         this.sleep_list.bulk_insert(
             moderations
                 .filter(entry => entry.duration !== null)
                 .map(entry => [entry.issued_at + unwrap(entry.duration), entry]),
         );
+        // Ensure moderations are in place
+        for (const moderation of moderations) {
+            try {
+                if (!(await this.is_moderation_applied(moderation))) {
+                    await this.add_moderation(moderation);
+                }
+            } catch (e) {
+                critical_error(e);
+            }
+        }
     }
 
     abstract add_moderation(entry: mongo.WithId<moderation_entry>): Promise<void>;
