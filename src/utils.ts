@@ -566,3 +566,86 @@ export async function* walk_dir(dir: string): AsyncGenerator<string> {
         }
     }
 }
+
+const INT_MAX = 0x7fffffff;
+
+export class SleepList<T, ID> {
+    // timestamp to fire at, T
+    list: [number, T][] = [];
+    timer: NodeJS.Timer | null = null;
+    handler: (item: T) => Promise<void>;
+    get_id: (item: T) => ID;
+
+    constructor(handler: (item: T) => Promise<void>, get_id: (item: T) => ID) {
+        this.handler = handler;
+        this.get_id = get_id;
+    }
+
+    destroy() {
+        if (this.timer) {
+            clearTimeout(this.timer);
+        }
+    }
+
+    // Must be called from the timeout's callback
+    async handle_timer() {
+        this.timer = null;
+        try {
+            assert(this.list.length > 0, "Sleep list empty??");
+            const [target_time, item] = this.list[0];
+            // Make sure we're actually supposed to run. 100ms buffer, just to be generous.
+            // This can happen for excessively long sleeps > INT_MAX ms
+            if (target_time <= Date.now() + 100) {
+                this.list.shift();
+                await this.handler(item);
+            }
+        } catch (e) {
+            critical_error(e);
+        } finally {
+            this.reset_timer();
+        }
+    }
+
+    reset_timer() {
+        if (this.timer !== null) {
+            clearTimeout(this.timer);
+        }
+        if (this.list.length > 0) {
+            const delta = Math.max(this.list[0][0] - Date.now(), 0);
+            this.timer = setTimeout(
+                () => {
+                    this.handle_timer().catch(critical_error).finally(this.reset_timer);
+                },
+                Math.min(delta, INT_MAX),
+            );
+        }
+    }
+
+    bulk_insert(items: [number, T][]) {
+        this.list.push(...items);
+        this.list = this.list.sort((a, b) => a[0] - b[0]);
+        this.reset_timer();
+    }
+
+    insert(item: [number, T]) {
+        this.list.push(item);
+        let i = 0;
+        for (; i < this.list.length; i++) {
+            if (this.list[i][0] >= item[0]) {
+                break;
+            }
+        }
+        this.list.splice(i, 0, item);
+        this.reset_timer();
+    }
+
+    remove(id: ID) {
+        this.list = this.list.filter(([_, entry]) => this.get_id(entry) !== id);
+        this.reset_timer();
+    }
+
+    replace(id: ID, item: [number, T]) {
+        this.list = this.list.filter(([_, entry]) => this.get_id(entry) !== id);
+        this.insert(item);
+    }
+}

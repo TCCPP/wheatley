@@ -2,162 +2,165 @@ import * as Discord from "discord.js";
 
 import { strict as assert } from "assert";
 
-import { critical_error, unwrap } from "../../utils.js";
+import { SleepList, critical_error, unwrap } from "../../utils.js";
 import { BotComponent } from "../../bot-component.js";
 import { TextBasedCommand } from "../../command.js";
 import { Wheatley } from "../../wheatley.js";
 
 import * as mongo from "mongodb";
+import { colors } from "../../common.js";
+
+/*
+ * !mute !unmute
+ * !ban !unban
+ * !kick
+ * !rolepersist add/remove
+ * !temprole
+ * !warn !delwarn
+ * !expunge !unexpunge
+ * !noofftopic
+ *
+ * !reason
+ * !duration
+ * !modlogs
+ * !case
+ *
+ * !purge
+ * !lockdown
+ * !note
+ *
+ * Notifications
+ * Buttons for !case
+ * Link users to modmail for appeals, also include appeal info in dm notifications
+ *
+ */
 
 export type moderation_type = "mute" | "warn" | "ban" | "kick" | "no off-topic" | "rolepersist";
 
-export type moderation_entry = {
+export type base_moderation_entry = {
     case_number: number;
     user: string;
     user_name: string;
     moderator: string;
     moderator_name: string;
-    type: moderation_type;
     reason: string | null;
     issued_at: number; // milliseconds since epoch
-    duration: number; // milliseconds
+    duration: number | null; // milliseconds
     active: boolean;
+    // TODO: Store a ledger of who alters it?
     removal_mod?: string;
     removal_mod_name?: string;
     removal_timestamp?: number; // milliseconds since epoch
     removal_reason?: string | null;
+    expunged?: boolean;
 };
 
-export const duration_regex = /(?:perm\b|\d+\s*[mhdwMy])/;
+export type moderation_entry =
+    | (base_moderation_entry & { type: "mute" | "warn" | "ban" | "kick" | "no off-topic" })
+    | (base_moderation_entry & { type: "rolepersist"; role: string });
 
-const INT_MAX = 0x7fffffff;
+export const duration_regex = /(?:()(perm)\b|(\d+)\s*([mhdwMy]))/;
+
+function parse_unit(u: string) {
+    let factor = 1000; // in ms
+    switch (u) {
+        case "y":
+            factor *= 365; // 365 days, fallthrough
+        case "d":
+            factor *= 24; // 24 hours, fallthrough
+        case "h":
+            factor *= 60; // 60 minutes, fallthrough
+        case "m":
+            factor *= 60; // 60 seconds
+            break;
+        // Weeks and months can't be folded into the above as nicely
+        case "w":
+            factor *= 7 * parse_unit("d");
+            break;
+        case "M":
+            factor *= 30 * parse_unit("d");
+            break;
+        default:
+            assert(false, "Unexpected unit");
+    }
+    return factor;
+}
 
 export function parse_duration(duration: string) {
-    // TODO
-    return 0;
+    const match = duration.match(duration_regex);
+    assert(match);
+    const [_, n, unit] = match;
+    if (n == "" && unit == "perm") {
+        return null;
+    } else {
+        return parseInt(n) * parse_unit(unit);
+    }
 }
 
 export abstract class ModerationComponent extends BotComponent {
     abstract get type(): moderation_type;
 
     // Sorted by moderation end time
-    sleep_list: mongo.WithId<moderation_entry>[] = [];
+    sleep_list: SleepList<mongo.WithId<moderation_entry>, mongo.BSON.ObjectId>;
     timer: NodeJS.Timer | null = null;
 
     constructor(wheatley: Wheatley) {
         super(wheatley);
+        this.sleep_list = new SleepList(this.handle_moderation_expire.bind(this), item => item._id);
     }
 
     override async on_ready() {
         // TODO: Implement catch-up / ensuring moderations are in place
-        const moderations = await this.wheatley.database.moderations.find({ type: "mute", active: true }).toArray();
-        if (moderations.length > 0) {
-            this.sleep_list = moderations.sort((a, b) => a.issued_at + a.duration - (b.issued_at + b.duration));
-            this.set_timer();
-        }
-    }
-
-    async handle_timer() {
-        this.timer = null;
-        try {
-            // sanity checks
-            assert(this.sleep_list.length > 0);
-            if (this.sleep_list[0].issued_at + this.sleep_list[0].duration > Date.now()) {
-                // can happen under excessively long sleeps
-                assert(this.sleep_list[0].duration > INT_MAX);
-                this.set_timer(); // set next timer
-                return;
-            }
-            // pop entry and remove role
-            const entry = this.sleep_list.shift()!;
-            await this.remove_moderation(entry);
-            // remove database entry
-            await this.wheatley.database.moderations.updateOne(
-                { _id: entry._id },
-                {
-                    $set: {
-                        active: false,
-                        removal_mod: this.wheatley.id,
-                        removal_mod_name: "Wheatley",
-                        removal_reason: "Auto",
-                        removal_timestamp: Date.now(),
-                    },
-                },
-            );
-            // reschedule, intentionally not rescheduling
-            if (this.sleep_list.length > 0) {
-                this.set_timer();
-            }
-        } catch (e) {
-            critical_error(e);
-        }
+        const moderations = await this.wheatley.database.moderations.find({ type: this.type, active: true }).toArray();
+        this.sleep_list.bulk_insert(
+            moderations
+                .filter(entry => entry.duration !== null)
+                .map(entry => [entry.issued_at + unwrap(entry.duration), entry]),
+        );
     }
 
     abstract add_moderation(entry: mongo.WithId<moderation_entry>): Promise<void>;
     abstract remove_moderation(entry: mongo.WithId<moderation_entry>): Promise<void>;
+    abstract is_moderation_applied(entry: mongo.WithId<moderation_entry>): Promise<boolean>;
 
-    set_timer() {
-        assert(this.timer == null);
-        assert(this.sleep_list.length > 0);
-        const next = this.sleep_list[0];
-        // next.issued_at + next.duration - Date.now() but make sure overflow is prevented
-        const sleep_time = next.issued_at - Date.now() + next.duration;
-        this.timer = setTimeout(
-            () => {
-                this.handle_timer().catch(critical_error);
+    async handle_moderation_expire(entry: mongo.WithId<moderation_entry>) {
+        await this.remove_moderation(entry);
+        // remove database entry
+        await this.wheatley.database.moderations.updateOne(
+            { _id: entry._id },
+            {
+                $set: {
+                    active: false,
+                    removal_mod: this.wheatley.id,
+                    removal_mod_name: "Wheatley",
+                    removal_reason: "Auto",
+                    removal_timestamp: Date.now(),
+                },
             },
-            Math.min(sleep_time, INT_MAX),
         );
     }
 
-    async register_moderation(moderation: mongo.WithId<moderation_entry>) {
-        // TODO
-        void 0;
+    async get_case_id() {
+        return unwrap(
+            (
+                await this.wheatley.database.wheatley.findOneAndUpdate(
+                    { id: "main" },
+                    {
+                        $inc: {
+                            moderation_case_number: 1,
+                        },
+                    },
+                    {
+                        returnDocument: "after",
+                    },
+                )
+            ).value,
+        ).moderation_case_number;
     }
 
-    async moderation_handler(command: TextBasedCommand, user: Discord.User, duration: string, reason: string) {
-        // TODO: Permissions?
-        try {
-            await this.wheatley.database.lock();
-            const case_number = unwrap(
-                (
-                    await this.wheatley.database.wheatley.findOneAndUpdate(
-                        { id: "main" },
-                        {
-                            $inc: {
-                                moderation_case_number: 1,
-                            },
-                        },
-                        {
-                            returnDocument: "after",
-                        },
-                    )
-                ).value,
-            ).moderation_case_number;
-            const member = await this.wheatley.TCCPP.members.fetch(command.user.id);
-            const document: moderation_entry = {
-                case_number,
-                user: user.id,
-                user_name: user.displayName,
-                moderator: command.user.id,
-                moderator_name: member.displayName,
-                type: this.type,
-                reason,
-                issued_at: Date.now(),
-                duration: parse_duration(duration),
-                active: true,
-            };
-            const res = await this.wheatley.database.moderations.insertOne(document);
-            await this.add_moderation({
-                _id: res.insertedId,
-                ...document,
-            });
-            await this.register_moderation({
-                _id: res.insertedId,
-                ...document,
-            });
-        } finally {
-            this.wheatley.database.unlock();
-        }
+    async reply_with_error(command: TextBasedCommand, message: string) {
+        await command.reply({
+            embeds: [new Discord.EmbedBuilder().setColor(colors.red).setTitle("Error").setDescription(message)],
+        });
     }
 }

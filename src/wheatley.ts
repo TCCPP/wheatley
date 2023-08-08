@@ -40,6 +40,7 @@ import {
     string_split,
     zip,
     walk_dir,
+    unwrap,
 } from "./utils.js";
 import { BotComponent } from "./bot-component.js";
 import {
@@ -122,6 +123,7 @@ export class Wheatley extends EventEmitter {
     skill_role_suggestion_log: Discord.TextChannel;
     starboard_channel: Discord.TextChannel;
     staff_action_log_channel: Discord.TextChannel;
+    muted_role: Discord.Role;
 
     database: WheatleyDatabaseProxy;
 
@@ -224,6 +226,7 @@ export class Wheatley extends EventEmitter {
             })(),
             (async () => {
                 this.TCCPP = await this.client.guilds.fetch(TCCPP_ID);
+                this.muted_role = unwrap(this.TCCPP.roles.cache.find(role => role.name === "Muted"));
             })(),
             (async () => {
                 this.cpp_help = await fetch_forum_channel(cpp_help_id);
