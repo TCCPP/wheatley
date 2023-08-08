@@ -220,7 +220,7 @@ export default class ServerSuggestionTracker extends BotComponent {
         this.status_lock.destroy();
     }
 
-    async open_suggestion(message: Discord.Message) {
+    async open_suggestion(message: Discord.Message, reopen = false) {
         try {
             M.log("New suggestion", message.author.tag, message.author.id, message.url);
             const embed = await this.make_embed(message);
@@ -243,8 +243,16 @@ export default class ServerSuggestionTracker extends BotComponent {
                 maybe: 0,
             });
             // add react options
-            for (const r of resolution_reactions) {
-                await status_message.react(r);
+            if (!reopen) {
+                for (const r of resolution_reactions) {
+                    await status_message.react(r);
+                }
+            } else {
+                if (message.thread) {
+                    await message.thread.send({
+                        embeds: [new Discord.EmbedBuilder().setColor(color).setDescription(`Suggestion reopened`)],
+                    });
+                }
             }
         } catch (e) {
             critical_error("error during open_suggestion", e);
@@ -323,6 +331,15 @@ export default class ServerSuggestionTracker extends BotComponent {
                 this.status_lock.insert(entry.status_message);
                 await status_message.delete();
                 await this.wheatley.database.server_suggestions.deleteOne({ suggestion: message.id });
+                if (message.thread) {
+                    await message.thread.send({
+                        embeds: [
+                            new Discord.EmbedBuilder()
+                                .setColor(color)
+                                .setDescription(`Suggestion resolved as ${reaction.emoji}`),
+                        ],
+                    });
+                }
                 // if wheatley then this is logged when the reaction is done on the dashboard
                 if (reaction.user.id != this.wheatley.id) {
                     await this.log_resolution(message, reaction);
@@ -481,7 +498,7 @@ export default class ServerSuggestionTracker extends BotComponent {
             const message = await departialize(reaction.message);
             if (!(await this.message_has_resolution_from_root(message))) {
                 // reopen
-                await this.open_suggestion(message);
+                await this.open_suggestion(message, true);
                 await this.log_reopen(message);
             }
         }
