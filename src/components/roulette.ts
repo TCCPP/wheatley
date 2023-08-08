@@ -137,9 +137,12 @@ export default class Roulette extends BotComponent {
     async leaderboard(command: TextBasedCommand) {
         const embed = new Discord.EmbedBuilder().setColor(green).setTitle("Roulette Leaderboard");
         let description = "";
-        for (const { user, highscore } of (await this.wheatley.database.roulette_leaderboard
-            .aggregate([{ $sort: { highscore: -1 } }, { $limit: LEADERBOARD_ENTRIES }])
-            .toArray()) as unknown as roulette_leaderboard_entry[]) {
+        const top_scores = <roulette_leaderboard_entry[]>(
+            await this.wheatley.database.roulette_leaderboard
+                .aggregate([{ $sort: { highscore: -1 } }, { $limit: LEADERBOARD_ENTRIES }])
+                .toArray()
+        );
+        for (const { user, highscore } of top_scores) {
             description += `<@${user}>: ${highscore} roll${highscore == 1 ? "" : "s"} before death\n`;
         }
         embed.setDescription(description);
