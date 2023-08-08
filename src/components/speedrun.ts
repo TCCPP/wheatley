@@ -1,6 +1,6 @@
 import * as Discord from "discord.js";
 import { strict as assert } from "assert";
-import { critical_error, diff_to_human, M } from "../utils.js";
+import { critical_error, time_to_human, M } from "../utils.js";
 import { colors } from "../common.js";
 import { BotComponent } from "../bot-component.js";
 import { Wheatley } from "../wheatley.js";
@@ -32,7 +32,7 @@ export default class Speedrun extends BotComponent {
             // the tracker already (i.e. longer than 30 minutes, not a speedrun)
             return;
         }
-        M.log("Ban speedrun", diff_to_human(now - entry.joined_at), user.id, user.tag);
+        M.log("Ban speedrun", time_to_human(now - entry.joined_at), user.id, user.tag);
         // .purged set by raidpurge (yes I know it's checked above), currently_banning used by anti-scambot
         // eslint-disable-next-line @typescript-eslint/no-unnecessary-condition
         const is_auto_ban = entry.purged || this.wheatley.tracker.currently_banning.has(user.id);
@@ -46,7 +46,7 @@ export default class Speedrun extends BotComponent {
             .setDescription(
                 `User <@${user.id}> joined at <t:${Math.round(entry.joined_at / 1000)}:T> and` +
                     ` banned at <t:${Math.round(now / 1000)}:T>.\n` +
-                    `Final timer: ${diff_to_human(now - entry.joined_at)}.` +
+                    `Final timer: ${time_to_human(now - entry.joined_at)}.` +
                     (is_auto_ban ? "\n**AUTO BAN**" : ""),
             )
             .setFooter({

@@ -104,6 +104,7 @@ export default class Mute extends ModerationComponent {
                 _id: res.insertedId,
                 ...document,
             });
+            await this.notify(command, user, "muted", document);
         } finally {
             this.wheatley.database.unlock();
         }

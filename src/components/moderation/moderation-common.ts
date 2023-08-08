@@ -2,7 +2,7 @@ import * as Discord from "discord.js";
 
 import { strict as assert } from "assert";
 
-import { SleepList, critical_error, unwrap } from "../../utils.js";
+import { SleepList, critical_error, time_to_human, unwrap } from "../../utils.js";
 import { BotComponent } from "../../bot-component.js";
 import { TextBasedCommand } from "../../command.js";
 import { Wheatley } from "../../wheatley.js";
@@ -161,6 +161,29 @@ export abstract class ModerationComponent extends BotComponent {
     async reply_with_error(command: TextBasedCommand, message: string) {
         await command.reply({
             embeds: [new Discord.EmbedBuilder().setColor(colors.red).setTitle("Error").setDescription(message)],
+        });
+    }
+
+    async notify(command: TextBasedCommand, user: Discord.User, action: string, document: moderation_entry) {
+        await (
+            await user.createDM()
+        ).send({
+            embeds: [
+                new Discord.EmbedBuilder()
+                    .setColor(colors.color)
+                    .setDescription(
+                        `You have been ${action} in Together C & C++.\n` +
+                            `Duration: ${document.duration ? time_to_human(document.duration) : "Permanent"}` +
+                            `Reason: ${document.reason}\n` +
+                            `To appeal this you may open a modmail in Server Guide -> #rules ` +
+                            `or reach out to a staff member.`,
+                    ),
+            ],
+        });
+        await command.reply({
+            embeds: [
+                new Discord.EmbedBuilder().setColor(colors.color).setDescription(`${user.displayName} was ${action}`),
+            ],
         });
     }
 }

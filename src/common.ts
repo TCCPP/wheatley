@@ -5,6 +5,10 @@ import { is_string, M } from "./utils.js";
 
 // Common constants
 export const MINUTE = 1000 * 60;
+export const HOUR = 60 * MINUTE;
+export const DAY = 24 * HOUR;
+export const MONTH = 30 * DAY;
+export const YEAR = 365 * DAY;
 
 export const pepereally = "<:pepereally:643881257624666112>";
 export const stackoverflow_emote = "<:stackoverflow:1074747016644661258>";

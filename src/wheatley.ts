@@ -47,6 +47,7 @@ import {
     BotCommand,
     BotModalHandler,
     BotTextBasedCommand,
+    CommandAbstractionReplyOptions,
     MessageContextMenuCommandBuilder,
     ModalHandler,
     TextBasedCommand,
@@ -65,6 +66,13 @@ function create_basic_embed(title: string | undefined, color: number, content: s
         embed.setTitle(title);
     }
     return embed;
+}
+
+function create_error_reply(message: string): Discord.BaseMessageOptions & CommandAbstractionReplyOptions {
+    return {
+        embeds: [create_basic_embed(undefined, colors.red, message)],
+        should_text_reply: true,
+    };
 }
 
 type text_command_map_target = {
@@ -429,10 +437,7 @@ export class Wheatley extends EventEmitter {
                 this.register_text_command(message, command_obj);
                 if (command.permissions !== undefined) {
                     if (!(await command_obj.get_member()).permissions.has(command.permissions)) {
-                        await command_obj.reply({
-                            embeds: [create_basic_embed(undefined, colors.red, "Invalid permissions")],
-                            should_text_reply: true,
-                        });
+                        await command_obj.reply(create_error_reply("Invalid permissions"));
                         return;
                     }
                 }
@@ -449,28 +454,16 @@ export class Wheatley extends EventEmitter {
                                 command_options.push(match[0]);
                                 command_body = command_body.slice(match[0].length).trim();
                             } else {
-                                await command_obj.reply({
-                                    embeds: [
-                                        create_basic_embed(
-                                            undefined,
-                                            colors.red,
-                                            `Required argument "${option.title}" not found`,
-                                        ),
-                                    ],
-                                });
+                                await command_obj.reply(
+                                    create_error_reply(`Required argument "${option.title}" not found`),
+                                );
                                 return;
                             }
                         } else if (i == command.options.size - 1) {
                             if (command_body == "") {
-                                await command_obj.reply({
-                                    embeds: [
-                                        create_basic_embed(
-                                            undefined,
-                                            colors.red,
-                                            `Required argument "${option.title}" not found`,
-                                        ),
-                                    ],
-                                });
+                                await command_obj.reply(
+                                    create_error_reply(`Required argument "${option.title}" not found`),
+                                );
                                 return;
                             } else {
                                 command_options.push(command_body);
@@ -483,15 +476,9 @@ export class Wheatley extends EventEmitter {
                                 command_options.push(match[0]);
                                 command_body = command_body.slice(match[0].length).trim();
                             } else {
-                                await command_obj.reply({
-                                    embeds: [
-                                        create_basic_embed(
-                                            undefined,
-                                            colors.red,
-                                            `Required argument "${option.title}" not found`,
-                                        ),
-                                    ],
-                                });
+                                await command_obj.reply(
+                                    create_error_reply(`Required argument "${option.title}" not found`),
+                                );
                                 return;
                             }
                         }
@@ -505,21 +492,13 @@ export class Wheatley extends EventEmitter {
                                 command_options.push(user);
                                 command_body = command_body.slice(match[0].length).trim();
                             } catch (e) {
-                                await command_obj.reply({
-                                    embeds: [create_basic_embed(undefined, colors.red, `Unable to find user`)],
-                                });
+                                await command_obj.reply(create_error_reply(`Unable to find user`));
                                 return;
                             }
                         } else {
-                            await command_obj.reply({
-                                embeds: [
-                                    create_basic_embed(
-                                        undefined,
-                                        colors.red,
-                                        `Required argument "${option.title}" not found`,
-                                    ),
-                                ],
-                            });
+                            await command_obj.reply(
+                                create_error_reply(`Required argument "${option.title}" not found`),
+                            );
                             return;
                         }
                     } else {
@@ -527,9 +506,7 @@ export class Wheatley extends EventEmitter {
                     }
                 }
                 if (command_body != "") {
-                    await command_obj.reply({
-                        embeds: [create_basic_embed(undefined, colors.red, `Unexpected parameters provided`)],
-                    });
+                    await command_obj.reply(create_error_reply(`Unexpected parameters provided`));
                     return;
                 }
                 /*for(const option of command.options.values()) {
@@ -645,24 +622,15 @@ export class Wheatley extends EventEmitter {
                         if (option.type == "string") {
                             const option_value = interaction.options.getString(option.title);
                             if (!option_value && option.required) {
-                                await command_object.reply({
-                                    embeds: [create_basic_embed(undefined, colors.red, "Required argument not found")],
-                                    ephemeral_if_possible: true,
-                                });
+                                await command_object.reply(create_error_reply("Required argument not found"), true);
                                 critical_error("this shouldn't happen");
                                 return;
                             }
                             if (option_value && option.regex && !option_value.trim().match(option.regex)) {
-                                await command_object.reply({
-                                    embeds: [
-                                        create_basic_embed(
-                                            undefined,
-                                            colors.red,
-                                            `Argument ${option.title} doesn't match expected format`,
-                                        ),
-                                    ],
-                                    ephemeral_if_possible: true,
-                                });
+                                await command_object.reply(
+                                    create_error_reply(`Argument ${option.title} doesn't match expected format`),
+                                    true,
+                                );
                                 return;
                             }
                             command_options.push(option_value ?? "");

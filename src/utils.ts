@@ -7,7 +7,7 @@ import * as fs from "fs";
 import * as path from "path";
 import { execFile, ExecFileOptions } from "child_process";
 
-import { MINUTE, zelis_id } from "./common.js";
+import { DAY, HOUR, MINUTE, MONTH, YEAR, zelis_id } from "./common.js";
 import { strict as assert } from "assert";
 
 function get_caller_location() {
@@ -96,20 +96,27 @@ function pluralize(n: number, word: string) {
     }
 }
 
-export function diff_to_human(diff: number) {
-    if (diff >= 60 * MINUTE) {
-        const hours = Math.floor(diff / (60 * MINUTE));
-        diff %= 60 * MINUTE;
-        const minutes = Math.floor(diff / MINUTE);
-        diff %= MINUTE;
-        const seconds = Math.round(diff / 1000);
-        return `${pluralize(hours, "hour")} ${pluralize(minutes, "minute")} ${pluralize(seconds, "second")}`;
+export function time_to_human(diff: number): string {
+    if (diff >= YEAR) {
+        const years = Math.floor(diff / YEAR);
+        return `${pluralize(years, "year")} ${time_to_human(diff % YEAR)}`;
+    }
+    if (diff >= MONTH) {
+        const months = Math.floor(diff / MONTH);
+        return `${pluralize(months, "month")} ${time_to_human(diff % MONTH)}`;
+    }
+    if (diff >= DAY) {
+        const days = Math.floor(diff / DAY);
+        return `${pluralize(days, "day")} ${time_to_human(diff % DAY)}`;
+    }
+    if (diff >= HOUR) {
+        const hours = Math.floor(diff / HOUR);
+        return `${pluralize(hours, "hour")} ${time_to_human(diff % HOUR)}`;
     }
     if (diff >= MINUTE) {
-        return `${pluralize(Math.floor(diff / MINUTE), "minute")} ${pluralize((diff % MINUTE) / 1000, "second")}`;
-    } else {
-        return `${pluralize(diff / 1000, "second")}`;
+        return `${pluralize(Math.floor(diff / MINUTE), "minute")} ${time_to_human(diff % MINUTE)}`;
     }
+    return `${pluralize(diff / 1000, "second")}`;
 }
 
 const code_re = /`[^`]+`(?!`)/gi;

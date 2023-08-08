@@ -1,7 +1,7 @@
 import * as Discord from "discord.js";
 import { strict as assert } from "assert";
-import { M, critical_error, diff_to_human, floor, round, unwrap } from "../utils.js";
-import { MINUTE, colors, is_authorized_admin } from "../common.js";
+import { M, critical_error, time_to_human, floor, round, unwrap } from "../utils.js";
+import { DAY, MINUTE, colors, is_authorized_admin } from "../common.js";
 import { BotComponent } from "../bot-component.js";
 import { Wheatley } from "../wheatley.js";
 
@@ -37,8 +37,6 @@ function F(ms: number) {
     }
     return sum;
 }
-
-const DAY = 24 * 60 * MINUTE;
 
 const BUTTON_EPOCH = 1675142409000;
 
@@ -304,7 +302,7 @@ export default class TheButton extends BotComponent {
                     `Total presses of The Button: \`${this.button_presses}\`\n` +
                     `Total points collected: \`${round(total_points_assigned, 1)}\`\n` +
                     `Players: \`${count}\`\n` +
-                    `Longest time since reset: \`${diff_to_human(this.longest_time_without_reset)}\``,
+                    `Longest time since reset: \`${time_to_human(this.longest_time_without_reset)}\``,
             );
             await interaction.reply({
                 embeds: [embed],
