@@ -39,12 +39,15 @@ import {
     SelfClearingMap,
     string_split,
     zip,
+    walk_dir,
+    unwrap,
 } from "./utils.js";
 import { BotComponent } from "./bot-component.js";
 import {
     BotCommand,
     BotModalHandler,
     BotTextBasedCommand,
+    CommandAbstractionReplyOptions,
     MessageContextMenuCommandBuilder,
     ModalHandler,
     TextBasedCommand,
@@ -63,6 +66,13 @@ function create_basic_embed(title: string | undefined, color: number, content: s
         embed.setTitle(title);
     }
     return embed;
+}
+
+function create_error_reply(message: string): Discord.BaseMessageOptions & CommandAbstractionReplyOptions {
+    return {
+        embeds: [create_basic_embed(undefined, colors.red, message)],
+        should_text_reply: true,
+    };
 }
 
 type text_command_map_target = {
@@ -95,6 +105,7 @@ export type wheatley_db_info = {
         ignored_emojis: string[];
         negative_emojis: string[];
     };
+    moderation_case_number: number;
 };
 
 export class Wheatley extends EventEmitter {
@@ -120,6 +131,7 @@ export class Wheatley extends EventEmitter {
     skill_role_suggestion_log: Discord.TextChannel;
     starboard_channel: Discord.TextChannel;
     staff_action_log_channel: Discord.TextChannel;
+    muted_role: Discord.Role;
 
     database: WheatleyDatabaseProxy;
 
@@ -185,17 +197,21 @@ export class Wheatley extends EventEmitter {
             }
         });
 
-        for (const file of await fs.readdir("src/components")) {
-            await this.add_component((await import(`./components/${file.replace(".ts", ".js")}`)).default);
+        for await (const file of walk_dir("src/components")) {
+            const default_export = (await import(`../${file.replace(".ts", ".js")}`)).default;
+            if (default_export !== undefined) {
+                await this.add_component(default_export);
+            }
         }
 
         if (await directory_exists("src/wheatley-private/components")) {
-            for (const file of await fs.readdir("src/wheatley-private/components")) {
-                const component = await this.add_component(
-                    (await import(`./wheatley-private/components/${file.replace(".ts", ".js")}`)).default,
-                );
-                if (file.endsWith("link-blacklist.ts")) {
-                    this.link_blacklist = component;
+            for await (const file of walk_dir("src/wheatley-private/components")) {
+                const default_export = (await import(`../${file.replace(".ts", ".js")}`)).default;
+                if (default_export !== undefined) {
+                    const component = await this.add_component(default_export);
+                    if (file.endsWith("link-blacklist.ts")) {
+                        this.link_blacklist = component;
+                    }
                 }
             }
         }
@@ -224,6 +240,7 @@ export class Wheatley extends EventEmitter {
             })(),
             (async () => {
                 this.TCCPP = await this.client.guilds.fetch(TCCPP_ID);
+                this.muted_role = unwrap(this.TCCPP.roles.cache.find(role => role.name === "Muted"));
             })(),
             (async () => {
                 this.cpp_help = await fetch_forum_channel(cpp_help_id);
@@ -384,6 +401,14 @@ export class Wheatley extends EventEmitter {
                                     .setAutocomplete(!!option.autocomplete)
                                     .setRequired(!!option.required),
                             );
+                            // eslint-disable-next-line @typescript-eslint/no-unnecessary-condition
+                        } else if (option.type == "user") {
+                            djs_command.addUserOption(slash_option =>
+                                slash_option
+                                    .setName(option.title)
+                                    .setDescription(option.description)
+                                    .setRequired(!!option.required),
+                            );
                         } else {
                             assert(false, "unhandled option type");
                         }
@@ -412,45 +437,83 @@ export class Wheatley extends EventEmitter {
             const command_name = match[1];
             if (command_name in this.text_commands) {
                 const command = this.text_commands[command_name];
-                const command_options: unknown[] = [];
                 const command_obj = prev_command_obj
                     ? new TextBasedCommand(prev_command_obj, command_name, message)
                     : new TextBasedCommand(command_name, message, this);
                 this.register_text_command(message, command_obj);
                 if (command.permissions !== undefined) {
                     if (!(await command_obj.get_member()).permissions.has(command.permissions)) {
-                        await command_obj.reply({
-                            embeds: [create_basic_embed(undefined, colors.red, "Invalid permissions")],
-                            should_text_reply: true,
-                        });
+                        await command_obj.reply(create_error_reply("Invalid permissions"));
                         return;
                     }
                 }
                 // TODO: Handle unexpected input?
-                // NOTE: For now only able to take text input
-                assert(
-                    [...command.options.values()].every(option => (option.type as any) == "string"),
-                    "unhandled option type",
-                );
-                const parts = string_split(
-                    message.content.substring(match[0].length).trim(),
-                    " ",
-                    command.options.size,
-                );
+                // NOTE: For now only able to take text and user input
+                // TODO: Handle `required`
+                let command_body = message.content.substring(match[0].length).trim();
+                const command_options: unknown[] = [];
                 for (const [i, option] of [...command.options.values()].entries()) {
-                    if (i >= parts.length && option.required) {
-                        await command_obj.reply({
-                            embeds: [
-                                create_basic_embed(
-                                    undefined,
-                                    colors.red,
-                                    `Required argument "${option.title}" not found`,
-                                ),
-                            ],
-                        });
-                        return;
+                    if (option.type == "string") {
+                        if (option.regex) {
+                            const match = command_body.match(option.regex);
+                            if (match) {
+                                command_options.push(match[0]);
+                                command_body = command_body.slice(match[0].length).trim();
+                            } else {
+                                await command_obj.reply(
+                                    create_error_reply(`Required argument "${option.title}" not found`),
+                                );
+                                return;
+                            }
+                        } else if (i == command.options.size - 1) {
+                            if (command_body == "") {
+                                await command_obj.reply(
+                                    create_error_reply(`Required argument "${option.title}" not found`),
+                                );
+                                return;
+                            } else {
+                                command_options.push(command_body);
+                                command_body = "";
+                            }
+                        } else {
+                            const re = /^\S+/;
+                            const match = command_body.match(re);
+                            if (match) {
+                                command_options.push(match[0]);
+                                command_body = command_body.slice(match[0].length).trim();
+                            } else {
+                                await command_obj.reply(
+                                    create_error_reply(`Required argument "${option.title}" not found`),
+                                );
+                                return;
+                            }
+                        }
+                        // eslint-disable-next-line @typescript-eslint/no-unnecessary-condition
+                    } else if (option.type == "user") {
+                        const re = /^(?:<@(\d{10,})>|(\d{10,}))/;
+                        const match = command_body.match(re);
+                        if (match) {
+                            try {
+                                const user = await this.client.users.fetch(match[1]);
+                                command_options.push(user);
+                                command_body = command_body.slice(match[0].length).trim();
+                            } catch (e) {
+                                await command_obj.reply(create_error_reply(`Unable to find user`));
+                                return;
+                            }
+                        } else {
+                            await command_obj.reply(
+                                create_error_reply(`Required argument "${option.title}" not found`),
+                            );
+                            return;
+                        }
+                    } else {
+                        assert(false, "unhandled option type");
                     }
-                    command_options.push(parts[i]);
+                }
+                if (command_body != "") {
+                    await command_obj.reply(create_error_reply(`Unexpected parameters provided`));
+                    return;
                 }
                 /*for(const option of command.options.values()) {
                     // NOTE: Temp for now
@@ -565,14 +628,21 @@ export class Wheatley extends EventEmitter {
                         if (option.type == "string") {
                             const option_value = interaction.options.getString(option.title);
                             if (!option_value && option.required) {
-                                await command_object.reply({
-                                    embeds: [create_basic_embed(undefined, colors.red, "Required argument not found")],
-                                    ephemeral_if_possible: true,
-                                });
+                                await command_object.reply(create_error_reply("Required argument not found"), true);
                                 critical_error("this shouldn't happen");
                                 return;
                             }
+                            if (option_value && option.regex && !option_value.trim().match(option.regex)) {
+                                await command_object.reply(
+                                    create_error_reply(`Argument ${option.title} doesn't match expected format`),
+                                    true,
+                                );
+                                return;
+                            }
                             command_options.push(option_value ?? "");
+                            // eslint-disable-next-line @typescript-eslint/no-unnecessary-condition
+                        } else if (option.type == "user") {
+                            command_options.push(interaction.options.getUser(option.title));
                         } else {
                             assert(false, "unhandled option type");
                         }

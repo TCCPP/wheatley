@@ -1,6 +1,6 @@
 import * as Discord from "discord.js";
 import { strict as assert } from "assert";
-import { critical_error, diff_to_human, M } from "../utils.js";
+import { critical_error, time_to_human, M } from "../utils.js";
 import { colors, MINUTE } from "../common.js";
 import { BotComponent } from "../bot-component.js";
 import { Wheatley } from "../wheatley.js";
@@ -25,7 +25,7 @@ export default class NotifyAboutBrandNewUsers extends BotComponent {
             .setDescription(
                 `User <@${member.user.id}>'s account was created at created at:` +
                     ` <t:${Math.round(member.user.createdTimestamp / 1000)}>\n` +
-                    `Account age: ${diff_to_human(Date.now() - member.user.createdTimestamp)}`,
+                    `Account age: ${time_to_human(Date.now() - member.user.createdTimestamp)}`,
             )
             .setFooter({
                 text: `ID: ${member.id}`,

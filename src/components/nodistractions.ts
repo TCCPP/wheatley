@@ -23,6 +23,8 @@ import { TextBasedCommand, TextBasedCommandBuilder } from "../command.js";
  * - Remove role and database entry
  */
 
+// TODO: Rephrase in terms of a moderation component
+
 function parse_unit(u: string) {
     let factor = 1000; // in ms
     switch (u) {

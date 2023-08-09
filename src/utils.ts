@@ -4,9 +4,10 @@ import chalk from "chalk";
 import XXH from "xxhashjs";
 
 import * as fs from "fs";
+import * as path from "path";
 import { execFile, ExecFileOptions } from "child_process";
 
-import { MINUTE, zelis_id } from "./common.js";
+import { DAY, HOUR, MINUTE, MONTH, YEAR, zelis_id } from "./common.js";
 import { strict as assert } from "assert";
 
 function get_caller_location() {
@@ -95,20 +96,30 @@ function pluralize(n: number, word: string) {
     }
 }
 
-export function diff_to_human(diff: number) {
-    if (diff >= 60 * MINUTE) {
-        const hours = Math.floor(diff / (60 * MINUTE));
-        diff %= 60 * MINUTE;
-        const minutes = Math.floor(diff / MINUTE);
-        diff %= MINUTE;
-        const seconds = Math.round(diff / 1000);
-        return `${pluralize(hours, "hour")} ${pluralize(minutes, "minute")} ${pluralize(seconds, "second")}`;
+export function time_to_human(diff: number, seconds_with_higher_precision = true): string {
+    if (diff >= YEAR) {
+        const years = Math.floor(diff / YEAR);
+        return `${pluralize(years, "year")} ${time_to_human(diff % YEAR, false)}`;
+    }
+    if (diff >= MONTH) {
+        const months = Math.floor(diff / MONTH);
+        return `${pluralize(months, "month")} ${time_to_human(diff % MONTH, false)}`;
+    }
+    if (diff >= DAY) {
+        const days = Math.floor(diff / DAY);
+        return `${pluralize(days, "day")} ${time_to_human(diff % DAY, false)}`;
+    }
+    if (diff >= HOUR) {
+        const hours = Math.floor(diff / HOUR);
+        return `${pluralize(hours, "hour")} ${time_to_human(diff % HOUR, false)}`;
     }
     if (diff >= MINUTE) {
-        return `${pluralize(Math.floor(diff / MINUTE), "minute")} ${pluralize((diff % MINUTE) / 1000, "second")}`;
-    } else {
-        return `${pluralize(diff / 1000, "second")}`;
+        return `${pluralize(Math.floor(diff / MINUTE), "minute")} ${time_to_human(
+            diff % MINUTE,
+            seconds_with_higher_precision && true,
+        )}`;
     }
+    return `${pluralize(round(diff / 1000, seconds_with_higher_precision ? 1 : 0), "second")}`;
 }
 
 const code_re = /`[^`]+`(?!`)/gi;
@@ -554,3 +565,97 @@ export type JSONValue =
     | undefined
     | {[x: string]: JSONValue}
     | Array<JSONValue>;
+
+export async function* walk_dir(dir: string): AsyncGenerator<string> {
+    for (const f of await fs.promises.readdir(dir)) {
+        const file_path = path.join(dir, f).replace(/\\/g, "/");
+        if ((await fs.promises.stat(file_path)).isDirectory()) {
+            yield* walk_dir(file_path);
+        } else {
+            yield file_path;
+        }
+    }
+}
+
+const INT_MAX = 0x7fffffff;
+
+export class SleepList<T, ID> {
+    // timestamp to fire at, T
+    list: [number, T][] = [];
+    timer: NodeJS.Timer | null = null;
+    handler: (item: T) => Promise<void>;
+    get_id: (item: T) => ID;
+
+    constructor(handler: (item: T) => Promise<void>, get_id: (item: T) => ID) {
+        this.handler = handler;
+        this.get_id = get_id;
+    }
+
+    destroy() {
+        if (this.timer) {
+            clearTimeout(this.timer);
+        }
+    }
+
+    // Must be called from the timeout's callback
+    async handle_timer() {
+        this.timer = null;
+        try {
+            assert(this.list.length > 0, "Sleep list empty??");
+            const [target_time, item] = this.list[0];
+            // Make sure we're actually supposed to run. 100ms buffer, just to be generous.
+            // This can happen for excessively long sleeps > INT_MAX ms
+            if (target_time <= Date.now() + 100) {
+                this.list.shift();
+                await this.handler(item);
+            }
+        } catch (e) {
+            critical_error(e);
+        } finally {
+            this.reset_timer();
+        }
+    }
+
+    reset_timer() {
+        if (this.timer !== null) {
+            clearTimeout(this.timer);
+        }
+        if (this.list.length > 0) {
+            const delta = Math.max(this.list[0][0] - Date.now(), 0);
+            this.timer = setTimeout(
+                () => {
+                    this.handle_timer().catch(critical_error).finally(this.reset_timer.bind(this));
+                },
+                Math.min(delta, INT_MAX),
+            );
+        }
+    }
+
+    bulk_insert(items: [number, T][]) {
+        this.list.push(...items);
+        this.list = this.list.sort((a, b) => a[0] - b[0]);
+        this.reset_timer();
+    }
+
+    insert(item: [number, T]) {
+        this.list.push(item);
+        let i = 0;
+        for (; i < this.list.length; i++) {
+            if (this.list[i][0] >= item[0]) {
+                break;
+            }
+        }
+        this.list.splice(i, 0, item);
+        this.reset_timer();
+    }
+
+    remove(id: ID) {
+        this.list = this.list.filter(([_, entry]) => this.get_id(entry) !== id);
+        this.reset_timer();
+    }
+
+    replace(id: ID, item: [number, T]) {
+        this.list = this.list.filter(([_, entry]) => this.get_id(entry) !== id);
+        this.insert(item);
+    }
+}
