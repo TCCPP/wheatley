@@ -392,7 +392,6 @@ export class Wheatley extends EventEmitter {
                     const djs_command = new Discord.SlashCommandBuilder().setName(name).setDescription(description);
                     for (const option of command.options.values()) {
                         // NOTE: Temp for now
-                        // eslint-disable-next-line @typescript-eslint/no-unnecessary-condition
                         if (option.type == "string") {
                             djs_command.addStringOption(slash_option =>
                                 slash_option
@@ -447,7 +446,7 @@ export class Wheatley extends EventEmitter {
                         return;
                     }
                 }
-                // TODO: Handle unexpected input?
+                // TODO: Handle unexpected / trailing input?
                 // NOTE: For now only able to take text and user input
                 // TODO: Handle `required`
                 let command_body = message.content.substring(match[0].length).trim();
@@ -515,27 +514,6 @@ export class Wheatley extends EventEmitter {
                     await command_obj.reply(create_error_reply(`Unexpected parameters provided`));
                     return;
                 }
-                /*for(const option of command.options.values()) {
-                    // NOTE: Temp for now
-                    // eslint-disable-next-line @typescript-eslint/no-unnecessary-condition
-                    if(option.type == "string") {
-                        // take the rest
-                        const rest = message.content.substring(match[0].length).trim();
-                        if(rest == "" && option.required) {
-                            await command_obj.reply({
-                                embeds: [
-                                    create_basic_embed(
-                                        undefined, colors.red, `Required argument "${option.title}" not found`
-                                    )
-                                ]
-                            });
-                            return;
-                        }
-                        command_options.push(rest);
-                    } else {
-                        assert(false, "unhandled option type");
-                    }
-                }*/
                 await command.handler(command_obj, ...command_options);
                 return true;
             } else {
@@ -623,8 +601,6 @@ export class Wheatley extends EventEmitter {
                         assert((await command_object.get_member()).permissions.has(command.permissions));
                     }
                     for (const option of command.options.values()) {
-                        // NOTE: Temp for now
-                        // eslint-disable-next-line @typescript-eslint/no-unnecessary-condition
                         if (option.type == "string") {
                             const option_value = interaction.options.getString(option.title);
                             if (!option_value && option.required) {

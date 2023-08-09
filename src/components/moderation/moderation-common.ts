@@ -56,10 +56,8 @@ export type basic_moderation =
       };
 
 // TODO: Rename to moderation base?
-// TODO: Only increment case id on success.....
 // TODO: Indexes: Active, case number, id, user, moderator, type
 // TODO: Some system for moderation update events
-// TODO: Unneeded eslint-disable-next-line @typescript-eslint/no-unnecessary-condition in wheatley.ts
 
 export type moderation_entry = basic_moderation & {
     case_number: number;
