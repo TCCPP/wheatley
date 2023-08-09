@@ -15,7 +15,6 @@ import { colors } from "../../common.js";
  * !ban !unban
  * !kick
  * !rolepersist add/remove
- * !temprole
  * !warn
  * !noofftopic
  *
@@ -274,7 +273,7 @@ export abstract class ModerationComponent extends BotComponent {
                         .setColor(colors.color)
                         .setDescription(
                             `You have been ${action} in Together C & C++.\n` +
-                                (is_removal ? "" : `Duration: ${duration}\n`) +
+                                (is_removal || moderation.type == "warn" ? "" : `Duration: ${duration}\n`) +
                                 `Reason: ${moderation.reason}` +
                                 (is_removal
                                     ? ""

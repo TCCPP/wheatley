@@ -10,23 +10,23 @@ import { ModerationComponent, basic_moderation, moderation_entry, moderation_typ
 import * as mongo from "mongodb";
 
 /**
- * Implements !kick
+ * Implements !warn
  */
-export default class Kick extends ModerationComponent {
+export default class Warn extends ModerationComponent {
     get type(): moderation_type {
-        return "kick";
+        return "warn";
     }
 
     constructor(wheatley: Wheatley) {
         super(wheatley);
 
         this.add_command(
-            new TextBasedCommandBuilder("wkick")
+            new TextBasedCommandBuilder("wwarn")
                 .set_permissions(Discord.PermissionFlagsBits.BanMembers)
-                .set_description("wkick")
+                .set_description("wwarn")
                 .add_user_option({
                     title: "user",
-                    description: "User to kick",
+                    description: "User to warn",
                     required: true,
                 })
                 .add_string_option({
@@ -34,14 +34,12 @@ export default class Kick extends ModerationComponent {
                     description: "Reason",
                     required: true,
                 })
-                .set_handler(this.kick_handler.bind(this)),
+                .set_handler(this.warn_handler.bind(this)),
         );
     }
 
     async apply_moderation(entry: moderation_entry) {
-        M.info(`Kicking ${entry.user_name}`);
-        const member = await this.wheatley.TCCPP.members.fetch(entry.user);
-        await member.kick(entry.reason ?? undefined);
+        // nop
     }
 
     async remove_moderation(entry: mongo.WithId<moderation_entry>) {
@@ -52,7 +50,7 @@ export default class Kick extends ModerationComponent {
         assert(false);
     }
 
-    async kick_handler(command: TextBasedCommand, user: Discord.User, reason: string) {
+    async warn_handler(command: TextBasedCommand, user: Discord.User, reason: string) {
         try {
             const moderation: moderation_entry = {
                 case_number: -1,
@@ -60,19 +58,18 @@ export default class Kick extends ModerationComponent {
                 user_name: user.displayName,
                 moderator: command.user.id,
                 moderator_name: (await command.get_member()).displayName,
-                type: "kick",
+                type: "warn",
                 reason,
                 issued_at: Date.now(),
                 duration: null,
-                active: false,
+                active: true,
                 removed: null,
                 expunged: null,
             };
-            await this.notify_user(command, user, "kicked", moderation);
             await this.register_new_moderation(moderation);
-            await this.reply_with_success(command, user, "kicked");
+            await this.reply_and_notify(command, user, "warned", moderation);
         } catch (e) {
-            await this.reply_with_error(command, "Error kicking");
+            await this.reply_with_error(command, "Error warning");
             critical_error(e);
         }
     }
