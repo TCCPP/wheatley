@@ -249,13 +249,7 @@ export abstract class ModerationComponent extends BotComponent {
         }
     }
 
-    async notify(
-        command: TextBasedCommand,
-        user: Discord.User,
-        action: string,
-        moderation: Omit<moderation_entry, "case">,
-        is_removal = false,
-    ) {
+    async reply_with_success(command: TextBasedCommand, user: Discord.User, action: string) {
         await command.reply({
             embeds: [
                 new Discord.EmbedBuilder()
@@ -263,6 +257,15 @@ export abstract class ModerationComponent extends BotComponent {
                     .setDescription(`<:success:1138616548630745088> ***${user.displayName} was ${action}***`),
             ],
         });
+    }
+
+    async notify_user(
+        command: TextBasedCommand,
+        user: Discord.User,
+        action: string,
+        moderation: Omit<moderation_entry, "case">,
+        is_removal = false,
+    ) {
         const duration = moderation.duration ? time_to_human(moderation.duration) : "Permanent";
         try {
             await (
@@ -287,5 +290,16 @@ export abstract class ModerationComponent extends BotComponent {
             await this.reply_with_error(command, "Error notifying");
             critical_error(e);
         }
+    }
+
+    async reply_and_notify(
+        command: TextBasedCommand,
+        user: Discord.User,
+        action: string,
+        moderation: Omit<moderation_entry, "case">,
+        is_removal = false,
+    ) {
+        await this.reply_with_success(command, user, action);
+        await this.notify_user(command, user, action, moderation, is_removal);
     }
 }

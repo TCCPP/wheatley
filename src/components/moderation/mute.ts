@@ -107,7 +107,7 @@ export default class Mute extends ModerationComponent {
                 expunged: null,
             };
             await this.register_new_moderation(moderation);
-            await this.notify(command, user, "muted", moderation);
+            await this.reply_and_notify(command, user, "muted", moderation);
         } catch (e) {
             await this.reply_with_error(command, "Error applying mute");
             critical_error(e);
@@ -135,7 +135,7 @@ export default class Mute extends ModerationComponent {
             } else {
                 await this.remove_moderation(res.value);
                 this.sleep_list.remove(res.value._id);
-                await this.notify(command, user, "unmuted", res.value, true);
+                await this.reply_and_notify(command, user, "unmuted", res.value, true);
             }
         } catch (e) {
             await this.reply_with_error(command, "Error unmuting");

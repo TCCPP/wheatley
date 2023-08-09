@@ -114,8 +114,9 @@ export default class Ban extends ModerationComponent {
                 removed: null,
                 expunged: null,
             };
+            await this.notify_user(command, user, "banned", moderation);
             await this.register_new_moderation(moderation);
-            await this.notify(command, user, "banned", moderation);
+            await this.reply_with_success(command, user, "banned");
         } catch (e) {
             await this.reply_with_error(command, "Error banning");
             critical_error(e);
@@ -143,7 +144,7 @@ export default class Ban extends ModerationComponent {
             } else {
                 await this.remove_moderation(res.value);
                 this.sleep_list.remove(res.value._id);
-                await this.notify(command, user, "unbanned", res.value, true);
+                await this.reply_with_success(command, user, "unbanned");
             }
         } catch (e) {
             await this.reply_with_error(command, "Error unbanning");

@@ -69,7 +69,7 @@ export default class Kick extends ModerationComponent {
                 expunged: null,
             };
             await this.register_new_moderation(moderation);
-            await this.notify(command, user, "kicked", moderation);
+            await this.reply_and_notify(command, user, "kicked", moderation);
         } catch (e) {
             await this.reply_with_error(command, "Error kicking");
             critical_error(e);
