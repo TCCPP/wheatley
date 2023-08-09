@@ -2,7 +2,7 @@ import * as Discord from "discord.js";
 
 import { strict as assert } from "assert";
 
-import { SleepList, critical_error, time_to_human, unwrap } from "../../utils.js";
+import { Mutex, SleepList, critical_error, time_to_human, unwrap } from "../../utils.js";
 import { BotComponent } from "../../bot-component.js";
 import { TextBasedCommand } from "../../command.js";
 import { Wheatley } from "../../wheatley.js";
@@ -152,20 +152,17 @@ export abstract class ModerationComponent extends BotComponent {
         }
     }
 
-    abstract apply_moderation(entry: mongo.WithId<moderation_entry>): Promise<void>;
+    // Add the moderation to the user (e.g. add a role or issue a ban)
+    abstract apply_moderation(entry: moderation_entry): Promise<void>;
+    // Remove the moderation to the user (e.g. remove a role or unban)
     abstract remove_moderation(entry: mongo.WithId<moderation_entry>): Promise<void>;
+    // Check if the moderation is in effect
     abstract is_moderation_applied(moderation: basic_moderation): Promise<boolean>;
-
-    async add_new_moderation(entry: mongo.WithId<moderation_entry>) {
-        await this.apply_moderation(entry);
-        if (entry.duration) {
-            this.sleep_list.insert([entry.issued_at + entry.duration, entry]);
-        }
-    }
 
     async handle_moderation_expire(entry: mongo.WithId<moderation_entry>) {
         if (await this.is_moderation_applied(entry)) {
             await this.remove_moderation(entry);
+            this.sleep_list.remove(entry._id);
             // remove database entry
             await this.wheatley.database.moderations.updateOne(
                 { _id: entry._id },
@@ -185,21 +182,42 @@ export abstract class ModerationComponent extends BotComponent {
     }
 
     async get_case_id() {
-        return unwrap(
-            (
-                await this.wheatley.database.wheatley.findOneAndUpdate(
-                    { id: "main" },
+        return (await this.wheatley.database.get_bot_singleton()).moderation_case_number;
+    }
+
+    async increment_case_id() {
+        const res = await this.wheatley.database.wheatley.updateOne(
+            { id: "main" },
+            {
+                $inc: {
+                    moderation_case_number: 1,
+                },
+            },
+        );
+        assert(res.acknowledged);
+    }
+
+    static case_id_mutex = new Mutex();
+
+    // Handle applying, adding to the sleep list, inserting into the database, and figuring out the case number
+    async register_new_moderation(moderation: moderation_entry) {
+        try {
+            await ModerationComponent.case_id_mutex.lock();
+            await this.apply_moderation(moderation);
+            const res = await this.wheatley.database.moderations.insertOne(moderation);
+            await this.increment_case_id();
+            if (moderation.duration) {
+                this.sleep_list.insert([
+                    moderation.issued_at + moderation.duration,
                     {
-                        $inc: {
-                            moderation_case_number: 1,
-                        },
+                        _id: res.insertedId,
+                        ...moderation,
                     },
-                    {
-                        returnDocument: "after",
-                    },
-                )
-            ).value,
-        ).moderation_case_number;
+                ]);
+            }
+        } finally {
+            ModerationComponent.case_id_mutex.unlock();
+        }
     }
 
     async reply_with_error(command: TextBasedCommand, message: string) {
@@ -217,7 +235,7 @@ export abstract class ModerationComponent extends BotComponent {
         command: TextBasedCommand,
         user: Discord.User,
         action: string,
-        document: moderation_entry,
+        moderation: Omit<moderation_entry, "case">,
         show_appeal_info = true,
     ) {
         await (
@@ -228,8 +246,8 @@ export abstract class ModerationComponent extends BotComponent {
                     .setColor(colors.color)
                     .setDescription(
                         `You have been ${action} in Together C & C++.\n` +
-                            `Duration: ${document.duration ? time_to_human(document.duration) : "Permanent"}` +
-                            `Reason: ${document.reason}` +
+                            `Duration: ${moderation.duration ? time_to_human(moderation.duration) : "Permanent"}` +
+                            `Reason: ${moderation.reason}` +
                             (show_appeal_info
                                 ? "\n" +
                                   `To appeal this you may open a modmail in Server Guide -> #rules ` +

@@ -68,7 +68,7 @@ export default class Mute extends ModerationComponent {
         );
     }
 
-    async apply_moderation(entry: mongo.WithId<moderation_entry>) {
+    async apply_moderation(entry: moderation_entry) {
         M.info(`Applying mute to ${entry.user_name}`);
         const member = await this.wheatley.TCCPP.members.fetch(entry.user);
         await member.roles.add(this.wheatley.muted_role);
@@ -78,7 +78,6 @@ export default class Mute extends ModerationComponent {
         M.info(`Removing mute from ${entry.user_name}`);
         const member = await this.wheatley.TCCPP.members.fetch(entry.user);
         await member.roles.remove(this.wheatley.muted_role);
-        this.sleep_list.remove(entry._id);
     }
 
     async is_moderation_applied(moderation: basic_moderation) {
@@ -94,7 +93,7 @@ export default class Mute extends ModerationComponent {
                 await this.reply_with_error(command, "User is already muted");
             }
             await this.wheatley.database.lock();
-            const document: moderation_entry = {
+            const moderation: moderation_entry = {
                 case_number: await this.get_case_id(),
                 user: user.id,
                 user_name: user.displayName,
@@ -108,12 +107,8 @@ export default class Mute extends ModerationComponent {
                 removed: null,
                 expunged: null,
             };
-            const res = await this.wheatley.database.moderations.insertOne(document);
-            await this.add_new_moderation({
-                _id: res.insertedId,
-                ...document,
-            });
-            await this.notify(command, user, "muted", document);
+            await this.register_new_moderation(moderation);
+            await this.notify(command, user, "muted", moderation);
         } catch (e) {
             await this.reply_with_error(command, "Error applying mute");
             critical_error(e);
@@ -142,6 +137,7 @@ export default class Mute extends ModerationComponent {
                 await this.reply_with_error(command, "User is not muted");
             } else {
                 await this.remove_moderation(res.value);
+                this.sleep_list.remove(res.value._id);
                 await this.notify(command, user, "unmuted", res.value, false);
             }
         } catch (e) {

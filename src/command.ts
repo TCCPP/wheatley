@@ -14,7 +14,7 @@ export type TextBasedCommandOption = {
     title: string;
     description: string;
     required?: boolean; // TODO: Currently not implemented for text commands
-    regex?: RegExp;
+    regex?: RegExp; // TODO: Should it not apply to slash command fields
     autocomplete?: (partial: string, command_name: string) => { name: string; value: string }[];
 };
 
