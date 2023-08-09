@@ -96,30 +96,36 @@ function pluralize(n: number, word: string) {
     }
 }
 
-export function time_to_human(diff: number, seconds_with_higher_precision = true): string {
+export function time_to_human_core(diff: number, seconds_with_higher_precision = true): string[] {
     if (diff >= YEAR) {
         const years = Math.floor(diff / YEAR);
-        return `${pluralize(years, "year")} ${time_to_human(diff % YEAR, false)}`;
+        return [...(years == 0 ? [] : [pluralize(years, "year")]), ...time_to_human_core(diff % YEAR, false)];
     }
     if (diff >= MONTH) {
         const months = Math.floor(diff / MONTH);
-        return `${pluralize(months, "month")} ${time_to_human(diff % MONTH, false)}`;
+        return [...(months == 0 ? [] : [pluralize(months, "month")]), ...time_to_human_core(diff % MONTH, false)];
     }
     if (diff >= DAY) {
         const days = Math.floor(diff / DAY);
-        return `${pluralize(days, "day")} ${time_to_human(diff % DAY, false)}`;
+        return [...(days == 0 ? [] : [pluralize(days, "day")]), ...time_to_human_core(diff % DAY, false)];
     }
     if (diff >= HOUR) {
         const hours = Math.floor(diff / HOUR);
-        return `${pluralize(hours, "hour")} ${time_to_human(diff % HOUR, false)}`;
+        return [...(hours == 0 ? [] : [pluralize(hours, "hour")]), ...time_to_human_core(diff % HOUR, false)];
     }
     if (diff >= MINUTE) {
-        return `${pluralize(Math.floor(diff / MINUTE), "minute")} ${time_to_human(
-            diff % MINUTE,
-            seconds_with_higher_precision && true,
-        )}`;
+        const minutes = Math.floor(diff / MINUTE);
+        return [
+            ...(minutes == 0 ? [] : [pluralize(minutes, "minute")]),
+            ...time_to_human_core(diff % MINUTE, seconds_with_higher_precision && true),
+        ];
     }
-    return `${pluralize(round(diff / 1000, seconds_with_higher_precision ? 1 : 0), "second")}`;
+    const seconds = diff / 1000;
+    return seconds == 0 ? [] : [pluralize(round(diff / 1000, seconds_with_higher_precision ? 1 : 0), "second")];
+}
+
+export function time_to_human(diff: number): string {
+    return time_to_human_core(diff).join(" ");
 }
 
 const code_re = /`[^`]+`(?!`)/gi;

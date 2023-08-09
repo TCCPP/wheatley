@@ -21,7 +21,7 @@ import { colors } from "../../common.js";
  *
  * !reason
  * !duration
- * !expunge !unexpunge
+ * !expunge
  * !modlogs
  * !case
  *
@@ -54,6 +54,12 @@ export type basic_moderation =
           user: string; // snowflake
           role: string; // snowflake
       };
+
+// TODO: Rename to moderation base?
+// TODO: Only increment case id on success.....
+// TODO: Indexes: Active, case number, id, user, moderator, type
+// TODO: Some system for moderation update events
+// TODO: Unneeded eslint-disable-next-line @typescript-eslint/no-unnecessary-condition in wheatley.ts
 
 export type moderation_entry = basic_moderation & {
     case_number: number;
@@ -204,6 +210,7 @@ export abstract class ModerationComponent extends BotComponent {
         try {
             await ModerationComponent.case_id_mutex.lock();
             await this.apply_moderation(moderation);
+            moderation.case_number = await this.get_case_id();
             const res = await this.wheatley.database.moderations.insertOne(moderation);
             await this.increment_case_id();
             if (moderation.duration) {
@@ -221,14 +228,25 @@ export abstract class ModerationComponent extends BotComponent {
     }
 
     async reply_with_error(command: TextBasedCommand, message: string) {
-        await command.reply({
-            embeds: [
-                new Discord.EmbedBuilder()
-                    .setColor(colors.alert_color)
-                    .setTitle("Error")
-                    .setDescription(`<:error:1138616562958483496> ***${message}***`),
-            ],
-        });
+        if (command.replied) {
+            await command.reply({
+                embeds: [
+                    new Discord.EmbedBuilder()
+                        .setColor(colors.alert_color)
+                        .setTitle("Error")
+                        .setDescription(`<:error:1138616562958483496> ***${message}***`),
+                ],
+            });
+        } else {
+            await command.followUp({
+                embeds: [
+                    new Discord.EmbedBuilder()
+                        .setColor(colors.alert_color)
+                        .setTitle("Error")
+                        .setDescription(`<:error:1138616562958483496> ***${message}***`),
+                ],
+            });
+        }
     }
 
     async notify(
@@ -236,26 +254,8 @@ export abstract class ModerationComponent extends BotComponent {
         user: Discord.User,
         action: string,
         moderation: Omit<moderation_entry, "case">,
-        show_appeal_info = true,
+        is_removal = false,
     ) {
-        await (
-            await user.createDM()
-        ).send({
-            embeds: [
-                new Discord.EmbedBuilder()
-                    .setColor(colors.color)
-                    .setDescription(
-                        `You have been ${action} in Together C & C++.\n` +
-                            `Duration: ${moderation.duration ? time_to_human(moderation.duration) : "Permanent"}` +
-                            `Reason: ${moderation.reason}` +
-                            (show_appeal_info
-                                ? "\n" +
-                                  `To appeal this you may open a modmail in Server Guide -> #rules ` +
-                                  `or reach out to a staff member.`
-                                : ""),
-                    ),
-            ],
-        });
         await command.reply({
             embeds: [
                 new Discord.EmbedBuilder()
@@ -263,5 +263,29 @@ export abstract class ModerationComponent extends BotComponent {
                     .setDescription(`<:success:1138616548630745088> ***${user.displayName} was ${action}***`),
             ],
         });
+        const duration = moderation.duration ? time_to_human(moderation.duration) : "Permanent";
+        try {
+            await (
+                await user.createDM()
+            ).send({
+                embeds: [
+                    new Discord.EmbedBuilder()
+                        .setColor(colors.color)
+                        .setDescription(
+                            `You have been ${action} in Together C & C++.\n` +
+                                (is_removal ? "" : `Duration: ${duration}\n`) +
+                                `Reason: ${moderation.reason}` +
+                                (is_removal
+                                    ? ""
+                                    : "\n" +
+                                      `To appeal this you may open a modmail in Server Guide -> #rules ` +
+                                      `or reach out to a staff member.`),
+                        ),
+                ],
+            });
+        } catch (e) {
+            await this.reply_with_error(command, "Error notifying");
+            critical_error(e);
+        }
     }
 }

@@ -269,7 +269,7 @@ export class TextBasedCommand extends Command {
     public readonly user: Discord.User;
 
     private response: Discord.Message | Discord.InteractionResponse | null = null;
-    private replied = false;
+    public replied = false;
     private editing = false;
 
     // normal constructor

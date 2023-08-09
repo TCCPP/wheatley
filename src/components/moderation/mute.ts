@@ -135,7 +135,7 @@ export default class Mute extends ModerationComponent {
             } else {
                 await this.remove_moderation(res.value);
                 this.sleep_list.remove(res.value._id);
-                await this.notify(command, user, "unmuted", res.value, false);
+                await this.notify(command, user, "unmuted", res.value, true);
             }
         } catch (e) {
             await this.reply_with_error(command, "Error unmuting");

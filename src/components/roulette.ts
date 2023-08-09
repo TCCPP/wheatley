@@ -1,13 +1,10 @@
 import * as Discord from "discord.js";
 import { strict as assert } from "assert";
 import { critical_error, M, SelfClearingMap, SelfClearingSet } from "../utils.js";
-import { bot_spam_id, MINUTE } from "../common.js";
+import { bot_spam_id, colors, MINUTE } from "../common.js";
 import { BotComponent } from "../bot-component.js";
 import { Wheatley } from "../wheatley.js";
 import { TextBasedCommand, TextBasedCommandBuilder } from "../command.js";
-
-const green = 0x31ea6c;
-const red = 0xed2d2d;
 
 export type roulette_leaderboard_entry = {
     user: string;
@@ -47,20 +44,20 @@ export default class Roulette extends BotComponent {
     make_click_embed(author: Discord.User) {
         const streak = (this.streaks.get(author.id) ?? 0) + 1;
         return new Discord.EmbedBuilder()
-            .setColor(green)
+            .setColor(colors.green)
             .setDescription(`Click. <@${author.id}> got lucky. (Current streak: ${streak})`);
     }
 
     make_bang_embed(author: Discord.User) {
         return new Discord.EmbedBuilder()
-            .setColor(red)
+            .setColor(colors.red)
             .setDescription(`BANG. <@${author.id}> is dead <a:saber:851241060553326652>`);
     }
 
     make_ban_embed(command: TextBasedCommand) {
         const author = command.user;
         return new Discord.EmbedBuilder()
-            .setColor(red)
+            .setColor(colors.red)
             .setDescription(
                 `BANG. <@${author.id}> ${author.tag} [lost](https://www.youtube.com/watch?v=dQw4w9WgXcQ)` +
                     ` [roulette](${command.get_or_forge_url()}) and is being timed out for half an hour` +
@@ -135,7 +132,7 @@ export default class Roulette extends BotComponent {
     }
 
     async leaderboard(command: TextBasedCommand) {
-        const embed = new Discord.EmbedBuilder().setColor(green).setTitle("Roulette Leaderboard");
+        const embed = new Discord.EmbedBuilder().setColor(colors.green).setTitle("Roulette Leaderboard");
         let description = "";
         const top_scores = <roulette_leaderboard_entry[]>(
             await this.wheatley.database.roulette_leaderboard
