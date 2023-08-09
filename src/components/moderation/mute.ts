@@ -92,9 +92,8 @@ export default class Mute extends ModerationComponent {
             if (await this.is_moderation_applied(base_moderation)) {
                 await this.reply_with_error(command, "User is already muted");
             }
-            await this.wheatley.database.lock();
             const moderation: moderation_entry = {
-                case_number: await this.get_case_id(),
+                case_number: -1,
                 user: user.id,
                 user_name: user.displayName,
                 moderator: command.user.id,
@@ -112,8 +111,6 @@ export default class Mute extends ModerationComponent {
         } catch (e) {
             await this.reply_with_error(command, "Error applying mute");
             critical_error(e);
-        } finally {
-            this.wheatley.database.unlock();
         }
     }
 
