@@ -229,7 +229,7 @@ export abstract class ModerationComponent extends BotComponent {
 
     async reply_with_error(command: TextBasedCommand, message: string) {
         if (command.replied) {
-            await command.reply({
+            await command.followUp({
                 embeds: [
                     new Discord.EmbedBuilder()
                         .setColor(colors.alert_color)
@@ -238,7 +238,7 @@ export abstract class ModerationComponent extends BotComponent {
                 ],
             });
         } else {
-            await command.followUp({
+            await command.reply({
                 embeds: [
                     new Discord.EmbedBuilder()
                         .setColor(colors.alert_color)
