@@ -209,6 +209,7 @@ class ArticleParser {
         let result = "";
         let piece = "";
         let in_inline_code = false;
+        let prev = "";
         for (const c of line) {
             if (c === "`") {
                 if (in_inline_code) {
@@ -218,10 +219,11 @@ class ArticleParser {
                     result += this.substitute_placeholders_no_code(piece);
                     piece = c;
                 }
-                in_inline_code = !in_inline_code;
+                in_inline_code = prev !== "\\" ? !in_inline_code : in_inline_code;
             } else {
                 piece += c;
             }
+            prev = c;
         }
         return result + (in_inline_code ? piece : this.substitute_placeholders_no_code(piece));
     }
