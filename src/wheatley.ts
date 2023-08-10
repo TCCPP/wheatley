@@ -229,45 +229,45 @@ export class Wheatley extends EventEmitter {
 
         // TODO: Log everything?
         const promises = [
-            (async () => {
+            async () => {
                 this.action_log_channel = await fetch_text_channel(action_log_channel_id);
-            })(),
-            (async () => {
+            },
+            async () => {
                 this.staff_flag_log = await fetch_text_channel(staff_flag_log_id);
-            })(),
-            (async () => {
+            },
+            async () => {
                 this.staff_message_log = await fetch_text_channel(message_log_channel_id);
-            })(),
-            (async () => {
+            },
+            async () => {
                 this.TCCPP = await this.client.guilds.fetch(TCCPP_ID);
                 this.muted_role = unwrap(this.TCCPP.roles.cache.find(role => role.name === "Muted"));
-            })(),
-            (async () => {
+            },
+            async () => {
                 this.cpp_help = await fetch_forum_channel(cpp_help_id);
-            })(),
-            (async () => {
+            },
+            async () => {
                 this.c_help = await fetch_forum_channel(c_help_id);
-            })(),
-            (async () => {
+            },
+            async () => {
                 this.zelis = await this.client.users.fetch(zelis_id);
-            })(),
-            (async () => {
+            },
+            async () => {
                 this.rules_channel = await fetch_text_channel(rules_channel_id);
-            })(),
-            (async () => {
+            },
+            async () => {
                 this.mods_channel = await fetch_text_channel(mods_channel_id);
                 this.skill_role_suggestion_log = await fetch_text_channel(skill_role_suggestion_log_id);
-            })(),
-            (async () => {
+            },
+            async () => {
                 this.staff_member_log_channel = await fetch_text_channel(member_log_channel_id);
-            })(),
-            (async () => {
+            },
+            async () => {
                 this.welcome_channel = await fetch_text_channel(welcome_channel_id);
-            })(),
-            (async () => {
+            },
+            async () => {
                 this.bot_spam = await fetch_text_channel(bot_spam_id);
-            })(),
-            (async () => {
+            },
+            async () => {
                 this.server_suggestions_channel = await fetch_text_channel(server_suggestions_channel_id);
                 this.suggestion_dashboard_thread = await fetch_thread_channel(
                     this.server_suggestions_channel,
@@ -277,18 +277,18 @@ export class Wheatley extends EventEmitter {
                     this.server_suggestions_channel,
                     suggestion_action_log_thread_id,
                 );
-            })(),
-            (async () => {
+            },
+            async () => {
                 this.the_button_channel = await fetch_text_channel(the_button_channel_id);
-            })(),
-            (async () => {
+            },
+            async () => {
                 this.starboard_channel = await fetch_text_channel(starboard_channel_id);
-            })(),
-            (async () => {
+            },
+            async () => {
                 this.staff_action_log_channel = await fetch_text_channel(staff_action_log_channel_id);
-            })(),
+            },
         ];
-        await Promise.all(promises);
+        await Promise.all(promises.map(action => action()));
     }
 
     destroy() {
