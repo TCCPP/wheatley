@@ -36,9 +36,9 @@ enum parse_state {
     done,
 }
 
-const image_regex = /!\[[^\]]*\]\(([^)]*)\)/;
-const reference_definition_regex = /\s*\[([^\]]*)\]: (.+)/;
-const reference_link_regex = /\[([^\]]*)\]\[([^\]]*)\]/g;
+const image_regex = /!\[[^\]]*]\(([^)]*)\)/;
+const reference_definition_regex = /\s*\[([^\]]*)]: (.+)/;
+const reference_link_regex = /\[([^\]]*)]\[([^\]]*)]/g;
 
 /**
  * One-time use class for parsing articles.
