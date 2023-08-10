@@ -82,8 +82,10 @@ async function handle_worker_message(message: MessageForWorker<WorkerJob>):
     };
 }
 
-parentPort.on("message", async (message: MessageForWorker<WorkerJob>) => {
-    parentPort!.postMessage(await handle_worker_message(message));
+parentPort.on("message", (message: MessageForWorker<WorkerJob>) => {
+    handle_worker_message(message)
+        .then(m => parentPort!.postMessage(m))
+        .catch(console.error);
 });
 
 parentPort.on("close", () => {

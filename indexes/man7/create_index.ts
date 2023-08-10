@@ -16,7 +16,7 @@ import { man7_index, WorkerJob, WorkerResponse } from "./types";
 const seed_url = "https://man7.org/linux/man-pages/dir_all_by_section.html";
 const base_url = "https://man7.org/linux/man-pages/";
 
-(async () => {
+await (async () => {
     let man_entries: man7_index = [];
     if(fs.existsSync("man7_index.json")) {
         man_entries = JSON.parse(await fs.promises.readFile("man7_index.json", { encoding: "utf-8" }));

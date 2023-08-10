@@ -91,7 +91,10 @@ export class ThreadPool<JobType, ResultType> implements AsyncIterable<ResultType
     }
     private create_new_worker(worker_path: string) {
         const worker = new Worker(worker_path);
-        worker.on("message", message => this.handle_worker_message(worker, message));
+        worker.on("message", message => {
+            this.handle_worker_message(worker, message)
+                .catch(console.error);
+        });
         return worker;
     }
     private async handle_worker_message(worker: Worker, message: MessageForThreadPool<ResultType>) {
@@ -144,7 +147,7 @@ export class Funnel {
             await promise_factory();
             this.count--;
             this.on_promise_finish();
-        })();
+        })().catch(console.error);
     }
     private on_promise_finish() {
         // run the next promise if needed

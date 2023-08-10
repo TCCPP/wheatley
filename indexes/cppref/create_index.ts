@@ -20,7 +20,7 @@ async function* walk_dir(dir: string): AsyncGenerator<string> {
     }
 }
 
-(async () => {
+await (async () => {
     let index: cppref_index = {
         c: [],
         cpp: []
@@ -38,7 +38,7 @@ async function* walk_dir(dir: string): AsyncGenerator<string> {
 
     let count = 0;
 
-    (async () => {
+    await (async () => {
         console.log("en.cppreference.com/w/c");
         for await(const path of walk_dir("en.cppreference.com/w/c")) {
             if(path.endsWith(".html")) {
