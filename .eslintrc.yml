@@ -26,16 +26,10 @@ rules:
       MemberExpression: 1
       SwitchCase: 1
       ImportDeclaration: first
-  max-len:
-    - error
-    - 120
-  semi:
-    - error
-    - always
-  no-unused-vars:
-    - off
-  no-constant-condition:
-    - off
+  max-len: [error, 120]
+  semi: [error, always]
+  no-unused-vars: off
+  no-constant-condition: off
   semi-spacing:
     - error
     - before: false
@@ -43,38 +37,27 @@ rules:
   no-empty:
     - error
     - allowEmptyCatch: true
-  object-curly-spacing:
-    - error
-    - always
-  comma-spacing:
-    - error
-  computed-property-spacing:
-    - error
+  object-curly-spacing: [error, always]
+  comma-spacing: error
+  computed-property-spacing: error
   brace-style:
     - error
     - 1tbs
     - allowSingleLine: true
-  eol-last:
-    - error
-  semi-style:
-    - error
-    - last
+  eol-last: error
+  semi-style: [error, last]
   prefer-const:
     - error
     - destructuring: all
-  curly:
-    - error
+  curly: error
   "@typescript-eslint/no-unused-vars":
     - warn
     - destructuredArrayIgnorePattern: ^_
       argsIgnorePattern: ^_
       varsIgnorePattern: ^assert$|^M$
-  "@typescript-eslint/no-non-null-assertion":
-    - off
-  "@typescript-eslint/no-explicit-any":
-    - off
-  "@typescript-eslint/no-unnecessary-type-assertion":
-    - error
+  "@typescript-eslint/no-non-null-assertion": off
+  "@typescript-eslint/no-explicit-any": off
+  "@typescript-eslint/no-unnecessary-type-assertion": error
   "@typescript-eslint/no-unnecessary-condition":
     - error
     - allowConstantLoopConditions: true
