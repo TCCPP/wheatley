@@ -6,7 +6,7 @@
 
 This repository contains the source code for the Wheatley bot, made for the Together C & C++ discord server.
 
-## Code organization
+## Project Structure
 
 - `indexes/` Code for processing cppreference and man7 data to create a searchable index
 - `src/` Main source code for the bot
@@ -29,12 +29,15 @@ Secrets and other bot info must be configured in the bot.json file. An example l
   "guild": "<guild id>",
   "token": "<discord api token>",
   "mongouser": "wheatley",
-  "mongopassword": "<mongo password>"
+  "mongopassword": "<mongo password>",
+  "freestanding": false
 }
 ```
 
-Mongo credentials can be omitted locally if you don't need to work on components that use mongo. `freestanding: true`
-can be specified to turn on only components which don't rely on channels etc. specific to Together C & C++ to exist.
+Mongo credentials can be omitted locally if you don't need to work on components
+that use mongo.
+`freestanding: true` can be specified to turn on only components which don't
+rely on channels etc. specific to Together C & C++ to exist.
 
 ## Database
 
