@@ -80,15 +80,36 @@ type text_command_map_target = {
     deletable: boolean;
 };
 
+export type wheatley_database_credentials = {
+    user: string;
+    password: string;
+};
+
 export type wheatley_auth = {
     id: string;
     guild?: string;
     token: string;
     freestanding?: boolean;
-    mongo?: {
-        user: string;
-        password: string;
+    mongo?: wheatley_database_credentials;
+};
+
+export type wheatley_database_info = {
+    id: string;
+    server_suggestions: {
+        last_scanned_timestamp: number;
     };
+    modmail_id_counter: number;
+    the_button: {
+        button_presses: number;
+        last_reset: number;
+        longest_time_without_reset: number;
+    };
+    starboard: {
+        delete_emojis: string[];
+        ignored_emojis: string[];
+        negative_emojis: string[];
+    };
+    moderation_case_number: number;
 };
 
 export class Wheatley extends EventEmitter {

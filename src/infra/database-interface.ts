@@ -1,5 +1,5 @@
 import { strict as assert } from "assert";
-import { M, Mutex, is_string, unwrap } from "../utils.js";
+import { Mutex, is_string, unwrap } from "../utils.js";
 
 import * as mongo from "mongodb";
 import { no_distraction_entry } from "../components/nodistractions.js";
@@ -10,30 +10,7 @@ import { button_scoreboard_entry } from "../components/the-button.js";
 import { TRACKER_START_TIME, suggestion_entry } from "../components/server-suggestion-tracker.js";
 import { link_blacklist_entry } from "../private-types.js";
 import { moderation_entry } from "../components/moderation/moderation-common.js";
-
-export type database_credentials = {
-    user: string;
-    password: string;
-};
-
-export type database_info = {
-    id: string;
-    server_suggestions: {
-        last_scanned_timestamp: number;
-    };
-    modmail_id_counter: number;
-    the_button: {
-        button_presses: number;
-        last_reset: number;
-        longest_time_without_reset: number;
-    };
-    starboard: {
-        delete_emojis: string[];
-        ignored_emojis: string[];
-        negative_emojis: string[];
-    };
-    moderation_case_number: number;
-};
+import { wheatley_database_credentials, wheatley_database_info } from "../wheatley.js";
 
 export class WheatleyDatabase {
     private mutex = new Mutex();
@@ -48,7 +25,7 @@ export class WheatleyDatabase {
         await this.client?.close();
     }
 
-    static async create(credentials: database_credentials) {
+    static async create(credentials: wheatley_database_credentials) {
         const url = `mongodb://${credentials.user}:${credentials.password}@localhost:27017/?authMechanism=DEFAULT`;
         const client = new mongo.MongoClient(url);
         await client.connect();
@@ -78,7 +55,7 @@ export class WheatleyDatabase {
     }
 
     // TODO: typing, schema verification? Utility wrapper?
-    async get_bot_singleton(): Promise<mongo.WithId<database_info>> {
+    async get_bot_singleton(): Promise<mongo.WithId<wheatley_database_info>> {
         const wheatley = this.get_collection("wheatley");
         const res = await wheatley.findOne();
         if (res == null) {
@@ -108,11 +85,11 @@ export class WheatleyDatabase {
             };
         } else {
             assert(res.id === "main");
-            return res as mongo.WithId<database_info>;
+            return res as mongo.WithId<wheatley_database_info>;
         }
     }
 
-    async update_bot_singleton(update: Partial<database_info>) {
+    async update_bot_singleton(update: Partial<wheatley_database_info>) {
         const wheatley = this.get_collection("wheatley");
         await wheatley.updateOne(
             { id: "main" },
@@ -140,7 +117,7 @@ export type WheatleyDatabaseProxy = WheatleyDatabase & {
     roulette_leaderboard: mongo.Collection<roulette_leaderboard_entry>;
     server_suggestions: mongo.Collection<suggestion_entry>;
     starboard_entries: mongo.Collection<starboard_entry>;
-    wheatley: mongo.Collection<database_info>;
+    wheatley: mongo.Collection<wheatley_database_info>;
     moderations: mongo.Collection<moderation_entry>;
 };
 // & {
