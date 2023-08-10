@@ -3,4 +3,4 @@ extends:
 parserOptions:
   ecmaVersion: latest
   sourceType: module
-  project: ./indexes/tsconfig.json
+  project: ./tsconfig.json
