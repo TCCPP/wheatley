@@ -18,7 +18,7 @@
     },
     "scripts": {
         "start": "tsc && unbuffer node build/src/main.js 2>&1 | tee -a log.txt",
-        "lint": "eslint src",
+        "lint": "eslint .",
         "lint-files": "eslint --color",
         "prepare": "husky install",
         "test": "tsc && mocha build/test",
