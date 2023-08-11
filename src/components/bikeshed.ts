@@ -8,18 +8,12 @@ import { BotComponent } from "../bot-component.js";
 import { Wheatley } from "../wheatley.js";
 import { TextBasedCommand, TextBasedCommandBuilder } from "../command.js";
 
-const U_ARROW_DOUBLE_UP = "\u23eb";
-const U_ARROW_DOUBLE_DOWN = "\u23ec";
-const U_ARROW_UP = "\u2B06\uFE0F";
-const U_ARROW_DOWN = "\u2B07\uFE0F";
-const U_RECORD_BUTTON = "\u23FA\uFE0F";
-
 const OPTIONS = [
-    { symbol: U_ARROW_DOUBLE_UP, text: "Strongly Favor" },
-    { symbol: U_ARROW_UP, text: "Favor" },
-    { symbol: U_RECORD_BUTTON, text: "Neutral" },
-    { symbol: U_ARROW_DOWN, text: "Against" },
-    { symbol: U_ARROW_DOUBLE_DOWN, text: "Strongly Against" },
+    { symbol: "⏫", text: "Strongly Favor" },
+    { symbol: "⬆️", text: "Favor" },
+    { symbol: "⏺️", text: "Neutral" },
+    { symbol: "⬇️", text: "Against" },
+    { symbol: "⏬", text: "Strongly Against" },
 ];
 
 const DESCRIPTION = OPTIONS.map(({ symbol, text }) => `${symbol} - ${text}`).join("\n");
