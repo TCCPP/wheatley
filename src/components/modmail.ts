@@ -146,6 +146,7 @@ export default class Modmail extends BotComponent {
                     if (!is_root(interaction.member.user)) {
                         // permissions, the .setNickname will fail
                         const member = await this.wheatley.TCCPP.members.fetch(interaction.member.user.id);
+                        await member.roles.add(this.wheatley.monke_role);
                         await member.setNickname("Monke");
                     }
                 } catch (e) {

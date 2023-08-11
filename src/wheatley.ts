@@ -136,6 +136,7 @@ export class Wheatley extends EventEmitter {
     starboard_channel: Discord.TextChannel;
     staff_action_log_channel: Discord.TextChannel;
     muted_role: Discord.Role;
+    monke_role: Discord.Role;
 
     database: WheatleyDatabaseProxy;
 
@@ -252,6 +253,7 @@ export class Wheatley extends EventEmitter {
             async () => {
                 this.TCCPP = await this.client.guilds.fetch(TCCPP_ID);
                 this.muted_role = unwrap(this.TCCPP.roles.cache.find(role => role.name === "Muted"));
+                this.monke_role = unwrap(this.TCCPP.roles.cache.find(role => role.name === "Monke"));
             },
             async () => {
                 this.cpp_help = await fetch_forum_channel(cpp_help_id);
