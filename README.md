@@ -28,16 +28,17 @@ Secrets and other bot info must be configured in the bot.json file. An example l
   "id": "<bot id>",
   "guild": "<guild id>",
   "token": "<discord api token>",
-  "mongouser": "wheatley",
-  "mongopassword": "<mongo password>",
+  "mongo": {
+    "user": "wheatley",
+    "password": "<mongo password>"
+  },
   "freestanding": false
 }
 ```
 
-Mongo credentials can be omitted locally if you don't need to work on components
-that use mongo.
-`freestanding: true` can be specified to turn on only components which don't
-rely on channels etc. specific to Together C & C++ to exist.
+Mongo credentials can be omitted locally if you don't need to work on components that use mongo. `freestanding: true`
+can be specified to turn on only components which don't rely on channels etc. specific to Together C & C++ to exist.
+Freestanding mode also disables connecting to MongoDB.
 
 ## Database
 

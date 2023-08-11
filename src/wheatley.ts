@@ -80,16 +80,20 @@ type text_command_map_target = {
     deletable: boolean;
 };
 
+export type wheatley_database_credentials = {
+    user: string;
+    password: string;
+};
+
 export type wheatley_auth = {
     id: string;
     guild?: string;
     token: string;
     freestanding?: boolean;
-    mongouser: string; // TODO
-    mongopassword: string; // TODO
+    mongo?: wheatley_database_credentials;
 };
 
-export type wheatley_db_info = {
+export type wheatley_database_info = {
     id: string;
     server_suggestions: {
         last_scanned_timestamp: number;
@@ -180,7 +184,14 @@ export class Wheatley extends EventEmitter {
     }
 
     async setup(auth: wheatley_auth) {
-        this.database = await WheatleyDatabase.create(auth);
+        if (!auth.freestanding) {
+            // TODO handle non-freestanding case where no credentials were
+            //      were provided, disabling database features.
+            //      This probably requires adding a bool method to each
+            //      component that uses the database, and not loading them.
+            assert(auth.mongo, "Missing MongoDB credentials");
+            this.database = await WheatleyDatabase.create(auth.mongo);
+        }
 
         this.client.on("ready", async () => {
             if (!this.freestanding) {
