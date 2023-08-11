@@ -38,11 +38,11 @@ export default class Bikeshed extends BotComponent {
                     description: "The title of the poll",
                     required: true,
                 })
-                .set_handler(Bikeshed.bikeshed),
+                .set_handler(this.bikeshed.bind(this)),
         );
     }
 
-    static async bikeshed(command: TextBasedCommand, arg: string) {
+    async bikeshed(command: TextBasedCommand, arg: string) {
         M.log("Creating bikeshed poll for question ");
         await command.reply({
             embeds: [new Discord.EmbedBuilder().setColor(colors.color).setTitle(arg).setDescription(DESCRIPTION)],
