@@ -9,15 +9,17 @@ constexpr T      pi = std::numbers::pi_v<T>;
 // C++17 or lower:
 const double pi = std::acos(-1); // from <cmath>
 const T      pi = std::acos(T(-1));
-// note: all variables can be constexpr after C++26
+// note: all variables can be constexpr in C++26
 ```
 
 ## C
-```cpp
-const double pi = acos(-1); // from <math.h>
-const T      pi = acos((T) -1); // from <tgmath.h> (C11)
-// note: all variables can be constexpr after C23
-// warning: do not use M_PI, it is not portable
+```c
+const long double pil =
+  3.141592653589793238462643383279502884197169399375105820L;
+const double pi = (double) pil;
+const float pif = (float) pi;
+// note: all variables can be constexpr in C23
+// warning: do not use M_PI; it is not portable
 ```
 
 ## See Also on cppreference
