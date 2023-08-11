@@ -268,7 +268,7 @@ export class TextBasedCommand extends Command {
     public member: Discord.GuildMember | Discord.APIInteractionGuildMember | null;
     public readonly user: Discord.User;
 
-    private response: Discord.Message | Discord.InteractionResponse | null = null;
+    public response: Discord.Message | Discord.InteractionResponse | null = null;
     public replied = false;
     private editing = false;
 
