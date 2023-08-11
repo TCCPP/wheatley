@@ -13,12 +13,12 @@ Observable behavior includes, but is not limited to:
 ```cpp
 int main() {
   if (false)
-    return 5;
-  int x = 10;
-  return x + 10;
+    return 1;
+  int x = 3;
+  return x + 7;
 }
 ```
-The *observable behavior* is that the program returns the exit code `20`.
+The *observable behavior* is that the program returns the exit code `10`.
 
 <!-- inline -->
 ## Assembly Output
@@ -27,7 +27,7 @@ main:
 ; 'if (false)' removed by
 ; dead-code elimination.
 ; 'x' is constant-folded.
-  mov eax, 20
+  mov eax, 10
   ret
 ```
 *See [live example at Compiler Explorer][ce]*
@@ -38,4 +38,4 @@ main:
 [cout]: https://en.cppreference.com/w/cpp/io/cout
 [exit]: https://en.cppreference.com/w/c/program/exit
 [term]: https://en.cppreference.com/w/cpp/error/terminate
-[ce]: https://godbolt.org/z/aY7zvMvT4
+[ce]: https://godbolt.org/z/Po8ebr38o
