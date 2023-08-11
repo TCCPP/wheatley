@@ -4,16 +4,16 @@ The compiler can transform code however it thinks is best, as long as this
 doesn't change the *observable behavior* of the program.
 People call this the *[as-if rule][as-if]*.
 Observable behavior includes, but is not limited to:
-- access of **[volatile][volatile]** objects
 - writing output to the terminal (**[printf][printf]**, **[std::cout][cout]**, etc.)
 - aborting the program (**[exit][exit]**, **[std::terminate][term]**, etc.)
+- access of **[volatile][volatile]** objects
 
 <!-- inline -->
 ## Example
 ```cpp
 int main() {
   if (false)
-    return 1;
+    printf("unreachable");
   int x = 3;
   return x + 7;
 }
@@ -38,4 +38,4 @@ main:
 [cout]: https://en.cppreference.com/w/cpp/io/cout
 [exit]: https://en.cppreference.com/w/c/program/exit
 [term]: https://en.cppreference.com/w/cpp/error/terminate
-[ce]: https://godbolt.org/z/Po8ebr38o
+[ce]: https://godbolt.org/z/eTbv3458a
