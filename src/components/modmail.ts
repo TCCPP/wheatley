@@ -2,7 +2,7 @@ import { strict as assert } from "assert";
 import * as Discord from "discord.js";
 
 import { critical_error, get_url_for, M } from "../utils.js";
-import { colors, is_authorized_admin, is_root, MINUTE, moderators_role_id } from "../common.js";
+import { colors, MINUTE } from "../common.js";
 import { BotComponent } from "../bot-component.js";
 import { Wheatley } from "../wheatley.js";
 
@@ -52,7 +52,7 @@ export default class Modmail extends BotComponent {
                 // make the thread
                 const id = this.modmail_id_counter++;
                 await this.wheatley.database.update_bot_singleton({ modmail_id_counter: this.modmail_id_counter });
-                const thread = await this.wheatley.rules_channel.threads.create({
+                const thread = await this.wheatley.channels.rules_channel.threads.create({
                     type: Discord.ChannelType.PrivateThread,
                     invitable: false,
                     name: `Modmail #${id}`,
@@ -75,7 +75,7 @@ export default class Modmail extends BotComponent {
                     name: member.user.tag,
                     iconURL: member.displayAvatarURL(),
                 });
-                await this.wheatley.mods_channel.send({
+                await this.wheatley.channels.mods_channel.send({
                     content: get_url_for(thread),
                     embeds: [notification_embed],
                 });
@@ -83,9 +83,9 @@ export default class Modmail extends BotComponent {
                 await thread.members.add(member.id);
                 // Deliberately not awaiting here
                 await thread.send({
-                    content: `<@&${moderators_role_id}>`,
+                    content: `<@&${this.wheatley.roles.moderators_role.id}>`,
                     allowedMentions: {
-                        roles: [moderators_role_id],
+                        roles: [this.wheatley.roles.moderators_role.id],
                     },
                 });
             } catch (e) {
@@ -105,7 +105,7 @@ export default class Modmail extends BotComponent {
         if (message.author.bot) {
             return;
         }
-        if (message.content == "!wsetupmodmailsystem" && is_authorized_admin(message.member!)) {
+        if (message.content == "!wsetupmodmailsystem" && this.wheatley.is_authorized_admin(message.member!)) {
             const row = new Discord.ActionRowBuilder<Discord.MessageActionRowComponentBuilder>().addComponents(
                 new Discord.ButtonBuilder()
                     .setCustomId("modmail_monkey")
@@ -143,10 +143,10 @@ export default class Modmail extends BotComponent {
                 await this.log_action(interaction.member, "Monkey pressed the button");
                 try {
                     assert(interaction.member);
-                    if (!is_root(interaction.member.user)) {
+                    if (!this.wheatley.is_root(interaction.member.user)) {
                         // permissions, the .setNickname will fail
                         const member = await this.wheatley.TCCPP.members.fetch(interaction.member.user.id);
-                        await member.roles.add(this.wheatley.monke_role);
+                        await member.roles.add(this.wheatley.roles.monke_role);
                         await member.setNickname("Monke");
                     }
                 } catch (e) {
@@ -255,7 +255,7 @@ export default class Modmail extends BotComponent {
         if (body) {
             embed.setDescription(body);
         }
-        await this.wheatley.staff_member_log_channel.send({
+        await this.wheatley.channels.staff_member_log_channel.send({
             embeds: [embed],
         });
     }

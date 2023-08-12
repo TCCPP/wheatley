@@ -5,42 +5,17 @@ import * as Discord from "discord.js";
 import { EventEmitter } from "events";
 import * as fs from "fs/promises";
 
-import {
-    action_log_channel_id,
-    bot_spam_id,
-    colors,
-    cpp_help_id,
-    c_help_id,
-    member_log_channel_id,
-    message_log_channel_id,
-    MINUTE,
-    mods_channel_id,
-    rules_channel_id,
-    server_suggestions_channel_id,
-    staff_flag_log_id,
-    suggestion_action_log_thread_id,
-    suggestion_dashboard_thread_id,
-    TCCPP_ID,
-    welcome_channel_id,
-    zelis_id,
-    the_button_channel_id,
-    skill_role_suggestion_log_id,
-    starboard_channel_id,
-    staff_action_log_channel_id,
-    fetch_root_mod_list,
-} from "./common.js";
+import { colors, MINUTE } from "./common.js";
 import {
     critical_error,
-    fetch_forum_channel,
-    fetch_text_channel,
     fetch_thread_channel,
     M,
     directory_exists,
     SelfClearingMap,
-    string_split,
     zip,
     walk_dir,
     unwrap,
+    is_string,
 } from "./utils.js";
 import { BotComponent } from "./bot-component.js";
 import {
@@ -112,31 +87,100 @@ export type wheatley_database_info = {
     moderation_case_number: number;
 };
 
+// User IDs
+export const zelis_id = "199943082441965577";
+
+const tuple = <T extends any[]>(...args: T): T => args;
+
+const channels_map = {
+    // staff
+    staff_flag_log: tuple("1026972603019169842", Discord.TextChannel),
+    staff_action_log: tuple("845290775692443699", Discord.TextChannel),
+    welcome_channel: tuple("778017793567490078", Discord.TextChannel),
+    staff_member_log_channel: tuple("875681819662622730", Discord.TextChannel),
+    staff_message_log: tuple("467729928956411914", Discord.TextChannel),
+    mods_channel: tuple("847993258600038460", Discord.TextChannel),
+    // meta
+    rules_channel: tuple("659868782877212723", Discord.TextChannel),
+    announcements_channel: tuple("331881381477089282", Discord.TextChannel),
+    server_suggestions_channel: tuple("802541516655951892", Discord.TextChannel),
+    skill_role_suggestion_log: tuple("1099193160858599484", Discord.TextChannel),
+    resources_channel: tuple("1124619767542718524", Discord.ForumChannel),
+    // language channels
+    cpp_help: tuple("1013107104678162544", Discord.ForumChannel),
+    c_help: tuple("1013104018739974194", Discord.ForumChannel),
+    // off-topic
+    starboard_channel: tuple("800509841424252968", Discord.TextChannel),
+    memes: tuple("526518219549442071", Discord.TextChannel),
+    // other
+    bot_spam: tuple("506274405500977153", Discord.TextChannel),
+    the_button_channel: tuple("1069678919667687455", Discord.TextChannel),
+    introductions: tuple("933113495304679494", Discord.TextChannel),
+};
+
+const roles_map = {
+    muted_role: "815987333094178825",
+    monke_role: "1139378060450332752",
+    no_off_topic_role: "879419994004422666",
+    moderators_role: "847915341954154536",
+    root_role: "331719468440879105",
+    pink_role: "888158339878490132",
+};
+
+const skill_roles_map = {
+    intermediate: "331876085820030978",
+    proficient: "849399021838925834",
+    advanced: "331719590990184450",
+    expert: "331719591405551616",
+    beginner: "784733371275673600",
+};
+
+//suggestion_dashboard_thread: tuple("", Discord.ThreadChannel),
+//suggestion_action_log_thread: tuple("", Discord.ThreadChannel),
+
+// General config
+
+export const non_beginner_skill_role_ids = [
+    "331876085820030978", // intermediate
+    "849399021838925834", // proficient
+    "331719590990184450", // advanced
+    "331719591405551616", // expert
+];
+
+export const skill_role_ids = [
+    "784733371275673600", // beginner
+    ...non_beginner_skill_role_ids,
+];
+
+export const root_ids = new Set([
+    "199943082441965577", // zelis
+    "162964325823283200", // eisen
+    "110756651694297088", // vincent
+    "89441674844995584", // styx
+    // prevent Wheatley reactions being removed in server suggestions and also allow some elegant handling
+    "597216680271282192", // wheatley
+]);
+
+export const root_mod_ids = [
+    "199943082441965577", // zelis
+    "230282234085638155", // cas
+    "310536456647081985", // lumi
+    "719255892813545502", // sampersand
+    "162964325823283200", // eisenwave
+    "89441674844995584", // styx
+    "110756651694297088", // vincent
+    "138014214093668353", // dxpower
+    "313597351262683138", // dot
+    "413463039145410560", // karnage
+    "512649489300062228", // quicknir
+];
+
+export const root_mod_ids_set = new Set(root_mod_ids);
+
 export class Wheatley extends EventEmitter {
     private components: BotComponent[] = [];
     readonly guild_command_manager: GuildCommandManager;
     readonly tracker: MemberTracker; // TODO: Rename
-    action_log_channel: Discord.TextChannel;
-    staff_flag_log: Discord.TextChannel;
-    staff_message_log: Discord.TextChannel;
-    TCCPP: Discord.Guild;
-    zelis: Discord.User;
-    cpp_help: Discord.ForumChannel;
-    c_help: Discord.ForumChannel;
-    rules_channel: Discord.TextChannel;
-    mods_channel: Discord.TextChannel;
-    staff_member_log_channel: Discord.TextChannel;
-    welcome_channel: Discord.TextChannel;
-    bot_spam: Discord.TextChannel;
-    server_suggestions_channel: Discord.TextChannel;
-    suggestion_dashboard_thread: Discord.ThreadChannel;
-    suggestion_action_log_thread: Discord.ThreadChannel;
-    the_button_channel: Discord.TextChannel;
-    skill_role_suggestion_log: Discord.TextChannel;
-    starboard_channel: Discord.TextChannel;
-    staff_action_log_channel: Discord.TextChannel;
-    muted_role: Discord.Role;
-    monke_role: Discord.Role;
 
     database: WheatleyDatabaseProxy;
 
@@ -160,6 +204,38 @@ export class Wheatley extends EventEmitter {
     // True if freestanding mode is enabled. Defaults to false.
     readonly freestanding: boolean;
 
+    // TCCPP Constants
+    readonly pepereally = "<:pepereally:643881257624666112>";
+    readonly stackoverflow_emote = "<:stackoverflow:1074747016644661258>";
+
+    // TCCPP stuff
+    TCCPP: Discord.Guild;
+    zelis: Discord.User;
+
+    channels: {
+        // ["prototype"] gets the instance type, eliminating the `typeof`. InstanceType<T> doesn't work for a protected
+        // constructor, weirdly.
+        [k in keyof typeof channels_map]: (typeof channels_map)[k][1]["prototype"];
+    };
+
+    suggestion_dashboard_thread: Discord.ThreadChannel;
+    suggestion_action_log_thread: Discord.ThreadChannel;
+
+    thread_based_channel_ids = new Set([
+        "802541516655951892", // server-suggestions
+        "594212045621035030", // showcase
+        "873682069325217802", // today-i-learned
+    ]);
+
+    roles: {
+        [k in keyof typeof roles_map]: Discord.Role;
+    };
+    skill_roles: {
+        [k in keyof typeof skill_roles_map]: Discord.Role;
+    };
+
+    root_mod_list = "jr-#6677, Eisenwave#7675, Styxs#7557, or Vin¢#1293";
+
     constructor(
         readonly client: Discord.Client,
         auth: wheatley_auth,
@@ -168,7 +244,7 @@ export class Wheatley extends EventEmitter {
 
         this.id = auth.id;
         this.freestanding = auth.freestanding ?? false;
-        this.guildId = auth.guild ?? TCCPP_ID;
+        this.guildId = auth.guild ?? "331718482485837825";
 
         this.guild_command_manager = new GuildCommandManager(this);
         this.tracker = new MemberTracker(this);
@@ -235,73 +311,51 @@ export class Wheatley extends EventEmitter {
         await this.client.login(auth.token);
     }
 
-    async fetch_guild_info() {
-        // fetch list of roots and mods, replace hard-coded list
-        await fetch_root_mod_list(this.client);
+    async load_channel(key: string, id: string) {}
 
-        // TODO: Log everything?
-        const promises = [
-            async () => {
-                this.action_log_channel = await fetch_text_channel(action_log_channel_id);
-            },
-            async () => {
-                this.staff_flag_log = await fetch_text_channel(staff_flag_log_id);
-            },
-            async () => {
-                this.staff_message_log = await fetch_text_channel(message_log_channel_id);
-            },
-            async () => {
-                this.TCCPP = await this.client.guilds.fetch(TCCPP_ID);
-                this.muted_role = unwrap(this.TCCPP.roles.cache.find(role => role.name === "Muted"));
-                this.monke_role = unwrap(this.TCCPP.roles.cache.find(role => role.name === "Monke"));
-            },
-            async () => {
-                this.cpp_help = await fetch_forum_channel(cpp_help_id);
-            },
-            async () => {
-                this.c_help = await fetch_forum_channel(c_help_id);
-            },
-            async () => {
-                this.zelis = await this.client.users.fetch(zelis_id);
-            },
-            async () => {
-                this.rules_channel = await fetch_text_channel(rules_channel_id);
-            },
-            async () => {
-                this.mods_channel = await fetch_text_channel(mods_channel_id);
-                this.skill_role_suggestion_log = await fetch_text_channel(skill_role_suggestion_log_id);
-            },
-            async () => {
-                this.staff_member_log_channel = await fetch_text_channel(member_log_channel_id);
-            },
-            async () => {
-                this.welcome_channel = await fetch_text_channel(welcome_channel_id);
-            },
-            async () => {
-                this.bot_spam = await fetch_text_channel(bot_spam_id);
-            },
-            async () => {
-                this.server_suggestions_channel = await fetch_text_channel(server_suggestions_channel_id);
-                this.suggestion_dashboard_thread = await fetch_thread_channel(
-                    this.server_suggestions_channel,
-                    suggestion_dashboard_thread_id,
-                );
-                this.suggestion_action_log_thread = await fetch_thread_channel(
-                    this.server_suggestions_channel,
-                    suggestion_action_log_thread_id,
-                );
-            },
-            async () => {
-                this.the_button_channel = await fetch_text_channel(the_button_channel_id);
-            },
-            async () => {
-                this.starboard_channel = await fetch_text_channel(starboard_channel_id);
-            },
-            async () => {
-                this.staff_action_log_channel = await fetch_text_channel(staff_action_log_channel_id);
-            },
-        ];
-        await Promise.all(promises.map(action => action()));
+    async fetch_guild_info() {
+        // Preliminary loads
+        this.TCCPP = await this.client.guilds.fetch(this.guildId);
+        this.zelis = await this.client.users.fetch(zelis_id);
+        // Channels
+        await Promise.all(
+            Object.entries(channels_map).map(async ([k, [id, type]]) => {
+                const channel = await this.client.channels.fetch(id);
+                assert(channel !== null, `Channel ${k} ${id} not found`);
+                assert(channel instanceof type, `Channel ${k} ${id} not of the expected type`);
+                this.channels[k as keyof typeof channels_map] = channel as any;
+                M.log(`Fetched channel ${k}`);
+            }),
+        );
+        // Roles
+        await Promise.all(
+            Object.entries(roles_map).map(async ([k, id]) => {
+                const role = await this.TCCPP.roles.fetch(id);
+                assert(role !== null, `Role ${k} ${id} not found`);
+                this.roles[k as keyof typeof roles_map] = role;
+                M.log(`Fetched role ${k}`);
+            }),
+        );
+        await Promise.all(
+            Object.entries(skill_roles_map).map(async ([k, id]) => {
+                const role = await this.TCCPP.roles.fetch(id);
+                assert(role !== null, `Role ${k} ${id} not found`);
+                this.skill_roles[k as keyof typeof skill_roles_map] = role;
+                M.log(`Fetched role ${k}`);
+            }),
+        );
+
+        // fetch list of roots and mods, replace hard-coded list
+        await this.fetch_root_mod_list(this.client);
+
+        this.suggestion_dashboard_thread = await fetch_thread_channel(
+            this.channels.server_suggestions_channel as any, // TODO
+            "908928083879415839",
+        );
+        this.suggestion_action_log_thread = await fetch_thread_channel(
+            this.channels.server_suggestions_channel as any, // TODO
+            "909309608512880681",
+        );
     }
 
     destroy() {
@@ -329,6 +383,40 @@ export class Wheatley extends EventEmitter {
         } else {
             return null;
         }
+    }
+
+    is_forum_help_thread(thread: Discord.ThreadChannel) {
+        return (
+            thread.parentId != null && [this.channels.cpp_help.id, this.channels.c_help.id].includes(thread.parentId)
+        );
+    }
+
+    // Some common tools
+    is_root(user: Discord.User | Discord.PartialUser | Discord.APIUser): boolean {
+        //return member.roles.cache.some(r => r.id == root_role_id);
+        return root_ids.has(user.id);
+    }
+
+    is_authorized_admin(member: Discord.GuildMember | Discord.User | string): boolean {
+        if (is_string(member)) {
+            return root_mod_ids_set.has(member);
+        } else {
+            return root_mod_ids_set.has(member.id);
+        }
+    }
+
+    has_skill_roles_other_than_beginner(member: Discord.GuildMember) {
+        return member.roles.cache.some(role => non_beginner_skill_role_ids.includes(role.id));
+    }
+
+    async fetch_root_mod_list(client: Discord.Client) {
+        const tags = [];
+        for (const id of root_mod_ids) {
+            tags.push((await client.users.fetch(id)).tag);
+        }
+        assert(tags.length > 3);
+        this.root_mod_list = tags.slice(0, tags.length - 1).join(", ") + ", or " + tags[tags.length - 1];
+        M.debug("root_mod_list", [this.root_mod_list]);
     }
 
     async populate_caches() {

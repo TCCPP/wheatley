@@ -7,8 +7,9 @@ import * as fs from "fs";
 import * as path from "path";
 import { execFile, ExecFileOptions } from "child_process";
 
-import { DAY, HOUR, MINUTE, MONTH, YEAR, zelis_id } from "./common.js";
+import { DAY, HOUR, MINUTE, MONTH, YEAR } from "./common.js";
 import { strict as assert } from "assert";
+import { zelis_id } from "./wheatley.js";
 
 function get_caller_location() {
     // https://stackoverflow.com/a/53339452/15675011

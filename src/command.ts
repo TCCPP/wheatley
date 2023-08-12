@@ -2,11 +2,13 @@ import { strict as assert } from "assert";
 
 import * as Discord from "discord.js";
 import { ContextMenuCommandBuilder } from "discord.js";
-import { ApplicationCommandTypeMessage, ApplicationCommandTypeUser } from "./common.js";
 import { forge_snowflake } from "./components/snowflake.js";
 
 import { unwrap, is_string, critical_error } from "./utils.js";
 import { Wheatley } from "./wheatley.js";
+
+export const ApplicationCommandTypeUser = 2;
+export const ApplicationCommandTypeMessage = 3;
 
 export type TextBasedCommandOptionType = "string" | "user";
 

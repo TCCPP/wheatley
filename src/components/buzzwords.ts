@@ -1,7 +1,7 @@
 import * as Discord from "discord.js";
 import { strict as assert } from "assert";
 import { M, SelfClearingSet, critical_error, round, unwrap } from "../utils.js";
-import { MINUTE, TCCPP_ID, colors, is_authorized_admin } from "../common.js";
+import { MINUTE, colors } from "../common.js";
 import { BotComponent } from "../bot-component.js";
 import { Wheatley } from "../wheatley.js";
 
@@ -323,11 +323,11 @@ export default class Buzzwords extends BotComponent {
 
     override async on_message_create(message: Discord.Message) {
         // Ignore bots and DMs
-        if (message.author.bot || message.guildId != TCCPP_ID) {
+        if (message.author.bot || message.guildId != this.wheatley.TCCPP.id) {
             return;
         }
         //if(message.channel.id != "1091502908241084436") return; // for now, for testing
-        if (is_authorized_admin(message.author)) {
+        if (this.wheatley.is_authorized_admin(message.author)) {
             if (message.content.trim().startsWith("!derailed")) {
                 const ids = message.content.match(/\d{10,}/g);
                 if (!ids || ids.length != 1) {

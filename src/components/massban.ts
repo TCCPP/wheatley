@@ -1,7 +1,7 @@
 import * as Discord from "discord.js";
 import { strict as assert } from "assert";
 import { critical_error, M } from "../utils.js";
-import { colors, is_authorized_admin, pepereally, TCCPP_ID } from "../common.js";
+import { colors } from "../common.js";
 import { BotComponent } from "../bot-component.js";
 import { Wheatley } from "../wheatley.js";
 
@@ -21,16 +21,16 @@ export default class Massban extends BotComponent {
             if (
                 message.author.id == this.wheatley.client.user!.id ||
                 message.author.bot ||
-                message.guildId != TCCPP_ID
+                message.guildId != this.wheatley.TCCPP.id
             ) {
                 return;
             }
             if (message.content.startsWith("!wban")) {
                 assert(message.member != null);
-                if (is_authorized_admin(message.member)) {
+                if (this.wheatley.is_authorized_admin(message.member)) {
                     await this.do_mass_ban(message);
                 } else {
-                    await message.reply(`Unauthorized ${pepereally}`);
+                    await message.reply(`Unauthorized ${this.wheatley.pepereally}`);
                 }
             }
         } catch (e) {
@@ -56,7 +56,7 @@ export default class Massban extends BotComponent {
                 .setTitle(`<@!${msg.author.id}> banned ${ids.length} users`)
                 .setDescription(`\`\`\`\n${ids.join("\n")}\n\`\`\``)
                 .setTimestamp();
-            await this.wheatley.action_log_channel.send({ embeds: [embed] });
+            await this.wheatley.channels.staff_action_log.send({ embeds: [embed] });
         }
     }
 }

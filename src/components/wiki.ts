@@ -5,7 +5,7 @@ import * as fs from "fs";
 import * as path from "path";
 
 import { M, unwrap, walk_dir } from "../utils.js";
-import { bot_spam_id, colors, resources_channel_id, rules_channel_id, stackoverflow_emote } from "../common.js";
+import { colors } from "../common.js";
 import { BotComponent } from "../bot-component.js";
 import { Wheatley } from "../wheatley.js";
 import { TextBasedCommand, TextBasedCommandBuilder } from "../command.js";
@@ -57,6 +57,8 @@ class ArticleParser {
 
     private current_state = parse_state.body;
     private in_code = false;
+
+    constructor(private readonly wheatley: Wheatley) {}
 
     parse(content: string) {
         this.body = "";
@@ -237,9 +239,9 @@ class ArticleParser {
         return str
             .replace(/<br>\n|<br\/>\n/, "\n")
             .replaceAll(/<br>|<br\/>/g, "\n")
-            .replaceAll(/#resources(?![a-zA-Z0-9_])/g, `<#${resources_channel_id}>`)
-            .replaceAll(/#rules(?![a-zA-Z0-9_])/g, `<#${rules_channel_id}>`)
-            .replaceAll(/(?<!<):stackoverflow:/g, stackoverflow_emote)
+            .replaceAll(/#resources(?![a-zA-Z0-9_])/g, `<#${this.wheatley.channels.resources_channel.id}>`)
+            .replaceAll(/#rules(?![a-zA-Z0-9_])/g, `<#${this.wheatley.channels.rules_channel.id}>`)
+            .replaceAll(/(?<!<):stackoverflow:/g, this.wheatley.stackoverflow_emote)
             .replaceAll(reference_link_regex, (_, text: string, ref: string) => {
                 assert(this.reference_definitions.has(ref), "Unknown reference in reference-style link");
                 return `[${text}](${this.reference_definitions.get(ref)})`;
@@ -278,8 +280,8 @@ class ArticleParser {
     }
 }
 
-export function parse_article(content: string): [WikiArticle, Set<string>] {
-    const parser = new ArticleParser();
+export function parse_article(content: string, wheatley: Wheatley): [WikiArticle, Set<string>] {
+    const parser = new ArticleParser(wheatley);
     parser.parse(content);
     return [parser.article, parser.article_aliases];
 }
@@ -351,7 +353,7 @@ export default class Wiki extends BotComponent {
             const content = await fs.promises.readFile(file_path, { encoding: "utf-8" });
             let parsed;
             try {
-                parsed = parse_article(content);
+                parsed = parse_article(content, this.wheatley);
             } catch (e: any) {
                 M.error(`Failed to parse article ${file_path}: ${e.message}`);
                 continue;
@@ -420,13 +422,13 @@ export default class Wiki extends BotComponent {
 
     async wiki_preview(command: TextBasedCommand, content: string) {
         M.log("Received wiki preview command", command.user.id, command.user.tag, command.get_or_forge_url());
-        if (!this.wheatley.freestanding && command.channel_id !== bot_spam_id) {
-            await command.reply(`!wiki-preview must be used in <#${bot_spam_id}>`, true, true);
+        if (!this.wheatley.freestanding && command.channel_id !== this.wheatley.channels.bot_spam.id) {
+            await command.reply(`!wiki-preview must be used in <#${this.wheatley.channels.bot_spam.id}>`, true, true);
             return;
         }
         let article: WikiArticle;
         try {
-            article = parse_article(content)[0];
+            article = parse_article(content, this.wheatley)[0];
         } catch (e) {
             await command.reply("Parse error: " + e, true, true);
             return;

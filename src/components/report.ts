@@ -3,7 +3,7 @@ import * as Discord from "discord.js";
 import { strict as assert } from "assert";
 
 import { critical_error, M, SelfClearingMap } from "../utils.js";
-import { colors, MINUTE, moderators_role_id, TCCPP_ID } from "../common.js";
+import { colors, MINUTE } from "../common.js";
 import { BotComponent } from "../bot-component.js";
 import { Wheatley } from "../wheatley.js";
 import { MessageContextMenuCommandBuilder, ModalHandler } from "../command.js";
@@ -44,7 +44,7 @@ export default class Report extends BotComponent {
     }
 
     async report(interaction: Discord.MessageContextMenuCommandInteraction) {
-        if (interaction.guildId != TCCPP_ID) {
+        if (interaction.guildId != this.wheatley.TCCPP.id) {
             await interaction.reply({
                 ephemeral: true,
                 content: "Report can only be used in TCCPP",
@@ -96,8 +96,8 @@ export default class Report extends BotComponent {
             (quote_embeds.embeds[0] as Discord.EmbedBuilder).setFooter({
                 text: `ID: ${target_message.author.id}`,
             });
-            await this.wheatley.staff_flag_log.send({
-                content: `<@&${moderators_role_id}>`,
+            await this.wheatley.channels.staff_flag_log.send({
+                content: `<@&${this.wheatley.roles.moderators_role.id}>`,
                 embeds: [report_embed, ...quote_embeds.embeds],
                 files: quote_embeds.files,
             });

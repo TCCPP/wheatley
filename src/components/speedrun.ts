@@ -53,6 +53,6 @@ export default class Speedrun extends BotComponent {
                 text: `ID: ${user.id}`,
             })
             .setTimestamp();
-        this.wheatley.action_log_channel.send({ embeds: [embed] }).catch(critical_error);
+        this.wheatley.channels.staff_action_log.send({ embeds: [embed] }).catch(critical_error);
     }
 }

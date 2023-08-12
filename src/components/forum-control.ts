@@ -1,7 +1,7 @@
 import * as Discord from "discord.js";
 import { strict as assert } from "assert";
 import { unwrap, get_tag, M } from "../utils.js";
-import { colors, forum_help_channels, is_authorized_admin } from "../common.js";
+import { colors } from "../common.js";
 import { BotComponent } from "../bot-component.js";
 import { Wheatley } from "../wheatley.js";
 import { TextBasedCommand, TextBasedCommandBuilder } from "../command.js";
@@ -57,7 +57,7 @@ export default class ForumControl extends BotComponent {
         if (channel.isThread()) {
             const thread = channel;
             const owner_id = await this.get_owner(thread);
-            if (owner_id == request.user.id || is_authorized_admin(request.user.id)) {
+            if (owner_id == request.user.id || this.wheatley.is_authorized_admin(request.user.id)) {
                 return true;
             } else {
                 await request.reply({
@@ -87,7 +87,7 @@ export default class ForumControl extends BotComponent {
             const solved_tag = get_tag(forum, "Solved").id;
             const open_tag = get_tag(forum, "Open").id;
             const stale_tag = get_tag(forum, "Stale").id;
-            if (thread.parentId && forum_help_channels.has(thread.parentId)) {
+            if (this.wheatley.is_forum_help_thread(thread)) {
                 // TODO
                 if (!thread.appliedTags.some(tag => tag == solved_tag)) {
                     M.log("Marking thread as solved", thread.id, thread.name);
@@ -130,7 +130,7 @@ export default class ForumControl extends BotComponent {
             assert(forum instanceof Discord.ForumChannel);
             const solved_tag = get_tag(forum, "Solved").id;
             const open_tag = get_tag(forum, "Open").id;
-            if (thread.parentId && forum_help_channels.has(thread.parentId)) {
+            if (this.wheatley.is_forum_help_thread(thread)) {
                 // TODO
                 if (thread.appliedTags.some(tag => tag == solved_tag)) {
                     M.log("Unsolving thread", thread.id, thread.name);

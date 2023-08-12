@@ -1,6 +1,6 @@
 import * as Discord from "discord.js";
 import { strict as assert } from "assert";
-import { MINUTE, pink_role_id, skill_role_ids } from "../common.js";
+import { MINUTE } from "../common.js";
 import { critical_error, unwrap, M } from "../utils.js";
 import { BotComponent } from "../bot-component.js";
 import { Wheatley } from "../wheatley.js";
@@ -30,7 +30,7 @@ export default class RoleManager extends BotComponent {
     }
 
     override async on_ready() {
-        this.pink_role = unwrap(await this.wheatley.TCCPP.roles.fetch(pink_role_id));
+        this.pink_role = unwrap(await this.wheatley.TCCPP.roles.fetch(this.wheatley.roles.pink_role.id));
         this.interval = setInterval(() => {
             this.check_users().catch(critical_error);
         }, 30 * MINUTE);
@@ -41,14 +41,16 @@ export default class RoleManager extends BotComponent {
             const members = await this.wheatley.TCCPP.members.fetch();
             members.map((m, _) => {
                 // pink
-                if (m.roles.cache.some(r => r.id == pink_role_id)) {
+                if (m.roles.cache.some(r => r.id == this.wheatley.roles.pink_role.id)) {
                     if (m.premiumSince == null) {
                         M.log("removing pink for", m.user.tag);
                         m.roles.remove(this.pink_role).catch(M.error);
                     }
                 }
                 // skill roles
-                const s = m.roles.cache.filter(r => skill_role_ids.includes(r.id));
+                const s = m.roles.cache.filter(r =>
+                    Object.values(this.wheatley.skill_roles).some(skill_role => r.id == skill_role.id),
+                );
                 if (s.size > 1) {
                     M.log("removing duplicate skill roles for", m.user.tag);
                     M.debug(m.user.tag);

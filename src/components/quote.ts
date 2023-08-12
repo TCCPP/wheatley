@@ -1,7 +1,7 @@
 import * as Discord from "discord.js";
 import { strict as assert } from "assert";
 import { critical_error, index_of_first_not_satisfying, is_media_link_embed, M, unwrap } from "../utils.js";
-import { colors, MINUTE, TCCPP_ID } from "../common.js";
+import { colors, MINUTE } from "../common.js";
 import { decode_snowflake, forge_snowflake } from "./snowflake.js";
 import { BotComponent } from "../bot-component.js";
 import { Wheatley } from "../wheatley.js";
@@ -198,7 +198,7 @@ export default class Quote extends BotComponent {
             M.log("Received quote command", command.user.tag, command.user.id, url, command.get_or_forge_url());
             assert(match.length == 5);
             const [domain, guild_id, channel_id, message_id] = match.slice(1);
-            if (guild_id == TCCPP_ID) {
+            if (guild_id == this.wheatley.TCCPP.id) {
                 await this.do_quote(command, [
                     {
                         domain,
@@ -233,13 +233,17 @@ export default class Quote extends BotComponent {
 
     override async on_message_create(message: Discord.Message) {
         // Ignore self, bots, and messages outside TCCPP (e.g. dm's)
-        if (message.author.id == this.wheatley.client.user!.id || message.author.bot || message.guildId != TCCPP_ID) {
+        if (
+            message.author.id == this.wheatley.client.user!.id ||
+            message.author.bot ||
+            message.guildId != this.wheatley.TCCPP.id
+        ) {
             return;
         }
         if (message.content.includes("[https://")) {
             // if the message might contain a link, look at it
             const quote_descriptors = [...message.content.matchAll(implicit_quote_re)]
-                .filter(([_, guild_id]) => guild_id == TCCPP_ID)
+                .filter(([_, guild_id]) => guild_id == this.wheatley.TCCPP.id)
                 .map(arr => arr.slice(2))
                 .map(([domain, channel_id, message_id, block_flag]) => ({
                     domain,

@@ -1,7 +1,7 @@
 import * as Discord from "discord.js";
 import { strict as assert } from "assert";
 import { M, critical_error, time_to_human, floor, round, unwrap } from "../utils.js";
-import { DAY, MINUTE, colors, is_authorized_admin } from "../common.js";
+import { DAY, MINUTE, colors } from "../common.js";
 import { BotComponent } from "../bot-component.js";
 import { Wheatley } from "../wheatley.js";
 
@@ -132,7 +132,7 @@ export default class TheButton extends BotComponent {
         this.last_reset = bot_data.the_button.last_reset;
         this.longest_time_without_reset = bot_data.the_button.longest_time_without_reset;
 
-        this.button_message = await this.wheatley.the_button_channel.messages.fetch(this.button_message_id);
+        this.button_message = await this.wheatley.channels.the_button_channel.messages.fetch(this.button_message_id);
         let waiting = false;
         this.interval = setInterval(() => {
             if (
@@ -157,23 +157,23 @@ export default class TheButton extends BotComponent {
         if (message.author.bot) {
             return;
         }
-        if (message.content == "!wsetupthebutton" && is_authorized_admin(message.member!)) {
+        if (message.content == "!wsetupthebutton" && this.wheatley.is_authorized_admin(message.member!)) {
             const time_since_last_reset = Date.now() - this.last_reset;
             const time_until_doomsday = Math.max(0, DAY - time_since_last_reset);
             await message.channel.send(this.make_message(time_until_doomsday));
             await message.delete();
         }
-        if (message.content == "!wresetthebutton" && is_authorized_admin(message.member!)) {
+        if (message.content == "!wresetthebutton" && this.wheatley.is_authorized_admin(message.member!)) {
             this.last_reset = Date.now();
             await this.update_message();
             await this.update_metadata();
             await message.delete();
         }
-        if (message.content == "!wresetthebuttonscoreboard" && is_authorized_admin(message.member!)) {
+        if (message.content == "!wresetthebuttonscoreboard" && this.wheatley.is_authorized_admin(message.member!)) {
             await this.wheatley.database.button_scoreboard.deleteMany({});
             await message.delete();
         }
-        if (message.content == "!wadjustscores" && is_authorized_admin(message.member!)) {
+        if (message.content == "!wadjustscores" && this.wheatley.is_authorized_admin(message.member!)) {
             await this.wheatley.database.button_scoreboard.updateMany(
                 {},
                 {
