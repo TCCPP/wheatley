@@ -102,7 +102,7 @@ const channels_map = {
     mods_channel: tuple("847993258600038460", Discord.TextChannel),
     // meta
     rules_channel: tuple("659868782877212723", Discord.TextChannel),
-    announcements_channel: tuple("331881381477089282", Discord.TextChannel),
+    announcements_channel: tuple("331881381477089282", Discord.NewsChannel),
     server_suggestions_channel: tuple("802541516655951892", Discord.TextChannel),
     skill_role_suggestion_log: tuple("1099193160858599484", Discord.TextChannel),
     resources_channel: tuple("1124619767542718524", Discord.ForumChannel),
@@ -216,7 +216,7 @@ export class Wheatley extends EventEmitter {
         // ["prototype"] gets the instance type, eliminating the `typeof`. InstanceType<T> doesn't work for a protected
         // constructor, weirdly.
         [k in keyof typeof channels_map]: (typeof channels_map)[k][1]["prototype"];
-    };
+    } = {} as any;
 
     suggestion_dashboard_thread: Discord.ThreadChannel;
     suggestion_action_log_thread: Discord.ThreadChannel;
@@ -229,10 +229,10 @@ export class Wheatley extends EventEmitter {
 
     roles: {
         [k in keyof typeof roles_map]: Discord.Role;
-    };
+    } = {} as any;
     skill_roles: {
         [k in keyof typeof skill_roles_map]: Discord.Role;
-    };
+    } = {} as any;
 
     root_mod_list = "jr-#6677, Eisenwave#7675, Styxs#7557, or Vin¢#1293";
 
@@ -274,6 +274,14 @@ export class Wheatley extends EventEmitter {
             if (!this.freestanding) {
                 await this.fetch_guild_info();
             }
+            for (const component of this.components) {
+                try {
+                    await component.setup();
+                } catch (e) {
+                    critical_error(e);
+                }
+            }
+            await this.guild_command_manager.finalize(auth.token);
             this.emit("wheatley_ready");
             this.ready = true;
             this.client.on("messageCreate", this.on_message.bind(this));
@@ -303,8 +311,6 @@ export class Wheatley extends EventEmitter {
                 }
             }
         }
-
-        await this.guild_command_manager.finalize(auth.token);
 
         M.debug("Logging in");
 
@@ -373,11 +379,6 @@ export class Wheatley extends EventEmitter {
         if (!this.freestanding || component.is_freestanding) {
             M.log(`Initializing ${component.name}`);
             const instance = new component(this);
-            try {
-                await instance.setup();
-            } catch (e) {
-                critical_error(e);
-            }
             this.components.push(instance);
             return instance;
         } else {
