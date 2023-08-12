@@ -76,7 +76,7 @@ export type wheatley_database_info = {
     moderation_case_number: number;
 };
 
-// User IDs
+const TCCPP_ID = "331718482485837825";
 export const zelis_id = "199943082441965577";
 
 const tuple = <T extends any[]>(...args: T): T => args;
@@ -126,11 +126,7 @@ const skill_roles_map = {
     beginner: "784733371275673600",
 };
 
-//suggestion_dashboard_thread: tuple("", Discord.ThreadChannel),
-//suggestion_action_log_thread: tuple("", Discord.ThreadChannel),
-
 // General config
-
 export const non_beginner_skill_role_ids = [
     "331876085820030978", // intermediate
     "849399021838925834", // proficient
@@ -195,7 +191,7 @@ export class Wheatley extends EventEmitter {
     // True if freestanding mode is enabled. Defaults to false.
     readonly freestanding: boolean;
 
-    // TCCPP Constants
+    // Some emojis
     readonly pepereally = "<:pepereally:643881257624666112>";
     readonly stackoverflow_emote = "<:stackoverflow:1074747016644661258>";
 
@@ -232,7 +228,7 @@ export class Wheatley extends EventEmitter {
 
         this.id = auth.id;
         this.freestanding = auth.freestanding ?? false;
-        this.guildId = auth.guild ?? "331718482485837825";
+        this.guildId = auth.guild ?? TCCPP_ID;
 
         this.guild_command_manager = new GuildCommandManager(this);
         this.tracker = new MemberTracker(this);
@@ -249,12 +245,8 @@ export class Wheatley extends EventEmitter {
     }
 
     async setup(auth: wheatley_auth) {
-        if (!auth.freestanding) {
-            // TODO handle non-freestanding case where no credentials were
-            //      were provided, disabling database features.
-            //      This probably requires adding a bool method to each
-            //      component that uses the database, and not loading them.
-            assert(auth.mongo, "Missing MongoDB credentials");
+        assert(this.freestanding || auth.mongo, "Missing MongoDB credentials");
+        if (auth.mongo) {
             this.database = await WheatleyDatabase.create(auth.mongo);
         }
 
@@ -313,7 +305,7 @@ export class Wheatley extends EventEmitter {
         await Promise.all(
             Object.entries(channels_map).map(async ([k, [id, type]]) => {
                 const channel = await this.client.channels.fetch(id);
-                if (channel === null && this.freestanding) {
+                if (this.freestanding && channel === null) {
                     return;
                 }
                 assert(channel !== null, `Channel ${k} ${id} not found`);
@@ -326,7 +318,7 @@ export class Wheatley extends EventEmitter {
         await Promise.all(
             Object.entries(roles_map).map(async ([k, id]) => {
                 const role = await this.TCCPP.roles.fetch(id);
-                if (role === null && this.freestanding) {
+                if (this.freestanding && role === null) {
                     return;
                 }
                 assert(role !== null, `Role ${k} ${id} not found`);
@@ -337,7 +329,7 @@ export class Wheatley extends EventEmitter {
         await Promise.all(
             Object.entries(skill_roles_map).map(async ([k, id]) => {
                 const role = await this.TCCPP.roles.fetch(id);
-                if (role === null && this.freestanding) {
+                if (this.freestanding && role === null) {
                     return;
                 }
                 assert(role !== null, `Role ${k} ${id} not found`);

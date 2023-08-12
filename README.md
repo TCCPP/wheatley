@@ -19,6 +19,25 @@ This repository contains the source code for the Wheatley bot, made for the Toge
 
 The bot is very modular and most components are completely independent of other components.
 
+## Local Development
+
+The bot relies on a lot of server-specific information, such as IDs for channels and roles. Components which do not rely
+on any server-specific information are marked as freestanding. When developing locally, configure the bot as
+freestanding (see below). If you are working on a component which relies on server specific information, the best
+solution currently is the following:
+
+1. Look at what server-specific pieces the component needs (channels, roles, etc.) and create copies in your development
+   server. Server-specific pieces needed by the component can be found easily by searching for `this.wheatley.channels.`
+   and `this.wheatley.roles.`.
+2. Update constants in `src/wheatley.ts` as needed - all constants are at the top of the file.
+3. Set the component to be enabled in freestanding mode with:
+
+```ts
+    static override get is_freestanding() {
+        return true;
+    }
+```
+
 ## auth.json
 
 Secrets and other bot info must be configured in the bot.json file. An example looks like:
