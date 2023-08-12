@@ -127,18 +127,7 @@ const skill_roles_map = {
 };
 
 // General config
-export const non_beginner_skill_role_ids = [
-    "331876085820030978", // intermediate
-    "849399021838925834", // proficient
-    "331719590990184450", // advanced
-    "331719591405551616", // expert
-];
-
-export const skill_role_ids = [
-    "784733371275673600", // beginner
-    ...non_beginner_skill_role_ids,
-];
-
+// TODO: Can eliminate this stuff
 export const root_ids = new Set([
     "199943082441965577", // zelis
     "162964325823283200", // eisen
@@ -218,6 +207,7 @@ export class Wheatley extends EventEmitter {
         [k in keyof typeof skill_roles_map]: Discord.Role;
     } = {} as any;
 
+    // TODO: Eliminate pre-set value
     root_mod_list = "jr-#6677, Eisenwave#7675, Styxs#7557, or Vin¢#1293";
 
     constructor(
@@ -384,6 +374,9 @@ export class Wheatley extends EventEmitter {
     }
 
     has_skill_roles_other_than_beginner(member: Discord.GuildMember) {
+        const non_beginner_skill_role_ids = Object.entries(this.skill_roles)
+            .filter(([name, _]) => name !== "beginner")
+            .map(([_, role]) => role.id);
         return member.roles.cache.some(role => non_beginner_skill_role_ids.includes(role.id));
     }
 
