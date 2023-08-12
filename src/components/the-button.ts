@@ -132,7 +132,7 @@ export default class TheButton extends BotComponent {
         this.last_reset = bot_data.the_button.last_reset;
         this.longest_time_without_reset = bot_data.the_button.longest_time_without_reset;
 
-        this.button_message = await this.wheatley.channels.the_button_channel.messages.fetch(this.button_message_id);
+        this.button_message = await this.wheatley.channels.the_button.messages.fetch(this.button_message_id);
         let waiting = false;
         this.interval = setInterval(() => {
             if (

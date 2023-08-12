@@ -94,13 +94,13 @@ export default class Starboard extends BotComponent {
 
     override async on_ready() {
         this.excluded_channels = new Set([
-            this.wheatley.channels.rules_channel.id,
-            this.wheatley.channels.announcements_channel.id,
-            this.wheatley.channels.server_suggestions_channel.id,
-            this.wheatley.channels.resources_channel.id,
-            this.wheatley.channels.the_button_channel.id,
+            this.wheatley.channels.rules.id,
+            this.wheatley.channels.announcements.id,
+            this.wheatley.channels.server_suggestions.id,
+            this.wheatley.channels.resources.id,
+            this.wheatley.channels.the_button.id,
             this.wheatley.channels.introductions.id,
-            this.wheatley.channels.starboard_channel.id,
+            this.wheatley.channels.starboard.id,
         ]);
 
         await this.get_emoji_config();
@@ -165,7 +165,7 @@ export default class Starboard extends BotComponent {
             const starboard_entry = await this.wheatley.database.starboard_entries.findOne({ message: message.id });
             if (starboard_entry) {
                 // edit
-                const starboard_message = await this.wheatley.channels.starboard_channel.messages.fetch(
+                const starboard_message = await this.wheatley.channels.starboard.messages.fetch(
                     starboard_entry.starboard_entry,
                 );
                 await starboard_message.edit({
@@ -174,7 +174,7 @@ export default class Starboard extends BotComponent {
                 });
             } else {
                 // send
-                const starboard_message = await this.wheatley.channels.starboard_channel.send({
+                const starboard_message = await this.wheatley.channels.starboard.send({
                     content: this.reactions_string(message),
                     ...(await make_embeds()),
                 });
@@ -305,7 +305,7 @@ export default class Starboard extends BotComponent {
         if (entry) {
             await this.mutex.lock(message.id);
             try {
-                await this.wheatley.channels.starboard_channel.messages.delete(entry.starboard_entry);
+                await this.wheatley.channels.starboard.messages.delete(entry.starboard_entry);
                 await this.wheatley.database.starboard_entries.deleteOne({ message: message.id });
             } finally {
                 this.mutex.unlock(message.id);

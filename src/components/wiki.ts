@@ -239,8 +239,8 @@ class ArticleParser {
         return str
             .replace(/<br>\n|<br\/>\n/, "\n")
             .replaceAll(/<br>|<br\/>/g, "\n")
-            .replaceAll(/#resources(?![a-zA-Z0-9_])/g, `<#${this.wheatley.channels.resources_channel.id}>`)
-            .replaceAll(/#rules(?![a-zA-Z0-9_])/g, `<#${this.wheatley.channels.rules_channel.id}>`)
+            .replaceAll(/#resources(?![a-zA-Z0-9_])/g, `<#${this.wheatley.channels.resources.id}>`)
+            .replaceAll(/#rules(?![a-zA-Z0-9_])/g, `<#${this.wheatley.channels.rules.id}>`)
             .replaceAll(/(?<!<):stackoverflow:/g, this.wheatley.stackoverflow_emote)
             .replaceAll(reference_link_regex, (_, text: string, ref: string) => {
                 assert(this.reference_definitions.has(ref), "Unknown reference in reference-style link");

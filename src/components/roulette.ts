@@ -105,7 +105,7 @@ export default class Roulette extends BotComponent {
                     // Send bang message
                     const m = { embeds: [this.make_bang_embed(command.user)] };
                     await command.reply(m);
-                    await this.wheatley.channels.staff_member_log_channel.send(m);
+                    await this.wheatley.channels.staff_member_log.send(m);
                     // Setup ban message
                     const ban_embed = this.make_ban_embed(command);
                     if (!ok) {
@@ -113,13 +113,13 @@ export default class Roulette extends BotComponent {
                             text: "Error: Timeout failed ",
                         });
                     }
-                    await this.wheatley.channels.staff_member_log_channel.send({ embeds: [ban_embed] });
+                    await this.wheatley.channels.staff_member_log.send({ embeds: [ban_embed] });
                 }
             } else {
                 const m = { embeds: [this.make_click_embed(command.user)] };
                 this.streaks.set(command.user.id, (this.streaks.get(command.user.id) ?? 0) + 1);
                 await command.reply(m);
-                await this.wheatley.channels.staff_member_log_channel.send(m);
+                await this.wheatley.channels.staff_member_log.send(m);
                 await this.update_score(command.user.id);
             }
         } else {

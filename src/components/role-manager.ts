@@ -30,7 +30,7 @@ export default class RoleManager extends BotComponent {
     }
 
     override async on_ready() {
-        this.pink_role = unwrap(await this.wheatley.TCCPP.roles.fetch(this.wheatley.roles.pink_role.id));
+        this.pink_role = unwrap(await this.wheatley.TCCPP.roles.fetch(this.wheatley.roles.pink.id));
         this.interval = setInterval(() => {
             this.check_users().catch(critical_error);
         }, 30 * MINUTE);
@@ -41,7 +41,7 @@ export default class RoleManager extends BotComponent {
             const members = await this.wheatley.TCCPP.members.fetch();
             members.map((m, _) => {
                 // pink
-                if (m.roles.cache.some(r => r.id == this.wheatley.roles.pink_role.id)) {
+                if (m.roles.cache.some(r => r.id == this.wheatley.roles.pink.id)) {
                     if (m.premiumSince == null) {
                         M.log("removing pink for", m.user.tag);
                         m.roles.remove(this.pink_role).catch(M.error);

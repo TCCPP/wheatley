@@ -52,7 +52,7 @@ export default class Modmail extends BotComponent {
                 // make the thread
                 const id = this.modmail_id_counter++;
                 await this.wheatley.database.update_bot_singleton({ modmail_id_counter: this.modmail_id_counter });
-                const thread = await this.wheatley.channels.rules_channel.threads.create({
+                const thread = await this.wheatley.channels.rules.threads.create({
                     type: Discord.ChannelType.PrivateThread,
                     invitable: false,
                     name: `Modmail #${id}`,
@@ -75,7 +75,7 @@ export default class Modmail extends BotComponent {
                     name: member.user.tag,
                     iconURL: member.displayAvatarURL(),
                 });
-                await this.wheatley.channels.mods_channel.send({
+                await this.wheatley.channels.mods.send({
                     content: get_url_for(thread),
                     embeds: [notification_embed],
                 });
@@ -83,9 +83,9 @@ export default class Modmail extends BotComponent {
                 await thread.members.add(member.id);
                 // Deliberately not awaiting here
                 await thread.send({
-                    content: `<@&${this.wheatley.roles.moderators_role.id}>`,
+                    content: `<@&${this.wheatley.roles.moderators.id}>`,
                     allowedMentions: {
-                        roles: [this.wheatley.roles.moderators_role.id],
+                        roles: [this.wheatley.roles.moderators.id],
                     },
                 });
             } catch (e) {
@@ -146,7 +146,7 @@ export default class Modmail extends BotComponent {
                     if (!this.wheatley.is_root(interaction.member.user)) {
                         // permissions, the .setNickname will fail
                         const member = await this.wheatley.TCCPP.members.fetch(interaction.member.user.id);
-                        await member.roles.add(this.wheatley.roles.monke_role);
+                        await member.roles.add(this.wheatley.roles.monke);
                         await member.setNickname("Monke");
                     }
                 } catch (e) {
@@ -255,7 +255,7 @@ export default class Modmail extends BotComponent {
         if (body) {
             embed.setDescription(body);
         }
-        await this.wheatley.channels.staff_member_log_channel.send({
+        await this.wheatley.channels.staff_member_log.send({
             embeds: [embed],
         });
     }

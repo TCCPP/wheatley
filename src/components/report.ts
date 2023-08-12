@@ -97,7 +97,7 @@ export default class Report extends BotComponent {
                 text: `ID: ${target_message.author.id}`,
             });
             await this.wheatley.channels.staff_flag_log.send({
-                content: `<@&${this.wheatley.roles.moderators_role.id}>`,
+                content: `<@&${this.wheatley.roles.moderators.id}>`,
                 embeds: [report_embed, ...quote_embeds.embeds],
                 files: quote_embeds.files,
             });

@@ -6,17 +6,7 @@ import { EventEmitter } from "events";
 import * as fs from "fs/promises";
 
 import { colors, MINUTE } from "./common.js";
-import {
-    critical_error,
-    fetch_thread_channel,
-    M,
-    directory_exists,
-    SelfClearingMap,
-    zip,
-    walk_dir,
-    unwrap,
-    is_string,
-} from "./utils.js";
+import { critical_error, M, directory_exists, SelfClearingMap, zip, walk_dir, is_string } from "./utils.js";
 import { BotComponent } from "./bot-component.js";
 import {
     BotCommand,
@@ -96,37 +86,37 @@ const channels_map = {
     // staff
     staff_flag_log: tuple("1026972603019169842", Discord.TextChannel),
     staff_action_log: tuple("845290775692443699", Discord.TextChannel),
-    welcome_channel: tuple("778017793567490078", Discord.TextChannel),
-    staff_member_log_channel: tuple("875681819662622730", Discord.TextChannel),
+    welcome: tuple("778017793567490078", Discord.TextChannel),
+    staff_member_log: tuple("875681819662622730", Discord.TextChannel),
     staff_message_log: tuple("467729928956411914", Discord.TextChannel),
-    mods_channel: tuple("847993258600038460", Discord.TextChannel),
+    mods: tuple("847993258600038460", Discord.TextChannel),
     // meta
-    rules_channel: tuple("659868782877212723", Discord.TextChannel),
-    announcements_channel: tuple("331881381477089282", Discord.NewsChannel),
-    server_suggestions_channel: tuple("802541516655951892", Discord.TextChannel),
+    rules: tuple("659868782877212723", Discord.TextChannel),
+    announcements: tuple("331881381477089282", Discord.NewsChannel),
+    server_suggestions: tuple("802541516655951892", Discord.TextChannel),
     skill_role_suggestion_log: tuple("1099193160858599484", Discord.TextChannel),
-    resources_channel: tuple("1124619767542718524", Discord.ForumChannel),
+    resources: tuple("1124619767542718524", Discord.ForumChannel),
     // language channels
     cpp_help: tuple("1013107104678162544", Discord.ForumChannel),
     c_help: tuple("1013104018739974194", Discord.ForumChannel),
     // off-topic
-    starboard_channel: tuple("800509841424252968", Discord.TextChannel),
+    starboard: tuple("800509841424252968", Discord.TextChannel),
     memes: tuple("526518219549442071", Discord.TextChannel),
     // other
     bot_spam: tuple("506274405500977153", Discord.TextChannel),
-    the_button_channel: tuple("1069678919667687455", Discord.TextChannel),
+    the_button: tuple("1069678919667687455", Discord.TextChannel),
     introductions: tuple("933113495304679494", Discord.TextChannel),
-    suggestion_dashboard_thread: tuple("908928083879415839", Discord.ThreadChannel),
-    suggestion_action_log_thread: tuple("909309608512880681", Discord.ThreadChannel),
+    suggestion_dashboard: tuple("908928083879415839", Discord.ThreadChannel),
+    suggestion_action_log: tuple("909309608512880681", Discord.ThreadChannel),
 };
 
 const roles_map = {
-    muted_role: "815987333094178825",
-    monke_role: "1139378060450332752",
-    no_off_topic_role: "879419994004422666",
-    moderators_role: "847915341954154536",
-    root_role: "331719468440879105",
-    pink_role: "888158339878490132",
+    muted: "815987333094178825",
+    monke: "1139378060450332752",
+    no_off_topic: "879419994004422666",
+    moderators: "847915341954154536",
+    root: "331719468440879105",
+    pink: "888158339878490132",
 };
 
 const skill_roles_map = {

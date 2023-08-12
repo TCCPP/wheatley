@@ -125,9 +125,9 @@ export default class Nodistractions extends BotComponent {
             try {
                 const member = await this.wheatley.TCCPP.members.fetch(entry.user);
                 M.log("removing !nodistractions", member.id, member.user.tag);
-                if (member.roles.cache.some(r => r.id == this.wheatley.roles.no_off_topic_role.id)) {
+                if (member.roles.cache.some(r => r.id == this.wheatley.roles.no_off_topic.id)) {
                     // might have been removed externally
-                    await member.roles.remove(this.wheatley.roles.no_off_topic_role.id);
+                    await member.roles.remove(this.wheatley.roles.no_off_topic.id);
                 }
             } catch (e) {
                 if (e instanceof Discord.DiscordAPIError && e.code == 10007) {
@@ -171,7 +171,7 @@ export default class Nodistractions extends BotComponent {
     ) {
         M.log("Applying !nodistractions", target.user.id, target.user.tag);
         // error handling
-        if (target.roles.cache.some(r => r.id == this.wheatley.roles.no_off_topic_role.id)) {
+        if (target.roles.cache.some(r => r.id == this.wheatley.roles.no_off_topic.id)) {
             if ((await this.wheatley.database.nodistractions.findOne({ user: target.id })) !== null) {
                 await command.reply("You're already in !nodistractions", true, true);
             } else {
@@ -189,7 +189,7 @@ export default class Nodistractions extends BotComponent {
         }
         // apply role, dm, react
         try {
-            await target.roles.add(this.wheatley.roles.no_off_topic_role.id);
+            await target.roles.add(this.wheatley.roles.no_off_topic.id);
         } catch (e) {
             M.error(e);
             return;
@@ -235,7 +235,7 @@ export default class Nodistractions extends BotComponent {
             this.timer = null;
         }
         // remove role
-        await target.roles.remove(this.wheatley.roles.no_off_topic_role.id);
+        await target.roles.remove(this.wheatley.roles.no_off_topic.id);
         // check again
         assert((await this.wheatley.database.nodistractions.findOne({ user: target.id })) !== null);
         if (!this.undistract_queue.some(e => e.user == target.id)) {
@@ -290,7 +290,7 @@ export default class Nodistractions extends BotComponent {
     async removenodistractions(command: TextBasedCommand) {
         M.log("Received !removenodistractions", command.user.id, command.user.tag);
         const member = await command.get_member(this.wheatley.TCCPP);
-        if (!member.roles.cache.some(r => r.id == this.wheatley.roles.no_off_topic_role.id)) {
+        if (!member.roles.cache.some(r => r.id == this.wheatley.roles.no_off_topic.id)) {
             await command.reply("You are not currently in !nodistractions", true, true);
             return;
         }

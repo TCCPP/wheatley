@@ -18,8 +18,8 @@ export default class TrackedMentions extends BotComponent {
     override async on_ready() {
         this.tracked_mentions = new Set([
             "540314034894012428", // admin role on test server
-            this.wheatley.roles.root_role.id,
-            this.wheatley.roles.moderators_role.id,
+            this.wheatley.roles.root.id,
+            this.wheatley.roles.moderators.id,
             "892864085006360626", // red dragon
             "970549026514698284", // wheatley
             "1013953887029444678", // dyno

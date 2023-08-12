@@ -49,7 +49,7 @@ export default class ThreadControl extends BotComponent {
         const channel = await request.get_channel();
         if (channel.isThread()) {
             const thread = channel;
-            if (thread.parentId == this.wheatley.channels.rules_channel.id) {
+            if (thread.parentId == this.wheatley.channels.rules.id) {
                 return true; // just let the user do it, should be fine
             }
             const owner_id = await this.get_owner(thread);
@@ -75,7 +75,7 @@ export default class ThreadControl extends BotComponent {
             const channel = await command.get_channel();
             assert(channel.isThread());
             if (
-                channel.parentId == this.wheatley.channels.rules_channel.id &&
+                channel.parentId == this.wheatley.channels.rules.id &&
                 channel.type == Discord.ChannelType.PrivateThread
             ) {
                 await channel.setArchived();
