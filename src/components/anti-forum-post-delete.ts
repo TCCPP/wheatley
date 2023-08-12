@@ -4,7 +4,7 @@ import * as Discord from "discord.js";
 
 import { get_tag, M } from "../utils.js";
 import { BotComponent } from "../bot-component.js";
-import { colors, is_forum_help_thread, MINUTE } from "../common.js";
+import { colors, MINUTE } from "../common.js";
 
 function create_embed(title: string | undefined, color: number, msg: string) {
     const embed = new Discord.EmbedBuilder().setColor(color).setDescription(msg);
@@ -23,7 +23,7 @@ export default class AntiForumPostDelete extends BotComponent {
             assert(message.channel.isThread());
             const thread = message.channel;
             if (
-                is_forum_help_thread(thread) &&
+                this.wheatley.is_forum_help_thread(thread) &&
                 (Date.now() - thread.createdTimestamp! > 2 * MINUTE || thread.messageCount! > 0)
             ) {
                 const forum = thread.parent;

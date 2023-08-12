@@ -1,6 +1,6 @@
 import * as Discord from "discord.js";
 import { strict as assert } from "assert";
-import { is_root, MINUTE, server_suggestions_channel_id, suggestion_dashboard_thread_id } from "../common.js";
+import { MINUTE } from "../common.js";
 import { critical_error, delay, file_exists, M } from "../utils.js";
 import { TRACKER_START_TIME } from "./server-suggestion-tracker.js";
 import { forge_snowflake } from "./snowflake.js";
@@ -19,14 +19,13 @@ const root_only_reacts = new Set([
     "🫑", "🍏", "🎾", "🍅", "🍎", "🏮",
 ]);
 
-const monitored_channels_ids = [server_suggestions_channel_id, suggestion_dashboard_thread_id];
-
 /**
  * Adds reactions to server suggestions and allows root users to approve/reject suggestions via reactions.
  */
 export default class ServerSuggestionReactions extends BotComponent {
     readonly monitored_channels = new Map<string, Discord.TextChannel | Discord.AnyThreadChannel>();
     stop = false;
+    monitored_channels_ids: string[];
 
     constructor(wheatley: Wheatley) {
         super(wheatley);
@@ -50,7 +49,7 @@ export default class ServerSuggestionReactions extends BotComponent {
                     });
                     await reaction.users.remove(id);
                 } else if (root_only_reacts.has(reaction.emoji.name!)) {
-                    if (!is_root(user)) {
+                    if (!this.wheatley.is_root(user)) {
                         M.log("removing non-root reaction", {
                             content: reaction.message.content,
                             reaction: reaction.emoji.name,
@@ -68,7 +67,7 @@ export default class ServerSuggestionReactions extends BotComponent {
     // 100 messages every 3 minutes, avoid ratelimits
     // runs only on restart, no rush
     async hard_catch_up() {
-        const server_suggestions_channel = this.monitored_channels.get(server_suggestions_channel_id);
+        const server_suggestions_channel = this.monitored_channels.get(this.wheatley.channels.server_suggestions.id);
         let oldest_seen = Date.now();
         assert(server_suggestions_channel != undefined);
         while (true) {
@@ -102,11 +101,15 @@ export default class ServerSuggestionReactions extends BotComponent {
     }
 
     override async on_ready() {
+        this.monitored_channels_ids = [
+            this.wheatley.channels.server_suggestions.id,
+            this.wheatley.channels.suggestion_dashboard.id,
+        ];
         if (await file_exists("src/wheatley-private/config.ts")) {
             const config = "../wheatley-private/config.js";
             react_blacklist = (await import(config)).react_blacklist;
         }
-        for (const channel_id of monitored_channels_ids) {
+        for (const channel_id of this.monitored_channels_ids) {
             const channel = await this.wheatley.client.channels.fetch(channel_id);
             assert(channel && (channel instanceof Discord.TextChannel || channel instanceof Discord.ThreadChannel));
             this.monitored_channels.set(channel_id, channel);
@@ -127,7 +130,7 @@ export default class ServerSuggestionReactions extends BotComponent {
         reaction: Discord.MessageReaction | Discord.PartialMessageReaction,
         user: Discord.User | Discord.PartialUser,
     ) {
-        if (monitored_channels_ids.indexOf(reaction.message.channel.id) > -1) {
+        if (this.monitored_channels_ids.indexOf(reaction.message.channel.id) > -1) {
             if (reaction.users.cache.some(user => react_blacklist.has(user.id))) {
                 // Remove but not immediately
                 M.debug("scheduling blacklisted user reaction removal");
@@ -141,7 +144,7 @@ export default class ServerSuggestionReactions extends BotComponent {
                     reaction.users.remove(user.id).catch(critical_error);
                 }, 5 * MINUTE);
             } else if (root_only_reacts.has(reaction.emoji.name!)) {
-                if (!is_root(user)) {
+                if (!this.wheatley.is_root(user)) {
                     M.log("removing non-root reaction", {
                         content: reaction.message.content,
                         reaction: reaction.emoji.name,

@@ -1,7 +1,7 @@
 import * as Discord from "discord.js";
 import { strict as assert } from "assert";
 import { critical_error, fetch_all_threads_archive_count, get_tag, M, SelfClearingSet } from "../utils.js";
-import { colors, is_forum_help_thread, MINUTE } from "../common.js";
+import { colors, MINUTE } from "../common.js";
 import { decode_snowflake } from "./snowflake.js"; // todo: eliminate decode_snowflake
 import { BotComponent } from "../bot-component.js";
 import { Wheatley } from "../wheatley.js";
@@ -65,7 +65,7 @@ export default class ForumChannels extends BotComponent {
         M.debug("Running forum cleanup");
         // Routinely archive threads
         // Ensure no thread has both the solved and open tag?
-        for (const forum of [this.wheatley.cpp_help, this.wheatley.c_help]) {
+        for (const forum of [this.wheatley.channels.cpp_help, this.wheatley.channels.c_help]) {
             const open_tag = get_tag(forum, "Open").id;
             const solved_tag = get_tag(forum, "Solved").id;
             const stale_tag = get_tag(forum, "Stale").id;
@@ -208,7 +208,7 @@ export default class ForumChannels extends BotComponent {
                 // wheatley threads are either modlogs or thread help threads
                 return;
             }
-            if (is_forum_help_thread(thread)) {
+            if (this.wheatley.is_forum_help_thread(thread)) {
                 const forum = thread.parent;
                 assert(forum instanceof Discord.ForumChannel);
                 const open_tag = get_tag(forum, "Open").id;
@@ -230,7 +230,7 @@ export default class ForumChannels extends BotComponent {
         } else {
             if (channel instanceof Discord.ThreadChannel) {
                 const thread = channel;
-                if (is_forum_help_thread(thread)) {
+                if (this.wheatley.is_forum_help_thread(thread)) {
                     // solved prompt logic
                     const forum = thread.parent;
                     assert(forum instanceof Discord.ForumChannel);

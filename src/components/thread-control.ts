@@ -1,7 +1,6 @@
 import * as Discord from "discord.js";
 import { strict as assert } from "assert";
 import { unwrap, M } from "../utils.js";
-import { is_authorized_admin, rules_channel_id } from "../common.js";
 import { BotComponent } from "../bot-component.js";
 import { Wheatley } from "../wheatley.js";
 import { TextBasedCommand, TextBasedCommandBuilder } from "../command.js";
@@ -50,11 +49,11 @@ export default class ThreadControl extends BotComponent {
         const channel = await request.get_channel();
         if (channel.isThread()) {
             const thread = channel;
-            if (thread.parentId == rules_channel_id) {
+            if (thread.parentId == this.wheatley.channels.rules.id) {
                 return true; // just let the user do it, should be fine
             }
             const owner_id = await this.get_owner(thread);
-            if (owner_id == request.user.id || is_authorized_admin(request.user.id)) {
+            if (owner_id == request.user.id || this.wheatley.is_authorized_admin(request.user.id)) {
                 return true;
             } else {
                 await request.reply({
@@ -75,7 +74,10 @@ export default class ThreadControl extends BotComponent {
         if (await this.try_to_control_thread(command, "archive")) {
             const channel = await command.get_channel();
             assert(channel.isThread());
-            if (channel.parentId == rules_channel_id && channel.type == Discord.ChannelType.PrivateThread) {
+            if (
+                channel.parentId == this.wheatley.channels.rules.id &&
+                channel.type == Discord.ChannelType.PrivateThread
+            ) {
                 await channel.setArchived();
             } else {
                 await command.reply("You can't use that here", true);

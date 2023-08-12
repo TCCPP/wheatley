@@ -1,7 +1,7 @@
 import * as Discord from "discord.js";
 import { strict as assert } from "assert";
 import { unwrap } from "../utils.js";
-import { colors, thread_based_channel_ids } from "../common.js";
+import { colors } from "../common.js";
 import { BotComponent } from "../bot-component.js";
 import { Wheatley } from "../wheatley.js";
 
@@ -45,7 +45,7 @@ export default class ThreadBasedChannels extends BotComponent {
         if (message.author.bot || message.type == Discord.MessageType.ThreadCreated) {
             return;
         }
-        if (thread_based_channel_ids.has(message.channel.id)) {
+        if (this.wheatley.thread_based_channel_ids.has(message.channel.id)) {
             const s = message.member?.displayName.trim().endsWith("s") ? "" : "s"; // rudimentary
             const thread = await message.startThread({
                 name: `${message.member?.displayName}'${s} post`,

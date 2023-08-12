@@ -3,7 +3,7 @@ import * as Discord from "discord.js";
 import { strict as assert } from "assert";
 
 import { M, SelfClearingMap, departialize, unwrap } from "../utils.js";
-import { colors, MINUTE, skill_role_suggestion_log_id, TCCPP_ID } from "../common.js";
+import { colors, MINUTE } from "../common.js";
 import { BotComponent } from "../bot-component.js";
 import { Wheatley } from "../wheatley.js";
 import { MessageContextMenuCommandBuilder, UserContextMenuCommandBuilder } from "../command.js";
@@ -36,7 +36,7 @@ export default class SkillRoleSuggestion extends BotComponent {
     async skill_suggestion(
         interaction: Discord.UserContextMenuCommandInteraction | Discord.MessageContextMenuCommandInteraction,
     ) {
-        if (interaction.guildId != TCCPP_ID) {
+        if (interaction.guildId != this.wheatley.TCCPP.id) {
             await interaction.reply({
                 ephemeral: true,
                 content: "Report can only be used in TCCPP",
@@ -121,7 +121,7 @@ export default class SkillRoleSuggestion extends BotComponent {
                 description += `\nComments: ${comments}`;
             }
             suggestion_modal.setDescription(description);
-            const suggestion = await this.wheatley.skill_role_suggestion_log.send({
+            const suggestion = await this.wheatley.channels.skill_role_suggestion_log.send({
                 embeds: [suggestion_modal],
             });
             await interaction.reply({
@@ -138,7 +138,10 @@ export default class SkillRoleSuggestion extends BotComponent {
         reaction: Discord.MessageReaction | Discord.PartialMessageReaction,
         user: Discord.User | Discord.PartialUser,
     ) {
-        if (reaction.message.channel.id != skill_role_suggestion_log_id || user.id == this.wheatley.id) {
+        if (
+            reaction.message.channel.id != this.wheatley.channels.skill_role_suggestion_log.id ||
+            user.id == this.wheatley.id
+        ) {
             return;
         }
         if (reaction.partial) {

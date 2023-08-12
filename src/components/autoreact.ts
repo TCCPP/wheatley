@@ -1,13 +1,7 @@
 import * as Discord from "discord.js";
 import { strict as assert } from "assert";
 import { delay, is_media_link_embed, M } from "../utils.js";
-import {
-    introductions_channel_id,
-    memes_channel_id,
-    MINUTE,
-    server_suggestions_channel_id,
-    TCCPP_ID,
-} from "../common.js";
+import { MINUTE } from "../common.js";
 import { BotComponent } from "../bot-component.js";
 import { Wheatley } from "../wheatley.js";
 
@@ -51,11 +45,11 @@ export default class Autoreact extends BotComponent {
         if (
             message.author.id == this.wheatley.client.user!.id || // Ignore self
             message.author.bot || // Ignore bots
-            message.guildId != TCCPP_ID // Ignore messages outside TCCPP (e.g. dm's)
+            message.guildId != this.wheatley.TCCPP.id // Ignore messages outside TCCPP (e.g. dm's)
         ) {
             return;
         }
-        if (message.channel.id == introductions_channel_id) {
+        if (message.channel.id == this.wheatley.channels.introductions.id) {
             if (message.member == null) {
                 // TODO: Ping zelis?
                 M.warn("Why??", message);
@@ -65,10 +59,10 @@ export default class Autoreact extends BotComponent {
                 M.log("Waving to new user", message.author.tag, message.author.id, message.url);
                 await message.react("👋");
             }
-        } else if (message.channel.id == memes_channel_id && has_media(message)) {
+        } else if (message.channel.id == this.wheatley.channels.memes.id && has_media(message)) {
             M.log("Adding star reaction", message.author.tag, message.author.id, message.url);
             await message.react("⭐");
-        } else if (message.channel.id == server_suggestions_channel_id) {
+        } else if (message.channel.id == this.wheatley.channels.server_suggestions.id) {
             M.log("Adding server suggestion reactions", message.author.tag, message.author.id, message.url);
             await message.react("👍");
             await message.react("👎");
@@ -84,11 +78,11 @@ export default class Autoreact extends BotComponent {
         if (
             new_message.author?.id == this.wheatley.client.user!.id || // Ignore self
             new_message.author?.bot || // Ignore bots
-            new_message.guildId != TCCPP_ID // Ignore messages outside TCCPP (e.g. dm's)
+            new_message.guildId != this.wheatley.TCCPP.id // Ignore messages outside TCCPP (e.g. dm's)
         ) {
             return;
         }
-        if (new_message.channel.id == memes_channel_id) {
+        if (new_message.channel.id == this.wheatley.channels.memes.id) {
             const bot_starred = new_message.reactions.cache.get("⭐")?.users.cache.has(this.wheatley.id);
             // If we haven't stared (or don't know if we've starred) and the new message has media, star
             if (!bot_starred && has_media(new_message)) {
@@ -115,8 +109,8 @@ export default class Autoreact extends BotComponent {
     }
 
     async catch_up() {
-        const TCCPP = await this.wheatley.client.guilds.fetch(TCCPP_ID);
-        const introductions_channel = await TCCPP.channels.fetch(introductions_channel_id);
+        const TCCPP = await this.wheatley.client.guilds.fetch(this.wheatley.TCCPP.id);
+        const introductions_channel = await TCCPP.channels.fetch(this.wheatley.channels.introductions.id);
         assert(introductions_channel);
         assert(introductions_channel.type == Discord.ChannelType.GuildText);
         const messages = await introductions_channel.messages.fetch({ limit: 100, cache: false });

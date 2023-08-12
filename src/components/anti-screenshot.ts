@@ -3,7 +3,7 @@ import { strict as assert } from "assert";
 import * as Discord from "discord.js";
 
 import { delay, M } from "../utils.js";
-import { colors, has_skill_roles_other_than_beginner, is_forum_help_thread } from "../common.js";
+import { colors } from "../common.js";
 import { BotComponent } from "../bot-component.js";
 import { Wheatley } from "../wheatley.js";
 
@@ -45,7 +45,7 @@ export default class AntiScreenshot extends BotComponent {
         }
         if (message.id == message.channel.id) {
             assert(message.channel instanceof Discord.ThreadChannel);
-            if (is_forum_help_thread(message.channel)) {
+            if (this.wheatley.is_forum_help_thread(message.channel)) {
                 // forum created and starter message now exists
                 // anti-screenshot logic
                 await this.anti_screenshot(message, message.channel);
@@ -88,7 +88,7 @@ export default class AntiScreenshot extends BotComponent {
                             name: interaction.user.tag,
                             iconURL: interaction.user.avatarURL()!,
                         });
-                    await this.wheatley.staff_message_log.send({
+                    await this.wheatley.channels.staff_message_log.send({
                         content: "Anti-screenshot message dismissed",
                         embeds: [log_embed],
                     });
@@ -102,7 +102,7 @@ export default class AntiScreenshot extends BotComponent {
         assert(starter_message);
         assert(starter_message.member);
         // trust people with skill roles
-        if (has_skill_roles_other_than_beginner(starter_message.member)) {
+        if (this.wheatley.has_skill_roles_other_than_beginner(starter_message.member)) {
             return;
         }
         // check if it has images and no code
@@ -133,7 +133,7 @@ export default class AntiScreenshot extends BotComponent {
                     iconURL: starter_message.author.avatarURL()!,
                 })
                 .setDescription(starter_message.content || "<empty>");
-            await this.wheatley.staff_message_log.send({
+            await this.wheatley.channels.staff_message_log.send({
                 content: "Anti-screenshot message sent",
                 embeds: [log_embed],
                 files: starter_message.attachments.map(a => a),

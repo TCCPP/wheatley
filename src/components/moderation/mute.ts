@@ -71,19 +71,19 @@ export default class Mute extends ModerationComponent {
     async apply_moderation(entry: moderation_entry) {
         M.info(`Applying mute to ${entry.user_name}`);
         const member = await this.wheatley.TCCPP.members.fetch(entry.user);
-        await member.roles.add(this.wheatley.muted_role);
+        await member.roles.add(this.wheatley.roles.muted);
     }
 
     async remove_moderation(entry: mongo.WithId<moderation_entry>) {
         M.info(`Removing mute from ${entry.user_name}`);
         const member = await this.wheatley.TCCPP.members.fetch(entry.user);
-        await member.roles.remove(this.wheatley.muted_role);
+        await member.roles.remove(this.wheatley.roles.muted);
     }
 
     async is_moderation_applied(moderation: basic_moderation) {
         assert(moderation.type == this.type);
         const member = await this.wheatley.TCCPP.members.fetch(moderation.user);
-        return member.roles.cache.filter(role => role.id == this.wheatley.muted_role.id).size > 0;
+        return member.roles.cache.filter(role => role.id == this.wheatley.roles.muted.id).size > 0;
     }
 
     async mute_handler(command: TextBasedCommand, user: Discord.User, duration: string, reason: string) {

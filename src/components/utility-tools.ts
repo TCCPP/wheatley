@@ -1,7 +1,6 @@
 import * as Discord from "discord.js";
 import { strict as assert } from "assert";
 import { M } from "../utils.js";
-import { is_authorized_admin } from "../common.js";
 import { BotComponent } from "../bot-component.js";
 import { Wheatley } from "../wheatley.js";
 
@@ -18,7 +17,7 @@ export default class UtilityTools extends BotComponent {
         if (message.author.bot) {
             return;
         }
-        if (is_authorized_admin(message.author)) {
+        if (this.wheatley.is_authorized_admin(message.author)) {
             if (message.content == "!channel-rename") {
                 M.info("got !channel-rename");
                 const m = await message.channel.send("working...");
