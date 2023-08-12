@@ -116,6 +116,8 @@ const channels_map = {
     bot_spam: tuple("506274405500977153", Discord.TextChannel),
     the_button_channel: tuple("1069678919667687455", Discord.TextChannel),
     introductions: tuple("933113495304679494", Discord.TextChannel),
+    suggestion_dashboard_thread: tuple("908928083879415839", Discord.ThreadChannel),
+    suggestion_action_log_thread: tuple("909309608512880681", Discord.ThreadChannel),
 };
 
 const roles_map = {
@@ -217,9 +219,6 @@ export class Wheatley extends EventEmitter {
         // constructor, weirdly.
         [k in keyof typeof channels_map]: (typeof channels_map)[k][1]["prototype"];
     } = {} as any;
-
-    suggestion_dashboard_thread: Discord.ThreadChannel;
-    suggestion_action_log_thread: Discord.ThreadChannel;
 
     thread_based_channel_ids = new Set([
         "802541516655951892", // server-suggestions
@@ -350,18 +349,8 @@ export class Wheatley extends EventEmitter {
                 M.log(`Fetched role ${k}`);
             }),
         );
-
         // fetch list of roots and mods, replace hard-coded list
         await this.fetch_root_mod_list(this.client);
-
-        this.suggestion_dashboard_thread = await fetch_thread_channel(
-            this.channels.server_suggestions_channel as any, // TODO
-            "908928083879415839",
-        );
-        this.suggestion_action_log_thread = await fetch_thread_channel(
-            this.channels.server_suggestions_channel as any, // TODO
-            "909309608512880681",
-        );
     }
 
     destroy() {

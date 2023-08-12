@@ -105,7 +105,7 @@ export default class ServerSuggestionReactions extends BotComponent {
     override async on_ready() {
         this.monitored_channels_ids = [
             this.wheatley.channels.server_suggestions_channel.id,
-            this.wheatley.suggestion_dashboard_thread.id,
+            this.wheatley.channels.suggestion_dashboard_thread.id,
         ];
         if (await file_exists("src/wheatley-private/config.ts")) {
             const config = "../wheatley-private/config.js";
