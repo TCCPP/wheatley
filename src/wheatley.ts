@@ -3,7 +3,6 @@ import { strict as assert } from "assert";
 import * as Discord from "discord.js";
 
 import { EventEmitter } from "events";
-import * as fs from "fs/promises";
 
 import { colors, MINUTE } from "./common.js";
 import { critical_error, M, directory_exists, SelfClearingMap, zip, walk_dir, is_string } from "./utils.js";
@@ -260,9 +259,7 @@ export class Wheatley extends EventEmitter {
         }
 
         this.client.on("ready", async () => {
-            if (!this.freestanding) {
-                await this.fetch_guild_info();
-            }
+            await this.fetch_guild_info();
             for (const component of this.components) {
                 try {
                     await component.setup();
@@ -316,6 +313,9 @@ export class Wheatley extends EventEmitter {
         await Promise.all(
             Object.entries(channels_map).map(async ([k, [id, type]]) => {
                 const channel = await this.client.channels.fetch(id);
+                if (channel === null && this.freestanding) {
+                    return;
+                }
                 assert(channel !== null, `Channel ${k} ${id} not found`);
                 assert(channel instanceof type, `Channel ${k} ${id} not of the expected type`);
                 this.channels[k as keyof typeof channels_map] = channel as any;
@@ -326,6 +326,9 @@ export class Wheatley extends EventEmitter {
         await Promise.all(
             Object.entries(roles_map).map(async ([k, id]) => {
                 const role = await this.TCCPP.roles.fetch(id);
+                if (role === null && this.freestanding) {
+                    return;
+                }
                 assert(role !== null, `Role ${k} ${id} not found`);
                 this.roles[k as keyof typeof roles_map] = role;
                 M.log(`Fetched role ${k}`);
@@ -334,6 +337,9 @@ export class Wheatley extends EventEmitter {
         await Promise.all(
             Object.entries(skill_roles_map).map(async ([k, id]) => {
                 const role = await this.TCCPP.roles.fetch(id);
+                if (role === null && this.freestanding) {
+                    return;
+                }
                 assert(role !== null, `Role ${k} ${id} not found`);
                 this.skill_roles[k as keyof typeof skill_roles_map] = role;
                 M.log(`Fetched role ${k}`);
