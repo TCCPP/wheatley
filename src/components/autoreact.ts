@@ -49,6 +49,14 @@ export default class Autoreact extends BotComponent {
         ) {
             return;
         }
+        if(message.content.includes("what?")) {
+            // Put an unmanaged non null assertion here because of the precondition requiring that guildId must be TCCPP
+            //  (and thus always a valid guild)
+            const reaction = message.guild!.emojis.cache.find(emoji => emoji.name === "thcampbell");
+            if(reaction !== undefined) {
+                await message.react(reaction);
+            }
+        }
         if (message.channel.id == this.wheatley.channels.introductions.id) {
             if (message.member == null) {
                 // TODO: Ping zelis?
