@@ -40,7 +40,7 @@ export default class Redirect extends BotComponent {
                         `Please move the current conversation to ${arg}.` +
                             "\nThe channel will be unlocked in 30 seconds.",
                     )
-                    .setColor(colors.color),
+                    .setColor(colors.wheatley),
             ],
         });
         await delay(30 * 1000);

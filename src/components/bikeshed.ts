@@ -45,7 +45,7 @@ export default class Bikeshed extends BotComponent {
     async bikeshed(command: TextBasedCommand, arg: string) {
         M.log("Creating bikeshed poll for question ");
         await command.reply({
-            embeds: [new Discord.EmbedBuilder().setColor(colors.color).setTitle(arg).setDescription(DESCRIPTION)],
+            embeds: [new Discord.EmbedBuilder().setColor(colors.wheatley).setTitle(arg).setDescription(DESCRIPTION)],
         });
         for (const option of OPTIONS) {
             const message = await command.response!.fetch();

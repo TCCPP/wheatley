@@ -250,7 +250,7 @@ export abstract class ModerationComponent extends BotComponent {
         await command.reply({
             embeds: [
                 new Discord.EmbedBuilder()
-                    .setColor(colors.color)
+                    .setColor(colors.wheatley)
                     .setDescription(`<:success:1138616548630745088> ***${user.displayName} was ${action}***`),
             ],
         });
@@ -270,7 +270,7 @@ export abstract class ModerationComponent extends BotComponent {
             ).send({
                 embeds: [
                     new Discord.EmbedBuilder()
-                        .setColor(colors.color)
+                        .setColor(colors.wheatley)
                         .setDescription(
                             `You have been ${action} in Together C & C++.\n` +
                                 (is_removal || moderation.type == "warn" ? "" : `Duration: ${duration}\n`) +

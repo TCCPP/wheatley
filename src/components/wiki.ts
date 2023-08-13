@@ -375,7 +375,7 @@ export default class Wiki extends BotComponent {
             });
         } else {
             const embed = new Discord.EmbedBuilder()
-                .setColor(colors.color)
+                .setColor(colors.wheatley)
                 .setTitle(article.title)
                 .setImage(article.image ?? null)
                 .setDescription(article.body ?? null)

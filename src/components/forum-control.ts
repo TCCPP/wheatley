@@ -95,7 +95,7 @@ export default class ForumControl extends BotComponent {
                         embeds: [
                             create_embed(
                                 undefined,
-                                colors.color,
+                                colors.wheatley,
                                 "Thank you and let us know if you have any more questions!\n\n" +
                                     "This thread is now set to auto-hide after an hour of inactivity",
                             ),

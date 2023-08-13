@@ -188,7 +188,7 @@ export default class Cppref extends BotComponent {
             await command.reply({
                 embeds: [
                     new Discord.EmbedBuilder()
-                        .setColor(colors.color)
+                        .setColor(colors.wheatley)
                         .setAuthor({
                             name: "cppreference.com",
                             iconURL: "https://en.cppreference.com/favicon.ico",
@@ -200,7 +200,7 @@ export default class Cppref extends BotComponent {
         } else {
             // TODO: Clang format.....?
             const embed = new Discord.EmbedBuilder()
-                .setColor(colors.color)
+                .setColor(colors.wheatley)
                 .setAuthor({
                     name: "cppreference.com",
                     iconURL: "https://en.cppreference.com/favicon.ico",

@@ -81,7 +81,7 @@ export default class AntiScreenshot extends BotComponent {
                     await interaction.message.delete();
                     // Log to the message log
                     const log_embed = new Discord.EmbedBuilder()
-                        .setColor(colors.color)
+                        .setColor(colors.wheatley)
                         .setTitle((interaction.channel as Discord.ThreadChannel).name)
                         .setURL(interaction.channel!.url)
                         .setAuthor({
@@ -125,7 +125,7 @@ export default class AntiScreenshot extends BotComponent {
             });
             // Log to the message log
             const log_embed = new Discord.EmbedBuilder()
-                .setColor(colors.color)
+                .setColor(colors.wheatley)
                 .setTitle(thread.name)
                 .setURL(starter_message.url)
                 .setAuthor({

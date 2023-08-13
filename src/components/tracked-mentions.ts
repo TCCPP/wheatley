@@ -33,7 +33,7 @@ export default class TrackedMentions extends BotComponent {
         if (mentions.length > 0) {
             M.log("Spotted tracked mention", message.url, message.author.id, message.author.tag);
             const embed = new Discord.EmbedBuilder()
-                .setColor(colors.color)
+                .setColor(colors.wheatley)
                 .setAuthor({
                     name: `${message.author.username}#${message.author.discriminator}`,
                     iconURL: message.author.displayAvatarURL(),

@@ -52,7 +52,7 @@ export default class Massban extends BotComponent {
             await msg.reply("Done.");
             // TODO: use long-message logic?
             const embed = new Discord.EmbedBuilder()
-                .setColor(colors.color)
+                .setColor(colors.wheatley)
                 .setTitle(`<@!${msg.author.id}> banned ${ids.length} users`)
                 .setDescription(`\`\`\`\n${ids.join("\n")}\n\`\`\``)
                 .setTimestamp();

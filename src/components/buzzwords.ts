@@ -334,7 +334,7 @@ export default class Buzzwords extends BotComponent {
                     await message.reply({
                         embeds: [
                             new Discord.EmbedBuilder()
-                                .setColor(colors.color)
+                                .setColor(colors.wheatley)
                                 .setDescription(
                                     "Error: Must mention exactly one member (either a mention or snowflake)",
                                 ),
@@ -346,7 +346,7 @@ export default class Buzzwords extends BotComponent {
                         content: `<@${id}> Congrats!`,
                         embeds: [
                             new Discord.EmbedBuilder()
-                                .setColor(colors.color)
+                                .setColor(colors.wheatley)
                                 .setDescription(`You've earned ${derail_points} points!`),
                         ],
                     });
@@ -379,7 +379,7 @@ export default class Buzzwords extends BotComponent {
                     await message.reply({
                         embeds: [
                             new Discord.EmbedBuilder()
-                                .setColor(colors.color)
+                                .setColor(colors.wheatley)
                                 .setDescription(
                                     "Error: Must mention exactly one member (either a mention or snowflake)" +
                                         " and an amount",
@@ -450,7 +450,7 @@ export default class Buzzwords extends BotComponent {
             await message.reply({
                 embeds: [
                     new Discord.EmbedBuilder()
-                        .setColor(colors.color)
+                        .setColor(colors.wheatley)
                         .setDescription(`Score: ${member_entry ? member_entry.score : 0}`),
                 ],
             });
@@ -476,7 +476,7 @@ export default class Buzzwords extends BotComponent {
                     await message.reply({
                         embeds: [
                             new Discord.EmbedBuilder()
-                                .setColor(colors.color)
+                                .setColor(colors.wheatley)
                                 .setDescription(`You've earned ${Math.round(total_score * 10) / 10} points!`),
                         ],
                     });

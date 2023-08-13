@@ -98,7 +98,7 @@ export default class TheButton extends BotComponent {
                             `Points right now: ${round(points, 1)}\n` +
                             `Points in a minute: ${round(points_next, 1)}`,
                     )
-                    .setColor(colors.color),
+                    .setColor(colors.wheatley),
             ],
             components: [row],
         };
@@ -258,7 +258,7 @@ export default class TheButton extends BotComponent {
                                 `Your total score: ${round(res.score, 1)}\n` +
                                 `Position on the scoreboard: ${scoreboard_index + 1}`,
                         )
-                        .setColor(colors.color),
+                        .setColor(colors.wheatley),
                 ],
                 ephemeral: true,
             });

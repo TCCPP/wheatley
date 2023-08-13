@@ -9,9 +9,9 @@ export const MONTH = 30 * DAY;
 export const YEAR = 365 * DAY;
 
 export enum colors {
-    color = 0x337fd5,
+    wheatley = 0x337fd5,
     alert_color = 0xf5a53e,
     speedrun_color = 0x0fc644,
     red = 0xed2d2d,
-    green = 0x31ea6c, // eslint-disable-line @typescript-eslint/no-duplicate-enum-values
+    green = 0x31ea6c,
 }

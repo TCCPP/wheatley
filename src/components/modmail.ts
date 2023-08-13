@@ -21,7 +21,7 @@ import { Wheatley } from "../wheatley.js";
 const RATELIMIT_TIME = 5 * MINUTE;
 
 function create_embed(title: string, msg: string) {
-    const embed = new Discord.EmbedBuilder().setColor(colors.color).setTitle(title).setDescription(msg);
+    const embed = new Discord.EmbedBuilder().setColor(colors.wheatley).setTitle(title).setDescription(msg);
     return embed;
 }
 
@@ -245,7 +245,7 @@ export default class Modmail extends BotComponent {
         })();
         M.log("Modmail log:", interaction_member?.user.id, tag, title);
         const embed = new Discord.EmbedBuilder()
-            .setColor(colors.color)
+            .setColor(colors.wheatley)
             .setTitle(title)
             .setAuthor({
                 name: tag,

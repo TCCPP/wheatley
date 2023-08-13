@@ -115,7 +115,7 @@ export default class ForumChannels extends BotComponent {
                 embeds: [
                     create_embed(
                         undefined,
-                        colors.color,
+                        colors.wheatley,
                         "This question is being automatically marked as stale.\n" +
                             " If your question has been answered, run `!solved`.\n" +
                             "If your question is not answered feel free to bump the post or re-ask.\n" +
@@ -218,7 +218,7 @@ export default class ForumChannels extends BotComponent {
                     embeds: [
                         create_embed(
                             undefined,
-                            colors.red,
+                            colors.wheatley,
                             "When your question is answered use **`!solved`** to " +
                                 "mark the question as resolved.\n\nRemember to ask __specific questions__, provide " +
                                 "__necessary details__, and reduce your question to its __simplest form__. For tips " +

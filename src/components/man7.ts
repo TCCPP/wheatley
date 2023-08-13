@@ -125,7 +125,7 @@ export default class Man7 extends BotComponent {
             await command.reply({
                 embeds: [
                     new Discord.EmbedBuilder()
-                        .setColor(colors.color)
+                        .setColor(colors.wheatley)
                         .setAuthor({
                             name: "man7",
                             url: "https://man7.org/linux/man-pages",
@@ -135,7 +135,7 @@ export default class Man7 extends BotComponent {
             });
         } else {
             const embed = new Discord.EmbedBuilder()
-                .setColor(colors.color)
+                .setColor(colors.wheatley)
                 .setAuthor({
                     name: "man7",
                     url: "https://man7.org/linux/man-pages",
