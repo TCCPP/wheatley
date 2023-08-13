@@ -46,10 +46,10 @@ int main(void) {
 
 <!-- inline -->
 ## `-fsanitize=memory -g` Output
-> SUMMARY: MemorySanitizer: use-of-uninitialized-value /tmp/test.cpp:3:5 in main
+> SUMMARY: MemorySanitizer: use-of-uninitialized-value /tmp/test.cpp:3:5 in main<br>
 > Exiting
 
-(`3:5` is line and column of `return`)
+(`3:5` is the line and column of `return`)
 
 ---
 Note: The sanitizer lists for GCC and clang are not exhaustive
