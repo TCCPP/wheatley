@@ -8,6 +8,7 @@ import { TextBasedCommand, TextBasedCommandBuilder } from "../../command.js";
 import {
     ModerationComponent,
     basic_moderation,
+    basic_moderation_with_user,
     duration_regex,
     moderation_entry,
     moderation_type,
@@ -84,7 +85,7 @@ export default class Ban extends ModerationComponent {
         );
     }
 
-    async is_moderation_applied(moderation: basic_moderation) {
+    async is_moderation_applied(moderation: basic_moderation_with_user) {
         assert(moderation.type == this.type);
         try {
             await this.wheatley.TCCPP.bans.fetch(moderation.user);
@@ -96,7 +97,7 @@ export default class Ban extends ModerationComponent {
 
     async ban_handler(command: TextBasedCommand, user: Discord.User, duration: string, reason: string) {
         try {
-            const base_moderation: basic_moderation = { type: "ban", user: user.id };
+            const base_moderation: basic_moderation_with_user = { type: "ban", user: user.id };
             if (await this.is_moderation_applied(base_moderation)) {
                 await this.reply_with_error(command, "User is already banned");
             }

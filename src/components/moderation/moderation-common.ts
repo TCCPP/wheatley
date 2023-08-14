@@ -46,13 +46,13 @@ export type moderation_edit_info = {
 export type basic_moderation =
     | {
           type: "mute" | "warn" | "ban" | "kick" | "no off-topic";
-          user: string; // snowflake
       }
     | {
           type: "rolepersist";
-          user: string; // snowflake
           role: string; // snowflake
       };
+
+export type basic_moderation_with_user = basic_moderation & { user: string };
 
 // TODO: Rename to moderation base?
 // TODO: Indexes: Active, case number, id, user, moderator, type
@@ -60,6 +60,7 @@ export type basic_moderation =
 
 export type moderation_entry = basic_moderation & {
     case_number: number;
+    user: string; // snowflake
     user_name: string;
     moderator: string; // snowflake
     moderator_name: string;
@@ -160,7 +161,7 @@ export abstract class ModerationComponent extends BotComponent {
     // Remove the moderation to the user (e.g. remove a role or unban)
     abstract remove_moderation(entry: mongo.WithId<moderation_entry>): Promise<void>;
     // Check if the moderation is in effect
-    abstract is_moderation_applied(moderation: basic_moderation): Promise<boolean>;
+    abstract is_moderation_applied(moderation: basic_moderation_with_user): Promise<boolean>;
 
     async handle_moderation_expire(entry: mongo.WithId<moderation_entry>) {
         if (await this.is_moderation_applied(entry)) {

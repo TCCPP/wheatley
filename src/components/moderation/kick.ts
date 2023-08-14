@@ -5,7 +5,13 @@ import { strict as assert } from "assert";
 import { M, critical_error, unwrap } from "../../utils.js";
 import { Wheatley } from "../../wheatley.js";
 import { TextBasedCommand, TextBasedCommandBuilder } from "../../command.js";
-import { ModerationComponent, basic_moderation, moderation_entry, moderation_type } from "./moderation-common.js";
+import {
+    ModerationComponent,
+    basic_moderation,
+    basic_moderation_with_user,
+    moderation_entry,
+    moderation_type,
+} from "./moderation-common.js";
 
 import * as mongo from "mongodb";
 
@@ -48,7 +54,7 @@ export default class Kick extends ModerationComponent {
         assert(false);
     }
 
-    is_moderation_applied(moderation: basic_moderation): never {
+    is_moderation_applied(moderation: basic_moderation_with_user): never {
         assert(false);
     }
 
