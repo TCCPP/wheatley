@@ -50,7 +50,7 @@ export class M {
     }
 }
 
-export function send_long_message(channel: Discord.TextChannel, msg: string) {
+export async function send_long_message(channel: Discord.TextChannel, msg: string) {
     if (msg.length > 2000) {
         const lines = msg.split("\n");
         let partial = "";
@@ -69,14 +69,11 @@ export function send_long_message(channel: Discord.TextChannel, msg: string) {
         if (partial != "") {
             queue.push(partial);
         }
-        const send_next = () => {
-            if (queue.length > 0) {
-                channel.send(queue.shift()!).then(send_next).catch(M.error);
-            }
-        };
-        send_next();
+        while (queue.length > 0) {
+            await channel.send(queue.shift()!);
+        }
     } else {
-        channel.send(msg).catch(M.error);
+        await channel.send(msg);
     }
 }
 
