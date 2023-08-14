@@ -107,6 +107,8 @@ const channels_map = {
     introductions: tuple("933113495304679494", Discord.TextChannel),
     suggestion_dashboard: tuple("908928083879415839", Discord.ThreadChannel),
     suggestion_action_log: tuple("909309608512880681", Discord.ThreadChannel),
+    // red telephone
+    red_telephone_alerts: tuple("1140096352278290512", Discord.TextChannel),
 };
 
 const roles_map = {
