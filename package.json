@@ -23,6 +23,7 @@
         "prepare": "husky install",
         "test": "tsc && mocha build/test",
         "format": "prettier . --write",
+        "format-check": "prettier . --check",
         "format-files": "prettier --write --ignore-unknown",
         "ts-check": "tsc --noEmit"
     },

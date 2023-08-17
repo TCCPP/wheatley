@@ -1,0 +1,16 @@
+name: format-check
+
+on:
+  push:
+  pull_request:
+
+jobs:
+  run-format-check:
+    runs-on: ubuntu-20.04
+    steps:
+      - name: checkout
+        uses: actions/checkout@v3
+      - name: dependencies
+        run: npm i --dev
+      - name: prettier-check
+        run: npm run format-check
