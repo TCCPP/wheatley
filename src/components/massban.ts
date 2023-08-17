@@ -27,7 +27,7 @@ export default class Massban extends BotComponent {
             }
             if (message.content.startsWith("!wban")) {
                 assert(message.member != null);
-                if (this.wheatley.is_authorized_admin(message.member)) {
+                if (this.wheatley.is_authorized_mod(message.member)) {
                     await this.do_mass_ban(message);
                 } else {
                     await message.reply(`Unauthorized ${this.wheatley.pepereally}`);

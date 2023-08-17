@@ -367,7 +367,7 @@ export class Wheatley extends EventEmitter {
         return root_ids.has(user.id);
     }
 
-    is_authorized_admin(member: Discord.GuildMember | Discord.User | string): boolean {
+    is_authorized_mod(member: Discord.GuildMember | Discord.User | string): boolean {
         if (is_string(member)) {
             return root_mod_ids_set.has(member);
         } else {

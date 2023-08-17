@@ -17,7 +17,7 @@ export default class UtilityTools extends BotComponent {
         if (message.author.bot) {
             return;
         }
-        if (this.wheatley.is_authorized_admin(message.author)) {
+        if (this.wheatley.is_authorized_mod(message.author)) {
             if (message.content == "!channel-rename") {
                 M.info("got !channel-rename");
                 const m = await message.channel.send("working...");

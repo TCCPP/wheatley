@@ -327,7 +327,7 @@ export default class Buzzwords extends BotComponent {
             return;
         }
         //if(message.channel.id != "1091502908241084436") return; // for now, for testing
-        if (this.wheatley.is_authorized_admin(message.author)) {
+        if (this.wheatley.is_authorized_mod(message.author)) {
             if (message.content.trim().startsWith("!derailed")) {
                 const ids = message.content.match(/\d{10,}/g);
                 if (!ids || ids.length != 1) {

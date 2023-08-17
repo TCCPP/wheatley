@@ -53,7 +53,7 @@ export default class ThreadControl extends BotComponent {
                 return true; // just let the user do it, should be fine
             }
             const owner_id = await this.get_owner(thread);
-            if (owner_id == request.user.id || this.wheatley.is_authorized_admin(request.user.id)) {
+            if (owner_id == request.user.id || this.wheatley.is_authorized_mod(request.user.id)) {
                 return true;
             } else {
                 await request.reply({

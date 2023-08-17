@@ -91,7 +91,7 @@ export default class Modlogs extends BotComponent {
     override async on_interaction_create(interaction: Discord.Interaction<Discord.CacheType>) {
         if (interaction.isButton()) {
             if (interaction.customId.startsWith("modlogs_page_")) {
-                if (!this.wheatley.is_authorized_admin(interaction.user)) {
+                if (!this.wheatley.is_authorized_mod(interaction.user)) {
                     await interaction.reply({
                         content: "Error: You are not authorized",
                         ephemeral: true,

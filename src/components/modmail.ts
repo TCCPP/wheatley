@@ -105,7 +105,7 @@ export default class Modmail extends BotComponent {
         if (message.author.bot) {
             return;
         }
-        if (message.content == "!wsetupmodmailsystem" && this.wheatley.is_authorized_admin(message.member!)) {
+        if (message.content == "!wsetupmodmailsystem" && this.wheatley.is_authorized_mod(message.member!)) {
             const row = new Discord.ActionRowBuilder<Discord.MessageActionRowComponentBuilder>().addComponents(
                 new Discord.ButtonBuilder()
                     .setCustomId("modmail_monkey")
