@@ -106,7 +106,7 @@ export default class SkillRoleSuggestion extends BotComponent {
                     : await this.wheatley.TCCPP.members.fetch(interaction.user.id);
             const { member, role } = unwrap(this.target_map.get(interaction.user.id));
             const suggestion_modal = new Discord.EmbedBuilder()
-                .setColor(colors.green)
+                .setColor(colors.wheatley)
                 .setAuthor({
                     name: member.displayName,
                     iconURL: member.avatarURL() ?? member.user.displayAvatarURL(),

@@ -16,8 +16,6 @@ const OPTIONS = [
     { symbol: "⏬", text: "Strongly Against" },
 ];
 
-const DESCRIPTION = OPTIONS.map(({ symbol, text }) => `${symbol} - ${text}`).join("\n");
-
 /**
  * Adds a /bikeshed command for creating polls with responses ranging from
  * strongly favor to strongly against.
@@ -45,7 +43,12 @@ export default class Bikeshed extends BotComponent {
     async bikeshed(command: TextBasedCommand, arg: string) {
         M.log("Creating bikeshed poll for question ");
         await command.reply({
-            embeds: [new Discord.EmbedBuilder().setColor(colors.wheatley).setTitle(arg).setDescription(DESCRIPTION)],
+            embeds: [
+                new Discord.EmbedBuilder()
+                    .setColor(colors.wheatley)
+                    .setTitle(arg)
+                    .setDescription(OPTIONS.map(({ symbol, text }) => `${symbol} - ${text}`).join("\n")),
+            ],
         });
         for (const option of OPTIONS) {
             const message = await command.response!.fetch();
