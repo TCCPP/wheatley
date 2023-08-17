@@ -62,7 +62,7 @@ export default class Warn extends ModerationComponent {
                 reason,
                 issued_at: Date.now(),
                 duration: null,
-                active: true,
+                active: false,
                 removed: null,
                 expunged: null,
             };
