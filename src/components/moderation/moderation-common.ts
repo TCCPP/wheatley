@@ -2,7 +2,7 @@ import * as Discord from "discord.js";
 
 import { strict as assert } from "assert";
 
-import { Mutex, SleepList, critical_error, time_to_human, unwrap } from "../../utils.js";
+import { Mutex, SleepList, build_description, critical_error, time_to_human, unwrap } from "../../utils.js";
 import { BotComponent } from "../../bot-component.js";
 import { TextBasedCommand } from "../../command.js";
 import { Wheatley } from "../../wheatley.js";
@@ -273,14 +273,15 @@ export abstract class ModerationComponent extends BotComponent {
                     new Discord.EmbedBuilder()
                         .setColor(colors.wheatley)
                         .setDescription(
-                            `You have been ${action} in Together C & C++.\n` +
-                                (is_removal || moderation.type == "warn" ? "" : `Duration: ${duration}\n`) +
-                                `Reason: ${moderation.reason}` +
-                                (is_removal
-                                    ? ""
-                                    : "\n" +
-                                      `To appeal this you may open a modmail in Server Guide -> #rules ` +
-                                      `or reach out to a staff member.`),
+                            build_description([
+                                `You have been ${action} in Together C & C++.`,
+                                is_removal || moderation.type == "warn" ? null : `Duration: ${duration}`,
+                                `Reason: ${moderation.reason}`,
+                                is_removal
+                                    ? null
+                                    : `To appeal this you may open a modmail in Server Guide -> #rules ` +
+                                      `or reach out to a staff member.`,
+                            ]),
                         ),
                 ],
             });
