@@ -566,11 +566,13 @@ export class Wheatley extends EventEmitter {
                         const re = /^(?:<@(\d{10,})>|(\d{10,}))/;
                         const match = command_body.match(re);
                         if (match) {
+                            const userid = match[1] || match[2];
                             try {
-                                const user = await this.client.users.fetch(match[1]);
+                                const user = await this.client.users.fetch(userid);
                                 command_options.push(user);
                                 command_body = command_body.slice(match[0].length).trim();
                             } catch (e) {
+                                M.debug(e);
                                 await command_obj.reply(create_error_reply(`Unable to find user`));
                                 return;
                             }
