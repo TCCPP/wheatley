@@ -176,7 +176,7 @@ export async function delay(n: number): Promise<void> {
 export class SelfClearingSet<T> {
     contents = new Map<T, number>();
     duration: number;
-    interval: NodeJS.Timer;
+    interval: NodeJS.Timeout;
     constructor(duration: number, interval?: number) {
         this.duration = duration;
         this.interval = setInterval(this.sweep.bind(this), interval ?? this.duration);
@@ -206,7 +206,7 @@ export class SelfClearingSet<T> {
 export class SelfClearingMap<K, V> {
     contents = new Map<K, [number, V]>();
     duration: number;
-    interval: NodeJS.Timer;
+    interval: NodeJS.Timeout;
     constructor(duration: number, interval?: number) {
         this.duration = duration;
         this.interval = setInterval(this.sweep.bind(this), interval ?? this.duration);
@@ -586,7 +586,7 @@ const INT_MAX = 0x7fffffff;
 export class SleepList<T, ID> {
     // timestamp to fire at, T
     list: [number, T][] = [];
-    timer: NodeJS.Timer | null = null;
+    timer: NodeJS.Timeout | null = null;
     handler: (item: T) => Promise<void>;
     get_id: (item: T) => ID;
 

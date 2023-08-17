@@ -45,7 +45,7 @@ export default class ForumChannels extends BotComponent {
     // don't prompt twice within 2 hours - that's just annoying
     readonly possibly_resolved = new SelfClearingSet<string>(2 * 60 * MINUTE);
     readonly timeout_map = new Map<string, NodeJS.Timeout>();
-    interval: NodeJS.Timer;
+    interval: NodeJS.Timeout;
 
     constructor(wheatley: Wheatley) {
         super(wheatley);

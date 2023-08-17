@@ -172,7 +172,7 @@ export default class Buzzwords extends BotComponent {
     };
     slowmode: SelfClearingSet<string>;
     timeout: NodeJS.Timeout | null = null;
-    interval: NodeJS.Timer | null = null;
+    interval: NodeJS.Timeout | null = null;
 
     constructor(wheatley: Wheatley) {
         super(wheatley);

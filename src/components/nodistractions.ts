@@ -68,7 +68,7 @@ export type no_distraction_entry = {
 export default class Nodistractions extends BotComponent {
     // Sorted by !nodistractions end time
     undistract_queue: no_distraction_entry[] = [];
-    timer: NodeJS.Timer | null = null;
+    timer: NodeJS.Timeout | null = null;
 
     constructor(wheatley: Wheatley) {
         super(wheatley);

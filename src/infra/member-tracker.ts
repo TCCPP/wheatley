@@ -35,7 +35,7 @@ export class MemberTracker {
     currently_banning: Map<string, number> = new Map();
     // modules that rely on on_join and on_ban
     submodules: submodule[] = [];
-    interval: NodeJS.Timer;
+    interval: NodeJS.Timeout;
     constructor(readonly wheatley: Wheatley) {
         // every 10 minutes, trim extraneous entries
         this.interval = setInterval(this.trim.bind(this), 10 * MINUTE);

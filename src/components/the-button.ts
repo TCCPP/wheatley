@@ -53,7 +53,7 @@ export default class TheButton extends BotComponent {
         timestamp: 0,
         remaining_seconds: 0,
     };
-    interval: NodeJS.Timer | null = null;
+    interval: NodeJS.Timeout | null = null;
 
     button_presses: number;
     last_reset: number;

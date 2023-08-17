@@ -16,7 +16,7 @@ import { Wheatley } from "../wheatley.js";
  */
 export default class RoleManager extends BotComponent {
     pink_role: Discord.Role;
-    interval: NodeJS.Timer | null = null;
+    interval: NodeJS.Timeout | null = null;
 
     constructor(wheatley: Wheatley) {
         super(wheatley);
