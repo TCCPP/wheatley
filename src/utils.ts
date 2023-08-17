@@ -77,6 +77,12 @@ export async function send_long_message(channel: Discord.TextChannel, msg: strin
     }
 }
 
+// Takes an array of lines and joins them, skips null entries. This is a helper function to make building descriptions
+// and conditionally excluding lines more ergonomic
+export function build_description(lines: (string | null)[]) {
+    return lines.filter(x => x !== null).join("\n");
+}
+
 // Round n to p decimal places
 export function round(n: number, p: number) {
     return Math.round(n * Math.pow(10, p)) / Math.pow(10, p);
@@ -86,40 +92,40 @@ export function floor(n: number, p: number) {
     return Math.floor(n * Math.pow(10, p)) / Math.pow(10, p);
 }
 
-function pluralize(n: number, word: string) {
+export function pluralize(n: number, word: string, round_to: null | number = null) {
     if (n == 1) {
-        return `${round(n, 2)} ${word}`;
+        return `${round_to ? round(n, 2) : n} ${word}`;
     } else {
-        return `${round(n, 2)} ${word}s`;
+        return `${round_to ? round(n, 2) : n} ${word}s`;
     }
 }
 
 export function time_to_human_core(diff: number, seconds_with_higher_precision = true): string[] {
     if (diff >= YEAR) {
         const years = Math.floor(diff / YEAR);
-        return [...(years == 0 ? [] : [pluralize(years, "year")]), ...time_to_human_core(diff % YEAR, false)];
+        return [...(years == 0 ? [] : [pluralize(years, "year", 2)]), ...time_to_human_core(diff % YEAR, false)];
     }
     if (diff >= MONTH) {
         const months = Math.floor(diff / MONTH);
-        return [...(months == 0 ? [] : [pluralize(months, "month")]), ...time_to_human_core(diff % MONTH, false)];
+        return [...(months == 0 ? [] : [pluralize(months, "month", 2)]), ...time_to_human_core(diff % MONTH, false)];
     }
     if (diff >= DAY) {
         const days = Math.floor(diff / DAY);
-        return [...(days == 0 ? [] : [pluralize(days, "day")]), ...time_to_human_core(diff % DAY, false)];
+        return [...(days == 0 ? [] : [pluralize(days, "day", 2)]), ...time_to_human_core(diff % DAY, false)];
     }
     if (diff >= HOUR) {
         const hours = Math.floor(diff / HOUR);
-        return [...(hours == 0 ? [] : [pluralize(hours, "hour")]), ...time_to_human_core(diff % HOUR, false)];
+        return [...(hours == 0 ? [] : [pluralize(hours, "hour", 2)]), ...time_to_human_core(diff % HOUR, false)];
     }
     if (diff >= MINUTE) {
         const minutes = Math.floor(diff / MINUTE);
         return [
-            ...(minutes == 0 ? [] : [pluralize(minutes, "minute")]),
+            ...(minutes == 0 ? [] : [pluralize(minutes, "minute", 2)]),
             ...time_to_human_core(diff % MINUTE, seconds_with_higher_precision && true),
         ];
     }
     const seconds = diff / 1000;
-    return seconds == 0 ? [] : [pluralize(round(diff / 1000, seconds_with_higher_precision ? 1 : 0), "second")];
+    return seconds == 0 ? [] : [pluralize(round(diff / 1000, seconds_with_higher_precision ? 1 : 0), "second", 2)];
 }
 
 export function time_to_human(diff: number): string {
@@ -664,3 +670,12 @@ export class SleepList<T, ID> {
         this.insert(item);
     }
 }
+
+// arr.filter(x => x !== null) returns a (T | null)[] even though it is a T[]
+// Apparently the idiomatic solution is arr.filter((x): x is T => x !== null), but this is shorter (and the type
+// predicate also isn't type checked so it doesn't seem safe to me)
+export function remove<U, V extends U>(arr: U[], v: V) {
+    return arr.filter(item => item !== v) as Exclude<U, V extends null | undefined ? V : never>[];
+}
+// eslint-disable-next-line
+// https://www.typescriptlang.org/play?#code/KYDwDg9gTgLgBAMwK4DsDGMCWEVysAWwgDdgAeAVQBo4A1OUGYFAEwGc4KA+ACgEMoUAFycA2gF0axEbQCUcAN4AoOKrzAYSKLgFQAdAkwAbJlB6YmBOAF4ucC4TgBCa9bjF5fDgFEQaI0gs5NR0DCBMrBwoSEZGcAA+cKhBhijALHAA-KEiaaRQXBIA3EoAvkpKQf4CwHBoOGzwuiI8jVCYKADmCXDRsbLFFfUojXAgNupEpPyCNH1GsiUA9EtqcAB6mUMN8ACeE-hTwDNQNABECBAQZ4tKK2ubFUA
