@@ -4,6 +4,7 @@ env:
 extends:
   - eslint:recommended
   - plugin:@typescript-eslint/recommended
+  - prettier
 ignorePatterns:
   - scratch
   - "*.js"
@@ -16,16 +17,6 @@ plugins:
   - "@typescript-eslint"
   - prettier
 rules:
-  indent:
-    - error
-    - 4
-    - FunctionDeclaration:
-        parameters: first
-      CallExpression:
-        arguments: first
-      MemberExpression: 1
-      SwitchCase: 1
-      ImportDeclaration: first
   max-len:
     - error
     - 120
