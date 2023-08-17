@@ -534,9 +534,8 @@ export default class ServerSuggestionTracker extends BotComponent {
                         // lock the status message
                         // NOTE: Assuming no identical snowflakes between channels, this should be pretty safe though
                         await this.mutex.lock(message.id);
-                        const suggestion = await this.wheatley.channels.server_suggestions.messages.fetch(
-                            suggestion_id,
-                        );
+                        const suggestion =
+                            await this.wheatley.channels.server_suggestions.messages.fetch(suggestion_id);
                         await suggestion.react(reaction.emoji.name!);
                         await this.log_resolution(suggestion, {
                             user: await departialize(user),
