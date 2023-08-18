@@ -72,10 +72,11 @@ export type moderation_entry = basic_moderation & {
     expunged: moderation_edit_info | null;
 };
 
-export const duration_regex = /(?:perm\b|(\d+)\s*([mhdwMy]))/;
+export const duration_regex = /(?:perm\b|(\d+)\s*([mhdwMys]))/;
 
+// returns duration in ms
 function parse_unit(u: string) {
-    let factor = 1000; // in ms
+    let factor = 1;
     switch (u) {
         case "y":
             factor *= 365; // 365 days, fallthrough
@@ -84,7 +85,9 @@ function parse_unit(u: string) {
         case "h":
             factor *= 60; // 60 minutes, fallthrough
         case "m":
-            factor *= 60; // 60 seconds
+            factor *= 60; // 60 seconds, fallthrough
+        case "s":
+            factor *= 1000; // 1000 ms
             break;
         // Weeks and months can't be folded into the above as nicely
         case "w":
@@ -226,25 +229,13 @@ export abstract class ModerationComponent extends BotComponent {
     }
 
     async reply_with_error(command: TextBasedCommand, message: string) {
-        if (command.replied) {
-            await command.followUp({
-                embeds: [
-                    new Discord.EmbedBuilder()
-                        .setColor(colors.alert_color)
-                        .setTitle("Error")
-                        .setDescription(`<:error:1138616562958483496> ***${message}***`),
-                ],
-            });
-        } else {
-            await command.reply({
-                embeds: [
-                    new Discord.EmbedBuilder()
-                        .setColor(colors.alert_color)
-                        .setTitle("Error")
-                        .setDescription(`<:error:1138616562958483496> ***${message}***`),
-                ],
-            });
-        }
+        await (command.replied ? command.followUp : command.reply).bind(command)({
+            embeds: [
+                new Discord.EmbedBuilder()
+                    .setColor(colors.alert_color)
+                    .setDescription(`<:error:1138616562958483496> ***${message}***`),
+            ],
+        });
     }
 
     async reply_with_success(command: TextBasedCommand, user: Discord.User, action: string) {
