@@ -107,23 +107,23 @@ export default class Inspect extends BotComponent {
         await command_object.reply({
             ephemeral: true,
             ephemeral_if_possible: true,
-            content:
-                message.content.length > 0
-                    ? Discord.escapeMarkdown(message.content).replace(/[<>/]/g, c => `\\${c}`)
-                    : "<empty>",
+            content: message.content.length > 0 ? Discord.escapeMarkdown(message.content) : "<empty>",
         });
         if (message.attachments.size > 0) {
             await command_object.followUp({
                 ephemeral: true,
                 ephemeral_if_possible: true,
-                content: "Attachments: " + JSON.stringify(message.attachments.map(repackage_attachment), null, 4),
+                content:
+                    "Attachments: " +
+                    Discord.escapeMarkdown(JSON.stringify(message.attachments.map(repackage_attachment), null, 4)),
             });
         }
         if (message.embeds.length > 0) {
             await command_object.followUp({
                 ephemeral: true,
                 ephemeral_if_possible: true,
-                content: "Embeds: " + JSON.stringify(message.embeds.map(repackage_embed), null, 4),
+                content:
+                    "Embeds: " + Discord.escapeMarkdown(JSON.stringify(message.embeds.map(repackage_embed), null, 4)),
             });
         }
     }
