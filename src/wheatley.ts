@@ -477,6 +477,13 @@ export class Wheatley extends EventEmitter {
                         .setAutocomplete(!!option.autocomplete)
                         .setRequired(!!option.required),
                 );
+            } else if (option.type == "number") {
+                djs_command.addNumberOption(slash_option =>
+                    slash_option
+                        .setName(option.title)
+                        .setDescription(option.description)
+                        .setRequired(!!option.required),
+                );
                 // eslint-disable-next-line @typescript-eslint/no-unnecessary-condition
             } else if (option.type == "user") {
                 djs_command.addUserOption(slash_option =>
@@ -646,8 +653,22 @@ export class Wheatley extends EventEmitter {
                                 return;
                             }
                         }
+                    } else if (option.type == "number") {
+                        // TODO: Handle optional number...
+                        const re = /^\d+/;
+                        const match = command_body.match(re);
+                        if (match) {
+                            command_options.push(parseInt(match[0]));
+                            command_body = command_body.slice(match[0].length).trim();
+                        } else {
+                            await command_obj.reply(
+                                create_error_reply(`Required numeric argument "${option.title}" not found`),
+                            );
+                            return;
+                        }
                         // eslint-disable-next-line @typescript-eslint/no-unnecessary-condition
                     } else if (option.type == "user") {
+                        // TODO: Handle optional user...
                         const re = /^(?:<@(\d{10,})>|(\d{10,}))/;
                         const match = command_body.match(re);
                         if (match) {

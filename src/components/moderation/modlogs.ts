@@ -6,6 +6,8 @@ import { M, build_description, pluralize, time_to_human } from "../../utils.js";
 import { BotComponent } from "../../bot-component.js";
 import { Wheatley } from "../../wheatley.js";
 import { CommandAbstractionReplyOptions, TextBasedCommand, TextBasedCommandBuilder } from "../../command.js";
+import { moderation_entry } from "./moderation-common.js";
+import { colors } from "../../common.js";
 
 const moderations_per_page = 5;
 
@@ -31,6 +33,28 @@ export default class Modlogs extends BotComponent {
                 })
                 .set_handler(this.modlogs.bind(this)),
         );
+
+        this.add_command(
+            new TextBasedCommandBuilder("wcase")
+                .set_description("Get case info")
+                .set_permissions(Discord.PermissionFlagsBits.BanMembers)
+                .add_number_option({
+                    title: "case",
+                    description: "Case to get information for",
+                    required: true,
+                })
+                .set_handler(this.case_info.bind(this)),
+        );
+    }
+
+    moderation_description(moderation: moderation_entry) {
+        return build_description([
+            `**Type:** ${moderation.type}`,
+            `**Moderator:** <@${moderation.moderator}>`,
+            `**Issued At:** <t:${Math.round(moderation.issued_at / 1000)}:f>`,
+            moderation.duration === null ? null : `**Duration:** ${time_to_human(moderation.duration)}`,
+            `**Reason:** ${moderation.reason ? moderation.reason : "No reason provided"}`,
+        ]);
     }
 
     // page is zero-indexed
@@ -50,15 +74,7 @@ export default class Modlogs extends BotComponent {
                             .map(moderation => {
                                 return {
                                     name: `Case ${moderation.case_number}`,
-                                    value: build_description([
-                                        `**Type:** ${moderation.type}`,
-                                        `**Moderator:** <@${moderation.moderator}>`,
-                                        `**Issued At:** <t:${Math.round(moderation.issued_at / 1000)}:f>`,
-                                        moderation.duration === null
-                                            ? null
-                                            : `**Duration:** ${time_to_human(moderation.duration)}`,
-                                        `**Reason:** ${moderation.reason ? moderation.reason : "No reason provided"}`,
-                                    ]),
+                                    value: this.moderation_description(moderation),
                                 };
                             }),
                     )
@@ -103,6 +119,28 @@ export default class Modlogs extends BotComponent {
                 );
                 await interaction.deferUpdate();
             }
+        }
+    }
+
+    async case_info(command: TextBasedCommand, case_number: number) {
+        M.log("Received case command");
+        const moderation = await this.wheatley.database.moderations.findOne({ case_number });
+        if (moderation) {
+            await command.reply({
+                embeds: [
+                    new Discord.EmbedBuilder()
+                        .setTitle(`Case ${case_number}`)
+                        .setDescription(this.moderation_description(moderation)),
+                ],
+            });
+        } else {
+            await command.reply({
+                embeds: [
+                    new Discord.EmbedBuilder()
+                        .setColor(colors.alert_color)
+                        .setDescription(`<:error:1138616562958483496> ***Case ${case_number} not found***`),
+                ],
+            });
         }
     }
 }

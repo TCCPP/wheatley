@@ -10,7 +10,6 @@ import {
     basic_moderation_with_user,
     duration_regex,
     moderation_entry,
-    moderation_type,
     parse_duration,
 } from "./moderation-common.js";
 

@@ -10,7 +10,7 @@ import { Wheatley } from "./wheatley.js";
 export const ApplicationCommandTypeUser = 2;
 export const ApplicationCommandTypeMessage = 3;
 
-export type TextBasedCommandOptionType = "string" | "user";
+export type TextBasedCommandOptionType = "string" | "number" | "user";
 
 export type TextBasedCommandOption = {
     title: string;
@@ -87,6 +87,22 @@ export class TextBasedCommandBuilder<
         });
         return this as unknown as TextBasedCommandBuilder<
             Append<Args, string>,
+            HasDescriptions,
+            HasHandler,
+            HasSubcommands
+        >;
+    }
+
+    add_number_option(
+        option: TextBasedCommandOption,
+    ): TextBasedCommandBuilder<Append<Args, number>, HasDescriptions, HasHandler, HasSubcommands> {
+        assert(!this.options.has(option.title));
+        this.options.set(option.title, {
+            ...option,
+            type: "number",
+        });
+        return this as unknown as TextBasedCommandBuilder<
+            Append<Args, number>,
             HasDescriptions,
             HasHandler,
             HasSubcommands
