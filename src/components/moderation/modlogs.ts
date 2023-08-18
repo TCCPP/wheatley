@@ -15,10 +15,6 @@ const moderations_per_page = 5;
  * Implements !modlogs
  */
 export default class Modlogs extends BotComponent {
-    static override get is_freestanding() {
-        return true;
-    }
-
     constructor(wheatley: Wheatley) {
         super(wheatley);
 
