@@ -509,63 +509,15 @@ export class Wheatley extends EventEmitter {
                 const name = command.names[0];
                 const description = command.descriptions[0];
                 const slash = command.slash_config[0];
-                // handle text command, do some magic to sneak in a fictitious parameter
-                const command_clone = command.clone();
-                command_clone.options = new Discord.Collection<
-                    string,
-                    TextBasedCommandOption & { type: TextBasedCommandOptionType }
-                >([
-                    [
-                        "subcommand",
-                        {
-                            title: "subcommand",
-                            description: "subcommand",
-                            required: true,
-                            regex: new RegExp(
-                                "(" +
-                                    command.subcommands
-                                        .map(subcommand => subcommand.names)
-                                        .flat()
-                                        .join("|") +
-                                    ")\\b",
-                            ),
-                            type: "string",
-                        },
-                    ],
-                    ...command.options,
-                ]);
-                (command_clone as unknown as TextBasedCommandBuilder<Prepend<T, string>, true, true>).handler = (
-                    command: TextBasedCommand,
-                    subcommand: string,
-                    ...args: any[]
-                ) => {
-                    this.text_commands[`${name}.${subcommand}`].handler(command, ...args);
-                };
+                // Base text command entry
                 assert(!(name in this.text_commands));
                 this.text_commands[name] = new BotTextBasedCommand(
                     name,
                     description,
                     slash,
                     command.permissions,
-                    command_clone as unknown as TextBasedCommandBuilder<T, true, true>,
+                    command as unknown as TextBasedCommandBuilder<T, true, true>,
                 );
-                // Add subcommands
-                for (const subcommand of command.subcommands) {
-                    for (const [sub_name, sub_description, sub_slash] of zip(
-                        subcommand.names,
-                        subcommand.descriptions,
-                        subcommand.slash_config,
-                    )) {
-                        assert(!(`${name}.${sub_name}` in this.text_commands));
-                        this.text_commands[`${name}.${sub_name}`] = new BotTextBasedCommand(
-                            sub_name,
-                            sub_description,
-                            sub_slash,
-                            command.permissions,
-                            subcommand,
-                        );
-                    }
-                }
                 // Slash command stuff
                 if (slash) {
                     const slash_command = new Discord.SlashCommandBuilder().setName(name).setDescription(description);
@@ -627,10 +579,25 @@ export class Wheatley extends EventEmitter {
         if (match) {
             const command_name = match[1];
             if (command_name in this.text_commands) {
-                const command = this.text_commands[command_name];
+                let command_body = message.content.substring(match[0].length).trim();
                 const command_obj = prev_command_obj
                     ? new TextBasedCommand(prev_command_obj, command_name, message)
                     : new TextBasedCommand(command_name, message, this);
+                let command = this.text_commands[command_name];
+                if(command.subcommands) {
+                    // expect a subcommand argument
+                    const re = /^\S+/;
+                    const match = command_body.match(re);
+                    if (match) {
+                        command = unwrap(unwrap(command.subcommands).get(match[0]));
+                        command_body = command_body.slice(match[0].length).trim();
+                    } else {
+                        await command_obj.reply(
+                            create_error_reply(`Expected subcommand specifier not found`),
+                        );
+                        return;
+                    }
+                }
                 this.register_text_command(message, command_obj);
                 if (command.permissions !== undefined) {
                     if (!(await command_obj.get_member()).permissions.has(command.permissions)) {
@@ -641,7 +608,6 @@ export class Wheatley extends EventEmitter {
                 // TODO: Handle unexpected / trailing input?
                 // NOTE: For now only able to take text and user input
                 // TODO: Handle `required`
-                let command_body = message.content.substring(match[0].length).trim();
                 const command_options: unknown[] = [];
                 for (const [i, option] of [...command.options.values()].entries()) {
                     if (option.type == "string") {
@@ -788,12 +754,10 @@ export class Wheatley extends EventEmitter {
         try {
             if (interaction.isChatInputCommand()) {
                 if (interaction.commandName in this.text_commands) {
-                    const command =
-                        this.text_commands[
-                            interaction.options.getSubcommand(false)
-                                ? `${interaction.commandName}.${interaction.options.getSubcommand()}`
-                                : interaction.commandName
-                        ];
+                    let command = this.text_commands[interaction.commandName];
+                    if(interaction.options.getSubcommand(false)) {
+                        command = unwrap(unwrap(command.subcommands).get(interaction.options.getSubcommand()));
+                    }
                     const command_options: unknown[] = [];
                     const command_object = new TextBasedCommand(interaction.commandName, interaction, this);
                     if (command.permissions !== undefined) {

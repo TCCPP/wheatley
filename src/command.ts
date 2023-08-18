@@ -4,7 +4,7 @@ import * as Discord from "discord.js";
 import { ContextMenuCommandBuilder } from "discord.js";
 import { forge_snowflake } from "./components/snowflake.js";
 
-import { unwrap, is_string, critical_error, intersection, Append } from "./utils.js";
+import { unwrap, is_string, critical_error, intersection, Append, zip } from "./utils.js";
 import { Wheatley } from "./wheatley.js";
 
 export const ApplicationCommandTypeUser = 2;
@@ -62,19 +62,6 @@ export class TextBasedCommandBuilder<
         this.names = Array.isArray(names) ? names : [names];
         this.slash_config = new Array(this.names.length).fill(true);
         this.type = "default" as any;
-    }
-
-    clone() {
-        const command = new TextBasedCommandBuilder<Args, HasDescriptions, HasHandler, HasSubcommands>(
-            this.names as any,
-        );
-        command.descriptions = this.descriptions;
-        command.options = this.options.clone();
-        command.slash_config = this.slash_config;
-        command.permissions = this.permissions;
-        command.subcommands = this.subcommands;
-        command.type = this.type;
-        return command;
     }
 
     set_description(
@@ -270,16 +257,36 @@ export class BotCommand<Args extends unknown[] = []> {
 
 export class BotTextBasedCommand<Args extends unknown[] = []> extends BotCommand<[TextBasedCommand, ...Args]> {
     options = new Discord.Collection<string, TextBasedCommandOption & { type: TextBasedCommandOptionType }>();
+    subcommands: Map<string, BotTextBasedCommand<any>> | null = null;
 
     constructor(
         name: string,
         public readonly description: string | undefined,
         public readonly slash: boolean,
         public readonly permissions: undefined | bigint,
-        builder: TextBasedCommandBuilder<Args, true, true>,
+        builder: TextBasedCommandBuilder<Args, true, true> | TextBasedCommandBuilder<Args, true, false, true>,
     ) {
-        super(name, builder.handler);
+        super(name, builder.handler ?? (() => critical_error("This shouldn't happen")));
         this.options = builder.options;
+        if(builder.type === "top-level") {
+            this.subcommands = new Map();
+            for (const subcommand of builder.subcommands) {
+                for (const [sub_name, sub_description, sub_slash] of zip(
+                    subcommand.names,
+                    subcommand.descriptions,
+                    subcommand.slash_config,
+                )) {
+                    assert(!this.subcommands.has(sub_name));
+                    this.subcommands.set(sub_name, new BotTextBasedCommand(
+                        sub_name,
+                        sub_description,
+                        sub_slash,
+                        builder.permissions,
+                        subcommand,
+                    ));
+                }
+            }
+        }
     }
 }
 
