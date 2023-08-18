@@ -268,7 +268,7 @@ export default class TheButton extends BotComponent {
             const scores = (await this.wheatley.database.button_scoreboard
                 .aggregate([{ $sort: { score: -1 } }, { $limit: 15 }])
                 .toArray()) as button_scoreboard_entry[];
-            const embed = new Discord.EmbedBuilder().setTitle("Scoreboard");
+            const embed = new Discord.EmbedBuilder().setTitle("Scoreboard").setColor(colors.wheatley);
             let description = "";
             for (const entry of scores) {
                 const tag = entry.tag == "" ? `<@${entry.user}>` : entry.tag;
@@ -297,7 +297,7 @@ export default class TheButton extends BotComponent {
                     .toArray()
             )[0].total as number;
             const days = (Date.now() - BUTTON_EPOCH) / DAY;
-            const embed = new Discord.EmbedBuilder().setTitle("Stats");
+            const embed = new Discord.EmbedBuilder().setTitle("Stats").setColor(colors.wheatley);
             embed.setDescription(
                 `The Button has been up for \`${fmt(days, "day")}\`\n` +
                     `Total presses of The Button: \`${this.button_presses}\`\n` +
