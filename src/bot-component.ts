@@ -65,7 +65,11 @@ export class BotComponent {
     }
 
     add_command<T extends unknown[]>(
-        command: TextBasedCommandBuilder<T, true, true> | MessageContextMenuCommandBuilder<true> | ModalHandler<true>,
+        command:
+            | TextBasedCommandBuilder<T, true, true>
+            | TextBasedCommandBuilder<T, true, false, true>
+            | MessageContextMenuCommandBuilder<true>
+            | ModalHandler<true>,
     ) {
         this.wheatley.add_command(command);
     }

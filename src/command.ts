@@ -4,7 +4,7 @@ import * as Discord from "discord.js";
 import { ContextMenuCommandBuilder } from "discord.js";
 import { forge_snowflake } from "./components/snowflake.js";
 
-import { unwrap, is_string, critical_error } from "./utils.js";
+import { unwrap, is_string, critical_error, intersection, Append } from "./utils.js";
 import { Wheatley } from "./wheatley.js";
 
 export const ApplicationCommandTypeUser = 2;
@@ -19,8 +19,6 @@ export type TextBasedCommandOption = {
     regex?: RegExp; // TODO: Should it not apply to slash command fields
     autocomplete?: (partial: string, command_name: string) => { name: string; value: string }[];
 };
-
-type Append<T extends unknown[], U> = [...T, U];
 
 type ConditionalOptional<C extends true | false, T> = C extends true ? T : T | undefined;
 
@@ -49,20 +47,39 @@ export class TextBasedCommandBuilder<
     Args extends unknown[] = [],
     HasDescriptions extends boolean = false,
     HasHandler extends boolean = false,
+    HasSubcommands extends boolean = false,
 > extends CommandBuilder<HasHandler, [TextBasedCommand, ...Args]> {
     readonly names: string[];
     descriptions: ConditionalOptional<HasDescriptions, string[]>;
     options = new Discord.Collection<string, TextBasedCommandOption & { type: TextBasedCommandOptionType }>();
     slash_config: boolean[];
     permissions: undefined | bigint = undefined;
+    subcommands: TextBasedCommandBuilder<any, true, true>[] = [];
+    type: HasSubcommands extends true ? "top-level" : "default";
 
     constructor(names: string | MoreThanOne<string>) {
         super();
         this.names = Array.isArray(names) ? names : [names];
         this.slash_config = new Array(this.names.length).fill(true);
+        this.type = "default" as any;
     }
 
-    set_description(raw_descriptions: string | MoreThanOne<string>): TextBasedCommandBuilder<Args, true, HasHandler> {
+    clone() {
+        const command = new TextBasedCommandBuilder<Args, HasDescriptions, HasHandler, HasSubcommands>(
+            this.names as any,
+        );
+        command.descriptions = this.descriptions;
+        command.options = this.options.clone();
+        command.slash_config = this.slash_config;
+        command.permissions = this.permissions;
+        command.subcommands = this.subcommands;
+        command.type = this.type;
+        return command;
+    }
+
+    set_description(
+        raw_descriptions: string | MoreThanOne<string>,
+    ): TextBasedCommandBuilder<Args, true, HasHandler, HasSubcommands> {
         const descriptions = Array.isArray(raw_descriptions) ? raw_descriptions : [raw_descriptions];
         if (descriptions.length == this.names.length) {
             this.descriptions = descriptions;
@@ -70,29 +87,39 @@ export class TextBasedCommandBuilder<
             assert(descriptions.length == 1);
             this.descriptions = new Array(this.names.length).fill(descriptions[0]);
         }
-        return this as unknown as TextBasedCommandBuilder<Args, true, HasHandler>;
+        return this as unknown as TextBasedCommandBuilder<Args, true, HasHandler, HasSubcommands>;
     }
 
     add_string_option(
         option: TextBasedCommandOption,
-    ): TextBasedCommandBuilder<Append<Args, string>, HasDescriptions, HasHandler> {
+    ): TextBasedCommandBuilder<Append<Args, string>, HasDescriptions, HasHandler, HasSubcommands> {
         assert(!this.options.has(option.title));
         this.options.set(option.title, {
             ...option,
             type: "string",
         });
-        return this as unknown as TextBasedCommandBuilder<Append<Args, string>, HasDescriptions, HasHandler>;
+        return this as unknown as TextBasedCommandBuilder<
+            Append<Args, string>,
+            HasDescriptions,
+            HasHandler,
+            HasSubcommands
+        >;
     }
 
     add_user_option(
         option: Omit<TextBasedCommandOption, "autocomplete" | "regex">,
-    ): TextBasedCommandBuilder<Append<Args, Discord.User>, HasDescriptions, HasHandler> {
+    ): TextBasedCommandBuilder<Append<Args, Discord.User>, HasDescriptions, HasHandler, HasSubcommands> {
         assert(!this.options.has(option.title));
         this.options.set(option.title, {
             ...option,
             type: "user",
         });
-        return this as unknown as TextBasedCommandBuilder<Append<Args, Discord.User>, HasDescriptions, HasHandler>;
+        return this as unknown as TextBasedCommandBuilder<
+            Append<Args, Discord.User>,
+            HasDescriptions,
+            HasHandler,
+            HasSubcommands
+        >;
     }
 
     set_handler(
@@ -115,6 +142,18 @@ export class TextBasedCommandBuilder<
     set_permissions(permissions: bigint) {
         this.permissions = permissions;
         return this;
+    }
+
+    add_subcommand<T extends unknown[]>(subcommand: TextBasedCommandBuilder<T, true, true>) {
+        assert(
+            this.subcommands.every(
+                some_subcommand => intersection(some_subcommand.names, subcommand.names).length === 0,
+            ),
+        );
+        this.subcommands.push(subcommand);
+        this.type = "top-level" as any;
+        // TODO: Maybe re-evaluate typing
+        return this as unknown as TextBasedCommandBuilder<Args, HasDescriptions, HasHandler, true>;
     }
 
     // TODO: to_command_descriptors?

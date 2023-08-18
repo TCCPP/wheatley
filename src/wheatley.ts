@@ -5,7 +5,17 @@ import * as Discord from "discord.js";
 import { EventEmitter } from "events";
 
 import { colors, MINUTE } from "./common.js";
-import { critical_error, M, directory_exists, SelfClearingMap, zip, walk_dir, is_string } from "./utils.js";
+import {
+    critical_error,
+    M,
+    directory_exists,
+    SelfClearingMap,
+    zip,
+    walk_dir,
+    is_string,
+    Prepend,
+    unwrap,
+} from "./utils.js";
 import { BotComponent } from "./bot-component.js";
 import {
     BotCommand,
@@ -16,6 +26,8 @@ import {
     ModalHandler,
     TextBasedCommand,
     TextBasedCommandBuilder,
+    TextBasedCommandOption,
+    TextBasedCommandOptionType,
 } from "./command.js";
 
 import { WheatleyDatabase, WheatleyDatabaseProxy } from "./infra/database-interface.js";
@@ -447,49 +459,155 @@ export class Wheatley extends EventEmitter {
 
     // command stuff
 
+    make_slash_command_for<
+        T extends unknown[],
+        B extends Discord.SlashCommandBuilder | Discord.SlashCommandSubcommandBuilder,
+    >(command: TextBasedCommandBuilder<T, true, true>, name: string, description: string, djs_builder: B): B {
+        const djs_command = <B>djs_builder.setName(name).setDescription(description);
+        for (const option of command.options.values()) {
+            // NOTE: Temp for now
+            if (option.type == "string") {
+                djs_command.addStringOption(slash_option =>
+                    slash_option
+                        .setName(option.title)
+                        .setDescription(option.description)
+                        .setAutocomplete(!!option.autocomplete)
+                        .setRequired(!!option.required),
+                );
+                // eslint-disable-next-line @typescript-eslint/no-unnecessary-condition
+            } else if (option.type == "user") {
+                djs_command.addUserOption(slash_option =>
+                    slash_option
+                        .setName(option.title)
+                        .setDescription(option.description)
+                        .setRequired(!!option.required),
+                );
+            } else {
+                assert(false, "unhandled option type");
+            }
+        }
+        if (command.permissions !== undefined) {
+            assert(djs_command instanceof Discord.SlashCommandBuilder);
+            djs_command.setDefaultMemberPermissions(command.permissions);
+        }
+        return djs_command;
+    }
+
     add_command<T extends unknown[]>(
-        command: TextBasedCommandBuilder<T, true, true> | MessageContextMenuCommandBuilder<true> | ModalHandler<true>,
+        command:
+            | TextBasedCommandBuilder<T, true, true>
+            | TextBasedCommandBuilder<T, true, false, true>
+            | MessageContextMenuCommandBuilder<true>
+            | ModalHandler<true>,
     ) {
         if (command instanceof TextBasedCommandBuilder) {
-            assert(command.names.length > 0);
-            assert(command.names.length == command.descriptions.length);
-            for (const [name, description, slash] of zip(command.names, command.descriptions, command.slash_config)) {
+            if (command.type === "top-level") {
+                assert(command.subcommands.length > 0);
+                assert(command.names.length === 1);
+                assert(command.names.length == command.slash_config.length);
+                assert(command.names.length == command.descriptions.length);
+                const name = command.names[0];
+                const description = command.descriptions[0];
+                const slash = command.slash_config[0];
+                // handle text command, do some magic to sneak in a fictitious parameter
+                const command_clone = command.clone();
+                command_clone.options = new Discord.Collection<
+                    string,
+                    TextBasedCommandOption & { type: TextBasedCommandOptionType }
+                >([
+                    [
+                        "subcommand",
+                        {
+                            title: "subcommand",
+                            description: "subcommand",
+                            required: true,
+                            regex: new RegExp(
+                                "(" +
+                                    command.subcommands
+                                        .map(subcommand => subcommand.names)
+                                        .flat()
+                                        .join("|") +
+                                    ")\\b",
+                            ),
+                            type: "string",
+                        },
+                    ],
+                    ...command.options,
+                ]);
+                (command_clone as unknown as TextBasedCommandBuilder<Prepend<T, string>, true, true>).handler = (
+                    command: TextBasedCommand,
+                    subcommand: string,
+                    ...args: any[]
+                ) => {
+                    this.text_commands[`${name}.${subcommand}`].handler(command, ...args);
+                };
                 assert(!(name in this.text_commands));
                 this.text_commands[name] = new BotTextBasedCommand(
                     name,
                     description,
                     slash,
                     command.permissions,
-                    command,
+                    command_clone as unknown as TextBasedCommandBuilder<T, true, true>,
                 );
+                // Add subcommands
+                for (const subcommand of command.subcommands) {
+                    for (const [sub_name, sub_description, sub_slash] of zip(
+                        subcommand.names,
+                        subcommand.descriptions,
+                        subcommand.slash_config,
+                    )) {
+                        assert(!(`${name}.${sub_name}` in this.text_commands));
+                        this.text_commands[`${name}.${sub_name}`] = new BotTextBasedCommand(
+                            sub_name,
+                            sub_description,
+                            sub_slash,
+                            command.permissions,
+                            subcommand,
+                        );
+                    }
+                }
+                // Slash command stuff
                 if (slash) {
-                    const djs_command = new Discord.SlashCommandBuilder().setName(name).setDescription(description);
-                    for (const option of command.options.values()) {
-                        // NOTE: Temp for now
-                        if (option.type == "string") {
-                            djs_command.addStringOption(slash_option =>
-                                slash_option
-                                    .setName(option.title)
-                                    .setDescription(option.description)
-                                    .setAutocomplete(!!option.autocomplete)
-                                    .setRequired(!!option.required),
+                    const slash_command = new Discord.SlashCommandBuilder().setName(name).setDescription(description);
+                    for (const subcommand of command.subcommands) {
+                        for (const [name, description, slash] of zip(
+                            subcommand.names,
+                            subcommand.descriptions,
+                            subcommand.slash_config,
+                        )) {
+                            assert(slash);
+                            slash_command.addSubcommand(subcommand_builder =>
+                                this.make_slash_command_for(subcommand, name, description, subcommand_builder),
                             );
-                            // eslint-disable-next-line @typescript-eslint/no-unnecessary-condition
-                        } else if (option.type == "user") {
-                            djs_command.addUserOption(slash_option =>
-                                slash_option
-                                    .setName(option.title)
-                                    .setDescription(option.description)
-                                    .setRequired(!!option.required),
-                            );
-                        } else {
-                            assert(false, "unhandled option type");
                         }
                     }
                     if (command.permissions !== undefined) {
-                        djs_command.setDefaultMemberPermissions(command.permissions);
+                        slash_command.setDefaultMemberPermissions(command.permissions);
                     }
-                    this.guild_command_manager.register(djs_command);
+                    this.guild_command_manager.register(slash_command);
+                }
+            } else {
+                assert(command.names.length > 0);
+                assert(command.names.length == command.descriptions.length);
+                assert(command.names.length == command.slash_config.length);
+                for (const [name, description, slash] of zip(
+                    command.names,
+                    command.descriptions,
+                    command.slash_config,
+                )) {
+                    assert(!(name in this.text_commands));
+                    this.text_commands[name] = new BotTextBasedCommand(
+                        name,
+                        description,
+                        slash,
+                        command.permissions,
+                        command,
+                    );
+                    if (slash) {
+                        this.guild_command_manager.register(
+                            this.make_slash_command_for(command, name, description, new Discord.SlashCommandBuilder()),
+                        );
+                    }
                 }
             }
         } else {
@@ -670,7 +788,12 @@ export class Wheatley extends EventEmitter {
         try {
             if (interaction.isChatInputCommand()) {
                 if (interaction.commandName in this.text_commands) {
-                    const command = this.text_commands[interaction.commandName];
+                    const command =
+                        this.text_commands[
+                            interaction.options.getSubcommand(false)
+                                ? `${interaction.commandName}.${interaction.options.getSubcommand()}`
+                                : interaction.commandName
+                        ];
                     const command_options: unknown[] = [];
                     const command_object = new TextBasedCommand(interaction.commandName, interaction, this);
                     if (command.permissions !== undefined) {

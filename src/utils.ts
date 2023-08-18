@@ -679,3 +679,11 @@ export function remove<U, V extends U>(arr: U[], v: V) {
 }
 // eslint-disable-next-line
 // https://www.typescriptlang.org/play?#code/KYDwDg9gTgLgBAMwK4DsDGMCWEVysAWwgDdgAeAVQBo4A1OUGYFAEwGc4KA+ACgEMoUAFycA2gF0axEbQCUcAN4AoOKrzAYSKLgFQAdAkwAbJlB6YmBOAF4ucC4TgBCa9bjF5fDgFEQaI0gs5NR0DCBMrBwoSEZGcAA+cKhBhijALHAA-KEiaaRQXBIA3EoAvkpKQf4CwHBoOGzwuiI8jVCYKADmCXDRsbLFFfUojXAgNupEpPyCNH1GsiUA9EtqcAB6mUMN8ACeE-hTwDNQNABECBAQZ4tKK2ubFUA
+
+export function intersection<V>(a: V[], b: V[]): V[] {
+    const B = new Set(b);
+    return [...a].filter(item => B.has(item));
+}
+
+export type Append<T extends unknown[], U> = [...T, U];
+export type Prepend<T extends unknown[], U> = [U, ...T];
