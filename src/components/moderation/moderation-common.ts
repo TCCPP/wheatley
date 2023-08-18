@@ -176,7 +176,11 @@ export abstract class ModerationComponent extends BotComponent {
             M.debug("Handling moderation expire", entry);
             await this.remove_moderation(entry);
             this.sleep_list.remove(entry._id);
-            // remove database entry
+        } else {
+            M.debug("Handling moderation expire - not applied", entry);
+        }
+        // check if moderation is still active, if so resolve it
+        if (unwrap(await this.wheatley.database.moderations.findOne({ _id: entry._id })).active) {
             await this.wheatley.database.moderations.updateOne(
                 { _id: entry._id },
                 {
@@ -191,8 +195,6 @@ export abstract class ModerationComponent extends BotComponent {
                     },
                 },
             );
-        } else {
-            M.debug("Handling moderation expire - not applied", entry);
         }
     }
 

@@ -68,6 +68,7 @@ export default class Modlogs extends BotComponent {
             embeds: [
                 new Discord.EmbedBuilder()
                     .setTitle(`Modlogs for ${user.displayName} (page ${page + 1} of ${pages})`)
+                    .setColor(colors.wheatley)
                     .setFields(
                         moderations
                             .slice(page * moderations_per_page, (page + 1) * moderations_per_page)
@@ -130,6 +131,7 @@ export default class Modlogs extends BotComponent {
                 embeds: [
                     new Discord.EmbedBuilder()
                         .setTitle(`Case ${case_number}`)
+                        .setColor(colors.wheatley)
                         .setDescription(this.moderation_description(moderation)),
                 ],
             });
