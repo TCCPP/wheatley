@@ -12,6 +12,8 @@ import {
     moderation_entry,
     moderation_type,
     parse_duration,
+    reply_with_error,
+    reply_with_success_action,
 } from "./moderation-common.js";
 
 import * as mongo from "mongodb";
@@ -98,7 +100,8 @@ export default class Ban extends ModerationComponent {
         try {
             const base_moderation: basic_moderation_with_user = { type: "ban", user: user.id };
             if (await this.is_moderation_applied(base_moderation)) {
-                await this.reply_with_error(command, "User is already banned");
+                await reply_with_error(command, "User is already banned");
+                return;
             }
             const moderation: moderation_entry = {
                 case_number: -1,
@@ -116,9 +119,9 @@ export default class Ban extends ModerationComponent {
             };
             await this.notify_user(command, user, "banned", moderation);
             await this.register_new_moderation(moderation);
-            await this.reply_with_success(command, user, "banned");
+            await reply_with_success_action(command, user, "banned", moderation.case_number);
         } catch (e) {
-            await this.reply_with_error(command, "Error banning");
+            await reply_with_error(command, "Error banning");
             critical_error(e);
         }
     }
@@ -138,16 +141,19 @@ export default class Ban extends ModerationComponent {
                         },
                     },
                 },
+                {
+                    returnDocument: "after",
+                },
             );
             if (!res.value || !(await this.is_moderation_applied(res.value))) {
-                await this.reply_with_error(command, "User is not banned");
+                await reply_with_error(command, "User is not banned");
             } else {
                 await this.remove_moderation(res.value);
                 this.sleep_list.remove(res.value._id);
-                await this.reply_with_success(command, user, "unbanned");
+                await reply_with_success_action(command, user, "unbanned");
             }
         } catch (e) {
-            await this.reply_with_error(command, "Error unbanning");
+            await reply_with_error(command, "Error unbanning");
             critical_error(e);
         }
     }

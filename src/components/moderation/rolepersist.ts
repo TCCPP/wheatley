@@ -11,6 +11,7 @@ import {
     duration_regex,
     moderation_entry,
     parse_duration,
+    reply_with_error,
 } from "./moderation-common.js";
 
 import * as mongo from "mongodb";
@@ -110,7 +111,7 @@ export default class Rolepersist extends ModerationComponent {
             const role = this.wheatley.get_role_by_name(role_name).id;
             const base_moderation: basic_moderation_with_user = { type: "rolepersist", user: user.id, role };
             if (await this.is_moderation_applied(base_moderation)) {
-                await this.reply_with_error(command, "User is already role-persisted with this role");
+                await reply_with_error(command, "User is already role-persisted with this role");
                 return;
             }
             const moderation: moderation_entry = {
@@ -131,7 +132,7 @@ export default class Rolepersist extends ModerationComponent {
             await this.register_new_moderation(moderation);
             await this.reply_and_notify(command, user, "role-persisted", moderation);
         } catch (e) {
-            await this.reply_with_error(command, "Error applying role-persist");
+            await reply_with_error(command, "Error applying role-persist");
             critical_error(e);
         }
     }
@@ -152,16 +153,19 @@ export default class Rolepersist extends ModerationComponent {
                         },
                     },
                 },
+                {
+                    returnDocument: "after",
+                },
             );
             if (!res.value || !(await this.is_moderation_applied(res.value))) {
-                await this.reply_with_error(command, "User is not role-persisted with that role");
+                await reply_with_error(command, "User is not role-persisted with that role");
             } else {
                 await this.remove_moderation(res.value);
                 this.sleep_list.remove(res.value._id);
                 await this.reply_and_notify(command, user, "removed from role-persist", res.value, true);
             }
         } catch (e) {
-            await this.reply_with_error(command, "Error removing role-persist");
+            await reply_with_error(command, "Error removing role-persist");
             critical_error(e);
         }
     }

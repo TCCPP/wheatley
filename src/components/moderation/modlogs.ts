@@ -6,7 +6,7 @@ import { M, build_description, pluralize, time_to_human } from "../../utils.js";
 import { BotComponent } from "../../bot-component.js";
 import { Wheatley } from "../../wheatley.js";
 import { CommandAbstractionReplyOptions, TextBasedCommand, TextBasedCommandBuilder } from "../../command.js";
-import { moderation_entry } from "./moderation-common.js";
+import { moderation_entry, reply_with_error } from "./moderation-common.js";
 import { colors } from "../../common.js";
 
 const moderations_per_page = 5;
@@ -58,7 +58,8 @@ export default class Modlogs extends BotComponent {
         user: Discord.User,
         page: number,
     ): Promise<Discord.BaseMessageOptions & CommandAbstractionReplyOptions> {
-        const moderations = await this.wheatley.database.moderations.find({ user: user.id }).toArray();
+        // TODO: Expunged or irrelevant? Show how things were removed / why?
+        const moderations = await this.wheatley.database.moderations.find({ user: user.id, expunged: null }).toArray();
         const pages = Math.ceil(moderations.length / moderations_per_page);
         return {
             embeds: [
@@ -123,22 +124,38 @@ export default class Modlogs extends BotComponent {
         M.log("Received case command");
         const moderation = await this.wheatley.database.moderations.findOne({ case_number });
         if (moderation) {
+            const fields: Discord.APIEmbedField[] = [];
+            if (moderation.removed) {
+                fields.push({
+                    name: "Removed",
+                    value: build_description([
+                        `**By:** <@${moderation.removed.moderator}>`,
+                        `**At:** <t:${Math.round(moderation.removed.timestamp / 1000)}:f>`,
+                        `**Reason:** ${moderation.removed.reason ? moderation.removed.reason : "No reason provided"}`,
+                    ]),
+                });
+            }
+            if (moderation.expunged) {
+                fields.push({
+                    name: "Expunged",
+                    value: build_description([
+                        `**By:** <@${moderation.expunged.moderator}>`,
+                        `**At:** <t:${Math.round(moderation.expunged.timestamp / 1000)}:f>`,
+                        `**Reason:** ${moderation.expunged.reason ? moderation.expunged.reason : "No reason provided"}`,
+                    ]),
+                });
+            }
             await command.reply({
                 embeds: [
                     new Discord.EmbedBuilder()
                         .setTitle(`Case ${case_number}`)
                         .setColor(colors.wheatley)
-                        .setDescription(this.moderation_description(moderation)),
+                        .setDescription(this.moderation_description(moderation))
+                        .setFields(fields),
                 ],
             });
         } else {
-            await command.reply({
-                embeds: [
-                    new Discord.EmbedBuilder()
-                        .setColor(colors.alert_color)
-                        .setDescription(`<:error:1138616562958483496> ***Case ${case_number} not found***`),
-                ],
-            });
+            await reply_with_error(command, `Case ${case_number} not found`);
         }
     }
 }

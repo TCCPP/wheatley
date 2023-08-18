@@ -10,6 +10,8 @@ import {
     basic_moderation_with_user,
     moderation_entry,
     moderation_type,
+    reply_with_error,
+    reply_with_success_action,
 } from "./moderation-common.js";
 
 import * as mongo from "mongodb";
@@ -77,9 +79,9 @@ export default class Kick extends ModerationComponent {
             };
             await this.notify_user(command, user, "kicked", moderation);
             await this.register_new_moderation(moderation);
-            await this.reply_with_success(command, user, "kicked");
+            await reply_with_success_action(command, user, "kicked", moderation.case_number);
         } catch (e) {
-            await this.reply_with_error(command, "Error kicking");
+            await reply_with_error(command, "Error kicking");
             critical_error(e);
         }
     }

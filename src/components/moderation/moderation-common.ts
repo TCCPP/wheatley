@@ -9,6 +9,7 @@ import { Wheatley } from "../../wheatley.js";
 
 import * as mongo from "mongodb";
 import { colors } from "../../common.js";
+import { EventEmitter } from "events";
 
 /*
  * !mute !unmute
@@ -113,6 +114,39 @@ export function parse_duration(duration: string) {
     }
 }
 
+export async function reply_with_error(command: TextBasedCommand, message: string) {
+    await (command.replied ? command.followUp : command.reply).bind(command)({
+        embeds: [
+            new Discord.EmbedBuilder()
+                .setColor(colors.alert_color)
+                .setDescription(`<:error:1138616562958483496> ***${message}***`),
+        ],
+    });
+}
+
+export async function reply_with_success(command: TextBasedCommand, message: string, extra?: string) {
+    await command.reply({
+        embeds: [
+            new Discord.EmbedBuilder()
+                .setColor(colors.wheatley)
+                .setDescription(`<:success:1138616548630745088> ***${message}***${extra ? " " + extra : ""}`),
+        ],
+    });
+}
+
+export async function reply_with_success_action(
+    command: TextBasedCommand,
+    user: Discord.User,
+    action: string,
+    case_number?: number,
+) {
+    await reply_with_success(
+        command,
+        `${user.displayName} was ${action}`,
+        case_number !== undefined ? `(case ${case_number})` : undefined,
+    );
+}
+
 export abstract class ModerationComponent extends BotComponent {
     abstract get type(): moderation_type;
 
@@ -120,9 +154,15 @@ export abstract class ModerationComponent extends BotComponent {
     sleep_list: SleepList<mongo.WithId<moderation_entry>, mongo.BSON.ObjectId>;
     timer: NodeJS.Timer | null = null;
 
+    // moderation_update(mongo.WithId<moderation_entry>)
+    static event_hub = new EventEmitter();
+
     constructor(wheatley: Wheatley) {
         super(wheatley);
         this.sleep_list = new SleepList(this.handle_moderation_expire.bind(this), item => item._id);
+        ModerationComponent.event_hub.on("moderation_update", (entry: mongo.WithId<moderation_entry>) => {
+            this.handle_moderation_update(entry).catch(critical_error);
+        });
     }
 
     override async on_ready() {
@@ -198,6 +238,28 @@ export abstract class ModerationComponent extends BotComponent {
         }
     }
 
+    async handle_moderation_update(entry: mongo.WithId<moderation_entry>) {
+        if (entry.type === this.type) {
+            M.debug("Handling update for", entry);
+            // Update sleep list entry
+            this.sleep_list.remove(entry._id);
+            if (entry.active) {
+                if (entry.duration) {
+                    this.sleep_list.insert([entry.issued_at + entry.duration, entry]);
+                }
+                // Entry is active, check if it needs to be applied
+                if (!(await this.is_moderation_applied(entry))) {
+                    await this.apply_moderation(entry);
+                }
+            } else {
+                // Entry is not active, check if it needs to be removed
+                if (await this.is_moderation_applied(entry)) {
+                    await this.remove_moderation(entry);
+                }
+            }
+        }
+    }
+
     async get_case_id() {
         return (await this.wheatley.database.get_bot_singleton()).moderation_case_number;
     }
@@ -238,27 +300,6 @@ export abstract class ModerationComponent extends BotComponent {
         }
     }
 
-    // TODO: Just move to `TextBasedCommand`?
-    async reply_with_error(command: TextBasedCommand, message: string) {
-        await (command.replied ? command.followUp : command.reply).bind(command)({
-            embeds: [
-                new Discord.EmbedBuilder()
-                    .setColor(colors.alert_color)
-                    .setDescription(`<:error:1138616562958483496> ***${message}***`),
-            ],
-        });
-    }
-
-    async reply_with_success(command: TextBasedCommand, user: Discord.User, action: string) {
-        await command.reply({
-            embeds: [
-                new Discord.EmbedBuilder()
-                    .setColor(colors.wheatley)
-                    .setDescription(`<:success:1138616548630745088> ***${user.displayName} was ${action}***`),
-            ],
-        });
-    }
-
     async notify_user(
         command: TextBasedCommand,
         user: Discord.User,
@@ -288,7 +329,7 @@ export abstract class ModerationComponent extends BotComponent {
                 ],
             });
         } catch (e) {
-            await this.reply_with_error(command, "Error notifying");
+            await reply_with_error(command, "Error notifying");
             critical_error(e);
         }
     }
@@ -297,10 +338,10 @@ export abstract class ModerationComponent extends BotComponent {
         command: TextBasedCommand,
         user: Discord.User,
         action: string,
-        moderation: Omit<moderation_entry, "case">,
+        moderation: moderation_entry,
         is_removal = false,
     ) {
-        await this.reply_with_success(command, user, action);
+        await reply_with_success_action(command, user, action, is_removal ? undefined : moderation.case_number);
         await this.notify_user(command, user, action, moderation, is_removal);
     }
 }

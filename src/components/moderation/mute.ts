@@ -12,6 +12,7 @@ import {
     moderation_entry,
     moderation_type,
     parse_duration,
+    reply_with_error,
 } from "./moderation-common.js";
 
 import * as mongo from "mongodb";
@@ -90,7 +91,8 @@ export default class Mute extends ModerationComponent {
         try {
             const base_moderation: basic_moderation_with_user = { type: "mute", user: user.id };
             if (await this.is_moderation_applied(base_moderation)) {
-                await this.reply_with_error(command, "User is already muted");
+                await reply_with_error(command, "User is already muted");
+                return;
             }
             const moderation: moderation_entry = {
                 case_number: -1,
@@ -109,7 +111,7 @@ export default class Mute extends ModerationComponent {
             await this.register_new_moderation(moderation);
             await this.reply_and_notify(command, user, "muted", moderation);
         } catch (e) {
-            await this.reply_with_error(command, "Error applying mute");
+            await reply_with_error(command, "Error applying mute");
             critical_error(e);
         }
     }
@@ -129,16 +131,19 @@ export default class Mute extends ModerationComponent {
                         },
                     },
                 },
+                {
+                    returnDocument: "after",
+                },
             );
             if (!res.value || !(await this.is_moderation_applied(res.value))) {
-                await this.reply_with_error(command, "User is not muted");
+                await reply_with_error(command, "User is not muted");
             } else {
                 await this.remove_moderation(res.value);
                 this.sleep_list.remove(res.value._id);
                 await this.reply_and_notify(command, user, "unmuted", res.value, true);
             }
         } catch (e) {
-            await this.reply_with_error(command, "Error unmuting");
+            await reply_with_error(command, "Error unmuting");
             critical_error(e);
         }
     }

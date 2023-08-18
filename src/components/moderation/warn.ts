@@ -5,7 +5,13 @@ import { strict as assert } from "assert";
 import { M, critical_error } from "../../utils.js";
 import { Wheatley } from "../../wheatley.js";
 import { TextBasedCommand, TextBasedCommandBuilder } from "../../command.js";
-import { ModerationComponent, basic_moderation, moderation_entry, moderation_type } from "./moderation-common.js";
+import {
+    ModerationComponent,
+    basic_moderation,
+    moderation_entry,
+    moderation_type,
+    reply_with_error,
+} from "./moderation-common.js";
 
 import * as mongo from "mongodb";
 
@@ -72,7 +78,7 @@ export default class Warn extends ModerationComponent {
             await this.register_new_moderation(moderation);
             await this.reply_and_notify(command, user, "warned", moderation);
         } catch (e) {
-            await this.reply_with_error(command, "Error warning");
+            await reply_with_error(command, "Error warning");
             critical_error(e);
         }
     }
