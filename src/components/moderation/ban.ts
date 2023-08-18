@@ -116,6 +116,7 @@ export default class Ban extends ModerationComponent {
                 active: true,
                 removed: null,
                 expunged: null,
+                link: command.get_or_forge_url(),
             };
             await this.notify_user(command, user, "banned", moderation);
             await this.register_new_moderation(moderation);

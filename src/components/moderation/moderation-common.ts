@@ -71,6 +71,7 @@ export type moderation_entry = basic_moderation & {
     active: boolean; // active and can be deactivated at some point
     removed: moderation_edit_info | null;
     expunged: moderation_edit_info | null;
+    link: string | null;
 };
 
 export const duration_regex = /(?:perm\b|(\d+)\s*([mhdwMys]))/;

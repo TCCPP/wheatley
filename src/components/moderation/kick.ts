@@ -76,6 +76,7 @@ export default class Kick extends ModerationComponent {
                 active: false,
                 removed: null,
                 expunged: null,
+                link: command.get_or_forge_url(),
             };
             await this.notify_user(command, user, "kicked", moderation);
             await this.register_new_moderation(moderation);

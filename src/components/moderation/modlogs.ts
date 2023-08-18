@@ -47,7 +47,7 @@ export default class Modlogs extends BotComponent {
         return build_description([
             `**Type:** ${moderation.type}`,
             `**Moderator:** <@${moderation.moderator}>`,
-            `**Issued At:** <t:${Math.round(moderation.issued_at / 1000)}:f>`,
+            `**Issued At:** <t:${Math.round(moderation.issued_at / 1000)}:f> [link](${moderation.link})`,
             moderation.duration === null ? null : `**Duration:** ${time_to_human(moderation.duration)}`,
             `**Reason:** ${moderation.reason ? moderation.reason : "No reason provided"}`,
         ]);
@@ -80,19 +80,22 @@ export default class Modlogs extends BotComponent {
                         text: `${pluralize(moderations.length, "log")}, ${pluralize(pages, "page")}`,
                     }),
             ],
-            components: [
-                new Discord.ActionRowBuilder<Discord.MessageActionRowComponentBuilder>().addComponents(
-                    new Discord.ButtonBuilder()
-                        // a custom id can be up to 100 characters long
-                        .setCustomId(`modlogs_page_${user.id}_${page === 0 ? pages - 1 : page - 1}`)
-                        .setLabel("🡄")
-                        .setStyle(Discord.ButtonStyle.Primary),
-                    new Discord.ButtonBuilder()
-                        .setCustomId(`modlogs_page_${user.id}_${(page + 1) % pages}`)
-                        .setLabel("🡆")
-                        .setStyle(Discord.ButtonStyle.Primary),
-                ),
-            ],
+            components:
+                pages === 1
+                    ? undefined
+                    : [
+                          new Discord.ActionRowBuilder<Discord.MessageActionRowComponentBuilder>().addComponents(
+                              new Discord.ButtonBuilder()
+                                  // a custom id can be up to 100 characters long
+                                  .setCustomId(`modlogs_page_${user.id}_${page === 0 ? pages - 1 : page - 1}`)
+                                  .setLabel("🡄")
+                                  .setStyle(Discord.ButtonStyle.Primary),
+                              new Discord.ButtonBuilder()
+                                  .setCustomId(`modlogs_page_${user.id}_${(page + 1) % pages}`)
+                                  .setLabel("🡆")
+                                  .setStyle(Discord.ButtonStyle.Primary),
+                          ),
+                      ],
         };
     }
 

@@ -107,6 +107,7 @@ export default class Mute extends ModerationComponent {
                 active: true,
                 removed: null,
                 expunged: null,
+                link: command.get_or_forge_url(),
             };
             await this.register_new_moderation(moderation);
             await this.reply_and_notify(command, user, "muted", moderation);

@@ -74,6 +74,7 @@ export default class Warn extends ModerationComponent {
                 active: false,
                 removed: null,
                 expunged: null,
+                link: command.get_or_forge_url(),
             };
             await this.register_new_moderation(moderation);
             await this.reply_and_notify(command, user, "warned", moderation);
