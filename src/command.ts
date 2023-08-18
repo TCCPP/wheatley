@@ -268,7 +268,7 @@ export class BotTextBasedCommand<Args extends unknown[] = []> extends BotCommand
     ) {
         super(name, builder.handler ?? (() => critical_error("This shouldn't happen")));
         this.options = builder.options;
-        if(builder.type === "top-level") {
+        if (builder.type === "top-level") {
             this.subcommands = new Map();
             for (const subcommand of builder.subcommands) {
                 for (const [sub_name, sub_description, sub_slash] of zip(
@@ -277,13 +277,10 @@ export class BotTextBasedCommand<Args extends unknown[] = []> extends BotCommand
                     subcommand.slash_config,
                 )) {
                     assert(!this.subcommands.has(sub_name));
-                    this.subcommands.set(sub_name, new BotTextBasedCommand(
+                    this.subcommands.set(
                         sub_name,
-                        sub_description,
-                        sub_slash,
-                        builder.permissions,
-                        subcommand,
-                    ));
+                        new BotTextBasedCommand(sub_name, sub_description, sub_slash, builder.permissions, subcommand),
+                    );
                 }
             }
         }

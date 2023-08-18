@@ -2,7 +2,7 @@ import * as Discord from "discord.js";
 
 import { strict as assert } from "assert";
 
-import { M, critical_error, unwrap } from "../../utils.js";
+import { M, critical_error } from "../../utils.js";
 import { Wheatley } from "../../wheatley.js";
 import { TextBasedCommand, TextBasedCommandBuilder } from "../../command.js";
 import { ModerationComponent, basic_moderation, moderation_entry, moderation_type } from "./moderation-common.js";
@@ -40,13 +40,16 @@ export default class Warn extends ModerationComponent {
 
     async apply_moderation(entry: moderation_entry) {
         // nop
+        void entry;
     }
 
     async remove_moderation(entry: mongo.WithId<moderation_entry>) {
+        void entry;
         assert(false);
     }
 
     is_moderation_applied(moderation: basic_moderation): never {
+        void moderation;
         assert(false);
     }
 

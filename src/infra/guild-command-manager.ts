@@ -1,5 +1,5 @@
 import { REST } from "@discordjs/rest";
-import { Routes } from "discord.js";
+import * as Discord from "discord.js";
 
 import * as util from "util";
 
@@ -21,8 +21,8 @@ export class GuildCommandManager {
             this.finalized = true;
             const rest = new REST({ version: "10" }).setToken(token);
             const route = this.wheatley.freestanding
-                ? Routes.applicationGuildCommands(this.wheatley.id, this.wheatley.guildId)
-                : Routes.applicationCommands(this.wheatley.id);
+                ? Discord.Routes.applicationGuildCommands(this.wheatley.id, this.wheatley.guildId)
+                : Discord.Routes.applicationCommands(this.wheatley.id);
 
             M.log("Sending application commands");
             await rest.put(route, { body: this.commands });

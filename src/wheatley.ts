@@ -299,8 +299,6 @@ export class Wheatley extends EventEmitter {
         await this.client.login(auth.token);
     }
 
-    async load_channel(key: string, id: string) {}
-
     async fetch_guild_info() {
         // Preliminary loads
         this.TCCPP = await this.client.guilds.fetch(this.guildId);
@@ -589,7 +587,7 @@ export class Wheatley extends EventEmitter {
                     ? new TextBasedCommand(prev_command_obj, command_name, message)
                     : new TextBasedCommand(command_name, message, this);
                 let command = this.text_commands[command_name];
-                if(command.subcommands) {
+                if (command.subcommands) {
                     // expect a subcommand argument
                     const re = /^\S+/;
                     const match = command_body.match(re);
@@ -597,9 +595,7 @@ export class Wheatley extends EventEmitter {
                         command = unwrap(unwrap(command.subcommands).get(match[0]));
                         command_body = command_body.slice(match[0].length).trim();
                     } else {
-                        await command_obj.reply(
-                            create_error_reply(`Expected subcommand specifier not found`),
-                        );
+                        await command_obj.reply(create_error_reply(`Expected subcommand specifier not found`));
                         return;
                     }
                 }
@@ -760,7 +756,7 @@ export class Wheatley extends EventEmitter {
             if (interaction.isChatInputCommand()) {
                 if (interaction.commandName in this.text_commands) {
                     let command = this.text_commands[interaction.commandName];
-                    if(interaction.options.getSubcommand(false)) {
+                    if (interaction.options.getSubcommand(false)) {
                         command = unwrap(unwrap(command.subcommands).get(interaction.options.getSubcommand()));
                     }
                     const command_options: unknown[] = [];

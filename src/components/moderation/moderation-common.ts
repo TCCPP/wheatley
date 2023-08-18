@@ -2,7 +2,7 @@ import * as Discord from "discord.js";
 
 import { strict as assert } from "assert";
 
-import { Mutex, SleepList, build_description, critical_error, time_to_human, unwrap } from "../../utils.js";
+import { M, Mutex, SleepList, build_description, critical_error, time_to_human, unwrap } from "../../utils.js";
 import { BotComponent } from "../../bot-component.js";
 import { TextBasedCommand } from "../../command.js";
 import { Wheatley } from "../../wheatley.js";

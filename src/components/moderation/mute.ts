@@ -2,12 +2,11 @@ import * as Discord from "discord.js";
 
 import { strict as assert } from "assert";
 
-import { M, critical_error, unwrap } from "../../utils.js";
+import { M, critical_error } from "../../utils.js";
 import { Wheatley } from "../../wheatley.js";
 import { TextBasedCommand, TextBasedCommandBuilder } from "../../command.js";
 import {
     ModerationComponent,
-    basic_moderation,
     basic_moderation_with_user,
     duration_regex,
     moderation_entry,
