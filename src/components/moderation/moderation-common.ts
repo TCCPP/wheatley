@@ -127,6 +127,10 @@ export abstract class ModerationComponent extends BotComponent {
 
     override async on_ready() {
         const moderations = await this.wheatley.database.moderations.find({ type: this.type, active: true }).toArray();
+        M.debug(
+            `Adding moderations to sleep list for ${this.type}`,
+            moderations.map(moderation => moderation.case_number),
+        );
         // Any catch up will be done in order
         this.sleep_list.bulk_insert(
             moderations
@@ -139,6 +143,7 @@ export abstract class ModerationComponent extends BotComponent {
         )) {
             try {
                 if (!(await this.is_moderation_applied(moderation))) {
+                    M.debug("Reapplying moderation", moderation);
                     await this.apply_moderation(moderation);
                 }
             } catch (e) {
@@ -168,6 +173,7 @@ export abstract class ModerationComponent extends BotComponent {
 
     async handle_moderation_expire(entry: mongo.WithId<moderation_entry>) {
         if (await this.is_moderation_applied(entry)) {
+            M.debug("Handling moderation expire", entry);
             await this.remove_moderation(entry);
             this.sleep_list.remove(entry._id);
             // remove database entry
@@ -185,6 +191,8 @@ export abstract class ModerationComponent extends BotComponent {
                     },
                 },
             );
+        } else {
+            M.debug("Handling moderation expire - not applied", entry);
         }
     }
 
@@ -228,6 +236,7 @@ export abstract class ModerationComponent extends BotComponent {
         }
     }
 
+    // TODO: Just move to `TextBasedCommand`?
     async reply_with_error(command: TextBasedCommand, message: string) {
         await (command.replied ? command.followUp : command.reply).bind(command)({
             embeds: [
