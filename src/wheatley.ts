@@ -404,6 +404,11 @@ export class Wheatley extends EventEmitter {
         M.debug("root_mod_list", [this.root_mod_list]);
     }
 
+    // case-insensitive
+    get_role_by_name(name: string) {
+        return unwrap(this.TCCPP.roles.cache.find(role => role.name.toLowerCase() === name.toLowerCase()));
+    }
+
     async populate_caches() {
         // Load a couple hundred messages for every channel we're in
         const channels: Record<string, { channel: Discord.TextBasedChannel; last_seen: number; done: boolean }> = {};
