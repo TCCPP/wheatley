@@ -10,7 +10,7 @@ import { Wheatley } from "./wheatley.js";
 export const ApplicationCommandTypeUser = 2;
 export const ApplicationCommandTypeMessage = 3;
 
-export type TextBasedCommandOptionType = "string" | "number" | "user";
+export type TextBasedCommandOptionType = "string" | "number" | "user" | "role";
 
 export type TextBasedCommandOption = {
     title: string;
@@ -119,6 +119,22 @@ export class TextBasedCommandBuilder<
         });
         return this as unknown as TextBasedCommandBuilder<
             Append<Args, Discord.User>,
+            HasDescriptions,
+            HasHandler,
+            HasSubcommands
+        >;
+    }
+
+    add_role_option(
+        option: Omit<TextBasedCommandOption, "autocomplete" | "regex">,
+    ): TextBasedCommandBuilder<Append<Args, Discord.Role>, HasDescriptions, HasHandler, HasSubcommands> {
+        assert(!this.options.has(option.title));
+        this.options.set(option.title, {
+            ...option,
+            type: "role",
+        });
+        return this as unknown as TextBasedCommandBuilder<
+            Append<Args, Discord.Role>,
             HasDescriptions,
             HasHandler,
             HasSubcommands

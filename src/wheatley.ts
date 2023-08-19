@@ -13,8 +13,8 @@ import {
     zip,
     walk_dir,
     is_string,
-    Prepend,
     unwrap,
+    escape_regex,
 } from "./utils.js";
 import { BotComponent } from "./bot-component.js";
 import {
@@ -26,8 +26,6 @@ import {
     ModalHandler,
     TextBasedCommand,
     TextBasedCommandBuilder,
-    TextBasedCommandOption,
-    TextBasedCommandOptionType,
 } from "./command.js";
 
 import { WheatleyDatabase, WheatleyDatabaseProxy } from "./infra/database-interface.js";
@@ -484,9 +482,16 @@ export class Wheatley extends EventEmitter {
                         .setDescription(option.description)
                         .setRequired(!!option.required),
                 );
-                // eslint-disable-next-line @typescript-eslint/no-unnecessary-condition
             } else if (option.type == "user") {
                 djs_command.addUserOption(slash_option =>
+                    slash_option
+                        .setName(option.title)
+                        .setDescription(option.description)
+                        .setRequired(!!option.required),
+                );
+                // eslint-disable-next-line @typescript-eslint/no-unnecessary-condition
+            } else if (option.type == "role") {
+                djs_command.addRoleOption(slash_option =>
                     slash_option
                         .setName(option.title)
                         .setDescription(option.description)
@@ -666,7 +671,6 @@ export class Wheatley extends EventEmitter {
                             );
                             return;
                         }
-                        // eslint-disable-next-line @typescript-eslint/no-unnecessary-condition
                     } else if (option.type == "user") {
                         // TODO: Handle optional user...
                         const re = /^(?:<@(\d{10,})>|(\d{10,}))/;
@@ -684,7 +688,25 @@ export class Wheatley extends EventEmitter {
                             }
                         } else {
                             await command_obj.reply(
-                                create_error_reply(`Required argument "${option.title}" not found`),
+                                create_error_reply(`Required user argument "${option.title}" not found`),
+                            );
+                            return;
+                        }
+                        // eslint-disable-next-line @typescript-eslint/no-unnecessary-condition
+                    } else if (option.type == "role") {
+                        const re = new RegExp(
+                            this.TCCPP.roles.cache
+                                .map(role => escape_regex(role.name))
+                                .filter(name => name !== "@everyone")
+                                .join("|"),
+                        );
+                        const match = command_body.match(re);
+                        if (match) {
+                            command_options.push(unwrap(this.TCCPP.roles.cache.find(role => role.name === match[0])));
+                            command_body = command_body.slice(match[0].length).trim();
+                        } else {
+                            await command_obj.reply(
+                                create_error_reply(`Required role argument "${option.title}" not found`),
                             );
                             return;
                         }
@@ -804,6 +826,8 @@ export class Wheatley extends EventEmitter {
                             // eslint-disable-next-line @typescript-eslint/no-unnecessary-condition
                         } else if (option.type == "user") {
                             command_options.push(interaction.options.getUser(option.title));
+                        } else if (option.type == "role") {
+                            command_options.push(interaction.options.getRole(option.title));
                         } else {
                             assert(false, "unhandled option type");
                         }

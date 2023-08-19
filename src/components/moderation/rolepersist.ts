@@ -39,7 +39,7 @@ export default class Rolepersist extends ModerationComponent {
                             description: "User to rolepersist",
                             required: true,
                         })
-                        .add_string_option({
+                        .add_role_option({
                             title: "role",
                             description: "Role",
                             required: true,
@@ -65,7 +65,7 @@ export default class Rolepersist extends ModerationComponent {
                             description: "User to rolepersist",
                             required: true,
                         })
-                        .add_string_option({
+                        .add_role_option({
                             title: "role",
                             description: "Role",
                             required: true,
@@ -103,7 +103,7 @@ export default class Rolepersist extends ModerationComponent {
     async rolepersist_add(
         command: TextBasedCommand,
         user: Discord.User,
-        role_name: string,
+        role: Discord.Role,
         duration: string,
         reason: string,
     ) {
@@ -112,8 +112,7 @@ export default class Rolepersist extends ModerationComponent {
                 await reply_with_error(command, "Cannot apply moderation to user");
                 return;
             }
-            const role = this.wheatley.get_role_by_name(role_name).id;
-            const base_moderation: basic_moderation_with_user = { type: "rolepersist", user: user.id, role };
+            const base_moderation: basic_moderation_with_user = { type: "rolepersist", user: user.id, role: role.id };
             if (await this.is_moderation_applied(base_moderation)) {
                 await reply_with_error(command, "User is already role-persisted with this role");
                 return;
@@ -125,7 +124,7 @@ export default class Rolepersist extends ModerationComponent {
                 moderator: command.user.id,
                 moderator_name: (await command.get_member()).displayName,
                 type: "rolepersist",
-                role,
+                role: role.id,
                 reason,
                 issued_at: Date.now(),
                 duration: parse_duration(duration),
@@ -142,11 +141,10 @@ export default class Rolepersist extends ModerationComponent {
         }
     }
 
-    async rolepersist_remove(command: TextBasedCommand, user: Discord.User, role_name: string, reason: string) {
+    async rolepersist_remove(command: TextBasedCommand, user: Discord.User, role: Discord.Role, reason: string) {
         try {
-            const role = this.wheatley.get_role_by_name(role_name).id;
             const res = await this.wheatley.database.moderations.findOneAndUpdate(
-                { user: user.id, type: "rolepersist", role, active: true },
+                { user: user.id, type: "rolepersist", role: role.id, active: true },
                 {
                     $set: {
                         active: false,
