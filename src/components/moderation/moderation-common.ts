@@ -330,12 +330,16 @@ export abstract class ModerationComponent extends BotComponent {
                                     ? null
                                     : `**Duration:** ${duration}`,
                                 `**Reason:** ${moderation.reason}`,
-                                is_removal
-                                    ? null
-                                    : `--------------------\n` +
-                                      `To appeal this you may open a modmail in Server Guide -> #rules ` +
-                                      `or reach out to a staff member.`,
                             ]),
+                        )
+                        .setFooter(
+                            is_removal
+                                ? null
+                                : {
+                                      text:
+                                          `To appeal this you may open a modmail in Server Guide -> #rules ` +
+                                          `or reach out to a staff member.`,
+                                  },
                         ),
                 ],
             });
