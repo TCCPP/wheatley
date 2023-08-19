@@ -2,7 +2,7 @@ import { strict as assert } from "assert";
 
 import * as Discord from "discord.js";
 
-import { M } from "../utils.js";
+import { M, escape_discord } from "../utils.js";
 import { BotComponent } from "../bot-component.js";
 import { Wheatley } from "../wheatley.js";
 import { MessageContextMenuCommandBuilder, TextBasedCommand, TextBasedCommandBuilder } from "../command.js";
@@ -107,7 +107,7 @@ export default class Inspect extends BotComponent {
         await command_object.reply({
             ephemeral: true,
             ephemeral_if_possible: true,
-            content: message.content.length > 0 ? Discord.escapeMarkdown(message.content) : "<empty>",
+            content: message.content.length > 0 ? escape_discord(message.content) : "<empty>",
         });
         if (message.attachments.size > 0) {
             await command_object.followUp({
@@ -115,15 +115,14 @@ export default class Inspect extends BotComponent {
                 ephemeral_if_possible: true,
                 content:
                     "Attachments: " +
-                    Discord.escapeMarkdown(JSON.stringify(message.attachments.map(repackage_attachment), null, 4)),
+                    escape_discord(JSON.stringify(message.attachments.map(repackage_attachment), null, 4)),
             });
         }
         if (message.embeds.length > 0) {
             await command_object.followUp({
                 ephemeral: true,
                 ephemeral_if_possible: true,
-                content:
-                    "Embeds: " + Discord.escapeMarkdown(JSON.stringify(message.embeds.map(repackage_embed), null, 4)),
+                content: "Embeds: " + escape_discord(JSON.stringify(message.embeds.map(repackage_embed), null, 4)),
             });
         }
     }

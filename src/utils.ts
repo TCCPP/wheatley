@@ -687,3 +687,8 @@ export function intersection<V>(a: V[], b: V[]): V[] {
 
 export type Append<T extends unknown[], U> = [...T, U];
 export type Prepend<T extends unknown[], U> = [U, ...T];
+
+export function escape_discord(str: string) {
+    // Escape <> for mentions, on top of markdown
+    return Discord.escapeMarkdown(str).replace(/[<>/]/g, c => `\\${c}`);
+}
