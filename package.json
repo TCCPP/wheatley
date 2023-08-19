@@ -6,7 +6,7 @@
     "type": "module",
     "dependencies": {
         "@discordjs/rest": "^2.0.1",
-        "@types/node": "^20.5.0",
+        "@types/node": "^20.5.1",
         "@types/ws": "^8.5.5",
         "@types/xxhashjs": "^0.2.2",
         "any-ascii": "^0.3.2",
