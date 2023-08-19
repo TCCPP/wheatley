@@ -17,6 +17,7 @@ import {
 } from "./moderation-common.js";
 
 import * as mongo from "mongodb";
+import Modlogs from "./modlogs.js";
 
 /**
  * Implements !ban
@@ -156,6 +157,14 @@ export default class Ban extends ModerationComponent {
                 await this.remove_moderation(res.value);
                 this.sleep_list.remove(res.value._id);
                 await reply_with_success_action(command, user, "unbanned");
+                await this.wheatley.channels.staff_action_log.send({
+                    embeds: [
+                        Modlogs.case_summary(
+                            res.value,
+                            await this.wheatley.client.users.fetch(res.value.user),
+                        ).setTitle(`Unbanned`),
+                    ],
+                });
             }
         } catch (e) {
             await reply_with_error(command, "Error unbanning");

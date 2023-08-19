@@ -16,6 +16,7 @@ import {
 } from "./moderation-common.js";
 
 import * as mongo from "mongodb";
+import Modlogs from "./modlogs.js";
 
 /**
  * Implements !mute
@@ -146,6 +147,14 @@ export default class Mute extends ModerationComponent {
                 await this.remove_moderation(res.value);
                 this.sleep_list.remove(res.value._id);
                 await this.reply_and_notify(command, user, "unmuted", res.value, true);
+                await this.wheatley.channels.staff_action_log.send({
+                    embeds: [
+                        Modlogs.case_summary(
+                            res.value,
+                            await this.wheatley.client.users.fetch(res.value.user),
+                        ).setTitle(`Umuted`),
+                    ],
+                });
             }
         } catch (e) {
             await reply_with_error(command, "Error unmuting");
