@@ -30,9 +30,9 @@ export default class Ban extends ModerationComponent {
         super(wheatley);
 
         this.add_command(
-            new TextBasedCommandBuilder("wban")
+            new TextBasedCommandBuilder("ban")
                 .set_permissions(Discord.PermissionFlagsBits.BanMembers)
-                .set_description("wban")
+                .set_description("!ban <user> <duration> <reason>")
                 .add_user_option({
                     title: "user",
                     description: "User to ban",
@@ -53,9 +53,9 @@ export default class Ban extends ModerationComponent {
         );
 
         this.add_command(
-            new TextBasedCommandBuilder("wunban")
+            new TextBasedCommandBuilder("unban")
                 .set_permissions(Discord.PermissionFlagsBits.BanMembers)
-                .set_description("wunban")
+                .set_description("!unban <user> <reason>")
                 .add_user_option({
                     title: "user",
                     description: "User to unban",

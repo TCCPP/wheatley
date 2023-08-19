@@ -19,8 +19,8 @@ export default class Modlogs extends BotComponent {
         super(wheatley);
 
         this.add_command(
-            new TextBasedCommandBuilder("wmodlogs")
-                .set_description("Get user moderation logs")
+            new TextBasedCommandBuilder("modlogs")
+                .set_description("Get user moderation logs. !modlogs <user>")
                 .set_permissions(Discord.PermissionFlagsBits.BanMembers)
                 .add_user_option({
                     title: "user",
@@ -31,8 +31,8 @@ export default class Modlogs extends BotComponent {
         );
 
         this.add_command(
-            new TextBasedCommandBuilder("wcase")
-                .set_description("Get case info")
+            new TextBasedCommandBuilder("case")
+                .set_description("Get case info. !case <case>")
                 .set_permissions(Discord.PermissionFlagsBits.BanMembers)
                 .add_number_option({
                     title: "case",

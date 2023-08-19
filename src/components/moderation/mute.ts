@@ -29,9 +29,9 @@ export default class Mute extends ModerationComponent {
         super(wheatley);
 
         this.add_command(
-            new TextBasedCommandBuilder("wmute")
+            new TextBasedCommandBuilder("mute")
                 .set_permissions(Discord.PermissionFlagsBits.BanMembers)
-                .set_description("wmute")
+                .set_description("!mute <user> <duration> <reason>")
                 .add_user_option({
                     title: "user",
                     description: "User to mute",
@@ -52,9 +52,9 @@ export default class Mute extends ModerationComponent {
         );
 
         this.add_command(
-            new TextBasedCommandBuilder("wunmute")
+            new TextBasedCommandBuilder("unmute")
                 .set_permissions(Discord.PermissionFlagsBits.BanMembers)
-                .set_description("wunmute")
+                .set_description("!unmute <user> <reason>")
                 .add_user_option({
                     title: "user",
                     description: "User to unmute",

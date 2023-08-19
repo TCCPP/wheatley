@@ -27,9 +27,9 @@ export default class Warn extends ModerationComponent {
         super(wheatley);
 
         this.add_command(
-            new TextBasedCommandBuilder("wwarn")
+            new TextBasedCommandBuilder("warn")
                 .set_permissions(Discord.PermissionFlagsBits.BanMembers)
-                .set_description("wwarn")
+                .set_description("!warn <user> <reason>")
                 .add_user_option({
                     title: "user",
                     description: "User to warn",

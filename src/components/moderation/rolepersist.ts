@@ -28,12 +28,12 @@ export default class Rolepersist extends ModerationComponent {
         super(wheatley);
 
         this.add_command(
-            new TextBasedCommandBuilder("wrolepersist")
+            new TextBasedCommandBuilder("rolepersist")
                 .set_permissions(Discord.PermissionFlagsBits.BanMembers)
-                .set_description("wrolepersist")
+                .set_description("!rolepersist")
                 .add_subcommand(
                     new TextBasedCommandBuilder("add")
-                        .set_description("wrolepersist add")
+                        .set_description("!rolepersist add <user> <role> <duration> <reason>")
                         .add_user_option({
                             title: "user",
                             description: "User to rolepersist",
@@ -59,7 +59,7 @@ export default class Rolepersist extends ModerationComponent {
                 )
                 .add_subcommand(
                     new TextBasedCommandBuilder("remove")
-                        .set_description("wrolepersist remove")
+                        .set_description("!rolepersist remove <user> <role> <reason>")
                         .add_user_option({
                             title: "user",
                             description: "User to rolepersist",
