@@ -158,6 +158,8 @@ export abstract class ModerationComponent extends BotComponent {
     // moderation_update(mongo.WithId<moderation_entry>)
     static event_hub = new EventEmitter();
 
+    static non_duration_moderation_set = new Set(["warn", "kick"]);
+
     constructor(wheatley: Wheatley) {
         super(wheatley);
         this.sleep_list = new SleepList(this.handle_moderation_expire.bind(this), item => item._id);
@@ -321,14 +323,17 @@ export abstract class ModerationComponent extends BotComponent {
                 embeds: [
                     new Discord.EmbedBuilder()
                         .setColor(colors.wheatley)
+                        .setTitle(`You have been ${action} in Together C & C++.`)
                         .setDescription(
                             build_description([
-                                `You have been ${action} in Together C & C++.`,
-                                is_removal || moderation.type == "warn" ? null : `Duration: ${duration}`,
-                                `Reason: ${moderation.reason}`,
+                                is_removal || ModerationComponent.non_duration_moderation_set.has(moderation.type)
+                                    ? null
+                                    : `**Duration:** ${duration}`,
+                                `**Reason:** ${moderation.reason}`,
                                 is_removal
                                     ? null
-                                    : `To appeal this you may open a modmail in Server Guide -> #rules ` +
+                                    : `--------------------\n` +
+                                      `To appeal this you may open a modmail in Server Guide -> #rules ` +
                                       `or reach out to a staff member.`,
                             ]),
                         ),
