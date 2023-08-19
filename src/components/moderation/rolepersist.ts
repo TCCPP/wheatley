@@ -108,6 +108,10 @@ export default class Rolepersist extends ModerationComponent {
         reason: string,
     ) {
         try {
+            if (this.wheatley.is_authorized_mod(user)) {
+                await reply_with_error(command, "Cannot apply moderation to user");
+                return;
+            }
             const role = this.wheatley.get_role_by_name(role_name).id;
             const base_moderation: basic_moderation_with_user = { type: "rolepersist", user: user.id, role };
             if (await this.is_moderation_applied(base_moderation)) {

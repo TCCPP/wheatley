@@ -98,6 +98,10 @@ export default class Ban extends ModerationComponent {
 
     async ban_handler(command: TextBasedCommand, user: Discord.User, duration: string, reason: string) {
         try {
+            if (this.wheatley.is_authorized_mod(user)) {
+                await reply_with_error(command, "Cannot apply moderation to user");
+                return;
+            }
             const base_moderation: basic_moderation_with_user = { type: "ban", user: user.id };
             if (await this.is_moderation_applied(base_moderation)) {
                 await reply_with_error(command, "User is already banned");

@@ -63,6 +63,10 @@ export default class Kick extends ModerationComponent {
 
     async kick_handler(command: TextBasedCommand, user: Discord.User, reason: string) {
         try {
+            if (this.wheatley.is_authorized_mod(user)) {
+                await reply_with_error(command, "Cannot apply moderation to user");
+                return;
+            }
             const moderation: moderation_entry = {
                 case_number: -1,
                 user: user.id,
