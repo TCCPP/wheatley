@@ -8,7 +8,7 @@ import { CommandBuilder } from "./builder.js";
 
 export type TextBasedCommandOptionType = "string" | "number" | "user" | "role";
 
-export type TextBasedCommandOption = {
+export type TextBasedCommandParameterOptions = {
     title: string;
     description: string;
     required?: boolean; // TODO: Currently not implemented for text commands
@@ -24,7 +24,7 @@ export class TextBasedCommandBuilder<
 > extends CommandBuilder<HasHandler, [TextBasedCommand, ...Args]> {
     readonly names: string[];
     descriptions: ConditionalOptional<HasDescriptions, string[]>;
-    options = new Discord.Collection<string, TextBasedCommandOption & { type: TextBasedCommandOptionType }>();
+    options = new Discord.Collection<string, TextBasedCommandParameterOptions & { type: TextBasedCommandOptionType }>();
     slash_config: boolean[];
     permissions: undefined | bigint = undefined;
     subcommands: TextBasedCommandBuilder<any, true, true>[] = [];
@@ -51,7 +51,7 @@ export class TextBasedCommandBuilder<
     }
 
     add_string_option(
-        option: TextBasedCommandOption,
+        option: TextBasedCommandParameterOptions,
     ): TextBasedCommandBuilder<Append<Args, string>, HasDescriptions, HasHandler, HasSubcommands> {
         assert(!this.options.has(option.title));
         this.options.set(option.title, {
@@ -67,7 +67,7 @@ export class TextBasedCommandBuilder<
     }
 
     add_number_option(
-        option: TextBasedCommandOption,
+        option: TextBasedCommandParameterOptions,
     ): TextBasedCommandBuilder<Append<Args, number>, HasDescriptions, HasHandler, HasSubcommands> {
         assert(!this.options.has(option.title));
         this.options.set(option.title, {
@@ -83,7 +83,7 @@ export class TextBasedCommandBuilder<
     }
 
     add_user_option(
-        option: Omit<TextBasedCommandOption, "autocomplete" | "regex">,
+        option: Omit<TextBasedCommandParameterOptions, "autocomplete" | "regex">,
     ): TextBasedCommandBuilder<Append<Args, Discord.User>, HasDescriptions, HasHandler, HasSubcommands> {
         assert(!this.options.has(option.title));
         this.options.set(option.title, {
@@ -99,7 +99,7 @@ export class TextBasedCommandBuilder<
     }
 
     add_role_option(
-        option: Omit<TextBasedCommandOption, "autocomplete" | "regex">,
+        option: Omit<TextBasedCommandParameterOptions, "autocomplete" | "regex">,
     ): TextBasedCommandBuilder<Append<Args, Discord.Role>, HasDescriptions, HasHandler, HasSubcommands> {
         assert(!this.options.has(option.title));
         this.options.set(option.title, {

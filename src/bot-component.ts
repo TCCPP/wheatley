@@ -30,6 +30,7 @@ export class BotComponent {
         wheatley.on("wheatley_ready", wrap(this.on_wheatley_ready.bind(this)));
     }
 
+    // Called after all components are constructed and the bot logs in, but before bot commands are finalized
     async setup() {} // eslint-disable-line @typescript-eslint/no-empty-function
 
     listeners: [keyof Discord.ClientEvents, (...args: any[]) => any][] = [];

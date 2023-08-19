@@ -3,12 +3,16 @@ import { strict as assert } from "assert";
 import * as Discord from "discord.js";
 
 import { critical_error, zip } from "../../utils.js";
-import { TextBasedCommandOption, TextBasedCommandOptionType, TextBasedCommandBuilder } from "../builders/text-based.js";
+import {
+    TextBasedCommandParameterOptions,
+    TextBasedCommandOptionType,
+    TextBasedCommandBuilder,
+} from "../builders/text-based.js";
 import { TextBasedCommand } from "../interfaces/text-based.js";
 import { BotCommand } from "./descriptor.js";
 
 export class BotTextBasedCommand<Args extends unknown[] = []> extends BotCommand<[TextBasedCommand, ...Args]> {
-    options = new Discord.Collection<string, TextBasedCommandOption & { type: TextBasedCommandOptionType }>();
+    options = new Discord.Collection<string, TextBasedCommandParameterOptions & { type: TextBasedCommandOptionType }>();
     subcommands: Map<string, BotTextBasedCommand<any>> | null = null;
 
     constructor(
