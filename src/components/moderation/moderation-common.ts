@@ -6,10 +6,10 @@ import { strict as assert } from "assert";
 
 import { M, Mutex, SleepList, build_description, critical_error, time_to_human, unwrap } from "../../utils.js";
 import { BotComponent } from "../../bot-component.js";
-import { TextBasedCommand } from "../../command.js";
 import { Wheatley } from "../../wheatley.js";
 import { colors } from "../../common.js";
 import Modlogs from "./modlogs.js";
+import { TextBasedCommand } from "../../command-abstractions/interfaces/text-based.js";
 
 /*
  * !mute !unmute

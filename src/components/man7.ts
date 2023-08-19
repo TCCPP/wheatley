@@ -11,7 +11,8 @@ import { man7_entry, man7_index } from "../../indexes/man7/types.js";
 import { BotComponent } from "../bot-component.js";
 import { Wheatley } from "../wheatley.js";
 import { colors } from "../common.js";
-import { TextBasedCommand, TextBasedCommandBuilder } from "../command.js";
+import { TextBasedCommandBuilder } from "../command-abstractions/builders/text-based.js";
+import { TextBasedCommand } from "../command-abstractions/interfaces/text-based.js";
 
 type augmented_man7_entry = man7_entry & IndexEntry;
 

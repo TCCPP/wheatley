@@ -11,7 +11,8 @@ import { Index } from "../algorithm/search.js";
 import { BotComponent } from "../bot-component.js";
 import { Wheatley } from "../wheatley.js";
 import { colors } from "../common.js";
-import { TextBasedCommand, TextBasedCommandBuilder } from "../command.js";
+import { TextBasedCommandBuilder } from "../command-abstractions/builders/text-based.js";
+import { TextBasedCommand } from "../command-abstractions/interfaces/text-based.js";
 
 function eliminate_aliases_and_duplicates(pages: cppref_page[]) {
     // There's this annoying thing where multiple pages are really the same page

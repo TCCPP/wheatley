@@ -2,9 +2,10 @@ import * as Discord from "discord.js";
 import { strict as assert } from "assert";
 import { BotComponent } from "../bot-component.js";
 import { Wheatley } from "../wheatley.js";
-import { TextBasedCommand, TextBasedCommandBuilder } from "../command.js";
 import { colors } from "../common.js";
 import { M, delay } from "../utils.js";
+import { TextBasedCommandBuilder } from "../command-abstractions/builders/text-based.js";
+import { TextBasedCommand } from "../command-abstractions/interfaces/text-based.js";
 
 /**
  * Adds the /redirect command for redirecting conversations between channels.

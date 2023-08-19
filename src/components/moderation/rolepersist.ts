@@ -1,10 +1,10 @@
-import * as Discord from "discord.js";
-
 import { strict as assert } from "assert";
+
+import * as Discord from "discord.js";
+import * as mongo from "mongodb";
 
 import { M, critical_error } from "../../utils.js";
 import { Wheatley } from "../../wheatley.js";
-import { TextBasedCommand, TextBasedCommandBuilder } from "../../command.js";
 import {
     ModerationComponent,
     basic_moderation_with_user,
@@ -13,9 +13,9 @@ import {
     parse_duration,
     reply_with_error,
 } from "./moderation-common.js";
-
-import * as mongo from "mongodb";
 import Modlogs from "./modlogs.js";
+import { TextBasedCommandBuilder } from "../../command-abstractions/builders/text-based.js";
+import { TextBasedCommand } from "../../command-abstractions/interfaces/text-based.js";
 
 /**
  * Implements !rolepersist

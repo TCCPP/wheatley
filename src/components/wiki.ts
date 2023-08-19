@@ -8,7 +8,8 @@ import { M, unwrap, walk_dir } from "../utils.js";
 import { colors } from "../common.js";
 import { BotComponent } from "../bot-component.js";
 import { Wheatley } from "../wheatley.js";
-import { TextBasedCommand, TextBasedCommandBuilder } from "../command.js";
+import { TextBasedCommandBuilder } from "../command-abstractions/builders/text-based.js";
+import { TextBasedCommand } from "../command-abstractions/interfaces/text-based.js";
 
 export const wiki_dir = "wiki_articles";
 

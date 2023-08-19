@@ -5,9 +5,11 @@ import * as Discord from "discord.js";
 import { M, escape_discord } from "../utils.js";
 import { BotComponent } from "../bot-component.js";
 import { Wheatley } from "../wheatley.js";
-import { MessageContextMenuCommandBuilder, TextBasedCommand, TextBasedCommandBuilder } from "../command.js";
 import { url_re } from "./quote.js";
 import { colors } from "../common.js";
+import { MessageContextMenuCommandBuilder } from "../command-abstractions/builders/context-menu.js";
+import { TextBasedCommandBuilder } from "../command-abstractions/builders/text-based.js";
+import { TextBasedCommand } from "../command-abstractions/interfaces/text-based.js";
 
 // These looks silly, but it is the best way I can think of to call all the getters and re-package
 function repackage_attachment({

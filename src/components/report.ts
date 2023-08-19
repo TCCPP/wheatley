@@ -6,8 +6,9 @@ import { critical_error, M, SelfClearingMap } from "../utils.js";
 import { colors, MINUTE } from "../common.js";
 import { BotComponent } from "../bot-component.js";
 import { Wheatley } from "../wheatley.js";
-import { MessageContextMenuCommandBuilder, ModalHandler } from "../command.js";
 import { make_quote_embeds } from "./quote.js";
+import { MessageContextMenuCommandBuilder } from "../command-abstractions/builders/context-menu.js";
+import { ModalHandler } from "../command-abstractions/builders/modal.js";
 
 /**
  * Provides a command for reporting other users' messages.

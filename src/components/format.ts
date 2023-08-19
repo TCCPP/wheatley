@@ -9,8 +9,8 @@ const fetch = (url: RequestInfo, init?: RequestInit) =>
 import { async_exec_file, critical_error, M } from "../utils.js";
 import { BotComponent } from "../bot-component.js";
 import { Wheatley } from "../wheatley.js";
-import { MessageContextMenuCommandBuilder } from "../command.js";
 import { MINUTE } from "../common.js";
+import { MessageContextMenuCommandBuilder } from "../command-abstractions/builders/context-menu.js";
 
 const color = 0x7e78fe; //0xA931FF;
 

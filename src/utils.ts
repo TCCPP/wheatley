@@ -692,3 +692,7 @@ export function escape_discord(str: string) {
     // Escape <> for mentions, on top of markdown
     return Discord.escapeMarkdown(str).replace(/[<>/]/g, c => `\\${c}`);
 }
+
+export type ConditionalOptional<C extends true | false, T> = C extends true ? T : T | undefined;
+
+export type MoreThanOne<T> = [T, T, ...T[]];

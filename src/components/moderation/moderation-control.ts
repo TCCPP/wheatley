@@ -5,10 +5,11 @@ import { strict as assert } from "assert";
 import { M, time_to_human } from "../../utils.js";
 import { BotComponent } from "../../bot-component.js";
 import { Wheatley } from "../../wheatley.js";
-import { TextBasedCommand, TextBasedCommandBuilder } from "../../command.js";
 import { ModerationComponent, parse_duration, reply_with_error, reply_with_success } from "./moderation-common.js";
 import { colors } from "../../common.js";
 import Modlogs from "./modlogs.js";
+import { TextBasedCommandBuilder } from "../../command-abstractions/builders/text-based.js";
+import { TextBasedCommand } from "../../command-abstractions/interfaces/text-based.js";
 
 /**
  * Implements !reason, !duration, ane !expunge

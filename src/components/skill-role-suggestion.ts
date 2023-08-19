@@ -6,7 +6,10 @@ import { M, SelfClearingMap, departialize, unwrap } from "../utils.js";
 import { colors, MINUTE } from "../common.js";
 import { BotComponent } from "../bot-component.js";
 import { Wheatley } from "../wheatley.js";
-import { MessageContextMenuCommandBuilder, UserContextMenuCommandBuilder } from "../command.js";
+import {
+    UserContextMenuCommandBuilder,
+    MessageContextMenuCommandBuilder,
+} from "../command-abstractions/builders/context-menu.js";
 
 /**
  * Adds commands for users to suggest skill roles for other members.

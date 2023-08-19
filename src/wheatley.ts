@@ -17,21 +17,18 @@ import {
     escape_regex,
 } from "./utils.js";
 import { BotComponent } from "./bot-component.js";
-import {
-    BotCommand,
-    BotModalHandler,
-    BotTextBasedCommand,
-    CommandAbstractionReplyOptions,
-    MessageContextMenuCommandBuilder,
-    ModalHandler,
-    TextBasedCommand,
-    TextBasedCommandBuilder,
-} from "./command.js";
+
+import { MessageContextMenuCommandBuilder } from "./command-abstractions/builders/context-menu.js";
+import { ModalHandler } from "./command-abstractions/builders/modal.js";
+import { TextBasedCommandBuilder } from "./command-abstractions/builders/text-based.js";
+import { BotCommand } from "./command-abstractions/descriptors/descriptor.js";
+import { BotModalHandler } from "./command-abstractions/descriptors/modal.js";
+import { BotTextBasedCommand } from "./command-abstractions/descriptors/text-based.js";
+import { CommandAbstractionReplyOptions, TextBasedCommand } from "./command-abstractions/interfaces/text-based.js";
 
 import { WheatleyDatabase, WheatleyDatabaseProxy } from "./infra/database-interface.js";
 import { GuildCommandManager } from "./infra/guild-command-manager.js";
 import { MemberTracker } from "./infra/member-tracker.js";
-
 import { forge_snowflake } from "./components/snowflake.js";
 
 function create_basic_embed(title: string | undefined, color: number, content: string) {
