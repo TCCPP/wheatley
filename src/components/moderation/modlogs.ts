@@ -2,7 +2,7 @@ import * as Discord from "discord.js";
 
 import { strict as assert } from "assert";
 
-import { M, build_description, pluralize, time_to_human } from "../../utils.js";
+import { M, build_description, pluralize, remove, time_to_human } from "../../utils.js";
 import { BotComponent } from "../../bot-component.js";
 import { Wheatley } from "../../wheatley.js";
 import { CommandAbstractionReplyOptions, TextBasedCommand, TextBasedCommandBuilder } from "../../command.js";
@@ -43,7 +43,7 @@ export default class Modlogs extends BotComponent {
         );
     }
 
-    moderation_description(moderation: moderation_entry) {
+    static moderation_description(moderation: moderation_entry) {
         return build_description([
             `**Type:** ${moderation.type}`,
             `**Moderator:** <@${moderation.moderator}>`,
@@ -51,6 +51,51 @@ export default class Modlogs extends BotComponent {
             moderation.duration === null ? null : `**Duration:** ${time_to_human(moderation.duration)}`,
             `**Reason:** ${moderation.reason ? moderation.reason : "No reason provided"}`,
         ]);
+    }
+
+    static case_summary(moderation: moderation_entry, user: Discord.User) {
+        return new Discord.EmbedBuilder()
+            .setTitle(`Case ${moderation.case_number}`)
+            .setAuthor({
+                name: moderation.user_name,
+                iconURL: user.avatarURL() ?? undefined,
+            })
+            .setColor(colors.wheatley)
+            .setDescription(Modlogs.moderation_description(moderation))
+            .setFields(
+                remove(
+                    [
+                        moderation.removed
+                            ? {
+                                  name: "Removed",
+                                  value: build_description([
+                                      `**By:** <@${moderation.removed.moderator}>`,
+                                      `**At:** <t:${Math.round(moderation.removed.timestamp / 1000)}:f>`,
+                                      `**Reason:** ${
+                                          moderation.removed.reason ? moderation.removed.reason : "No reason provided"
+                                      }`,
+                                  ]),
+                              }
+                            : null,
+                        moderation.expunged
+                            ? {
+                                  name: "Expunged",
+                                  value: build_description([
+                                      `**By:** <@${moderation.expunged.moderator}>`,
+                                      `**At:** <t:${Math.round(moderation.expunged.timestamp / 1000)}:f>`,
+                                      `**Reason:** ${
+                                          moderation.expunged.reason ? moderation.expunged.reason : "No reason provided"
+                                      }`,
+                                  ]),
+                              }
+                            : null,
+                    ],
+                    null,
+                ),
+            )
+            .setFooter({
+                text: `ID: ${moderation.user}`,
+            });
     }
 
     // page is zero-indexed
@@ -72,7 +117,7 @@ export default class Modlogs extends BotComponent {
                             .map(moderation => {
                                 return {
                                     name: `Case ${moderation.case_number}`,
-                                    value: this.moderation_description(moderation),
+                                    value: Modlogs.moderation_description(moderation),
                                 };
                             }),
                     )
@@ -127,35 +172,8 @@ export default class Modlogs extends BotComponent {
         M.log("Received case command");
         const moderation = await this.wheatley.database.moderations.findOne({ case_number });
         if (moderation) {
-            const fields: Discord.APIEmbedField[] = [];
-            if (moderation.removed) {
-                fields.push({
-                    name: "Removed",
-                    value: build_description([
-                        `**By:** <@${moderation.removed.moderator}>`,
-                        `**At:** <t:${Math.round(moderation.removed.timestamp / 1000)}:f>`,
-                        `**Reason:** ${moderation.removed.reason ? moderation.removed.reason : "No reason provided"}`,
-                    ]),
-                });
-            }
-            if (moderation.expunged) {
-                fields.push({
-                    name: "Expunged",
-                    value: build_description([
-                        `**By:** <@${moderation.expunged.moderator}>`,
-                        `**At:** <t:${Math.round(moderation.expunged.timestamp / 1000)}:f>`,
-                        `**Reason:** ${moderation.expunged.reason ? moderation.expunged.reason : "No reason provided"}`,
-                    ]),
-                });
-            }
             await command.reply({
-                embeds: [
-                    new Discord.EmbedBuilder()
-                        .setTitle(`Case ${case_number}`)
-                        .setColor(colors.wheatley)
-                        .setDescription(this.moderation_description(moderation))
-                        .setFields(fields),
-                ],
+                embeds: [Modlogs.case_summary(moderation, await this.wheatley.client.users.fetch(moderation.user))],
             });
         } else {
             await reply_with_error(command, `Case ${case_number} not found`);

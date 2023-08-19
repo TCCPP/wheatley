@@ -1,4 +1,6 @@
 import * as Discord from "discord.js";
+import * as mongo from "mongodb";
+import { EventEmitter } from "events";
 
 import { strict as assert } from "assert";
 
@@ -6,10 +8,8 @@ import { M, Mutex, SleepList, build_description, critical_error, time_to_human, 
 import { BotComponent } from "../../bot-component.js";
 import { TextBasedCommand } from "../../command.js";
 import { Wheatley } from "../../wheatley.js";
-
-import * as mongo from "mongodb";
 import { colors } from "../../common.js";
-import { EventEmitter } from "events";
+import Modlogs from "./modlogs.js";
 
 /*
  * !mute !unmute
@@ -296,6 +296,11 @@ export abstract class ModerationComponent extends BotComponent {
                     },
                 ]);
             }
+            this.wheatley.channels.staff_action_log
+                .send({
+                    embeds: [Modlogs.case_summary(moderation, await this.wheatley.client.users.fetch(moderation.user))],
+                })
+                .catch(critical_error);
         } finally {
             ModerationComponent.case_id_mutex.unlock();
         }
