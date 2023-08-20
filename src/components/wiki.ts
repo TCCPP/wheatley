@@ -423,8 +423,20 @@ export default class Wiki extends BotComponent {
 
     async wiki_preview(command: TextBasedCommand, content: string) {
         M.log("Received wiki preview command", command.user.id, command.user.tag, command.get_or_forge_url());
-        if (!this.wheatley.freestanding && command.channel_id !== this.wheatley.channels.bot_spam.id) {
-            await command.reply(`!wiki-preview must be used in <#${this.wheatley.channels.bot_spam.id}>`, true, true);
+        const channel = await command.get_channel();
+        if (
+            !(
+                this.wheatley.freestanding ||
+                channel.id === this.wheatley.channels.bot_spam.id ||
+                (channel.isThread() && channel.parentId === this.wheatley.channels.bot_spam.id) ||
+                channel.isDMBased()
+            )
+        ) {
+            await command.reply(
+                `!wiki-preview must be used in <#${this.wheatley.channels.bot_spam.id}>, a bot-spam thread, or a DM`,
+                true,
+                true,
+            );
             return;
         }
         let article: WikiArticle;
