@@ -42,7 +42,7 @@ export default class Bikeshed extends BotComponent {
     }
 
     async bikeshed(command: TextBasedCommand, arg: string) {
-        M.log("Creating bikeshed poll for question ");
+        M.log("Creating bikeshed poll");
         await command.reply({
             embeds: [
                 new Discord.EmbedBuilder()
