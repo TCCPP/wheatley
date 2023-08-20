@@ -244,9 +244,9 @@ export default class Quote extends BotComponent {
         if (message.content.includes("[https://")) {
             // if the message might contain a link, look at it
             const quote_descriptors = [...message.content.matchAll(implicit_quote_re)]
-                .filter(([_, guild_id]) => guild_id == this.wheatley.TCCPP.id)
-                .map(arr => arr.slice(2))
-                .map(([domain, channel_id, message_id, block_flag]) => ({
+                .filter(([_full, _domain, guild_id]) => guild_id == this.wheatley.TCCPP.id)
+                .map(arr => arr.slice(1))
+                .map(([domain, _, channel_id, message_id, block_flag]) => ({
                     domain,
                     channel_id,
                     message_id,
