@@ -296,7 +296,7 @@ export default class Wiki extends BotComponent {
     }
 
     articles: Record<string, WikiArticle> = {};
-    article_aliases: Map<string, string> = new Map();
+    article_aliases = new Discord.Collection<string, string>();
 
     constructor(wheatley: Wheatley) {
         super(wheatley);

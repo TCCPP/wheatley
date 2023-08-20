@@ -163,7 +163,7 @@ export const root_mod_ids = [
 export const root_mod_ids_set = new Set(root_mod_ids);
 
 export class Wheatley extends EventEmitter {
-    private components: BotComponent[] = [];
+    components = new Map<string, BotComponent>();
     readonly guild_command_manager: GuildCommandManager;
     readonly tracker: MemberTracker; // TODO: Rename
 
@@ -251,7 +251,7 @@ export class Wheatley extends EventEmitter {
 
         this.client.on("ready", async () => {
             await this.fetch_guild_info();
-            for (const component of this.components) {
+            for (const component of this.components.values()) {
                 try {
                     await component.setup();
                 } catch (e) {
@@ -340,7 +340,7 @@ export class Wheatley extends EventEmitter {
 
     destroy() {
         this.database.close().catch(critical_error);
-        for (const component of this.components) {
+        for (const component of this.components.values()) {
             component.destroy();
         }
         this.text_command_map.destroy();
@@ -352,8 +352,9 @@ export class Wheatley extends EventEmitter {
     async add_component<T extends BotComponent>(component: { new (w: Wheatley): T; get is_freestanding(): boolean }) {
         if (!this.freestanding || component.is_freestanding) {
             M.log(`Initializing ${component.name}`);
+            assert(!this.components.has(component.name), "Duplicate component name");
             const instance = new component(this);
-            this.components.push(instance);
+            this.components.set(component.name, instance);
             return instance;
         } else {
             return null;
