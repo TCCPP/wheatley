@@ -218,23 +218,28 @@ export default class Starboard extends BotComponent {
         }
         const action = do_delete ? "Auto-deleting" : "Auto-delete threshold reached";
         M.log(`${action} ${message.url} for ${delete_reaction.count} ${delete_reaction.emoji.name} reactions`);
-        if (
-            do_delete ||
-            !(await this.wheatley.database.auto_delete_threshold_notifications.findOne({ message: message.id }))
-        ) {
-            await this.wheatley.channels.staff_flag_log.send({
-                content:
-                    `${action} message from <@${message.author.id}> for ` +
-                    `${delete_reaction.count} ${delete_reaction.emoji.name} reactions` +
-                    `\n${this.reactions_string(message)}` +
-                    "\n" +
-                    (await delete_reaction.users.fetch()).map(user => `<@${user.id}> ${user.tag}`).join("\n"),
-                ...(await make_quote_embeds([message], undefined, this.wheatley, true)),
-                allowedMentions: { parse: [] },
-            });
-            await this.wheatley.database.auto_delete_threshold_notifications.insertOne({
-                message: message.id,
-            });
+        try {
+            await this.wheatley.database.lock();
+            if (
+                do_delete ||
+                !(await this.wheatley.database.auto_delete_threshold_notifications.findOne({ message: message.id }))
+            ) {
+                await this.wheatley.channels.staff_flag_log.send({
+                    content:
+                        `${action} message from <@${message.author.id}> for ` +
+                        `${delete_reaction.count} ${delete_reaction.emoji.name} reactions` +
+                        `\n${this.reactions_string(message)}` +
+                        "\n" +
+                        (await delete_reaction.users.fetch()).map(user => `<@${user.id}> ${user.tag}`).join("\n"),
+                    ...(await make_quote_embeds([message], undefined, this.wheatley, true)),
+                    allowedMentions: { parse: [] },
+                });
+                await this.wheatley.database.auto_delete_threshold_notifications.insertOne({
+                    message: message.id,
+                });
+            }
+        } finally {
+            this.wheatley.database.unlock();
         }
         if (do_delete) {
             await message.delete();
