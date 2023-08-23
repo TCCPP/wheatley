@@ -18,6 +18,7 @@ import { TextBasedCommand } from "../../command-abstractions/text-based-command.
  * !rolepersist add/remove
  * !warn
  * !noofftopic
+ * !timeout
  *
  * !reason
  * !duration
@@ -34,7 +35,7 @@ import { TextBasedCommand } from "../../command-abstractions/text-based-command.
  *
  */
 
-export type moderation_type = "mute" | "warn" | "ban" | "kick" | "no off-topic" | "rolepersist";
+export type moderation_type = "mute" | "warn" | "ban" | "kick" | "no off-topic" | "rolepersist" | "timeout";
 
 export type moderation_edit_info = {
     moderator: string;
@@ -45,7 +46,7 @@ export type moderation_edit_info = {
 
 export type basic_moderation =
     | {
-          type: "mute" | "warn" | "ban" | "kick" | "no off-topic";
+          type: Exclude<moderation_type, "rolepersist">;
       }
     | {
           type: "rolepersist";
