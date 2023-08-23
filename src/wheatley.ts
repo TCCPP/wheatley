@@ -595,6 +595,7 @@ export class Wheatley extends EventEmitter {
                 const command_obj = prev_command_obj
                     ? new TextBasedCommand(prev_command_obj, command_name, message)
                     : new TextBasedCommand(command_name, message, this);
+                this.register_text_command(message, command_obj);
                 let command = this.text_commands[command_name];
                 if (command.subcommands) {
                     // expect a subcommand argument
@@ -609,7 +610,6 @@ export class Wheatley extends EventEmitter {
                         return;
                     }
                 }
-                this.register_text_command(message, command_obj);
                 if (command.permissions !== undefined) {
                     if (!(await command_obj.get_member()).permissions.has(command.permissions)) {
                         await command_obj.reply(create_error_reply("Invalid permissions"));
