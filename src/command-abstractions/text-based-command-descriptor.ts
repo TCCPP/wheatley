@@ -9,24 +9,24 @@ import {
     TextBasedCommandBuilder,
 } from "./text-based-command-builder.js";
 import { TextBasedCommand } from "./text-based-command.js";
+import { BaseBotInteraction } from "./interaction-base.js";
 
-export class BotTextBasedCommand<Args extends unknown[] = []> {
+export class BotTextBasedCommand<Args extends unknown[] = []> extends BaseBotInteraction<[TextBasedCommand, ...Args]> {
     public readonly options = new Discord.Collection<
         string,
         TextBasedCommandParameterOptions & { type: TextBasedCommandOptionType }
     >();
-    public readonly handler: (...args: [TextBasedCommand, ...Args]) => any;
     public readonly subcommands: Map<string, BotTextBasedCommand<any>> | null = null;
 
     constructor(
-        public readonly name: string,
+        name: string,
         public readonly description: string | undefined,
         public readonly slash: boolean,
         public readonly permissions: undefined | bigint,
         builder: TextBasedCommandBuilder<Args, true, true> | TextBasedCommandBuilder<Args, true, false, true>,
     ) {
+        super(name, builder.handler ?? (() => critical_error("This shouldn't happen")));
         this.options = builder.options;
-        this.handler = builder.handler ?? (() => critical_error("This shouldn't happen"));
         if (builder.type === "top-level") {
             this.subcommands = new Map();
             for (const subcommand of builder.subcommands) {
