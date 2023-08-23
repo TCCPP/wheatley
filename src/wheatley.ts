@@ -601,10 +601,10 @@ export class Wheatley extends EventEmitter {
                     // expect a subcommand argument
                     const re = /^\S+/;
                     const match = command_body.match(re);
-                    const subcommand = match ? unwrap(command.subcommands).get(match[0]) : undefined;
-                    if (match) {
+                    const subcommand = match ? command.subcommands.get(match[0]) : undefined;
+                    if (subcommand) {
                         command = unwrap(subcommand);
-                        command_body = command_body.slice(match[0].length).trim();
+                        command_body = command_body.slice(unwrap(match)[0].length).trim();
                     } else {
                         await command_obj.reply(create_error_reply(`Expected subcommand specifier not found`));
                         return;
