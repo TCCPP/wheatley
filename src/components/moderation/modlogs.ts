@@ -128,7 +128,7 @@ export default class Modlogs extends BotComponent {
                     }),
             ],
             components:
-                pages === 1
+                pages <= 1
                     ? undefined
                     : [
                           new Discord.ActionRowBuilder<Discord.MessageActionRowComponentBuilder>().addComponents(
