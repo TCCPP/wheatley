@@ -273,6 +273,10 @@ export class TextBasedCommand {
         this.editing = true;
     }
 
+    get is_editing() {
+        return this.editing;
+    }
+
     get_reply() {
         assert(this.replied);
         return this.response;

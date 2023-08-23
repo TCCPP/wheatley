@@ -115,7 +115,7 @@ export function parse_duration(duration: string) {
 }
 
 export async function reply_with_error(command: TextBasedCommand, message: string) {
-    await (command.replied ? command.followUp : command.reply).bind(command)({
+    await (command.replied && !command.is_editing ? command.followUp : command.reply).bind(command)({
         embeds: [
             new Discord.EmbedBuilder()
                 .setColor(colors.alert_color)
