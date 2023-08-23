@@ -9,7 +9,7 @@ import { BotComponent } from "../../bot-component.js";
 import { Wheatley } from "../../wheatley.js";
 import { colors } from "../../common.js";
 import Modlogs from "./modlogs.js";
-import { TextBasedCommand } from "../../command-abstractions/interfaces/text-based.js";
+import { TextBasedCommand } from "../../command-abstractions/text-based-command.js";
 
 /*
  * !mute !unmute
@@ -29,7 +29,6 @@ import { TextBasedCommand } from "../../command-abstractions/interfaces/text-bas
  * !lockdown
  * !note
  *
- * Notifications
  * Buttons for !case
  * Link users to modmail for appeals, also include appeal info in dm notifications
  *
@@ -56,9 +55,8 @@ export type basic_moderation =
 export type basic_moderation_with_user = basic_moderation & { user: string };
 
 // TODO: Rename to moderation base?
-// TODO: Indexes: Active, case number, id, user, moderator, type
-// TODO: Some system for moderation update events
 
+// Indexes: ID, type, case number, user, moderator, active
 export type moderation_entry = basic_moderation & {
     case_number: number;
     user: string; // snowflake

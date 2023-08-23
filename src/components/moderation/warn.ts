@@ -12,8 +12,8 @@ import {
     moderation_type,
     reply_with_error,
 } from "./moderation-common.js";
-import { TextBasedCommandBuilder } from "../../command-abstractions/builders/text-based.js";
-import { TextBasedCommand } from "../../command-abstractions/interfaces/text-based.js";
+import { TextBasedCommandBuilder } from "../../command-abstractions/text-based-command-builder.js";
+import { TextBasedCommand } from "../../command-abstractions/text-based-command.js";
 
 /**
  * Implements !warn

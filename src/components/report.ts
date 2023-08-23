@@ -7,8 +7,8 @@ import { colors, MINUTE } from "../common.js";
 import { BotComponent } from "../bot-component.js";
 import { Wheatley } from "../wheatley.js";
 import { make_quote_embeds } from "./quote.js";
-import { MessageContextMenuCommandBuilder } from "../command-abstractions/builders/context-menu.js";
-import { ModalHandler } from "../command-abstractions/builders/modal.js";
+import { MessageContextMenuInteractionBuilder } from "../command-abstractions/context-menu.js";
+import { ModalInteractionBuilder } from "../command-abstractions/modal.js";
 
 /**
  * Provides a command for reporting other users' messages.
@@ -34,9 +34,9 @@ export default class Report extends BotComponent {
     constructor(wheatley: Wheatley) {
         super(wheatley);
 
-        this.add_command(new MessageContextMenuCommandBuilder("Report").set_handler(this.report.bind(this)));
+        this.add_command(new MessageContextMenuInteractionBuilder("Report").set_handler(this.report.bind(this)));
 
-        this.add_command(new ModalHandler(this.report_modal, this.modal_handler.bind(this)));
+        this.add_command(new ModalInteractionBuilder(this.report_modal, this.modal_handler.bind(this)));
     }
 
     override destroy() {

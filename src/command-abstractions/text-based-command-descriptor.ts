@@ -2,28 +2,31 @@ import { strict as assert } from "assert";
 
 import * as Discord from "discord.js";
 
-import { critical_error, zip } from "../../utils.js";
+import { critical_error, zip } from "../utils.js";
 import {
     TextBasedCommandParameterOptions,
     TextBasedCommandOptionType,
     TextBasedCommandBuilder,
-} from "../builders/text-based.js";
-import { TextBasedCommand } from "../interfaces/text-based.js";
-import { BotCommand } from "./descriptor.js";
+} from "./text-based-command-builder.js";
+import { TextBasedCommand } from "./text-based-command.js";
 
-export class BotTextBasedCommand<Args extends unknown[] = []> extends BotCommand<[TextBasedCommand, ...Args]> {
-    options = new Discord.Collection<string, TextBasedCommandParameterOptions & { type: TextBasedCommandOptionType }>();
-    subcommands: Map<string, BotTextBasedCommand<any>> | null = null;
+export class BotTextBasedCommand<Args extends unknown[] = []> {
+    public readonly options = new Discord.Collection<
+        string,
+        TextBasedCommandParameterOptions & { type: TextBasedCommandOptionType }
+    >();
+    public readonly handler: (...args: [TextBasedCommand, ...Args]) => any;
+    public readonly subcommands: Map<string, BotTextBasedCommand<any>> | null = null;
 
     constructor(
-        name: string,
+        public readonly name: string,
         public readonly description: string | undefined,
         public readonly slash: boolean,
         public readonly permissions: undefined | bigint,
         builder: TextBasedCommandBuilder<Args, true, true> | TextBasedCommandBuilder<Args, true, false, true>,
     ) {
-        super(name, builder.handler ?? (() => critical_error("This shouldn't happen")));
         this.options = builder.options;
+        this.handler = builder.handler ?? (() => critical_error("This shouldn't happen"));
         if (builder.type === "top-level") {
             this.subcommands = new Map();
             for (const subcommand of builder.subcommands) {

@@ -5,8 +5,8 @@ import { colors, MINUTE } from "../common.js";
 import { decode_snowflake, forge_snowflake } from "./snowflake.js";
 import { BotComponent } from "../bot-component.js";
 import { Wheatley } from "../wheatley.js";
-import { TextBasedCommandBuilder } from "../command-abstractions/builders/text-based.js";
-import { TextBasedCommand } from "../command-abstractions/interfaces/text-based.js";
+import { TextBasedCommandBuilder } from "../command-abstractions/text-based-command-builder.js";
+import { TextBasedCommand } from "../command-abstractions/text-based-command.js";
 
 // https://discord.com/channels/331718482485837825/802541516655951892/877257002584252426
 //                              guild              channel            message

@@ -3,8 +3,8 @@ import { strict as assert } from "assert";
 import { unwrap, M } from "../utils.js";
 import { BotComponent } from "../bot-component.js";
 import { Wheatley } from "../wheatley.js";
-import { TextBasedCommandBuilder } from "../command-abstractions/builders/text-based.js";
-import { TextBasedCommand } from "../command-abstractions/interfaces/text-based.js";
+import { TextBasedCommandBuilder } from "../command-abstractions/text-based-command-builder.js";
+import { TextBasedCommand } from "../command-abstractions/text-based-command.js";
 
 /**
  * Thread control for threads in thread-based (non-forum) channels

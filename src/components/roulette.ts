@@ -4,8 +4,8 @@ import { critical_error, M, SelfClearingMap, SelfClearingSet } from "../utils.js
 import { colors, MINUTE } from "../common.js";
 import { BotComponent } from "../bot-component.js";
 import { Wheatley } from "../wheatley.js";
-import { TextBasedCommandBuilder } from "../command-abstractions/builders/text-based.js";
-import { TextBasedCommand } from "../command-abstractions/interfaces/text-based.js";
+import { TextBasedCommandBuilder } from "../command-abstractions/text-based-command-builder.js";
+import { TextBasedCommand } from "../command-abstractions/text-based-command.js";
 
 export type roulette_leaderboard_entry = {
     user: string;

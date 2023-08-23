@@ -2,9 +2,8 @@ import { strict as assert } from "assert";
 
 import * as Discord from "discord.js";
 
-import { ConditionalOptional, MoreThanOne, Append, intersection } from "../../utils.js";
-import { TextBasedCommand } from "../interfaces/text-based.js";
-import { CommandBuilder } from "./builder.js";
+import { ConditionalOptional, MoreThanOne, Append, intersection } from "../utils.js";
+import { TextBasedCommand } from "./text-based-command.js";
 
 export type TextBasedCommandOptionType = "string" | "number" | "user" | "role";
 
@@ -21,7 +20,8 @@ export class TextBasedCommandBuilder<
     HasDescriptions extends boolean = false,
     HasHandler extends boolean = false,
     HasSubcommands extends boolean = false,
-> extends CommandBuilder<HasHandler, [TextBasedCommand, ...Args]> {
+> {
+    handler: ConditionalOptional<HasHandler, (...args: [TextBasedCommand, ...Args]) => any>;
     readonly names: string[];
     descriptions: ConditionalOptional<HasDescriptions, string[]>;
     options = new Discord.Collection<string, TextBasedCommandParameterOptions & { type: TextBasedCommandOptionType }>();
@@ -31,7 +31,6 @@ export class TextBasedCommandBuilder<
     type: HasSubcommands extends true ? "top-level" : "default";
 
     constructor(names: string | MoreThanOne<string>) {
-        super();
         this.names = Array.isArray(names) ? names : [names];
         this.slash_config = new Array(this.names.length).fill(true);
         this.type = "default" as any;
