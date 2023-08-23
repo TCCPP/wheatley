@@ -2,11 +2,10 @@ import { strict as assert } from "assert";
 
 import * as Discord from "discord.js";
 
-import { unwrap, ConditionalOptional } from "../../utils.js";
-import { BotModalHandler } from "../descriptors/modal.js";
-import { OtherCommandBuilder } from "./builder.js";
+import { unwrap, ConditionalOptional } from "../utils.js";
+import { BaseInteractionBuilder, BaseBotInteraction } from "./interaction-base.js";
 
-export class ModalHandler<HasHandler extends boolean = false> extends OtherCommandBuilder<
+export class ModalInteractionBuilder<HasHandler extends boolean = false> extends BaseInteractionBuilder<
     HasHandler,
     [Discord.ModalSubmitInteraction, ...string[]]
 > {
@@ -28,12 +27,21 @@ export class ModalHandler<HasHandler extends boolean = false> extends OtherComma
             return [undefined as ConditionalOptional<HasHandler, BotModalHandler>, undefined];
         } else {
             return [
-                new BotModalHandler(this.name, this as ModalHandler<true>) as ConditionalOptional<
+                new BotModalHandler(this.name, this as ModalInteractionBuilder<true>) as ConditionalOptional<
                     HasHandler,
                     BotModalHandler
                 >,
                 undefined,
             ];
         }
+    }
+}
+
+export class BotModalHandler extends BaseBotInteraction<[Discord.ModalSubmitInteraction, ...string[]]> {
+    fields: string[];
+
+    constructor(name: string, modal: ModalInteractionBuilder<true>) {
+        super(name, modal.handler);
+        this.fields = modal.fields;
     }
 }

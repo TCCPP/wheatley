@@ -3,8 +3,8 @@ import { strict as assert } from "assert";
 import * as Discord from "discord.js";
 import * as mongo from "mongodb";
 
-import { TextBasedCommandBuilder } from "../../command-abstractions/builders/text-based.js";
-import { TextBasedCommand } from "../../command-abstractions/interfaces/text-based.js";
+import { TextBasedCommandBuilder } from "../../command-abstractions/text-based-command-builder.js";
+import { TextBasedCommand } from "../../command-abstractions/text-based-command.js";
 import { M, critical_error } from "../../utils.js";
 import { Wheatley } from "../../wheatley.js";
 import {

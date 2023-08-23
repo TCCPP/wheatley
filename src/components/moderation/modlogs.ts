@@ -7,8 +7,8 @@ import { BotComponent } from "../../bot-component.js";
 import { Wheatley } from "../../wheatley.js";
 import { moderation_entry, reply_with_error } from "./moderation-common.js";
 import { colors } from "../../common.js";
-import { TextBasedCommandBuilder } from "../../command-abstractions/builders/text-based.js";
-import { CommandAbstractionReplyOptions, TextBasedCommand } from "../../command-abstractions/interfaces/text-based.js";
+import { TextBasedCommandBuilder } from "../../command-abstractions/text-based-command-builder.js";
+import { CommandAbstractionReplyOptions, TextBasedCommand } from "../../command-abstractions/text-based-command.js";
 
 const moderations_per_page = 5;
 

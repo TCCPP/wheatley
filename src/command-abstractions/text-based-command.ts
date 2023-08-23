@@ -2,10 +2,9 @@ import { strict as assert } from "assert";
 
 import * as Discord from "discord.js";
 
-import { forge_snowflake } from "../../components/snowflake.js";
-import { is_string, unwrap } from "../../utils.js";
-import { Wheatley } from "../../wheatley.js";
-import { Command } from "./command.js";
+import { forge_snowflake } from "../components/snowflake.js";
+import { is_string, unwrap } from "../utils.js";
+import { Wheatley } from "../wheatley.js";
 
 export type CommandAbstractionReplyOptions = {
     // default: false
@@ -20,7 +19,7 @@ const default_allowed_mentions: Discord.MessageMentionOptions = {
     parse: ["users"],
 };
 
-export class TextBasedCommand extends Command {
+export class TextBasedCommand {
     public readonly name: string;
     private readonly wheatley: Wheatley;
     private readonly reply_object: Discord.ChatInputCommandInteraction | Discord.Message;
@@ -47,7 +46,6 @@ export class TextBasedCommand extends Command {
             | [string, Discord.ChatInputCommandInteraction | Discord.Message, Wheatley]
             | [TextBasedCommand, string, Discord.Message]
     ) {
-        super();
         const args = is_string(_args[0])
             ? (["n", ..._args] as ["n", string, Discord.ChatInputCommandInteraction | Discord.Message, Wheatley])
             : (["c", ..._args] as ["c", TextBasedCommand, string, Discord.Message]);

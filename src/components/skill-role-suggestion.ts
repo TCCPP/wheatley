@@ -7,9 +7,9 @@ import { colors, MINUTE } from "../common.js";
 import { BotComponent } from "../bot-component.js";
 import { Wheatley } from "../wheatley.js";
 import {
-    UserContextMenuCommandBuilder,
-    MessageContextMenuCommandBuilder,
-} from "../command-abstractions/builders/context-menu.js";
+    UserContextMenuInteractionBuilder,
+    MessageContextMenuInteractionBuilder,
+} from "../command-abstractions/context-menu.js";
 
 /**
  * Adds commands for users to suggest skill roles for other members.
@@ -22,10 +22,12 @@ export default class SkillRoleSuggestion extends BotComponent {
         super(wheatley);
 
         this.add_command(
-            new UserContextMenuCommandBuilder("Suggest Skill Role User").set_handler(this.skill_suggestion.bind(this)),
+            new UserContextMenuInteractionBuilder("Suggest Skill Role User").set_handler(
+                this.skill_suggestion.bind(this),
+            ),
         );
         this.add_command(
-            new MessageContextMenuCommandBuilder("Suggest Skill Role Message").set_handler(
+            new MessageContextMenuInteractionBuilder("Suggest Skill Role Message").set_handler(
                 this.skill_suggestion.bind(this),
             ),
         );

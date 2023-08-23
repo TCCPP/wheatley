@@ -2,18 +2,21 @@ import { strict as assert } from "assert";
 
 import * as Discord from "discord.js";
 
-import { critical_error, zip } from "../../utils.js";
+import { critical_error, zip } from "../utils.js";
 import {
     TextBasedCommandParameterOptions,
     TextBasedCommandOptionType,
     TextBasedCommandBuilder,
-} from "../builders/text-based.js";
-import { TextBasedCommand } from "../interfaces/text-based.js";
-import { BotCommand } from "./descriptor.js";
+} from "./text-based-command-builder.js";
+import { TextBasedCommand } from "./text-based-command.js";
+import { BaseBotInteraction } from "./interaction-base.js";
 
-export class BotTextBasedCommand<Args extends unknown[] = []> extends BotCommand<[TextBasedCommand, ...Args]> {
-    options = new Discord.Collection<string, TextBasedCommandParameterOptions & { type: TextBasedCommandOptionType }>();
-    subcommands: Map<string, BotTextBasedCommand<any>> | null = null;
+export class BotTextBasedCommand<Args extends unknown[] = []> extends BaseBotInteraction<[TextBasedCommand, ...Args]> {
+    public readonly options = new Discord.Collection<
+        string,
+        TextBasedCommandParameterOptions & { type: TextBasedCommandOptionType }
+    >();
+    public readonly subcommands: Map<string, BotTextBasedCommand<any>> | null = null;
 
     constructor(
         name: string,

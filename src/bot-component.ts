@@ -4,9 +4,9 @@ import * as Discord from "discord.js";
 import { critical_error, M } from "./utils.js";
 
 import { Wheatley } from "./wheatley.js";
-import { MessageContextMenuCommandBuilder } from "./command-abstractions/builders/context-menu.js";
-import { ModalHandler } from "./command-abstractions/builders/modal.js";
-import { TextBasedCommandBuilder } from "./command-abstractions/builders/text-based.js";
+import { MessageContextMenuInteractionBuilder } from "./command-abstractions/context-menu.js";
+import { ModalInteractionBuilder } from "./command-abstractions/modal.js";
+import { TextBasedCommandBuilder } from "./command-abstractions/text-based-command-builder.js";
 
 type Arr = readonly unknown[];
 const wrap = <T extends Arr>(f: (...args: [...T]) => void | Promise<void>) => {
@@ -71,8 +71,8 @@ export class BotComponent {
         command:
             | TextBasedCommandBuilder<T, true, true>
             | TextBasedCommandBuilder<T, true, false, true>
-            | MessageContextMenuCommandBuilder<true>
-            | ModalHandler<true>,
+            | MessageContextMenuInteractionBuilder<true>
+            | ModalInteractionBuilder<true>,
     ) {
         this.wheatley.add_command(command);
     }

@@ -7,9 +7,9 @@ import { BotComponent } from "../bot-component.js";
 import { Wheatley } from "../wheatley.js";
 import { url_re } from "./quote.js";
 import { colors } from "../common.js";
-import { MessageContextMenuCommandBuilder } from "../command-abstractions/builders/context-menu.js";
-import { TextBasedCommandBuilder } from "../command-abstractions/builders/text-based.js";
-import { TextBasedCommand } from "../command-abstractions/interfaces/text-based.js";
+import { MessageContextMenuInteractionBuilder } from "../command-abstractions/context-menu.js";
+import { TextBasedCommandBuilder } from "../command-abstractions/text-based-command-builder.js";
+import { TextBasedCommand } from "../command-abstractions/text-based-command.js";
 
 // These looks silly, but it is the best way I can think of to call all the getters and re-package
 function repackage_attachment({
@@ -87,7 +87,7 @@ export default class Inspect extends BotComponent {
     constructor(wheatley: Wheatley) {
         super(wheatley);
 
-        this.add_command(new MessageContextMenuCommandBuilder("Inspect").set_handler(this.inspect.bind(this)));
+        this.add_command(new MessageContextMenuInteractionBuilder("Inspect").set_handler(this.inspect.bind(this)));
 
         this.add_command(
             new TextBasedCommandBuilder("inspect")

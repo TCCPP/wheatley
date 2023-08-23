@@ -4,8 +4,8 @@ import { unwrap, get_tag, M } from "../utils.js";
 import { colors } from "../common.js";
 import { BotComponent } from "../bot-component.js";
 import { Wheatley } from "../wheatley.js";
-import { TextBasedCommandBuilder } from "../command-abstractions/builders/text-based.js";
-import { TextBasedCommand } from "../command-abstractions/interfaces/text-based.js";
+import { TextBasedCommandBuilder } from "../command-abstractions/text-based-command-builder.js";
+import { TextBasedCommand } from "../command-abstractions/text-based-command.js";
 
 /*
  * Forum thread handling:

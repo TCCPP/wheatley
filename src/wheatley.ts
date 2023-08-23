@@ -18,13 +18,12 @@ import {
 } from "./utils.js";
 import { BotComponent } from "./bot-component.js";
 
-import { MessageContextMenuCommandBuilder } from "./command-abstractions/builders/context-menu.js";
-import { ModalHandler } from "./command-abstractions/builders/modal.js";
-import { TextBasedCommandBuilder } from "./command-abstractions/builders/text-based.js";
-import { BotCommand } from "./command-abstractions/descriptors/descriptor.js";
-import { BotModalHandler } from "./command-abstractions/descriptors/modal.js";
-import { BotTextBasedCommand } from "./command-abstractions/descriptors/text-based.js";
-import { CommandAbstractionReplyOptions, TextBasedCommand } from "./command-abstractions/interfaces/text-based.js";
+import { MessageContextMenuInteractionBuilder } from "./command-abstractions/context-menu.js";
+import { BotModalHandler, ModalInteractionBuilder } from "./command-abstractions/modal.js";
+import { TextBasedCommandBuilder } from "./command-abstractions/text-based-command-builder.js";
+import { BotTextBasedCommand } from "./command-abstractions/text-based-command-descriptor.js";
+import { CommandAbstractionReplyOptions, TextBasedCommand } from "./command-abstractions/text-based-command.js";
+import { BaseBotInteraction } from "./command-abstractions/interaction-base.js";
 
 import { WheatleyDatabase, WheatleyDatabaseProxy } from "./infra/database-interface.js";
 import { GuildCommandManager } from "./infra/guild-command-manager.js";
@@ -172,7 +171,7 @@ export class Wheatley extends EventEmitter {
     link_blacklist: any;
 
     text_commands: Record<string, BotTextBasedCommand<any>> = {};
-    other_commands: Record<string, BotCommand<any>> = {};
+    other_commands: Record<string, BaseBotInteraction<any>> = {};
 
     // map of message snowflakes -> commands, used for making text commands deletable and editable
     text_command_map = new SelfClearingMap<string, text_command_map_target>(30 * MINUTE);
@@ -510,8 +509,8 @@ export class Wheatley extends EventEmitter {
         command:
             | TextBasedCommandBuilder<T, true, true>
             | TextBasedCommandBuilder<T, true, false, true>
-            | MessageContextMenuCommandBuilder<true>
-            | ModalHandler<true>,
+            | MessageContextMenuInteractionBuilder<true>
+            | ModalInteractionBuilder<true>,
     ) {
         if (command instanceof TextBasedCommandBuilder) {
             if (command.type === "top-level") {

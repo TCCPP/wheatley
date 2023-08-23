@@ -10,7 +10,7 @@ import { async_exec_file, critical_error, M } from "../utils.js";
 import { BotComponent } from "../bot-component.js";
 import { Wheatley } from "../wheatley.js";
 import { MINUTE } from "../common.js";
-import { MessageContextMenuCommandBuilder } from "../command-abstractions/builders/context-menu.js";
+import { MessageContextMenuInteractionBuilder } from "../command-abstractions/context-menu.js";
 
 const color = 0x7e78fe; //0xA931FF;
 
@@ -214,7 +214,9 @@ export default class Format extends BotComponent {
     constructor(wheatley: Wheatley) {
         super(wheatley);
 
-        this.add_command(new MessageContextMenuCommandBuilder("Format").set_handler(this.format_ctxmenu.bind(this)));
+        this.add_command(
+            new MessageContextMenuInteractionBuilder("Format").set_handler(this.format_ctxmenu.bind(this)),
+        );
     }
 
     // TODO: More refactoring needed
