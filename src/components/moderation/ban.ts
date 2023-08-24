@@ -162,7 +162,7 @@ export default class Ban extends ModerationComponent {
                         Modlogs.case_summary(
                             res.value,
                             await this.wheatley.client.users.fetch(res.value.user),
-                        ).setTitle(`Unbanned`),
+                        ).setTitle(`Case ${res.value.case_number}: Unbanned`),
                     ],
                 });
             }

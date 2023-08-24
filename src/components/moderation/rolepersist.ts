@@ -172,7 +172,7 @@ export default class Rolepersist extends ModerationComponent {
                         Modlogs.case_summary(
                             res.value,
                             await this.wheatley.client.users.fetch(res.value.user),
-                        ).setTitle(`Rolepersist Removed`),
+                        ).setTitle(`Case ${res.value.case_number}: Rolepersist Removed`),
                     ],
                 });
             }

@@ -160,7 +160,7 @@ export default class Timeout extends ModerationComponent {
                         Modlogs.case_summary(
                             res.value,
                             await this.wheatley.client.users.fetch(res.value.user),
-                        ).setTitle(`Removed from timeout`),
+                        ).setTitle(`Case ${res.value.case_number}: Removed from timeout`),
                     ],
                 });
             }

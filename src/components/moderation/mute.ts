@@ -152,7 +152,7 @@ export default class Mute extends ModerationComponent {
                         Modlogs.case_summary(
                             res.value,
                             await this.wheatley.client.users.fetch(res.value.user),
-                        ).setTitle(`Umuted`),
+                        ).setTitle(`Case ${res.value.case_number}: Umuted`),
                     ],
                 });
             }
