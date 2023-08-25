@@ -5,17 +5,7 @@ import * as Discord from "discord.js";
 import { EventEmitter } from "events";
 
 import { colors, MINUTE } from "./common.js";
-import {
-    critical_error,
-    M,
-    directory_exists,
-    SelfClearingMap,
-    zip,
-    walk_dir,
-    is_string,
-    unwrap,
-    escape_regex,
-} from "./utils.js";
+import { critical_error, M, directory_exists, SelfClearingMap, zip, walk_dir, is_string, unwrap } from "./utils.js";
 import { BotComponent } from "./bot-component.js";
 
 import { MessageContextMenuInteractionBuilder } from "./command-abstractions/context-menu.js";
@@ -30,7 +20,7 @@ import { GuildCommandManager } from "./infra/guild-command-manager.js";
 import { MemberTracker } from "./infra/member-tracker.js";
 import { forge_snowflake } from "./components/snowflake.js";
 
-function create_basic_embed(title: string | undefined, color: number, content: string) {
+export function create_basic_embed(title: string | undefined, color: number, content: string) {
     const embed = new Discord.EmbedBuilder().setColor(color).setDescription(content);
     if (title) {
         embed.setTitle(title);
@@ -38,7 +28,7 @@ function create_basic_embed(title: string | undefined, color: number, content: s
     return embed;
 }
 
-function create_error_reply(message: string): Discord.BaseMessageOptions & CommandAbstractionReplyOptions {
+export function create_error_reply(message: string): Discord.BaseMessageOptions & CommandAbstractionReplyOptions {
     return {
         embeds: [create_basic_embed(undefined, colors.red, message)],
         should_text_reply: true,
@@ -529,6 +519,7 @@ export class Wheatley extends EventEmitter {
                     slash,
                     command.permissions,
                     command as unknown as TextBasedCommandBuilder<T, true, true>,
+                    this,
                 );
                 // Slash command stuff
                 if (slash) {
@@ -566,6 +557,7 @@ export class Wheatley extends EventEmitter {
                         slash,
                         command.permissions,
                         command,
+                        this,
                     );
                     if (slash) {
                         this.guild_command_manager.register(
@@ -616,106 +608,7 @@ export class Wheatley extends EventEmitter {
                         return;
                     }
                 }
-                // TODO: Handle unexpected / trailing input?
-                // NOTE: For now only able to take text and user input
-                // TODO: Handle `required`
-                const command_options: unknown[] = [];
-                for (const [i, option] of [...command.options.values()].entries()) {
-                    if (option.type == "string") {
-                        if (option.regex) {
-                            const match = command_body.match(option.regex);
-                            if (match) {
-                                command_options.push(match[0]);
-                                command_body = command_body.slice(match[0].length).trim();
-                            } else {
-                                await command_obj.reply(
-                                    create_error_reply(`Required argument "${option.title}" not found`),
-                                );
-                                return;
-                            }
-                        } else if (i == command.options.size - 1) {
-                            if (command_body == "") {
-                                await command_obj.reply(
-                                    create_error_reply(`Required argument "${option.title}" not found`),
-                                );
-                                return;
-                            } else {
-                                command_options.push(command_body);
-                                command_body = "";
-                            }
-                        } else {
-                            const re = /^\S+/;
-                            const match = command_body.match(re);
-                            if (match) {
-                                command_options.push(match[0]);
-                                command_body = command_body.slice(match[0].length).trim();
-                            } else {
-                                await command_obj.reply(
-                                    create_error_reply(`Required argument "${option.title}" not found`),
-                                );
-                                return;
-                            }
-                        }
-                    } else if (option.type == "number") {
-                        // TODO: Handle optional number...
-                        const re = /^\d+/;
-                        const match = command_body.match(re);
-                        if (match) {
-                            command_options.push(parseInt(match[0]));
-                            command_body = command_body.slice(match[0].length).trim();
-                        } else {
-                            await command_obj.reply(
-                                create_error_reply(`Required numeric argument "${option.title}" not found`),
-                            );
-                            return;
-                        }
-                    } else if (option.type == "user") {
-                        // TODO: Handle optional user...
-                        const re = /^(?:<@(\d{10,})>|(\d{10,}))/;
-                        const match = command_body.match(re);
-                        if (match) {
-                            const userid = match[1] || match[2];
-                            try {
-                                const user = await this.client.users.fetch(userid);
-                                command_options.push(user);
-                                command_body = command_body.slice(match[0].length).trim();
-                            } catch (e) {
-                                M.debug(e);
-                                await command_obj.reply(create_error_reply(`Unable to find user`));
-                                return;
-                            }
-                        } else {
-                            await command_obj.reply(
-                                create_error_reply(`Required user argument "${option.title}" not found`),
-                            );
-                            return;
-                        }
-                        // eslint-disable-next-line @typescript-eslint/no-unnecessary-condition
-                    } else if (option.type == "role") {
-                        const re = new RegExp(
-                            this.TCCPP.roles.cache
-                                .map(role => escape_regex(role.name))
-                                .filter(name => name !== "@everyone")
-                                .join("|"),
-                        );
-                        const match = command_body.match(re);
-                        if (match) {
-                            command_options.push(unwrap(this.TCCPP.roles.cache.find(role => role.name === match[0])));
-                            command_body = command_body.slice(match[0].length).trim();
-                        } else {
-                            await command_obj.reply(
-                                create_error_reply(`Required role argument "${option.title}" not found`),
-                            );
-                            return;
-                        }
-                    } else {
-                        assert(false, "unhandled option type");
-                    }
-                }
-                if (command_body != "") {
-                    await command_obj.reply(create_error_reply(`Unexpected parameters provided`));
-                    return;
-                }
+                const command_options = await command.parse_text_arguments(command_obj, command_body);
                 await command.handler(command_obj, ...command_options);
                 return true;
             } else {
