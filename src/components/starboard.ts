@@ -11,6 +11,7 @@ import { TextBasedCommand } from "../command-abstractions/text-based-command.js"
 export type starboard_entry = {
     message: string;
     starboard_entry: string;
+    deleted?: boolean;
 };
 
 export type auto_delete_threshold_notifications = {
@@ -165,10 +166,33 @@ export default class Starboard extends BotComponent {
                 make_quote_embeds([message], undefined, this.wheatley, true, "\n\n**[Jump to message!]($$)**");
             const starboard_entry = await this.wheatley.database.starboard_entries.findOne({ message: message.id });
             if (starboard_entry) {
+                if (starboard_entry.deleted) {
+                    return;
+                }
                 // edit
-                const starboard_message = await this.wheatley.channels.starboard.messages.fetch(
-                    starboard_entry.starboard_entry,
-                );
+                let starboard_message;
+                try {
+                    starboard_message = await this.wheatley.channels.starboard.messages.fetch(
+                        starboard_entry.starboard_entry,
+                    );
+                } catch (e: any) {
+                    // unknown message
+                    if (e.code === 10008) {
+                        await this.wheatley.database.starboard_entries.updateOne(
+                            {
+                                message: message.id,
+                            },
+                            {
+                                $set: {
+                                    deleted: true,
+                                },
+                            },
+                        );
+                        return;
+                    } else {
+                        throw e;
+                    }
+                }
                 await starboard_message.edit({
                     content: this.reactions_string(message),
                     ...(await make_embeds()),
