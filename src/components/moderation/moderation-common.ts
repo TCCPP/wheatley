@@ -181,7 +181,7 @@ export abstract class ModerationComponent extends BotComponent {
         );
         // Ensure moderations are in place
         for (const moderation of moderations.sort(
-            (a, b) => a.issued_at + unwrap(a.duration) - (b.issued_at + unwrap(b.duration)),
+            (a, b) => a.issued_at + (a.duration ?? 0) - (b.issued_at + (b.duration ?? 0)),
         )) {
             try {
                 if (!(await this.is_moderation_applied(moderation))) {
