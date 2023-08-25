@@ -49,32 +49,44 @@ export default class Autoreact extends BotComponent {
         ) {
             return;
         }
-        if (message.content.trim().match(/^wh?at(?:[!?]*\?[!?]*)?$/gi)) {
-            // Put an unmanaged non null assertion here because of the precondition requiring that guildId must be TCCPP
-            //  (and thus always a valid guild)
-            const reaction = message.guild!.emojis.cache.find(emoji => emoji.name === "thcampbell");
-            if (reaction !== undefined) {
-                await message.react(reaction);
+        try {
+            if (message.content.trim().match(/^wh?at(?:[!?]*\?[!?]*)?$/gi)) {
+                // Put an unmanaged non null assertion here because of the precondition requiring that guildId must be
+                // TCCPP (and thus always a valid guild)
+                const reaction = message.guild!.emojis.cache.find(emoji => emoji.name === "thcampbell");
+                if (reaction !== undefined) {
+                    await message.react(reaction);
+                }
             }
-        }
-        if (message.channel.id == this.wheatley.channels.introductions.id) {
-            if (message.member == null) {
-                // TODO: Ping zelis?
-                M.warn("Why??", message);
+            if (message.channel.id == this.wheatley.channels.introductions.id) {
+                if (message.member == null) {
+                    // TODO: Ping zelis?
+                    M.warn("Why??", message);
+                }
+                if (await this.is_new_member(message)) {
+                    await delay(1 * MINUTE);
+                    M.log("Waving to new user", message.author.tag, message.author.id, message.url);
+                    await message.react("👋");
+                }
+            } else if (message.channel.id == this.wheatley.channels.memes.id && has_media(message)) {
+                M.log("Adding star reaction", message.author.tag, message.author.id, message.url);
+                await message.react("⭐");
+            } else if (message.channel.id == this.wheatley.channels.server_suggestions.id) {
+                M.log("Adding server suggestion reactions", message.author.tag, message.author.id, message.url);
+                await message.react("👍");
+                await message.react("👎");
+                await message.react("🤷");
             }
-            if (await this.is_new_member(message)) {
-                await delay(1 * MINUTE);
-                M.log("Waving to new user", message.author.tag, message.author.id, message.url);
-                await message.react("👋");
+        } catch (e: any) {
+            // reaction blocked
+            if (e.code === 90001) {
+                await message.member?.timeout(1 * MINUTE, "Thou shall not block the bot");
+                if (message.channel.id == this.wheatley.channels.server_suggestions.id) {
+                    await message.delete();
+                }
+            } else {
+                throw e;
             }
-        } else if (message.channel.id == this.wheatley.channels.memes.id && has_media(message)) {
-            M.log("Adding star reaction", message.author.tag, message.author.id, message.url);
-            await message.react("⭐");
-        } else if (message.channel.id == this.wheatley.channels.server_suggestions.id) {
-            M.log("Adding server suggestion reactions", message.author.tag, message.author.id, message.url);
-            await message.react("👍");
-            await message.react("👎");
-            await message.react("🤷");
         }
     }
 
