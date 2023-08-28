@@ -1,8 +1,8 @@
 # Wheatley
 
-[![build](https://github.com/jeremy-rifkin/wheatley/actions/workflows/build.yml/badge.svg)](https://github.com/jeremy-rifkin/wheatley/actions/workflows/build.yml)
-[![test](https://github.com/jeremy-rifkin/wheatley/actions/workflows/test.yml/badge.svg)](https://github.com/jeremy-rifkin/wheatley/actions/workflows/test.yml)
-[![eslint](https://github.com/jeremy-rifkin/wheatley/actions/workflows/eslint.yml/badge.svg)](https://github.com/jeremy-rifkin/wheatley/actions/workflows/eslint.yml)
+[![build](https://github.com/TCCPP/wheatley/actions/workflows/build.yml/badge.svg)](https://github.com/TCCPP/wheatley/actions/workflows/build.yml)
+[![test](https://github.com/TCCPP/wheatley/actions/workflows/test.yml/badge.svg)](https://github.com/TCCPP/wheatley/actions/workflows/test.yml)
+[![eslint](https://github.com/TCCPP/wheatley/actions/workflows/eslint.yml/badge.svg)](https://github.com/TCCPP/wheatley/actions/workflows/eslint.yml)
 
 This repository contains the source code for the Wheatley bot, made for the Together C & C++ discord server.
 
@@ -185,6 +185,7 @@ mongosh
 # use admin
 # db.createUser({user:'mongoadmin', pwd: '<password>', roles:['userAdminAnyDatabase']})
 # db.auth('mongoadmin', '<password>') # test that authentication works
+# use wheatley
 # db.createUser({user:'wheatley', pwd: '<password>', roles:[{db:'wheatley', role:'readWrite'}]})
 # use wheatley
 sudo vim /etc/mongod.conf
