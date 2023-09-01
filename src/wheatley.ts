@@ -160,8 +160,8 @@ export class Wheatley extends EventEmitter {
 
     link_blacklist: any;
 
-    text_commands: Record<string, BotTextBasedCommand<any>> = {};
-    other_commands: Record<string, BaseBotInteraction<any>> = {};
+    text_commands: Record<string, BotTextBasedCommand<unknown[]>> = {};
+    other_commands: Record<string, BaseBotInteraction<unknown[]>> = {};
 
     // map of message snowflakes -> commands, used for making text commands deletable and editable
     text_command_map = new SelfClearingMap<string, text_command_map_target>(30 * MINUTE);
@@ -520,7 +520,7 @@ export class Wheatley extends EventEmitter {
                     command.permissions,
                     command as unknown as TextBasedCommandBuilder<T, true, true>,
                     this,
-                );
+                ) as BotTextBasedCommand<unknown[]>;
                 // Slash command stuff
                 if (slash) {
                     const slash_command = new Discord.SlashCommandBuilder().setName(name).setDescription(description);
@@ -558,7 +558,7 @@ export class Wheatley extends EventEmitter {
                         command.permissions,
                         command,
                         this,
-                    );
+                    ) as BotTextBasedCommand<unknown[]>;
                     if (slash) {
                         this.guild_command_manager.register(
                             this.make_slash_command_for(command, name, description, new Discord.SlashCommandBuilder()),
@@ -578,6 +578,7 @@ export class Wheatley extends EventEmitter {
 
     static command_regex = new RegExp("^!(\\S+)");
 
+    // returns false if the message was not a wheatley command
     async handle_command(message: Discord.Message, prev_command_obj?: TextBasedCommand) {
         const match = message.content.match(Wheatley.command_regex);
         if (match) {
@@ -609,7 +610,9 @@ export class Wheatley extends EventEmitter {
                     }
                 }
                 const command_options = await command.parse_text_arguments(command_obj, command_body);
-                await command.handler(command_obj, ...command_options);
+                if (command_options !== undefined) {
+                    await command.handler(command_obj, ...command_options);
+                }
                 return true;
             } else {
                 // unknown command
