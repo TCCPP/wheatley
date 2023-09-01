@@ -42,12 +42,12 @@ export default class Mute extends ModerationComponent {
                     title: "duration",
                     description: "Duration",
                     regex: duration_regex,
-                    required: true,
+                    required: false,
                 })
                 .add_string_option({
                     title: "reason",
                     description: "Reason",
-                    required: true,
+                    required: false,
                 })
                 .set_handler(this.mute_handler.bind(this)),
         );
@@ -88,7 +88,7 @@ export default class Mute extends ModerationComponent {
         return member.roles.cache.filter(role => role.id == this.wheatley.roles.muted.id).size > 0;
     }
 
-    async mute_handler(command: TextBasedCommand, user: Discord.User, duration: string, reason: string) {
+    async mute_handler(command: TextBasedCommand, user: Discord.User, duration: string | null, reason: string | null) {
         try {
             if (this.wheatley.is_authorized_mod(user)) {
                 await reply_with_error(command, "Cannot apply moderation to user");
@@ -115,7 +115,7 @@ export default class Mute extends ModerationComponent {
                 link: command.get_or_forge_url(),
             };
             await this.register_new_moderation(moderation);
-            await this.reply_and_notify(command, user, "muted", moderation);
+            await this.reply_and_notify(command, user, "muted", moderation, duration === null, reason === null);
         } catch (e) {
             await reply_with_error(command, "Error applying mute");
             critical_error(e);
@@ -146,7 +146,7 @@ export default class Mute extends ModerationComponent {
             } else {
                 await this.remove_moderation(res.value);
                 this.sleep_list.remove(res.value._id);
-                await this.reply_and_notify(command, user, "unmuted", res.value, true);
+                await this.reply_and_notify(command, user, "unmuted", res.value, false, false, true);
                 await this.wheatley.channels.staff_action_log.send({
                     embeds: [
                         Modlogs.case_summary(

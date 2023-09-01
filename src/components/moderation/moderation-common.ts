@@ -103,7 +103,10 @@ function parse_unit(u: string) {
     return factor;
 }
 
-export function parse_duration(duration: string) {
+export function parse_duration(duration: string | null) {
+    if (duration === null) {
+        return null;
+    }
     const match = duration.match(duration_regex);
     assert(match);
     if (duration == "perm") {
@@ -138,12 +141,18 @@ export async function reply_with_success_action(
     command: TextBasedCommand,
     user: Discord.User,
     action: string,
+    remind_to_duration: boolean,
+    remind_to_reason: boolean,
     case_number?: number,
 ) {
+    const reminders = build_description([
+        remind_to_duration ? "**Remember to provide a duration with !duration**" : null,
+        remind_to_reason ? "**Remember to provide a reason with !duration**" : null,
+    ]);
     await reply_with_success(
         command,
         `${user.displayName} was ${action}`,
-        case_number !== undefined ? `(case ${case_number})` : undefined,
+        (case_number !== undefined ? `(case ${case_number})` : "") + reminders === "" ? "" : "\n\n" + reminders,
     );
 }
 
@@ -353,9 +362,18 @@ export abstract class ModerationComponent extends BotComponent {
         user: Discord.User,
         action: string,
         moderation: moderation_entry,
+        remind_to_duration: boolean,
+        remind_to_reason: boolean,
         is_removal = false,
     ) {
-        await reply_with_success_action(command, user, action, is_removal ? undefined : moderation.case_number);
+        await reply_with_success_action(
+            command,
+            user,
+            action,
+            remind_to_duration,
+            remind_to_reason,
+            is_removal ? undefined : moderation.case_number,
+        );
         await this.notify_user(command, user, action, moderation, is_removal);
     }
 }

@@ -43,12 +43,12 @@ export default class Ban extends ModerationComponent {
                     title: "duration",
                     description: "Duration",
                     regex: duration_regex,
-                    required: true,
+                    required: false,
                 })
                 .add_string_option({
                     title: "reason",
                     description: "Reason",
-                    required: true,
+                    required: false,
                 })
                 .set_handler(this.ban_handler.bind(this)),
         );
@@ -97,7 +97,7 @@ export default class Ban extends ModerationComponent {
         }
     }
 
-    async ban_handler(command: TextBasedCommand, user: Discord.User, duration: string, reason: string) {
+    async ban_handler(command: TextBasedCommand, user: Discord.User, duration: string | null, reason: string | null) {
         try {
             if (this.wheatley.is_authorized_mod(user)) {
                 await reply_with_error(command, "Cannot apply moderation to user");
@@ -125,7 +125,14 @@ export default class Ban extends ModerationComponent {
             };
             await this.notify_user(command, user, "banned", moderation);
             await this.register_new_moderation(moderation);
-            await reply_with_success_action(command, user, "banned", moderation.case_number);
+            await reply_with_success_action(
+                command,
+                user,
+                "banned",
+                duration === null,
+                reason === null,
+                moderation.case_number,
+            );
         } catch (e) {
             await reply_with_error(command, "Error banning");
             critical_error(e);
@@ -156,7 +163,7 @@ export default class Ban extends ModerationComponent {
             } else {
                 await this.remove_moderation(res.value);
                 this.sleep_list.remove(res.value._id);
-                await reply_with_success_action(command, user, "unbanned");
+                await reply_with_success_action(command, user, "unbanned", false, false);
                 await this.wheatley.channels.staff_action_log.send({
                     embeds: [
                         Modlogs.case_summary(

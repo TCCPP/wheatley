@@ -49,12 +49,12 @@ export default class Rolepersist extends ModerationComponent {
                             title: "duration",
                             description: "Duration",
                             regex: duration_regex,
-                            required: true,
+                            required: false,
                         })
                         .add_string_option({
                             title: "reason",
                             description: "Reason",
-                            required: true,
+                            required: false,
                         })
                         .set_handler(this.rolepersist_add.bind(this)),
                 )
@@ -105,8 +105,8 @@ export default class Rolepersist extends ModerationComponent {
         command: TextBasedCommand,
         user: Discord.User,
         role: Discord.Role,
-        duration: string,
-        reason: string,
+        duration: string | null,
+        reason: string | null,
     ) {
         try {
             if (this.wheatley.is_authorized_mod(user)) {
@@ -135,7 +135,14 @@ export default class Rolepersist extends ModerationComponent {
                 link: command.get_or_forge_url(),
             };
             await this.register_new_moderation(moderation);
-            await this.reply_and_notify(command, user, "role-persisted", moderation);
+            await this.reply_and_notify(
+                command,
+                user,
+                "role-persisted",
+                moderation,
+                duration === null,
+                reason === null,
+            );
         } catch (e) {
             await reply_with_error(command, "Error applying role-persist");
             critical_error(e);
@@ -166,7 +173,7 @@ export default class Rolepersist extends ModerationComponent {
             } else {
                 await this.remove_moderation(res.value);
                 this.sleep_list.remove(res.value._id);
-                await this.reply_and_notify(command, user, "removed from role-persist", res.value, true);
+                await this.reply_and_notify(command, user, "removed from role-persist", res.value, false, false, true);
                 await this.wheatley.channels.staff_action_log.send({
                     embeds: [
                         Modlogs.case_summary(

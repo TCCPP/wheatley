@@ -80,6 +80,7 @@ export default class Nodistractions extends BotComponent {
                 .add_string_option({
                     title: "time",
                     description: "How long to go in nodistractions",
+                    required: true,
                 })
                 .set_handler(this.nodistractions.bind(this)),
         );

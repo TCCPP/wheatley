@@ -39,7 +39,7 @@ export default class Kick extends ModerationComponent {
                 .add_string_option({
                     title: "reason",
                     description: "Reason",
-                    required: true,
+                    required: false,
                 })
                 .set_handler(this.kick_handler.bind(this)),
         );
@@ -61,7 +61,7 @@ export default class Kick extends ModerationComponent {
         assert(false);
     }
 
-    async kick_handler(command: TextBasedCommand, user: Discord.User, reason: string) {
+    async kick_handler(command: TextBasedCommand, user: Discord.User, reason: string | null) {
         try {
             if (this.wheatley.is_authorized_mod(user)) {
                 await reply_with_error(command, "Cannot apply moderation to user");
@@ -84,7 +84,7 @@ export default class Kick extends ModerationComponent {
             };
             await this.notify_user(command, user, "kicked", moderation);
             await this.register_new_moderation(moderation);
-            await reply_with_success_action(command, user, "kicked", moderation.case_number);
+            await reply_with_success_action(command, user, "kicked", false, reason === null, moderation.case_number);
         } catch (e) {
             await reply_with_error(command, "Error kicking");
             critical_error(e);

@@ -46,12 +46,12 @@ export default class Timeout extends ModerationComponent {
                             title: "duration",
                             description: "Duration",
                             regex: duration_regex,
-                            required: true,
+                            required: false,
                         })
                         .add_string_option({
                             title: "reason",
                             description: "Reason",
-                            required: true,
+                            required: false,
                         })
                         .set_handler(this.timeout_add_handler.bind(this)),
                 )
@@ -91,7 +91,12 @@ export default class Timeout extends ModerationComponent {
         return member.communicationDisabledUntil !== null;
     }
 
-    async timeout_add_handler(command: TextBasedCommand, user: Discord.User, duration: string, reason: string) {
+    async timeout_add_handler(
+        command: TextBasedCommand,
+        user: Discord.User,
+        duration: string | null,
+        reason: string | null,
+    ) {
         try {
             if (this.wheatley.is_authorized_mod(user)) {
                 await reply_with_error(command, "Cannot apply moderation to user");
@@ -123,7 +128,7 @@ export default class Timeout extends ModerationComponent {
                 link: command.get_or_forge_url(),
             };
             await this.register_new_moderation(moderation);
-            await this.reply_and_notify(command, user, "timed-out", moderation);
+            await this.reply_and_notify(command, user, "timed-out", moderation, duration === null, reason === null);
         } catch (e) {
             await reply_with_error(command, "Error applying timeout");
             critical_error(e);
@@ -154,7 +159,7 @@ export default class Timeout extends ModerationComponent {
             } else {
                 await this.remove_moderation(res.value);
                 this.sleep_list.remove(res.value._id);
-                await this.reply_and_notify(command, user, "removed from timeout", res.value, true);
+                await this.reply_and_notify(command, user, "removed from timeout", res.value, false, false, true);
                 await this.wheatley.channels.staff_action_log.send({
                     embeds: [
                         Modlogs.case_summary(

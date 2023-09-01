@@ -55,9 +55,7 @@ export class BotTextBasedCommand<Args extends unknown[] = []> extends BaseBotInt
     }
 
     async parse_text_arguments(command_obj: TextBasedCommand, command_body: string) {
-        // TODO: Handle unexpected / trailing input?
-        // NOTE: For now only able to take text and user input
-        // TODO: Handle `required`
+        // TODO: Handle `required` more thoroughly?
         const command_options: unknown[] = [];
         for (const [i, option] of [...this.options.values()].entries()) {
             if (option.type == "string") {
@@ -66,17 +64,21 @@ export class BotTextBasedCommand<Args extends unknown[] = []> extends BaseBotInt
                     if (match) {
                         command_options.push(match[0]);
                         command_body = command_body.slice(match[0].length).trim();
+                    } else if (!option.required) {
+                        command_options.push(null);
                     } else {
                         await command_obj.reply(create_error_reply(`Required argument "${option.title}" not found`));
                         return;
                     }
                 } else if (i == this.options.size - 1) {
-                    if (command_body == "") {
-                        await command_obj.reply(create_error_reply(`Required argument "${option.title}" not found`));
-                        return;
-                    } else {
+                    if (command_body !== "") {
                         command_options.push(command_body);
                         command_body = "";
+                    } else if (!option.required) {
+                        command_options.push(null);
+                    } else {
+                        await command_obj.reply(create_error_reply(`Required argument "${option.title}" not found`));
+                        return;
                     }
                 } else {
                     const re = /^\S+/;
@@ -84,6 +86,8 @@ export class BotTextBasedCommand<Args extends unknown[] = []> extends BaseBotInt
                     if (match) {
                         command_options.push(match[0]);
                         command_body = command_body.slice(match[0].length).trim();
+                    } else if (!option.required) {
+                        command_options.push(null);
                     } else {
                         await command_obj.reply(create_error_reply(`Required argument "${option.title}" not found`));
                         return;
@@ -96,6 +100,8 @@ export class BotTextBasedCommand<Args extends unknown[] = []> extends BaseBotInt
                 if (match) {
                     command_options.push(parseInt(match[0]));
                     command_body = command_body.slice(match[0].length).trim();
+                } else if (!option.required) {
+                    command_options.push(null);
                 } else {
                     await command_obj.reply(
                         create_error_reply(`Required numeric argument "${option.title}" not found`),
@@ -117,6 +123,8 @@ export class BotTextBasedCommand<Args extends unknown[] = []> extends BaseBotInt
                         await command_obj.reply(create_error_reply(`Unable to find user`));
                         return;
                     }
+                } else if (!option.required) {
+                    command_options.push(null);
                 } else {
                     await command_obj.reply(create_error_reply(`Required user argument "${option.title}" not found`));
                     return;
@@ -133,6 +141,8 @@ export class BotTextBasedCommand<Args extends unknown[] = []> extends BaseBotInt
                 if (match) {
                     command_options.push(unwrap(this.wheatley.TCCPP.roles.cache.find(role => role.name === match[0])));
                     command_body = command_body.slice(match[0].length).trim();
+                } else if (!option.required) {
+                    command_options.push(null);
                 } else {
                     await command_obj.reply(create_error_reply(`Required role argument "${option.title}" not found`));
                     return;

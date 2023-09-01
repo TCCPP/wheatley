@@ -77,7 +77,7 @@ export default class Warn extends ModerationComponent {
                 link: command.get_or_forge_url(),
             };
             await this.register_new_moderation(moderation);
-            await this.reply_and_notify(command, user, "warned", moderation);
+            await this.reply_and_notify(command, user, "warned", moderation, false, false);
         } catch (e) {
             await reply_with_error(command, "Error warning");
             critical_error(e);

@@ -152,6 +152,7 @@ export default class ModerationControl extends BotComponent {
 
     async expunge(command: TextBasedCommand, case_number: number, reason: string) {
         M.log("Received expunge command");
+        // TODO: Remove if active....
         const res = await this.wheatley.database.moderations.findOneAndUpdate(
             { case_number },
             {
