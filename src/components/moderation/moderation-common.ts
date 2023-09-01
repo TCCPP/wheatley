@@ -147,7 +147,7 @@ export async function reply_with_success_action(
 ) {
     const reminders = build_description([
         remind_to_duration ? "**Remember to provide a duration with !duration**" : null,
-        remind_to_reason ? "**Remember to provide a reason with !duration**" : null,
+        remind_to_reason ? "**Remember to provide a reason with !reason**" : null,
     ]);
     await reply_with_success(
         command,
