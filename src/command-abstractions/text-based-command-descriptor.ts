@@ -27,7 +27,7 @@ export class BotTextBasedCommand<Args extends unknown[] = []> extends BaseBotInt
         builder: TextBasedCommandBuilder<Args, true, true> | TextBasedCommandBuilder<Args, true, false, true>,
         protected readonly wheatley: Wheatley,
     ) {
-        super(name, builder.handler ?? (() => critical_error("This shouldn't happen")));
+        super(name, builder.handler ?? (async () => critical_error("This shouldn't happen")));
         this.options = builder.options;
         if (builder.type === "top-level") {
             this.subcommands = new Map();

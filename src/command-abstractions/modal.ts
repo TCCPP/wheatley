@@ -12,7 +12,10 @@ export class ModalInteractionBuilder<HasHandler extends boolean = false> extends
     readonly name: string;
     readonly fields: string[];
 
-    constructor(modal: Discord.ModalBuilder, handler: (x: Discord.ModalSubmitInteraction, ...args: string[]) => any) {
+    constructor(
+        modal: Discord.ModalBuilder,
+        handler: (x: Discord.ModalSubmitInteraction, ...args: string[]) => Promise<void>,
+    ) {
         super();
         assert(modal.data.custom_id);
         this.name = unwrap(modal.data.custom_id);

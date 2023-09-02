@@ -5,7 +5,7 @@ export const ApplicationCommandTypeUser = 2;
 export const ApplicationCommandTypeMessage = 3;
 
 export abstract class BaseBuilder<HasHandler extends boolean = false, HandlerArgs extends unknown[] = []> {
-    handler: ConditionalOptional<HasHandler, (...args: HandlerArgs) => any>;
+    handler: ConditionalOptional<HasHandler, (...args: HandlerArgs) => Promise<void>>;
 }
 
 export abstract class BaseInteractionBuilder<
@@ -19,6 +19,6 @@ export abstract class BaseInteractionBuilder<
 export class BaseBotInteraction<Args extends unknown[] = []> {
     constructor(
         public readonly name: string,
-        public readonly handler: (...args: Args) => any,
+        public readonly handler: (...args: Args) => Promise<void>,
     ) {}
 }

@@ -570,7 +570,7 @@ export class Wheatley extends EventEmitter {
         } else {
             assert(!(command.name in this.other_commands));
             const [bot_command, djs_command] = command.to_command_descriptors();
-            this.other_commands[command.name] = bot_command;
+            this.other_commands[command.name] = bot_command as BaseBotInteraction<unknown[]>;
             if (djs_command) {
                 this.guild_command_manager.register(djs_command);
             }

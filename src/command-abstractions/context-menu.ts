@@ -21,7 +21,7 @@ export class MessageContextMenuInteractionBuilder<HasHandler extends boolean = f
     }
 
     set_handler(
-        handler: (x: Discord.MessageContextMenuCommandInteraction) => any,
+        handler: (x: Discord.MessageContextMenuCommandInteraction) => Promise<void>,
     ): MessageContextMenuInteractionBuilder<true> {
         this.handler = handler;
         return this as unknown as MessageContextMenuInteractionBuilder<true>;
@@ -54,7 +54,7 @@ export class UserContextMenuInteractionBuilder<HasHandler extends boolean = fals
     }
 
     set_handler(
-        handler: (x: Discord.UserContextMenuCommandInteraction) => any,
+        handler: (x: Discord.UserContextMenuCommandInteraction) => Promise<void>,
     ): MessageContextMenuInteractionBuilder<true> {
         this.handler = handler;
         return this as unknown as MessageContextMenuInteractionBuilder<true>;

@@ -135,7 +135,7 @@ export class TextBasedCommandBuilder<
     }
 
     set_handler(
-        handler: (x: TextBasedCommand, ...args: Args) => any,
+        handler: (x: TextBasedCommand, ...args: Args) => Promise<void>,
     ): TextBasedCommandBuilder<Args, HasDescriptions, true> {
         this.handler = handler;
         return this as unknown as TextBasedCommandBuilder<Args, HasDescriptions, true>;
