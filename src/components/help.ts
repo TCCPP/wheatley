@@ -81,6 +81,9 @@ export default class Help extends BotComponent {
                     "`!unmute <user> <reason>`",
                     "`!rolepersist add <user> <role> [duration] [reason]`",
                     "`!rolepersist remove <user> <role> <reason>`",
+                    "Rolepersist aliases: `noofftopic`, `nosuggestions`, `nosuggestionsatall`, `noreactions`, " +
+                        "`nothreads`, `noseriousofftopic`, `notil`, `nomemes`. " +
+                        "Syntax: `!(alias) <user> [duration] [reason].`",
                     "`!timeout add <user> [duration] [reason]`",
                     "`!timeout remove <user> <reason>`",
                     "`!warn <user> <reason>`",
