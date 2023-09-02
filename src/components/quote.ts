@@ -260,7 +260,12 @@ export default class Quote extends BotComponent {
                     ...quote_descriptors.map(d => `${d.channel_id}/${d.message_id}` + (d.block ? " block" : "")),
                     message.url,
                 );
-                const command = new TextBasedCommand("quote", message, this.wheatley);
+                const command = new TextBasedCommand(
+                    "quote",
+                    this.wheatley.text_commands["quote"],
+                    message,
+                    this.wheatley,
+                );
                 await this.do_quote(command, quote_descriptors);
                 const reply = command.get_reply();
                 assert(reply instanceof Discord.Message);

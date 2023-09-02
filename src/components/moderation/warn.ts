@@ -29,7 +29,7 @@ export default class Warn extends ModerationComponent {
         this.add_command(
             new TextBasedCommandBuilder("warn")
                 .set_permissions(Discord.PermissionFlagsBits.BanMembers)
-                .set_description("!warn <user> <reason>")
+                .set_description("Warn user")
                 .add_user_option({
                     title: "user",
                     description: "User to warn",

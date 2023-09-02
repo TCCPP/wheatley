@@ -33,10 +33,10 @@ export default class Timeout extends ModerationComponent {
         this.add_command(
             new TextBasedCommandBuilder("timeout")
                 .set_permissions(Discord.PermissionFlagsBits.BanMembers)
-                .set_description("!timeout")
+                .set_description("Timeout add / remove")
                 .add_subcommand(
                     new TextBasedCommandBuilder("add")
-                        .set_description("!timeout add <user> <duration> <reason>")
+                        .set_description("Timeout user")
                         .add_user_option({
                             title: "user",
                             description: "User to timeout (max 28 days)",
@@ -57,7 +57,7 @@ export default class Timeout extends ModerationComponent {
                 )
                 .add_subcommand(
                     new TextBasedCommandBuilder("remove")
-                        .set_description("!timeout remove <user> <duration> <reason>")
+                        .set_description("Timeout remove user")
                         .add_user_option({
                             title: "user",
                             description: "User to remove from timeout",

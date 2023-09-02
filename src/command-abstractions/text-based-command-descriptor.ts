@@ -2,7 +2,7 @@ import { strict as assert } from "assert";
 
 import * as Discord from "discord.js";
 
-import { M, critical_error, escape_regex, unwrap, zip } from "../utils.js";
+import { M, critical_error, escape_regex, unwrap, wrap, zip } from "../utils.js";
 import {
     TextBasedCommandParameterOptions,
     TextBasedCommandOptionType,
@@ -10,14 +10,15 @@ import {
 } from "./text-based-command-builder.js";
 import { TextBasedCommand } from "./text-based-command.js";
 import { BaseBotInteraction } from "./interaction-base.js";
-import { Wheatley, create_error_reply } from "../wheatley.js";
+import { Wheatley, create_basic_embed } from "../wheatley.js";
+import { colors } from "../common.js";
 
 export class BotTextBasedCommand<Args extends unknown[] = []> extends BaseBotInteraction<[TextBasedCommand, ...Args]> {
     public readonly options = new Discord.Collection<
         string,
         TextBasedCommandParameterOptions & { type: TextBasedCommandOptionType }
     >();
-    public readonly subcommands: Map<string, BotTextBasedCommand<any>> | null = null;
+    public readonly subcommands: Discord.Collection<string, BotTextBasedCommand<any>> | null = null;
 
     constructor(
         name: string,
@@ -30,7 +31,7 @@ export class BotTextBasedCommand<Args extends unknown[] = []> extends BaseBotInt
         super(name, builder.handler ?? (async () => critical_error("This shouldn't happen")));
         this.options = builder.options;
         if (builder.type === "top-level") {
-            this.subcommands = new Map();
+            this.subcommands = new Discord.Collection();
             for (const subcommand of builder.subcommands) {
                 for (const [sub_name, sub_description, sub_slash] of zip(
                     subcommand.names,
@@ -56,6 +57,19 @@ export class BotTextBasedCommand<Args extends unknown[] = []> extends BaseBotInt
 
     async parse_text_arguments(command_obj: TextBasedCommand, command_body: string) {
         // TODO: Handle `required` more thoroughly?
+        const reply_with_error = async (message: string, surpress_usage = false) => {
+            await command_obj.reply({
+                embeds: [
+                    create_basic_embed(
+                        undefined,
+                        colors.red,
+                        message +
+                            (surpress_usage ? "" : "\n\n**Usage:**\n" + command_obj.command_descriptor.get_usage()),
+                    ),
+                ],
+                should_text_reply: true,
+            });
+        };
         const command_options: unknown[] = [];
         for (const [i, option] of [...this.options.values()].entries()) {
             if (option.type == "string") {
@@ -67,7 +81,7 @@ export class BotTextBasedCommand<Args extends unknown[] = []> extends BaseBotInt
                     } else if (!option.required) {
                         command_options.push(null);
                     } else {
-                        await command_obj.reply(create_error_reply(`Required argument "${option.title}" not found`));
+                        await reply_with_error(`Required argument "${option.title}" not found`);
                         return;
                     }
                 } else if (i == this.options.size - 1) {
@@ -77,7 +91,7 @@ export class BotTextBasedCommand<Args extends unknown[] = []> extends BaseBotInt
                     } else if (!option.required) {
                         command_options.push(null);
                     } else {
-                        await command_obj.reply(create_error_reply(`Required argument "${option.title}" not found`));
+                        await reply_with_error(`Required argument "${option.title}" not found`);
                         return;
                     }
                 } else {
@@ -89,7 +103,7 @@ export class BotTextBasedCommand<Args extends unknown[] = []> extends BaseBotInt
                     } else if (!option.required) {
                         command_options.push(null);
                     } else {
-                        await command_obj.reply(create_error_reply(`Required argument "${option.title}" not found`));
+                        await reply_with_error(`Required argument "${option.title}" not found`);
                         return;
                     }
                 }
@@ -103,9 +117,7 @@ export class BotTextBasedCommand<Args extends unknown[] = []> extends BaseBotInt
                 } else if (!option.required) {
                     command_options.push(null);
                 } else {
-                    await command_obj.reply(
-                        create_error_reply(`Required numeric argument "${option.title}" not found`),
-                    );
+                    await reply_with_error(`Required numeric argument "${option.title}" not found`);
                     return;
                 }
             } else if (option.type == "user") {
@@ -120,13 +132,13 @@ export class BotTextBasedCommand<Args extends unknown[] = []> extends BaseBotInt
                         command_body = command_body.slice(match[0].length).trim();
                     } catch (e) {
                         M.debug(e);
-                        await command_obj.reply(create_error_reply(`Unable to find user`));
+                        await reply_with_error(`Unable to find user`, true);
                         return;
                     }
                 } else if (!option.required) {
                     command_options.push(null);
                 } else {
-                    await command_obj.reply(create_error_reply(`Required user argument "${option.title}" not found`));
+                    await reply_with_error(`Required user argument "${option.title}" not found`);
                     return;
                 }
                 // eslint-disable-next-line @typescript-eslint/no-unnecessary-condition
@@ -144,7 +156,7 @@ export class BotTextBasedCommand<Args extends unknown[] = []> extends BaseBotInt
                 } else if (!option.required) {
                     command_options.push(null);
                 } else {
-                    await command_obj.reply(create_error_reply(`Required role argument "${option.title}" not found`));
+                    await reply_with_error(`Required role argument "${option.title}" not found`);
                     return;
                 }
             } else {
@@ -152,9 +164,25 @@ export class BotTextBasedCommand<Args extends unknown[] = []> extends BaseBotInt
             }
         }
         if (command_body != "") {
-            await command_obj.reply(create_error_reply(`Unexpected parameters provided`));
+            await reply_with_error(`Unexpected parameters provided`);
             return;
         }
         return command_options as Args;
+    }
+
+    get_usage(raw = false): string {
+        if (this.subcommands) {
+            return this.subcommands
+                .map(command => wrap((raw ? "" : "!") + this.name + " " + command.get_usage(true), raw ? "" : "`"))
+                .join("\n");
+        } else {
+            return wrap(
+                [
+                    (raw ? "" : "!") + this.name,
+                    ...this.options.map(option => (option.required ? `<${option.title}>` : `[${option.title}]`)),
+                ].join(" "),
+                raw ? "" : "`",
+            );
+        }
     }
 }

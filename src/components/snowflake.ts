@@ -33,7 +33,7 @@ export default class Snowflake extends BotComponent {
 
         this.add_command(
             new TextBasedCommandBuilder("snowflake")
-                .set_description("snowflake")
+                .set_description("Snowflake")
                 .add_string_option({
                     title: "input",
                     description: "Input",

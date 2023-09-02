@@ -21,12 +21,12 @@ export default class Ping extends BotComponent {
         super(wheatley);
 
         this.add_command(
-            new TextBasedCommandBuilder(["ping", "wstatus"]).set_description("ping").set_handler(this.ping.bind(this)),
+            new TextBasedCommandBuilder(["ping", "wstatus"]).set_description("Ping").set_handler(this.ping.bind(this)),
         );
 
         this.add_command(
             new TextBasedCommandBuilder("echo")
-                .set_description("echo")
+                .set_description("Echo")
                 .add_string_option({
                     title: "input",
                     description: "The input to echo back",

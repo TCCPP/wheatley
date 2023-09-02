@@ -593,11 +593,11 @@ export class Wheatley extends EventEmitter {
             const command_name = match[1];
             if (command_name in this.text_commands) {
                 let command_body = message.content.substring(match[0].length).trim();
-                const command_obj = prev_command_obj
-                    ? new TextBasedCommand(prev_command_obj, command_name, message)
-                    : new TextBasedCommand(command_name, message, this);
-                this.register_text_command(message, command_obj);
                 let command = this.text_commands[command_name];
+                const command_obj = prev_command_obj
+                    ? new TextBasedCommand(prev_command_obj, command_name, command, message)
+                    : new TextBasedCommand(command_name, command, message, this);
+                this.register_text_command(message, command_obj);
                 if (command.subcommands) {
                     // expect a subcommand argument
                     const re = /^\S+/;
@@ -606,8 +606,13 @@ export class Wheatley extends EventEmitter {
                     if (subcommand) {
                         command = unwrap(subcommand);
                         command_body = command_body.slice(unwrap(match)[0].length).trim();
+                        command_obj.command_descriptor = command;
                     } else {
-                        await command_obj.reply(create_error_reply(`Expected subcommand specifier not found`));
+                        await command_obj.reply(
+                            create_error_reply(
+                                `Expected subcommand specifier not found.` + "\n\n**Usage:**\n" + command.get_usage(),
+                            ),
+                        );
                         return;
                     }
                 }
@@ -705,7 +710,7 @@ export class Wheatley extends EventEmitter {
                         command = unwrap(unwrap(command.subcommands).get(interaction.options.getSubcommand()));
                     }
                     const command_options: unknown[] = [];
-                    const command_object = new TextBasedCommand(interaction.commandName, interaction, this);
+                    const command_object = new TextBasedCommand(interaction.commandName, command, interaction, this);
                     if (command.permissions !== undefined) {
                         assert((await command_object.get_member()).permissions.has(command.permissions));
                     }

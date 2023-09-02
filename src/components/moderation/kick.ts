@@ -30,7 +30,7 @@ export default class Kick extends ModerationComponent {
         this.add_command(
             new TextBasedCommandBuilder("kick")
                 .set_permissions(Discord.PermissionFlagsBits.BanMembers)
-                .set_description("!kick <user> <reason>")
+                .set_description("Kick user")
                 .add_user_option({
                     title: "user",
                     description: "User to kick",

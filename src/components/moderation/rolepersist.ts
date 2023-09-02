@@ -3,7 +3,7 @@ import { strict as assert } from "assert";
 import * as Discord from "discord.js";
 import * as mongo from "mongodb";
 
-import { M, critical_error } from "../../utils.js";
+import { M, capitalize, critical_error } from "../../utils.js";
 import { Wheatley } from "../../wheatley.js";
 import {
     ModerationComponent,
@@ -31,10 +31,10 @@ export default class Rolepersist extends ModerationComponent {
         this.add_command(
             new TextBasedCommandBuilder("rolepersist")
                 .set_permissions(Discord.PermissionFlagsBits.BanMembers)
-                .set_description("!rolepersist")
+                .set_description("Rolepersist add/remove")
                 .add_subcommand(
                     new TextBasedCommandBuilder("add")
-                        .set_description("!rolepersist add <user> <role> <duration> <reason>")
+                        .set_description("Rolepersist user")
                         .add_user_option({
                             title: "user",
                             description: "User to rolepersist",
@@ -60,7 +60,7 @@ export default class Rolepersist extends ModerationComponent {
                 )
                 .add_subcommand(
                     new TextBasedCommandBuilder("remove")
-                        .set_description("!rolepersist remove <user> <role> <reason>")
+                        .set_description("Rolepersist remove user")
                         .add_user_option({
                             title: "user",
                             description: "User to rolepersist",
@@ -95,7 +95,7 @@ export default class Rolepersist extends ModerationComponent {
             this.add_command(
                 new TextBasedCommandBuilder(command)
                     .set_permissions(Discord.PermissionFlagsBits.BanMembers)
-                    .set_description(`!${command} <user> <duration> <reason>`)
+                    .set_description(`${capitalize(role).replace("_", " ")}`)
                     .add_user_option({
                         title: "user",
                         description: "User to rolepersist",

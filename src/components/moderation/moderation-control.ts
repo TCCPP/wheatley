@@ -20,7 +20,7 @@ export default class ModerationControl extends BotComponent {
 
         this.add_command(
             new TextBasedCommandBuilder("reason")
-                .set_description("Update the reason for a case. !reason <case> <reason>")
+                .set_description("Update the reason for a case")
                 .set_permissions(Discord.PermissionFlagsBits.BanMembers)
                 .add_number_option({
                     title: "case",
@@ -37,7 +37,7 @@ export default class ModerationControl extends BotComponent {
 
         this.add_command(
             new TextBasedCommandBuilder("duration")
-                .set_description("Update the duration for a case. !duration <case> <duration>")
+                .set_description("Update the duration for a case")
                 .set_permissions(Discord.PermissionFlagsBits.BanMembers)
                 .add_number_option({
                     title: "case",
@@ -54,7 +54,7 @@ export default class ModerationControl extends BotComponent {
 
         this.add_command(
             new TextBasedCommandBuilder("expunge")
-                .set_description("Expunge a case. !expunge <case> <reason>")
+                .set_description("Expunge a case")
                 .set_permissions(Discord.PermissionFlagsBits.BanMembers)
                 .add_number_option({
                     title: "case",

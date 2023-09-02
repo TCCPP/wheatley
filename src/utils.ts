@@ -700,3 +700,18 @@ export type MoreThanOne<T> = [T, T, ...T[]];
 
 // see <https://github.com/microsoft/TypeScript/issues/31501>
 export type DistributedOmit<T, K extends PropertyKey> = T extends T ? Pick<T, Exclude<keyof T, K>> : never;
+
+export function capitalize(str: string) {
+    if (str === "") {
+        return str;
+    }
+    return str.charAt(0).toUpperCase() + str.slice(1);
+}
+
+export function wrap(str: string, thing: string | [string, string]) {
+    if (is_string(thing)) {
+        return thing + str + thing;
+    } else {
+        return thing[0] + str + thing[1];
+    }
+}

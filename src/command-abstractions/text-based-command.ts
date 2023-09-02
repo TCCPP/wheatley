@@ -5,6 +5,7 @@ import * as Discord from "discord.js";
 import { forge_snowflake } from "../components/snowflake.js";
 import { is_string, unwrap } from "../utils.js";
 import { Wheatley } from "../wheatley.js";
+import { BotTextBasedCommand } from "./text-based-command-descriptor.js";
 
 export type CommandAbstractionReplyOptions = {
     // default: false
@@ -21,6 +22,7 @@ const default_allowed_mentions: Discord.MessageMentionOptions = {
 
 export class TextBasedCommand {
     public readonly name: string;
+    public command_descriptor: BotTextBasedCommand<unknown[]>;
     private readonly wheatley: Wheatley;
     private readonly reply_object: Discord.ChatInputCommandInteraction | Discord.Message;
 
@@ -37,22 +39,39 @@ export class TextBasedCommand {
     private editing = false;
 
     // normal constructor
-    constructor(name: string, reply_object: Discord.ChatInputCommandInteraction | Discord.Message, wheatley: Wheatley);
+    constructor(
+        name: string,
+        command: BotTextBasedCommand<unknown[]>,
+        reply_object: Discord.ChatInputCommandInteraction | Discord.Message,
+        wheatley: Wheatley,
+    );
     // copy constructor - used for edit
-    constructor(command: TextBasedCommand, name: string, reply_object: Discord.Message);
+    constructor(
+        command: TextBasedCommand,
+        name: string,
+        command_descriptor: BotTextBasedCommand<unknown[]>,
+        reply_object: Discord.Message,
+    );
     // impl
     constructor(
         ..._args:
-            | [string, Discord.ChatInputCommandInteraction | Discord.Message, Wheatley]
-            | [TextBasedCommand, string, Discord.Message]
+            | [string, BotTextBasedCommand<unknown[]>, Discord.ChatInputCommandInteraction | Discord.Message, Wheatley]
+            | [TextBasedCommand, string, BotTextBasedCommand<unknown[]>, Discord.Message]
     ) {
         const args = is_string(_args[0])
-            ? (["n", ..._args] as ["n", string, Discord.ChatInputCommandInteraction | Discord.Message, Wheatley])
-            : (["c", ..._args] as ["c", TextBasedCommand, string, Discord.Message]);
+            ? (["n", ..._args] as [
+                  "n",
+                  string,
+                  BotTextBasedCommand<unknown[]>,
+                  Discord.ChatInputCommandInteraction | Discord.Message,
+                  Wheatley,
+              ])
+            : (["c", ..._args] as ["c", TextBasedCommand, string, BotTextBasedCommand<unknown[]>, Discord.Message]);
         if (args[0] == "n") {
             // construct new command
-            const [_, name, reply_object, wheatley] = args;
+            const [_, name, command, reply_object, wheatley] = args;
             this.name = name;
+            this.command_descriptor = command;
             this.reply_object = reply_object;
             this.wheatley = wheatley;
             if (reply_object instanceof Discord.ChatInputCommandInteraction) {
@@ -73,8 +92,9 @@ export class TextBasedCommand {
             // eslint-disable-next-line @typescript-eslint/no-unnecessary-condition
         } else if (args[0] == "c") {
             // construct from copy, used for edit
-            const [_, command, name, reply_object] = args;
+            const [_, command, name, command_descriptor, reply_object] = args;
             this.name = name;
+            this.command_descriptor = command_descriptor;
             this.wheatley = command.wheatley;
             this.reply_object = reply_object;
             this.guild = command.guild;

@@ -31,7 +31,7 @@ export default class Roulette extends BotComponent {
 
         this.add_command(
             new TextBasedCommandBuilder("leaderboard")
-                .set_description("leaderboard")
+                .set_description("Leaderboard")
                 .set_handler(this.leaderboard.bind(this)),
         );
     }
