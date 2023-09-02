@@ -106,7 +106,10 @@ export default class Modlogs extends BotComponent {
         page: number,
     ): Promise<Discord.BaseMessageOptions & CommandAbstractionReplyOptions> {
         // TODO: Expunged or irrelevant? Show how things were removed / why?
-        const moderations = await this.wheatley.database.moderations.find({ user: user.id, expunged: null }).toArray();
+        const moderations = await this.wheatley.database.moderations
+            .find({ user: user.id, expunged: null })
+            .sort({ issued_at: -1 })
+            .toArray();
         const pages = Math.ceil(moderations.length / moderations_per_page);
         return {
             embeds: [
