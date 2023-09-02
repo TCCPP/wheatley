@@ -80,35 +80,48 @@ export default class Rolepersist extends ModerationComponent {
                 ),
         );
 
-        this.add_command(
-            new TextBasedCommandBuilder("noofftopic")
-                .set_permissions(Discord.PermissionFlagsBits.BanMembers)
-                .set_description("!noofftopic <user> <duration> <reason>")
-                .add_user_option({
-                    title: "user",
-                    description: "User to rolepersist",
-                    required: true,
-                })
-                .add_string_option({
-                    title: "duration",
-                    description: "Duration",
-                    regex: duration_regex,
-                    required: false,
-                })
-                .add_string_option({
-                    title: "reason",
-                    description: "Reason",
-                    required: false,
-                })
-                .set_handler(
-                    async (
-                        command: TextBasedCommand,
-                        user: Discord.User,
-                        duration: string | null,
-                        reason: string | null,
-                    ) => await this.rolepersist_add(command, user, this.wheatley.roles.no_off_topic, duration, reason),
-                ),
-        );
+        const aliases: Record<string, keyof Wheatley["roles"]> = {
+            noofftopic: "no_off_topic",
+            nosuggestions: "no_suggestions",
+            nosuggestionsatall: "no_suggestions_at_all",
+            noreactions: "no_reactions",
+            nothreads: "no_threads",
+            noseriousofftopic: "no_serious_off_topic",
+            notil: "no_til",
+            nomemes: "no_memes",
+        };
+
+        for (const [command, role] of Object.entries(aliases)) {
+            this.add_command(
+                new TextBasedCommandBuilder(command)
+                    .set_permissions(Discord.PermissionFlagsBits.BanMembers)
+                    .set_description(`!${command} <user> <duration> <reason>`)
+                    .add_user_option({
+                        title: "user",
+                        description: "User to rolepersist",
+                        required: true,
+                    })
+                    .add_string_option({
+                        title: "duration",
+                        description: "Duration",
+                        regex: duration_regex,
+                        required: false,
+                    })
+                    .add_string_option({
+                        title: "reason",
+                        description: "Reason",
+                        required: false,
+                    })
+                    .set_handler(
+                        async (
+                            command: TextBasedCommand,
+                            user: Discord.User,
+                            duration: string | null,
+                            reason: string | null,
+                        ) => await this.rolepersist_add(command, user, this.wheatley.roles[role], duration, reason),
+                    ),
+            );
+        }
     }
 
     async apply_moderation(entry: moderation_entry) {
@@ -143,7 +156,12 @@ export default class Rolepersist extends ModerationComponent {
                 await reply_with_error(command, "Cannot apply moderation to user");
                 return;
             }
-            const base_moderation: basic_moderation_with_user = { type: "rolepersist", user: user.id, role: role.id };
+            const base_moderation: basic_moderation_with_user = {
+                type: "rolepersist",
+                user: user.id,
+                role: role.id,
+                role_name: role.name,
+            };
             if (await this.is_moderation_applied(base_moderation)) {
                 await reply_with_error(command, "User is already role-persisted with this role");
                 return;
@@ -156,6 +174,7 @@ export default class Rolepersist extends ModerationComponent {
                 moderator_name: (await command.get_member()).displayName,
                 type: "rolepersist",
                 role: role.id,
+                role_name: role.name,
                 reason,
                 issued_at: Date.now(),
                 duration: parse_duration(duration),
