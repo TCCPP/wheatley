@@ -74,11 +74,15 @@ export default class Help extends BotComponent {
             embed.addFields({
                 name: "Moderation",
                 value: build_description([
-                    "`!ban <user> <duration> <reason>`",
-                    "`!kick <user> <reason>`",
-                    "`!mute <user> <duration> <reason>`",
-                    "`!rolepersist add <user> <role> <duration> <reason>`",
+                    "`!ban <user> [duration] [reason]`",
+                    "`!unban <user> <reason>`",
+                    "`!kick <user> [reason]`",
+                    "`!mute <user> [duration] [reason]`",
+                    "`!unmute <user> <reason>`",
+                    "`!rolepersist add <user> <role> [duration] [reason]`",
                     "`!rolepersist remove <user> <role> <reason>`",
+                    "`!timeout add <user> [duration] [reason]`",
+                    "`!timeout remove <user> <reason>`",
                     "`!warn <user> <reason>`",
                     "`!reason <case> <reason>`",
                     "`!duration <case> <duration>`",
@@ -86,6 +90,8 @@ export default class Help extends BotComponent {
                     "`!modlogs <user>`",
                     "`!case <case>`",
                     "`!redirect <channel>`",
+                    'Durations: "perm" for permanent or `number unit` (whitespace ignored).' +
+                        " Units are y, M, w, d, h, m, s.",
                 ]),
             });
         }
