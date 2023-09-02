@@ -1,6 +1,6 @@
 import * as Discord from "discord.js";
 import { strict as assert } from "assert";
-import { unwrap } from "../utils.js";
+import { M, unwrap } from "../utils.js";
 import { colors } from "../common.js";
 import { BotComponent } from "../bot-component.js";
 import { Wheatley } from "../wheatley.js";
@@ -78,6 +78,18 @@ export default class ThreadBasedChannels extends BotComponent {
                     ),
                 ],
             });
+        }
+    }
+
+    override async on_message_delete(message: Discord.Message | Discord.PartialMessage) {
+        if (message.channelId === this.wheatley.channels.today_i_learned.id) {
+            if (message.hasThread) {
+                await unwrap(message.thread).send(
+                    "This today I learned post was removed. If it was removed by a moderator it was likely due to it " +
+                        "being off topic. Note that the channel is about more than just what you learned today, it's " +
+                        "for sharing things that might be useful to others as well.",
+                );
+            }
         }
     }
 }
