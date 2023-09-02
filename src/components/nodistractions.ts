@@ -92,13 +92,6 @@ export default class Nodistractions extends BotComponent {
         );
     }
 
-    override destroy() {
-        super.destroy();
-        if (this.timer) {
-            clearTimeout(this.timer);
-        }
-    }
-
     override async on_ready() {
         // load entries
         for await (const { user, start, duration } of this.wheatley.database.nodistractions.find()) {

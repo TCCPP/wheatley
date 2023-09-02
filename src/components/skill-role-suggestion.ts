@@ -33,11 +33,6 @@ export default class SkillRoleSuggestion extends BotComponent {
         );
     }
 
-    override destroy() {
-        super.destroy();
-        this.target_map.destroy();
-    }
-
     async skill_suggestion(
         interaction: Discord.UserContextMenuCommandInteraction | Discord.MessageContextMenuCommandInteraction,
     ) {

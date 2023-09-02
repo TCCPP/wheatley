@@ -36,12 +36,6 @@ export default class Roulette extends BotComponent {
         );
     }
 
-    override destroy() {
-        super.destroy();
-        this.warned_users.destroy();
-        this.streaks.destroy();
-    }
-
     make_click_embed(author: Discord.User) {
         const streak = (this.streaks.get(author.id) ?? 0) + 1;
         return new Discord.EmbedBuilder()

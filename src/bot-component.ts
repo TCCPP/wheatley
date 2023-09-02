@@ -47,12 +47,6 @@ export class BotComponent {
         }
     }
 
-    destroy() {
-        for (const [event, listener] of this.listeners) {
-            this.wheatley.client.off(event, listener);
-        }
-    }
-
     private on_wheatley_ready() {
         this.setup_listener("messageCreate", this.on_message_create);
         this.setup_listener("messageDelete", this.on_message_delete);

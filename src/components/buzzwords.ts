@@ -179,17 +179,6 @@ export default class Buzzwords extends BotComponent {
         this.slowmode = new SelfClearingSet<string>(MINUTE / 2, MINUTE / 4);
     }
 
-    override destroy() {
-        super.destroy();
-        this.slowmode.destroy();
-        if (this.timeout) {
-            clearTimeout(this.timeout);
-        }
-        if (this.interval) {
-            clearInterval(this.interval);
-        }
-    }
-
     override async on_ready() {
         // eslint-disable-next-line @typescript-eslint/no-unnecessary-condition
         if (ENABLED) {

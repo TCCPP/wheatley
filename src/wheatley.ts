@@ -335,17 +335,6 @@ export class Wheatley extends EventEmitter {
         await this.fetch_root_mod_list(this.client);
     }
 
-    destroy() {
-        this.database.close().catch(critical_error);
-        for (const component of this.components.values()) {
-            component.destroy();
-        }
-        this.text_command_map.destroy();
-        this.deletable_map.destroy();
-        this.tracker.destroy();
-        this.client.destroy().catch(critical_error);
-    }
-
     async add_component<T extends BotComponent>(component: { new (w: Wheatley): T; get is_freestanding(): boolean }) {
         if (!this.freestanding || component.is_freestanding) {
             M.log(`Initializing ${component.name}`);

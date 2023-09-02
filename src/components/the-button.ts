@@ -63,13 +63,6 @@ export default class TheButton extends BotComponent {
         super(wheatley);
     }
 
-    override destroy() {
-        super.destroy();
-        if (this.interval) {
-            clearInterval(this.interval);
-        }
-    }
-
     make_message(time_until_doomsday: number): Discord.MessageEditOptions & Discord.MessageCreateOptions {
         const [hours, minutes, seconds] = dissectDelta(time_until_doomsday);
         const row = new Discord.ActionRowBuilder<Discord.MessageActionRowComponentBuilder>().addComponents(

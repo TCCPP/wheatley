@@ -54,13 +54,6 @@ export default class UsernameManager extends BotComponent {
         super(wheatley);
     }
 
-    override destroy() {
-        super.destroy();
-        if (this.interval) {
-            clearInterval(this.interval);
-        }
-    }
-
     override async on_ready() {
         await this.cleanup();
         // Every hour give it a scan

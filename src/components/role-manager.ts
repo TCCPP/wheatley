@@ -22,13 +22,6 @@ export default class RoleManager extends BotComponent {
         super(wheatley);
     }
 
-    override destroy() {
-        super.destroy();
-        if (this.interval) {
-            clearInterval(this.interval);
-        }
-    }
-
     override async on_ready() {
         this.pink_role = unwrap(await this.wheatley.TCCPP.roles.fetch(this.wheatley.roles.pink.id));
         this.interval = setInterval(() => {

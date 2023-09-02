@@ -31,10 +31,6 @@ export default class ServerSuggestionReactions extends BotComponent {
         super(wheatley);
     }
 
-    override destroy() {
-        this.stop = true;
-    }
-
     async handle_fetched_message(message: Discord.Message) {
         for (const [_, reaction] of message.reactions.cache) {
             const users = await reaction.users.fetch();

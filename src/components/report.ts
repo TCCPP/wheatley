@@ -39,11 +39,6 @@ export default class Report extends BotComponent {
         this.add_command(new ModalInteractionBuilder(this.report_modal, this.modal_handler.bind(this)));
     }
 
-    override destroy() {
-        super.destroy();
-        this.target_map.destroy();
-    }
-
     async report(interaction: Discord.MessageContextMenuCommandInteraction) {
         if (interaction.guildId != this.wheatley.TCCPP.id) {
             await interaction.reply({

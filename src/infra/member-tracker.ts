@@ -43,10 +43,6 @@ export class MemberTracker {
         wheatley.client.on("guildBanAdd", this.on_ban.bind(this));
     }
 
-    destroy() {
-        clearInterval(this.interval);
-    }
-
     // Bookkeeping
     trim() {
         const now = Date.now();

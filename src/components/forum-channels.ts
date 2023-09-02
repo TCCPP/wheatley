@@ -51,15 +51,6 @@ export default class ForumChannels extends BotComponent {
         super(wheatley);
     }
 
-    override destroy() {
-        super.destroy();
-        this.possibly_resolved.destroy();
-        clearInterval(this.interval);
-        for (const [_, timeout] of this.timeout_map) {
-            clearTimeout(timeout);
-        }
-    }
-
     async forum_cleanup() {
         // TODO: Temporarily turned off
         M.debug("Running forum cleanup");
