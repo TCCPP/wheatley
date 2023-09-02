@@ -79,6 +79,36 @@ export default class Rolepersist extends ModerationComponent {
                         .set_handler(this.rolepersist_remove.bind(this)),
                 ),
         );
+
+        this.add_command(
+            new TextBasedCommandBuilder("noofftopic")
+                .set_permissions(Discord.PermissionFlagsBits.BanMembers)
+                .set_description("!noofftopic <user> <duration> <reason>")
+                .add_user_option({
+                    title: "user",
+                    description: "User to rolepersist",
+                    required: true,
+                })
+                .add_string_option({
+                    title: "duration",
+                    description: "Duration",
+                    regex: duration_regex,
+                    required: false,
+                })
+                .add_string_option({
+                    title: "reason",
+                    description: "Reason",
+                    required: false,
+                })
+                .set_handler(
+                    async (
+                        command: TextBasedCommand,
+                        user: Discord.User,
+                        duration: string | null,
+                        reason: string | null,
+                    ) => await this.rolepersist_add(command, user, this.wheatley.roles.no_off_topic, duration, reason),
+                ),
+        );
     }
 
     async apply_moderation(entry: moderation_entry) {

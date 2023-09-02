@@ -35,7 +35,7 @@ import { TextBasedCommand } from "../../command-abstractions/text-based-command.
  *
  */
 
-export type moderation_type = "mute" | "warn" | "ban" | "kick" | "no off-topic" | "rolepersist" | "timeout";
+export type moderation_type = "mute" | "warn" | "ban" | "kick" | "rolepersist" | "timeout";
 
 export type moderation_edit_info = {
     moderator: string;
