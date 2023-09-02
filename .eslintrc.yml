@@ -55,6 +55,7 @@ rules:
     - destructuring: all
   curly:
     - error
+  "prettier/prettier": "warn"
   "@typescript-eslint/no-unused-vars":
     - warn
     - destructuredArrayIgnorePattern: ^_
