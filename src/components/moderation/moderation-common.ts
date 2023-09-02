@@ -4,7 +4,16 @@ import { EventEmitter } from "events";
 
 import { strict as assert } from "assert";
 
-import { M, Mutex, SleepList, build_description, critical_error, time_to_human, unwrap } from "../../utils.js";
+import {
+    DistributedOmit,
+    M,
+    Mutex,
+    SleepList,
+    build_description,
+    critical_error,
+    time_to_human,
+    unwrap,
+} from "../../utils.js";
 import { BotComponent } from "../../bot-component.js";
 import { Wheatley } from "../../wheatley.js";
 import { colors } from "../../common.js";
@@ -51,6 +60,7 @@ export type basic_moderation =
     | {
           type: "rolepersist";
           role: string; // snowflake
+          role_name: string;
       };
 
 export type basic_moderation_with_user = basic_moderation & { user: string };
@@ -320,7 +330,7 @@ export abstract class ModerationComponent extends BotComponent {
         command: TextBasedCommand,
         user: Discord.User,
         action: string,
-        moderation: Omit<moderation_entry, "case">,
+        moderation: DistributedOmit<moderation_entry, "case">,
         is_removal = false,
     ) {
         const duration = moderation.duration ? time_to_human(moderation.duration) : "Permanent";
@@ -338,6 +348,7 @@ export abstract class ModerationComponent extends BotComponent {
                                     ? null
                                     : `**Duration:** ${duration}`,
                                 `**Reason:** ${moderation.reason}`,
+                                moderation.type === "rolepersist" ? `**Role:** ${moderation.role_name}` : null,
                             ]),
                         )
                         .setFooter(

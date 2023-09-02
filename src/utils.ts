@@ -697,3 +697,6 @@ export type ConditionalOptional<C extends true | false, T> = C extends true ? T 
 export type ConditionalNull<C extends true | false, T> = C extends true ? T : T | null;
 
 export type MoreThanOne<T> = [T, T, ...T[]];
+
+// see <https://github.com/microsoft/TypeScript/issues/31501>
+export type DistributedOmit<T, K extends PropertyKey> = T extends T ? Pick<T, Exclude<keyof T, K>> : never;
