@@ -2,7 +2,8 @@ import { strict as assert } from "assert";
 
 import * as Discord from "discord.js";
 
-import { unwrap, ConditionalOptional } from "../utils.js";
+import { unwrap } from "../utils/misc.js";
+import { ConditionalOptional } from "../utils/typing.js";
 import { BaseInteractionBuilder, BaseBotInteraction } from "./interaction-base.js";
 
 export class ModalInteractionBuilder<HasHandler extends boolean = false> extends BaseInteractionBuilder<

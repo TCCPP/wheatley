@@ -5,7 +5,14 @@ import * as Discord from "discord.js";
 import { EventEmitter } from "events";
 
 import { colors, MINUTE } from "./common.js";
-import { critical_error, M, directory_exists, SelfClearingMap, zip, walk_dir, is_string, unwrap } from "./utils.js";
+import { unwrap } from "./utils/misc.js";
+import { is_string } from "./utils/strings.js";
+import { zip } from "./utils/iterables.js";
+import { directory_exists } from "./utils/filesystem.js";
+import { walk_dir } from "./utils/filesystem.js";
+import { critical_error } from "./utils/debugging-and-logging.js";
+import { SelfClearingMap } from "./utils/containers.js";
+import { M } from "./utils/debugging-and-logging.js";
 import { BotComponent } from "./bot-component.js";
 
 import { MessageContextMenuInteractionBuilder } from "./command-abstractions/context-menu.js";

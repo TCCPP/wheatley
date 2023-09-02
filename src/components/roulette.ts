@@ -1,6 +1,8 @@
 import * as Discord from "discord.js";
 import { strict as assert } from "assert";
-import { critical_error, M, SelfClearingMap, SelfClearingSet } from "../utils.js";
+import { critical_error } from "../utils/debugging-and-logging.js";
+import { SelfClearingMap, SelfClearingSet } from "../utils/containers.js";
+import { M } from "../utils/debugging-and-logging.js";
 import { colors, MINUTE } from "../common.js";
 import { BotComponent } from "../bot-component.js";
 import { Wheatley } from "../wheatley.js";

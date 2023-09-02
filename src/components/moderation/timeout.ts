@@ -3,7 +3,9 @@ import * as mongo from "mongodb";
 
 import { strict as assert } from "assert";
 
-import { M, critical_error, unwrap } from "../../utils.js";
+import { unwrap } from "../../utils/misc.js";
+import { critical_error } from "../../utils/debugging-and-logging.js";
+import { M } from "../../utils/debugging-and-logging.js";
 import { Wheatley } from "../../wheatley.js";
 import {
     ModerationComponent,

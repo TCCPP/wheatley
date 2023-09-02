@@ -1,6 +1,10 @@
 import * as Discord from "discord.js";
 import { strict as assert } from "assert";
-import { critical_error, index_of_first_not_satisfying, is_media_link_embed, M, unwrap } from "../utils.js";
+import { unwrap } from "../utils/misc.js";
+import { index_of_first_not_satisfying } from "../utils/iterables.js";
+import { is_media_link_embed } from "../utils/discord.js";
+import { critical_error } from "../utils/debugging-and-logging.js";
+import { M } from "../utils/debugging-and-logging.js";
 import { colors, MINUTE } from "../common.js";
 import { decode_snowflake, forge_snowflake } from "./snowflake.js";
 import { BotComponent } from "../bot-component.js";

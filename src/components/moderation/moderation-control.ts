@@ -2,7 +2,8 @@ import * as Discord from "discord.js";
 
 import { strict as assert } from "assert";
 
-import { M, time_to_human } from "../../utils.js";
+import { time_to_human } from "../../utils/strings.js";
+import { M } from "../../utils/debugging-and-logging.js";
 import { BotComponent } from "../../bot-component.js";
 import { Wheatley } from "../../wheatley.js";
 import { ModerationComponent, parse_duration, reply_with_error, reply_with_success } from "./moderation-common.js";

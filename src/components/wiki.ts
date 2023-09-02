@@ -4,7 +4,9 @@ import * as Discord from "discord.js";
 import * as fs from "fs";
 import * as path from "path";
 
-import { M, unwrap, walk_dir } from "../utils.js";
+import { unwrap } from "../utils/misc.js";
+import { walk_dir } from "../utils/filesystem.js";
+import { M } from "../utils/debugging-and-logging.js";
 import { colors } from "../common.js";
 import { BotComponent } from "../bot-component.js";
 import { Wheatley } from "../wheatley.js";

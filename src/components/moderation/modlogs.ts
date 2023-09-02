@@ -2,7 +2,10 @@ import { strict as assert } from "assert";
 
 import * as Discord from "discord.js";
 
-import { M, build_description, pluralize, remove, time_to_human } from "../../utils.js";
+import { build_description } from "../../utils/strings.js";
+import { pluralize, time_to_human } from "../../utils/strings.js";
+import { remove } from "../../utils/typing.js";
+import { M } from "../../utils/debugging-and-logging.js";
 import { BotComponent } from "../../bot-component.js";
 import { Wheatley } from "../../wheatley.js";
 import { moderation_entry, reply_with_error } from "./moderation-common.js";

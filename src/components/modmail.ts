@@ -1,7 +1,9 @@
 import { strict as assert } from "assert";
 import * as Discord from "discord.js";
 
-import { critical_error, get_url_for, M } from "../utils.js";
+import { get_url_for } from "../utils/discord.js";
+import { critical_error } from "../utils/debugging-and-logging.js";
+import { M } from "../utils/debugging-and-logging.js";
 import { colors, MINUTE } from "../common.js";
 import { BotComponent } from "../bot-component.js";
 import { Wheatley } from "../wheatley.js";

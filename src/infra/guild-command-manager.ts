@@ -3,7 +3,8 @@ import * as Discord from "discord.js";
 
 import * as util from "util";
 
-import { critical_error, M } from "../utils.js";
+import { critical_error } from "../utils/debugging-and-logging.js";
+import { M } from "../utils/debugging-and-logging.js";
 import { Wheatley } from "../wheatley.js";
 
 export class GuildCommandManager {

@@ -1,6 +1,7 @@
 import * as Discord from "discord.js";
 import { strict as assert } from "assert";
-import { format_list, M } from "../utils.js";
+import { format_list } from "../utils/strings.js";
+import { M } from "../utils/debugging-and-logging.js";
 import { colors } from "../common.js";
 import { BotComponent } from "../bot-component.js";
 import { Wheatley } from "../wheatley.js";

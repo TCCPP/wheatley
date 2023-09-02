@@ -3,7 +3,8 @@ import { strict as assert } from "assert";
 import * as Discord from "discord.js";
 
 import { forge_snowflake } from "../components/snowflake.js";
-import { is_string, unwrap } from "../utils.js";
+import { unwrap } from "../utils/misc.js";
+import { is_string } from "../utils/strings.js";
 import { Wheatley } from "../wheatley.js";
 import { BotTextBasedCommand } from "./text-based-command-descriptor.js";
 

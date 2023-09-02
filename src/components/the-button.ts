@@ -1,6 +1,9 @@
 import * as Discord from "discord.js";
 import { strict as assert } from "assert";
-import { M, critical_error, time_to_human, floor, round, unwrap } from "../utils.js";
+import { floor, round, unwrap } from "../utils/misc.js";
+import { time_to_human } from "../utils/strings.js";
+import { critical_error } from "../utils/debugging-and-logging.js";
+import { M } from "../utils/debugging-and-logging.js";
 import { DAY, MINUTE, colors } from "../common.js";
 import { BotComponent } from "../bot-component.js";
 import { Wheatley } from "../wheatley.js";

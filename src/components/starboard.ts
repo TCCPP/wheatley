@@ -1,6 +1,10 @@
 import * as Discord from "discord.js";
 import { strict as assert } from "assert";
-import { KeyedMutexSet, M, critical_error, departialize, unwrap } from "../utils.js";
+import { unwrap } from "../utils/misc.js";
+import { departialize } from "../utils/discord.js";
+import { critical_error } from "../utils/debugging-and-logging.js";
+import { KeyedMutexSet } from "../utils/containers.js";
+import { M } from "../utils/debugging-and-logging.js";
 import { MINUTE } from "../common.js";
 import { BotComponent } from "../bot-component.js";
 import { Wheatley } from "../wheatley.js";

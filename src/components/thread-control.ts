@@ -1,6 +1,7 @@
 import * as Discord from "discord.js";
 import { strict as assert } from "assert";
-import { unwrap, M } from "../utils.js";
+import { unwrap } from "../utils/misc.js";
+import { M } from "../utils/debugging-and-logging.js";
 import { BotComponent } from "../bot-component.js";
 import { Wheatley } from "../wheatley.js";
 import { TextBasedCommandBuilder } from "../command-abstractions/text-based-command-builder.js";

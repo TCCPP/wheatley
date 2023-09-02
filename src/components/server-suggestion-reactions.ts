@@ -1,7 +1,10 @@
 import * as Discord from "discord.js";
 import { strict as assert } from "assert";
 import { MINUTE } from "../common.js";
-import { critical_error, delay, file_exists, M } from "../utils.js";
+import { delay } from "../utils/misc.js";
+import { file_exists } from "../utils/filesystem.js";
+import { critical_error } from "../utils/debugging-and-logging.js";
+import { M } from "../utils/debugging-and-logging.js";
 import { TRACKER_START_TIME } from "./server-suggestion-tracker.js";
 import { forge_snowflake } from "./snowflake.js";
 import { BotComponent } from "../bot-component.js";

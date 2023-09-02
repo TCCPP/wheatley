@@ -4,16 +4,14 @@ import { EventEmitter } from "events";
 
 import { strict as assert } from "assert";
 
-import {
-    DistributedOmit,
-    M,
-    Mutex,
-    SleepList,
-    build_description,
-    critical_error,
-    time_to_human,
-    unwrap,
-} from "../../utils.js";
+import { unwrap } from "../../utils/misc.js";
+import { build_description } from "../../utils/strings.js";
+import { time_to_human } from "../../utils/strings.js";
+import { DistributedOmit } from "../../utils/typing.js";
+import { SleepList } from "../../utils/containers.js";
+import { critical_error } from "../../utils/debugging-and-logging.js";
+import { Mutex } from "../../utils/containers.js";
+import { M } from "../../utils/debugging-and-logging.js";
 import { BotComponent } from "../../bot-component.js";
 import { Wheatley } from "../../wheatley.js";
 import { colors } from "../../common.js";

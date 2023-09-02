@@ -4,7 +4,8 @@ import { strict as assert } from "assert";
 
 import { BotComponent } from "../bot-component.js";
 import { Wheatley } from "../wheatley.js";
-import { M, unwrap } from "../utils.js";
+import { unwrap } from "../utils/misc.js";
+import { M } from "../utils/debugging-and-logging.js";
 
 /**
  * Deletes thread creation messages.

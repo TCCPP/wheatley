@@ -18,7 +18,8 @@
 
 import * as Discord from "discord.js";
 
-import { critical_error, init_debugger, M } from "./utils.js";
+import { critical_error, init_debugger } from "./utils/debugging-and-logging.js";
+import { M } from "./utils/debugging-and-logging.js";
 
 import { wheatley_auth, Wheatley } from "./wheatley.js";
 import fs from "fs";

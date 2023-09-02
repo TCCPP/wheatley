@@ -1,5 +1,5 @@
 import { strict as assert } from "assert";
-import { M } from "./utils.js";
+import { M } from "./utils/debugging-and-logging.js";
 
 // Common constants
 export const MINUTE = 1000 * 60;

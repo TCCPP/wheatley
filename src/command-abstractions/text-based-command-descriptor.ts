@@ -2,7 +2,11 @@ import { strict as assert } from "assert";
 
 import * as Discord from "discord.js";
 
-import { M, critical_error, escape_regex, unwrap, wrap, zip } from "../utils.js";
+import { unwrap } from "../utils/misc.js";
+import { escape_regex, wrap } from "../utils/strings.js";
+import { zip } from "../utils/iterables.js";
+import { critical_error } from "../utils/debugging-and-logging.js";
+import { M } from "../utils/debugging-and-logging.js";
 import {
     TextBasedCommandParameterOptions,
     TextBasedCommandOptionType,

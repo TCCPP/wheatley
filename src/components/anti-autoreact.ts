@@ -1,6 +1,7 @@
 import * as Discord from "discord.js";
 import { strict as assert } from "assert";
-import { M, departialize } from "../utils.js";
+import { departialize } from "../utils/discord.js";
+import { M } from "../utils/debugging-and-logging.js";
 import { BotComponent } from "../bot-component.js";
 
 /**

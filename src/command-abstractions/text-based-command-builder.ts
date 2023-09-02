@@ -2,7 +2,8 @@ import { strict as assert } from "assert";
 
 import * as Discord from "discord.js";
 
-import { ConditionalOptional, MoreThanOne, Append, intersection, ConditionalNull } from "../utils.js";
+import { ConditionalOptional, MoreThanOne, ConditionalNull } from "../utils/typing.js";
+import { Append, intersection } from "../utils/typing.js";
 import { TextBasedCommand } from "./text-based-command.js";
 import { BaseBuilder } from "./interaction-base.js";
 

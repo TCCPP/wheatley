@@ -3,7 +3,9 @@ import { strict as assert } from "assert";
 import * as Discord from "discord.js";
 import * as mongo from "mongodb";
 
-import { M, capitalize, critical_error } from "../../utils.js";
+import { capitalize } from "../../utils/strings.js";
+import { critical_error } from "../../utils/debugging-and-logging.js";
+import { M } from "../../utils/debugging-and-logging.js";
 import { Wheatley } from "../../wheatley.js";
 import {
     ModerationComponent,

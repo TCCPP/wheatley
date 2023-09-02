@@ -4,7 +4,9 @@ import { strict as assert } from "assert";
 
 import * as fs from "fs";
 
-import { critical_error, format_list, M } from "../utils.js";
+import { format_list } from "../utils/strings.js";
+import { critical_error } from "../utils/debugging-and-logging.js";
+import { M } from "../utils/debugging-and-logging.js";
 
 import { cppref_index, cppref_page, CpprefSubIndex } from "../../indexes/cppref/types.js";
 import { Index } from "../algorithm/search.js";

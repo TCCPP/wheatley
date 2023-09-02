@@ -1,5 +1,5 @@
 import { strict as assert } from "assert";
-import { ConditionalOptional } from "../utils.js";
+import { ConditionalOptional } from "../utils/typing.js";
 
 export const ApplicationCommandTypeUser = 2;
 export const ApplicationCommandTypeMessage = 3;

@@ -1,6 +1,11 @@
 import * as Discord from "discord.js";
 import { strict as assert } from "assert";
-import { critical_error, departialize, M, KeyedMutexSet, SelfClearingSet, xxh3, unwrap } from "../utils.js";
+import { unwrap } from "../utils/misc.js";
+import { xxh3 } from "../utils/strings.js";
+import { departialize } from "../utils/discord.js";
+import { critical_error } from "../utils/debugging-and-logging.js";
+import { KeyedMutexSet, SelfClearingSet } from "../utils/containers.js";
+import { M } from "../utils/debugging-and-logging.js";
 import { MINUTE } from "../common.js";
 import { forge_snowflake } from "./snowflake.js";
 import { BotComponent } from "../bot-component.js";

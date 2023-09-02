@@ -2,7 +2,7 @@ import { strict as assert } from "assert";
 
 import * as Discord from "discord.js";
 
-import { ConditionalOptional } from "../utils.js";
+import { ConditionalOptional } from "../utils/typing.js";
 import {
     BaseInteractionBuilder,
     ApplicationCommandTypeMessage,

@@ -1,5 +1,7 @@
 import { strict as assert } from "assert";
-import { Mutex, is_string, unwrap } from "../utils.js";
+import { unwrap } from "../utils/misc.js";
+import { is_string } from "../utils/strings.js";
+import { Mutex } from "../utils/containers.js";
 
 import * as mongo from "mongodb";
 import { no_distraction_entry } from "../components/nodistractions.js";

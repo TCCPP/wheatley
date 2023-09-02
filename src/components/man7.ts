@@ -4,7 +4,8 @@ import { strict as assert } from "assert";
 
 import * as fs from "fs";
 
-import { M, critical_error } from "../utils.js";
+import { critical_error } from "../utils/debugging-and-logging.js";
+import { M } from "../utils/debugging-and-logging.js";
 
 import { Index, IndexEntry } from "../algorithm/search.js";
 import { man7_entry, man7_index } from "../../indexes/man7/types.js";

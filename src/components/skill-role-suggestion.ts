@@ -2,7 +2,10 @@ import * as Discord from "discord.js";
 
 import { strict as assert } from "assert";
 
-import { M, SelfClearingMap, departialize, unwrap } from "../utils.js";
+import { unwrap } from "../utils/misc.js";
+import { departialize } from "../utils/discord.js";
+import { SelfClearingMap } from "../utils/containers.js";
+import { M } from "../utils/debugging-and-logging.js";
 import { colors, MINUTE } from "../common.js";
 import { BotComponent } from "../bot-component.js";
 import { Wheatley } from "../wheatley.js";

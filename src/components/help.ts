@@ -2,7 +2,9 @@ import * as Discord from "discord.js";
 
 import { strict as assert } from "assert";
 
-import { M, build_description, unwrap } from "../utils.js";
+import { unwrap } from "../utils/misc.js";
+import { build_description } from "../utils/strings.js";
+import { M } from "../utils/debugging-and-logging.js";
 import { colors } from "../common.js";
 import { BotComponent } from "../bot-component.js";
 import { Wheatley } from "../wheatley.js";

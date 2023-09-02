@@ -2,7 +2,8 @@ import { strict as assert } from "assert";
 
 import * as Discord from "discord.js";
 
-import { M, escape_discord } from "../utils.js";
+import { escape_discord } from "../utils/strings.js";
+import { M } from "../utils/debugging-and-logging.js";
 import { BotComponent } from "../bot-component.js";
 import { Wheatley } from "../wheatley.js";
 import { url_re } from "./quote.js";

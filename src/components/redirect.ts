@@ -3,7 +3,8 @@ import { strict as assert } from "assert";
 import { BotComponent } from "../bot-component.js";
 import { Wheatley } from "../wheatley.js";
 import { colors } from "../common.js";
-import { M, delay } from "../utils.js";
+import { delay } from "../utils/misc.js";
+import { M } from "../utils/debugging-and-logging.js";
 import { TextBasedCommandBuilder } from "../command-abstractions/text-based-command-builder.js";
 import { TextBasedCommand } from "../command-abstractions/text-based-command.js";
 
