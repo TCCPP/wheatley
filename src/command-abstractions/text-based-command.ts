@@ -302,4 +302,8 @@ export class TextBasedCommand {
         assert(this.replied);
         return this.response;
     }
+
+    get_command_invocation_snowflake() {
+        return this.reply_object.id;
+    }
 }
