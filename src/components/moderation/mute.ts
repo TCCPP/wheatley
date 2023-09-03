@@ -142,18 +142,17 @@ export default class Mute extends ModerationComponent {
                     returnDocument: "after",
                 },
             );
-            if (!res.value || !(await this.is_moderation_applied(res.value))) {
+            if (!res || !(await this.is_moderation_applied(res))) {
                 await reply_with_error(command, "User is not muted");
             } else {
-                await this.remove_moderation(res.value);
-                this.sleep_list.remove(res.value._id);
-                await this.reply_and_notify(command, user, "unmuted", res.value, false, false, true);
+                await this.remove_moderation(res);
+                this.sleep_list.remove(res._id);
+                await this.reply_and_notify(command, user, "unmuted", res, false, false, true);
                 await this.wheatley.channels.staff_action_log.send({
                     embeds: [
-                        Modlogs.case_summary(
-                            res.value,
-                            await this.wheatley.client.users.fetch(res.value.user),
-                        ).setTitle(`Case ${res.value.case_number}: Umuted`),
+                        Modlogs.case_summary(res, await this.wheatley.client.users.fetch(res.user)).setTitle(
+                            `Case ${res.case_number}: Umuted`,
+                        ),
                     ],
                 });
             }

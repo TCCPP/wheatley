@@ -97,16 +97,16 @@ export default class ModerationControl extends BotComponent {
                 returnDocument: "after",
             },
         );
-        if (res.value) {
+        if (res) {
             await reply_with_success(command, "Reason updated");
             await this.wheatley.channels.staff_action_log.send({
                 embeds: [
-                    Modlogs.case_summary(res.value, await this.wheatley.client.users.fetch(res.value.user)).setTitle(
-                        `Case ${res.value.case_number} reason updated`,
+                    Modlogs.case_summary(res, await this.wheatley.client.users.fetch(res.user)).setTitle(
+                        `Case ${res.case_number} reason updated`,
                     ),
                 ],
             });
-            await this.notify_user(res.value.user, case_number, `**Reason:** ${reason}`);
+            await this.notify_user(res.user, case_number, `**Reason:** ${reason}`);
         } else {
             await reply_with_error(command, `Case ${case_number} not found`);
         }
@@ -135,19 +135,19 @@ export default class ModerationControl extends BotComponent {
                 returnDocument: "after",
             },
         );
-        if (res.value) {
+        if (res) {
             await reply_with_success(command, "Duration updated");
             // Update sleep lists and remove moderation if needed
-            ModerationComponent.event_hub.emit("moderation_update", res.value);
+            ModerationComponent.event_hub.emit("moderation_update", res);
             await this.wheatley.channels.staff_action_log.send({
                 embeds: [
-                    Modlogs.case_summary(res.value, await this.wheatley.client.users.fetch(res.value.user)).setTitle(
-                        `Case ${res.value.case_number} duration updated`,
+                    Modlogs.case_summary(res, await this.wheatley.client.users.fetch(res.user)).setTitle(
+                        `Case ${res.case_number} duration updated`,
                     ),
                 ],
             });
-            const duration_str = res.value.duration ? time_to_human(res.value.duration) : "Permanent";
-            await this.notify_user(res.value.user, case_number, `**Duration:** ${duration_str}`);
+            const duration_str = res.duration ? time_to_human(res.duration) : "Permanent";
+            await this.notify_user(res.user, case_number, `**Duration:** ${duration_str}`);
         }
     }
 
@@ -170,18 +170,18 @@ export default class ModerationControl extends BotComponent {
                 returnDocument: "after",
             },
         );
-        if (res.value) {
+        if (res) {
             await reply_with_success(command, "Case expunged");
             // Update sleep lists and remove moderation if needed
-            ModerationComponent.event_hub.emit("moderation_update", res.value);
+            ModerationComponent.event_hub.emit("moderation_update", res);
             await this.wheatley.channels.staff_action_log.send({
                 embeds: [
-                    Modlogs.case_summary(res.value, await this.wheatley.client.users.fetch(res.value.user)).setTitle(
-                        `Case ${res.value.case_number} expunged`,
+                    Modlogs.case_summary(res, await this.wheatley.client.users.fetch(res.user)).setTitle(
+                        `Case ${res.case_number} expunged`,
                     ),
                 ],
             });
-            await this.notify_user(res.value.user, case_number, `**Expunged:** ${reason}`);
+            await this.notify_user(res.user, case_number, `**Expunged:** ${reason}`);
         } else {
             await reply_with_error(command, `Case ${case_number} not found`);
         }

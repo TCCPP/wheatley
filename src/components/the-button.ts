@@ -216,30 +216,28 @@ export default class TheButton extends BotComponent {
             );
             await this.update_message();
             const res = unwrap(
-                (
-                    await this.wheatley.database.button_scoreboard.findOneAndUpdate(
-                        {
+                await this.wheatley.database.button_scoreboard.findOneAndUpdate(
+                    {
+                        user: interaction.user.id,
+                    },
+                    {
+                        $setOnInsert: {
                             user: interaction.user.id,
                         },
-                        {
-                            $setOnInsert: {
-                                user: interaction.user.id,
-                            },
-                            $set: {
-                                tag: interaction.user.tag,
-                                last_press: Date.now(),
-                            },
-                            $inc: {
-                                score: points,
-                                presses: 1,
-                            },
+                        $set: {
+                            tag: interaction.user.tag,
+                            last_press: Date.now(),
                         },
-                        {
-                            upsert: true,
-                            returnDocument: "after",
+                        $inc: {
+                            score: points,
+                            presses: 1,
                         },
-                    )
-                ).value,
+                    },
+                    {
+                        upsert: true,
+                        returnDocument: "after",
+                    },
+                ),
             );
             this.longest_time_without_reset = Math.max(this.longest_time_without_reset, time_since_last_reset);
             this.button_presses++;
