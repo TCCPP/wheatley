@@ -7,6 +7,7 @@ import { delay } from "../utils/misc.js";
 import { M } from "../utils/debugging-and-logging.js";
 import { TextBasedCommandBuilder } from "../command-abstractions/text-based-command-builder.js";
 import { TextBasedCommand } from "../command-abstractions/text-based-command.js";
+import { format_list } from "../utils/strings.js";
 
 /**
  * Adds the /redirect command for redirecting conversations between channels.
@@ -25,6 +26,21 @@ export default class Redirect extends BotComponent {
                 })
                 .set_permissions(Discord.PermissionFlagsBits.Administrator)
                 .set_handler(this.redirect.bind(this)),
+        );
+    }
+
+    override async setup() {
+        this.add_command(
+            new TextBasedCommandBuilder("r")
+                .set_description(
+                    `Redirect a conversation from <#${this.wheatley.channels.c_cpp_discussion.id}> to a help channel`,
+                )
+                .add_user_option({
+                    title: "user",
+                    description: "User to redirect",
+                    required: true,
+                })
+                .set_handler(this.r.bind(this)),
         );
     }
 
@@ -48,5 +64,22 @@ export default class Redirect extends BotComponent {
         await delay(30 * 1000);
         await command.channel.permissionOverwrites.set(initial_permissions);
         //await command.channel.permissionOverwrites.edit(TCCPP_ID, { SendMessages: null });
+    }
+
+    async r(command: TextBasedCommand, user: Discord.User) {
+        if (command.channel_id != this.wheatley.channels.c_cpp_discussion.id) {
+            await command.reply(`This shortcut is for use in <#${this.wheatley.channels.c_cpp_discussion.id}>`, true);
+            return;
+        }
+        await (
+            await command.get_channel()
+        ).send(
+            `Hello <@${user.id}>, welcome to Together C & C++! This isn't a help channel, please ask your question ` +
+                `in one of the channels above (${format_list(
+                    (<(keyof Wheatley["channels"])[]>[])
+                        .concat("cpp_help", "c_help", "cpp_help_text", "c_help_text")
+                        .map(name => `<#${this.wheatley.channels[name].id}>`),
+                )})`,
+        );
     }
 }

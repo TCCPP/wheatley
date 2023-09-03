@@ -80,7 +80,7 @@ export default class Help extends BotComponent {
                 },
                 {
                     name: "Misc",
-                    value: build_description(...this.command_info("ping", "echo")),
+                    value: build_description(...this.command_info("ping", "echo", "r")),
                 },
             );
         if (this.wheatley.is_authorized_mod(command.user)) {
