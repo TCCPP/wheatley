@@ -71,15 +71,15 @@ export default class Redirect extends BotComponent {
             await command.reply(`This shortcut is for use in <#${this.wheatley.channels.c_cpp_discussion.id}>`, true);
             return;
         }
-        await (
-            await command.get_channel()
-        ).send(
-            `Hello <@${user.id}>, welcome to Together C & C++! This isn't a help channel, please ask your question ` +
-                `in one of the channels above (${format_list(
+        await command.reply({
+            content:
+                `Hello <@${user.id}>, welcome to Together C & C++! This isn't a help channel, please ask your ` +
+                `question in one of the channels above (${format_list(
                     (<(keyof Wheatley["channels"])[]>[])
                         .concat("cpp_help", "c_help", "cpp_help_text", "c_help_text")
                         .map(name => `<#${this.wheatley.channels[name].id}>`),
                 )})`,
-        );
+            should_text_reply: false,
+        });
     }
 }
