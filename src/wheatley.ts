@@ -462,13 +462,7 @@ export class Wheatley extends EventEmitter {
                 assert(!(descriptor.name in this.text_commands));
                 this.text_commands[descriptor.name] = descriptor;
                 if (descriptor.slash) {
-                    this.guild_command_manager.register(
-                        descriptor.to_slash_command(
-                            descriptor.name,
-                            descriptor.description,
-                            new Discord.SlashCommandBuilder(),
-                        ),
-                    );
+                    this.guild_command_manager.register(descriptor.to_slash_command(new Discord.SlashCommandBuilder()));
                 }
             }
         } else {

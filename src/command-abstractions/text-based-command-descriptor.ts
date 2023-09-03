@@ -52,25 +52,19 @@ export class BotTextBasedCommand<Args extends unknown[] = []> extends BaseBotInt
         }
     }
 
-    to_slash_command<B extends Discord.SlashCommandBuilder | Discord.SlashCommandSubcommandBuilder>(
-        name: string,
-        description: string,
-        djs_builder: B,
-    ): B {
+    to_slash_command<B extends Discord.SlashCommandBuilder | Discord.SlashCommandSubcommandBuilder>(djs_builder: B): B {
         assert(this.slash);
         if (this.subcommands) {
-            const slash_command = new Discord.SlashCommandBuilder().setName(name).setDescription(description);
-            for (const [name, subcommand] of this.subcommands) {
-                slash_command.addSubcommand(subcommand_builder =>
-                    subcommand.to_slash_command(name, subcommand.description, subcommand_builder),
-                );
+            const slash_command = new Discord.SlashCommandBuilder().setName(this.name).setDescription(this.description);
+            for (const subcommand of this.subcommands.values()) {
+                slash_command.addSubcommand(subcommand_builder => subcommand.to_slash_command(subcommand_builder));
             }
             if (this.permissions !== undefined) {
                 slash_command.setDefaultMemberPermissions(this.permissions);
             }
             return <B>slash_command;
         } else {
-            const djs_command = <B>djs_builder.setName(name).setDescription(description);
+            const djs_command = djs_builder.setName(this.name).setDescription(this.description);
             for (const option of this.options.values()) {
                 // NOTE: Temp for now
                 if (option.type == "string") {
@@ -111,7 +105,7 @@ export class BotTextBasedCommand<Args extends unknown[] = []> extends BaseBotInt
                 assert(djs_command instanceof Discord.SlashCommandBuilder);
                 djs_command.setDefaultMemberPermissions(this.permissions);
             }
-            return djs_command;
+            return <B>djs_command;
         }
     }
 
