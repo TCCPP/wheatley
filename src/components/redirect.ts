@@ -74,9 +74,9 @@ export default class Redirect extends BotComponent {
         await command.reply({
             content:
                 `Hello <@${user.id}>, welcome to Together C & C++! This isn't a help channel, please ask your ` +
-                `question in one of the channels above (${format_list(
+                `question in one of the help channels above (${format_list(
                     (<(keyof Wheatley["channels"])[]>[])
-                        .concat("cpp_help", "c_help", "cpp_help_text", "c_help_text")
+                        .concat("cpp_help", "cpp_help_text", "c_help", "c_help_text")
                         .map(name => `<#${this.wheatley.channels[name].id}>`),
                 )})`,
             should_text_reply: false,
