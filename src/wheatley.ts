@@ -7,7 +7,6 @@ import { EventEmitter } from "events";
 import { colors, MINUTE } from "./common.js";
 import { unwrap } from "./utils/misc.js";
 import { is_string } from "./utils/strings.js";
-import { zip } from "./utils/iterables.js";
 import { directory_exists } from "./utils/filesystem.js";
 import { walk_dir } from "./utils/filesystem.js";
 import { critical_error } from "./utils/debugging-and-logging.js";
@@ -451,54 +450,6 @@ export class Wheatley extends EventEmitter {
 
     // command stuff
 
-    make_slash_command_for<
-        T extends unknown[],
-        B extends Discord.SlashCommandBuilder | Discord.SlashCommandSubcommandBuilder,
-    >(command: TextBasedCommandBuilder<T, true, true>, name: string, description: string, djs_builder: B): B {
-        const djs_command = <B>djs_builder.setName(name).setDescription(description);
-        for (const option of command.options.values()) {
-            // NOTE: Temp for now
-            if (option.type == "string") {
-                djs_command.addStringOption(slash_option =>
-                    slash_option
-                        .setName(option.title)
-                        .setDescription(option.description)
-                        .setAutocomplete(!!option.autocomplete)
-                        .setRequired(!!option.required),
-                );
-            } else if (option.type == "number") {
-                djs_command.addNumberOption(slash_option =>
-                    slash_option
-                        .setName(option.title)
-                        .setDescription(option.description)
-                        .setRequired(!!option.required),
-                );
-            } else if (option.type == "user") {
-                djs_command.addUserOption(slash_option =>
-                    slash_option
-                        .setName(option.title)
-                        .setDescription(option.description)
-                        .setRequired(!!option.required),
-                );
-                // eslint-disable-next-line @typescript-eslint/no-unnecessary-condition
-            } else if (option.type == "role") {
-                djs_command.addRoleOption(slash_option =>
-                    slash_option
-                        .setName(option.title)
-                        .setDescription(option.description)
-                        .setRequired(!!option.required),
-                );
-            } else {
-                assert(false, "unhandled option type");
-            }
-        }
-        if (command.permissions !== undefined) {
-            assert(djs_command instanceof Discord.SlashCommandBuilder);
-            djs_command.setDefaultMemberPermissions(command.permissions);
-        }
-        return djs_command;
-    }
-
     add_command<T extends unknown[]>(
         command:
             | TextBasedCommandBuilder<T, true, true>
@@ -507,67 +458,17 @@ export class Wheatley extends EventEmitter {
             | ModalInteractionBuilder<true>,
     ) {
         if (command instanceof TextBasedCommandBuilder) {
-            if (command.type === "top-level") {
-                assert(command.subcommands.length > 0);
-                assert(command.names.length === 1);
-                assert(command.names.length == command.slash_config.length);
-                assert(command.names.length == command.descriptions.length);
-                const name = command.names[0];
-                const description = command.descriptions[0];
-                const slash = command.slash_config[0];
-                // Base text command entry
-                assert(!(name in this.text_commands));
-                this.text_commands[name] = new BotTextBasedCommand(
-                    name,
-                    description,
-                    slash,
-                    command.permissions,
-                    command as unknown as TextBasedCommandBuilder<T, true, true>,
-                    this,
-                ) as BotTextBasedCommand<unknown[]>;
-                // Slash command stuff
-                if (slash) {
-                    const slash_command = new Discord.SlashCommandBuilder().setName(name).setDescription(description);
-                    for (const subcommand of command.subcommands) {
-                        for (const [name, description, slash] of zip(
-                            subcommand.names,
-                            subcommand.descriptions,
-                            subcommand.slash_config,
-                        )) {
-                            assert(slash);
-                            slash_command.addSubcommand(subcommand_builder =>
-                                this.make_slash_command_for(subcommand, name, description, subcommand_builder),
-                            );
-                        }
-                    }
-                    if (command.permissions !== undefined) {
-                        slash_command.setDefaultMemberPermissions(command.permissions);
-                    }
-                    this.guild_command_manager.register(slash_command);
-                }
-            } else {
-                assert(command.names.length > 0);
-                assert(command.names.length == command.descriptions.length);
-                assert(command.names.length == command.slash_config.length);
-                for (const [name, description, slash] of zip(
-                    command.names,
-                    command.descriptions,
-                    command.slash_config,
-                )) {
-                    assert(!(name in this.text_commands));
-                    this.text_commands[name] = new BotTextBasedCommand(
-                        name,
-                        description,
-                        slash,
-                        command.permissions,
-                        command,
-                        this,
-                    ) as BotTextBasedCommand<unknown[]>;
-                    if (slash) {
-                        this.guild_command_manager.register(
-                            this.make_slash_command_for(command, name, description, new Discord.SlashCommandBuilder()),
-                        );
-                    }
+            for (const descriptor of command.to_command_descriptors(this)) {
+                assert(!(descriptor.name in this.text_commands));
+                this.text_commands[descriptor.name] = descriptor;
+                if (descriptor.slash) {
+                    this.guild_command_manager.register(
+                        descriptor.to_slash_command(
+                            descriptor.name,
+                            descriptor.description,
+                            new Discord.SlashCommandBuilder(),
+                        ),
+                    );
                 }
             }
         } else {

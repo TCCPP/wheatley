@@ -6,6 +6,9 @@ import { ConditionalOptional, MoreThanOne, ConditionalNull } from "../utils/typi
 import { Append, intersection } from "../utils/typing.js";
 import { TextBasedCommand } from "./text-based-command.js";
 import { BaseBuilder } from "./interaction-base.js";
+import { BotTextBasedCommand } from "./text-based-command-descriptor.js";
+import { Wheatley } from "../wheatley.js";
+import { zip } from "../utils/iterables.js";
 
 export type TextBasedCommandOptionType = "string" | "number" | "user" | "role";
 
@@ -169,5 +172,47 @@ export class TextBasedCommandBuilder<
         return this as unknown as TextBasedCommandBuilder<Args, HasDescriptions, HasHandler, true>;
     }
 
-    // TODO: to_command_descriptors?
+    to_command_descriptors(
+        this: TextBasedCommandBuilder<Args, true, true> | TextBasedCommandBuilder<Args, true, false, true>,
+        wheatley: Wheatley,
+    ): BotTextBasedCommand<unknown[]>[] {
+        const descriptors: BotTextBasedCommand<unknown[]>[] = [];
+        if (this.type === "top-level") {
+            assert(this.subcommands.length > 0);
+            assert(this.names.length === 1);
+            assert(this.names.length == this.slash_config.length);
+            assert(this.names.length == this.descriptions.length);
+            const name = this.names[0];
+            const description = this.descriptions[0];
+            const slash = this.slash_config[0];
+            // Base text command entry
+            descriptors.push(
+                new BotTextBasedCommand(
+                    name,
+                    description,
+                    slash,
+                    this.permissions,
+                    this,
+                    wheatley,
+                ) as BotTextBasedCommand<unknown[]>,
+            );
+        } else {
+            assert(this.names.length > 0);
+            assert(this.names.length == this.descriptions.length);
+            assert(this.names.length == this.slash_config.length);
+            for (const [name, description, slash] of zip(this.names, this.descriptions, this.slash_config)) {
+                descriptors.push(
+                    new BotTextBasedCommand(
+                        name,
+                        description,
+                        slash,
+                        this.permissions,
+                        this,
+                        wheatley,
+                    ) as BotTextBasedCommand<unknown[]>,
+                );
+            }
+        }
+        return descriptors;
+    }
 }

@@ -26,7 +26,7 @@ export class BotTextBasedCommand<Args extends unknown[] = []> extends BaseBotInt
 
     constructor(
         name: string,
-        public readonly description: string | undefined,
+        public readonly description: string,
         public readonly slash: boolean,
         public readonly permissions: undefined | bigint,
         builder: TextBasedCommandBuilder<Args, true, true> | TextBasedCommandBuilder<Args, true, false, true>,
@@ -45,17 +45,73 @@ export class BotTextBasedCommand<Args extends unknown[] = []> extends BaseBotInt
                     assert(!this.subcommands.has(sub_name));
                     this.subcommands.set(
                         sub_name,
-                        new BotTextBasedCommand(
-                            sub_name,
-                            sub_description,
-                            sub_slash,
-                            builder.permissions,
-                            subcommand,
-                            wheatley,
-                        ),
+                        new BotTextBasedCommand(sub_name, sub_description, sub_slash, undefined, subcommand, wheatley),
                     );
                 }
             }
+        }
+    }
+
+    to_slash_command<B extends Discord.SlashCommandBuilder | Discord.SlashCommandSubcommandBuilder>(
+        name: string,
+        description: string,
+        djs_builder: B,
+    ): B {
+        assert(this.slash);
+        if (this.subcommands) {
+            const slash_command = new Discord.SlashCommandBuilder().setName(name).setDescription(description);
+            for (const [name, subcommand] of this.subcommands) {
+                slash_command.addSubcommand(subcommand_builder =>
+                    subcommand.to_slash_command(name, subcommand.description, subcommand_builder),
+                );
+            }
+            if (this.permissions !== undefined) {
+                slash_command.setDefaultMemberPermissions(this.permissions);
+            }
+            return <B>slash_command;
+        } else {
+            const djs_command = <B>djs_builder.setName(name).setDescription(description);
+            for (const option of this.options.values()) {
+                // NOTE: Temp for now
+                if (option.type == "string") {
+                    djs_command.addStringOption(slash_option =>
+                        slash_option
+                            .setName(option.title)
+                            .setDescription(option.description)
+                            .setAutocomplete(!!option.autocomplete)
+                            .setRequired(!!option.required),
+                    );
+                } else if (option.type == "number") {
+                    djs_command.addNumberOption(slash_option =>
+                        slash_option
+                            .setName(option.title)
+                            .setDescription(option.description)
+                            .setRequired(!!option.required),
+                    );
+                } else if (option.type == "user") {
+                    djs_command.addUserOption(slash_option =>
+                        slash_option
+                            .setName(option.title)
+                            .setDescription(option.description)
+                            .setRequired(!!option.required),
+                    );
+                    // eslint-disable-next-line @typescript-eslint/no-unnecessary-condition
+                } else if (option.type == "role") {
+                    djs_command.addRoleOption(slash_option =>
+                        slash_option
+                            .setName(option.title)
+                            .setDescription(option.description)
+                            .setRequired(!!option.required),
+                    );
+                } else {
+                    assert(false, "unhandled option type");
+                }
+            }
+            if (this.permissions !== undefined) {
+                assert(djs_command instanceof Discord.SlashCommandBuilder);
+                djs_command.setDefaultMemberPermissions(this.permissions);
+            }
+            return djs_command;
         }
     }
 
