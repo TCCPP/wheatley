@@ -239,4 +239,12 @@ export class BotTextBasedCommand<Args extends unknown[] = []> extends BaseBotInt
             );
         }
     }
+
+    get_command_info(): string {
+        if (this.subcommands) {
+            return this.subcommands.map(command => command.get_command_info()).join("\n");
+        } else {
+            return this.get_usage() + " " + this.description;
+        }
+    }
 }

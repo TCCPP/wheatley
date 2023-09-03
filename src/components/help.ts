@@ -28,76 +28,89 @@ export default class Help extends BotComponent {
         );
     }
 
+    command_info(...commands: string[]) {
+        return commands.map(command => this.wheatley.text_commands[command].get_command_info());
+    }
+
     async help(command: TextBasedCommand) {
         M.log("Received help command");
         const embed = new Discord.EmbedBuilder()
             .setColor(colors.wheatley)
             .setTitle("Wheatley")
+            .setDescription(
+                build_description(
+                    "Wheatley discord bot for the Together C & C++ server. The bot is open source, contributions are " +
+                        "welcome at https://github.com/TCCPP/wheatley.",
+                ),
+            )
+            .setThumbnail("https://avatars.githubusercontent.com/u/142943210")
             .addFields(
                 {
                     name: "Wiki Articles",
-                    value: build_description([
-                        "`!wiki <article name>` - Pull up an article",
+                    value: build_description(
+                        ...this.command_info("wiki", "wiki-preview"),
                         "Article shortcuts: " +
                             (unwrap(this.wheatley.components.get("Wiki")) as Wiki).article_aliases
                                 .map((_, alias) => `\`${alias}\``)
                                 .join(", "),
-                    ]),
+                        "Article contributions are welcome " +
+                            "[here](https://github.com/TCCPP/wheatley/tree/main/wiki_articles)!",
+                    ),
                 },
                 {
                     name: "References",
-                    value: build_description([
-                        "`!cref <query>` Lookup a cppreference c article",
-                        "`!cppref <query>` Lookup a cppreference article",
-                        "`!man <query>` Lookup a man7 entry",
-                    ]),
+                    value: build_description(...this.command_info("cppref", "cref", "man")),
                 },
                 {
                     name: "Thread Control",
-                    value: build_description(["`!solved` `!unsolved`", "`!archive`", "`!rename <name>`"]),
+                    value: build_description(...this.command_info("solved", "unsolved", "archive", "rename")),
                 },
                 {
                     name: "Utility",
-                    value: build_description([
-                        "`!snowflake <input>`",
-                        "`!inspect <message url>`",
-                        "`!quote <url>` - Quote a message",
-                        "`!quoteb <url>` - Quote a block of messages by the same person",
-                        "`!nodistractions <duration>`",
-                        "`!removenodistractions`",
-                    ]),
+                    value: build_description(
+                        ...this.command_info(
+                            "snowflake",
+                            "inspect",
+                            "quote",
+                            "quoteb",
+                            "nodistractions",
+                            "removenodistractions",
+                        ),
+                    ),
                 },
                 {
                     name: "Misc",
-                    value: build_description(["`!ping`", "`!echo <input>`"]),
+                    value: build_description(...this.command_info("ping", "echo")),
                 },
             );
         if (this.wheatley.is_authorized_mod(command.user)) {
             embed.addFields({
                 name: "Moderation",
-                value: build_description([
-                    "`!ban <user> [duration] [reason]`",
-                    "`!unban <user> <reason>`",
-                    "`!kick <user> [reason]`",
-                    "`!mute <user> [duration] [reason]`",
-                    "`!unmute <user> <reason>`",
-                    "`!rolepersist add <user> <role> [duration] [reason]`",
-                    "`!rolepersist remove <user> <role> <reason>`",
+                value: build_description(
+                    ...this.command_info(
+                        "ban",
+                        "unban",
+                        "kick",
+                        "mute",
+                        "unmute",
+                        "rolepersist",
+                        "timeout",
+                        "warn",
+                        "reason",
+                        "duration",
+                        "expunge",
+                        "modlogs",
+                        "case",
+                        "redirect",
+                    ),
                     "Rolepersist aliases: `noofftopic`, `nosuggestions`, `nosuggestionsatall`, `noreactions`, " +
                         "`nothreads`, `noseriousofftopic`, `notil`, `nomemes`. " +
-                        "Syntax: `!(alias) <user> [duration] [reason].`",
-                    "`!timeout add <user> [duration] [reason]`",
-                    "`!timeout remove <user> <reason>`",
-                    "`!warn <user> <reason>`",
-                    "`!reason <case> <reason>`",
-                    "`!duration <case> <duration>`",
-                    "`!expunge <case> <reason>`",
-                    "`!modlogs <user>`",
-                    "`!case <case>`",
-                    "`!redirect <channel>`",
-                    'Durations: "perm" for permanent or `number unit` (whitespace ignored).' +
+                        `Syntax: \`${this.wheatley.text_commands["noofftopic"]
+                            .get_usage()
+                            .replace("noofftopic", "(alias)")}\``,
+                    "Durations: `perm` for permanent or `number unit` (whitespace ignored)." +
                         " Units are y, M, w, d, h, m, s.",
-                ]),
+                ),
             });
         }
         await command.reply({

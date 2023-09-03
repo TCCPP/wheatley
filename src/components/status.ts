@@ -15,7 +15,7 @@ export default class Status extends BotComponent {
 
     override async on_ready() {
         this.wheatley.client.user?.setActivity({
-            name: "C & C++",
+            name: "C & C++ | !help",
             type: Discord.ActivityType.Playing,
         });
     }

@@ -153,10 +153,10 @@ export async function reply_with_success_action(
     remind_to_reason: boolean,
     case_number?: number,
 ) {
-    const reminders = build_description([
+    const reminders = build_description(
         remind_to_duration ? "**Remember to provide a duration with !duration**" : null,
         remind_to_reason ? "**Remember to provide a reason with !reason**" : null,
-    ]);
+    );
     await reply_with_success(
         command,
         `${user.displayName} was ${action}`,
@@ -341,13 +341,13 @@ export abstract class ModerationComponent extends BotComponent {
                         .setColor(colors.wheatley)
                         .setTitle(`You have been ${action} in Together C & C++.`)
                         .setDescription(
-                            build_description([
+                            build_description(
                                 is_removal || ModerationComponent.non_duration_moderation_set.has(moderation.type)
                                     ? null
                                     : `**Duration:** ${duration}`,
                                 `**Reason:** ${moderation.reason}`,
                                 moderation.type === "rolepersist" ? `**Role:** ${moderation.role_name}` : null,
-                            ]),
+                            ),
                         )
                         .setFooter(
                             is_removal

@@ -103,6 +103,6 @@ export function wrap(str: string, thing: string | [string, string]) {
 
 // Takes an array of lines and joins them, skips null entries. This is a helper function to make building descriptions
 // and conditionally excluding lines more ergonomic
-export function build_description(lines: (string | null)[]) {
+export function build_description(...lines: (string | null)[]) {
     return lines.filter(x => x !== null).join("\n");
 }

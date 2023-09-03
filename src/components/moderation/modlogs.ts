@@ -48,14 +48,14 @@ export default class Modlogs extends BotComponent {
     }
 
     static moderation_description(moderation: moderation_entry) {
-        return build_description([
+        return build_description(
             `**Type:** ${moderation.type}`,
             moderation.type === "rolepersist" ? `**Role:** <@&${moderation.role}>` : null,
             `**Moderator:** <@${moderation.moderator}>`,
             `**Issued At:** <t:${Math.round(moderation.issued_at / 1000)}:f> [link](${moderation.link})`,
             moderation.duration === null ? null : `**Duration:** ${time_to_human(moderation.duration)}`,
             `**Reason:** ${moderation.reason ? moderation.reason : "No reason provided"}`,
-        ]);
+        );
     }
 
     static case_summary(moderation: moderation_entry, user: Discord.User) {
@@ -73,25 +73,25 @@ export default class Modlogs extends BotComponent {
                         moderation.removed
                             ? {
                                   name: "Removed",
-                                  value: build_description([
+                                  value: build_description(
                                       `**By:** <@${moderation.removed.moderator}>`,
                                       `**At:** <t:${Math.round(moderation.removed.timestamp / 1000)}:f>`,
                                       `**Reason:** ${
                                           moderation.removed.reason ? moderation.removed.reason : "No reason provided"
                                       }`,
-                                  ]),
+                                  ),
                               }
                             : null,
                         moderation.expunged
                             ? {
                                   name: "Expunged",
-                                  value: build_description([
+                                  value: build_description(
                                       `**By:** <@${moderation.expunged.moderator}>`,
                                       `**At:** <t:${Math.round(moderation.expunged.timestamp / 1000)}:f>`,
                                       `**Reason:** ${
                                           moderation.expunged.reason ? moderation.expunged.reason : "No reason provided"
                                       }`,
-                                  ]),
+                                  ),
                               }
                             : null,
                     ],
