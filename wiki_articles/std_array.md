@@ -4,7 +4,7 @@ C-style arrays have important shortcomings:<br/>
 
 :no_entry: cannot be returned from functions<br>
 :no_entry: cannot be assigned with `=`<br>
-:warning: cannot be compared with `==`, `<` etc. (it'd be pointer comparison)
+:no_entry: cannot be compared with `==`, `<` etc. (it'd be pointer comparison)<br>
 :no_entry: can only be initialized via `""`, `{}`, or *[default initialization][1]*<br>
 :warning: might implicitly [decay to pointers][2]; C arrays are not passed by value to functions<br>
 :warning: might be [variable-length arrays][3] (VLAs), if the developer makes a mistake
