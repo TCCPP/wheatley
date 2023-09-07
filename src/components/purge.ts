@@ -8,10 +8,12 @@ import { BotComponent } from "../bot-component.js";
 import { Wheatley } from "../wheatley.js";
 import { TextBasedCommandBuilder } from "../command-abstractions/text-based-command-builder.js";
 import { CommandAbstractionReplyOptions, TextBasedCommand } from "../command-abstractions/text-based-command.js";
-import { duration_regex } from "./moderation/moderation-common.js";
+import { duration_regex, parse_duration } from "./moderation/moderation-common.js";
 import { decode_snowflake, forge_snowflake } from "./snowflake.js";
 import { pluralize } from "../utils/strings.js";
 import { SelfClearingMap } from "../utils/containers.js";
+import { url_re } from "./quote.js";
+import { ascending, unwrap } from "../utils/misc.js";
 
 /**
  * Adds a !purge command.
@@ -22,6 +24,7 @@ export default class Purge extends BotComponent {
     }
 
     // boolean flag indicates whether to continue, serves as a stop token
+    // TODO: Delete "aborting..." message
     tasks = new SelfClearingMap<string, boolean>(2 * HOUR, 30 * MINUTE);
 
     constructor(wheatley: Wheatley) {
@@ -79,7 +82,7 @@ export default class Purge extends BotComponent {
                             description: "User to purge",
                             required: true,
                         })
-                        .add_number_option({
+                        .add_string_option({
                             title: "timeframe",
                             description: "Timeframe for which to purge messages",
                             regex: duration_regex,
@@ -111,7 +114,7 @@ export default class Purge extends BotComponent {
         );
     }
 
-    override async on_interaction_create(interaction: Discord.Interaction<Discord.CacheType>) {
+    override async on_interaction_create(interaction: Discord.Interaction) {
         if (interaction.isButton()) {
             if (interaction.customId.startsWith("abort_purge_")) {
                 if (!this.wheatley.is_authorized_mod(interaction.user)) {
@@ -130,6 +133,20 @@ export default class Purge extends BotComponent {
                 await interaction.reply("Aborting...");
             }
         }
+    }
+
+    parse_url_or_snowflake(url: string): [string | null, string] {
+        let match = url.trim().match(url_re);
+        if (match) {
+            const [_, guild_id, channel_id, message_id] = match.slice(1);
+            assert(guild_id == this.wheatley.TCCPP.id);
+            return [channel_id, message_id];
+        }
+        match = url.trim().match(/^\d+$/);
+        if (match) {
+            return [null, match[0]];
+        }
+        assert(false);
     }
 
     async purge_core(
@@ -174,7 +191,8 @@ export default class Purge extends BotComponent {
                 continue;
             }
             M.debug("Purge got", messages.size, "messages");
-            await channel.bulkDelete(messages);
+            //M.log(messages.map(message => message.content).join("\n"));
+            //await channel.bulkDelete(messages);
             handled += messages.size;
             last_seen = Math.min(...[...messages.values()].map(message => message.createdTimestamp));
             command.edit(make_message(false)).catch(critical_error);
@@ -198,7 +216,7 @@ export default class Purge extends BotComponent {
             while (count > 0) {
                 const messages = await channel.messages.fetch({
                     limit: Math.min(100, count),
-                    cache: true,
+                    cache: false,
                     before: forge_snowflake(last_seen - 1),
                 });
                 if (messages.size == 0) {
@@ -215,22 +233,81 @@ export default class Purge extends BotComponent {
 
     async purge_after(command: TextBasedCommand, url: string) {
         M.log("Received purge after command");
-        await command.reply({
-            embeds: [new Discord.EmbedBuilder().setColor(colors.wheatley).setTitle("pong")],
-        });
+        await this.purge_range(
+            command,
+            url,
+            forge_snowflake(decode_snowflake(command.get_command_invocation_snowflake()) - 2),
+            true, // url should be in the same channel as the command
+        );
     }
 
-    async purge_range(command: TextBasedCommand, start: string, end: string) {
+    // inclusive
+    async purge_range(
+        command: TextBasedCommand,
+        start: string,
+        end: string,
+        expect_this_channel = false,
+        filter = (message: Discord.Message) => true,
+    ) {
         M.log("Received purge range command");
-        await command.reply({
-            embeds: [new Discord.EmbedBuilder().setColor(colors.wheatley).setTitle("pong")],
-        });
+        const [start_channel_id, start_message_id] = this.parse_url_or_snowflake(start);
+        const [end_channel_id, end_message_id] = this.parse_url_or_snowflake(end);
+        // sort out channel
+        const start_channel = start_channel_id
+            ? unwrap(await this.wheatley.client.channels.fetch(start_channel_id))
+            : await command.get_channel();
+        const end_channel = end_channel_id
+            ? unwrap(await this.wheatley.client.channels.fetch(end_channel_id))
+            : await command.get_channel();
+        assert(start_channel.id == end_channel.id);
+        assert(start_channel instanceof Discord.BaseGuildTextChannel || start_channel instanceof Discord.ThreadChannel);
+        const channel = start_channel; // binding must happen after assert so it's typed correctly in the generator
+        if (expect_this_channel) {
+            assert(channel.id == (await command.get_channel()).id);
+        }
+        // sort out earliest/last
+        const [earliest, latest] = [start_message_id, end_message_id].map(decode_snowflake).sort(ascending);
+        async function* generator(): AsyncGenerator<Discord.Collection<string, Discord.Message>> {
+            let last_seen = latest + 2; // offset -1 below, and an extra +1 for good measure
+            while (true) {
+                const messages = (
+                    await channel.messages.fetch({
+                        limit: 100,
+                        cache: false,
+                        //after: forge_snowflake(earliest), // apparently this stuff is mutually exclusive
+                        before: forge_snowflake(last_seen - 1),
+                    })
+                ).filter(
+                    message => decode_snowflake(message.id) >= earliest && decode_snowflake(message.id) <= last_seen,
+                );
+                if (messages.size == 0) {
+                    break;
+                }
+                //for (const message of messages.values()) {
+                //    M.log(
+                //        message.id,
+                //        decode_snowflake(message.id) >= earliest && decode_snowflake(message.id) <= last_seen,
+                //    );
+                //}
+                yield messages.filter(filter);
+                last_seen = Math.min(...[...messages.values()].map(message => message.createdTimestamp));
+            }
+        }
+        await this.purge_core(command, channel, `Purging range`, generator);
     }
 
-    async purge_user(command: TextBasedCommand, user: Discord.User) {
+    async purge_user(command: TextBasedCommand, user: Discord.User, raw_timeframe: string) {
         M.log("Received purge user command");
-        await command.reply({
-            embeds: [new Discord.EmbedBuilder().setColor(colors.wheatley).setTitle("pong")],
-        });
+        const timeframe = unwrap(parse_duration(raw_timeframe)); // ms
+        const id = command.get_command_invocation_snowflake();
+        const end = decode_snowflake(id) - 2;
+        const start = end - timeframe;
+        await this.purge_range(
+            command,
+            forge_snowflake(start),
+            forge_snowflake(end),
+            false,
+            (message: Discord.Message) => message.author.id == user.id,
+        );
     }
 }

@@ -624,11 +624,13 @@ export class Wheatley extends EventEmitter {
                                 return;
                             }
                             command_options.push(option_value ?? "");
-                            // eslint-disable-next-line @typescript-eslint/no-unnecessary-condition
                         } else if (option.type == "user") {
                             command_options.push(interaction.options.getUser(option.title));
                         } else if (option.type == "role") {
                             command_options.push(interaction.options.getRole(option.title));
+                            // eslint-disable-next-line @typescript-eslint/no-unnecessary-condition
+                        } else if (option.type == "number") {
+                            command_options.push(interaction.options.getNumber(option.title));
                         } else {
                             assert(false, "unhandled option type");
                         }

@@ -18,3 +18,31 @@ export function unwrap<T>(x: T | null | undefined): T {
     assert(x !== null && x !== undefined);
     return x;
 }
+
+function compare<T>(a: T, b: T) {
+    if (a < b) {
+        return -1;
+    } else if (a > b) {
+        return 1;
+    } else {
+        return 0;
+    }
+}
+
+/**
+ * Utility for Array.prototype.sort
+ */
+export function ascending<T, P>(a: T, b: T, pick?: (item: T) => P) {
+    if (pick) {
+        return compare(pick(a), pick(b));
+    } else {
+        return compare(a, b);
+    }
+}
+
+/**
+ * Utility for Array.prototype.sort
+ */
+export function descending<T, P>(a: T, b: T, pick?: (item: T) => P) {
+    return -ascending(a, b, pick);
+}
