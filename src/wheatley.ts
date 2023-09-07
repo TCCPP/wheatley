@@ -103,6 +103,7 @@ const channels_map = {
     cpp_help_text: tuple("331718580070645760", Discord.TextChannel),
     c_help_text: tuple("331718539738087426", Discord.TextChannel),
     c_cpp_discussion: tuple("851121440425639956", Discord.TextChannel),
+    general_discussion: tuple("855220264149057556", Discord.TextChannel),
     // off-topic
     starboard: tuple("800509841424252968", Discord.TextChannel),
     memes: tuple("526518219549442071", Discord.TextChannel),
@@ -482,6 +483,7 @@ export class Wheatley extends EventEmitter {
 
     // returns false if the message was not a wheatley command
     async handle_command(message: Discord.Message, prev_command_obj?: TextBasedCommand) {
+        // TODO: On blank / missing subcommand specifiers just give usage / command info
         const match = message.content.match(Wheatley.command_regex);
         if (match) {
             const command_name = match[1];
