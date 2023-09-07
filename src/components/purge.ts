@@ -156,7 +156,7 @@ export default class Purge extends BotComponent {
 
     async purge_core(
         command: TextBasedCommand,
-        channel: Discord.BaseGuildTextChannel | Discord.ThreadChannel,
+        channel: Exclude<Discord.TextBasedChannel, Discord.DMChannel | Discord.PartialDMChannel>,
         reply_title: string,
         generator: () => AsyncGenerator<Discord.Collection<string, Discord.Message>>,
     ) {
@@ -235,7 +235,7 @@ export default class Purge extends BotComponent {
                 count -= messages.size;
             }
         }
-        assert(channel instanceof Discord.BaseGuildTextChannel || channel instanceof Discord.ThreadChannel);
+        assert(channel.isTextBased() && !channel.isDMBased());
         await this.purge_core(command, channel, `Purging ${pluralize(count, "message")}`, generator);
     }
 
@@ -268,7 +268,7 @@ export default class Purge extends BotComponent {
             ? unwrap(await this.wheatley.client.channels.fetch(end_channel_id))
             : await command.get_channel();
         assert(start_channel.id == end_channel.id);
-        assert(start_channel instanceof Discord.BaseGuildTextChannel || start_channel instanceof Discord.ThreadChannel);
+        assert(start_channel.isTextBased() && !start_channel.isDMBased());
         const channel = start_channel; // binding must happen after assert so it's typed correctly in the generator
         if (expect_this_channel) {
             assert(channel.id == (await command.get_channel()).id);
