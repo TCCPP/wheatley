@@ -33,7 +33,8 @@ export default class Redirect extends BotComponent {
         this.add_command(
             new TextBasedCommandBuilder("r")
                 .set_description(
-                    `Redirect a conversation from <#${this.wheatley.channels.c_cpp_discussion.id}> to a help channel`,
+                    `Redirect a conversation from <#${this.wheatley.channels.c_cpp_discussion.id}> or ` +
+                        `<#${this.wheatley.channels.general_discussion.id}> to a help channel`,
                 )
                 .add_user_option({
                     title: "user",
@@ -75,7 +76,7 @@ export default class Redirect extends BotComponent {
         ) {
             await command.reply(
                 `This shortcut is for use in <#${this.wheatley.channels.c_cpp_discussion.id}>` +
-                    ` or <#${this.wheatley.channels.c_cpp_discussion.id}>`,
+                    ` or <#${this.wheatley.channels.general_discussion.id}>`,
                 true,
             );
             return;
