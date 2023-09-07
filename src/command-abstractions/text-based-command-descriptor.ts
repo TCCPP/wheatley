@@ -3,7 +3,7 @@ import { strict as assert } from "assert";
 import * as Discord from "discord.js";
 
 import { unwrap } from "../utils/misc.js";
-import { escape_regex, wrap } from "../utils/strings.js";
+import { build_description, escape_regex, wrap } from "../utils/strings.js";
 import { zip } from "../utils/iterables.js";
 import { critical_error } from "../utils/debugging-and-logging.js";
 import { M } from "../utils/debugging-and-logging.js";
@@ -126,6 +126,13 @@ export class BotTextBasedCommand<Args extends unknown[] = []> extends BaseBotInt
         };
         const command_options: unknown[] = [];
         for (const [i, option] of [...this.options.values()].entries()) {
+            const required_arg_error = async () => {
+                if (i === 0) {
+                    await command_obj.reply({ embeds: [this.command_info_and_description_embed()] });
+                } else {
+                    await reply_with_error(`Required argument "${option.title}" not found`);
+                }
+            };
             if (option.type == "string") {
                 if (option.regex) {
                     const match = command_body.match(option.regex);
@@ -135,7 +142,7 @@ export class BotTextBasedCommand<Args extends unknown[] = []> extends BaseBotInt
                     } else if (!option.required) {
                         command_options.push(null);
                     } else {
-                        await reply_with_error(`Required argument "${option.title}" not found`);
+                        await required_arg_error();
                         return;
                     }
                 } else if (i == this.options.size - 1) {
@@ -145,7 +152,7 @@ export class BotTextBasedCommand<Args extends unknown[] = []> extends BaseBotInt
                     } else if (!option.required) {
                         command_options.push(null);
                     } else {
-                        await reply_with_error(`Required argument "${option.title}" not found`);
+                        await required_arg_error();
                         return;
                     }
                 } else {
@@ -157,7 +164,7 @@ export class BotTextBasedCommand<Args extends unknown[] = []> extends BaseBotInt
                     } else if (!option.required) {
                         command_options.push(null);
                     } else {
-                        await reply_with_error(`Required argument "${option.title}" not found`);
+                        await required_arg_error();
                         return;
                     }
                 }
@@ -171,7 +178,7 @@ export class BotTextBasedCommand<Args extends unknown[] = []> extends BaseBotInt
                 } else if (!option.required) {
                     command_options.push(null);
                 } else {
-                    await reply_with_error(`Required numeric argument "${option.title}" not found`);
+                    await required_arg_error();
                     return;
                 }
             } else if (option.type == "user") {
@@ -192,7 +199,7 @@ export class BotTextBasedCommand<Args extends unknown[] = []> extends BaseBotInt
                 } else if (!option.required) {
                     command_options.push(null);
                 } else {
-                    await reply_with_error(`Required user argument "${option.title}" not found`);
+                    await required_arg_error();
                     return;
                 }
                 // eslint-disable-next-line @typescript-eslint/no-unnecessary-condition
@@ -210,7 +217,7 @@ export class BotTextBasedCommand<Args extends unknown[] = []> extends BaseBotInt
                 } else if (!option.required) {
                     command_options.push(null);
                 } else {
-                    await reply_with_error(`Required role argument "${option.title}" not found`);
+                    await required_arg_error();
                     return;
                 }
             } else {
@@ -246,5 +253,12 @@ export class BotTextBasedCommand<Args extends unknown[] = []> extends BaseBotInt
         } else {
             return this.get_usage() + " " + this.description;
         }
+    }
+
+    command_info_and_description_embed() {
+        return new Discord.EmbedBuilder()
+            .setTitle(`${this.name}`)
+            .setDescription(build_description(this.description, "", ...this.get_command_info().split("\n")))
+            .setColor(colors.wheatley);
     }
 }

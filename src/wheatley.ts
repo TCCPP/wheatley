@@ -483,7 +483,6 @@ export class Wheatley extends EventEmitter {
 
     // returns false if the message was not a wheatley command
     async handle_command(message: Discord.Message, prev_command_obj?: TextBasedCommand) {
-        // TODO: On blank / missing subcommand specifiers just give usage / command info
         const match = message.content.match(Wheatley.command_regex);
         if (match) {
             const command_name = match[1];
@@ -504,11 +503,7 @@ export class Wheatley extends EventEmitter {
                         command_body = command_body.slice(unwrap(match)[0].length).trim();
                         command_obj.command_descriptor = command;
                     } else {
-                        await command_obj.reply(
-                            create_error_reply(
-                                `Expected subcommand specifier not found.` + "\n\n**Usage:**\n" + command.get_usage(),
-                            ),
-                        );
+                        await command_obj.reply({ embeds: [command.command_info_and_description_embed()] });
                         return;
                     }
                 }
