@@ -177,6 +177,7 @@ export class TextBasedCommandBuilder<
         wheatley: Wheatley,
     ): BotTextBasedCommand<unknown[]>[] {
         const descriptors: BotTextBasedCommand<unknown[]>[] = [];
+        // TODO: No longer need to special-case top-level?
         if (this.type === "top-level") {
             assert(this.subcommands.length > 0);
             assert(this.names.length === 1);
@@ -188,6 +189,7 @@ export class TextBasedCommandBuilder<
             // Base text command entry
             descriptors.push(
                 new BotTextBasedCommand(
+                    name,
                     name,
                     description,
                     slash,
@@ -203,6 +205,7 @@ export class TextBasedCommandBuilder<
             for (const [name, description, slash] of zip(this.names, this.descriptions, this.slash_config)) {
                 descriptors.push(
                     new BotTextBasedCommand(
+                        name,
                         name,
                         description,
                         slash,

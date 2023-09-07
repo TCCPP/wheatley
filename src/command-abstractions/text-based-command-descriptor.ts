@@ -26,6 +26,7 @@ export class BotTextBasedCommand<Args extends unknown[] = []> extends BaseBotInt
 
     constructor(
         name: string,
+        public readonly display_name: string,
         public readonly description: string,
         public readonly slash: boolean,
         public readonly permissions: undefined | bigint,
@@ -45,7 +46,15 @@ export class BotTextBasedCommand<Args extends unknown[] = []> extends BaseBotInt
                     assert(!this.subcommands.has(sub_name));
                     this.subcommands.set(
                         sub_name,
-                        new BotTextBasedCommand(sub_name, sub_description, sub_slash, undefined, subcommand, wheatley),
+                        new BotTextBasedCommand(
+                            sub_name,
+                            `${display_name} ${sub_name}`,
+                            sub_description,
+                            sub_slash,
+                            undefined,
+                            subcommand,
+                            wheatley,
+                        ),
                     );
                 }
             }
@@ -231,25 +240,23 @@ export class BotTextBasedCommand<Args extends unknown[] = []> extends BaseBotInt
         return command_options as Args;
     }
 
-    get_usage(raw = false): string {
+    get_usage(): string {
         if (this.subcommands) {
-            return this.subcommands
-                .map(command => wrap((raw ? "" : "!") + this.name + " " + command.get_usage(true), raw ? "" : "`"))
-                .join("\n");
+            return this.subcommands.map(command => command.get_usage()).join("\n");
         } else {
             return wrap(
                 [
-                    (raw ? "" : "!") + this.name,
+                    "!" + this.display_name,
                     ...this.options.map(option => (option.required ? `<${option.title}>` : `[${option.title}]`)),
                 ].join(" "),
-                raw ? "" : "`",
+                "`",
             );
         }
     }
 
     get_command_info(): string {
         if (this.subcommands) {
-            return this.subcommands.map(command => command.get_command_info()).join("\n");
+            return this.get_usage();
         } else {
             return this.get_usage() + " " + this.description;
         }
@@ -257,7 +264,7 @@ export class BotTextBasedCommand<Args extends unknown[] = []> extends BaseBotInt
 
     command_info_and_description_embed() {
         return new Discord.EmbedBuilder()
-            .setTitle(`${this.name}`)
+            .setTitle(`${this.display_name}`)
             .setDescription(build_description(this.description, "", ...this.get_command_info().split("\n")))
             .setColor(colors.wheatley);
     }
