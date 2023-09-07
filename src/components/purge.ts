@@ -24,8 +24,7 @@ export default class Purge extends BotComponent {
     }
 
     // boolean flag indicates whether to continue, serves as a stop token
-    // TODO: Delete "aborting..." message
-    tasks = new SelfClearingMap<string, boolean>(2 * HOUR, 30 * MINUTE);
+    tasks = new SelfClearingMap<string, [boolean, Discord.InteractionResponse | null]>(2 * HOUR, 30 * MINUTE);
 
     constructor(wheatley: Wheatley) {
         super(wheatley);
@@ -126,11 +125,17 @@ export default class Purge extends BotComponent {
                 }
                 const id = interaction.customId.substring("abort_purge_".length);
                 if (this.tasks.has(id)) {
-                    this.tasks.set(id, false);
+                    this.tasks.set(id, [false, null]);
                 }
                 //await interaction.message.edit({ embeds: interaction.message.embeds });
                 //await interaction.deferUpdate();
-                await interaction.reply("Aborting...");
+                const m = await interaction.reply("Aborting...");
+                if (this.tasks.has(id)) {
+                    // if stuff hasn't been resolved while waiting for that promise
+                    this.tasks.set(id, [false, m]);
+                } else {
+                    await m.delete();
+                }
             }
         }
     }
@@ -157,7 +162,7 @@ export default class Purge extends BotComponent {
     ) {
         const id = command.get_command_invocation_snowflake();
         assert(!this.tasks.has(id));
-        this.tasks.set(id, true);
+        this.tasks.set(id, [true, null]);
         let last_seen = decode_snowflake(id);
         let handled = 0;
         const make_message = (done: boolean): Discord.BaseMessageOptions & CommandAbstractionReplyOptions => ({
@@ -167,7 +172,7 @@ export default class Purge extends BotComponent {
                     .setTitle(reply_title)
                     .setDescription(`Purged ${handled} messages, last seen <t:${Math.round(last_seen / 1000)}:f>`)
                     .setFooter({
-                        text: this.tasks.get(id) === false ? "Aborted" : done ? "Finished" : "Working...",
+                        text: unwrap(this.tasks.get(id))[0] === false ? "Aborted" : done ? "Finished" : "Working...",
                     }),
             ],
             components: done
@@ -186,18 +191,21 @@ export default class Purge extends BotComponent {
         const generator_instance = generator();
         for await (const messages of generator_instance) {
             assert(this.tasks.has(id));
-            if (this.tasks.get(id) === false) {
+            if (unwrap(this.tasks.get(id))[0] === false) {
                 await generator_instance.return("x");
                 continue;
             }
             M.debug("Purge got", messages.size, "messages");
-            //M.log(messages.map(message => message.content).join("\n"));
-            //await channel.bulkDelete(messages);
+            await channel.bulkDelete(messages);
             handled += messages.size;
             last_seen = Math.min(...[...messages.values()].map(message => message.createdTimestamp));
             command.edit(make_message(false)).catch(critical_error);
         }
         await command.edit(make_message(true));
+        if (unwrap(this.tasks.get(id))[1]) {
+            // an abort message, delete it
+            await unwrap(unwrap(this.tasks.get(id))[1]).delete();
+        }
         this.tasks.remove(id);
     }
 
@@ -283,12 +291,6 @@ export default class Purge extends BotComponent {
                 if (messages.size == 0) {
                     break;
                 }
-                //for (const message of messages.values()) {
-                //    M.log(
-                //        message.id,
-                //        decode_snowflake(message.id) >= earliest && decode_snowflake(message.id) <= last_seen,
-                //    );
-                //}
                 yield messages.filter(filter);
                 last_seen = Math.min(...[...messages.values()].map(message => message.createdTimestamp));
             }
