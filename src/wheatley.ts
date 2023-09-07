@@ -513,7 +513,7 @@ export class Wheatley extends EventEmitter {
                         return;
                     }
                 }
-                const command_options = await command.parse_text_arguments(command_obj, command_body);
+                const command_options = await command.parse_text_arguments(command_obj, message, command_body);
                 if (command_options !== undefined) {
                     await command.handler(command_obj, ...command_options);
                 }

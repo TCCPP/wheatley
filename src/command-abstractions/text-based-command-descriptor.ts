@@ -118,7 +118,7 @@ export class BotTextBasedCommand<Args extends unknown[] = []> extends BaseBotInt
         }
     }
 
-    async parse_text_arguments(command_obj: TextBasedCommand, command_body: string) {
+    async parse_text_arguments(command_obj: TextBasedCommand, message: Discord.Message, command_body: string) {
         // TODO: Handle `required` more thoroughly?
         const reply_with_error = async (message: string, surpress_usage = false) => {
             await command_obj.reply({
@@ -203,6 +203,22 @@ export class BotTextBasedCommand<Args extends unknown[] = []> extends BaseBotInt
                     } catch (e) {
                         M.debug(e);
                         await reply_with_error(`Unable to find user`, true);
+                        return;
+                    }
+                } else if (message.type === Discord.MessageType.Reply) {
+                    // Handle reply as an argument, only if no text argument is provided
+                    // NOTE: If there's ever a command like !x <user> <user> this won't quite work
+                    try {
+                        const ref = unwrap(message.reference);
+                        assert(ref.guildId === message.guildId);
+                        assert(ref.channelId === message.channelId);
+                        const channel = unwrap(await this.wheatley.client.channels.fetch(ref.channelId));
+                        assert(channel.isTextBased());
+                        const reply_message = await channel.messages.fetch(unwrap(ref.messageId));
+                        command_options.push(reply_message.author);
+                    } catch (e) {
+                        await reply_with_error(`Error fetching reply`, true);
+                        critical_error(e);
                         return;
                     }
                 } else if (!option.required) {
