@@ -34,87 +34,96 @@ export default class Help extends BotComponent {
 
     async help(command: TextBasedCommand) {
         M.log("Received help command");
-        const embed = new Discord.EmbedBuilder()
-            .setColor(colors.wheatley)
-            .setTitle("Wheatley")
-            .setDescription(
-                build_description(
-                    "Wheatley discord bot for the Together C & C++ server. The bot is open source, contributions are " +
-                        "welcome at https://github.com/TCCPP/wheatley.",
-                ),
-            )
-            .setThumbnail("https://avatars.githubusercontent.com/u/142943210")
-            .addFields(
-                {
-                    name: "Wiki Articles",
-                    value: build_description(
-                        ...this.command_info("wiki", "wiki-preview"),
-                        "Article shortcuts: " +
-                            (unwrap(this.wheatley.components.get("Wiki")) as Wiki).article_aliases
-                                .map((_, alias) => `\`${alias}\``)
-                                .join(", "),
-                        "Article contributions are welcome " +
-                            "[here](https://github.com/TCCPP/wheatley/tree/main/wiki_articles)!",
+        const embeds = [
+            new Discord.EmbedBuilder()
+                .setColor(colors.wheatley)
+                .setTitle("Wheatley")
+                .setDescription(
+                    build_description(
+                        "Wheatley discord bot for the Together C & C++ server. The bot is open source, contributions " +
+                            "are welcome at https://github.com/TCCPP/wheatley.",
                     ),
-                },
-                {
-                    name: "References",
-                    value: build_description(...this.command_info("cppref", "cref", "man")),
-                },
-                {
-                    name: "Thread Control",
-                    value: build_description(...this.command_info("solved", "unsolved", "archive", "rename")),
-                },
-                {
-                    name: "Utility",
-                    value: build_description(
-                        ...this.command_info(
-                            "snowflake",
-                            "inspect",
-                            "quote",
-                            "quoteb",
-                            "nodistractions",
-                            "removenodistractions",
+                )
+                .setThumbnail("https://avatars.githubusercontent.com/u/142943210")
+                .addFields(
+                    {
+                        name: "Wiki Articles",
+                        value: build_description(
+                            ...this.command_info("wiki", "wiki-preview"),
+                            "Article shortcuts: " +
+                                (unwrap(this.wheatley.components.get("Wiki")) as Wiki).article_aliases
+                                    .map((_, alias) => `\`${alias}\``)
+                                    .join(", "),
+                            "Article contributions are welcome " +
+                                "[here](https://github.com/TCCPP/wheatley/tree/main/wiki_articles)!",
                         ),
-                    ),
-                },
-                {
-                    name: "Misc",
-                    value: build_description(...this.command_info("ping", "echo", "r")),
-                },
-            );
-        if (this.wheatley.is_authorized_mod(command.user)) {
-            embed.addFields({
-                name: "Moderation",
-                value: build_description(
-                    ...this.command_info(
-                        "ban",
-                        "unban",
-                        "kick",
-                        "mute",
-                        "unmute",
-                        "rolepersist",
-                        "timeout",
-                        "warn",
-                        "reason",
-                        "duration",
-                        "expunge",
-                        "modlogs",
-                        "case",
-                        "redirect",
-                    ),
-                    "Rolepersist aliases: `noofftopic`, `nosuggestions`, `nosuggestionsatall`, `noreactions`, " +
-                        "`nothreads`, `noseriousofftopic`, `notil`, `nomemes`. " +
-                        `Syntax: \`${this.wheatley.text_commands["noofftopic"]
-                            .get_usage()
-                            .replace("noofftopic", "(alias)")}\``,
-                    "Durations: `perm` for permanent or `number unit` (whitespace ignored)." +
-                        " Units are y, M, w, d, h, m, s.",
+                    },
+                    {
+                        name: "References",
+                        value: build_description(...this.command_info("cppref", "cref", "man")),
+                    },
+                    {
+                        name: "Thread Control",
+                        value: build_description(...this.command_info("solved", "unsolved", "archive", "rename")),
+                    },
+                    {
+                        name: "Utility",
+                        value: build_description(
+                            ...this.command_info(
+                                "snowflake",
+                                "inspect",
+                                "quote",
+                                "quoteb",
+                                "nodistractions",
+                                "removenodistractions",
+                            ),
+                        ),
+                    },
+                    {
+                        name: "Misc",
+                        value: build_description(...this.command_info("ping", "echo", "r")),
+                    },
                 ),
-            });
+        ];
+        if (this.wheatley.is_authorized_mod(command.user)) {
+            embeds.push(
+                new Discord.EmbedBuilder().setColor(colors.wheatley).addFields(
+                    {
+                        name: "Moderation",
+                        value: build_description(
+                            ...this.command_info(
+                                "ban",
+                                "unban",
+                                "kick",
+                                "mute",
+                                "unmute",
+                                "rolepersist",
+                                "timeout",
+                                "warn",
+                                "reason",
+                                "duration",
+                                "expunge",
+                                "modlogs",
+                                "case",
+                            ),
+                            "Rolepersist aliases: `noofftopic`, `nosuggestions`, `nosuggestionsatall`, " +
+                                "`noreactions`, `nothreads`, `noseriousofftopic`, `notil`, `nomemes`. " +
+                                `Syntax: \`${this.wheatley.text_commands["noofftopic"]
+                                    .get_usage()
+                                    .replace("noofftopic", "(alias)")}\``,
+                            "Durations: `perm` for permanent or `number unit` (whitespace ignored)." +
+                                " Units are y, M, w, d, h, m, s.",
+                        ),
+                    },
+                    {
+                        name: "Moderation utilities",
+                        value: build_description(...this.command_info("redirect", "purge")),
+                    },
+                ),
+            );
         }
         await command.reply({
-            embeds: [embed],
+            embeds,
         });
     }
 }
