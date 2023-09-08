@@ -4,18 +4,19 @@ import { fetch_all_threads_archive_count, get_tag } from "../utils/discord.js";
 import { critical_error } from "../utils/debugging-and-logging.js";
 import { SelfClearingSet } from "../utils/containers.js";
 import { M } from "../utils/debugging-and-logging.js";
-import { colors, MINUTE } from "../common.js";
+import { colors, DAY, HOUR, MINUTE } from "../common.js";
 import { decode_snowflake } from "./snowflake.js"; // todo: eliminate decode_snowflake
 import { BotComponent } from "../bot-component.js";
 import { Wheatley } from "../wheatley.js";
 
 // TODO: Take into account thread's inactivity setting
 
-const inactive_timeout = 48 * 60 * MINUTE; // 48 hours for a thread that's seen no activity, mark it stale
-const solved_archive_timeout = 48 * 60 * MINUTE; // after 48 hours hide solved threads
-const stale_rearchive_timeout = 12 * 60 * MINUTE; // after 12 hours hide stale threads
+const inactive_timeout = 48 * HOUR; // 48 hours for a thread that's seen no activity, mark it stale
+const solved_archive_timeout = 48 * HOUR; // after 48 hours hide solved threads
+const stale_rearchive_timeout = 12 * HOUR; // after 12 hours hide stale threads
+const lock_timeout = 5 * DAY; // after 4 days lock stale/solved threads to deal with necroposting
 
-const cleanup_limit = 400; // how many posts back in the archive to go
+const cleanup_limit = 400; //10000; // how many posts back in the archive to go
 
 // if the op says thank you remind them to close the thread after 15 minutes
 const thank_you_timeout = 5 * MINUTE;
@@ -122,12 +123,24 @@ export default class ForumChannels extends BotComponent {
             );
             await thread.setArchived(true, "Automatically archiving: Stale");
         } else if (
+            (thread.appliedTags.includes(stale_tag) || thread.appliedTags.includes(solved_tag)) &&
+            !thread.locked &&
+            now - last_message >= lock_timeout
+        ) {
+            // Ensure stale threads are archived
+            M.log("Locking thread", thread.id, thread.name);
+            if (thread.archived) {
+                await thread.setArchived(false);
+            }
+            await thread.setLocked(true, "Automatically locking: Stale/solved and inactive for an extended period.");
+            await thread.setArchived(true);
+        } else if (
             thread.appliedTags.includes(stale_tag) &&
             !thread.archived &&
             now - last_message >= stale_rearchive_timeout
         ) {
             // Ensure stale threads are archived
-            M.log("Archiving thread", thread.id, thread.name);
+            M.log("Archiving stale thread", thread.id, thread.name);
             await thread.setArchived(true, "Automatically archiving: Stale");
         } else if (
             thread.appliedTags.includes(solved_tag) &&
