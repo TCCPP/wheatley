@@ -70,10 +70,11 @@ export default class Help extends BotComponent {
                         name: "Utility",
                         value: build_description(
                             ...this.command_info(
-                                "snowflake",
-                                "inspect",
+                                "f",
                                 "quote",
                                 "quoteb",
+                                "snowflake",
+                                "inspect",
                                 "nodistractions",
                                 "removenodistractions",
                             ),
