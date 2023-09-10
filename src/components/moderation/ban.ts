@@ -19,6 +19,8 @@ import {
     reply_with_success_action,
 } from "./moderation-common.js";
 import Modlogs from "./modlogs.js";
+import { MINUTE } from "../../common.js";
+import { unwrap } from "../../utils/misc.js";
 
 /**
  * Implements !ban
@@ -74,8 +76,7 @@ export default class Ban extends ModerationComponent {
 
     async apply_moderation(entry: moderation_entry) {
         M.info(`Banning ${entry.user_name}`);
-        const member = await this.wheatley.TCCPP.members.fetch(entry.user);
-        await member.ban({
+        await this.wheatley.TCCPP.members.ban(entry.user, {
             reason: entry.reason ?? undefined,
         });
     }
@@ -176,6 +177,34 @@ export default class Ban extends ModerationComponent {
         } catch (e) {
             await reply_with_error(command, "Error unbanning");
             critical_error(e);
+        }
+    }
+
+    override async on_guild_member_remove(member: Discord.GuildMember | Discord.PartialGuildMember) {
+        const logs = await member.guild.fetchAuditLogs({
+            limit: 10,
+            type: Discord.AuditLogEvent.MemberBanAdd,
+        });
+        const entry = logs.entries
+            .filter(entry => entry.createdAt > new Date(Date.now() - 10 * MINUTE))
+            .find(entry => unwrap(entry.target).id == member.user.id);
+        if (entry) {
+            const moderation: moderation_entry = {
+                case_number: -1,
+                user: unwrap(entry.target).id,
+                user_name: unwrap(entry.target).displayName,
+                moderator: unwrap(entry.executor).id,
+                moderator_name: unwrap(entry.executor).displayName,
+                type: "ban",
+                reason: entry.reason,
+                issued_at: Date.now(),
+                duration: null,
+                active: true,
+                removed: null,
+                expunged: null,
+                link: null,
+            };
+            await this.register_new_moderation(moderation);
         }
     }
 }

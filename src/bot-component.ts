@@ -57,6 +57,7 @@ export class BotComponent {
         this.setup_listener("interactionCreate", this.on_interaction_create);
         this.setup_listener("guildMemberAdd", this.on_guild_member_add);
         this.setup_listener("guildMemberUpdate", this.on_guild_member_update);
+        this.setup_listener("guildMemberRemove", this.on_guild_member_remove);
         this.setup_listener("threadCreate", this.on_thread_create);
 
         this.on_ready().catch(critical_error);
@@ -87,6 +88,7 @@ export class BotComponent {
         old_member: Discord.GuildMember | Discord.PartialGuildMember,
         new_member: Discord.GuildMember,
     ): Promise<void>;
+    async on_guild_member_remove?(member: Discord.GuildMember | Discord.PartialGuildMember): Promise<void>;
     async on_reaction_add?(
         reaction: Discord.MessageReaction | Discord.PartialMessageReaction,
         user: Discord.User | Discord.PartialUser,
