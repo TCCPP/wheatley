@@ -239,16 +239,19 @@ class ArticleParser {
      * @param str the string to substitute in
      */
     private substitute_placeholders_no_code(str: string): string {
-        return str
+        const freestanding_result = str
             .replace(/<br>\n|<br\/>\n/, "\n")
             .replaceAll(/<br>|<br\/>/g, "\n")
-            .replaceAll(/#resources(?![a-zA-Z0-9_])/g, `<#${this.wheatley.channels.resources.id}>`)
-            .replaceAll(/#rules(?![a-zA-Z0-9_])/g, `<#${this.wheatley.channels.rules.id}>`)
             .replaceAll(/(?<!<):stackoverflow:/g, this.wheatley.stackoverflow_emote)
             .replaceAll(reference_link_regex, (_, text: string, ref: string) => {
                 assert(this.reference_definitions.has(ref), "Unknown reference in reference-style link");
                 return `[${text}](${this.reference_definitions.get(ref)})`;
             });
+        return this.wheatley.freestanding
+            ? freestanding_result
+            : freestanding_result
+                  .replaceAll(/#resources(?![a-zA-Z0-9_])/g, `<#${this.wheatley.channels.resources.id}>`)
+                  .replaceAll(/#rules(?![a-zA-Z0-9_])/g, `<#${this.wheatley.channels.rules.id}>`);
     }
 
     private collect_references(lines: string[]) {

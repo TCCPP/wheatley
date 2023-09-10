@@ -257,7 +257,10 @@ export class Wheatley extends EventEmitter {
         }
 
         this.client.on("ready", async () => {
-            await this.fetch_guild_info();
+            if (!this.freestanding) {
+                await this.fetch_guild_info();
+            }
+
             for (const component of this.components.values()) {
                 try {
                     await component.setup();
