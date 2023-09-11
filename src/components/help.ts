@@ -69,8 +69,8 @@ export default class Help extends BotComponent {
                     {
                         name: "Utility",
                         value: build_description(
+                            "`!f <reply>` Format the message being replied to",
                             ...this.command_info(
-                                "f",
                                 "quote",
                                 "quoteb",
                                 "snowflake",
