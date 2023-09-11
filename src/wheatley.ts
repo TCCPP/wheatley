@@ -257,9 +257,7 @@ export class Wheatley extends EventEmitter {
         }
 
         this.client.on("ready", async () => {
-            if (!this.freestanding) {
-                await this.fetch_guild_info();
-            }
+            await this.fetch_guild_info();
 
             for (const component of this.components.values()) {
                 try {
@@ -305,13 +303,34 @@ export class Wheatley extends EventEmitter {
     }
 
     async fetch_guild_info() {
+        const wrap = async <T>(fn: () => Promise<T>): Promise<T | null> => {
+            try {
+                return await fn();
+            } catch(e) {
+                if(!this.freestanding) {
+                    critical_error(e);
+                    throw e;
+                } else {
+                    // absorb error
+                    return null;
+                }
+            }
+        };
+        const fudged_unwrap = <T>(value: T | null | undefined): T => {
+            if(!this.freestanding) {
+                // for the real bot actually check
+                return unwrap(value);
+            } else {
+                return value as T;
+            }
+        }
         // Preliminary loads
-        this.TCCPP = await this.client.guilds.fetch(this.guildId);
-        this.zelis = await this.client.users.fetch(zelis_id);
+        this.TCCPP = fudged_unwrap(await wrap(() => this.client.guilds.fetch(this.guildId)));
+        this.zelis = fudged_unwrap(await wrap(() => this.client.users.fetch(zelis_id)));
         // Channels
         await Promise.all(
             Object.entries(channels_map).map(async ([k, [id, type]]) => {
-                const channel = await this.client.channels.fetch(id);
+                const channel = await wrap(() => this.client.channels.fetch(id));
                 if (this.freestanding && channel === null) {
                     return;
                 }
@@ -324,7 +343,7 @@ export class Wheatley extends EventEmitter {
         // Roles
         await Promise.all(
             Object.entries(roles_map).map(async ([k, id]) => {
-                const role = await this.TCCPP.roles.fetch(id);
+                const role = await wrap(() => this.TCCPP.roles.fetch(id));
                 if (this.freestanding && role === null) {
                     return;
                 }
@@ -335,7 +354,7 @@ export class Wheatley extends EventEmitter {
         );
         await Promise.all(
             Object.entries(skill_roles_map).map(async ([k, id]) => {
-                const role = await this.TCCPP.roles.fetch(id);
+                const role = await wrap(() => this.TCCPP.roles.fetch(id));
                 if (this.freestanding && role === null) {
                     return;
                 }
@@ -345,7 +364,7 @@ export class Wheatley extends EventEmitter {
             }),
         );
         // fetch list of roots and mods, replace hard-coded list
-        await this.fetch_root_mod_list(this.client);
+        await wrap(() => this.fetch_root_mod_list(this.client));
     }
 
     async add_component<T extends BotComponent>(component: { new (w: Wheatley): T; get is_freestanding(): boolean }) {
