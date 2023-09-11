@@ -306,8 +306,8 @@ export class Wheatley extends EventEmitter {
         const wrap = async <T>(fn: () => Promise<T>): Promise<T | null> => {
             try {
                 return await fn();
-            } catch(e) {
-                if(!this.freestanding) {
+            } catch (e) {
+                if (!this.freestanding) {
                     critical_error(e);
                     throw e;
                 } else {
@@ -317,13 +317,13 @@ export class Wheatley extends EventEmitter {
             }
         };
         const fudged_unwrap = <T>(value: T | null | undefined): T => {
-            if(!this.freestanding) {
+            if (!this.freestanding) {
                 // for the real bot actually check
                 return unwrap(value);
             } else {
                 return value as T;
             }
-        }
+        };
         // Preliminary loads
         this.TCCPP = fudged_unwrap(await wrap(() => this.client.guilds.fetch(this.guildId)));
         this.zelis = fudged_unwrap(await wrap(() => this.client.users.fetch(zelis_id)));
