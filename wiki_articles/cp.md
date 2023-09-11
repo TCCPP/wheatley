@@ -8,7 +8,7 @@ Please understand competitive programming (CP) questions are hard to help with b
 - Your solution code is probably not written for others to easily read.
 
 <!-- inline -->
-## How To Get the Best Possible Help?
+## How to Get the Best Possible Help?
 
 What you can do to get the best possible help:
 
