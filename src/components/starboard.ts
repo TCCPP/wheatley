@@ -355,7 +355,7 @@ export default class Starboard extends BotComponent {
                 { id: "main" },
                 {
                     $push: {
-                        negative_emojis: {
+                        "starboard.negative_emojis": {
                             $each: names.filter(name => !this.negative_emojis.includes(name)),
                         },
                     },
@@ -374,7 +374,7 @@ export default class Starboard extends BotComponent {
                 { id: "main" },
                 {
                     $push: {
-                        delete_emojis: {
+                        "starboard.delete_emojis": {
                             $each: names.filter(name => !this.delete_emojis.includes(name)),
                         },
                     },
@@ -393,7 +393,7 @@ export default class Starboard extends BotComponent {
                 { id: "main" },
                 {
                     $push: {
-                        ignored_emojis: {
+                        "starboard.ignored_emojis": {
                             $each: names.filter(name => !this.ignored_emojis.includes(name)),
                         },
                     },
