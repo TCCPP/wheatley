@@ -29,7 +29,7 @@ export default class AntiEveryone extends BotComponent {
         // https://old.discordjs.dev/#/docs/discord.js/main/class/MessageMentions?scrollTo=everyone
         if (message.mentions.everyone) {
             // NOTE: Could use .toLocaleString("en-US") to format this number with commas.
-            const memberCount = this.wheatley.TCCPP.memberCount;
+            const memberCount = this.wheatley.TCCPP.members.cache.size;
             await message.channel.send({
                 content: `<@${message.author}>`,
                 embeds: [
