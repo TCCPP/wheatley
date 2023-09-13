@@ -1,5 +1,4 @@
 import * as Discord from "discord.js";
-import { Message } from "discord.js";
 import { BotComponent } from "../bot-component.js";
 import { Wheatley } from "../wheatley.js";
 import { colors } from "../common.js";
@@ -13,7 +12,7 @@ export default class AntiEveryone extends BotComponent {
         super(wheatley);
     }
 
-    override async on_message_create(message: Message<boolean>): Promise<void> {
+    override async on_message_create(message: Discord.Message<boolean>): Promise<void> {
         if (
             // self
             message.author.id == this.wheatley.client.user!.id ||
