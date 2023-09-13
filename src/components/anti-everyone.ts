@@ -31,7 +31,7 @@ export default class AntiEveryone extends BotComponent {
             // NOTE: .toLocaleString("en-US") formats this number with commas.
             const memberCount = this.wheatley.TCCPP.members.cache.size.toLocaleString("en-US");
             await message.reply({
-                content: `Did you really just try to ping ${memberCount} people? `,
+                content: `Did you really just try to ping ${memberCount} people?`,
             });
         }
     }
