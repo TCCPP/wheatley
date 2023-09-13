@@ -10,14 +10,6 @@ import { Wheatley } from "../wheatley.js";
 
 const DISMISS_TIME = 30 * 1000;
 
-const SCREENSHOT_EMBED = new Discord.EmbedBuilder()
-    .setColor(colors.red)
-    .setTitle("Screenshots!")
-    .setDescription(
-        "Your message appears to contain screenshots but no code. " +
-            "Please send code and error messages in text instead of screenshots if applicable!",
-    );
-
 function are_images({ contentType }: { contentType: string | null }) {
     assert(contentType);
     return contentType.startsWith("image/");
@@ -121,7 +113,15 @@ export default class AntiScreenshot extends BotComponent {
             );
             await thread.send({
                 content: `<@${thread.ownerId}>`,
-                embeds: [SCREENSHOT_EMBED],
+                embeds: [
+                    new Discord.EmbedBuilder()
+                        .setColor(colors.red)
+                        .setTitle("Screenshots!")
+                        .setDescription(
+                            "Your message appears to contain screenshots but no code. " +
+                                "Please send code and error messages in text instead of screenshots if applicable!",
+                        ),
+                ],
                 components: [row],
             });
             // Log to the message log
