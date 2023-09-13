@@ -2,6 +2,9 @@ import * as Discord from "discord.js";
 import { BotComponent } from "../bot-component.js";
 import { Wheatley } from "../wheatley.js";
 import { colors } from "../common.js";
+import { M } from "../utils/debugging-and-logging.js";
+
+const failed_everyone_re = /(?:@everyone|@here)/g; // todo: word boundaries?
 
 /**
  * Responds to users attempting to ping @everyone or @here
@@ -25,9 +28,7 @@ export default class AntiEveryone extends BotComponent {
         ) {
             return;
         }
-        // This covers @everyone and @here, despite its name.
-        // https://old.discordjs.dev/#/docs/discord.js/main/class/MessageMentions?scrollTo=everyone
-        if (message.mentions.everyone) {
+        if (message.content.match(failed_everyone_re) != null) {
             // NOTE: .toLocaleString("en-US") formats this number with commas.
             const memberCount = this.wheatley.TCCPP.members.cache.size.toLocaleString("en-US");
             await message.reply({
