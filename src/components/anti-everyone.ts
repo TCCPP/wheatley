@@ -4,15 +4,6 @@ import { BotComponent } from "../bot-component.js";
 import { Wheatley } from "../wheatley.js";
 import { colors } from "../common.js";
 
-const EVERYONE_EMBED = new Discord.EmbedBuilder()
-    .setColor(colors.red)
-    .setTitle("Don't ping Everyone!")
-    .setDescription(
-        // FIXME: this message might need to be re-worded
-        'Pinging "everyone" (or "here") is not allowed in this server. ' +
-            "These pings are disruptive to a large quantity of users.",
-    );
-
 /**
  * Responds to users attempting to ping @everyone or @here
  * with a message discouraging the behavior.
@@ -40,7 +31,16 @@ export default class AntiEveryone extends BotComponent {
         if (message.mentions.everyone) {
             await message.channel.send({
                 content: `<@${message.author}>`,
-                embeds: [EVERYONE_EMBED],
+                embeds: [
+                    new Discord.EmbedBuilder()
+                        .setColor(colors.red)
+                        .setTitle("Don't ping Everyone!")
+                        .setDescription(
+                            // FIXME: this message might need to be re-worded
+                            'Pinging "everyone" (or "here") is not allowed in this server. ' +
+                                "These pings are disruptive to a large quantity of users.",
+                        ),
+                ],
             });
         }
     }
