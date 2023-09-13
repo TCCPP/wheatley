@@ -28,19 +28,10 @@ export default class AntiEveryone extends BotComponent {
         // This covers @everyone and @here, despite its name.
         // https://old.discordjs.dev/#/docs/discord.js/main/class/MessageMentions?scrollTo=everyone
         if (message.mentions.everyone) {
-            // NOTE: Could use .toLocaleString("en-US") to format this number with commas.
-            const memberCount = this.wheatley.TCCPP.members.cache.size;
-            await message.channel.send({
-                content: `<@${message.author}>`,
-                embeds: [
-                    new Discord.EmbedBuilder()
-                        .setColor(colors.red)
-                        .setTitle("Don't ping Everyone!")
-                        .setDescription(
-                            `Did you really just try to ping ${memberCount} people? ` +
-                                "Not all of them would appreciate that.",
-                        ),
-                ],
+            // NOTE: .toLocaleString("en-US") formats this number with commas.
+            const memberCount = this.wheatley.TCCPP.members.cache.size.toLocaleString("en-US");
+            await message.reply({
+                content: `Did you really just try to ping ${memberCount} people? `,
             });
         }
     }
