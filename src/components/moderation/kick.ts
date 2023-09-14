@@ -94,31 +94,30 @@ export default class Kick extends ModerationComponent {
     }
 
     override async on_guild_member_remove(member: Discord.GuildMember | Discord.PartialGuildMember) {
-        const logs = await member.guild.fetchAuditLogs({
-            limit: 10,
-            type: Discord.AuditLogEvent.MemberKick,
-        });
-        const entry = logs.entries
-            .filter(entry => entry.createdAt > new Date(Date.now() - 10 * MINUTE))
-            .find(entry => unwrap(entry.target).id == member.user.id);
-        if (entry) {
-            const moderation: moderation_entry = {
-                case_number: -1,
-                user: unwrap(entry.target).id,
-                user_name: unwrap(entry.target).displayName,
-                moderator: unwrap(entry.executor).id,
-                moderator_name: unwrap(entry.executor).displayName,
-                type: "kick",
-                reason: entry.reason,
-                issued_at: Date.now(),
-                duration: null,
-                active: false,
-                removed: null,
-                expunged: null,
-                link: null,
-            };
-            await this.register_new_moderation(moderation);
-            //await reply_with_success_action(command, user, "kicked", false, reason === null, moderation.case_number);
-        }
+        // const logs = await member.guild.fetchAuditLogs({
+        //     limit: 10,
+        //     type: Discord.AuditLogEvent.MemberKick,
+        // });
+        // const entry = logs.entries
+        //     .filter(entry => entry.createdAt > new Date(Date.now() - 10 * MINUTE))
+        //     .find(entry => unwrap(entry.target).id == member.user.id);
+        // if (entry) {
+        //     const moderation: moderation_entry = {
+        //         case_number: -1,
+        //         user: unwrap(entry.target).id,
+        //         user_name: unwrap(entry.target).displayName,
+        //         moderator: unwrap(entry.executor).id,
+        //         moderator_name: unwrap(entry.executor).displayName,
+        //         type: "kick",
+        //         reason: entry.reason,
+        //         issued_at: Date.now(),
+        //         duration: null,
+        //         active: false,
+        //         removed: null,
+        //         expunged: null,
+        //         link: null,
+        //     };
+        //     await this.register_new_moderation(moderation);
+        // }
     }
 }
