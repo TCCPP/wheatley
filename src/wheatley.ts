@@ -620,7 +620,7 @@ export class Wheatley extends EventEmitter {
                                 );
                                 return;
                             }
-                            command_options.push(option_value ?? "");
+                            command_options.push(option_value);
                         } else if (option.type == "user") {
                             command_options.push(interaction.options.getUser(option.title));
                         } else if (option.type == "role") {
