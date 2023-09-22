@@ -191,7 +191,6 @@ export class BotTextBasedCommand<Args extends unknown[] = []> extends BaseBotInt
                     return;
                 }
             } else if (option.type == "user") {
-                // TODO: Handle optional user...
                 const re = /^(?:<@(\d{10,})>|(\d{10,}))/;
                 const match = command_body.match(re);
                 if (match) {
@@ -226,6 +225,36 @@ export class BotTextBasedCommand<Args extends unknown[] = []> extends BaseBotInt
                 } else {
                     await required_arg_error();
                     return;
+                }
+            } else if (option.type == "users") {
+                const users: Discord.User[] = [];
+                while (true) {
+                    const re = /^(?:<@(\d{10,})>|(\d{10,}))+/;
+                    const match = command_body.match(re);
+                    if (match) {
+                        const userid = match[1] || match[2];
+                        try {
+                            const user = await this.wheatley.client.users.fetch(userid);
+                            users.push(user);
+                            command_body = command_body.slice(match[0].length).trim();
+                        } catch (e) {
+                            M.debug(e);
+                            await reply_with_error(`Unable to find user`, true);
+                            return;
+                        }
+                    } else {
+                        break;
+                    }
+                }
+                if (users.length > 0) {
+                    command_options.push(users);
+                } else {
+                    if (!option.required) {
+                        command_options.push(null);
+                    } else {
+                        await required_arg_error();
+                        return;
+                    }
                 }
                 // eslint-disable-next-line @typescript-eslint/no-unnecessary-condition
             } else if (option.type == "role") {

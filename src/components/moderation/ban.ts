@@ -16,10 +16,11 @@ import {
     moderation_type,
     parse_duration,
     reply_with_error,
+    reply_with_success,
     reply_with_success_action,
 } from "./moderation-common.js";
 import Modlogs from "./modlogs.js";
-import { MINUTE } from "../../common.js";
+import { MINUTE, colors } from "../../common.js";
 import { unwrap } from "../../utils/misc.js";
 
 /**
@@ -54,6 +55,30 @@ export default class Ban extends ModerationComponent {
                     required: false,
                 })
                 .set_handler(this.ban_handler.bind(this)),
+        );
+
+        this.add_command(
+            new TextBasedCommandBuilder("massban")
+                .set_permissions(Discord.PermissionFlagsBits.BanMembers)
+                .set_description("Ban users")
+                .set_slash(false)
+                .add_users_option({
+                    title: "users",
+                    description: "Users to ban",
+                    required: true,
+                })
+                .add_string_option({
+                    title: "duration",
+                    description: "Duration",
+                    regex: duration_regex,
+                    required: false,
+                })
+                .add_string_option({
+                    title: "reason",
+                    description: "Reason",
+                    required: false,
+                })
+                .set_handler(this.massban_handler.bind(this)),
         );
 
         this.add_command(
@@ -135,6 +160,60 @@ export default class Ban extends ModerationComponent {
                 reason === null,
                 moderation.case_number,
             );
+        } catch (e) {
+            await reply_with_error(command, "Error banning");
+            critical_error(e);
+        }
+    }
+
+    async massban_handler(
+        command: TextBasedCommand,
+        users: Discord.User[],
+        duration: string | null,
+        reason: string | null,
+    ) {
+        M.info(
+            "Ban command received",
+            users.map(user => user.id),
+            duration,
+            reason,
+        );
+        try {
+            for (const user of users) {
+                if (this.wheatley.is_authorized_mod(user)) {
+                    await reply_with_error(command, `Cannot apply moderation to ${user.displayName}`);
+                    continue;
+                }
+                const base_moderation: basic_moderation_with_user = { type: "ban", user: user.id };
+                if (await this.is_moderation_applied(base_moderation)) {
+                    await reply_with_error(command, `${user.displayName} is already banned`);
+                    continue;
+                }
+                const moderation: moderation_entry = {
+                    case_number: -1,
+                    user: user.id,
+                    user_name: user.displayName,
+                    moderator: command.user.id,
+                    moderator_name: (await command.get_member()).displayName,
+                    type: "ban",
+                    reason,
+                    issued_at: Date.now(),
+                    duration: parse_duration(duration),
+                    active: true,
+                    removed: null,
+                    expunged: null,
+                    link: command.get_or_forge_url(),
+                };
+                await this.notify_user(command, user, "banned", moderation);
+                await this.register_new_moderation(moderation);
+            }
+            await (command.replied && !command.is_editing ? command.followUp : command.reply).bind(command)({
+                embeds: [
+                    new Discord.EmbedBuilder()
+                        .setColor(colors.wheatley)
+                        .setDescription(`<:success:1138616548630745088> ***Banned all users***`),
+                ],
+            });
         } catch (e) {
             await reply_with_error(command, "Error banning");
             critical_error(e);

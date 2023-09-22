@@ -10,7 +10,7 @@ import { BotTextBasedCommand } from "./text-based-command-descriptor.js";
 import { Wheatley } from "../wheatley.js";
 import { zip } from "../utils/iterables.js";
 
-export type TextBasedCommandOptionType = "string" | "number" | "user" | "role";
+export type TextBasedCommandOptionType = "string" | "number" | "user" | "users" | "role";
 
 export type TextBasedCommandParameterOptions = {
     title: string;
@@ -111,6 +111,27 @@ export class TextBasedCommandBuilder<
         });
         return this as unknown as TextBasedCommandBuilder<
             Append<Args, ConditionalNull<O["required"], Discord.User>>,
+            HasDescriptions,
+            HasHandler,
+            HasSubcommands
+        >;
+    }
+
+    add_users_option<O extends Omit<TextBasedCommandParameterOptions, "autocomplete" | "regex">>(
+        option: O,
+    ): TextBasedCommandBuilder<
+        Append<Args, ConditionalNull<O["required"], Discord.User[]>>,
+        HasDescriptions,
+        HasHandler,
+        HasSubcommands
+    > {
+        assert(!this.options.has(option.title));
+        this.options.set(option.title, {
+            ...option,
+            type: "users",
+        });
+        return this as unknown as TextBasedCommandBuilder<
+            Append<Args, ConditionalNull<O["required"], Discord.User[]>>,
             HasDescriptions,
             HasHandler,
             HasSubcommands
