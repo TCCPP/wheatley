@@ -182,7 +182,7 @@ export default class Ban extends ModerationComponent {
         try {
             for (const user of users) {
                 if (this.wheatley.is_authorized_mod(user)) {
-                    await reply_with_error(command, `Cannot apply moderation to ${user.displayName}`);
+                    await reply_with_error(command, moderation_on_team_member_message);
                     continue;
                 }
                 const base_moderation: basic_moderation_with_user = { type: "ban", user: user.id };
