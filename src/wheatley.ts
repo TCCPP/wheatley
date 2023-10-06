@@ -150,6 +150,7 @@ export const root_ids = new Set([
     "110756651694297088", // vincent
     "89441674844995584", // styx
     // prevent Wheatley reactions being removed in server suggestions and also allow some elegant handling
+    "313597351262683138", // dot
     "597216680271282192", // wheatley
 ]);
 
@@ -165,6 +166,7 @@ export const root_mod_ids = [
     "313597351262683138", // dot
     "413463039145410560", // karnage
     "512649489300062228", // quicknir
+    "446584068746772480", // yinsei
 ];
 
 export const root_mod_ids_set = new Set(root_mod_ids);
