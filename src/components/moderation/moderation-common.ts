@@ -83,6 +83,8 @@ export type moderation_entry = basic_moderation & {
 
 export const duration_regex = /(?:perm\b|(\d+)\s*([mhdwMys]))/;
 
+export const moderation_on_team_member_message: string = "Can't apply this moderation on team members";
+
 // returns duration in ms
 function parse_unit(u: string) {
     let factor = 1;

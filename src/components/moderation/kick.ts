@@ -15,6 +15,7 @@ import {
     moderation_type,
     reply_with_error,
     reply_with_success_action,
+    moderation_on_team_member_message,
 } from "./moderation-common.js";
 import { unwrap } from "../../utils/misc.js";
 import { MINUTE } from "../../common.js";
@@ -66,7 +67,7 @@ export default class Kick extends ModerationComponent {
     async kick_handler(command: TextBasedCommand, user: Discord.User, reason: string | null) {
         try {
             if (this.wheatley.is_authorized_mod(user)) {
-                await reply_with_error(command, "Cannot apply moderation to user");
+                await reply_with_error(command, moderation_on_team_member_message);
                 return;
             }
             const moderation: moderation_entry = {

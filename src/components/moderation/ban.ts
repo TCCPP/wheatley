@@ -18,6 +18,7 @@ import {
     reply_with_error,
     reply_with_success,
     reply_with_success_action,
+    moderation_on_team_member_message,
 } from "./moderation-common.js";
 import Modlogs from "./modlogs.js";
 import { MINUTE, colors } from "../../common.js";
@@ -127,7 +128,7 @@ export default class Ban extends ModerationComponent {
     async ban_handler(command: TextBasedCommand, user: Discord.User, duration: string | null, reason: string | null) {
         try {
             if (this.wheatley.is_authorized_mod(user)) {
-                await reply_with_error(command, "Cannot apply moderation to user");
+                await reply_with_error(command, moderation_on_team_member_message);
                 return;
             }
             const base_moderation: basic_moderation_with_user = { type: "ban", user: user.id };
@@ -181,7 +182,7 @@ export default class Ban extends ModerationComponent {
         try {
             for (const user of users) {
                 if (this.wheatley.is_authorized_mod(user)) {
-                    await reply_with_error(command, `Cannot apply moderation to ${user.displayName}`);
+                    await reply_with_error(command, moderation_on_team_member_message);
                     continue;
                 }
                 const base_moderation: basic_moderation_with_user = { type: "ban", user: user.id };
