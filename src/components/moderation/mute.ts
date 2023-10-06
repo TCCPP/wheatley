@@ -14,6 +14,7 @@ import {
     moderation_type,
     parse_duration,
     reply_with_error,
+    moderation_on_team_member_message,
 } from "./moderation-common.js";
 import Modlogs from "./modlogs.js";
 import { TextBasedCommandBuilder } from "../../command-abstractions/text-based-command-builder.js";
@@ -92,7 +93,7 @@ export default class Mute extends ModerationComponent {
     async mute_handler(command: TextBasedCommand, user: Discord.User, duration: string | null, reason: string | null) {
         try {
             if (this.wheatley.is_authorized_mod(user)) {
-                await reply_with_error(command, "Cannot apply moderation to user");
+                await reply_with_error(command, moderation_on_team_member_message);
                 return;
             }
             const base_moderation: basic_moderation_with_user = { type: "mute", user: user.id };
