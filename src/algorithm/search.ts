@@ -322,16 +322,14 @@ abstract class BaseIndex<T extends IndexEntry, ExtraEntryData = {}> {
             console.log(query);
         }
         if (DEBUG) {
-            candidates
-                .slice(0, 3)
-                .map(candidate =>
-                    console.log(
-                        candidate.score,
-                        candidate.page.parsed_title.join(", "),
-                        "////",
-                        candidate.debug_info.join(", "),
-                    ),
+            for (const candidate of candidates.slice(0, 3)) {
+                console.log(
+                    candidate.score,
+                    candidate.page.parsed_title.join(", "),
+                    "////",
+                    candidate.debug_info.join(", "),
                 );
+            }
         }
         return candidates
             .slice(0, 5)

@@ -633,7 +633,6 @@ export default class ServerSuggestionTracker extends BotComponent {
                     await this.open_suggestion(message); // will .update() this.wheatley.database
                 }
             }
-            break;
         }
         await this.wheatley.database.update_bot_singleton({
             server_suggestions: {
