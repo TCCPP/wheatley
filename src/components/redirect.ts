@@ -24,7 +24,7 @@ export default class Redirect extends BotComponent {
                     description: "channel",
                     required: true,
                 })
-                .set_permissions(Discord.PermissionFlagsBits.Administrator)
+                .set_permissions(Discord.PermissionFlagsBits.BanMembers)
                 .set_handler(this.redirect.bind(this)),
         );
     }

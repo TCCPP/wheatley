@@ -98,7 +98,7 @@ export default class Inspect extends BotComponent {
                     description: "url",
                     required: true,
                 })
-                .set_permissions(Discord.PermissionFlagsBits.Administrator)
+                .set_permissions(Discord.PermissionFlagsBits.BanMembers)
                 .set_handler(this.inspect_text.bind(this)),
         );
     }
