@@ -85,7 +85,7 @@ export default class ForumChannels extends BotComponent {
             // no action needed - has been marked !solved
         } else {
             M.log("Sending !solved prompt timeout for thread", thread.id, thread.name, thread.url);
-            await thread.send(`<@${thread.ownerId}> Has your question been resolved? If so, run \`!solved\` :)`);
+            await thread.send(`<@${thread.ownerId}> Has your question been resolved? If so, type \`!solved\` :)`);
         }
     }
 
@@ -113,7 +113,7 @@ export default class ForumChannels extends BotComponent {
                         undefined,
                         colors.wheatley,
                         "This question is being automatically marked as stale.\n" +
-                            " If your question has been answered, run `!solved`.\n" +
+                            " If your question has been answered, type `!solved`.\n" +
                             "If your question is not answered feel free to bump the post or re-ask.\n" +
                             "Take a look at `!howto ask` for tips on improving your question.",
                     ),
@@ -245,7 +245,7 @@ export default class ForumChannels extends BotComponent {
                             "When your question is answered use **`!solved`** to " +
                                 "mark the question as resolved.\n\nRemember to ask __specific questions__, provide " +
                                 "__necessary details__, and reduce your question to its __simplest form__. For tips " +
-                                "on how to ask a good question run `!howto ask`.",
+                                "on how to ask a good question use `!howto ask`.",
                         ),
                     ],
                 });
