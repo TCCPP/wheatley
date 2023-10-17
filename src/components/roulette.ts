@@ -21,6 +21,7 @@ const LEADERBOARD_ENTRIES = 20;
  */
 export default class Roulette extends BotComponent {
     readonly warned_users = new SelfClearingSet<string>(60 * MINUTE);
+    readonly disabled_users = new SelfClearingSet<string>(20 * MINUTE); // prevent mod abuse (1984)
     // user id -> streak count
     readonly streaks = new SelfClearingMap<string, number>(60 * MINUTE);
 
@@ -85,6 +86,16 @@ export default class Roulette extends BotComponent {
             await command.reply(`Must be used in <#${this.wheatley.channels.bot_spam.id}>`, true);
             return;
         }
+        if (this.disabled_users.has(command.user.id)) {
+            await command.reply({
+                embeds: [
+                    new Discord.EmbedBuilder()
+                        .setColor(colors.red)
+                        .setDescription(`You're dead but not timed out since you're a mod <:bb:827126651032698931>`),
+                ],
+            });
+            return;
+        }
         if (this.warned_users.has(command.user.id)) {
             const roll = Math.floor(Math.random() * 6);
             M.log("Received !roulette", command.user.id, command.user.tag, roll);
@@ -93,7 +104,11 @@ export default class Roulette extends BotComponent {
                 this.streaks.set(command.user.id, 0);
                 await this.update_score(command.user.id); // TODO: I forget why this is here
                 try {
-                    await (await command.get_member()).timeout(30 * MINUTE, "Bang");
+                    if (this.wheatley.is_authorized_mod(command.user)) {
+                        this.disabled_users.insert(command.user.id);
+                    } else {
+                        await (await command.get_member()).timeout(30 * MINUTE, "Bang");
+                    }
                 } catch (error) {
                     critical_error("promise failed for timeout of roulette loser", [command.user.id, command.user.tag]);
                     M.error(error);
