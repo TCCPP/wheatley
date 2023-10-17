@@ -159,7 +159,8 @@ export default class Starboard extends BotComponent {
         return (
             !this.excluded_channels.has(channel.id) &&
             !(channel instanceof Discord.ForumChannel) &&
-            !channel.isDMBased()
+            !channel.isDMBased() &&
+            channel.permissionsFor(this.wheatley.TCCPP.roles.everyone).has("ViewChannel")
         );
     }
 
