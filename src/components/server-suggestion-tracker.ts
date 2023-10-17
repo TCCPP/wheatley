@@ -243,9 +243,7 @@ export default class ServerSuggestionTracker extends BotComponent {
                 }
             } else {
                 if (message.thread) {
-                    await message.thread.send({
-                        embeds: [new Discord.EmbedBuilder().setColor(color).setDescription(`Suggestion reopened`)],
-                    });
+                    await message.thread.send(`Suggestion reopened`);
                 }
             }
         } catch (e) {
@@ -328,13 +326,7 @@ export default class ServerSuggestionTracker extends BotComponent {
                 await status_message.delete();
                 await this.wheatley.database.server_suggestions.deleteOne({ suggestion: message.id });
                 if (message.thread) {
-                    await message.thread.send({
-                        embeds: [
-                            new Discord.EmbedBuilder()
-                                .setColor(color)
-                                .setDescription(`Suggestion resolved as ${reaction.emoji}`),
-                        ],
-                    });
+                    await message.thread.send(`Suggestion resolved as ${reaction.emoji}`);
                 }
                 // if wheatley then this is logged when the reaction is done on the dashboard
                 if (reaction.user.id != this.wheatley.id) {
