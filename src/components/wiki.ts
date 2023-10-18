@@ -60,6 +60,7 @@ class ArticleParser {
 
     private current_state = parse_state.body;
     private in_code = false;
+    private last_was_blockquote = false;
 
     constructor(private readonly wheatley: Wheatley) {}
 
@@ -169,6 +170,7 @@ class ArticleParser {
     private parse_regular_line(line: string): void {
         const requires_line_break =
             this.in_code ||
+            (line.startsWith(">") && this.last_was_blockquote) ||
             line.startsWith("```") ||
             line.startsWith("#") ||
             line.trim() === "" ||
@@ -199,6 +201,10 @@ class ArticleParser {
             this.footer = append_line(this.footer ?? "");
         } else {
             assert(false);
+        }
+
+        if (!this.in_code && line.startsWith(">")) {
+            this.last_was_blockquote = true;
         }
     }
 
