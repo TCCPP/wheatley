@@ -57,6 +57,7 @@ export type wheatley_auth = {
     token: string;
     freestanding?: boolean;
     mongo?: wheatley_database_credentials;
+    sentry?: string;
 };
 
 export type wheatley_database_info = {

@@ -1,7 +1,9 @@
 import moment from "moment";
 import chalk from "chalk";
 import * as Discord from "discord.js";
+import * as Sentry from "@sentry/node";
 import { zelis_id } from "../wheatley.js";
+import { to_string } from "./strings.js";
 
 function get_caller_location() {
     // https://stackoverflow.com/a/53339452/15675011
@@ -59,25 +61,20 @@ export function init_debugger(_client: Discord.Client) {
     client = _client;
 }
 
-export function critical_error(...args: any[]) {
-    M.error(...args);
+export function critical_error(arg: any) {
+    M.error(arg);
     get_zelis()
         .then(zelis_found => {
             if (zelis_found) {
-                const strs = [];
-                for (const arg of args) {
-                    try {
-                        strs.push(arg.toString());
-                    } catch {
-                        try {
-                            strs.push(String(arg));
-                        } catch {
-                            void 0;
-                        }
-                    }
-                }
-                zelis!.send(`Critical error occurred: ${strs.join(" ")}`).catch(() => void 0);
+                zelis!.send(`Critical error occurred: ${to_string(arg)}`).catch(() => void 0);
             }
         })
-        .catch(() => void 0);
+        .catch(() => void 0)
+        .finally(() => {
+            if (arg instanceof Error) {
+                Sentry.captureException(arg);
+            } else {
+                Sentry.captureMessage(to_string(arg));
+            }
+        });
 }

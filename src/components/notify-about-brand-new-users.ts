@@ -33,9 +33,7 @@ export default class NotifyAboutBrandNewUsers extends BotComponent {
                 text: `ID: ${member.id}`,
             })
             .setTimestamp();
-        await this.wheatley.channels.welcome
-            .send({ embeds: [embed] })
-            .catch((...args: any[]) => critical_error(...args));
+        await this.wheatley.channels.welcome.send({ embeds: [embed] }).catch(reason => critical_error(reason));
         //member_log_channel!.send(`<@!${zelis_id}>`);
     }
 

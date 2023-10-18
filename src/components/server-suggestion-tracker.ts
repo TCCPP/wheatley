@@ -247,7 +247,7 @@ export default class ServerSuggestionTracker extends BotComponent {
                 }
             }
         } catch (e) {
-            critical_error("error during open_suggestion", e);
+            critical_error(e);
         }
     }
 
@@ -262,7 +262,7 @@ export default class ServerSuggestionTracker extends BotComponent {
             await status_message.delete();
             await this.wheatley.database.server_suggestions.deleteOne({ suggestion: message_id });
         } catch (e) {
-            critical_error("error during delete_suggestion", e);
+            critical_error(e);
         }
     }
 
@@ -309,7 +309,7 @@ export default class ServerSuggestionTracker extends BotComponent {
             }
             return false;
         } catch (e) {
-            critical_error("error during update_message_if_needed", e);
+            critical_error(e);
         }
     }
 
@@ -336,7 +336,7 @@ export default class ServerSuggestionTracker extends BotComponent {
                 // already resolved
             }
         } catch (e) {
-            critical_error("error during update_message_if_needed", e);
+            critical_error(e);
         }
     }
 

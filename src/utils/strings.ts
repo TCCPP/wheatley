@@ -106,3 +106,17 @@ export function wrap(str: string, thing: string | [string, string]) {
 export function build_description(...lines: (string | null)[]) {
     return lines.filter(x => x !== null).join("\n");
 }
+
+export function to_string(obj: any) {
+    let str = "<error in to_string>";
+    try {
+        str = obj.toString();
+    } catch {
+        try {
+            str = String(obj);
+        } catch {
+            void 0;
+        }
+    }
+    return str;
+}

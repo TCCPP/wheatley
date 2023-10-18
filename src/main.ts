@@ -17,6 +17,7 @@
  */
 
 import * as Discord from "discord.js";
+import * as Sentry from "@sentry/node";
 
 import { critical_error, init_debugger } from "./utils/debugging-and-logging.js";
 import { M } from "./utils/debugging-and-logging.js";
@@ -80,6 +81,12 @@ async function main() {
     // reading sync is okay here, we can't do anything in parallel anyway
     const auth: wheatley_auth = JSON.parse(fs.readFileSync("auth.json", { encoding: "utf-8" }));
 
+    if (auth.sentry) {
+        Sentry.init({
+            dsn: auth.sentry,
+        });
+    }
+
     try {
         wheatley = new Wheatley(client, auth);
     } catch (e) {
@@ -98,5 +105,5 @@ process.on("uncaughtException", error => {
 
 // Last line of defense
 process.on("unhandledRejection", (reason, promise) => {
-    critical_error("unhandledRejection", reason, promise);
+    critical_error(`unhandledRejection ${reason} ${promise}`);
 });

@@ -110,7 +110,9 @@ export default class Roulette extends BotComponent {
                         await (await command.get_member()).timeout(30 * MINUTE, "Bang");
                     }
                 } catch (error) {
-                    critical_error("promise failed for timeout of roulette loser", [command.user.id, command.user.tag]);
+                    critical_error(
+                        `promise failed for timeout of roulette loser ${[command.user.id, command.user.tag]}`,
+                    );
                     M.error(error);
                     ok = false;
                 } finally {
