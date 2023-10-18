@@ -423,6 +423,18 @@ export class Wheatley extends EventEmitter {
         return unwrap(this.TCCPP.roles.cache.find(role => role.name.toLowerCase() === name.toLowerCase()));
     }
 
+    async try_fetch_member(options: Discord.UserResolvable | Discord.FetchMemberOptions) {
+        try {
+            return await this.TCCPP.members.fetch(options);
+        } catch (e) {
+            if (e instanceof Discord.DiscordAPIError && e.code === 10007) {
+                return null;
+            } else {
+                throw e;
+            }
+        }
+    }
+
     async populate_caches() {
         // Load a couple hundred messages for every channel we're in
         const channels: Record<string, { channel: Discord.TextBasedChannel; last_seen: number; done: boolean }> = {};

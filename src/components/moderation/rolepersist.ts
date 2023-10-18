@@ -130,21 +130,29 @@ export default class Rolepersist extends ModerationComponent {
     async apply_moderation(entry: moderation_entry) {
         assert(entry.type == this.type);
         M.info(`Applying rolepersist to ${entry.user_name}`);
-        const member = await this.wheatley.TCCPP.members.fetch(entry.user);
-        await member.roles.add(entry.role);
+        const member = await this.wheatley.try_fetch_member(entry.user);
+        if (member) {
+            await member.roles.add(entry.role);
+        }
     }
 
     async remove_moderation(entry: mongo.WithId<moderation_entry>) {
         assert(entry.type == this.type);
         M.info(`Removing rolepersist from ${entry.user_name}`);
-        const member = await this.wheatley.TCCPP.members.fetch(entry.user);
-        await member.roles.remove(entry.role);
+        const member = await this.wheatley.try_fetch_member(entry.user);
+        if (member) {
+            await member.roles.remove(entry.role);
+        }
     }
 
     async is_moderation_applied(moderation: basic_moderation_with_user) {
         assert(moderation.type == this.type);
-        const member = await this.wheatley.TCCPP.members.fetch(moderation.user);
-        return member.roles.cache.filter(role => role.id == moderation.role).size > 0;
+        const member = await this.wheatley.try_fetch_member(moderation.user);
+        if (member) {
+            return member.roles.cache.filter(role => role.id == moderation.role).size > 0;
+        } else {
+            return false;
+        }
     }
 
     async rolepersist_add(
