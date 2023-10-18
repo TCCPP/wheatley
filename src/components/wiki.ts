@@ -177,26 +177,26 @@ class ArticleParser {
         const terminator = requires_line_break ? "\n" : "";
         const terminated_line = this.substitute_placeholders(line + terminator);
 
-        const plus_line = (prefix: string) => {
-            if (prefix.length !== 0) {
-                const tail = prefix[prefix.length - 1];
+        const append_line = (content: string) => {
+            if (content.length !== 0) {
+                const tail = content[content.length - 1];
                 if (requires_line_break) {
                     if (tail !== "\n") {
-                        prefix += "\n";
+                        content += "\n";
                     }
                 } else if (!/\s/.test(tail)) {
-                    prefix += " ";
+                    content += " ";
                 }
             }
-            return prefix + terminated_line;
+            return content + terminated_line;
         };
 
         if (this.current_state === parse_state.body) {
-            this.body = plus_line(this.body!);
+            this.body = append_line(this.body!);
         } else if (this.current_state === parse_state.field) {
-            this.fields[this.fields.length - 1].value = plus_line(this.fields[this.fields.length - 1].value);
+            this.fields[this.fields.length - 1].value = append_line(this.fields[this.fields.length - 1].value);
         } else if (this.current_state === parse_state.footer) {
-            this.footer = plus_line(this.footer ?? "");
+            this.footer = append_line(this.footer ?? "");
         } else {
             assert(false);
         }
