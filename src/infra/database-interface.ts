@@ -28,7 +28,8 @@ export class WheatleyDatabase {
     }
 
     static async create(credentials: wheatley_database_credentials) {
-        const url = `mongodb://${credentials.user}:${credentials.password}@localhost:27017/?authMechanism=DEFAULT`;
+        const [user, password] = [credentials.user, credentials.password].map(encodeURIComponent);
+        const url = `mongodb://${user}:${password}@localhost:27017/?authMechanism=DEFAULT`;
         const client = new mongo.MongoClient(url);
         await client.connect();
         const db = client.db("wheatley");
