@@ -90,6 +90,7 @@ const channels_map = {
     welcome: tuple("778017793567490078", Discord.TextChannel),
     staff_member_log: tuple("875681819662622730", Discord.TextChannel),
     staff_message_log: tuple("467729928956411914", Discord.TextChannel),
+    staff_only: tuple("342153262260289537", Discord.TextChannel),
     mods: tuple("847993258600038460", Discord.TextChannel),
     // meta
     rules: tuple("659868782877212723", Discord.TextChannel),
@@ -146,7 +147,6 @@ const skill_roles_map = {
 // TODO: Can eliminate this stuff
 export const root_ids = new Set([
     "199943082441965577", // zelis
-    "162964325823283200", // eisen
     "110756651694297088", // vincent
     "89441674844995584", // styx
     // prevent Wheatley reactions being removed in server suggestions and also allow some elegant handling
@@ -159,7 +159,6 @@ export const root_mod_ids = [
     "230282234085638155", // cas
     "310536456647081985", // lumi
     "719255892813545502", // sampersand
-    "162964325823283200", // eisenwave
     "89441674844995584", // styx
     "110756651694297088", // vincent
     "138014214093668353", // dxpower

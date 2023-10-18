@@ -3,6 +3,7 @@
 [![build](https://github.com/TCCPP/wheatley/actions/workflows/build.yml/badge.svg)](https://github.com/TCCPP/wheatley/actions/workflows/build.yml)
 [![test](https://github.com/TCCPP/wheatley/actions/workflows/test.yml/badge.svg)](https://github.com/TCCPP/wheatley/actions/workflows/test.yml)
 [![eslint](https://github.com/TCCPP/wheatley/actions/workflows/eslint.yml/badge.svg)](https://github.com/TCCPP/wheatley/actions/workflows/eslint.yml)
+[![Quality Gate Status](https://sonarcloud.io/api/project_badges/measure?project=TCCPP_wheatley&metric=alert_status)](https://sonarcloud.io/summary/new_code?id=TCCPP_wheatley)
 
 This repository contains the source code for the Wheatley bot, made for the Together C & C++ discord server.
 
