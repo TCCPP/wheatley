@@ -81,7 +81,7 @@ export default class Autoreact extends BotComponent {
             }
         } catch (e: any) {
             // reaction blocked
-            if (e.code === 90001) {
+            if (e instanceof Discord.DiscordAPIError && e.code === 90001) {
                 await message.member?.timeout(1 * MINUTE, "Thou shall not block the bot");
                 if (message.channel.id == this.wheatley.channels.server_suggestions.id) {
                     await message.delete();

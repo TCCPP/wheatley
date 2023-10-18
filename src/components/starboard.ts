@@ -182,7 +182,7 @@ export default class Starboard extends BotComponent {
                     );
                 } catch (e: any) {
                     // unknown message
-                    if (e.code === 10008) {
+                    if (e instanceof Discord.DiscordAPIError && e.code === 10008) {
                         await this.wheatley.database.starboard_entries.updateOne(
                             {
                                 message: message.id,
