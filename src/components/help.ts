@@ -125,6 +125,7 @@ export default class Help extends BotComponent {
         }
         await command.reply({
             embeds,
+            ephemeral_if_possible: true,
         });
     }
 }
