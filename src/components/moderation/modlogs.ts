@@ -116,6 +116,29 @@ export default class Modlogs extends BotComponent {
             .sort({ issued_at: -1 })
             .toArray();
         const pages = Math.ceil(moderations.length / moderations_per_page);
+        const buttons: Discord.ButtonBuilder[] = [];
+        if (pages <= 1) {
+            // pass
+        } else if (pages == 2) {
+            buttons.push(
+                new Discord.ButtonBuilder()
+                    .setCustomId(`modlogs_page_${user.id}_${(page + 1) % pages}`)
+                    .setLabel(page == 0 ? "🡆" : "🡄")
+                    .setStyle(Discord.ButtonStyle.Primary),
+            );
+        } else {
+            buttons.push(
+                new Discord.ButtonBuilder()
+                    // a custom id can be up to 100 characters long
+                    .setCustomId(`modlogs_page_${user.id}_${page === 0 ? pages - 1 : page - 1}`)
+                    .setLabel("🡄")
+                    .setStyle(Discord.ButtonStyle.Primary),
+                new Discord.ButtonBuilder()
+                    .setCustomId(`modlogs_page_${user.id}_${(page + 1) % pages}`)
+                    .setLabel("🡆")
+                    .setStyle(Discord.ButtonStyle.Primary),
+            );
+        }
         return {
             embeds: [
                 new Discord.EmbedBuilder()
@@ -136,19 +159,11 @@ export default class Modlogs extends BotComponent {
                     }),
             ],
             components:
-                pages <= 1
+                buttons.length == 0
                     ? undefined
                     : [
                           new Discord.ActionRowBuilder<Discord.MessageActionRowComponentBuilder>().addComponents(
-                              new Discord.ButtonBuilder()
-                                  // a custom id can be up to 100 characters long
-                                  .setCustomId(`modlogs_page_${user.id}_${page === 0 ? pages - 1 : page - 1}`)
-                                  .setLabel("🡄")
-                                  .setStyle(Discord.ButtonStyle.Primary),
-                              new Discord.ButtonBuilder()
-                                  .setCustomId(`modlogs_page_${user.id}_${(page + 1) % pages}`)
-                                  .setLabel("🡆")
-                                  .setStyle(Discord.ButtonStyle.Primary),
+                              ...buttons,
                           ),
                       ],
         };
