@@ -1,4 +1,6 @@
 import * as Discord from "discord.js";
+import * as mongo from "mongodb";
+
 import { strict as assert } from "assert";
 import { unwrap } from "../utils/misc.js";
 import { departialize } from "../utils/discord.js";
@@ -263,9 +265,17 @@ export default class Starboard extends BotComponent {
                     ...(await make_quote_embeds([message], undefined, this.wheatley, true)),
                     allowedMentions: { parse: [] },
                 });
+                // E11000 duplicate key error collection can happen here if somehow the key is inserted but the delete
+                // doesn't happen. The bot restarting might be how this happens. Silently continue.
                 await this.wheatley.database.auto_delete_threshold_notifications.insertOne({
                     message: message.id,
                 });
+            }
+        } catch (e) {
+            if (e instanceof mongo.MongoServerError && e.code == 11000) {
+                // ok
+            } else {
+                critical_error(e);
             }
         } finally {
             this.wheatley.database.unlock();
