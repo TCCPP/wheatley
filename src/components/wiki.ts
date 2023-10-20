@@ -102,7 +102,7 @@ class ArticleParser {
         } else if (!this.in_code && line.startsWith("#")) {
             this.parse_heading(line);
         } else if (!this.in_code && trimmed.startsWith("<!--") && trimmed.endsWith("-->")) {
-            const directive = trimmed.match(/^<!--+(.*?)-+->$/)![1].trim();
+            const directive = trimmed.match(/^<!--(.*?)-->$/)![1].trim();
             this.parse_directive(directive);
         } else if (trimmed === "---") {
             this.parse_directive(trimmed);
