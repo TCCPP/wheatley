@@ -1,4 +1,5 @@
 import * as Discord from "discord.js";
+import { strict as assert } from "assert";
 import { BotComponent } from "../bot-component.js";
 import { Wheatley } from "../wheatley.js";
 import { TextBasedCommandBuilder } from "../command-abstractions/text-based-command-builder.js";
@@ -38,8 +39,8 @@ export default class CHelpRedirect extends BotComponent {
         super(wheatley);
 
         this.add_command(
-            new TextBasedCommandBuilder(["not-c"])
-                .set_description(["Mark C++ code in the C help channel"])
+            new TextBasedCommandBuilder("not-c")
+                .set_description("Mark C++ code in the C help channel")
                 .add_user_option({
                     title: "user",
                     description: "User who posted the code",
@@ -77,6 +78,8 @@ export default class CHelpRedirect extends BotComponent {
     }
 
     async not_c(command: TextBasedCommand, user: Discord.User | null) {
+        assert(command.channel);
+        assert(command.channel instanceof Discord.GuildChannel);
         //for manual triggers, trust the caller and don't check the message
         //supposedly the automatic check didn't trigger, so checking the message again would fail again
         if(user)
@@ -100,7 +103,7 @@ export default class CHelpRedirect extends BotComponent {
         }
 
         // Only check messages in #c-help-text
-        if (message.channel.id != this.wheatley.channels.c_help_text)
+        if (message.channel.id != this.wheatley.channels.c_help_text.id)
         {
             return;
         }
