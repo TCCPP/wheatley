@@ -1,6 +1,8 @@
 import * as Discord from "discord.js";
 import { BotComponent } from "../bot-component.js";
 import { Wheatley } from "../wheatley.js";
+import { TextBasedCommandBuilder } from "../command-abstractions/text-based-command-builder.js";
+import { TextBasedCommand } from "../command-abstractions/text-based-command.js";
 
 const code_block_start = "```";
 
@@ -61,7 +63,7 @@ export default class CHelpRedirect extends BotComponent {
             let end = text.substring(start + code_block_start.length).search(code_block_start)
             let block = text.substring(start + code_block_start.length, start + code_block_start.length + end)
 
-            for(var keyword of cpp_keywords)
+            for(const keyword of cpp_keywords)
             {
                 if(block.includes(keyword))
                 {
