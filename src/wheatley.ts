@@ -387,6 +387,15 @@ export class Wheatley extends EventEmitter {
         );
     }
 
+    // utility: returns the channel for regular channels or the thread / forum post parent
+    top_level_channel(channel: Discord.TextBasedChannel) {
+        if (channel instanceof Discord.ThreadChannel && channel.parentId != null) {
+            return channel.parentId;
+        } else {
+            return channel.id;
+        }
+    }
+
     // Some common tools
     is_root(user: Discord.User | Discord.PartialUser | Discord.APIUser): boolean {
         //return member.roles.cache.some(r => r.id == root_role_id);

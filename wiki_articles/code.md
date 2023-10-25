@@ -1,5 +1,3 @@
-<!-- alias code -->
-
 # How to Format Code on Discord
 
 <!-- inline -->
