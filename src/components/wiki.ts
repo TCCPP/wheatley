@@ -124,7 +124,7 @@ class ArticleParser {
         assert(level >= 1, "Cannot parse heading that has no heading level");
 
         if (level === 1) {
-            assert(this.title !== undefined, "Duplicate title heading");
+            assert(this.title === undefined, "Duplicate title heading");
             this.title = line.substring(1).trim();
             this.current_state = parse_state.body;
         } else if (level === 2) {
