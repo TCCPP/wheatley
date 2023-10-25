@@ -83,7 +83,7 @@ export function string_split(str: string, delim: string, limit: number) {
 
 export function escape_discord(str: string) {
     // Escape <> for mentions, on top of markdown
-    return Discord.escapeMarkdown(str).replace(/[<>/]/g, c => `\\${c}`);
+    return Discord.escapeMarkdown(str).replace(/[<>\-#]|(?<=\d)\./g, c => `\\${c}`);
 }
 
 export function capitalize(str: string) {
