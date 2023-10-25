@@ -4,6 +4,7 @@ import { BotComponent } from "../bot-component.js";
 import { Wheatley } from "../wheatley.js";
 import { TextBasedCommandBuilder } from "../command-abstractions/text-based-command-builder.js";
 import { TextBasedCommand } from "../command-abstractions/text-based-command.js";
+import { DAY } from "../common.js";
 
 const code_block_start = "```";
 
@@ -48,6 +49,22 @@ export default class CHelpRedirect extends BotComponent {
                 })
                 .set_handler(this.not_c.bind(this)),
         );
+    }
+
+    async is_new_member(message: Discord.Message) {
+        let member: Discord.GuildMember;
+        if (message.member == null) {
+            try {
+                member = await message.guild!.members.fetch(message.author.id);
+            } catch (error) {
+                M.warn("Failed to get user", message.author.id);
+                return false;
+            }
+        } else {
+            member = message.member;
+        }
+        assert(member.joinedTimestamp != null);
+        return Date.now() - member.joinedTimestamp <= 7 * DAY;
     }
 
     check_message(message: Discord.Message): boolean {
@@ -104,6 +121,12 @@ export default class CHelpRedirect extends BotComponent {
 
         // Only check messages in #c-help-text
         if (message.channel.id != this.wheatley.channels.c_help_text.id) {
+            return;
+        }
+
+        //only bother new members
+        if(await this.is_new_member(message))
+        {
             return;
         }
 
