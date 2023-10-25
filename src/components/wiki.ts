@@ -128,7 +128,7 @@ class ArticleParser {
             this.title = line.substring(1).trim();
             this.current_state = parse_state.body;
         } else if (level === 2) {
-            const name = line.substring(2).trim();
+            const name = this.substitute_emojis(line.substring(2).trim());
             const inline = this.current_state === parse_state.before_inline_field;
             const field = { name, value: "", inline };
             this.fields.push(field);
@@ -240,19 +240,23 @@ class ArticleParser {
         return result + (in_inline_code ? piece : this.substitute_placeholders_no_code(piece));
     }
 
+    private substitute_emojis(str: string) {
+        return str
+            .replaceAll(/(?<!<):stackoverflow:/g, this.wheatley.stackoverflow_emote)
+            .replaceAll(/(?<!<):microsoft:/g, this.wheatley.microsoft_emote)
+            .replaceAll(/(?<!<):tux:/g, this.wheatley.tux_emote)
+            .replaceAll(/(?<!<):apple:/g, this.wheatley.apple_emote);
+    }
+
     /**
      * Substitutes placeholders in a string with no backticks, i.e. no
      * possibility of having inline code.
      * @param str the string to substitute in
      */
     private substitute_placeholders_no_code(str: string): string {
-        const freestanding_result = str
+        const freestanding_result = this.substitute_emojis(str)
             .replace(/<br>\n|<br\/>\n/, "\n")
             .replaceAll(/<br>|<br\/>/g, "\n")
-            .replaceAll(/(?<!<):stackoverflow:/g, this.wheatley.stackoverflow_emote)
-            .replaceAll(/(?<!<):microsoft:/g, this.wheatley.microsoft_emote)
-            .replaceAll(/(?<!<):tux:/g, this.wheatley.tux_emote)
-            .replaceAll(/(?<!<):apple:/g, this.wheatley.apple_emote)
             .replaceAll(reference_link_regex, (_, text: string, ref: string) => {
                 assert(this.reference_definitions.has(ref), "Unknown reference in reference-style link");
                 return `[${text}](${this.reference_definitions.get(ref)})`;
