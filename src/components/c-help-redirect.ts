@@ -95,6 +95,13 @@ export default class CHelpRedirect extends BotComponent {
     async not_c(command: TextBasedCommand, user: Discord.User | null) {
         assert(command.channel);
         assert(command.channel instanceof Discord.GuildChannel);
+
+        // Only allowed in #c-help-text
+        if (command.channel.id != this.wheatley.channels.c_help_text.id) {
+            await command.reply(`Can only be used in <#${this.wheatley.channels.c_help_text.id}>`, true);
+            return;
+        }
+
         //for manual triggers, trust the caller and don't check the message
         //supposedly the automatic check didn't trigger, so checking the message again would fail again
         if (user) {
