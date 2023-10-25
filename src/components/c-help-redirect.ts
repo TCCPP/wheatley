@@ -5,6 +5,7 @@ import { Wheatley } from "../wheatley.js";
 import { TextBasedCommandBuilder } from "../command-abstractions/text-based-command-builder.js";
 import { TextBasedCommand } from "../command-abstractions/text-based-command.js";
 import { DAY } from "../common.js";
+import { M } from "../utils/debugging-and-logging.js";
 
 const code_block_start = "```";
 
