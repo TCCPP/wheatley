@@ -2,6 +2,7 @@ import { strict as assert } from "assert";
 import * as Discord from "discord.js";
 import { client } from "./debugging-and-logging.js";
 import { unwrap } from "./misc.js";
+import { TextBasedCommand } from "../command-abstractions/text-based-command.js";
 
 type PotentiallyPartial =
     | Discord.User
@@ -144,5 +145,44 @@ export async function send_long_message(channel: Discord.TextChannel, msg: strin
         }
     } else {
         await channel.send(msg);
+    }
+}
+
+export async function send_long_response(
+    command_object: Discord.MessageContextMenuCommandInteraction | TextBasedCommand,
+    msg: string,
+    ephemeral_if_possible = false,
+) {
+    const queue: string[] = [];
+    if (msg.length > 2000) {
+        const lines = msg.split("\n");
+        let partial = "";
+        while (lines.length > 0) {
+            if (partial.length + lines[0].length + 1 <= 2000) {
+                if (partial != "") {
+                    partial += "\n";
+                }
+                partial += lines.shift();
+            } else {
+                queue.push(partial);
+                partial = "";
+            }
+        }
+        if (partial != "") {
+            queue.push(partial);
+        }
+    } else {
+        queue.push(msg);
+    }
+    while (queue.length > 0) {
+        await (command_object.replied &&
+        (command_object instanceof Discord.MessageContextMenuCommandInteraction || !command_object.is_editing)
+            ? command_object.followUp
+            : command_object.reply
+        ).bind(command_object)({
+            ephemeral: ephemeral_if_possible,
+            ephemeral_if_possible,
+            content: unwrap(queue.shift()),
+        });
     }
 }
