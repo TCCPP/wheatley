@@ -14,7 +14,7 @@ export class MessageContextMenuInteractionBuilder<HasHandler extends boolean = f
     HasHandler,
     [Discord.MessageContextMenuCommandInteraction]
 > {
-    // TODO: Permissions?
+    permissions: undefined | bigint = undefined;
 
     constructor(public readonly name: string) {
         super();
@@ -31,15 +31,22 @@ export class MessageContextMenuInteractionBuilder<HasHandler extends boolean = f
         if (!this.handler) {
             return [undefined as ConditionalOptional<HasHandler, BaseBotInteraction<any>>, undefined];
         } else {
-            // TODO: Permissions?
             return [
                 new BaseBotInteraction(this.name, this.handler) as ConditionalOptional<
                     HasHandler,
                     BaseBotInteraction<any>
                 >,
-                new Discord.ContextMenuCommandBuilder().setName(this.name).setType(ApplicationCommandTypeMessage),
+                new Discord.ContextMenuCommandBuilder()
+                    .setName(this.name)
+                    .setDefaultMemberPermissions(this.permissions)
+                    .setType(ApplicationCommandTypeMessage),
             ];
         }
+    }
+
+    set_permissions(permissions: bigint) {
+        this.permissions = permissions;
+        return this;
     }
 }
 
@@ -47,7 +54,7 @@ export class UserContextMenuInteractionBuilder<HasHandler extends boolean = fals
     HasHandler,
     [Discord.UserContextMenuCommandInteraction]
 > {
-    // TODO: Permissions?
+    permissions: undefined | bigint = undefined;
 
     constructor(public readonly name: string) {
         super();
@@ -64,14 +71,21 @@ export class UserContextMenuInteractionBuilder<HasHandler extends boolean = fals
         if (!this.handler) {
             return [undefined as ConditionalOptional<HasHandler, BaseBotInteraction<any>>, undefined];
         } else {
-            // TODO: Permissions?
             return [
                 new BaseBotInteraction(this.name, this.handler) as ConditionalOptional<
                     HasHandler,
                     BaseBotInteraction<any>
                 >,
-                new Discord.ContextMenuCommandBuilder().setName(this.name).setType(ApplicationCommandTypeUser),
+                new Discord.ContextMenuCommandBuilder()
+                    .setName(this.name)
+                    .setDefaultMemberPermissions(this.permissions)
+                    .setType(ApplicationCommandTypeUser),
             ];
         }
+    }
+
+    set_permissions(permissions: bigint) {
+        this.permissions = permissions;
+        return this;
     }
 }
