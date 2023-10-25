@@ -152,6 +152,7 @@ export async function send_long_response(
     command_object: Discord.MessageContextMenuCommandInteraction | TextBasedCommand,
     msg: string,
     ephemeral_if_possible = false,
+    flags?: Discord.MessageFlags.SuppressEmbeds,
 ) {
     const queue: string[] = [];
     if (msg.length > 2000) {
@@ -183,6 +184,7 @@ export async function send_long_response(
             ephemeral: ephemeral_if_possible,
             ephemeral_if_possible,
             content: unwrap(queue.shift()),
+            flags,
         });
     }
 }
