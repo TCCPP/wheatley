@@ -21,7 +21,7 @@ We *strongly* recommend to start out using an IDE, which will provide all these 
 - [CLion](https://www.jetbrains.com/clion/)
 
 <!-- inline -->
-## :apple~1: Mac
+## :apple: Mac
 - [Xcode](https://developer.apple.com/xcode/)
 - [CLion](https://www.jetbrains.com/clion/)
 
