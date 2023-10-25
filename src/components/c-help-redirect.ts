@@ -52,7 +52,7 @@ export default class CHelpRedirect extends BotComponent {
         );
     }
 
-    async is_new_member(message: Discord.Message) {
+    async is_not_new_member(message: Discord.Message) {
         let member: Discord.GuildMember;
         if (message.member == null) {
             try {
@@ -65,7 +65,7 @@ export default class CHelpRedirect extends BotComponent {
             member = message.member;
         }
         assert(member.joinedTimestamp != null);
-        return Date.now() - member.joinedTimestamp <= 7 * DAY;
+        return Date.now() - member.joinedTimestamp >= 7 * DAY;
     }
 
     check_message(message: Discord.Message): boolean {
@@ -126,8 +126,7 @@ export default class CHelpRedirect extends BotComponent {
         }
 
         //only bother new members
-        if(await this.is_new_member(message))
-        {
+        if(await this.is_not_new_member(message)) {
             return;
         }
 
