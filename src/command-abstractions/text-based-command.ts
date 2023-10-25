@@ -252,6 +252,16 @@ export class TextBasedCommand {
         return this.reply_object instanceof Discord.ChatInputCommandInteraction;
     }
 
+    // get_text_command_content() {
+    //     assert(this.reply_object instanceof Discord.Message);
+    //     return this.reply_object.content;
+    // }
+
+    get_message_object() {
+        assert(this.reply_object instanceof Discord.Message);
+        return this.reply_object;
+    }
+
     async react(emoji: string, ephemeral_if_possible = false) {
         if (this.reply_object instanceof Discord.ChatInputCommandInteraction) {
             await this.reply_object.reply({

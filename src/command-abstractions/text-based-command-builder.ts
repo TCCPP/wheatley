@@ -33,6 +33,7 @@ export class TextBasedCommandBuilder<
     permissions: undefined | bigint = undefined;
     subcommands: TextBasedCommandBuilder<any, true, true>[] = [];
     type: HasSubcommands extends true ? "top-level" : "default";
+    allow_trailing_junk: boolean = false;
 
     constructor(names: string | MoreThanOne<string>) {
         super();
@@ -181,6 +182,11 @@ export class TextBasedCommandBuilder<
         return this;
     }
 
+    set_allow_trailing_junk(allow_trailing_junk: boolean) {
+        this.allow_trailing_junk = allow_trailing_junk;
+        return this;
+    }
+
     add_subcommand<T extends unknown[]>(subcommand: TextBasedCommandBuilder<T, true, true>) {
         assert(
             this.subcommands.every(
@@ -215,6 +221,7 @@ export class TextBasedCommandBuilder<
                     description,
                     slash,
                     this.permissions,
+                    this.allow_trailing_junk,
                     this,
                     wheatley,
                 ) as BotTextBasedCommand<unknown[]>,
@@ -231,6 +238,7 @@ export class TextBasedCommandBuilder<
                         description,
                         slash,
                         this.permissions,
+                        this.allow_trailing_junk,
                         this,
                         wheatley,
                     ) as BotTextBasedCommand<unknown[]>,

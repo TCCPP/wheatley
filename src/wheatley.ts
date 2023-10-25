@@ -396,6 +396,16 @@ export class Wheatley extends EventEmitter {
         }
     }
 
+    async fetch_message_reply(message: Discord.Message) {
+        const ref = unwrap(message.reference);
+        assert(ref.guildId === message.guildId);
+        assert(ref.channelId === message.channelId);
+        const channel = unwrap(await this.client.channels.fetch(ref.channelId));
+        assert(channel.isTextBased());
+        const reply_message = await channel.messages.fetch(unwrap(ref.messageId));
+        return reply_message;
+    }
+
     // Some common tools
     is_root(user: Discord.User | Discord.PartialUser | Discord.APIUser): boolean {
         //return member.roles.cache.some(r => r.id == root_role_id);
