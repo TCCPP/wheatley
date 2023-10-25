@@ -250,6 +250,9 @@ class ArticleParser {
             .replace(/<br>\n|<br\/>\n/, "\n")
             .replaceAll(/<br>|<br\/>/g, "\n")
             .replaceAll(/(?<!<):stackoverflow:/g, this.wheatley.stackoverflow_emote)
+            .replaceAll(/(?<!<):microsoft:/g, this.wheatley.microsoft_emote)
+            .replaceAll(/(?<!<):tux:/g, this.wheatley.tux_emote)
+            .replaceAll(/(?<!<):apple:/g, this.wheatley.apple_emote)
             .replaceAll(reference_link_regex, (_, text: string, ref: string) => {
                 assert(this.reference_definitions.has(ref), "Unknown reference in reference-style link");
                 return `[${text}](${this.reference_definitions.get(ref)})`;

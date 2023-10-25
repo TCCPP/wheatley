@@ -201,6 +201,9 @@ export class Wheatley extends EventEmitter {
     // Some emojis
     readonly pepereally = "<:pepereally:643881257624666112>";
     readonly stackoverflow_emote = "<:stackoverflow:1074747016644661258>";
+    readonly microsoft_emote = "<:microsoft:1165512917047853127>";
+    readonly tux_emote = "<:tux:1165505626894520361>";
+    readonly apple_emote = "<:apple:1165508607798943754>";
 
     // TCCPP stuff
     TCCPP: Discord.Guild;
