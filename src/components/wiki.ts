@@ -49,7 +49,7 @@ const reference_link_regex = /\[([^\]]*)]\[([^\]]*)]/g;
 class ArticleParser {
     private readonly aliases = new Set<string>();
 
-    private title: string;
+    private title: string | undefined;
     private body?: string;
     private fields: WikiField[] = [];
     private footer?: string;
@@ -124,6 +124,7 @@ class ArticleParser {
         assert(level >= 1, "Cannot parse heading that has no heading level");
 
         if (level === 1) {
+            assert(this.title !== undefined, "Duplicate title heading");
             this.title = line.substring(1).trim();
             this.current_state = parse_state.body;
         } else if (level === 2) {
@@ -276,7 +277,7 @@ class ArticleParser {
     get article(): WikiArticle {
         assert(this.is_done, "Attempting to access article of a parser without success");
         return {
-            title: this.title,
+            title: unwrap(this.title),
             body: this.body,
             fields: this.fields,
             footer: this.footer,
