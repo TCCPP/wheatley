@@ -20,21 +20,44 @@ const cpp_keywords = [
   "static_cast",
   "const_cast",
   "reinterpret_cast",
-  "new ",
-  "delete ",
+  "= new ", //too common to include just "new"
+  //"delete ", //too common
+  "delete[]",
   "public:",
   "protected:",
   "private:",
-  // other cpp-only keywords:
-  //explicit/mutable/final
-  //try/catch/throw
-  //operator
-  //"cout <<" / "cin >>"
-  //true/false
+];
+
+const not_c_keywords = [
+  "explicit",
+  "mutable",
+  "final",
+  "try",
+  "catch",
+  "throw",
+  "operator", //possibly list all operator+ etc. to be on the safe side
+  "cout<<",
+  "cout <<",
+  "cin>>",
+  "cin >>",
+  "<iostream>",
+  "<cstdio>",
+];
+
+const maybe_c_keywords = [
+  "printf",
+  "scanf",
+  "<stdio.h>",
+  "<stdlib.h>",
+  "<math.h>",
+  "malloc",
+  "calloc",
+  "realloc",
+  "free(", //too common to include just "free"
 ];
 
 /**
- * Checks for cpp code in #c-help-text and suggests #cpp-help-text instead
+ * Checks for cpp code in #c-help-text and suggests #cpp-help-text instead, and vice versa
  */
 export default class CHelpRedirect extends BotComponent {
   constructor(wheatley: Wheatley) {
@@ -49,6 +72,17 @@ export default class CHelpRedirect extends BotComponent {
           required: false,
         })
         .set_handler(this.not_c.bind(this)),
+    );
+
+    this.add_command(
+      new TextBasedCommandBuilder("not-cpp")
+        .set_description("Mark C code in the C++ help channel")
+        .add_user_option({
+          title: "user",
+          description: "User who posted the code",
+          required: false,
+        })
+        .set_handler(this.not_cpp.bind(this)),
     );
   }
 
@@ -68,7 +102,7 @@ export default class CHelpRedirect extends BotComponent {
     return Date.now() - member.joinedTimestamp >= 7 * DAY;
   }
 
-  check_message(message: Discord.Message): boolean {
+  check_message_for_cpp_code(message: Discord.Message): boolean {
     if (!message.content.includes(code_block_start)) {
       // to avoid false positives, only check inside code blocks
       return false;
@@ -90,6 +124,60 @@ export default class CHelpRedirect extends BotComponent {
         if (block.includes(keyword)) {
           return true;
         }
+      }
+
+      text = text.substring(
+        start + code_block_start.length + end + code_block_start.length,
+      );
+    }
+    return false;
+  }
+
+  check_message_for_c_code(message: Discord.Message): boolean {
+    if (!message.content.includes(code_block_start)) {
+      // to avoid false positives, only check inside code blocks
+      return false;
+    }
+
+    let text = message.content;
+
+    while (text.search(code_block_start) > -1) {
+      const start = text.search(code_block_start);
+      const end = text
+        .substring(start + code_block_start.length)
+        .search(code_block_start);
+      const block = text.substring(
+        start + code_block_start.length,
+        start + code_block_start.length + end,
+      );
+
+      //for C code, the block must not have any C++ keywords
+      //including inconclusive keywords
+      //and have some C keyword
+
+      let c_code_found = false;
+      let cpp_code_found = false;
+
+      for (const keyword of cpp_keywords) {
+        if (block.includes(keyword)) {
+          cpp_code_found = true;
+        }
+      }
+
+      for (const keyword of not_c_keywords) {
+        if (block.includes(keyword)) {
+          cpp_code_found = true;
+        }
+      }
+
+      for (const keyword of maybe_c_keywords) {
+        if (block.includes(keyword)) {
+          c_code_found = true;
+        }
+      }
+
+      if (c_code_found && !cpp_code_found) {
+        return true;
       }
 
       text = text.substring(
@@ -127,6 +215,34 @@ export default class CHelpRedirect extends BotComponent {
     }
   }
 
+  async not_cpp(command: TextBasedCommand, user: Discord.User | null) {
+    assert(command.channel);
+    assert(command.channel instanceof Discord.GuildChannel);
+
+    // Only allowed in #cpp-help-text
+    if (command.channel.id != this.wheatley.channels.cpp_help_text.id) {
+      await command.reply(
+        `Can only be used in <#${this.wheatley.channels.cpp_help_text.id}>`,
+        true,
+      );
+      return;
+    }
+
+    //for manual triggers, trust the caller and don't check the message
+    //supposedly the automatic check didn't trigger, so checking the message again would fail again
+    if (user) {
+      await command.channel.send(
+        `<@${user.id}> Your code looks like C code, but this is a C++ channel. ` +
+          `Did you mean to post in <#${this.wheatley.channels.c_help_text.id}>?`,
+      );
+    } else {
+      await command.channel.send(
+        `This code looks like C code, but this is a C++ channel. ` +
+          `Did you mean to post in <#${this.wheatley.channels.c_help_text.id}>?`,
+      );
+    }
+  }
+
   override async on_message_create(message: Discord.Message) {
     // Ignore self, bots, and messages outside TCCPP (e.g. dm's)
     if (
@@ -137,21 +253,26 @@ export default class CHelpRedirect extends BotComponent {
       return;
     }
 
-    // Only check messages in #c-help-text
-    if (message.channel.id != this.wheatley.channels.c_help_text.id) {
-      return;
-    }
-
-    //only bother new members
+    //only auto-check new members
     if (await this.is_not_new_member(message)) {
       return;
     }
 
-    if (this.check_message(message)) {
-      await message.reply(
-        `<@${message.author.id}> Your code looks like C++ code, but this is a C channel.` +
-          `Did you mean to post in <#${this.wheatley.channels.cpp_help_text.id}>?`,
-      );
+    // Only check messages in help-text channels
+    if (message.channel.id == this.wheatley.channels.c_help_text.id) {
+      if (this.check_message_for_cpp_code(message)) {
+        await message.reply(
+          `<@${message.author.id}> Your code looks like C++ code, but this is a C channel.` +
+            `Did you mean to post in <#${this.wheatley.channels.cpp_help_text.id}>?`,
+        );
+      }
+    } else if (message.channel.id == this.wheatley.channels.cpp_help_text.id) {
+      if (this.check_message_for_c_code(message)) {
+        await message.reply(
+          `<@${message.author.id}> Your code looks like C code, but this is a C++ channel.` +
+            `Did you mean to post in <#${this.wheatley.channels.c_help_text.id}>?`,
+        );
+      }
     }
   }
 }
