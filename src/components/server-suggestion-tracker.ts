@@ -10,6 +10,8 @@ import { MINUTE } from "../common.js";
 import { forge_snowflake } from "./snowflake.js";
 import { BotComponent } from "../bot-component.js";
 import { Wheatley } from "../wheatley.js";
+import { TextBasedCommandBuilder } from "../command-abstractions/text-based-command-builder.js";
+import { TextBasedCommand } from "../command-abstractions/text-based-command.js";
 
 export const TRACKER_START_TIME = 1625112000000; // Thu Jul 01 2021 00:00:00 GMT-0400 (Eastern Daylight Time)
 // export const TRACKER_START_TIME = 1630468800000; // Wed Sep 01 2021 00:00:00 GMT-0400 (Eastern Daylight Time)
@@ -43,6 +45,19 @@ export default class ServerSuggestionTracker extends BotComponent {
 
     constructor(wheatley: Wheatley) {
         super(wheatley);
+
+        this.add_command(
+            new TextBasedCommandBuilder("suggestions-dashboard-count")
+                .set_description("Server suggestions count")
+                .set_permissions(Discord.PermissionFlagsBits.BanMembers)
+                .set_handler(this.dashboard_count.bind(this)),
+        );
+    }
+
+    async dashboard_count(command: TextBasedCommand) {
+        await command.reply({
+            content: `${await this.wheatley.database.server_suggestions.countDocuments()} open suggestions`,
+        });
     }
 
     // utilities
@@ -356,10 +371,6 @@ export default class ServerSuggestionTracker extends BotComponent {
         try {
             if (message.channel.id == this.wheatley.channels.server_suggestions.id) {
                 await this.handle_suggestion_channel_message(message);
-            } else if (message.content == "!suggestions-stats") {
-                await message.reply({
-                    content: `${await this.wheatley.database.server_suggestions.countDocuments()} open suggestions`,
-                });
             }
         } catch (e) {
             critical_error(e);
