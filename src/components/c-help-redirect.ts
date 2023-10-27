@@ -4,8 +4,9 @@ import { BotComponent } from "../bot-component.js";
 import { Wheatley } from "../wheatley.js";
 import { TextBasedCommandBuilder } from "../command-abstractions/text-based-command-builder.js";
 import { TextBasedCommand } from "../command-abstractions/text-based-command.js";
-import { DAY } from "../common.js";
+import { HOUR, DAY } from "../common.js";
 import { M } from "../utils/debugging-and-logging.js";
+import { SelfClearingSet } from "../utils/containers.js";
 
 const code_block_start = "```";
 
@@ -60,6 +61,11 @@ const maybe_c_keywords = [
  * Checks for cpp code in #c-help-text and suggests #cpp-help-text instead, and vice versa
  */
 export default class CHelpRedirect extends BotComponent {
+    
+    //for timeouts on triggering on the same user
+    //use the same set for both channels, shouldn't be an issue in practice
+    readonly auto_triggered_users = new SelfClearingSet<string>(1 * HOUR);
+
     constructor(wheatley: Wheatley) {
         super(wheatley);
 
@@ -238,9 +244,16 @@ export default class CHelpRedirect extends BotComponent {
             return;
         }
 
+        //timeout for triggering on the same user
+        if(this.auto_triggered_users.has(message.author.id))
+        {
+            return;
+        }
+
         // Only check messages in help-text channels
         if (message.channel.id == this.wheatley.channels.c_help_text.id) {
             if (this.check_message_for_cpp_code(message)) {
+                this.auto_triggered_users.insert(message.author.id);
                 await message.reply(
                     `<@${message.author.id}> Your code looks like C++ code, but this is a C channel.` +
                         `Did you mean to post in <#${this.wheatley.channels.cpp_help_text.id}>?`,
@@ -248,6 +261,7 @@ export default class CHelpRedirect extends BotComponent {
             }
         } else if (message.channel.id == this.wheatley.channels.cpp_help_text.id) {
             if (this.check_message_for_c_code(message)) {
+                this.auto_triggered_users.insert(message.author.id);
                 await message.reply(
                     `<@${message.author.id}> Your code looks like C code, but this is a C++ channel.` +
                         `Did you mean to post in <#${this.wheatley.channels.c_help_text.id}>?`,
