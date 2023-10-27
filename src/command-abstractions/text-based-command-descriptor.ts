@@ -30,6 +30,7 @@ export class BotTextBasedCommand<Args extends unknown[] = []> extends BaseBotInt
         public readonly description: string,
         public readonly slash: boolean,
         public readonly permissions: undefined | bigint,
+        public readonly allow_trailing_junk: boolean,
         builder: TextBasedCommandBuilder<Args, true, true> | TextBasedCommandBuilder<Args, true, false, true>,
         protected readonly wheatley: Wheatley,
     ) {
@@ -52,6 +53,7 @@ export class BotTextBasedCommand<Args extends unknown[] = []> extends BaseBotInt
                             sub_description,
                             sub_slash,
                             undefined,
+                            allow_trailing_junk,
                             subcommand,
                             wheatley,
                         ),
@@ -208,12 +210,7 @@ export class BotTextBasedCommand<Args extends unknown[] = []> extends BaseBotInt
                     // Handle reply as an argument, only if no text argument is provided
                     // NOTE: If there's ever a command like !x <user> <user> this won't quite work
                     try {
-                        const ref = unwrap(message.reference);
-                        assert(ref.guildId === message.guildId);
-                        assert(ref.channelId === message.channelId);
-                        const channel = unwrap(await this.wheatley.client.channels.fetch(ref.channelId));
-                        assert(channel.isTextBased());
-                        const reply_message = await channel.messages.fetch(unwrap(ref.messageId));
+                        const reply_message = await this.wheatley.fetch_message_reply(message);
                         command_options.push(reply_message.author);
                     } catch (e) {
                         await reply_with_error(`Error fetching reply`, true);
@@ -278,7 +275,7 @@ export class BotTextBasedCommand<Args extends unknown[] = []> extends BaseBotInt
                 assert(false, "unhandled option type");
             }
         }
-        if (command_body != "") {
+        if (command_body != "" && !this.allow_trailing_junk) {
             await reply_with_error(`Unexpected parameters provided`);
             return;
         }

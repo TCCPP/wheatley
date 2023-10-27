@@ -11,6 +11,7 @@ import { colors } from "../common.js";
 import { MessageContextMenuInteractionBuilder } from "../command-abstractions/context-menu.js";
 import { TextBasedCommandBuilder } from "../command-abstractions/text-based-command-builder.js";
 import { TextBasedCommand } from "../command-abstractions/text-based-command.js";
+import { send_long_response } from "../utils/discord.js";
 
 // These looks silly, but it is the best way I can think of to call all the getters and re-package
 function repackage_attachment({
@@ -88,7 +89,11 @@ export default class Inspect extends BotComponent {
     constructor(wheatley: Wheatley) {
         super(wheatley);
 
-        this.add_command(new MessageContextMenuInteractionBuilder("Inspect").set_handler(this.inspect.bind(this)));
+        this.add_command(
+            new MessageContextMenuInteractionBuilder("Inspect")
+                .set_permissions(Discord.PermissionFlagsBits.BanMembers)
+                .set_handler(this.inspect.bind(this)),
+        );
 
         this.add_command(
             new TextBasedCommandBuilder("inspect")
@@ -107,25 +112,40 @@ export default class Inspect extends BotComponent {
         message: Discord.Message,
         command_object: Discord.MessageContextMenuCommandInteraction | TextBasedCommand,
     ) {
-        await command_object.reply({
-            ephemeral: true,
-            ephemeral_if_possible: true,
-            content: message.content.length > 0 ? escape_discord(message.content) : "<empty>",
-        });
+        await send_long_response(
+            command_object,
+            message.content.length > 0 ? escape_discord(message.content) : "<empty>",
+            true,
+            Discord.MessageFlags.SuppressEmbeds,
+        );
         if (message.attachments.size > 0) {
             await command_object.followUp({
                 ephemeral: true,
                 ephemeral_if_possible: true,
-                content:
-                    "Attachments: " +
-                    escape_discord(JSON.stringify(message.attachments.map(repackage_attachment), null, 4)),
+                content: "Attachments:",
+                files: [
+                    new Discord.AttachmentBuilder(
+                        Buffer.from(JSON.stringify(message.attachments.map(repackage_attachment), null, 4)),
+                        {
+                            name: "attachments.txt",
+                        },
+                    ),
+                ],
             });
         }
         if (message.embeds.length > 0) {
             await command_object.followUp({
                 ephemeral: true,
                 ephemeral_if_possible: true,
-                content: "Embeds: " + escape_discord(JSON.stringify(message.embeds.map(repackage_embed), null, 4)),
+                content: "Embeds:",
+                files: [
+                    new Discord.AttachmentBuilder(
+                        Buffer.from(JSON.stringify(message.embeds.map(repackage_embed), null, 4)),
+                        {
+                            name: "embeds.txt",
+                        },
+                    ),
+                ],
             });
         }
     }

@@ -201,6 +201,9 @@ export class Wheatley extends EventEmitter {
     // Some emojis
     readonly pepereally = "<:pepereally:643881257624666112>";
     readonly stackoverflow_emote = "<:stackoverflow:1074747016644661258>";
+    readonly microsoft_emote = "<:microsoft:1165512917047853127>";
+    readonly tux_emote = "<:tux:1165505626894520361>";
+    readonly apple_emote = "<:apple:1165508607798943754>";
 
     // TCCPP stuff
     TCCPP: Discord.Guild;
@@ -385,6 +388,25 @@ export class Wheatley extends EventEmitter {
         return (
             thread.parentId != null && [this.channels.cpp_help.id, this.channels.c_help.id].includes(thread.parentId)
         );
+    }
+
+    // utility: returns the channel for regular channels or the thread / forum post parent
+    top_level_channel(channel: Discord.TextBasedChannel) {
+        if (channel instanceof Discord.ThreadChannel && channel.parentId != null) {
+            return channel.parentId;
+        } else {
+            return channel.id;
+        }
+    }
+
+    async fetch_message_reply(message: Discord.Message) {
+        const ref = unwrap(message.reference);
+        assert(ref.guildId === message.guildId);
+        assert(ref.channelId === message.channelId);
+        const channel = unwrap(await this.client.channels.fetch(ref.channelId));
+        assert(channel.isTextBased());
+        const reply_message = await channel.messages.fetch(unwrap(ref.messageId));
+        return reply_message;
     }
 
     // Some common tools

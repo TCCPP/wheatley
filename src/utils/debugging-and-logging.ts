@@ -78,3 +78,21 @@ export function critical_error(arg: any) {
             }
         });
 }
+
+export function ignorable_error(arg: any) {
+    M.error(arg);
+    get_zelis()
+        .then(zelis_found => {
+            if (zelis_found) {
+                zelis!.send(`Ignorable error occurred: ${to_string(arg)}`).catch(() => void 0);
+            }
+        })
+        .catch(() => void 0)
+        .finally(() => {
+            if (arg instanceof Error) {
+                Sentry.captureException(arg);
+            } else {
+                Sentry.captureMessage(to_string(arg));
+            }
+        });
+}
