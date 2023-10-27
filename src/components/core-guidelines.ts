@@ -6,7 +6,7 @@ import { critical_error } from "../utils/debugging-and-logging.js";
 import { M } from "../utils/debugging-and-logging.js";
 
 import { Index, IndexEntry } from "../algorithm/search.js";
-import { core_guidelines_entry, core_guidelines_index } from "../../indexes/core-guidelines/types.js";
+import { core_guidelines_entry, core_guidelines_index } from "../../indexes/core_guidelines/types.js";
 import { BotComponent } from "../bot-component.js";
 import { Wheatley } from "../wheatley.js";
 import { colors } from "../common.js";
