@@ -89,7 +89,9 @@ export default class CoreGuidelines extends BotComponent {
 
     async guide(command: TextBasedCommand, query: string) {
         const result = this.index.lookup(query);
-        M.log("core guidelines query", query, result ? `https://isocpp.github.io/CppCoreGuidelines/CppCoreGuidelines${result.anchor}` : null);
+        M.log("core guidelines query",
+            query,
+            result ? `https://isocpp.github.io/CppCoreGuidelines/CppCoreGuidelines${result.anchor}` : null);
         if (result === null) {
             await command.reply({
                 embeds: [
@@ -112,7 +114,7 @@ export default class CoreGuidelines extends BotComponent {
                     url: "https://isocpp.github.io/CppCoreGuidelines/CppCoreGuidelines",
                 })
                 .setTitle(result.id + ": " + result.caption)
-                .setURL(`https://isocpp.github.io/CppCoreGuidelines/CppCoreGuidelines${result.anchor}`)
+                .setURL(`https://isocpp.github.io/CppCoreGuidelines/CppCoreGuidelines${result.anchor}`);
             await command.reply({ embeds: [embed] });
         }
     }
