@@ -11,7 +11,7 @@ import { SelfClearingSet } from "../utils/containers.js";
 const code_block_start = "```";
 
 const cpp_keywords = [
-    "std::", //just :: would work too, this is slightly less prone to false positives
+    "std::", // just :: would work too, this is slightly less prone to false positives
     "using namespace ",
     "class ",
     "typename ",
@@ -21,8 +21,8 @@ const cpp_keywords = [
     "static_cast",
     "const_cast",
     "reinterpret_cast",
-    "= new ", //too common to include just "new"
-    //"delete ", //too common
+    "= new ", // too common to include just "new"
+    // "delete ", // too common
     "delete[]",
     "public:",
     "protected:",
@@ -36,7 +36,7 @@ const not_c_keywords = [
     "try",
     "catch",
     "throw",
-    "operator", //possibly list all operator+ etc. to be on the safe side
+    "operator", // possibly list all operator+ etc. to be on the safe side
     "cout<<",
     "cout <<",
     "cin>>",
@@ -54,16 +54,15 @@ const maybe_c_keywords = [
     "malloc",
     "calloc",
     "realloc",
-    "free(", //too common to include just "free"
+    "free(", // too common to include just "free"
 ];
 
 /**
  * Checks for cpp code in #c-help-text and suggests #cpp-help-text instead, and vice versa
  */
 export default class CHelpRedirect extends BotComponent {
-    
-    //for timeouts on triggering on the same user
-    //use the same set for both channels, shouldn't be an issue in practice
+    // For timeouts on triggering on the same user
+    // use the same set for both channels, shouldn't be an issue in practice
     readonly auto_triggered_users = new SelfClearingSet<string>(1 * HOUR);
 
     constructor(wheatley: Wheatley) {
@@ -110,7 +109,7 @@ export default class CHelpRedirect extends BotComponent {
 
     check_message_for_cpp_code(message: Discord.Message): boolean {
         if (!message.content.includes(code_block_start)) {
-            // to avoid false positives, only check inside code blocks
+            // To avoid false positives, only check inside code blocks
             return false;
         }
 
@@ -134,7 +133,7 @@ export default class CHelpRedirect extends BotComponent {
 
     check_message_for_c_code(message: Discord.Message): boolean {
         if (!message.content.includes(code_block_start)) {
-            // to avoid false positives, only check inside code blocks
+            // To avoid false positives, only check inside code blocks
             return false;
         }
 
@@ -145,9 +144,9 @@ export default class CHelpRedirect extends BotComponent {
             const end = text.substring(start + code_block_start.length).search(code_block_start);
             const block = text.substring(start + code_block_start.length, start + code_block_start.length + end);
 
-            //for C code, the block must not have any C++ keywords
-            //including inconclusive keywords
-            //and have some C keyword
+            // For C code, the block must not have any C++ keywords
+            // including inconclusive keywords
+            // and have some C keyword
 
             let c_code_found = false;
             let cpp_code_found = false;
@@ -189,8 +188,8 @@ export default class CHelpRedirect extends BotComponent {
             return;
         }
 
-        //for manual triggers, trust the caller and don't check the message
-        //supposedly the automatic check didn't trigger, so checking the message again would fail again
+        // For manual triggers, trust the caller and don't check the message
+        // Supposedly the automatic check didn't trigger, so checking the message again would fail again
         if (user) {
             await command.channel.send(
                 `<@${user.id}> Your code looks like C++ code, but this is a C channel. ` +
@@ -214,8 +213,8 @@ export default class CHelpRedirect extends BotComponent {
             return;
         }
 
-        //for manual triggers, trust the caller and don't check the message
-        //supposedly the automatic check didn't trigger, so checking the message again would fail again
+        // For manual triggers, trust the caller and don't check the message
+        // Supposedly the automatic check didn't trigger, so checking the message again would fail again
         if (user) {
             await command.channel.send(
                 `<@${user.id}> Your code looks like C code, but this is a C++ channel. ` +
@@ -239,14 +238,13 @@ export default class CHelpRedirect extends BotComponent {
             return;
         }
 
-        //only auto-check new members
+        // Only auto-check new members
         if (await this.is_not_new_member(message)) {
             return;
         }
 
-        //timeout for triggering on the same user
-        if(this.auto_triggered_users.has(message.author.id))
-        {
+        // Timeout for triggering on the same user
+        if (this.auto_triggered_users.has(message.author.id)) {
             return;
         }
 
