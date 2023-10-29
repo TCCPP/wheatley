@@ -426,6 +426,7 @@ const MAGIC_NGRAM_SIMILARITY_THRESHOLD = 0.39;
 
 // eslint-disable-next-line @typescript-eslint/no-unused-vars
 class NgramIndex<T extends IndexEntry> extends BaseIndex<T> {
+    magic_threshold = MAGIC_NGRAM_SIMILARITY_THRESHOLD;
     constructor(entries: T[], normalizer = normalize_and_split_cppref_title) {
         super(entries, normalizer);
     }
@@ -439,7 +440,7 @@ class NgramIndex<T extends IndexEntry> extends BaseIndex<T> {
         ]);
     }
     override meets_threshold(score: number) {
-        return score >= MAGIC_NGRAM_SIMILARITY_THRESHOLD;
+        return score >= this.magic_threshold;
     }
     override score(query: string, title: string): EntryScore {
         const query_ngrams = this.make_ngrams(query);
@@ -449,6 +450,9 @@ class NgramIndex<T extends IndexEntry> extends BaseIndex<T> {
             score,
             debug_info: [...intersect(query_ngrams, title_ngrams)],
         };
+    }
+    set_threshold(threshold: number) {
+        this.magic_threshold = threshold;
     }
 }
 
