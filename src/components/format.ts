@@ -182,7 +182,7 @@ async function format(replying_to: Discord.Message) {
                 if (fetch_response.ok) {
                     const text = await fetch_response.text();
                     return new Discord.AttachmentBuilder(await clang_format_general(text), {
-                        name: `${attachment}.cpp`,
+                        name: `${attachment.name}.cpp`,
                     });
                 } else {
                     return null;
