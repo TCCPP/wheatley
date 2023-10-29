@@ -287,7 +287,10 @@ export default class ForumChannels extends BotComponent {
             }
             // mirror to the text channel
             const text_channel = this.wheatley.get_corresponding_text_help_channel(thread);
-            const quote = await make_quote_embeds([message], null, this.wheatley, true);
+            const quote = await make_quote_embeds([message], null, this.wheatley, true, {
+                no_extra_media_embeds: true,
+            });
+            // ninja in a title
             (quote.embeds[0] as Discord.EmbedBuilder).setTitle(`New question: ${thread.name}`);
             await text_channel.send(quote);
         } else {

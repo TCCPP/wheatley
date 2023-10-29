@@ -61,13 +61,20 @@ function filename(url: string) {
     return url.split("/").at(-1);
 }
 
+type quote_options = {
+    // description template
+    template?: string;
+    // only include an image in the single embed, omit all other media or attachments
+    no_extra_media_embeds?: boolean;
+};
+
 // TODO: Since taking Wheatley as a parameter, maybe just move to Wheatley
 export async function make_quote_embeds(
     messages: Discord.Message[],
     requested_by: Discord.GuildMember | null,
     wheatley: Wheatley,
     safe_link: boolean,
-    template = "\n\nFrom <##> [[Jump to message]]($$)",
+    options?: quote_options,
 ): Promise<{
     embeds: (Discord.EmbedBuilder | Discord.Embed)[];
     files?: (Discord.AttachmentPayload | Discord.Attachment)[];
@@ -75,6 +82,7 @@ export async function make_quote_embeds(
     assert(messages.length >= 1);
     const head = messages[0];
     const contents = messages.map(m => m.content).join("\n");
+    const template = options?.template ?? "\n\nFrom <##> [[Jump to message]]($$)";
     const template_string = template.replaceAll("##", "#" + head.channel.id).replaceAll("$$", head.url);
     const embed = new Discord.EmbedBuilder()
         .setColor(color)
@@ -138,14 +146,11 @@ export async function make_quote_embeds(
     const other_embeds = messages.map(message => message.embeds.filter(e => !is_media_link_embed(e))).flat();
     const media_embeds: Discord.EmbedBuilder[] = [];
     const attachments: Discord.Attachment[] = [];
-    const other_attachments: Discord.AttachmentPayload[] = messages
+    const other_attachments: Discord.Attachment[] = messages
         .map(message => [
             ...message.attachments
-                .filter(a => !(a.contentType?.indexOf("image") == 0 || a.contentType?.indexOf("video") == 0))
-                .map(a => ({
-                    attachment: a.url,
-                    name: filename(a.url),
-                })),
+                .map(a => a)
+                .filter(a => !(a.contentType?.indexOf("image") == 0 || a.contentType?.indexOf("video") == 0)),
         ])
         .flat();
     let set_primary_image = false;
@@ -169,6 +174,12 @@ export async function make_quote_embeds(
                 attachments.push(medium.attachment);
             }
         }
+    }
+    if (options?.no_extra_media_embeds) {
+        media_embeds.splice(0, media_embeds.length);
+        other_embeds.splice(0, other_embeds.length);
+        attachments.splice(0, attachments.length);
+        other_attachments.splice(0, other_attachments.length);
     }
     return {
         embeds: [embed, ...media_embeds, ...other_embeds],

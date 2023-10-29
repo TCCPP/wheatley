@@ -170,7 +170,9 @@ export default class Starboard extends BotComponent {
         await this.mutex.lock(message.id);
         try {
             const make_embeds = () =>
-                make_quote_embeds([message], null, this.wheatley, true, "\n\n**[Jump to message!]($$)**");
+                make_quote_embeds([message], null, this.wheatley, true, {
+                    template: "\n\n**[Jump to message!]($$)**",
+                });
             const starboard_entry = await this.wheatley.database.starboard_entries.findOne({ message: message.id });
             if (starboard_entry) {
                 if (starboard_entry.deleted) {
