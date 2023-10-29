@@ -12,6 +12,7 @@ import { BotComponent } from "../bot-component.js";
 import { Wheatley } from "../wheatley.js";
 import { TextBasedCommandBuilder } from "../command-abstractions/text-based-command-builder.js";
 import { TextBasedCommand } from "../command-abstractions/text-based-command.js";
+import { make_quote_embeds } from "./quote.js";
 
 export const TRACKER_START_TIME = 1625112000000; // Thu Jul 01 2021 00:00:00 GMT-0400 (Eastern Daylight Time)
 // export const TRACKER_START_TIME = 1630468800000; // Wed Sep 01 2021 00:00:00 GMT-0400 (Eastern Daylight Time)
@@ -159,25 +160,17 @@ export default class ServerSuggestionTracker extends BotComponent {
      * If a message is not tracked it is either resolved or missed.
      */
 
-    // jump to message link
-    // include media in embed?
-
-    async make_embed(message: Discord.Message) {
+    async make_embeds(message: Discord.Message) {
         const reactions = message.reactions.cache;
         const up = (reactions.get("👍") || { count: 0 }).count;
         const down = (reactions.get("👎") || { count: 0 }).count;
         const maybe = (reactions.get("🤷") || { count: 0 }).count;
-        return new Discord.EmbedBuilder()
-            .setColor(color)
-            .setAuthor({
-                name: `${await this.get_display_name(message)}`,
-                iconURL: message.author.displayAvatarURL(),
-            })
-            .setDescription(message.content + `\n\n[[Jump to message]](${message.url})`)
-            .setTimestamp(message.createdAt)
-            .setFooter({
-                text: `${up} 👍 ${down} 👎 ${maybe} 🤷`,
-            });
+        const quote_embeds = await make_quote_embeds([message], undefined, this.wheatley, true);
+        // ninja in a custom footer
+        (quote_embeds.embeds[0] as Discord.EmbedBuilder).setFooter({
+            text: `${up} 👍 ${down} 👎 ${maybe} 🤷`,
+        });
+        return quote_embeds;
     }
 
     // Two log operations:
@@ -232,8 +225,8 @@ export default class ServerSuggestionTracker extends BotComponent {
     async open_suggestion(message: Discord.Message, reopen = false) {
         try {
             M.log("New suggestion", message.author.tag, message.author.id, message.url);
-            const embed = await this.make_embed(message);
-            const status_message = await this.wheatley.channels.suggestion_dashboard.send({ embeds: [embed] });
+            const quote = await this.make_embeds(message);
+            const status_message = await this.wheatley.channels.suggestion_dashboard.send(quote);
             const bot_info = await this.wheatley.database.get_bot_singleton();
             const last_scanned = bot_info.server_suggestions.last_scanned_timestamp;
             if (message.createdTimestamp > last_scanned) {
@@ -290,8 +283,8 @@ export default class ServerSuggestionTracker extends BotComponent {
                 const status_message = await this.wheatley.channels.suggestion_dashboard.messages.fetch(
                     entry.status_message,
                 );
-                const embed = await this.make_embed(message);
-                await status_message.edit({ embeds: [embed] });
+                const quote = await this.make_embeds(message);
+                await status_message.edit(quote);
                 entry.hash = hash;
                 await this.wheatley.database.server_suggestions.updateOne({ suggestion: message.id }, { $set: entry });
                 return true; // return if we updated
@@ -310,8 +303,8 @@ export default class ServerSuggestionTracker extends BotComponent {
                     const status_message = await this.wheatley.channels.suggestion_dashboard.messages.fetch(
                         entry.status_message,
                     );
-                    const embed = await this.make_embed(message);
-                    await status_message.edit({ embeds: [embed] });
+                    const quote = await this.make_embeds(message);
+                    await status_message.edit(quote);
                     entry.up = up;
                     entry.down = down;
                     entry.maybe = maybe;
@@ -455,8 +448,8 @@ export default class ServerSuggestionTracker extends BotComponent {
                 const status_message = await this.wheatley.channels.suggestion_dashboard.messages.fetch(
                     entry.status_message,
                 );
-                const embed = await this.make_embed(message);
-                await status_message.edit({ embeds: [embed] });
+                const quote = await this.make_embeds(message);
+                await status_message.edit(quote);
                 if (reaction.emoji.name == "👍") {
                     entry.up = reaction.count;
                 } else if (reaction.emoji.name == "👎") {
