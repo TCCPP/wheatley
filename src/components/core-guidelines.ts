@@ -19,9 +19,7 @@ export class CoreGuidelinesIndex {
     index: Index<augmented_core_guidelines_entry>;
 
     setup_index(index_data: core_guidelines_index) {
-        this.index = new Index(index_data, (title: string) => [
-            title.toLowerCase(),
-        ]);
+        this.index = new Index(index_data, (title: string) => [title.toLowerCase()]);
     }
 
     async load_data() {
@@ -89,9 +87,11 @@ export default class CoreGuidelines extends BotComponent {
 
     async guide(command: TextBasedCommand, query: string) {
         const result = this.index.lookup(query);
-        M.log("core guidelines query",
+        M.log(
+            "core guidelines query",
             query,
-            result ? `https://isocpp.github.io/CppCoreGuidelines/CppCoreGuidelines${result.anchor}` : null);
+            result ? `https://isocpp.github.io/CppCoreGuidelines/CppCoreGuidelines${result.anchor}` : null,
+        );
         if (result === null) {
             await command.reply({
                 embeds: [
