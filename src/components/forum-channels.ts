@@ -64,12 +64,11 @@ export default class ForumChannels extends BotComponent {
             const open_tag = get_tag(forum, "Open").id;
             const solved_tag = get_tag(forum, "Solved").id;
             const stale_tag = get_tag(forum, "Stale").id;
-            const locked_tag = get_tag(forum, "Locked").id;
             const threads = await fetch_all_threads_archive_count(forum, cleanup_limit);
             M.debug("Cleaning up", threads.size, "threads in", forum.name);
             for (const [_, thread] of threads) {
                 assert(thread.parentId && thread.parentId == forum.id);
-                await this.misc_checks(thread, open_tag, solved_tag, stale_tag, locked_tag);
+                await this.misc_checks(thread, open_tag, solved_tag, stale_tag);
                 await this.check_thread_activity(thread, open_tag, solved_tag, stale_tag);
             }
         }
@@ -156,13 +155,7 @@ export default class ForumChannels extends BotComponent {
         }
     }
 
-    async misc_checks(
-        thread: Discord.ThreadChannel,
-        open_tag: string,
-        solved_tag: string,
-        stale_tag: string,
-        locked_tag: string,
-    ) {
+    async misc_checks(thread: Discord.ThreadChannel, open_tag: string, solved_tag: string, stale_tag: string) {
         const status_tags = [open_tag, solved_tag, stale_tag];
         // Ensure there is exactly one solved/open/stale tag
         const status_tag_count = thread.appliedTags.filter(tag => status_tags.includes(tag)).length;
@@ -199,13 +192,6 @@ export default class ForumChannels extends BotComponent {
                 await thread.setArchived(true);
             }
         }
-        // Cleanup locking of threads
-        //if (thread.locked && !thread.appliedTags.includes(locked_tag)) {
-        //    M.log("Unlocking thread", thread.id, thread.name);
-        //    await thread.setArchived(false);
-        //    await thread.setLocked(false);
-        //    await thread.setArchived(true);
-        //}
     }
 
     override async on_ready() {
