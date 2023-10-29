@@ -8,6 +8,7 @@ import { colors, DAY, HOUR, MINUTE } from "../common.js";
 import { decode_snowflake } from "./snowflake.js"; // todo: eliminate decode_snowflake
 import { BotComponent } from "../bot-component.js";
 import { Wheatley } from "../wheatley.js";
+import { make_quote_embeds } from "./quote.js";
 
 // TODO: Take into account thread's inactivity setting
 
@@ -284,6 +285,11 @@ export default class ForumChannels extends BotComponent {
                     ],
                 });
             }
+            // mirror to the text channel
+            const text_channel = this.wheatley.get_corresponding_text_help_channel(thread);
+            const quote = await make_quote_embeds([message], null, this.wheatley, true);
+            (quote.embeds[0] as Discord.EmbedBuilder).setTitle(`New question: ${thread.name}`);
+            await text_channel.send(quote);
         } else {
             if (channel instanceof Discord.ThreadChannel && this.wheatley.is_forum_help_thread(channel)) {
                 await this.handle_message_for_solved_prompt(message);

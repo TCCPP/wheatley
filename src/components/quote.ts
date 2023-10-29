@@ -61,9 +61,10 @@ function filename(url: string) {
     return url.split("/").at(-1);
 }
 
+// TODO: Since taking Wheatley as a parameter, maybe just move to Wheatley
 export async function make_quote_embeds(
     messages: Discord.Message[],
-    requested_by: Discord.GuildMember | undefined,
+    requested_by: Discord.GuildMember | null,
     wheatley: Wheatley,
     safe_link: boolean,
     template = "\n\nFrom <##> [[Jump to message]]($$)",

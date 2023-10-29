@@ -89,7 +89,7 @@ export default class Report extends BotComponent {
             if (message.length > 0) {
                 report_embed.setDescription(`Message: ${message}`);
             }
-            const quote_embeds = await make_quote_embeds([target_message], undefined, this.wheatley, true);
+            const quote_embeds = await make_quote_embeds([target_message], null, this.wheatley, true);
             // ninja in a custom footer
             (quote_embeds.embeds[0] as Discord.EmbedBuilder).setFooter({
                 text: `ID: ${target_message.author.id}`,

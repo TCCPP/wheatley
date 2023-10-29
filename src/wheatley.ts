@@ -390,6 +390,15 @@ export class Wheatley extends EventEmitter {
         );
     }
 
+    get_corresponding_text_help_channel(thread: Discord.ThreadChannel) {
+        if (thread.parentId == this.channels.cpp_help.id) {
+            return this.channels.cpp_help_text;
+        } else if (thread.parentId == this.channels.c_help.id) {
+            return this.channels.c_help_text;
+        }
+        assert(false);
+    }
+
     // utility: returns the channel for regular channels or the thread / forum post parent
     top_level_channel(channel: Discord.TextBasedChannel) {
         if (channel instanceof Discord.ThreadChannel && channel.parentId != null) {

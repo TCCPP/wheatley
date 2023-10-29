@@ -170,7 +170,7 @@ export default class Starboard extends BotComponent {
         await this.mutex.lock(message.id);
         try {
             const make_embeds = () =>
-                make_quote_embeds([message], undefined, this.wheatley, true, "\n\n**[Jump to message!]($$)**");
+                make_quote_embeds([message], null, this.wheatley, true, "\n\n**[Jump to message!]($$)**");
             const starboard_entry = await this.wheatley.database.starboard_entries.findOne({ message: message.id });
             if (starboard_entry) {
                 if (starboard_entry.deleted) {
@@ -262,7 +262,7 @@ export default class Starboard extends BotComponent {
                         `\n${this.reactions_string(message)}` +
                         "\n" +
                         (await delete_reaction.users.fetch()).map(user => `<@${user.id}> ${user.tag}`).join("\n"),
-                    ...(await make_quote_embeds([message], undefined, this.wheatley, true)),
+                    ...(await make_quote_embeds([message], null, this.wheatley, true)),
                     allowedMentions: { parse: [] },
                 });
                 // E11000 duplicate key error collection can happen here if somehow the key is inserted but the delete

@@ -165,7 +165,7 @@ export default class ServerSuggestionTracker extends BotComponent {
         const up = (reactions.get("👍") || { count: 0 }).count;
         const down = (reactions.get("👎") || { count: 0 }).count;
         const maybe = (reactions.get("🤷") || { count: 0 }).count;
-        const quote_embeds = await make_quote_embeds([message], undefined, this.wheatley, true);
+        const quote_embeds = await make_quote_embeds([message], null, this.wheatley, true);
         // ninja in a custom footer
         (quote_embeds.embeds[0] as Discord.EmbedBuilder).setFooter({
             text: `${up} 👍 ${down} 👎 ${maybe} 🤷`,
