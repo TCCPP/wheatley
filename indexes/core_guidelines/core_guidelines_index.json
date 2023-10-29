@@ -1,0 +1,3284 @@
+[
+    {
+        "id": "In",
+        "caption": "Introduction",
+        "anchor": "#S-introduction",
+        "title": "In: Introduction (#S-introduction)"
+    },
+    {
+        "id": "P",
+        "caption": "Philosophy",
+        "anchor": "#S-philosophy",
+        "title": "P: Philosophy (#S-philosophy)"
+    },
+    {
+        "id": "I",
+        "caption": "Interfaces",
+        "anchor": "#S-interfaces",
+        "title": "I: Interfaces (#S-interfaces)"
+    },
+    {
+        "id": "F",
+        "caption": "Functions",
+        "anchor": "#S-functions",
+        "title": "F: Functions (#S-functions)"
+    },
+    {
+        "id": "C",
+        "caption": "Classes and class hierarchies",
+        "anchor": "#S-class",
+        "title": "C: Classes and class hierarchies (#S-class)"
+    },
+    {
+        "id": "Enum",
+        "caption": "Enumerations",
+        "anchor": "#S-enum",
+        "title": "Enum: Enumerations (#S-enum)"
+    },
+    {
+        "id": "R",
+        "caption": "Resource management",
+        "anchor": "#S-resource",
+        "title": "R: Resource management (#S-resource)"
+    },
+    {
+        "id": "ES",
+        "caption": "Expressions and statements",
+        "anchor": "#S-expr",
+        "title": "ES: Expressions and statements (#S-expr)"
+    },
+    {
+        "id": "Per",
+        "caption": "Performance",
+        "anchor": "#S-performance",
+        "title": "Per: Performance (#S-performance)"
+    },
+    {
+        "id": "CP",
+        "caption": "Concurrency and parallelism",
+        "anchor": "#S-concurrency",
+        "title": "CP: Concurrency and parallelism (#S-concurrency)"
+    },
+    {
+        "id": "E",
+        "caption": "Error handling",
+        "anchor": "#S-errors",
+        "title": "E: Error handling (#S-errors)"
+    },
+    {
+        "id": "Con",
+        "caption": "Constants and immutability",
+        "anchor": "#S-const",
+        "title": "Con: Constants and immutability (#S-const)"
+    },
+    {
+        "id": "T",
+        "caption": "Templates and generic programming",
+        "anchor": "#S-templates",
+        "title": "T: Templates and generic programming (#S-templates)"
+    },
+    {
+        "id": "CPL",
+        "caption": "C-style programming",
+        "anchor": "#S-cpl",
+        "title": "CPL: C-style programming (#S-cpl)"
+    },
+    {
+        "id": "SF",
+        "caption": "Source files",
+        "anchor": "#S-source",
+        "title": "SF: Source files (#S-source)"
+    },
+    {
+        "id": "SL",
+        "caption": "The Standard Library",
+        "anchor": "#sl-the-standard-library",
+        "title": "SL: The Standard Library (#sl-the-standard-library)"
+    },
+    {
+        "id": "A",
+        "caption": "Architectural ideas",
+        "anchor": "#S-A",
+        "title": "A: Architectural ideas (#S-A)"
+    },
+    {
+        "id": "NR",
+        "caption": "Non-Rules and myths",
+        "anchor": "#S-not",
+        "title": "NR: Non-Rules and myths (#S-not)"
+    },
+    {
+        "id": "RF",
+        "caption": "References",
+        "anchor": "#S-references",
+        "title": "RF: References (#S-references)"
+    },
+    {
+        "id": "Pro",
+        "caption": "Profiles",
+        "anchor": "#S-profile",
+        "title": "Pro: Profiles (#S-profile)"
+    },
+    {
+        "id": "GSL",
+        "caption": "Guidelines support library",
+        "anchor": "#gsl-guidelines-support-library",
+        "title": "GSL: Guidelines support library (#gsl-guidelines-support-library)"
+    },
+    {
+        "id": "NL",
+        "caption": "Naming and layout suggestions",
+        "anchor": "#S-naming",
+        "title": "NL: Naming and layout suggestions (#S-naming)"
+    },
+    {
+        "id": "FAQ",
+        "caption": "Answers to frequently asked questions",
+        "anchor": "#S-faq",
+        "title": "FAQ: Answers to frequently asked questions (#S-faq)"
+    },
+    {
+        "id": "Appendix A",
+        "caption": "Libraries",
+        "anchor": "#S-libraries",
+        "title": "Appendix A: Libraries (#S-libraries)"
+    },
+    {
+        "id": "Appendix B",
+        "caption": "Modernizing code",
+        "anchor": "#S-modernizing",
+        "title": "Appendix B: Modernizing code (#S-modernizing)"
+    },
+    {
+        "id": "Appendix C",
+        "caption": "Discussion",
+        "anchor": "#S-discussion",
+        "title": "Appendix C: Discussion (#S-discussion)"
+    },
+    {
+        "id": "Appendix D",
+        "caption": "Supporting tools",
+        "anchor": "#S-tools",
+        "title": "Appendix D: Supporting tools (#S-tools)"
+    },
+    {
+        "id": "Glossary",
+        "caption": "Glossary",
+        "anchor": "#S-glossary",
+        "title": "Glossary (#S-glossary)"
+    },
+    {
+        "id": "To-do",
+        "caption": "Unclassified proto-rules",
+        "anchor": "#S-unclassified",
+        "title": "To-do: Unclassified proto-rules (#S-unclassified)"
+    },
+    {
+        "id": "In.target",
+        "caption": "Target readership",
+        "anchor": "#SS-readers",
+        "title": "In.target: Target readership (#SS-readers)"
+    },
+    {
+        "id": "In.aims",
+        "caption": "Aims",
+        "anchor": "#SS-aims",
+        "title": "In.aims: Aims (#SS-aims)"
+    },
+    {
+        "id": "In.not",
+        "caption": "Non-aims",
+        "anchor": "#SS-non",
+        "title": "In.not: Non-aims (#SS-non)"
+    },
+    {
+        "id": "In.force",
+        "caption": "Enforcement",
+        "anchor": "#SS-force",
+        "title": "In.force: Enforcement (#SS-force)"
+    },
+    {
+        "id": "In.struct",
+        "caption": "The structure of this document",
+        "anchor": "#SS-struct",
+        "title": "In.struct: The structure of this document (#SS-struct)"
+    },
+    {
+        "id": "In.sec",
+        "caption": "Major sections",
+        "anchor": "#SS-sec",
+        "title": "In.sec: Major sections (#SS-sec)"
+    },
+    {
+        "id": "P.1",
+        "caption": "Express ideas directly in code",
+        "anchor": "#Rp-direct",
+        "title": "P.1: Express ideas directly in code (#Rp-direct)"
+    },
+    {
+        "id": "P.2",
+        "caption": "Write in ISO Standard C++",
+        "anchor": "#Rp-Cplusplus",
+        "title": "P.2: Write in ISO Standard C++ (#Rp-Cplusplus)"
+    },
+    {
+        "id": "P.3",
+        "caption": "Express intent",
+        "anchor": "#Rp-what",
+        "title": "P.3: Express intent (#Rp-what)"
+    },
+    {
+        "id": "P.4",
+        "caption": "Ideally, a program should be statically type safe",
+        "anchor": "#Rp-typesafe",
+        "title": "P.4: Ideally, a program should be statically type safe (#Rp-typesafe)"
+    },
+    {
+        "id": "P.5",
+        "caption": "Prefer compile-time checking to run-time checking",
+        "anchor": "#Rp-compile-time",
+        "title": "P.5: Prefer compile-time checking to run-time checking (#Rp-compile-time)"
+    },
+    {
+        "id": "P.6",
+        "caption": "What cannot be checked at compile time should be checkable at run time",
+        "anchor": "#Rp-run-time",
+        "title": "P.6: What cannot be checked at compile time should be checkable at run time (#Rp-run-time)"
+    },
+    {
+        "id": "P.7",
+        "caption": "Catch run-time errors early",
+        "anchor": "#Rp-early",
+        "title": "P.7: Catch run-time errors early (#Rp-early)"
+    },
+    {
+        "id": "P.8",
+        "caption": "Don't leak any resources",
+        "anchor": "#Rp-leak",
+        "title": "P.8: Don't leak any resources (#Rp-leak)"
+    },
+    {
+        "id": "P.9",
+        "caption": "Don't waste time or space",
+        "anchor": "#Rp-waste",
+        "title": "P.9: Don't waste time or space (#Rp-waste)"
+    },
+    {
+        "id": "P.10",
+        "caption": "Prefer immutable data to mutable data",
+        "anchor": "#Rp-mutable",
+        "title": "P.10: Prefer immutable data to mutable data (#Rp-mutable)"
+    },
+    {
+        "id": "P.11",
+        "caption": "Encapsulate messy constructs, rather than spreading through the code",
+        "anchor": "#Rp-library",
+        "title": "P.11: Encapsulate messy constructs, rather than spreading through the code (#Rp-library)"
+    },
+    {
+        "id": "P.12",
+        "caption": "Use supporting tools as appropriate",
+        "anchor": "#Rp-tools",
+        "title": "P.12: Use supporting tools as appropriate (#Rp-tools)"
+    },
+    {
+        "id": "P.13",
+        "caption": "Use support libraries as appropriate",
+        "anchor": "#Rp-lib",
+        "title": "P.13: Use support libraries as appropriate (#Rp-lib)"
+    },
+    {
+        "id": "I.1",
+        "caption": "Make interfaces explicit",
+        "anchor": "#Ri-explicit",
+        "title": "I.1: Make interfaces explicit (#Ri-explicit)"
+    },
+    {
+        "id": "I.2",
+        "caption": "Avoid non-`const` global variables",
+        "anchor": "#Ri-global",
+        "title": "I.2: Avoid non-`const` global variables (#Ri-global)"
+    },
+    {
+        "id": "I.3",
+        "caption": "Avoid singletons",
+        "anchor": "#Ri-singleton",
+        "title": "I.3: Avoid singletons (#Ri-singleton)"
+    },
+    {
+        "id": "I.4",
+        "caption": "Make interfaces precisely and strongly typed",
+        "anchor": "#Ri-typed",
+        "title": "I.4: Make interfaces precisely and strongly typed (#Ri-typed)"
+    },
+    {
+        "id": "I.5",
+        "caption": "State preconditions (if any)",
+        "anchor": "#Ri-pre",
+        "title": "I.5: State preconditions (if any) (#Ri-pre)"
+    },
+    {
+        "id": "I.6",
+        "caption": "Prefer `Expects()` for expressing preconditions",
+        "anchor": "#Ri-expects",
+        "title": "I.6: Prefer `Expects()` for expressing preconditions (#Ri-expects)"
+    },
+    {
+        "id": "I.7",
+        "caption": "State postconditions",
+        "anchor": "#Ri-post",
+        "title": "I.7: State postconditions (#Ri-post)"
+    },
+    {
+        "id": "I.8",
+        "caption": "Prefer `Ensures()` for expressing postconditions",
+        "anchor": "#Ri-ensures",
+        "title": "I.8: Prefer `Ensures()` for expressing postconditions (#Ri-ensures)"
+    },
+    {
+        "id": "I.9",
+        "caption": "If an interface is a template, document its parameters using concepts",
+        "anchor": "#Ri-concepts",
+        "title": "I.9: If an interface is a template, document its parameters using concepts (#Ri-concepts)"
+    },
+    {
+        "id": "I.10",
+        "caption": "Use exceptions to signal a failure to perform a required task",
+        "anchor": "#Ri-except",
+        "title": "I.10: Use exceptions to signal a failure to perform a required task (#Ri-except)"
+    },
+    {
+        "id": "I.11",
+        "caption": "Never transfer ownership by a raw pointer (`T*`) or reference (`T&`)",
+        "anchor": "#Ri-raw",
+        "title": "I.11: Never transfer ownership by a raw pointer (`T*`) or reference (`T&`) (#Ri-raw)"
+    },
+    {
+        "id": "I.12",
+        "caption": "Declare a pointer that must not be null as `not_null`",
+        "anchor": "#Ri-nullptr",
+        "title": "I.12: Declare a pointer that must not be null as `not_null` (#Ri-nullptr)"
+    },
+    {
+        "id": "I.13",
+        "caption": "Do not pass an array as a single pointer",
+        "anchor": "#Ri-array",
+        "title": "I.13: Do not pass an array as a single pointer (#Ri-array)"
+    },
+    {
+        "id": "I.22",
+        "caption": "Avoid complex initialization of global objects",
+        "anchor": "#Ri-global-init",
+        "title": "I.22: Avoid complex initialization of global objects (#Ri-global-init)"
+    },
+    {
+        "id": "I.23",
+        "caption": "Keep the number of function arguments low",
+        "anchor": "#Ri-nargs",
+        "title": "I.23: Keep the number of function arguments low (#Ri-nargs)"
+    },
+    {
+        "id": "I.24",
+        "caption": "Avoid adjacent parameters that can be invoked by the same arguments in either order with different meaning",
+        "anchor": "#Ri-unrelated",
+        "title": "I.24: Avoid adjacent parameters that can be invoked by the same arguments in either order with different meaning (#Ri-unrelated)"
+    },
+    {
+        "id": "I.25",
+        "caption": "Prefer empty abstract classes as interfaces to class hierarchies",
+        "anchor": "#Ri-abstract",
+        "title": "I.25: Prefer empty abstract classes as interfaces to class hierarchies (#Ri-abstract)"
+    },
+    {
+        "id": "I.26",
+        "caption": "If you want a cross-compiler ABI, use a C-style subset",
+        "anchor": "#Ri-abi",
+        "title": "I.26: If you want a cross-compiler ABI, use a C-style subset (#Ri-abi)"
+    },
+    {
+        "id": "I.27",
+        "caption": "For stable library ABI, consider the Pimpl idiom",
+        "anchor": "#Ri-pimpl",
+        "title": "I.27: For stable library ABI, consider the Pimpl idiom (#Ri-pimpl)"
+    },
+    {
+        "id": "I.30",
+        "caption": "Encapsulate rule violations",
+        "anchor": "#Ri-encapsulate",
+        "title": "I.30: Encapsulate rule violations (#Ri-encapsulate)"
+    },
+    {
+        "id": "F.1",
+        "caption": "\"Package\" meaningful operations as carefully named functions",
+        "anchor": "#Rf-package",
+        "title": "F.1: \"Package\" meaningful operations as carefully named functions (#Rf-package)"
+    },
+    {
+        "id": "F.2",
+        "caption": "A function should perform a single logical operation",
+        "anchor": "#Rf-logical",
+        "title": "F.2: A function should perform a single logical operation (#Rf-logical)"
+    },
+    {
+        "id": "F.3",
+        "caption": "Keep functions short and simple",
+        "anchor": "#Rf-single",
+        "title": "F.3: Keep functions short and simple (#Rf-single)"
+    },
+    {
+        "id": "F.4",
+        "caption": "If a function might have to be evaluated at compile time, declare it `constexpr`",
+        "anchor": "#Rf-constexpr",
+        "title": "F.4: If a function might have to be evaluated at compile time, declare it `constexpr` (#Rf-constexpr)"
+    },
+    {
+        "id": "F.5",
+        "caption": "If a function is very small and time-critical, declare it inline",
+        "anchor": "#Rf-inline",
+        "title": "F.5: If a function is very small and time-critical, declare it inline (#Rf-inline)"
+    },
+    {
+        "id": "F.6",
+        "caption": "If your function must not throw, declare it `noexcept`",
+        "anchor": "#Rf-noexcept",
+        "title": "F.6: If your function must not throw, declare it `noexcept` (#Rf-noexcept)"
+    },
+    {
+        "id": "F.7",
+        "caption": "For general use, take `T*` or `T&` arguments rather than smart pointers",
+        "anchor": "#Rf-smart",
+        "title": "F.7: For general use, take `T*` or `T&` arguments rather than smart pointers (#Rf-smart)"
+    },
+    {
+        "id": "F.8",
+        "caption": "Prefer pure functions",
+        "anchor": "#Rf-pure",
+        "title": "F.8: Prefer pure functions (#Rf-pure)"
+    },
+    {
+        "id": "F.9",
+        "caption": "Unused parameters should be unnamed",
+        "anchor": "#Rf-unused",
+        "title": "F.9: Unused parameters should be unnamed (#Rf-unused)"
+    },
+    {
+        "id": "F.10",
+        "caption": "If an operation can be reused, give it a name",
+        "anchor": "#Rf-name",
+        "title": "F.10: If an operation can be reused, give it a name (#Rf-name)"
+    },
+    {
+        "id": "F.11",
+        "caption": "Use an unnamed lambda if you need a simple function object in one place only",
+        "anchor": "#Rf-lambda",
+        "title": "F.11: Use an unnamed lambda if you need a simple function object in one place only (#Rf-lambda)"
+    },
+    {
+        "id": "F.15",
+        "caption": "Prefer simple and conventional ways of passing information",
+        "anchor": "#Rf-conventional",
+        "title": "F.15: Prefer simple and conventional ways of passing information (#Rf-conventional)"
+    },
+    {
+        "id": "F.16",
+        "caption": "For \"in\" parameters, pass cheaply-copied types by value and others by reference to `const`",
+        "anchor": "#Rf-in",
+        "title": "F.16: For \"in\" parameters, pass cheaply-copied types by value and others by reference to `const` (#Rf-in)"
+    },
+    {
+        "id": "F.17",
+        "caption": "For \"in-out\" parameters, pass by reference to non-`const`",
+        "anchor": "#Rf-inout",
+        "title": "F.17: For \"in-out\" parameters, pass by reference to non-`const` (#Rf-inout)"
+    },
+    {
+        "id": "F.18",
+        "caption": "For \"will-move-from\" parameters, pass by `X&&` and `std::move` the parameter",
+        "anchor": "#Rf-consume",
+        "title": "F.18: For \"will-move-from\" parameters, pass by `X&&` and `std::move` the parameter (#Rf-consume)"
+    },
+    {
+        "id": "F.19",
+        "caption": "For \"forward\" parameters, pass by `TP&&` and only `std::forward` the parameter",
+        "anchor": "#Rf-forward",
+        "title": "F.19: For \"forward\" parameters, pass by `TP&&` and only `std::forward` the parameter (#Rf-forward)"
+    },
+    {
+        "id": "F.20",
+        "caption": "For \"out\" output values, prefer return values to output parameters",
+        "anchor": "#Rf-out",
+        "title": "F.20: For \"out\" output values, prefer return values to output parameters (#Rf-out)"
+    },
+    {
+        "id": "F.21",
+        "caption": "To return multiple \"out\" values, prefer returning a struct or tuple",
+        "anchor": "#Rf-out-multi",
+        "title": "F.21: To return multiple \"out\" values, prefer returning a struct or tuple (#Rf-out-multi)"
+    },
+    {
+        "id": "F.60",
+        "caption": "Prefer `T*` over `T&` when \"no argument\" is a valid option",
+        "anchor": "#Rf-ptr-ref",
+        "title": "F.60: Prefer `T*` over `T&` when \"no argument\" is a valid option (#Rf-ptr-ref)"
+    },
+    {
+        "id": "F.22",
+        "caption": "Use `T*` or `owner<T*>` to designate a single object",
+        "anchor": "#Rf-ptr",
+        "title": "F.22: Use `T*` or `owner<T*>` to designate a single object (#Rf-ptr)"
+    },
+    {
+        "id": "F.23",
+        "caption": "Use a `not_null<T>` to indicate that \"null\" is not a valid value",
+        "anchor": "#Rf-nullptr",
+        "title": "F.23: Use a `not_null<T>` to indicate that \"null\" is not a valid value (#Rf-nullptr)"
+    },
+    {
+        "id": "F.24",
+        "caption": "Use a `span<T>` or a `span_p<T>` to designate a half-open sequence",
+        "anchor": "#Rf-range",
+        "title": "F.24: Use a `span<T>` or a `span_p<T>` to designate a half-open sequence (#Rf-range)"
+    },
+    {
+        "id": "F.25",
+        "caption": "Use a `zstring` or a `not_null<zstring>` to designate a C-style string",
+        "anchor": "#Rf-zstring",
+        "title": "F.25: Use a `zstring` or a `not_null<zstring>` to designate a C-style string (#Rf-zstring)"
+    },
+    {
+        "id": "F.26",
+        "caption": "Use a `unique_ptr<T>` to transfer ownership where a pointer is needed",
+        "anchor": "#Rf-unique_ptr",
+        "title": "F.26: Use a `unique_ptr<T>` to transfer ownership where a pointer is needed (#Rf-unique_ptr)"
+    },
+    {
+        "id": "F.27",
+        "caption": "Use a `shared_ptr<T>` to share ownership",
+        "anchor": "#Rf-shared_ptr",
+        "title": "F.27: Use a `shared_ptr<T>` to share ownership (#Rf-shared_ptr)"
+    },
+    {
+        "id": "F.42",
+        "caption": "Return a `T*` to indicate a position (only)",
+        "anchor": "#Rf-return-ptr",
+        "title": "F.42: Return a `T*` to indicate a position (only) (#Rf-return-ptr)"
+    },
+    {
+        "id": "F.43",
+        "caption": "Never (directly or indirectly) return a pointer or a reference to a local object",
+        "anchor": "#Rf-dangle",
+        "title": "F.43: Never (directly or indirectly) return a pointer or a reference to a local object (#Rf-dangle)"
+    },
+    {
+        "id": "F.44",
+        "caption": "Return a `T&` when copy is undesirable and \"returning no object\" isn't needed",
+        "anchor": "#Rf-return-ref",
+        "title": "F.44: Return a `T&` when copy is undesirable and \"returning no object\" isn't needed (#Rf-return-ref)"
+    },
+    {
+        "id": "F.45",
+        "caption": "Don't return a `T&&`",
+        "anchor": "#Rf-return-ref-ref",
+        "title": "F.45: Don't return a `T&&` (#Rf-return-ref-ref)"
+    },
+    {
+        "id": "F.46",
+        "caption": "`int` is the return type for `main()`",
+        "anchor": "#Rf-main",
+        "title": "F.46: `int` is the return type for `main()` (#Rf-main)"
+    },
+    {
+        "id": "F.47",
+        "caption": "Return `T&` from assignment operators",
+        "anchor": "#Rf-assignment-op",
+        "title": "F.47: Return `T&` from assignment operators (#Rf-assignment-op)"
+    },
+    {
+        "id": "F.48",
+        "caption": "Don't return `std::move(local)`",
+        "anchor": "#Rf-return-move-local",
+        "title": "F.48: Don't return `std::move(local)` (#Rf-return-move-local)"
+    },
+    {
+        "id": "F.49",
+        "caption": "Don't return `const T`",
+        "anchor": "#Rf-return-const",
+        "title": "F.49: Don't return `const T` (#Rf-return-const)"
+    },
+    {
+        "id": "F.50",
+        "caption": "Use a lambda when a function won't do (to capture local variables, or to write a local function)",
+        "anchor": "#Rf-capture-vs-overload",
+        "title": "F.50: Use a lambda when a function won't do (to capture local variables, or to write a local function) (#Rf-capture-vs-overload)"
+    },
+    {
+        "id": "F.51",
+        "caption": "Where there is a choice, prefer default arguments over overloading",
+        "anchor": "#Rf-default-args",
+        "title": "F.51: Where there is a choice, prefer default arguments over overloading (#Rf-default-args)"
+    },
+    {
+        "id": "F.52",
+        "caption": "Prefer capturing by reference in lambdas that will be used locally, including passed to algorithms",
+        "anchor": "#Rf-reference-capture",
+        "title": "F.52: Prefer capturing by reference in lambdas that will be used locally, including passed to algorithms (#Rf-reference-capture)"
+    },
+    {
+        "id": "F.53",
+        "caption": "Avoid capturing by reference in lambdas that will be used non-locally, including returned, stored on the heap, or passed to another thread",
+        "anchor": "#Rf-value-capture",
+        "title": "F.53: Avoid capturing by reference in lambdas that will be used non-locally, including returned, stored on the heap, or passed to another thread (#Rf-value-capture)"
+    },
+    {
+        "id": "F.54",
+        "caption": "When writing a lambda that captures `this` or any class data member, don't use `[=]` default capture",
+        "anchor": "#Rf-this-capture",
+        "title": "F.54: When writing a lambda that captures `this` or any class data member, don't use `[=]` default capture (#Rf-this-capture)"
+    },
+    {
+        "id": "F.55",
+        "caption": "Don't use `va_arg` arguments",
+        "anchor": "#F-varargs",
+        "title": "F.55: Don't use `va_arg` arguments (#F-varargs)"
+    },
+    {
+        "id": "F.56",
+        "caption": "Avoid unnecessary condition nesting",
+        "anchor": "#F-nesting",
+        "title": "F.56: Avoid unnecessary condition nesting (#F-nesting)"
+    },
+    {
+        "id": "C.1",
+        "caption": "Organize related data into structures (`struct`s or `class`es)",
+        "anchor": "#Rc-org",
+        "title": "C.1: Organize related data into structures (`struct`s or `class`es) (#Rc-org)"
+    },
+    {
+        "id": "C.2",
+        "caption": "Use `class` if the class has an invariant; use `struct` if the data members can vary independently",
+        "anchor": "#Rc-struct",
+        "title": "C.2: Use `class` if the class has an invariant; use `struct` if the data members can vary independently (#Rc-struct)"
+    },
+    {
+        "id": "C.3",
+        "caption": "Represent the distinction between an interface and an implementation using a class",
+        "anchor": "#Rc-interface",
+        "title": "C.3: Represent the distinction between an interface and an implementation using a class (#Rc-interface)"
+    },
+    {
+        "id": "C.4",
+        "caption": "Make a function a member only if it needs direct access to the representation of a class",
+        "anchor": "#Rc-member",
+        "title": "C.4: Make a function a member only if it needs direct access to the representation of a class (#Rc-member)"
+    },
+    {
+        "id": "C.5",
+        "caption": "Place helper functions in the same namespace as the class they support",
+        "anchor": "#Rc-helper",
+        "title": "C.5: Place helper functions in the same namespace as the class they support (#Rc-helper)"
+    },
+    {
+        "id": "C.7",
+        "caption": "Don't define a class or enum and declare a variable of its type in the same statement",
+        "anchor": "#Rc-standalone",
+        "title": "C.7: Don't define a class or enum and declare a variable of its type in the same statement (#Rc-standalone)"
+    },
+    {
+        "id": "C.8",
+        "caption": "Use `class` rather than `struct` if any member is non-public",
+        "anchor": "#Rc-class",
+        "title": "C.8: Use `class` rather than `struct` if any member is non-public (#Rc-class)"
+    },
+    {
+        "id": "C.9",
+        "caption": "Minimize exposure of members",
+        "anchor": "#Rc-private",
+        "title": "C.9: Minimize exposure of members (#Rc-private)"
+    },
+    {
+        "id": "C.concrete",
+        "caption": "Concrete types",
+        "anchor": "#SS-concrete",
+        "title": "C.concrete: Concrete types (#SS-concrete)"
+    },
+    {
+        "id": "C.ctor",
+        "caption": "Constructors, assignments, and destructors",
+        "anchor": "#S-ctor",
+        "title": "C.ctor: Constructors, assignments, and destructors (#S-ctor)"
+    },
+    {
+        "id": "C.con",
+        "caption": "Containers and other resource handles",
+        "anchor": "#SS-containers",
+        "title": "C.con: Containers and other resource handles (#SS-containers)"
+    },
+    {
+        "id": "C.lambdas",
+        "caption": "Function objects and lambdas",
+        "anchor": "#SS-lambdas",
+        "title": "C.lambdas: Function objects and lambdas (#SS-lambdas)"
+    },
+    {
+        "id": "C.hier",
+        "caption": "Class hierarchies (OOP)",
+        "anchor": "#SS-hier",
+        "title": "C.hier: Class hierarchies (OOP) (#SS-hier)"
+    },
+    {
+        "id": "C.over",
+        "caption": "Overloading and overloaded operators",
+        "anchor": "#SS-overload",
+        "title": "C.over: Overloading and overloaded operators (#SS-overload)"
+    },
+    {
+        "id": "C.union",
+        "caption": "Unions",
+        "anchor": "#SS-union",
+        "title": "C.union: Unions (#SS-union)"
+    },
+    {
+        "id": "C.10",
+        "caption": "Prefer concrete types over class hierarchies",
+        "anchor": "#Rc-concrete",
+        "title": "C.10: Prefer concrete types over class hierarchies (#Rc-concrete)"
+    },
+    {
+        "id": "C.11",
+        "caption": "Make concrete types regular",
+        "anchor": "#Rc-regular",
+        "title": "C.11: Make concrete types regular (#Rc-regular)"
+    },
+    {
+        "id": "C.12",
+        "caption": "Don't make data members `const` or references in a copyable or movable type",
+        "anchor": "#Rc-constref",
+        "title": "C.12: Don't make data members `const` or references in a copyable or movable type (#Rc-constref)"
+    },
+    {
+        "id": "C.20",
+        "caption": "If you can avoid defining any default operations, do",
+        "anchor": "#Rc-zero",
+        "title": "C.20: If you can avoid defining any default operations, do (#Rc-zero)"
+    },
+    {
+        "id": "C.21",
+        "caption": "If you define or `=delete` any copy, move, or destructor function, define or `=delete` them all",
+        "anchor": "#Rc-five",
+        "title": "C.21: If you define or `=delete` any copy, move, or destructor function, define or `=delete` them all (#Rc-five)"
+    },
+    {
+        "id": "C.22",
+        "caption": "Make default operations consistent",
+        "anchor": "#Rc-matched",
+        "title": "C.22: Make default operations consistent (#Rc-matched)"
+    },
+    {
+        "id": "C.30",
+        "caption": "Define a destructor if a class needs an explicit action at object destruction",
+        "anchor": "#Rc-dtor",
+        "title": "C.30: Define a destructor if a class needs an explicit action at object destruction (#Rc-dtor)"
+    },
+    {
+        "id": "C.31",
+        "caption": "All resources acquired by a class must be released by the class's destructor",
+        "anchor": "#Rc-dtor-release",
+        "title": "C.31: All resources acquired by a class must be released by the class's destructor (#Rc-dtor-release)"
+    },
+    {
+        "id": "C.32",
+        "caption": "If a class has a raw pointer (`T*`) or reference (`T&`), consider whether it might be owning",
+        "anchor": "#Rc-dtor-ptr",
+        "title": "C.32: If a class has a raw pointer (`T*`) or reference (`T&`), consider whether it might be owning (#Rc-dtor-ptr)"
+    },
+    {
+        "id": "C.33",
+        "caption": "If a class has an owning pointer member, define a destructor",
+        "anchor": "#Rc-dtor-ptr2",
+        "title": "C.33: If a class has an owning pointer member, define a destructor (#Rc-dtor-ptr2)"
+    },
+    {
+        "id": "C.35",
+        "caption": "A base class destructor should be either public and virtual, or protected and non-virtual",
+        "anchor": "#Rc-dtor-virtual",
+        "title": "C.35: A base class destructor should be either public and virtual, or protected and non-virtual (#Rc-dtor-virtual)"
+    },
+    {
+        "id": "C.36",
+        "caption": "A destructor must not fail",
+        "anchor": "#Rc-dtor-fail",
+        "title": "C.36: A destructor must not fail (#Rc-dtor-fail)"
+    },
+    {
+        "id": "C.37",
+        "caption": "Make destructors `noexcept`",
+        "anchor": "#Rc-dtor-noexcept",
+        "title": "C.37: Make destructors `noexcept` (#Rc-dtor-noexcept)"
+    },
+    {
+        "id": "C.40",
+        "caption": "Define a constructor if a class has an invariant",
+        "anchor": "#Rc-ctor",
+        "title": "C.40: Define a constructor if a class has an invariant (#Rc-ctor)"
+    },
+    {
+        "id": "C.41",
+        "caption": "A constructor should create a fully initialized object",
+        "anchor": "#Rc-complete",
+        "title": "C.41: A constructor should create a fully initialized object (#Rc-complete)"
+    },
+    {
+        "id": "C.42",
+        "caption": "If a constructor cannot construct a valid object, throw an exception",
+        "anchor": "#Rc-throw",
+        "title": "C.42: If a constructor cannot construct a valid object, throw an exception (#Rc-throw)"
+    },
+    {
+        "id": "C.43",
+        "caption": "Ensure that a copyable class has a default constructor",
+        "anchor": "#Rc-default0",
+        "title": "C.43: Ensure that a copyable class has a default constructor (#Rc-default0)"
+    },
+    {
+        "id": "C.44",
+        "caption": "Prefer default constructors to be simple and non-throwing",
+        "anchor": "#Rc-default00",
+        "title": "C.44: Prefer default constructors to be simple and non-throwing (#Rc-default00)"
+    },
+    {
+        "id": "C.45",
+        "caption": "Don't define a default constructor that only initializes data members; use member initializers instead",
+        "anchor": "#Rc-default",
+        "title": "C.45: Don't define a default constructor that only initializes data members; use member initializers instead (#Rc-default)"
+    },
+    {
+        "id": "C.46",
+        "caption": "By default, declare single-argument constructors `explicit`",
+        "anchor": "#Rc-explicit",
+        "title": "C.46: By default, declare single-argument constructors `explicit` (#Rc-explicit)"
+    },
+    {
+        "id": "C.47",
+        "caption": "Define and initialize member variables in the order of member declaration",
+        "anchor": "#Rc-order",
+        "title": "C.47: Define and initialize member variables in the order of member declaration (#Rc-order)"
+    },
+    {
+        "id": "C.48",
+        "caption": "Prefer in-class initializers to member initializers in constructors for constant initializers",
+        "anchor": "#Rc-in-class-initializer",
+        "title": "C.48: Prefer in-class initializers to member initializers in constructors for constant initializers (#Rc-in-class-initializer)"
+    },
+    {
+        "id": "C.49",
+        "caption": "Prefer initialization to assignment in constructors",
+        "anchor": "#Rc-initialize",
+        "title": "C.49: Prefer initialization to assignment in constructors (#Rc-initialize)"
+    },
+    {
+        "id": "C.50",
+        "caption": "Use a factory function if you need \"virtual behavior\" during initialization",
+        "anchor": "#Rc-factory",
+        "title": "C.50: Use a factory function if you need \"virtual behavior\" during initialization (#Rc-factory)"
+    },
+    {
+        "id": "C.51",
+        "caption": "Use delegating constructors to represent common actions for all constructors of a class",
+        "anchor": "#Rc-delegating",
+        "title": "C.51: Use delegating constructors to represent common actions for all constructors of a class (#Rc-delegating)"
+    },
+    {
+        "id": "C.52",
+        "caption": "Use inheriting constructors to import constructors into a derived class that does not need further explicit initialization",
+        "anchor": "#Rc-inheriting",
+        "title": "C.52: Use inheriting constructors to import constructors into a derived class that does not need further explicit initialization (#Rc-inheriting)"
+    },
+    {
+        "id": "C.60",
+        "caption": "Make copy assignment non-`virtual`, take the parameter by `const&`, and return by non-`const&`",
+        "anchor": "#Rc-copy-assignment",
+        "title": "C.60: Make copy assignment non-`virtual`, take the parameter by `const&`, and return by non-`const&` (#Rc-copy-assignment)"
+    },
+    {
+        "id": "C.61",
+        "caption": "A copy operation should copy",
+        "anchor": "#Rc-copy-semantic",
+        "title": "C.61: A copy operation should copy (#Rc-copy-semantic)"
+    },
+    {
+        "id": "C.62",
+        "caption": "Make copy assignment safe for self-assignment",
+        "anchor": "#Rc-copy-self",
+        "title": "C.62: Make copy assignment safe for self-assignment (#Rc-copy-self)"
+    },
+    {
+        "id": "C.63",
+        "caption": "Make move assignment non-`virtual`, take the parameter by `&&`, and return by non-`const&`",
+        "anchor": "#Rc-move-assignment",
+        "title": "C.63: Make move assignment non-`virtual`, take the parameter by `&&`, and return by non-`const&` (#Rc-move-assignment)"
+    },
+    {
+        "id": "C.64",
+        "caption": "A move operation should move and leave its source in a valid state",
+        "anchor": "#Rc-move-semantic",
+        "title": "C.64: A move operation should move and leave its source in a valid state (#Rc-move-semantic)"
+    },
+    {
+        "id": "C.65",
+        "caption": "Make move assignment safe for self-assignment",
+        "anchor": "#Rc-move-self",
+        "title": "C.65: Make move assignment safe for self-assignment (#Rc-move-self)"
+    },
+    {
+        "id": "C.66",
+        "caption": "Make move operations `noexcept`",
+        "anchor": "#Rc-move-noexcept",
+        "title": "C.66: Make move operations `noexcept` (#Rc-move-noexcept)"
+    },
+    {
+        "id": "C.67",
+        "caption": "A polymorphic class should suppress public copy/move",
+        "anchor": "#Rc-copy-virtual",
+        "title": "C.67: A polymorphic class should suppress public copy/move (#Rc-copy-virtual)"
+    },
+    {
+        "id": "C.80",
+        "caption": "Use `=default` if you have to be explicit about using the default semantics",
+        "anchor": "#Rc-eqdefault",
+        "title": "C.80: Use `=default` if you have to be explicit about using the default semantics (#Rc-eqdefault)"
+    },
+    {
+        "id": "C.81",
+        "caption": "Use `=delete` when you want to disable default behavior (without wanting an alternative)",
+        "anchor": "#Rc-delete",
+        "title": "C.81: Use `=delete` when you want to disable default behavior (without wanting an alternative) (#Rc-delete)"
+    },
+    {
+        "id": "C.82",
+        "caption": "Don't call virtual functions in constructors and destructors",
+        "anchor": "#Rc-ctor-virtual",
+        "title": "C.82: Don't call virtual functions in constructors and destructors (#Rc-ctor-virtual)"
+    },
+    {
+        "id": "C.83",
+        "caption": "For value-like types, consider providing a `noexcept` swap function",
+        "anchor": "#Rc-swap",
+        "title": "C.83: For value-like types, consider providing a `noexcept` swap function (#Rc-swap)"
+    },
+    {
+        "id": "C.84",
+        "caption": "A `swap` must not fail",
+        "anchor": "#Rc-swap-fail",
+        "title": "C.84: A `swap` must not fail (#Rc-swap-fail)"
+    },
+    {
+        "id": "C.85",
+        "caption": "Make `swap` `noexcept`",
+        "anchor": "#Rc-swap-noexcept",
+        "title": "C.85: Make `swap` `noexcept` (#Rc-swap-noexcept)"
+    },
+    {
+        "id": "C.86",
+        "caption": "Make `==` symmetric with respect of operand types and `noexcept`",
+        "anchor": "#Rc-eq",
+        "title": "C.86: Make `==` symmetric with respect of operand types and `noexcept` (#Rc-eq)"
+    },
+    {
+        "id": "C.87",
+        "caption": "Beware of `==` on base classes",
+        "anchor": "#Rc-eq-base",
+        "title": "C.87: Beware of `==` on base classes (#Rc-eq-base)"
+    },
+    {
+        "id": "C.89",
+        "caption": "Make a `hash` `noexcept`",
+        "anchor": "#Rc-hash",
+        "title": "C.89: Make a `hash` `noexcept` (#Rc-hash)"
+    },
+    {
+        "id": "C.90",
+        "caption": "Rely on constructors and assignment operators, not memset and memcpy",
+        "anchor": "#Rc-memset",
+        "title": "C.90: Rely on constructors and assignment operators, not memset and memcpy (#Rc-memset)"
+    },
+    {
+        "id": "C.100",
+        "caption": "Follow the STL when defining a container",
+        "anchor": "#Rcon-stl",
+        "title": "C.100: Follow the STL when defining a container (#Rcon-stl)"
+    },
+    {
+        "id": "C.101",
+        "caption": "Give a container value semantics",
+        "anchor": "#Rcon-val",
+        "title": "C.101: Give a container value semantics (#Rcon-val)"
+    },
+    {
+        "id": "C.102",
+        "caption": "Give a container move operations",
+        "anchor": "#Rcon-move",
+        "title": "C.102: Give a container move operations (#Rcon-move)"
+    },
+    {
+        "id": "C.103",
+        "caption": "Give a container an initializer list constructor",
+        "anchor": "#Rcon-init",
+        "title": "C.103: Give a container an initializer list constructor (#Rcon-init)"
+    },
+    {
+        "id": "C.104",
+        "caption": "Give a container a default constructor that sets it to empty",
+        "anchor": "#Rcon-empty",
+        "title": "C.104: Give a container a default constructor that sets it to empty (#Rcon-empty)"
+    },
+    {
+        "id": "C.109",
+        "caption": "If a resource handle has pointer semantics, provide `*` and `->`",
+        "anchor": "#Rcon-ptr",
+        "title": "C.109: If a resource handle has pointer semantics, provide `*` and `->` (#Rcon-ptr)"
+    },
+    {
+        "id": "C.120",
+        "caption": "Use class hierarchies to represent concepts with inherent hierarchical structure (only)",
+        "anchor": "#Rh-domain",
+        "title": "C.120: Use class hierarchies to represent concepts with inherent hierarchical structure (only) (#Rh-domain)"
+    },
+    {
+        "id": "C.121",
+        "caption": "If a base class is used as an interface, make it a pure abstract class",
+        "anchor": "#Rh-abstract",
+        "title": "C.121: If a base class is used as an interface, make it a pure abstract class (#Rh-abstract)"
+    },
+    {
+        "id": "C.122",
+        "caption": "Use abstract classes as interfaces when complete separation of interface and implementation is needed",
+        "anchor": "#Rh-separation",
+        "title": "C.122: Use abstract classes as interfaces when complete separation of interface and implementation is needed (#Rh-separation)"
+    },
+    {
+        "id": "C.126",
+        "caption": "An abstract class typically doesn't need a user-written constructor",
+        "anchor": "#Rh-abstract-ctor",
+        "title": "C.126: An abstract class typically doesn't need a user-written constructor (#Rh-abstract-ctor)"
+    },
+    {
+        "id": "C.127",
+        "caption": "A class with a virtual function should have a virtual or protected destructor",
+        "anchor": "#Rh-dtor",
+        "title": "C.127: A class with a virtual function should have a virtual or protected destructor (#Rh-dtor)"
+    },
+    {
+        "id": "C.128",
+        "caption": "Virtual functions should specify exactly one of `virtual`, `override`, or `final`",
+        "anchor": "#Rh-override",
+        "title": "C.128: Virtual functions should specify exactly one of `virtual`, `override`, or `final` (#Rh-override)"
+    },
+    {
+        "id": "C.129",
+        "caption": "When designing a class hierarchy, distinguish between implementation inheritance and interface inheritance",
+        "anchor": "#Rh-kind",
+        "title": "C.129: When designing a class hierarchy, distinguish between implementation inheritance and interface inheritance (#Rh-kind)"
+    },
+    {
+        "id": "C.130",
+        "caption": "For making deep copies of polymorphic classes prefer a virtual `clone` function instead of public copy construction/assignment",
+        "anchor": "#Rh-copy",
+        "title": "C.130: For making deep copies of polymorphic classes prefer a virtual `clone` function instead of public copy construction/assignment (#Rh-copy)"
+    },
+    {
+        "id": "C.131",
+        "caption": "Avoid trivial getters and setters",
+        "anchor": "#Rh-get",
+        "title": "C.131: Avoid trivial getters and setters (#Rh-get)"
+    },
+    {
+        "id": "C.132",
+        "caption": "Don't make a function `virtual` without reason",
+        "anchor": "#Rh-virtual",
+        "title": "C.132: Don't make a function `virtual` without reason (#Rh-virtual)"
+    },
+    {
+        "id": "C.133",
+        "caption": "Avoid `protected` data",
+        "anchor": "#Rh-protected",
+        "title": "C.133: Avoid `protected` data (#Rh-protected)"
+    },
+    {
+        "id": "C.134",
+        "caption": "Ensure all non-`const` data members have the same access level",
+        "anchor": "#Rh-public",
+        "title": "C.134: Ensure all non-`const` data members have the same access level (#Rh-public)"
+    },
+    {
+        "id": "C.135",
+        "caption": "Use multiple inheritance to represent multiple distinct interfaces",
+        "anchor": "#Rh-mi-interface",
+        "title": "C.135: Use multiple inheritance to represent multiple distinct interfaces (#Rh-mi-interface)"
+    },
+    {
+        "id": "C.136",
+        "caption": "Use multiple inheritance to represent the union of implementation attributes",
+        "anchor": "#Rh-mi-implementation",
+        "title": "C.136: Use multiple inheritance to represent the union of implementation attributes (#Rh-mi-implementation)"
+    },
+    {
+        "id": "C.137",
+        "caption": "Use `virtual` bases to avoid overly general base classes",
+        "anchor": "#Rh-vbase",
+        "title": "C.137: Use `virtual` bases to avoid overly general base classes (#Rh-vbase)"
+    },
+    {
+        "id": "C.138",
+        "caption": "Create an overload set for a derived class and its bases with `using`",
+        "anchor": "#Rh-using",
+        "title": "C.138: Create an overload set for a derived class and its bases with `using` (#Rh-using)"
+    },
+    {
+        "id": "C.139",
+        "caption": "Use `final` on classes sparingly",
+        "anchor": "#Rh-final",
+        "title": "C.139: Use `final` on classes sparingly (#Rh-final)"
+    },
+    {
+        "id": "C.140",
+        "caption": "Do not provide different default arguments for a virtual function and an overrider",
+        "anchor": "#Rh-virtual-default-arg",
+        "title": "C.140: Do not provide different default arguments for a virtual function and an overrider (#Rh-virtual-default-arg)"
+    },
+    {
+        "id": "C.145",
+        "caption": "Access polymorphic objects through pointers and references",
+        "anchor": "#Rh-poly",
+        "title": "C.145: Access polymorphic objects through pointers and references (#Rh-poly)"
+    },
+    {
+        "id": "C.146",
+        "caption": "Use `dynamic_cast` where class hierarchy navigation is unavoidable",
+        "anchor": "#Rh-dynamic_cast",
+        "title": "C.146: Use `dynamic_cast` where class hierarchy navigation is unavoidable (#Rh-dynamic_cast)"
+    },
+    {
+        "id": "C.147",
+        "caption": "Use `dynamic_cast` to a reference type when failure to find the required class is considered an error",
+        "anchor": "#Rh-ref-cast",
+        "title": "C.147: Use `dynamic_cast` to a reference type when failure to find the required class is considered an error (#Rh-ref-cast)"
+    },
+    {
+        "id": "C.148",
+        "caption": "Use `dynamic_cast` to a pointer type when failure to find the required class is considered a valid alternative",
+        "anchor": "#Rh-ptr-cast",
+        "title": "C.148: Use `dynamic_cast` to a pointer type when failure to find the required class is considered a valid alternative (#Rh-ptr-cast)"
+    },
+    {
+        "id": "C.149",
+        "caption": "Use `unique_ptr` or `shared_ptr` to avoid forgetting to `delete` objects created using `new`",
+        "anchor": "#Rh-smart",
+        "title": "C.149: Use `unique_ptr` or `shared_ptr` to avoid forgetting to `delete` objects created using `new` (#Rh-smart)"
+    },
+    {
+        "id": "C.150",
+        "caption": "Use `make_unique()` to construct objects owned by `unique_ptr`s",
+        "anchor": "#Rh-make_unique",
+        "title": "C.150: Use `make_unique()` to construct objects owned by `unique_ptr`s (#Rh-make_unique)"
+    },
+    {
+        "id": "C.151",
+        "caption": "Use `make_shared()` to construct objects owned by `shared_ptr`s",
+        "anchor": "#Rh-make_shared",
+        "title": "C.151: Use `make_shared()` to construct objects owned by `shared_ptr`s (#Rh-make_shared)"
+    },
+    {
+        "id": "C.152",
+        "caption": "Never assign a pointer to an array of derived class objects to a pointer to its base",
+        "anchor": "#Rh-array",
+        "title": "C.152: Never assign a pointer to an array of derived class objects to a pointer to its base (#Rh-array)"
+    },
+    {
+        "id": "C.153",
+        "caption": "Prefer virtual function to casting",
+        "anchor": "#Rh-use-virtual",
+        "title": "C.153: Prefer virtual function to casting (#Rh-use-virtual)"
+    },
+    {
+        "id": "C.160",
+        "caption": "Define operators primarily to mimic conventional usage",
+        "anchor": "#Ro-conventional",
+        "title": "C.160: Define operators primarily to mimic conventional usage (#Ro-conventional)"
+    },
+    {
+        "id": "C.161",
+        "caption": "Use non-member functions for symmetric operators",
+        "anchor": "#Ro-symmetric",
+        "title": "C.161: Use non-member functions for symmetric operators (#Ro-symmetric)"
+    },
+    {
+        "id": "C.162",
+        "caption": "Overload operations that are roughly equivalent",
+        "anchor": "#Ro-equivalent",
+        "title": "C.162: Overload operations that are roughly equivalent (#Ro-equivalent)"
+    },
+    {
+        "id": "C.163",
+        "caption": "Overload only for operations that are roughly equivalent",
+        "anchor": "#Ro-equivalent-2",
+        "title": "C.163: Overload only for operations that are roughly equivalent (#Ro-equivalent-2)"
+    },
+    {
+        "id": "C.164",
+        "caption": "Avoid implicit conversion operators",
+        "anchor": "#Ro-conversion",
+        "title": "C.164: Avoid implicit conversion operators (#Ro-conversion)"
+    },
+    {
+        "id": "C.165",
+        "caption": "Use `using` for customization points",
+        "anchor": "#Ro-custom",
+        "title": "C.165: Use `using` for customization points (#Ro-custom)"
+    },
+    {
+        "id": "C.166",
+        "caption": "Overload unary `&` only as part of a system of smart pointers and references",
+        "anchor": "#Ro-address-of",
+        "title": "C.166: Overload unary `&` only as part of a system of smart pointers and references (#Ro-address-of)"
+    },
+    {
+        "id": "C.167",
+        "caption": "Use an operator for an operation with its conventional meaning",
+        "anchor": "#Ro-overload",
+        "title": "C.167: Use an operator for an operation with its conventional meaning (#Ro-overload)"
+    },
+    {
+        "id": "C.168",
+        "caption": "Define overloaded operators in the namespace of their operands",
+        "anchor": "#Ro-namespace",
+        "title": "C.168: Define overloaded operators in the namespace of their operands (#Ro-namespace)"
+    },
+    {
+        "id": "C.170",
+        "caption": "If you feel like overloading a lambda, use a generic lambda",
+        "anchor": "#Ro-lambda",
+        "title": "C.170: If you feel like overloading a lambda, use a generic lambda (#Ro-lambda)"
+    },
+    {
+        "id": "C.180",
+        "caption": "Use `union`s to save Memory",
+        "anchor": "#Ru-union",
+        "title": "C.180: Use `union`s to save Memory (#Ru-union)"
+    },
+    {
+        "id": "C.181",
+        "caption": "Avoid \"naked\" `union`s",
+        "anchor": "#Ru-naked",
+        "title": "C.181: Avoid \"naked\" `union`s (#Ru-naked)"
+    },
+    {
+        "id": "C.182",
+        "caption": "Use anonymous `union`s to implement tagged unions",
+        "anchor": "#Ru-anonymous",
+        "title": "C.182: Use anonymous `union`s to implement tagged unions (#Ru-anonymous)"
+    },
+    {
+        "id": "C.183",
+        "caption": "Don't use a `union` for type punning",
+        "anchor": "#Ru-pun",
+        "title": "C.183: Don't use a `union` for type punning (#Ru-pun)"
+    },
+    {
+        "id": "Enum.1",
+        "caption": "Prefer enumerations over macros",
+        "anchor": "#Renum-macro",
+        "title": "Enum.1: Prefer enumerations over macros (#Renum-macro)"
+    },
+    {
+        "id": "Enum.2",
+        "caption": "Use enumerations to represent sets of related named constants",
+        "anchor": "#Renum-set",
+        "title": "Enum.2: Use enumerations to represent sets of related named constants (#Renum-set)"
+    },
+    {
+        "id": "Enum.3",
+        "caption": "Prefer `enum class`es over \"plain\" `enum`s",
+        "anchor": "#Renum-class",
+        "title": "Enum.3: Prefer `enum class`es over \"plain\" `enum`s (#Renum-class)"
+    },
+    {
+        "id": "Enum.4",
+        "caption": "Define operations on enumerations for safe and simple use",
+        "anchor": "#Renum-oper",
+        "title": "Enum.4: Define operations on enumerations for safe and simple use (#Renum-oper)"
+    },
+    {
+        "id": "Enum.5",
+        "caption": "Don't use `ALL_CAPS` for enumerators",
+        "anchor": "#Renum-caps",
+        "title": "Enum.5: Don't use `ALL_CAPS` for enumerators (#Renum-caps)"
+    },
+    {
+        "id": "Enum.6",
+        "caption": "Avoid unnamed enumerations",
+        "anchor": "#Renum-unnamed",
+        "title": "Enum.6: Avoid unnamed enumerations (#Renum-unnamed)"
+    },
+    {
+        "id": "Enum.7",
+        "caption": "Specify the underlying type of an enumeration only when necessary",
+        "anchor": "#Renum-underlying",
+        "title": "Enum.7: Specify the underlying type of an enumeration only when necessary (#Renum-underlying)"
+    },
+    {
+        "id": "Enum.8",
+        "caption": "Specify enumerator values only when necessary",
+        "anchor": "#Renum-value",
+        "title": "Enum.8: Specify enumerator values only when necessary (#Renum-value)"
+    },
+    {
+        "id": "R.1",
+        "caption": "Manage resources automatically using resource handles and RAII (Resource Acquisition Is Initialization)",
+        "anchor": "#Rr-raii",
+        "title": "R.1: Manage resources automatically using resource handles and RAII (Resource Acquisition Is Initialization) (#Rr-raii)"
+    },
+    {
+        "id": "R.2",
+        "caption": "In interfaces, use raw pointers to denote individual objects (only)",
+        "anchor": "#Rr-use-ptr",
+        "title": "R.2: In interfaces, use raw pointers to denote individual objects (only) (#Rr-use-ptr)"
+    },
+    {
+        "id": "R.3",
+        "caption": "A raw pointer (a `T*`) is non-owning",
+        "anchor": "#Rr-ptr",
+        "title": "R.3: A raw pointer (a `T*`) is non-owning (#Rr-ptr)"
+    },
+    {
+        "id": "R.4",
+        "caption": "A raw reference (a `T&`) is non-owning",
+        "anchor": "#Rr-ref",
+        "title": "R.4: A raw reference (a `T&`) is non-owning (#Rr-ref)"
+    },
+    {
+        "id": "R.5",
+        "caption": "Prefer scoped objects, don't heap-allocate unnecessarily",
+        "anchor": "#Rr-scoped",
+        "title": "R.5: Prefer scoped objects, don't heap-allocate unnecessarily (#Rr-scoped)"
+    },
+    {
+        "id": "R.6",
+        "caption": "Avoid non-`const` global variables",
+        "anchor": "#Rr-global",
+        "title": "R.6: Avoid non-`const` global variables (#Rr-global)"
+    },
+    {
+        "id": "R.10",
+        "caption": "Avoid `malloc()` and `free()`",
+        "anchor": "#Rr-mallocfree",
+        "title": "R.10: Avoid `malloc()` and `free()` (#Rr-mallocfree)"
+    },
+    {
+        "id": "R.11",
+        "caption": "Avoid calling `new` and `delete` explicitly",
+        "anchor": "#Rr-newdelete",
+        "title": "R.11: Avoid calling `new` and `delete` explicitly (#Rr-newdelete)"
+    },
+    {
+        "id": "R.12",
+        "caption": "Immediately give the result of an explicit resource allocation to a manager object",
+        "anchor": "#Rr-immediate-alloc",
+        "title": "R.12: Immediately give the result of an explicit resource allocation to a manager object (#Rr-immediate-alloc)"
+    },
+    {
+        "id": "R.13",
+        "caption": "Perform at most one explicit resource allocation in a single expression statement",
+        "anchor": "#Rr-single-alloc",
+        "title": "R.13: Perform at most one explicit resource allocation in a single expression statement (#Rr-single-alloc)"
+    },
+    {
+        "id": "R.14",
+        "caption": "Avoid `[]` parameters, prefer `span`",
+        "anchor": "#Rr-ap",
+        "title": "R.14: Avoid `[]` parameters, prefer `span` (#Rr-ap)"
+    },
+    {
+        "id": "R.15",
+        "caption": "Always overload matched allocation/deallocation pairs",
+        "anchor": "#Rr-pair",
+        "title": "R.15: Always overload matched allocation/deallocation pairs (#Rr-pair)"
+    },
+    {
+        "id": "R.20",
+        "caption": "Use `unique_ptr` or `shared_ptr` to represent ownership",
+        "anchor": "#Rr-owner",
+        "title": "R.20: Use `unique_ptr` or `shared_ptr` to represent ownership (#Rr-owner)"
+    },
+    {
+        "id": "R.21",
+        "caption": "Prefer `unique_ptr` over `shared_ptr` unless you need to share ownership",
+        "anchor": "#Rr-unique",
+        "title": "R.21: Prefer `unique_ptr` over `shared_ptr` unless you need to share ownership (#Rr-unique)"
+    },
+    {
+        "id": "R.22",
+        "caption": "Use `make_shared()` to make `shared_ptr`s",
+        "anchor": "#Rr-make_shared",
+        "title": "R.22: Use `make_shared()` to make `shared_ptr`s (#Rr-make_shared)"
+    },
+    {
+        "id": "R.23",
+        "caption": "Use `make_unique()` to make `unique_ptr`s",
+        "anchor": "#Rr-make_unique",
+        "title": "R.23: Use `make_unique()` to make `unique_ptr`s (#Rr-make_unique)"
+    },
+    {
+        "id": "R.24",
+        "caption": "Use `std::weak_ptr` to break cycles of `shared_ptr`s",
+        "anchor": "#Rr-weak_ptr",
+        "title": "R.24: Use `std::weak_ptr` to break cycles of `shared_ptr`s (#Rr-weak_ptr)"
+    },
+    {
+        "id": "R.30",
+        "caption": "Take smart pointers as parameters only to explicitly express lifetime semantics",
+        "anchor": "#Rr-smartptrparam",
+        "title": "R.30: Take smart pointers as parameters only to explicitly express lifetime semantics (#Rr-smartptrparam)"
+    },
+    {
+        "id": "R.31",
+        "caption": "If you have non-`std` smart pointers, follow the basic pattern from `std`",
+        "anchor": "#Rr-smart",
+        "title": "R.31: If you have non-`std` smart pointers, follow the basic pattern from `std` (#Rr-smart)"
+    },
+    {
+        "id": "R.32",
+        "caption": "Take a `unique_ptr<widget>` parameter to express that a function assumes ownership of a `widget`",
+        "anchor": "#Rr-uniqueptrparam",
+        "title": "R.32: Take a `unique_ptr<widget>` parameter to express that a function assumes ownership of a `widget` (#Rr-uniqueptrparam)"
+    },
+    {
+        "id": "R.33",
+        "caption": "Take a `unique_ptr<widget>&` parameter to express that a function reseats the `widget`",
+        "anchor": "#Rr-reseat",
+        "title": "R.33: Take a `unique_ptr<widget>&` parameter to express that a function reseats the `widget` (#Rr-reseat)"
+    },
+    {
+        "id": "R.34",
+        "caption": "Take a `shared_ptr<widget>` parameter to express shared ownership",
+        "anchor": "#Rr-sharedptrparam-owner",
+        "title": "R.34: Take a `shared_ptr<widget>` parameter to express shared ownership (#Rr-sharedptrparam-owner)"
+    },
+    {
+        "id": "R.35",
+        "caption": "Take a `shared_ptr<widget>&` parameter to express that a function might reseat the shared pointer",
+        "anchor": "#Rr-sharedptrparam",
+        "title": "R.35: Take a `shared_ptr<widget>&` parameter to express that a function might reseat the shared pointer (#Rr-sharedptrparam)"
+    },
+    {
+        "id": "R.36",
+        "caption": "Take a `const shared_ptr<widget>&` parameter to express that it might retain a reference count to the object ???",
+        "anchor": "#Rr-sharedptrparam-const",
+        "title": "R.36: Take a `const shared_ptr<widget>&` parameter to express that it might retain a reference count to the object ??? (#Rr-sharedptrparam-const)"
+    },
+    {
+        "id": "R.37",
+        "caption": "Do not pass a pointer or reference obtained from an aliased smart pointer",
+        "anchor": "#Rr-smartptrget",
+        "title": "R.37: Do not pass a pointer or reference obtained from an aliased smart pointer (#Rr-smartptrget)"
+    },
+    {
+        "id": "ES.1",
+        "caption": "Prefer the standard library to other libraries and to \"handcrafted code\"",
+        "anchor": "#Res-lib",
+        "title": "ES.1: Prefer the standard library to other libraries and to \"handcrafted code\" (#Res-lib)"
+    },
+    {
+        "id": "ES.2",
+        "caption": "Prefer suitable abstractions to direct use of language features",
+        "anchor": "#Res-abstr",
+        "title": "ES.2: Prefer suitable abstractions to direct use of language features (#Res-abstr)"
+    },
+    {
+        "id": "ES.3",
+        "caption": "Don't repeat yourself, avoid redundant code",
+        "anchor": "#Res-DRY",
+        "title": "ES.3: Don't repeat yourself, avoid redundant code (#Res-DRY)"
+    },
+    {
+        "id": "ES.5",
+        "caption": "Keep scopes small",
+        "anchor": "#Res-scope",
+        "title": "ES.5: Keep scopes small (#Res-scope)"
+    },
+    {
+        "id": "ES.6",
+        "caption": "Declare names in for-statement initializers and conditions to limit scope",
+        "anchor": "#Res-cond",
+        "title": "ES.6: Declare names in for-statement initializers and conditions to limit scope (#Res-cond)"
+    },
+    {
+        "id": "ES.7",
+        "caption": "Keep common and local names short, and keep uncommon and non-local names longer",
+        "anchor": "#Res-name-length",
+        "title": "ES.7: Keep common and local names short, and keep uncommon and non-local names longer (#Res-name-length)"
+    },
+    {
+        "id": "ES.8",
+        "caption": "Avoid similar-looking names",
+        "anchor": "#Res-name-similar",
+        "title": "ES.8: Avoid similar-looking names (#Res-name-similar)"
+    },
+    {
+        "id": "ES.9",
+        "caption": "Avoid `ALL_CAPS` names",
+        "anchor": "#Res-not-CAPS",
+        "title": "ES.9: Avoid `ALL_CAPS` names (#Res-not-CAPS)"
+    },
+    {
+        "id": "ES.10",
+        "caption": "Declare one name (only) per declaration",
+        "anchor": "#Res-name-one",
+        "title": "ES.10: Declare one name (only) per declaration (#Res-name-one)"
+    },
+    {
+        "id": "ES.11",
+        "caption": "Use `auto` to avoid redundant repetition of type names",
+        "anchor": "#Res-auto",
+        "title": "ES.11: Use `auto` to avoid redundant repetition of type names (#Res-auto)"
+    },
+    {
+        "id": "ES.12",
+        "caption": "Do not reuse names in nested scopes",
+        "anchor": "#Res-reuse",
+        "title": "ES.12: Do not reuse names in nested scopes (#Res-reuse)"
+    },
+    {
+        "id": "ES.20",
+        "caption": "Always initialize an object",
+        "anchor": "#Res-always",
+        "title": "ES.20: Always initialize an object (#Res-always)"
+    },
+    {
+        "id": "ES.21",
+        "caption": "Don't introduce a variable (or constant) before you need to use it",
+        "anchor": "#Res-introduce",
+        "title": "ES.21: Don't introduce a variable (or constant) before you need to use it (#Res-introduce)"
+    },
+    {
+        "id": "ES.22",
+        "caption": "Don't declare a variable until you have a value to initialize it with",
+        "anchor": "#Res-init",
+        "title": "ES.22: Don't declare a variable until you have a value to initialize it with (#Res-init)"
+    },
+    {
+        "id": "ES.23",
+        "caption": "Prefer the `{},`-initializer syntax",
+        "anchor": "#Res-list",
+        "title": "ES.23: Prefer the `{},`-initializer syntax (#Res-list)"
+    },
+    {
+        "id": "ES.24",
+        "caption": "Use a `unique_ptr<T>` to hold pointers",
+        "anchor": "#Res-unique",
+        "title": "ES.24: Use a `unique_ptr<T>` to hold pointers (#Res-unique)"
+    },
+    {
+        "id": "ES.25",
+        "caption": "Declare an object `const` or `constexpr` unless you want to modify its value later on",
+        "anchor": "#Res-const",
+        "title": "ES.25: Declare an object `const` or `constexpr` unless you want to modify its value later on (#Res-const)"
+    },
+    {
+        "id": "ES.26",
+        "caption": "Don't use a variable for two unrelated purposes",
+        "anchor": "#Res-recycle",
+        "title": "ES.26: Don't use a variable for two unrelated purposes (#Res-recycle)"
+    },
+    {
+        "id": "ES.27",
+        "caption": "Use `std::array` or `stack_array` for arrays on the stack",
+        "anchor": "#Res-stack",
+        "title": "ES.27: Use `std::array` or `stack_array` for arrays on the stack (#Res-stack)"
+    },
+    {
+        "id": "ES.28",
+        "caption": "Use lambdas for complex initialization, especially of `const` variables",
+        "anchor": "#Res-lambda-init",
+        "title": "ES.28: Use lambdas for complex initialization, especially of `const` variables (#Res-lambda-init)"
+    },
+    {
+        "id": "ES.30",
+        "caption": "Don't use macros for program text manipulation",
+        "anchor": "#Res-macros",
+        "title": "ES.30: Don't use macros for program text manipulation (#Res-macros)"
+    },
+    {
+        "id": "ES.31",
+        "caption": "Don't use macros for constants or \"functions\"",
+        "anchor": "#Res-macros2",
+        "title": "ES.31: Don't use macros for constants or \"functions\" (#Res-macros2)"
+    },
+    {
+        "id": "ES.32",
+        "caption": "Use `ALL_CAPS` for all macro names",
+        "anchor": "#Res-ALL_CAPS",
+        "title": "ES.32: Use `ALL_CAPS` for all macro names (#Res-ALL_CAPS)"
+    },
+    {
+        "id": "ES.33",
+        "caption": "If you must use macros, give them unique names",
+        "anchor": "#Res-MACROS",
+        "title": "ES.33: If you must use macros, give them unique names (#Res-MACROS)"
+    },
+    {
+        "id": "ES.34",
+        "caption": "Don't define a (C-style) variadic function",
+        "anchor": "#Res-ellipses",
+        "title": "ES.34: Don't define a (C-style) variadic function (#Res-ellipses)"
+    },
+    {
+        "id": "ES.40",
+        "caption": "Avoid complicated expressions",
+        "anchor": "#Res-complicated",
+        "title": "ES.40: Avoid complicated expressions (#Res-complicated)"
+    },
+    {
+        "id": "ES.41",
+        "caption": "If in doubt about operator precedence, parenthesize",
+        "anchor": "#Res-parens",
+        "title": "ES.41: If in doubt about operator precedence, parenthesize (#Res-parens)"
+    },
+    {
+        "id": "ES.42",
+        "caption": "Keep use of pointers simple and straightforward",
+        "anchor": "#Res-ptr",
+        "title": "ES.42: Keep use of pointers simple and straightforward (#Res-ptr)"
+    },
+    {
+        "id": "ES.43",
+        "caption": "Avoid expressions with undefined order of evaluation",
+        "anchor": "#Res-order",
+        "title": "ES.43: Avoid expressions with undefined order of evaluation (#Res-order)"
+    },
+    {
+        "id": "ES.44",
+        "caption": "Don't depend on order of evaluation of function arguments",
+        "anchor": "#Res-order-fct",
+        "title": "ES.44: Don't depend on order of evaluation of function arguments (#Res-order-fct)"
+    },
+    {
+        "id": "ES.45",
+        "caption": "Avoid \"magic constants\"; use symbolic constants",
+        "anchor": "#Res-magic",
+        "title": "ES.45: Avoid \"magic constants\"; use symbolic constants (#Res-magic)"
+    },
+    {
+        "id": "ES.46",
+        "caption": "Avoid narrowing conversions",
+        "anchor": "#Res-narrowing",
+        "title": "ES.46: Avoid narrowing conversions (#Res-narrowing)"
+    },
+    {
+        "id": "ES.47",
+        "caption": "Use `nullptr` rather than `0` or `NULL`",
+        "anchor": "#Res-nullptr",
+        "title": "ES.47: Use `nullptr` rather than `0` or `NULL` (#Res-nullptr)"
+    },
+    {
+        "id": "ES.48",
+        "caption": "Avoid casts",
+        "anchor": "#Res-casts",
+        "title": "ES.48: Avoid casts (#Res-casts)"
+    },
+    {
+        "id": "ES.49",
+        "caption": "If you must use a cast, use a named cast",
+        "anchor": "#Res-casts-named",
+        "title": "ES.49: If you must use a cast, use a named cast (#Res-casts-named)"
+    },
+    {
+        "id": "ES.50",
+        "caption": "Don't cast away `const`",
+        "anchor": "#Res-casts-const",
+        "title": "ES.50: Don't cast away `const` (#Res-casts-const)"
+    },
+    {
+        "id": "ES.55",
+        "caption": "Avoid the need for range checking",
+        "anchor": "#Res-range-checking",
+        "title": "ES.55: Avoid the need for range checking (#Res-range-checking)"
+    },
+    {
+        "id": "ES.56",
+        "caption": "Write `std::move()` only when you need to explicitly move an object to another scope",
+        "anchor": "#Res-move",
+        "title": "ES.56: Write `std::move()` only when you need to explicitly move an object to another scope (#Res-move)"
+    },
+    {
+        "id": "ES.60",
+        "caption": "Avoid `new` and `delete` outside resource management functions",
+        "anchor": "#Res-new",
+        "title": "ES.60: Avoid `new` and `delete` outside resource management functions (#Res-new)"
+    },
+    {
+        "id": "ES.61",
+        "caption": "Delete arrays using `delete[]` and non-arrays using `delete`",
+        "anchor": "#Res-del",
+        "title": "ES.61: Delete arrays using `delete[]` and non-arrays using `delete` (#Res-del)"
+    },
+    {
+        "id": "ES.62",
+        "caption": "Don't compare pointers into different arrays",
+        "anchor": "#Res-arr2",
+        "title": "ES.62: Don't compare pointers into different arrays (#Res-arr2)"
+    },
+    {
+        "id": "ES.63",
+        "caption": "Don't slice",
+        "anchor": "#Res-slice",
+        "title": "ES.63: Don't slice (#Res-slice)"
+    },
+    {
+        "id": "ES.64",
+        "caption": "Use the `T{e},`notation for construction",
+        "anchor": "#Res-construct",
+        "title": "ES.64: Use the `T{e},`notation for construction (#Res-construct)"
+    },
+    {
+        "id": "ES.65",
+        "caption": "Don't dereference an invalid pointer",
+        "anchor": "#Res-deref",
+        "title": "ES.65: Don't dereference an invalid pointer (#Res-deref)"
+    },
+    {
+        "id": "ES.70",
+        "caption": "Prefer a `switch`-statement to an `if`-statement when there is a choice",
+        "anchor": "#Res-switch-if",
+        "title": "ES.70: Prefer a `switch`-statement to an `if`-statement when there is a choice (#Res-switch-if)"
+    },
+    {
+        "id": "ES.71",
+        "caption": "Prefer a range-`for`-statement to a `for`-statement when there is a choice",
+        "anchor": "#Res-for-range",
+        "title": "ES.71: Prefer a range-`for`-statement to a `for`-statement when there is a choice (#Res-for-range)"
+    },
+    {
+        "id": "ES.72",
+        "caption": "Prefer a `for`-statement to a `while`-statement when there is an obvious loop variable",
+        "anchor": "#Res-for-while",
+        "title": "ES.72: Prefer a `for`-statement to a `while`-statement when there is an obvious loop variable (#Res-for-while)"
+    },
+    {
+        "id": "ES.73",
+        "caption": "Prefer a `while`-statement to a `for`-statement when there is no obvious loop variable",
+        "anchor": "#Res-while-for",
+        "title": "ES.73: Prefer a `while`-statement to a `for`-statement when there is no obvious loop variable (#Res-while-for)"
+    },
+    {
+        "id": "ES.74",
+        "caption": "Prefer to declare a loop variable in the initializer part of a `for`-statement",
+        "anchor": "#Res-for-init",
+        "title": "ES.74: Prefer to declare a loop variable in the initializer part of a `for`-statement (#Res-for-init)"
+    },
+    {
+        "id": "ES.75",
+        "caption": "Avoid `do`-statements",
+        "anchor": "#Res-do",
+        "title": "ES.75: Avoid `do`-statements (#Res-do)"
+    },
+    {
+        "id": "ES.76",
+        "caption": "Avoid `goto`",
+        "anchor": "#Res-goto",
+        "title": "ES.76: Avoid `goto` (#Res-goto)"
+    },
+    {
+        "id": "ES.77",
+        "caption": "Minimize the use of `break` and `continue` in loops",
+        "anchor": "#Res-continue",
+        "title": "ES.77: Minimize the use of `break` and `continue` in loops (#Res-continue)"
+    },
+    {
+        "id": "ES.78",
+        "caption": "Don't rely on implicit fallthrough in `switch` statements",
+        "anchor": "#Res-break",
+        "title": "ES.78: Don't rely on implicit fallthrough in `switch` statements (#Res-break)"
+    },
+    {
+        "id": "ES.79",
+        "caption": "Use `default` to handle common cases (only)",
+        "anchor": "#Res-default",
+        "title": "ES.79: Use `default` to handle common cases (only) (#Res-default)"
+    },
+    {
+        "id": "ES.84",
+        "caption": "Don't try to declare a local variable with no name",
+        "anchor": "#Res-noname",
+        "title": "ES.84: Don't try to declare a local variable with no name (#Res-noname)"
+    },
+    {
+        "id": "ES.85",
+        "caption": "Make empty statements visible",
+        "anchor": "#Res-empty",
+        "title": "ES.85: Make empty statements visible (#Res-empty)"
+    },
+    {
+        "id": "ES.86",
+        "caption": "Avoid modifying loop control variables inside the body of raw for-loops",
+        "anchor": "#Res-loop-counter",
+        "title": "ES.86: Avoid modifying loop control variables inside the body of raw for-loops (#Res-loop-counter)"
+    },
+    {
+        "id": "ES.87",
+        "caption": "Don't add redundant `==` or `!=` to conditions",
+        "anchor": "#Res-if",
+        "title": "ES.87: Don't add redundant `==` or `!=` to conditions (#Res-if)"
+    },
+    {
+        "id": "ES.100",
+        "caption": "Don't mix signed and unsigned arithmetic",
+        "anchor": "#Res-mix",
+        "title": "ES.100: Don't mix signed and unsigned arithmetic (#Res-mix)"
+    },
+    {
+        "id": "ES.101",
+        "caption": "Use unsigned types for bit manipulation",
+        "anchor": "#Res-unsigned",
+        "title": "ES.101: Use unsigned types for bit manipulation (#Res-unsigned)"
+    },
+    {
+        "id": "ES.102",
+        "caption": "Use signed types for arithmetic",
+        "anchor": "#Res-signed",
+        "title": "ES.102: Use signed types for arithmetic (#Res-signed)"
+    },
+    {
+        "id": "ES.103",
+        "caption": "Don't overflow",
+        "anchor": "#Res-overflow",
+        "title": "ES.103: Don't overflow (#Res-overflow)"
+    },
+    {
+        "id": "ES.104",
+        "caption": "Don't underflow",
+        "anchor": "#Res-underflow",
+        "title": "ES.104: Don't underflow (#Res-underflow)"
+    },
+    {
+        "id": "ES.105",
+        "caption": "Don't divide by integer zero",
+        "anchor": "#Res-zero",
+        "title": "ES.105: Don't divide by integer zero (#Res-zero)"
+    },
+    {
+        "id": "ES.106",
+        "caption": "Don't try to avoid negative values by using `unsigned`",
+        "anchor": "#Res-nonnegative",
+        "title": "ES.106: Don't try to avoid negative values by using `unsigned` (#Res-nonnegative)"
+    },
+    {
+        "id": "ES.107",
+        "caption": "Don't use `unsigned` for subscripts, prefer `gsl::index`",
+        "anchor": "#Res-subscripts",
+        "title": "ES.107: Don't use `unsigned` for subscripts, prefer `gsl::index` (#Res-subscripts)"
+    },
+    {
+        "id": "Per.1",
+        "caption": "Don't optimize without reason",
+        "anchor": "#Rper-reason",
+        "title": "Per.1: Don't optimize without reason (#Rper-reason)"
+    },
+    {
+        "id": "Per.2",
+        "caption": "Don't optimize prematurely",
+        "anchor": "#Rper-Knuth",
+        "title": "Per.2: Don't optimize prematurely (#Rper-Knuth)"
+    },
+    {
+        "id": "Per.3",
+        "caption": "Don't optimize something that's not performance critical",
+        "anchor": "#Rper-critical",
+        "title": "Per.3: Don't optimize something that's not performance critical (#Rper-critical)"
+    },
+    {
+        "id": "Per.4",
+        "caption": "Don't assume that complicated code is necessarily faster than simple code",
+        "anchor": "#Rper-simple",
+        "title": "Per.4: Don't assume that complicated code is necessarily faster than simple code (#Rper-simple)"
+    },
+    {
+        "id": "Per.5",
+        "caption": "Don't assume that low-level code is necessarily faster than high-level code",
+        "anchor": "#Rper-low",
+        "title": "Per.5: Don't assume that low-level code is necessarily faster than high-level code (#Rper-low)"
+    },
+    {
+        "id": "Per.6",
+        "caption": "Don't make claims about performance without measurements",
+        "anchor": "#Rper-measure",
+        "title": "Per.6: Don't make claims about performance without measurements (#Rper-measure)"
+    },
+    {
+        "id": "Per.7",
+        "caption": "Design to enable optimization",
+        "anchor": "#Rper-efficiency",
+        "title": "Per.7: Design to enable optimization (#Rper-efficiency)"
+    },
+    {
+        "id": "Per.10",
+        "caption": "Rely on the static type system",
+        "anchor": "#Rper-type",
+        "title": "Per.10: Rely on the static type system (#Rper-type)"
+    },
+    {
+        "id": "Per.11",
+        "caption": "Move computation from run time to compile time",
+        "anchor": "#Rper-Comp",
+        "title": "Per.11: Move computation from run time to compile time (#Rper-Comp)"
+    },
+    {
+        "id": "Per.12",
+        "caption": "Eliminate redundant aliases",
+        "anchor": "#Rper-alias",
+        "title": "Per.12: Eliminate redundant aliases (#Rper-alias)"
+    },
+    {
+        "id": "Per.13",
+        "caption": "Eliminate redundant indirections",
+        "anchor": "#Rper-indirect",
+        "title": "Per.13: Eliminate redundant indirections (#Rper-indirect)"
+    },
+    {
+        "id": "Per.14",
+        "caption": "Minimize the number of allocations and deallocations",
+        "anchor": "#Rper-alloc",
+        "title": "Per.14: Minimize the number of allocations and deallocations (#Rper-alloc)"
+    },
+    {
+        "id": "Per.15",
+        "caption": "Do not allocate on a critical branch",
+        "anchor": "#Rper-alloc0",
+        "title": "Per.15: Do not allocate on a critical branch (#Rper-alloc0)"
+    },
+    {
+        "id": "Per.16",
+        "caption": "Use compact data structures",
+        "anchor": "#Rper-compact",
+        "title": "Per.16: Use compact data structures (#Rper-compact)"
+    },
+    {
+        "id": "Per.17",
+        "caption": "Declare the most used member of a time-critical struct first",
+        "anchor": "#Rper-struct",
+        "title": "Per.17: Declare the most used member of a time-critical struct first (#Rper-struct)"
+    },
+    {
+        "id": "Per.18",
+        "caption": "Space is time",
+        "anchor": "#Rper-space",
+        "title": "Per.18: Space is time (#Rper-space)"
+    },
+    {
+        "id": "Per.19",
+        "caption": "Access memory predictably",
+        "anchor": "#Rper-access",
+        "title": "Per.19: Access memory predictably (#Rper-access)"
+    },
+    {
+        "id": "Per.30",
+        "caption": "Avoid context switches on the critical path",
+        "anchor": "#Rper-context",
+        "title": "Per.30: Avoid context switches on the critical path (#Rper-context)"
+    },
+    {
+        "id": "CP.1",
+        "caption": "Assume that your code will run as part of a multi-threaded program",
+        "anchor": "#Rconc-multi",
+        "title": "CP.1: Assume that your code will run as part of a multi-threaded program (#Rconc-multi)"
+    },
+    {
+        "id": "CP.2",
+        "caption": "Avoid data races",
+        "anchor": "#Rconc-races",
+        "title": "CP.2: Avoid data races (#Rconc-races)"
+    },
+    {
+        "id": "CP.3",
+        "caption": "Minimize explicit sharing of writable data",
+        "anchor": "#Rconc-data",
+        "title": "CP.3: Minimize explicit sharing of writable data (#Rconc-data)"
+    },
+    {
+        "id": "CP.4",
+        "caption": "Think in terms of tasks, rather than threads",
+        "anchor": "#Rconc-task",
+        "title": "CP.4: Think in terms of tasks, rather than threads (#Rconc-task)"
+    },
+    {
+        "id": "CP.8",
+        "caption": "Don't try to use `volatile` for synchronization",
+        "anchor": "#Rconc-volatile",
+        "title": "CP.8: Don't try to use `volatile` for synchronization (#Rconc-volatile)"
+    },
+    {
+        "id": "CP.9",
+        "caption": "Whenever feasible use tools to validate your concurrent code",
+        "anchor": "#Rconc-tools",
+        "title": "CP.9: Whenever feasible use tools to validate your concurrent code (#Rconc-tools)"
+    },
+    {
+        "id": "CP.con",
+        "caption": "Concurrency",
+        "anchor": "#SScp-con",
+        "title": "CP.con: Concurrency (#SScp-con)"
+    },
+    {
+        "id": "CP.coro",
+        "caption": "Coroutines",
+        "anchor": "#SScp-coro",
+        "title": "CP.coro: Coroutines (#SScp-coro)"
+    },
+    {
+        "id": "CP.par",
+        "caption": "Parallelism",
+        "anchor": "#SScp-par",
+        "title": "CP.par: Parallelism (#SScp-par)"
+    },
+    {
+        "id": "CP.mess",
+        "caption": "Message passing",
+        "anchor": "#SScp-mess",
+        "title": "CP.mess: Message passing (#SScp-mess)"
+    },
+    {
+        "id": "CP.vec",
+        "caption": "Vectorization",
+        "anchor": "#SScp-vec",
+        "title": "CP.vec: Vectorization (#SScp-vec)"
+    },
+    {
+        "id": "CP.free",
+        "caption": "Lock-free programming",
+        "anchor": "#SScp-free",
+        "title": "CP.free: Lock-free programming (#SScp-free)"
+    },
+    {
+        "id": "CP.etc",
+        "caption": "Etc. concurrency rules",
+        "anchor": "#SScp-etc",
+        "title": "CP.etc: Etc. concurrency rules (#SScp-etc)"
+    },
+    {
+        "id": "CP.20",
+        "caption": "Use RAII, never plain `lock()`/`unlock()`",
+        "anchor": "#Rconc-raii",
+        "title": "CP.20: Use RAII, never plain `lock()`/`unlock()` (#Rconc-raii)"
+    },
+    {
+        "id": "CP.21",
+        "caption": "Use `std::lock()` or `std::scoped_lock` to acquire multiple `mutex`es",
+        "anchor": "#Rconc-lock",
+        "title": "CP.21: Use `std::lock()` or `std::scoped_lock` to acquire multiple `mutex`es (#Rconc-lock)"
+    },
+    {
+        "id": "CP.22",
+        "caption": "Never call unknown code while holding a lock (e.g., a callback)",
+        "anchor": "#Rconc-unknown",
+        "title": "CP.22: Never call unknown code while holding a lock (e.g., a callback) (#Rconc-unknown)"
+    },
+    {
+        "id": "CP.23",
+        "caption": "Think of a joining `thread` as a scoped container",
+        "anchor": "#Rconc-join",
+        "title": "CP.23: Think of a joining `thread` as a scoped container (#Rconc-join)"
+    },
+    {
+        "id": "CP.24",
+        "caption": "Think of a `thread` as a global container",
+        "anchor": "#Rconc-detach",
+        "title": "CP.24: Think of a `thread` as a global container (#Rconc-detach)"
+    },
+    {
+        "id": "CP.25",
+        "caption": "Prefer `gsl::joining_thread` over `std::thread`",
+        "anchor": "#Rconc-joining_thread",
+        "title": "CP.25: Prefer `gsl::joining_thread` over `std::thread` (#Rconc-joining_thread)"
+    },
+    {
+        "id": "CP.26",
+        "caption": "Don't `detach()` a thread",
+        "anchor": "#Rconc-detached_thread",
+        "title": "CP.26: Don't `detach()` a thread (#Rconc-detached_thread)"
+    },
+    {
+        "id": "CP.31",
+        "caption": "Pass small amounts of data between threads by value, rather than by reference or pointer",
+        "anchor": "#Rconc-data-by-value",
+        "title": "CP.31: Pass small amounts of data between threads by value, rather than by reference or pointer (#Rconc-data-by-value)"
+    },
+    {
+        "id": "CP.32",
+        "caption": "To share ownership between unrelated `thread`s use `shared_ptr`",
+        "anchor": "#Rconc-shared",
+        "title": "CP.32: To share ownership between unrelated `thread`s use `shared_ptr` (#Rconc-shared)"
+    },
+    {
+        "id": "CP.40",
+        "caption": "Minimize context switching",
+        "anchor": "#Rconc-switch",
+        "title": "CP.40: Minimize context switching (#Rconc-switch)"
+    },
+    {
+        "id": "CP.41",
+        "caption": "Minimize thread creation and destruction",
+        "anchor": "#Rconc-create",
+        "title": "CP.41: Minimize thread creation and destruction (#Rconc-create)"
+    },
+    {
+        "id": "CP.42",
+        "caption": "Don't `wait` without a condition",
+        "anchor": "#Rconc-wait",
+        "title": "CP.42: Don't `wait` without a condition (#Rconc-wait)"
+    },
+    {
+        "id": "CP.43",
+        "caption": "Minimize time spent in a critical section",
+        "anchor": "#Rconc-time",
+        "title": "CP.43: Minimize time spent in a critical section (#Rconc-time)"
+    },
+    {
+        "id": "CP.44",
+        "caption": "Remember to name your `lock_guard`s and `unique_lock`s",
+        "anchor": "#Rconc-name",
+        "title": "CP.44: Remember to name your `lock_guard`s and `unique_lock`s (#Rconc-name)"
+    },
+    {
+        "id": "CP.50",
+        "caption": "Define a `mutex` together with the data it guards. Use `synchronized_value<T>` where possible",
+        "anchor": "#Rconc-mutex",
+        "title": "CP.50: Define a `mutex` together with the data it guards. Use `synchronized_value<T>` where possible (#Rconc-mutex)"
+    },
+    {
+        "id": "CP.51",
+        "caption": "Do not use capturing lambdas that are coroutines",
+        "anchor": "#Rcoro-capture",
+        "title": "CP.51: Do not use capturing lambdas that are coroutines (#Rcoro-capture)"
+    },
+    {
+        "id": "CP.52",
+        "caption": "Do not hold locks or other synchronization primitives across suspension points",
+        "anchor": "#Rcoro-locks",
+        "title": "CP.52: Do not hold locks or other synchronization primitives across suspension points (#Rcoro-locks)"
+    },
+    {
+        "id": "CP.53",
+        "caption": "Parameters to coroutines should not be passed by reference",
+        "anchor": "#Rcoro-reference-parameters",
+        "title": "CP.53: Parameters to coroutines should not be passed by reference (#Rcoro-reference-parameters)"
+    },
+    {
+        "id": "CP.60",
+        "caption": "Use a `future` to return a value from a concurrent task",
+        "anchor": "#Rconc-future",
+        "title": "CP.60: Use a `future` to return a value from a concurrent task (#Rconc-future)"
+    },
+    {
+        "id": "CP.61",
+        "caption": "Use `async()` to spawn concurrent tasks",
+        "anchor": "#Rconc-async",
+        "title": "CP.61: Use `async()` to spawn concurrent tasks (#Rconc-async)"
+    },
+    {
+        "id": "CP.100",
+        "caption": "Don't use lock-free programming unless you absolutely have to",
+        "anchor": "#Rconc-lockfree",
+        "title": "CP.100: Don't use lock-free programming unless you absolutely have to (#Rconc-lockfree)"
+    },
+    {
+        "id": "CP.101",
+        "caption": "Distrust your hardware/compiler combination",
+        "anchor": "#Rconc-distrust",
+        "title": "CP.101: Distrust your hardware/compiler combination (#Rconc-distrust)"
+    },
+    {
+        "id": "CP.102",
+        "caption": "Carefully study the literature",
+        "anchor": "#Rconc-literature",
+        "title": "CP.102: Carefully study the literature (#Rconc-literature)"
+    },
+    {
+        "id": "CP.110",
+        "caption": "Do not write your own double-checked locking for initialization",
+        "anchor": "#Rconc-double",
+        "title": "CP.110: Do not write your own double-checked locking for initialization (#Rconc-double)"
+    },
+    {
+        "id": "CP.111",
+        "caption": "Use a conventional pattern if you really need double-checked locking",
+        "anchor": "#Rconc-double-pattern",
+        "title": "CP.111: Use a conventional pattern if you really need double-checked locking (#Rconc-double-pattern)"
+    },
+    {
+        "id": "CP.200",
+        "caption": "Use `volatile` only to talk to non-C++ memory",
+        "anchor": "#Rconc-volatile2",
+        "title": "CP.200: Use `volatile` only to talk to non-C++ memory (#Rconc-volatile2)"
+    },
+    {
+        "id": "CP.201",
+        "caption": "??? Signals",
+        "anchor": "#Rconc-signal",
+        "title": "CP.201: ??? Signals (#Rconc-signal)"
+    },
+    {
+        "id": "E.1",
+        "caption": "Develop an error-handling strategy early in a design",
+        "anchor": "#Re-design",
+        "title": "E.1: Develop an error-handling strategy early in a design (#Re-design)"
+    },
+    {
+        "id": "E.2",
+        "caption": "Throw an exception to signal that a function can't perform its assigned task",
+        "anchor": "#Re-throw",
+        "title": "E.2: Throw an exception to signal that a function can't perform its assigned task (#Re-throw)"
+    },
+    {
+        "id": "E.3",
+        "caption": "Use exceptions for error handling only",
+        "anchor": "#Re-errors",
+        "title": "E.3: Use exceptions for error handling only (#Re-errors)"
+    },
+    {
+        "id": "E.4",
+        "caption": "Design your error-handling strategy around invariants",
+        "anchor": "#Re-design-invariants",
+        "title": "E.4: Design your error-handling strategy around invariants (#Re-design-invariants)"
+    },
+    {
+        "id": "E.5",
+        "caption": "Let a constructor establish an invariant, and throw if it cannot",
+        "anchor": "#Re-invariant",
+        "title": "E.5: Let a constructor establish an invariant, and throw if it cannot (#Re-invariant)"
+    },
+    {
+        "id": "E.6",
+        "caption": "Use RAII to prevent leaks",
+        "anchor": "#Re-raii",
+        "title": "E.6: Use RAII to prevent leaks (#Re-raii)"
+    },
+    {
+        "id": "E.7",
+        "caption": "State your preconditions",
+        "anchor": "#Re-precondition",
+        "title": "E.7: State your preconditions (#Re-precondition)"
+    },
+    {
+        "id": "E.8",
+        "caption": "State your postconditions",
+        "anchor": "#Re-postcondition",
+        "title": "E.8: State your postconditions (#Re-postcondition)"
+    },
+    {
+        "id": "E.12",
+        "caption": "Use `noexcept` when exiting a function because of a `throw` is impossible or unacceptable",
+        "anchor": "#Re-noexcept",
+        "title": "E.12: Use `noexcept` when exiting a function because of a `throw` is impossible or unacceptable (#Re-noexcept)"
+    },
+    {
+        "id": "E.13",
+        "caption": "Never throw while being the direct owner of an object",
+        "anchor": "#Re-never-throw",
+        "title": "E.13: Never throw while being the direct owner of an object (#Re-never-throw)"
+    },
+    {
+        "id": "E.14",
+        "caption": "Use purpose-designed user-defined types as exceptions (not built-in types)",
+        "anchor": "#Re-exception-types",
+        "title": "E.14: Use purpose-designed user-defined types as exceptions (not built-in types) (#Re-exception-types)"
+    },
+    {
+        "id": "E.15",
+        "caption": "Throw by value, catch exceptions from a hierarchy by reference",
+        "anchor": "#Re-exception-ref",
+        "title": "E.15: Throw by value, catch exceptions from a hierarchy by reference (#Re-exception-ref)"
+    },
+    {
+        "id": "E.16",
+        "caption": "Destructors, deallocation, `swap`, and exception type copy/move construction must never fail",
+        "anchor": "#Re-never-fail",
+        "title": "E.16: Destructors, deallocation, `swap`, and exception type copy/move construction must never fail (#Re-never-fail)"
+    },
+    {
+        "id": "E.17",
+        "caption": "Don't try to catch every exception in every function",
+        "anchor": "#Re-not-always",
+        "title": "E.17: Don't try to catch every exception in every function (#Re-not-always)"
+    },
+    {
+        "id": "E.18",
+        "caption": "Minimize the use of explicit `try`/`catch`",
+        "anchor": "#Re-catch",
+        "title": "E.18: Minimize the use of explicit `try`/`catch` (#Re-catch)"
+    },
+    {
+        "id": "E.19",
+        "caption": "Use a `final_action` object to express cleanup if no suitable resource handle is available",
+        "anchor": "#Re-finally",
+        "title": "E.19: Use a `final_action` object to express cleanup if no suitable resource handle is available (#Re-finally)"
+    },
+    {
+        "id": "E.25",
+        "caption": "If you can't throw exceptions, simulate RAII for resource management",
+        "anchor": "#Re-no-throw-raii",
+        "title": "E.25: If you can't throw exceptions, simulate RAII for resource management (#Re-no-throw-raii)"
+    },
+    {
+        "id": "E.26",
+        "caption": "If you can't throw exceptions, consider failing fast",
+        "anchor": "#Re-no-throw-crash",
+        "title": "E.26: If you can't throw exceptions, consider failing fast (#Re-no-throw-crash)"
+    },
+    {
+        "id": "E.27",
+        "caption": "If you can't throw exceptions, use error codes systematically",
+        "anchor": "#Re-no-throw-codes",
+        "title": "E.27: If you can't throw exceptions, use error codes systematically (#Re-no-throw-codes)"
+    },
+    {
+        "id": "E.28",
+        "caption": "Avoid error handling based on global state (e.g. `errno`)",
+        "anchor": "#Re-no-throw",
+        "title": "E.28: Avoid error handling based on global state (e.g. `errno`) (#Re-no-throw)"
+    },
+    {
+        "id": "E.30",
+        "caption": "Don't use exception specifications",
+        "anchor": "#Re-specifications",
+        "title": "E.30: Don't use exception specifications (#Re-specifications)"
+    },
+    {
+        "id": "E.31",
+        "caption": "Properly order your `catch`-clauses",
+        "anchor": "#Re_catch",
+        "title": "E.31: Properly order your `catch`-clauses (#Re_catch)"
+    },
+    {
+        "id": "Con.1",
+        "caption": "By default, make objects immutable",
+        "anchor": "#Rconst-immutable",
+        "title": "Con.1: By default, make objects immutable (#Rconst-immutable)"
+    },
+    {
+        "id": "Con.2",
+        "caption": "By default, make member functions `const`",
+        "anchor": "#Rconst-fct",
+        "title": "Con.2: By default, make member functions `const` (#Rconst-fct)"
+    },
+    {
+        "id": "Con.3",
+        "caption": "By default, pass pointers and references to `const`s",
+        "anchor": "#Rconst-ref",
+        "title": "Con.3: By default, pass pointers and references to `const`s (#Rconst-ref)"
+    },
+    {
+        "id": "Con.4",
+        "caption": "Use `const` to define objects with values that do not change after construction",
+        "anchor": "#Rconst-const",
+        "title": "Con.4: Use `const` to define objects with values that do not change after construction (#Rconst-const)"
+    },
+    {
+        "id": "Con.5",
+        "caption": "Use `constexpr` for values that can be computed at compile time",
+        "anchor": "#Rconst-constexpr",
+        "title": "Con.5: Use `constexpr` for values that can be computed at compile time (#Rconst-constexpr)"
+    },
+    {
+        "id": "T.1",
+        "caption": "Use templates to raise the level of abstraction of code",
+        "anchor": "#Rt-raise",
+        "title": "T.1: Use templates to raise the level of abstraction of code (#Rt-raise)"
+    },
+    {
+        "id": "T.2",
+        "caption": "Use templates to express algorithms that apply to many argument types",
+        "anchor": "#Rt-algo",
+        "title": "T.2: Use templates to express algorithms that apply to many argument types (#Rt-algo)"
+    },
+    {
+        "id": "T.3",
+        "caption": "Use templates to express containers and ranges",
+        "anchor": "#Rt-cont",
+        "title": "T.3: Use templates to express containers and ranges (#Rt-cont)"
+    },
+    {
+        "id": "T.4",
+        "caption": "Use templates to express syntax tree manipulation",
+        "anchor": "#Rt-expr",
+        "title": "T.4: Use templates to express syntax tree manipulation (#Rt-expr)"
+    },
+    {
+        "id": "T.5",
+        "caption": "Combine generic and OO techniques to amplify their strengths, not their costs",
+        "anchor": "#Rt-generic-oo",
+        "title": "T.5: Combine generic and OO techniques to amplify their strengths, not their costs (#Rt-generic-oo)"
+    },
+    {
+        "id": "T.10",
+        "caption": "Specify concepts for all template arguments",
+        "anchor": "#Rt-concepts",
+        "title": "T.10: Specify concepts for all template arguments (#Rt-concepts)"
+    },
+    {
+        "id": "T.11",
+        "caption": "Whenever possible use standard concepts",
+        "anchor": "#Rt-std-concepts",
+        "title": "T.11: Whenever possible use standard concepts (#Rt-std-concepts)"
+    },
+    {
+        "id": "T.12",
+        "caption": "Prefer concept names over `auto` for local variables",
+        "anchor": "#Rt-auto",
+        "title": "T.12: Prefer concept names over `auto` for local variables (#Rt-auto)"
+    },
+    {
+        "id": "T.13",
+        "caption": "Prefer the shorthand notation for simple, single-type argument concepts",
+        "anchor": "#Rt-shorthand",
+        "title": "T.13: Prefer the shorthand notation for simple, single-type argument concepts (#Rt-shorthand)"
+    },
+    {
+        "id": "T.20",
+        "caption": "Avoid \"concepts\" without meaningful semantics",
+        "anchor": "#Rt-low",
+        "title": "T.20: Avoid \"concepts\" without meaningful semantics (#Rt-low)"
+    },
+    {
+        "id": "T.21",
+        "caption": "Require a complete set of operations for a concept",
+        "anchor": "#Rt-complete",
+        "title": "T.21: Require a complete set of operations for a concept (#Rt-complete)"
+    },
+    {
+        "id": "T.22",
+        "caption": "Specify axioms for concepts",
+        "anchor": "#Rt-axiom",
+        "title": "T.22: Specify axioms for concepts (#Rt-axiom)"
+    },
+    {
+        "id": "T.23",
+        "caption": "Differentiate a refined concept from its more general case by adding new use patterns",
+        "anchor": "#Rt-refine",
+        "title": "T.23: Differentiate a refined concept from its more general case by adding new use patterns (#Rt-refine)"
+    },
+    {
+        "id": "T.24",
+        "caption": "Use tag classes or traits to differentiate concepts that differ only in semantics",
+        "anchor": "#Rt-tag",
+        "title": "T.24: Use tag classes or traits to differentiate concepts that differ only in semantics (#Rt-tag)"
+    },
+    {
+        "id": "T.25",
+        "caption": "Avoid complementary constraints",
+        "anchor": "#Rt-not",
+        "title": "T.25: Avoid complementary constraints (#Rt-not)"
+    },
+    {
+        "id": "T.26",
+        "caption": "Prefer to define concepts in terms of use-patterns rather than simple syntax",
+        "anchor": "#Rt-use",
+        "title": "T.26: Prefer to define concepts in terms of use-patterns rather than simple syntax (#Rt-use)"
+    },
+    {
+        "id": "T.30",
+        "caption": "Use concept negation (`!C<T>`) sparingly to express a minor difference",
+        "anchor": "#Rt-???",
+        "title": "T.30: Use concept negation (`!C<T>`) sparingly to express a minor difference (#Rt-???)"
+    },
+    {
+        "id": "T.31",
+        "caption": "Use concept disjunction (`C1<T> || C2<T>`) sparingly to express alternatives",
+        "anchor": "#Rt-???",
+        "title": "T.31: Use concept disjunction (`C1<T> || C2<T>`) sparingly to express alternatives (#Rt-???)"
+    },
+    {
+        "id": "T.40",
+        "caption": "Use function objects to pass operations to algorithms",
+        "anchor": "#Rt-fo",
+        "title": "T.40: Use function objects to pass operations to algorithms (#Rt-fo)"
+    },
+    {
+        "id": "T.41",
+        "caption": "Require only essential properties in a template's concepts",
+        "anchor": "#Rt-essential",
+        "title": "T.41: Require only essential properties in a template's concepts (#Rt-essential)"
+    },
+    {
+        "id": "T.42",
+        "caption": "Use template aliases to simplify notation and hide implementation details",
+        "anchor": "#Rt-alias",
+        "title": "T.42: Use template aliases to simplify notation and hide implementation details (#Rt-alias)"
+    },
+    {
+        "id": "T.43",
+        "caption": "Prefer `using` over `typedef` for defining aliases",
+        "anchor": "#Rt-using",
+        "title": "T.43: Prefer `using` over `typedef` for defining aliases (#Rt-using)"
+    },
+    {
+        "id": "T.44",
+        "caption": "Use function templates to deduce class template argument types (where feasible)",
+        "anchor": "#Rt-deduce",
+        "title": "T.44: Use function templates to deduce class template argument types (where feasible) (#Rt-deduce)"
+    },
+    {
+        "id": "T.46",
+        "caption": "Require template arguments to be at least semiregular",
+        "anchor": "#Rt-regular",
+        "title": "T.46: Require template arguments to be at least semiregular (#Rt-regular)"
+    },
+    {
+        "id": "T.47",
+        "caption": "Avoid highly visible unconstrained templates with common names",
+        "anchor": "#Rt-visible",
+        "title": "T.47: Avoid highly visible unconstrained templates with common names (#Rt-visible)"
+    },
+    {
+        "id": "T.48",
+        "caption": "If your compiler does not support concepts, fake them with `enable_if`",
+        "anchor": "#Rt-concept-def",
+        "title": "T.48: If your compiler does not support concepts, fake them with `enable_if` (#Rt-concept-def)"
+    },
+    {
+        "id": "T.49",
+        "caption": "Where possible, avoid type-erasure",
+        "anchor": "#Rt-erasure",
+        "title": "T.49: Where possible, avoid type-erasure (#Rt-erasure)"
+    },
+    {
+        "id": "T.60",
+        "caption": "Minimize a template's context dependencies",
+        "anchor": "#Rt-depend",
+        "title": "T.60: Minimize a template's context dependencies (#Rt-depend)"
+    },
+    {
+        "id": "T.61",
+        "caption": "Do not over-parameterize members (SCARY)",
+        "anchor": "#Rt-scary",
+        "title": "T.61: Do not over-parameterize members (SCARY) (#Rt-scary)"
+    },
+    {
+        "id": "T.62",
+        "caption": "Place non-dependent class template members in a non-templated base class",
+        "anchor": "#Rt-nondependent",
+        "title": "T.62: Place non-dependent class template members in a non-templated base class (#Rt-nondependent)"
+    },
+    {
+        "id": "T.64",
+        "caption": "Use specialization to provide alternative implementations of class templates",
+        "anchor": "#Rt-specialization",
+        "title": "T.64: Use specialization to provide alternative implementations of class templates (#Rt-specialization)"
+    },
+    {
+        "id": "T.65",
+        "caption": "Use tag dispatch to provide alternative implementations of functions",
+        "anchor": "#Rt-tag-dispatch",
+        "title": "T.65: Use tag dispatch to provide alternative implementations of functions (#Rt-tag-dispatch)"
+    },
+    {
+        "id": "T.67",
+        "caption": "Use specialization to provide alternative implementations for irregular types",
+        "anchor": "#Rt-specialization2",
+        "title": "T.67: Use specialization to provide alternative implementations for irregular types (#Rt-specialization2)"
+    },
+    {
+        "id": "T.68",
+        "caption": "Use `{},` rather than `()` within templates to avoid ambiguities",
+        "anchor": "#Rt-cast",
+        "title": "T.68: Use `{},` rather than `()` within templates to avoid ambiguities (#Rt-cast)"
+    },
+    {
+        "id": "T.69",
+        "caption": "Inside a template, don't make an unqualified non-member function call unless you intend it to be a customization point",
+        "anchor": "#Rt-customization",
+        "title": "T.69: Inside a template, don't make an unqualified non-member function call unless you intend it to be a customization point (#Rt-customization)"
+    },
+    {
+        "id": "T.80",
+        "caption": "Do not naively templatize a class hierarchy",
+        "anchor": "#Rt-hier",
+        "title": "T.80: Do not naively templatize a class hierarchy (#Rt-hier)"
+    },
+    {
+        "id": "T.81",
+        "caption": "Do not mix hierarchies and arrays",
+        "anchor": "#Rt-array",
+        "title": "T.81: Do not mix hierarchies and arrays (#Rt-array)"
+    },
+    {
+        "id": "T.82",
+        "caption": "Linearize a hierarchy when virtual functions are undesirable",
+        "anchor": "#Rt-linear",
+        "title": "T.82: Linearize a hierarchy when virtual functions are undesirable (#Rt-linear)"
+    },
+    {
+        "id": "T.83",
+        "caption": "Do not declare a member function template virtual",
+        "anchor": "#Rt-virtual",
+        "title": "T.83: Do not declare a member function template virtual (#Rt-virtual)"
+    },
+    {
+        "id": "T.84",
+        "caption": "Use a non-template core implementation to provide an ABI-stable interface",
+        "anchor": "#Rt-abi",
+        "title": "T.84: Use a non-template core implementation to provide an ABI-stable interface (#Rt-abi)"
+    },
+    {
+        "id": "T.100",
+        "caption": "Use variadic templates when you need a function that takes a variable number of arguments of a variety of types",
+        "anchor": "#Rt-variadic",
+        "title": "T.100: Use variadic templates when you need a function that takes a variable number of arguments of a variety of types (#Rt-variadic)"
+    },
+    {
+        "id": "T.101",
+        "caption": "??? How to pass arguments to a variadic template ???",
+        "anchor": "#Rt-variadic-pass",
+        "title": "T.101: ??? How to pass arguments to a variadic template ??? (#Rt-variadic-pass)"
+    },
+    {
+        "id": "T.102",
+        "caption": "??? How to process arguments to a variadic template ???",
+        "anchor": "#Rt-variadic-process",
+        "title": "T.102: ??? How to process arguments to a variadic template ??? (#Rt-variadic-process)"
+    },
+    {
+        "id": "T.103",
+        "caption": "Don't use variadic templates for homogeneous argument lists",
+        "anchor": "#Rt-variadic-not",
+        "title": "T.103: Don't use variadic templates for homogeneous argument lists (#Rt-variadic-not)"
+    },
+    {
+        "id": "T.120",
+        "caption": "Use template metaprogramming only when you really need to",
+        "anchor": "#Rt-metameta",
+        "title": "T.120: Use template metaprogramming only when you really need to (#Rt-metameta)"
+    },
+    {
+        "id": "T.121",
+        "caption": "Use template metaprogramming primarily to emulate concepts",
+        "anchor": "#Rt-emulate",
+        "title": "T.121: Use template metaprogramming primarily to emulate concepts (#Rt-emulate)"
+    },
+    {
+        "id": "T.122",
+        "caption": "Use templates (usually template aliases) to compute types at compile time",
+        "anchor": "#Rt-tmp",
+        "title": "T.122: Use templates (usually template aliases) to compute types at compile time (#Rt-tmp)"
+    },
+    {
+        "id": "T.123",
+        "caption": "Use `constexpr` functions to compute values at compile time",
+        "anchor": "#Rt-fct",
+        "title": "T.123: Use `constexpr` functions to compute values at compile time (#Rt-fct)"
+    },
+    {
+        "id": "T.124",
+        "caption": "Prefer to use standard-library TMP facilities",
+        "anchor": "#Rt-std-tmp",
+        "title": "T.124: Prefer to use standard-library TMP facilities (#Rt-std-tmp)"
+    },
+    {
+        "id": "T.125",
+        "caption": "If you need to go beyond the standard-library TMP facilities, use an existing library",
+        "anchor": "#Rt-lib",
+        "title": "T.125: If you need to go beyond the standard-library TMP facilities, use an existing library (#Rt-lib)"
+    },
+    {
+        "id": "T.140",
+        "caption": "If an operation can be reused, give it a name",
+        "anchor": "#Rt-name",
+        "title": "T.140: If an operation can be reused, give it a name (#Rt-name)"
+    },
+    {
+        "id": "T.141",
+        "caption": "Use an unnamed lambda if you need a simple function object in one place only",
+        "anchor": "#Rt-lambda",
+        "title": "T.141: Use an unnamed lambda if you need a simple function object in one place only (#Rt-lambda)"
+    },
+    {
+        "id": "T.142",
+        "caption": "Use template variables to simplify notation",
+        "anchor": "#Rt-var",
+        "title": "T.142: Use template variables to simplify notation (#Rt-var)"
+    },
+    {
+        "id": "T.143",
+        "caption": "Don't write unintentionally non-generic code",
+        "anchor": "#Rt-non-generic",
+        "title": "T.143: Don't write unintentionally non-generic code (#Rt-non-generic)"
+    },
+    {
+        "id": "T.144",
+        "caption": "Don't specialize function templates",
+        "anchor": "#Rt-specialize-function",
+        "title": "T.144: Don't specialize function templates (#Rt-specialize-function)"
+    },
+    {
+        "id": "T.150",
+        "caption": "Check that a class matches a concept using `static_assert`",
+        "anchor": "#Rt-check-class",
+        "title": "T.150: Check that a class matches a concept using `static_assert` (#Rt-check-class)"
+    },
+    {
+        "id": "CPL.1",
+        "caption": "Prefer C++ to C",
+        "anchor": "#Rcpl-C",
+        "title": "CPL.1: Prefer C++ to C (#Rcpl-C)"
+    },
+    {
+        "id": "CPL.2",
+        "caption": "If you must use C, use the common subset of C and C++, and compile the C code as C++",
+        "anchor": "#Rcpl-subset",
+        "title": "CPL.2: If you must use C, use the common subset of C and C++, and compile the C code as C++ (#Rcpl-subset)"
+    },
+    {
+        "id": "CPL.3",
+        "caption": "If you must use C for interfaces, use C++ in the calling code using such interfaces",
+        "anchor": "#Rcpl-interface",
+        "title": "CPL.3: If you must use C for interfaces, use C++ in the calling code using such interfaces (#Rcpl-interface)"
+    },
+    {
+        "id": "SF.1",
+        "caption": "Use a `.cpp` suffix for code files and `.h` for interface files if your project doesn't already follow another convention",
+        "anchor": "#Rs-file-suffix",
+        "title": "SF.1: Use a `.cpp` suffix for code files and `.h` for interface files if your project doesn't already follow another convention (#Rs-file-suffix)"
+    },
+    {
+        "id": "SF.2",
+        "caption": "A header file must not contain object definitions or non-inline function definitions",
+        "anchor": "#Rs-inline",
+        "title": "SF.2: A header file must not contain object definitions or non-inline function definitions (#Rs-inline)"
+    },
+    {
+        "id": "SF.3",
+        "caption": "Use header files for all declarations used in multiple source files",
+        "anchor": "#Rs-declaration-header",
+        "title": "SF.3: Use header files for all declarations used in multiple source files (#Rs-declaration-header)"
+    },
+    {
+        "id": "SF.4",
+        "caption": "Include header files before other declarations in a file",
+        "anchor": "#Rs-include-order",
+        "title": "SF.4: Include header files before other declarations in a file (#Rs-include-order)"
+    },
+    {
+        "id": "SF.5",
+        "caption": "A `.cpp` file must include the header file(s) that defines its interface",
+        "anchor": "#Rs-consistency",
+        "title": "SF.5: A `.cpp` file must include the header file(s) that defines its interface (#Rs-consistency)"
+    },
+    {
+        "id": "SF.6",
+        "caption": "Use `using namespace` directives for transition, for foundation libraries (such as `std`), or within a local scope (only)",
+        "anchor": "#Rs-using",
+        "title": "SF.6: Use `using namespace` directives for transition, for foundation libraries (such as `std`), or within a local scope (only) (#Rs-using)"
+    },
+    {
+        "id": "SF.7",
+        "caption": "Don't write `using namespace` at global scope in a header file",
+        "anchor": "#Rs-using-directive",
+        "title": "SF.7: Don't write `using namespace` at global scope in a header file (#Rs-using-directive)"
+    },
+    {
+        "id": "SF.8",
+        "caption": "Use `#include` guards for all header files",
+        "anchor": "#Rs-guards",
+        "title": "SF.8: Use `#include` guards for all header files (#Rs-guards)"
+    },
+    {
+        "id": "SF.9",
+        "caption": "Avoid cyclic dependencies among source files",
+        "anchor": "#Rs-cycles",
+        "title": "SF.9: Avoid cyclic dependencies among source files (#Rs-cycles)"
+    },
+    {
+        "id": "SF.10",
+        "caption": "Avoid dependencies on implicitly `#include`d names",
+        "anchor": "#Rs-implicit",
+        "title": "SF.10: Avoid dependencies on implicitly `#include`d names (#Rs-implicit)"
+    },
+    {
+        "id": "SF.11",
+        "caption": "Header files should be self-contained",
+        "anchor": "#Rs-contained",
+        "title": "SF.11: Header files should be self-contained (#Rs-contained)"
+    },
+    {
+        "id": "SF.12",
+        "caption": "Prefer the quoted form of `#include` for files relative to the including file and the angle bracket form everywhere else",
+        "anchor": "#Rs-incform",
+        "title": "SF.12: Prefer the quoted form of `#include` for files relative to the including file and the angle bracket form everywhere else (#Rs-incform)"
+    },
+    {
+        "id": "SF.13",
+        "caption": "Use portable header identifiers in `#include` statements",
+        "anchor": "#Rs-portable-header-id",
+        "title": "SF.13: Use portable header identifiers in `#include` statements (#Rs-portable-header-id)"
+    },
+    {
+        "id": "SF.20",
+        "caption": "Use `namespace`s to express logical structure",
+        "anchor": "#Rs-namespace",
+        "title": "SF.20: Use `namespace`s to express logical structure (#Rs-namespace)"
+    },
+    {
+        "id": "SF.21",
+        "caption": "Don't use an unnamed (anonymous) namespace in a header",
+        "anchor": "#Rs-unnamed",
+        "title": "SF.21: Don't use an unnamed (anonymous) namespace in a header (#Rs-unnamed)"
+    },
+    {
+        "id": "SF.22",
+        "caption": "Use an unnamed (anonymous) namespace for all internal/non-exported entities",
+        "anchor": "#Rs-unnamed2",
+        "title": "SF.22: Use an unnamed (anonymous) namespace for all internal/non-exported entities (#Rs-unnamed2)"
+    },
+    {
+        "id": "SL.con",
+        "caption": "Containers",
+        "anchor": "#SS-con",
+        "title": "SL.con: Containers (#SS-con)"
+    },
+    {
+        "id": "SL.str",
+        "caption": "String",
+        "anchor": "#SS-string",
+        "title": "SL.str: String (#SS-string)"
+    },
+    {
+        "id": "SL.io",
+        "caption": "Iostream",
+        "anchor": "#SS-io",
+        "title": "SL.io: Iostream (#SS-io)"
+    },
+    {
+        "id": "SL.regex",
+        "caption": "Regex",
+        "anchor": "#SS-regex",
+        "title": "SL.regex: Regex (#SS-regex)"
+    },
+    {
+        "id": "SL.chrono",
+        "caption": "Time",
+        "anchor": "#SS-chrono",
+        "title": "SL.chrono: Time (#SS-chrono)"
+    },
+    {
+        "id": "SL.C",
+        "caption": "The C Standard Library",
+        "anchor": "#SS-clib",
+        "title": "SL.C: The C Standard Library (#SS-clib)"
+    },
+    {
+        "id": "SL.1",
+        "caption": "Use libraries wherever possible",
+        "anchor": "#Rsl-lib",
+        "title": "SL.1: Use libraries wherever possible (#Rsl-lib)"
+    },
+    {
+        "id": "SL.2",
+        "caption": "Prefer the standard library to other libraries",
+        "anchor": "#Rsl-sl",
+        "title": "SL.2: Prefer the standard library to other libraries (#Rsl-sl)"
+    },
+    {
+        "id": "SL.3",
+        "caption": "Do not add non-standard entities to namespace `std`",
+        "anchor": "#sl-std",
+        "title": "SL.3: Do not add non-standard entities to namespace `std` (#sl-std)"
+    },
+    {
+        "id": "SL.4",
+        "caption": "Use the standard library in a type-safe manner",
+        "anchor": "#sl-safe",
+        "title": "SL.4: Use the standard library in a type-safe manner (#sl-safe)"
+    },
+    {
+        "id": "SL.4",
+        "caption": "Use the standard library in a type-safe manner",
+        "anchor": "#sl-safe",
+        "title": "SL.4: Use the standard library in a type-safe manner (#sl-safe)"
+    },
+    {
+        "id": "SL.con.1",
+        "caption": "Prefer using STL `array` or `vector` instead of a C array",
+        "anchor": "#Rsl-arrays",
+        "title": "SL.con.1: Prefer using STL `array` or `vector` instead of a C array (#Rsl-arrays)"
+    },
+    {
+        "id": "SL.con.2",
+        "caption": "Prefer using STL `vector` by default unless you have a reason to use a different container",
+        "anchor": "#Rsl-vector",
+        "title": "SL.con.2: Prefer using STL `vector` by default unless you have a reason to use a different container (#Rsl-vector)"
+    },
+    {
+        "id": "SL.con.3",
+        "caption": "Avoid bounds errors",
+        "anchor": "#Rsl-bounds",
+        "title": "SL.con.3: Avoid bounds errors (#Rsl-bounds)"
+    },
+    {
+        "id": "SL.con.4",
+        "caption": "don't use `memset` or `memcpy` for arguments that are not trivially-copyable",
+        "anchor": "#Rsl-copy",
+        "title": "SL.con.4: don't use `memset` or `memcpy` for arguments that are not trivially-copyable (#Rsl-copy)"
+    },
+    {
+        "id": "SL.str.1",
+        "caption": "Use `std::string` to own character sequences",
+        "anchor": "#Rstr-string",
+        "title": "SL.str.1: Use `std::string` to own character sequences (#Rstr-string)"
+    },
+    {
+        "id": "SL.str.2",
+        "caption": "Use `std::string_view` or `gsl::span<char>` to refer to character sequences",
+        "anchor": "#Rstr-view",
+        "title": "SL.str.2: Use `std::string_view` or `gsl::span<char>` to refer to character sequences (#Rstr-view)"
+    },
+    {
+        "id": "SL.str.3",
+        "caption": "Use `zstring` or `czstring` to refer to a C-style, zero-terminated, sequence of characters",
+        "anchor": "#Rstr-zstring",
+        "title": "SL.str.3: Use `zstring` or `czstring` to refer to a C-style, zero-terminated, sequence of characters (#Rstr-zstring)"
+    },
+    {
+        "id": "SL.str.4",
+        "caption": "Use `char*` to refer to a single character",
+        "anchor": "#Rstr-char*",
+        "title": "SL.str.4: Use `char*` to refer to a single character (#Rstr-char*)"
+    },
+    {
+        "id": "SL.str.5",
+        "caption": "Use `std::byte` to refer to byte values that do not necessarily represent characters",
+        "anchor": "#Rstr-byte",
+        "title": "SL.str.5: Use `std::byte` to refer to byte values that do not necessarily represent characters (#Rstr-byte)"
+    },
+    {
+        "id": "SL.str.10",
+        "caption": "Use `std::string` when you need to perform locale-sensitive string operations",
+        "anchor": "#Rstr-locale",
+        "title": "SL.str.10: Use `std::string` when you need to perform locale-sensitive string operations (#Rstr-locale)"
+    },
+    {
+        "id": "SL.str.11",
+        "caption": "Use `gsl::span<char>` rather than `std::string_view` when you need to mutate a string",
+        "anchor": "#Rstr-span",
+        "title": "SL.str.11: Use `gsl::span<char>` rather than `std::string_view` when you need to mutate a string (#Rstr-span)"
+    },
+    {
+        "id": "SL.str.12",
+        "caption": "Use the `s` suffix for string literals meant to be standard-library `string`s",
+        "anchor": "#Rstr-s",
+        "title": "SL.str.12: Use the `s` suffix for string literals meant to be standard-library `string`s (#Rstr-s)"
+    },
+    {
+        "id": "SL.io.1",
+        "caption": "Use character-level input only when you have to",
+        "anchor": "#Rio-low",
+        "title": "SL.io.1: Use character-level input only when you have to (#Rio-low)"
+    },
+    {
+        "id": "SL.io.2",
+        "caption": "When reading, always consider ill-formed input",
+        "anchor": "#Rio-validate",
+        "title": "SL.io.2: When reading, always consider ill-formed input (#Rio-validate)"
+    },
+    {
+        "id": "SL.io.3",
+        "caption": "Prefer iostreams for I/O",
+        "anchor": "#Rio-streams",
+        "title": "SL.io.3: Prefer iostreams for I/O (#Rio-streams)"
+    },
+    {
+        "id": "SL.io.10",
+        "caption": "Unless you use `printf`-family functions call `ios_base::sync_with_stdio(false)`",
+        "anchor": "#Rio-sync",
+        "title": "SL.io.10: Unless you use `printf`-family functions call `ios_base::sync_with_stdio(false)` (#Rio-sync)"
+    },
+    {
+        "id": "SL.io.50",
+        "caption": "Avoid `endl`",
+        "anchor": "#Rio-endl",
+        "title": "SL.io.50: Avoid `endl` (#Rio-endl)"
+    },
+    {
+        "id": "SL.C.1",
+        "caption": "Don't use setjmp/longjmp",
+        "anchor": "#Rclib-jmp",
+        "title": "SL.C.1: Don't use setjmp/longjmp (#Rclib-jmp)"
+    },
+    {
+        "id": "A.1",
+        "caption": "Separate stable code from less stable code",
+        "anchor": "#Ra-stable",
+        "title": "A.1: Separate stable code from less stable code (#Ra-stable)"
+    },
+    {
+        "id": "A.2",
+        "caption": "Express potentially reusable parts as a library",
+        "anchor": "#Ra-lib",
+        "title": "A.2: Express potentially reusable parts as a library (#Ra-lib)"
+    },
+    {
+        "id": "A.4",
+        "caption": "There should be no cycles among libraries",
+        "anchor": "#Ra-dag",
+        "title": "A.4: There should be no cycles among libraries (#Ra-dag)"
+    },
+    {
+        "id": "NR.1",
+        "caption": "Don't insist that all declarations should be at the top of a function",
+        "anchor": "#Rnr-top",
+        "title": "NR.1: Don't insist that all declarations should be at the top of a function (#Rnr-top)"
+    },
+    {
+        "id": "NR.2",
+        "caption": "Don't insist to have only a single `return`-statement in a function",
+        "anchor": "#Rnr-single-return",
+        "title": "NR.2: Don't insist to have only a single `return`-statement in a function (#Rnr-single-return)"
+    },
+    {
+        "id": "NR.3",
+        "caption": "Don't avoid exceptions",
+        "anchor": "#Rnr-no-exceptions",
+        "title": "NR.3: Don't avoid exceptions (#Rnr-no-exceptions)"
+    },
+    {
+        "id": "NR.4",
+        "caption": "Don't insist on placing each class definition in its own source file",
+        "anchor": "#Rnr-lots-of-files",
+        "title": "NR.4: Don't insist on placing each class definition in its own source file (#Rnr-lots-of-files)"
+    },
+    {
+        "id": "NR.5",
+        "caption": "Don't use two-phase initialization",
+        "anchor": "#Rnr-two-phase-init",
+        "title": "NR.5: Don't use two-phase initialization (#Rnr-two-phase-init)"
+    },
+    {
+        "id": "NR.6",
+        "caption": "Don't place all cleanup actions at the end of a function and `goto exit`",
+        "anchor": "#Rnr-goto-exit",
+        "title": "NR.6: Don't place all cleanup actions at the end of a function and `goto exit` (#Rnr-goto-exit)"
+    },
+    {
+        "id": "NR.7",
+        "caption": "Don't make all data members `protected`",
+        "anchor": "#Rnr-protected-data",
+        "title": "NR.7: Don't make all data members `protected` (#Rnr-protected-data)"
+    },
+    {
+        "id": "RF.rules",
+        "caption": "Coding rules",
+        "anchor": "#SS-rules",
+        "title": "RF.rules: Coding rules (#SS-rules)"
+    },
+    {
+        "id": "RF.books",
+        "caption": "Books with coding guidelines",
+        "anchor": "#SS-books",
+        "title": "RF.books: Books with coding guidelines (#SS-books)"
+    },
+    {
+        "id": "RF.C++",
+        "caption": "C++ Programming (C++11/C++14/C++17)",
+        "anchor": "#SS-Cplusplus",
+        "title": "RF.C++: C++ Programming (C++11/C++14/C++17) (#SS-Cplusplus)"
+    },
+    {
+        "id": "RF.web",
+        "caption": "Websites",
+        "anchor": "#SS-web",
+        "title": "RF.web: Websites (#SS-web)"
+    },
+    {
+        "id": "RS.video",
+        "caption": "Videos about \"modern C++\"",
+        "anchor": "#SS-vid",
+        "title": "RS.video: Videos about \"modern C++\" (#SS-vid)"
+    },
+    {
+        "id": "RF.man",
+        "caption": "Manuals",
+        "anchor": "#SS-man",
+        "title": "RF.man: Manuals (#SS-man)"
+    },
+    {
+        "id": "RF.core",
+        "caption": "Core Guidelines materials",
+        "anchor": "#SS-core",
+        "title": "RF.core: Core Guidelines materials (#SS-core)"
+    },
+    {
+        "id": "Pro.type",
+        "caption": "Type safety",
+        "anchor": "#SS-type",
+        "title": "Pro.type: Type safety (#SS-type)"
+    },
+    {
+        "id": "Pro.bounds",
+        "caption": "Bounds safety",
+        "anchor": "#SS-bounds",
+        "title": "Pro.bounds: Bounds safety (#SS-bounds)"
+    },
+    {
+        "id": "Pro.lifetime",
+        "caption": "Lifetime safety",
+        "anchor": "#SS-lifetime",
+        "title": "Pro.lifetime: Lifetime safety (#SS-lifetime)"
+    },
+    {
+        "id": "GSL.view",
+        "caption": "Views",
+        "anchor": "#SS-views",
+        "title": "GSL.view: Views (#SS-views)"
+    },
+    {
+        "id": "GSL.owner",
+        "caption": "Ownership pointers",
+        "anchor": "#SS-ownership",
+        "title": "GSL.owner: Ownership pointers (#SS-ownership)"
+    },
+    {
+        "id": "GSL.assert",
+        "caption": "Assertions",
+        "anchor": "#SS-assertions",
+        "title": "GSL.assert: Assertions (#SS-assertions)"
+    },
+    {
+        "id": "GSL.util",
+        "caption": "Utilities",
+        "anchor": "#SS-utilities",
+        "title": "GSL.util: Utilities (#SS-utilities)"
+    },
+    {
+        "id": "GSL.concept",
+        "caption": "Concepts",
+        "anchor": "#SS-gsl-concepts",
+        "title": "GSL.concept: Concepts (#SS-gsl-concepts)"
+    },
+    {
+        "id": "NL.1",
+        "caption": "Don't say in comments what can be clearly stated in code",
+        "anchor": "#Rl-comments",
+        "title": "NL.1: Don't say in comments what can be clearly stated in code (#Rl-comments)"
+    },
+    {
+        "id": "NL.2",
+        "caption": "State intent in comments",
+        "anchor": "#Rl-comments-intent",
+        "title": "NL.2: State intent in comments (#Rl-comments-intent)"
+    },
+    {
+        "id": "NL.3",
+        "caption": "Keep comments crisp",
+        "anchor": "#Rl-comments-crisp",
+        "title": "NL.3: Keep comments crisp (#Rl-comments-crisp)"
+    },
+    {
+        "id": "NL.4",
+        "caption": "Maintain a consistent indentation style",
+        "anchor": "#Rl-indent",
+        "title": "NL.4: Maintain a consistent indentation style (#Rl-indent)"
+    },
+    {
+        "id": "NL.5",
+        "caption": "Avoid encoding type information in names",
+        "anchor": "#Rl-name-type",
+        "title": "NL.5: Avoid encoding type information in names (#Rl-name-type)"
+    },
+    {
+        "id": "NL.7",
+        "caption": "Make the length of a name roughly proportional to the length of its scope",
+        "anchor": "#Rl-name-length",
+        "title": "NL.7: Make the length of a name roughly proportional to the length of its scope (#Rl-name-length)"
+    },
+    {
+        "id": "NL.8",
+        "caption": "Use a consistent naming style",
+        "anchor": "#Rl-name",
+        "title": "NL.8: Use a consistent naming style (#Rl-name)"
+    },
+    {
+        "id": "NL.9",
+        "caption": "Use `ALL_CAPS` for macro names only",
+        "anchor": "#Rl-all-caps",
+        "title": "NL.9: Use `ALL_CAPS` for macro names only (#Rl-all-caps)"
+    },
+    {
+        "id": "NL.10",
+        "caption": "Prefer `underscore_style` names",
+        "anchor": "#Rl-camel",
+        "title": "NL.10: Prefer `underscore_style` names (#Rl-camel)"
+    },
+    {
+        "id": "NL.11",
+        "caption": "Make literals readable",
+        "anchor": "#Rl-literals",
+        "title": "NL.11: Make literals readable (#Rl-literals)"
+    },
+    {
+        "id": "NL.15",
+        "caption": "Use spaces sparingly",
+        "anchor": "#Rl-space",
+        "title": "NL.15: Use spaces sparingly (#Rl-space)"
+    },
+    {
+        "id": "NL.16",
+        "caption": "Use a conventional class member declaration order",
+        "anchor": "#Rl-order",
+        "title": "NL.16: Use a conventional class member declaration order (#Rl-order)"
+    },
+    {
+        "id": "NL.17",
+        "caption": "Use K&R-derived layout",
+        "anchor": "#Rl-knr",
+        "title": "NL.17: Use K&R-derived layout (#Rl-knr)"
+    },
+    {
+        "id": "NL.18",
+        "caption": "Use C++-style declarator layout",
+        "anchor": "#Rl-ptr",
+        "title": "NL.18: Use C++-style declarator layout (#Rl-ptr)"
+    },
+    {
+        "id": "NL.19",
+        "caption": "Avoid names that are easily misread",
+        "anchor": "#Rl-misread",
+        "title": "NL.19: Avoid names that are easily misread (#Rl-misread)"
+    },
+    {
+        "id": "NL.20",
+        "caption": "Don't place two statements on the same line",
+        "anchor": "#Rl-stmt",
+        "title": "NL.20: Don't place two statements on the same line (#Rl-stmt)"
+    },
+    {
+        "id": "NL.21",
+        "caption": "Declare one name (only) per declaration",
+        "anchor": "#Rl-dcl",
+        "title": "NL.21: Declare one name (only) per declaration (#Rl-dcl)"
+    },
+    {
+        "id": "NL.25",
+        "caption": "Don't use `void` as an argument type",
+        "anchor": "#Rl-void",
+        "title": "NL.25: Don't use `void` as an argument type (#Rl-void)"
+    },
+    {
+        "id": "NL.26",
+        "caption": "Use conventional `const` notation",
+        "anchor": "#Rl-const",
+        "title": "NL.26: Use conventional `const` notation (#Rl-const)"
+    },
+    {
+        "id": "NL.27",
+        "caption": "Use a `.cpp` suffix for code files and `.h` for interface files",
+        "anchor": "#Rl-file-suffix",
+        "title": "NL.27: Use a `.cpp` suffix for code files and `.h` for interface files (#Rl-file-suffix)"
+    }
+]
