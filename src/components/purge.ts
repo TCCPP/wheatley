@@ -14,6 +14,7 @@ import { pluralize } from "../utils/strings.js";
 import { SelfClearingMap } from "../utils/containers.js";
 import { url_re } from "./quote.js";
 import { ascending, unwrap } from "../utils/misc.js";
+import { MessageContextMenuInteractionBuilder } from "../command-abstractions/context-menu.js";
 
 /**
  * Adds a !purge command.
@@ -89,6 +90,12 @@ export default class Purge extends BotComponent {
                         })
                         .set_handler(this.purge_user.bind(this)),
                 ),
+        );
+
+        this.add_command(
+            new MessageContextMenuInteractionBuilder("Purge message")
+                .set_permissions(Discord.PermissionFlagsBits.BanMembers)
+                .set_handler(this.purge_message.bind(this)),
         );
 
         this.add_command(
@@ -311,5 +318,13 @@ export default class Purge extends BotComponent {
             false,
             (message: Discord.Message) => message.author.id == user.id,
         );
+    }
+
+    async purge_message(interaction: Discord.MessageContextMenuCommandInteraction) {
+        await interaction.targetMessage.delete();
+        await interaction.reply({
+            content: "Message deleted",
+            ephemeral: true,
+        });
     }
 }
