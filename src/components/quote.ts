@@ -70,7 +70,7 @@ export async function make_quote_embeds(
     template = "\n\nFrom <##> [[Jump to message]]($$)",
 ): Promise<{
     embeds: (Discord.EmbedBuilder | Discord.Embed)[];
-    files?: Discord.AttachmentPayload[];
+    files?: (Discord.AttachmentPayload | Discord.Attachment)[];
 }> {
     assert(messages.length >= 1);
     const head = messages[0];
@@ -94,7 +94,7 @@ export async function make_quote_embeds(
     }
     type MediaDescriptor = {
         type: "image" | "video";
-        url: string;
+        attachment: Discord.Attachment;
     };
     const media: MediaDescriptor[] = messages
         .map(
@@ -104,29 +104,29 @@ export async function make_quote_embeds(
                         .filter(a => a.contentType?.indexOf("image") == 0)
                         .map(a => ({
                             type: "image",
-                            url: a.url,
+                            attachment: a,
                         })),
                     ...message.attachments
                         .filter(a => a.contentType?.indexOf("video") == 0)
                         .map(a => ({
                             type: "video",
-                            url: a.url,
-                            additional_data: {
-                                width: a.width,
-                                height: a.height,
-                            },
+                            attachment: a,
                         })),
                     ...message.embeds.filter(is_media_link_embed).map(e => {
                         if (e.image || e.thumbnail) {
                             // Webp can be thumbnail only, no image. Very weird.
                             return {
                                 type: "image",
-                                url: unwrap(unwrap(e.image || e.thumbnail).url),
+                                attachment: {
+                                    url: unwrap(unwrap(e.image || e.thumbnail).url),
+                                } as Discord.Attachment,
                             };
                         } else if (e.video) {
                             return {
                                 type: "video",
-                                url: unwrap(e.video.url),
+                                attachment: {
+                                    url: unwrap(e.video.url),
+                                } as Discord.Attachment,
                             };
                         } else {
                             assert(false);
@@ -137,7 +137,7 @@ export async function make_quote_embeds(
         .flat();
     const other_embeds = messages.map(message => message.embeds.filter(e => !is_media_link_embed(e))).flat();
     const media_embeds: Discord.EmbedBuilder[] = [];
-    const attachments: Discord.AttachmentPayload[] = [];
+    const attachments: Discord.Attachment[] = [];
     const other_attachments: Discord.AttachmentPayload[] = messages
         .map(message => [
             ...message.attachments
@@ -153,23 +153,20 @@ export async function make_quote_embeds(
         for (const medium of media) {
             if (medium.type == "image") {
                 if (!set_primary_image) {
-                    embed.setImage(medium.url);
+                    embed.setImage(medium.attachment.url);
                     set_primary_image = true;
                 } else {
                     media_embeds.push(
                         new Discord.EmbedBuilder({
                             image: {
-                                url: medium.url,
+                                url: medium.attachment.url,
                             },
                         }),
                     );
                 }
             } else {
                 // video
-                attachments.push({
-                    attachment: medium.url,
-                    name: filename(medium.url),
-                });
+                attachments.push(medium.attachment);
             }
         }
     }
@@ -282,7 +279,7 @@ export default class Quote extends BotComponent {
 
     async do_quote(command: TextBasedCommand, messages: QuoteDescriptor[]) {
         const embeds: (Discord.EmbedBuilder | Discord.Embed)[] = [];
-        const files: Discord.AttachmentPayload[] = [];
+        const files: (Discord.AttachmentPayload | Discord.Attachment)[] = [];
         for (const { domain, channel_id, message_id, block } of messages) {
             const channel = await this.wheatley.TCCPP.channels.fetch(channel_id);
             if (
