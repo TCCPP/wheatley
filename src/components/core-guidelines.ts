@@ -20,6 +20,7 @@ export class CoreGuidelinesIndex {
 
     setup_index(index_data: core_guidelines_index) {
         this.index = new Index(index_data, (title: string) => [title.toLowerCase()]);
+        this.index.set_threshold(0.3);
     }
 
     async load_data() {

@@ -2898,12 +2898,6 @@
         "title": "SL.4: Use the standard library in a type-safe manner (#sl-safe)"
     },
     {
-        "id": "SL.4",
-        "caption": "Use the standard library in a type-safe manner",
-        "anchor": "#sl-safe",
-        "title": "SL.4: Use the standard library in a type-safe manner (#sl-safe)"
-    },
-    {
         "id": "SL.con.1",
         "caption": "Prefer using STL `array` or `vector` instead of a C array",
         "anchor": "#Rsl-arrays",
