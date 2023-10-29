@@ -203,6 +203,54 @@ export default class ForumChannels extends BotComponent {
         }, 60 * MINUTE);
     }
 
+    async handle_message_for_solved_prompt(message: Discord.Message) {
+        // solved prompt logic
+        const thread = message.channel;
+        assert(thread instanceof Discord.ThreadChannel);
+        const forum = thread.parent;
+        assert(forum instanceof Discord.ForumChannel);
+        const solved_tag = get_tag(forum, "Solved").id;
+        if (!thread.appliedTags.includes(solved_tag)) {
+            // if this is an unsolved help forum post... check if we need to start or restart a timeout
+            const op = thread.ownerId;
+            assert(op, "Assumption: Can only happen if uncached.");
+            if (message.author.id == op) {
+                const content = message.content.toLowerCase();
+                if (content.match(thank_you_re) != null) {
+                    if (!this.possibly_resolved.has(thread.id)) {
+                        M.debug(
+                            "Setting !solved prompt timeout for thread",
+                            thread.id,
+                            thread.name,
+                            thread.url,
+                            "based off of",
+                            message.url,
+                        );
+                        this.timeout_map.set(
+                            thread.id,
+                            setTimeout(() => {
+                                this.prompt_close(thread).catch(critical_error);
+                            }, thank_you_timeout),
+                        );
+                        this.possibly_resolved.insert(thread.id);
+                        return;
+                    }
+                }
+            }
+            // if we reach here, it's a non-thank message
+            // might need to restart the timeout
+            if (this.timeout_map.has(thread.id)) {
+                clearTimeout(this.timeout_map.get(thread.id));
+                this.timeout_map.set(
+                    thread.id,
+                    setTimeout(() => {
+                        this.prompt_close(thread).catch(critical_error);
+                    }, thank_you_timeout),
+                );
+            }
+        }
+    }
+
     override async on_message_create(message: Discord.Message) {
         // Ignore bots and thread create messages
         if (message.author.bot || message.type == Discord.MessageType.ThreadCreated) {
@@ -237,53 +285,8 @@ export default class ForumChannels extends BotComponent {
                 });
             }
         } else {
-            if (channel instanceof Discord.ThreadChannel) {
-                const thread = channel;
-                if (this.wheatley.is_forum_help_thread(thread)) {
-                    // solved prompt logic
-                    const forum = thread.parent;
-                    assert(forum instanceof Discord.ForumChannel);
-                    const solved_tag = get_tag(forum, "Solved").id;
-                    if (!thread.appliedTags.includes(solved_tag)) {
-                        // if this is an unsolved help forum post... check if we need to start or restart a timeout
-                        const op = thread.ownerId;
-                        assert(op, "Assumption: Can only happen if uncached.");
-                        if (message.author.id == op) {
-                            const content = message.content.toLowerCase();
-                            if (content.match(thank_you_re) != null) {
-                                if (!this.possibly_resolved.has(thread.id)) {
-                                    M.debug(
-                                        "Setting !solved prompt timeout for thread",
-                                        thread.id,
-                                        thread.name,
-                                        thread.url,
-                                        "based off of",
-                                        message.url,
-                                    );
-                                    this.timeout_map.set(
-                                        thread.id,
-                                        setTimeout(() => {
-                                            this.prompt_close(thread).catch(critical_error);
-                                        }, thank_you_timeout),
-                                    );
-                                    this.possibly_resolved.insert(thread.id);
-                                    return;
-                                }
-                            }
-                        }
-                        // if we reach here, it's a non-thank message
-                        // might need to restart the timeout
-                        if (this.timeout_map.has(thread.id)) {
-                            clearTimeout(this.timeout_map.get(thread.id));
-                            this.timeout_map.set(
-                                thread.id,
-                                setTimeout(() => {
-                                    this.prompt_close(thread).catch(critical_error);
-                                }, thank_you_timeout),
-                            );
-                        }
-                    }
-                }
+            if (channel instanceof Discord.ThreadChannel && this.wheatley.is_forum_help_thread(channel)) {
+                await this.handle_message_for_solved_prompt(message);
             }
         }
     }
