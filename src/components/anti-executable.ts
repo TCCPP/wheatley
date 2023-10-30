@@ -1,15 +1,12 @@
 import * as Discord from "discord.js";
-import fs from "fs";
 import * as https from "https";
 
 import { strict as assert } from "assert";
 
-import { M, critical_error, ignorable_error } from "../utils/debugging-and-logging.js";
+import { M, critical_error } from "../utils/debugging-and-logging.js";
 import { colors } from "../common.js";
 import { BotComponent } from "../bot-component.js";
-import { Wheatley, create_error_reply } from "../wheatley.js";
-import { TextBasedCommandBuilder } from "../command-abstractions/text-based-command-builder.js";
-import { TextBasedCommand } from "../command-abstractions/text-based-command.js";
+import { Wheatley } from "../wheatley.js";
 import { build_description, capitalize } from "../utils/strings.js";
 import { make_quote_embeds } from "./quote.js";
 
@@ -21,23 +18,8 @@ export default class AntiExecutable extends BotComponent {
         return true;
     }
 
-    static readonly quarantine = "XX_QUARANTINE_XX";
-    counter = 0;
-
     constructor(wheatley: Wheatley) {
         super(wheatley);
-    }
-
-    override async setup() {
-        // remove quarantine
-        try {
-            await fs.promises.stat(AntiExecutable.quarantine);
-            await fs.promises.rm(AntiExecutable.quarantine, { recursive: true, force: true });
-        } catch {
-            // fs.access failed
-        }
-        // make quarantine
-        await fs.promises.mkdir(AntiExecutable.quarantine);
     }
 
     // Elf:  0x7F 0x45 0x4c 0x46 at offset 0
@@ -66,7 +48,7 @@ export default class AntiExecutable extends BotComponent {
         return false;
     }
 
-    fetch_start(url: string) {
+    fetch(url: string, limit?: number) {
         return new Promise<Buffer>((resolve, reject) => {
             let buffer = Buffer.alloc(0);
             https
@@ -76,7 +58,7 @@ export default class AntiExecutable extends BotComponent {
                     }
                     res.on("data", chunk => {
                         buffer = Buffer.concat([buffer, chunk]);
-                        if (buffer.length >= 64) {
+                        if (limit !== undefined && buffer.length >= limit) {
                             res.destroy();
                             resolve(buffer);
                         }
@@ -91,68 +73,64 @@ export default class AntiExecutable extends BotComponent {
         });
     }
 
-    fetch_to_file(url: string, filename: string) {
-        return new Promise<void>((resolve, reject) => {
-            const file = fs.createWriteStream(filename);
-            file.on("finish", resolve);
-            file.on("error", reject);
-            https
-                .get(url, res => {
-                    if (res.statusCode !== 200) {
-                        throw new Error(`Request failed status code: ${res.statusCode}`);
-                    }
-                    res.pipe(file);
-                    res.on("error", reject);
-                })
-                .on("error", reject)
-                .end();
+    async virustotal_scan(file_buffer: Buffer, flag_messsage: Discord.Message) {
+        const res = await this.wheatley.virustotal.upload(file_buffer);
+        const bad_count = res.stats.suspicious + res.stats.malicious;
+        await flag_messsage.reply({
+            embeds: [
+                new Discord.EmbedBuilder()
+                    .setColor(bad_count > 0 ? colors.red : colors.wheatley)
+                    .setTitle("VirusTotal result")
+                    .setURL(res.url)
+                    .setDescription(
+                        build_description(
+                            ...Object.entries(res.stats).map(([name, count]) => `${capitalize(name)}: ${count}`),
+                        ),
+                    ),
+            ],
         });
     }
 
-    override async on_message_create(message: Discord.Message<boolean>) {
+    async handle_executables(message: Discord.Message, attachments: Discord.Attachment[]) {
+        const quote = await make_quote_embeds([message], null, this.wheatley, true);
+        await message.delete();
+        await message.channel.send(`<@${message.author.id}> Please do not send executable files`);
+        const flag_messsage = await this.wheatley.channels.staff_flag_log.send({
+            content: `:warning: Executable file detected`,
+            ...quote,
+        });
+        await Promise.all(
+            attachments.map(async attachment => {
+                // download
+                let file_buffer: Buffer;
+                try {
+                    file_buffer = await this.fetch(attachment.url);
+                } catch (e) {
+                    critical_error(e);
+                    return;
+                }
+                // virustotal
+                if (!this.wheatley.freestanding) {
+                    await this.virustotal_scan(file_buffer, flag_messsage);
+                }
+            }),
+        );
+    }
+
+    override async on_message_create(message: Discord.Message) {
         if (message.author.bot) {
             return;
         }
         if (message.attachments.size > 0) {
+            const executables: Discord.Attachment[] = [];
             for (const [_, attachment] of message.attachments) {
-                const res = await this.fetch_start(attachment.url);
+                const res = await this.fetch(attachment.url, 64);
                 if (this.looks_like_executable(res)) {
-                    const quote = await make_quote_embeds([message], null, this.wheatley, true);
-                    await message.delete();
-                    await message.channel.send(`<@${message.author.id}> Please do not send executable files`);
-                    const flag_messsage = await this.wheatley.channels.staff_flag_log.send({
-                        content: `:warning: Executable file detected`,
-                        ...quote,
-                    });
-                    // download
-                    const filename = `${AntiExecutable.quarantine}/attachment_${this.counter++}`;
-                    try {
-                        await this.fetch_to_file(attachment.url, filename);
-                    } catch (e) {
-                        critical_error(e);
-                        return;
-                    }
-                    // virustotal
-                    if (!this.wheatley.freestanding) {
-                        const res = await this.wheatley.virustotal.upload(filename);
-                        const bad_count = res.stats.suspicious + res.stats.malicious;
-                        await flag_messsage.reply({
-                            embeds: [
-                                new Discord.EmbedBuilder()
-                                    .setColor(bad_count > 0 ? colors.red : colors.wheatley)
-                                    .setTitle("VirusTotal result")
-                                    .setURL(res.url)
-                                    .setDescription(
-                                        build_description(
-                                            ...Object.entries(res.stats).map(
-                                                ([name, count]) => `${capitalize(name)}: ${count}`,
-                                            ),
-                                        ),
-                                    ),
-                            ],
-                        });
-                    }
+                    executables.push(attachment);
                 }
+            }
+            if (executables.length > 0) {
+                await this.handle_executables(message, executables);
             }
         }
     }

@@ -264,7 +264,7 @@ export class Wheatley extends EventEmitter {
             this.database = await WheatleyDatabase.create(auth.mongo);
         }
         assert(this.freestanding || auth.virustotal, "Missing virustotal api key");
-        if (!this.freestanding || auth.virustotal) {
+        if (!this.freestanding) {
             this.virustotal = new Virustotal(auth);
         }
 
