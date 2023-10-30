@@ -91,7 +91,7 @@ export default class AntiExecutable extends BotComponent {
         });
     }
 
-    async handle_executables(message: Discord.Message, attachments: Discord.Attachment[]) {
+    async handle_executables(message: Discord.Message, executables: Discord.Attachment[]) {
         const quote = await make_quote_embeds([message], null, this.wheatley, true);
         await message.delete();
         await message.channel.send(`<@${message.author.id}> Please do not send executable files`);
@@ -100,11 +100,11 @@ export default class AntiExecutable extends BotComponent {
             ...quote,
         });
         await Promise.all(
-            attachments.map(async attachment => {
+            executables.map(async executable => {
                 // download
                 let file_buffer: Buffer;
                 try {
-                    file_buffer = await this.fetch(attachment.url);
+                    file_buffer = await this.fetch(executable.url);
                 } catch (e) {
                     critical_error(e);
                     return;
