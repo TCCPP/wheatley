@@ -252,6 +252,38 @@ export default class ForumChannels extends BotComponent {
         }
     }
 
+    async mirror_forum_post(message: Discord.Message, thread: Discord.ThreadChannel) {
+        const lines: string[] = [];
+        let in_code = false;
+        for (const line of message.content.split("\n")) {
+            lines.push(line);
+            if ((line.match(/```/g) || []).length % 2 == 1) {
+                in_code = !in_code;
+            }
+            if (lines.length >= 7) {
+                lines.push("...");
+                if (in_code) {
+                    lines.push("```");
+                }
+                break;
+            }
+        }
+        const content = lines
+            .join("\n")
+            .replaceAll(/```\s*```/g, "")
+            .replaceAll(/\s+$/g, "")
+            .replaceAll(/\n{2,}/g, "\n\n");
+        // mirror to the text channel
+        const text_channel = this.wheatley.get_corresponding_text_help_channel(thread);
+        const quote = await make_quote_embeds([message], null, this.wheatley, true, {
+            no_extra_media_embeds: true,
+            custom_content: content,
+        });
+        // ninja in a title
+        (quote.embeds[0] as Discord.EmbedBuilder).setTitle(`New question: ${thread.name}`);
+        await text_channel.send(quote);
+    }
+
     override async on_message_create(message: Discord.Message) {
         // Ignore bots and thread create messages
         if (message.author.bot || message.type == Discord.MessageType.ThreadCreated) {
@@ -285,14 +317,7 @@ export default class ForumChannels extends BotComponent {
                     ],
                 });
             }
-            // mirror to the text channel
-            const text_channel = this.wheatley.get_corresponding_text_help_channel(thread);
-            const quote = await make_quote_embeds([message], null, this.wheatley, true, {
-                no_extra_media_embeds: true,
-            });
-            // ninja in a title
-            (quote.embeds[0] as Discord.EmbedBuilder).setTitle(`New question: ${thread.name}`);
-            await text_channel.send(quote);
+            await this.mirror_forum_post(message, thread);
         } else {
             if (channel instanceof Discord.ThreadChannel && this.wheatley.is_forum_help_thread(channel)) {
                 await this.handle_message_for_solved_prompt(message);

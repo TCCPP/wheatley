@@ -66,6 +66,8 @@ type quote_options = {
     template?: string;
     // only include an image in the single embed, omit all other media or attachments
     no_extra_media_embeds?: boolean;
+    // override message content
+    custom_content?: string;
 };
 
 // TODO: Since taking Wheatley as a parameter, maybe just move to Wheatley
@@ -81,7 +83,7 @@ export async function make_quote_embeds(
 }> {
     assert(messages.length >= 1);
     const head = messages[0];
-    const contents = messages.map(m => m.content).join("\n");
+    const contents = options?.custom_content ?? messages.map(m => m.content).join("\n");
     const template = options?.template ?? "\n\nFrom <##> [[Jump to message]]($$)";
     const template_string = template.replaceAll("##", "#" + head.channel.id).replaceAll("$$", head.url);
     const embed = new Discord.EmbedBuilder()
