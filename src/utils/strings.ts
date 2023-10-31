@@ -2,6 +2,7 @@ import * as Discord from "discord.js";
 import XXH from "xxhashjs";
 import { DAY, HOUR, MINUTE, MONTH, YEAR } from "../common.js";
 import { round } from "./misc.js";
+import { remove } from "./typing.js";
 
 export function pluralize(n: number, word: string, round_to: null | number = null) {
     if (n == 1) {
@@ -105,7 +106,9 @@ export function wrap(str: string, thing: string | [string, string]) {
 // Takes an array of lines and joins them, skips null entries. This is a helper function to make building descriptions
 // and conditionally excluding lines more ergonomic
 export function build_description(...lines: (string | null)[]) {
-    return lines.filter(x => x !== null).join("\n");
+    return remove(lines, null)
+        .map(line => line.trim())
+        .join("\n");
 }
 
 export function to_string(obj: any) {
