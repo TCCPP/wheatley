@@ -11,6 +11,7 @@
         "@types/ws": "^8.5.8",
         "@types/xxhashjs": "^0.2.3",
         "any-ascii": "^0.3.2",
+        "axios": "^1.6.0",
         "chalk": "<5.0.0",
         "discord.js": "^14.13.0",
         "moment": "^2.29.4",

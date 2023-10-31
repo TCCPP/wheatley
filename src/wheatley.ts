@@ -25,6 +25,7 @@ import { WheatleyDatabase, WheatleyDatabaseProxy } from "./infra/database-interf
 import { GuildCommandManager } from "./infra/guild-command-manager.js";
 import { MemberTracker } from "./infra/member-tracker.js";
 import { forge_snowflake } from "./components/snowflake.js";
+import { Virustotal } from "./infra/virustotal.js";
 
 export function create_basic_embed(title: string | undefined, color: number, content: string) {
     const embed = new Discord.EmbedBuilder().setColor(color).setDescription(content);
@@ -58,6 +59,7 @@ export type wheatley_auth = {
     freestanding?: boolean;
     mongo?: wheatley_database_credentials;
     sentry?: string;
+    virustotal?: string;
 };
 
 export type wheatley_database_info = {
@@ -177,6 +179,7 @@ export class Wheatley extends EventEmitter {
     readonly tracker: MemberTracker; // TODO: Rename
 
     database: WheatleyDatabaseProxy;
+    virustotal: Virustotal;
 
     link_blacklist: any;
 
@@ -259,6 +262,10 @@ export class Wheatley extends EventEmitter {
         assert(this.freestanding || auth.mongo, "Missing MongoDB credentials");
         if (auth.mongo) {
             this.database = await WheatleyDatabase.create(auth.mongo);
+        }
+        assert(this.freestanding || auth.virustotal, "Missing virustotal api key");
+        if (!this.freestanding) {
+            this.virustotal = new Virustotal(auth);
         }
 
         this.client.on("ready", async () => {
