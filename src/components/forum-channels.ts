@@ -22,7 +22,7 @@ const cleanup_limit = 400; //10000; // how many posts back in the archive to go
 // if the op says thank you remind them to close the thread after 15 minutes
 const thank_you_timeout = 5 * MINUTE;
 
-const thank_you_re = /\b(thanks|thank\s*(?:you|u)|ty|cheers|figured? it out(?!\?))\b/gi;
+const thank_you_re = /\b(thanks|thank\s*(?:you|u)|ty|tysm|cheers|figured? it out(?!\?))\b/gi;
 
 /*
  * Forum thread handling:
