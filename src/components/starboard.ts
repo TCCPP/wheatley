@@ -25,11 +25,11 @@ export type auto_delete_threshold_notifications = {
 };
 
 const star_threshold = 5;
+const other_threshold = 5;
 const memes_star_threshold = 14;
-const other_threshold = 7;
-const memes_other_threshold = 14;
+const memes_other_threshold = 12;
 
-const auto_delete_threshold = 10;
+const auto_delete_threshold = 7;
 
 const max_deletes_in_24h = 5;
 
