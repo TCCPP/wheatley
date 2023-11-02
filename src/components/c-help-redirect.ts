@@ -253,7 +253,7 @@ export default class CHelpRedirect extends BotComponent {
             if (this.check_message_for_cpp_code(message)) {
                 this.auto_triggered_users.insert(message.author.id);
                 await message.reply(
-                    `<@${message.author.id}> Your code looks like C++ code, but this is a C channel.` +
+                    `<@${message.author.id}> Your code looks like C++ code, but this is a C channel. ` +
                         `Did you mean to post in <#${this.wheatley.channels.cpp_help_text.id}>?`,
                 );
             }
@@ -261,7 +261,7 @@ export default class CHelpRedirect extends BotComponent {
             if (this.check_message_for_c_code(message)) {
                 this.auto_triggered_users.insert(message.author.id);
                 await message.reply(
-                    `<@${message.author.id}> Your code looks like C code, but this is a C++ channel.` +
+                    `<@${message.author.id}> Your code looks like C code, but this is a C++ channel. ` +
                         `Did you mean to post in <#${this.wheatley.channels.c_help_text.id}>?`,
                 );
             }
