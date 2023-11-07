@@ -104,9 +104,9 @@ export async function make_quote_embeds(
     }
     type MediaDescriptor = {
         type: "image" | "video";
-        attachment: Discord.Attachment;
+        attachment: Discord.Attachment | { attachment: string };
     };
-    const media: MediaDescriptor[] = messages
+    const media = messages
         .map(
             message =>
                 [
@@ -135,8 +135,8 @@ export async function make_quote_embeds(
                             return {
                                 type: "video",
                                 attachment: {
-                                    url: unwrap(e.video.url),
-                                } as Discord.Attachment,
+                                    attachment: unwrap(e.video.url),
+                                } as Discord.AttachmentPayload,
                             };
                         } else {
                             assert(false);
@@ -147,8 +147,8 @@ export async function make_quote_embeds(
         .flat();
     const other_embeds = messages.map(message => message.embeds.filter(e => !is_media_link_embed(e))).flat();
     const media_embeds: Discord.EmbedBuilder[] = [];
-    const attachments: Discord.Attachment[] = [];
-    const other_attachments: Discord.Attachment[] = messages
+    const attachments: (Discord.Attachment | Discord.AttachmentPayload)[] = [];
+    const other_attachments: (Discord.Attachment | Discord.AttachmentPayload)[] = messages
         .map(message => [
             ...message.attachments
                 .map(a => a)
@@ -160,13 +160,20 @@ export async function make_quote_embeds(
         for (const medium of media) {
             if (medium.type == "image") {
                 if (!set_primary_image) {
-                    embed.setImage(medium.attachment.url);
+                    embed.setImage(
+                        medium.attachment instanceof Discord.Attachment
+                            ? medium.attachment.url
+                            : medium.attachment.attachment,
+                    );
                     set_primary_image = true;
                 } else {
                     media_embeds.push(
                         new Discord.EmbedBuilder({
                             image: {
-                                url: medium.attachment.url,
+                                url:
+                                    medium.attachment instanceof Discord.Attachment
+                                        ? medium.attachment.url
+                                        : medium.attachment.attachment,
                             },
                         }),
                     );

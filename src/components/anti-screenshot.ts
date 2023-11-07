@@ -10,9 +10,9 @@ import { Wheatley } from "../wheatley.js";
 
 const DISMISS_TIME = 30 * 1000;
 
-function are_images({ contentType }: { contentType: string | null }) {
-    assert(contentType);
-    return contentType.startsWith("image/");
+function are_images(attachment: Discord.Attachment) {
+    assert(attachment.contentType, JSON.stringify(attachment));
+    return attachment.contentType.startsWith("image/");
 }
 
 function are_text({ contentType }: { contentType: string | null }) {
