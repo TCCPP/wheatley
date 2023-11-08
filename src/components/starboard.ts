@@ -208,14 +208,19 @@ export default class Starboard extends BotComponent {
                 });
             } else {
                 // send
-                const starboard_message = await this.wheatley.channels.starboard.send({
-                    content: this.reactions_string(message),
-                    ...(await make_embeds()),
-                });
-                await this.wheatley.database.starboard_entries.insertOne({
-                    message: message.id,
-                    starboard_entry: starboard_message.id,
-                });
+                try {
+                    const starboard_message = await this.wheatley.channels.starboard.send({
+                        content: this.reactions_string(message),
+                        ...(await make_embeds()),
+                    });
+                    await this.wheatley.database.starboard_entries.insertOne({
+                        message: message.id,
+                        starboard_entry: starboard_message.id,
+                    });
+                } catch (e) {
+                    M.log("--------------->", message.url);
+                    critical_error(e);
+                }
             }
         } finally {
             this.mutex.unlock(message.id);
@@ -277,6 +282,8 @@ export default class Starboard extends BotComponent {
             if (e instanceof mongo.MongoServerError && e.code == 11000) {
                 // ok
             } else {
+                do_delete = false;
+                M.log("--------------->", message.url);
                 critical_error(e);
             }
         } finally {
@@ -298,9 +305,19 @@ export default class Starboard extends BotComponent {
         if (!(await this.is_valid_channel(reaction.message.channel))) {
             return;
         }
+        M.info("------------- on_reaction_add -------------");
+        M.info(reaction.partial);
         if (reaction.partial) {
+            M.info("DEPARTIALIZING REACTION");
             reaction = await reaction.fetch();
         }
+        M.log(
+            reaction,
+            reaction.count,
+            reaction.message.reactions.cache.get(reaction.emoji.name ?? "")?.count,
+            reaction.message.reactions.resolve(reaction.emoji.name ?? "")?.count,
+            reaction.message.url,
+        );
         // Check delete emojis
         if (
             reaction.emoji.name &&
