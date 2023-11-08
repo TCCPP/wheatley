@@ -121,7 +121,7 @@ export async function fetch_all_threads_archive_count(forum: Discord.ForumChanne
 }
 
 export function is_media_link_embed(embed: Discord.Embed) {
-    return embed.image || embed.video || embed.thumbnail;
+    return embed.image || embed.video;
 }
 
 export async function send_long_message(channel: Discord.TextChannel, msg: string) {

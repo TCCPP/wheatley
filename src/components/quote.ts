@@ -123,12 +123,12 @@ export async function make_quote_embeds(
                             attachment: a,
                         })),
                     ...message.embeds.filter(is_media_link_embed).map(e => {
-                        if (e.image || e.thumbnail) {
+                        if (e.image) {
                             // Webp can be thumbnail only, no image. Very weird.
                             return {
                                 type: "image",
                                 attachment: {
-                                    url: unwrap(unwrap(e.image || e.thumbnail).url),
+                                    url: unwrap(unwrap(e.image).url),
                                 } as Discord.Attachment,
                             };
                         } else if (e.video) {
