@@ -9,7 +9,7 @@ import { unwrap } from "./utils/misc.js";
 import { is_string } from "./utils/strings.js";
 import { directory_exists } from "./utils/filesystem.js";
 import { walk_dir } from "./utils/filesystem.js";
-import { critical_error } from "./utils/debugging-and-logging.js";
+import { critical_error, milestone } from "./utils/debugging-and-logging.js";
 import { SelfClearingMap } from "./utils/containers.js";
 import { M } from "./utils/debugging-and-logging.js";
 import { BotComponent } from "./bot-component.js";
@@ -269,6 +269,8 @@ export class Wheatley extends EventEmitter {
         }
 
         this.client.on("ready", async () => {
+            milestone("Bot started");
+
             await this.fetch_guild_info();
 
             for (const component of this.components.values()) {

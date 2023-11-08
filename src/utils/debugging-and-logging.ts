@@ -4,6 +4,7 @@ import * as Discord from "discord.js";
 import * as Sentry from "@sentry/node";
 import { zelis_id } from "../wheatley.js";
 import { to_string } from "./strings.js";
+import { send_long_message } from "./discord.js";
 
 function get_caller_location() {
     // https://stackoverflow.com/a/53339452/15675011
@@ -66,7 +67,7 @@ export function critical_error(arg: any) {
     get_zelis()
         .then(zelis_found => {
             if (zelis_found) {
-                zelis!.send(`Critical error occurred: ${to_string(arg)}`).catch(() => void 0);
+                send_long_message(zelis!.dmChannel!, `Critical error occurred: ${to_string(arg)}`).catch(() => void 0);
             }
         })
         .catch(() => void 0)
@@ -94,5 +95,19 @@ export function ignorable_error(arg: any) {
             } else {
                 Sentry.captureMessage(to_string(arg));
             }
+        });
+}
+
+export function milestone(message: string) {
+    M.error(message);
+    get_zelis()
+        .then(zelis_found => {
+            if (zelis_found) {
+                zelis!.send(message).catch(() => void 0);
+            }
+        })
+        .catch(() => void 0)
+        .finally(() => {
+            Sentry.captureMessage(message);
         });
 }

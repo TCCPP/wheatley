@@ -124,7 +124,7 @@ export function is_media_link_embed(embed: Discord.Embed) {
     return embed.image || embed.video;
 }
 
-export async function send_long_message(channel: Discord.TextChannel, msg: string) {
+export async function send_long_message(channel: Discord.TextChannel | Discord.DMChannel, msg: string) {
     if (msg.length > 2000) {
         const lines = msg.split("\n");
         let partial = "";
