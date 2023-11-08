@@ -136,7 +136,7 @@ export async function make_quote_embeds(
                             return {
                                 type: "image",
                                 attachment: {
-                                    url: unwrap(unwrap(e.image).url),
+                                    url: unwrap(unwrap(e.image ? e.image : e.thumbnail).url),
                                 } as Discord.Attachment,
                             };
                         } else {
