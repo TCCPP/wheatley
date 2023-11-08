@@ -121,7 +121,8 @@ export async function fetch_all_threads_archive_count(forum: Discord.ForumChanne
 }
 
 export function is_media_link_embed(embed: Discord.Embed) {
-    return embed.image || embed.video;
+    // It is possible for a thumbnail but no image/video to be present
+    return embed.image || embed.video || embed.thumbnail;
 }
 
 export async function send_long_message(channel: Discord.TextChannel | Discord.DMChannel, msg: string) {

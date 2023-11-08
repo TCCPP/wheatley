@@ -123,20 +123,21 @@ export async function make_quote_embeds(
                             attachment: a,
                         })),
                     ...message.embeds.filter(is_media_link_embed).map(e => {
-                        if (e.image) {
+                        if (e.video) {
+                            // Check video first, as videos can have thumbnails
+                            return {
+                                type: "video",
+                                attachment: {
+                                    attachment: unwrap(e.video.url),
+                                } as Discord.AttachmentPayload,
+                            };
+                        } else if (e.image || e.thumbnail) {
                             // Webp can be thumbnail only, no image. Very weird.
                             return {
                                 type: "image",
                                 attachment: {
                                     url: unwrap(unwrap(e.image).url),
                                 } as Discord.Attachment,
-                            };
-                        } else if (e.video) {
-                            return {
-                                type: "video",
-                                attachment: {
-                                    attachment: unwrap(e.video.url),
-                                } as Discord.AttachmentPayload,
                             };
                         } else {
                             assert(false);
