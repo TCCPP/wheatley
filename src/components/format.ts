@@ -181,7 +181,7 @@ async function format(replying_to: Discord.Message) {
                 const fetch_response = await fetch(attachment.url);
                 if (fetch_response.ok) {
                     const text = await fetch_response.text();
-                    return new Discord.AttachmentBuilder(await clang_format_general(text), {
+                    return new Discord.AttachmentBuilder(Buffer.from(await clang_format_general(text)), {
                         name: `${attachment.name}.cpp`,
                     });
                 } else {
