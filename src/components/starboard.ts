@@ -143,14 +143,7 @@ export default class Starboard extends BotComponent {
         //     reaction.emoji.id === null,
         // );
         assert(reaction.emoji.name);
-        if (
-            !(
-                reaction.emoji instanceof Discord.GuildEmoji ||
-                reaction.emoji.id === null ||
-                // workaround https://github.com/discordjs/discord.js/issues/9948
-                (reaction.emoji.id as any) === undefined
-            )
-        ) {
+        if (!(reaction.emoji instanceof Discord.GuildEmoji || reaction.emoji.id === null)) {
             return false;
         }
         // M.info("------------->", reaction.emoji.name == "⭐", reaction.count);
