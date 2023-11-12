@@ -5,7 +5,7 @@
     "author": "",
     "type": "module",
     "dependencies": {
-        "@discordjs/rest": "^2.0.1",
+        "@discordjs/rest": "^2.1.0",
         "@sentry/node": "^7.80.0",
         "@types/node": "^20.9.0",
         "@types/ws": "^8.5.9",
@@ -13,7 +13,7 @@
         "any-ascii": "^0.3.2",
         "axios": "^1.6.1",
         "chalk": "<5.0.0",
-        "discord.js": "^14.13.0",
+        "discord.js": "^14.14.0",
         "moment": "^2.29.4",
         "mongodb": "^6.2.0",
         "xxhashjs": "^0.2.2"
