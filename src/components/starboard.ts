@@ -233,7 +233,7 @@ export default class Starboard extends BotComponent {
                         starboard_entry: starboard_message.id,
                     });
                 } catch (e) {
-                    M.log("--------------->", message.url);
+                    // M.log("--------------->", message.url);
                     critical_error(e);
                 }
             }
@@ -320,10 +320,10 @@ export default class Starboard extends BotComponent {
         if (!(await this.is_valid_channel(reaction.message.channel))) {
             return;
         }
-        M.info("------------- on_reaction_add -------------");
-        M.info(reaction.partial);
+        // M.info("------------- on_reaction_add -------------");
+        // M.info(reaction.partial);
         if (reaction.partial) {
-            M.info("DEPARTIALIZING REACTION");
+            // M.info("DEPARTIALIZING REACTION");
             reaction = await reaction.fetch();
         }
         M.log(
