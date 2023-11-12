@@ -85,7 +85,7 @@ export function string_split(str: string, delim: string, limit: number) {
 export function escape_discord(str: string) {
     // Escape <> for mentions, - for lists, # for headings, [ for links, and the period in \d. for ordered lists on top
     // of what discord.js escapes
-    return Discord.escapeMarkdown(str).replace(/[<>\-#[]|(?<=\d)\./g, c => `\\${c}`);
+    return Discord.escapeMarkdown(str).replace(/[<>\-#[]|(?<=^\s*\d+)\./gm, c => `\\${c}`);
 }
 
 export function capitalize(str: string) {
