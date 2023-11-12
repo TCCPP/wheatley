@@ -99,7 +99,7 @@ export function ignorable_error(arg: any) {
 }
 
 export function milestone(message: string) {
-    M.error(message);
+    M.info(message);
     get_zelis()
         .then(zelis_found => {
             if (zelis_found) {
