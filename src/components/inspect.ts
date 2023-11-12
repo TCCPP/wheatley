@@ -89,12 +89,9 @@ export default class Inspect extends BotComponent {
     constructor(wheatley: Wheatley) {
         super(wheatley);
 
-        this.add_command(
-            new MessageContextMenuInteractionBuilder("Inspect")
-                .set_permissions(Discord.PermissionFlagsBits.BanMembers)
-                .set_handler(this.inspect.bind(this)),
-        );
+        this.add_command(new MessageContextMenuInteractionBuilder("Inspect").set_handler(this.inspect.bind(this)));
 
+        // Permissions on this command in the interest of preventing spam (intentional or otherwise)
         this.add_command(
             new TextBasedCommandBuilder("inspect")
                 .set_description("Inspect a message")
