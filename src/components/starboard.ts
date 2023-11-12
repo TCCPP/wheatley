@@ -135,10 +135,25 @@ export default class Starboard extends BotComponent {
     }
 
     meets_threshold(reaction: Discord.MessageReaction) {
+        // M.info(
+        //     "meets_threshold",
+        //     reaction,
+        //     reaction.emoji,
+        //     reaction.emoji instanceof Discord.GuildEmoji,
+        //     reaction.emoji.id === null,
+        // );
         assert(reaction.emoji.name);
-        if (!(reaction.emoji instanceof Discord.GuildEmoji || reaction.emoji.id === null)) {
+        if (
+            !(
+                reaction.emoji instanceof Discord.GuildEmoji ||
+                reaction.emoji.id === null ||
+                // workaround https://github.com/discordjs/discord.js/issues/9948
+                (reaction.emoji.id as any) === undefined
+            )
+        ) {
             return false;
         }
+        // M.info("------------->", reaction.emoji.name == "⭐", reaction.count);
         if (reaction.emoji.name == "⭐") {
             if (reaction.message.channel.id == this.wheatley.channels.memes.id) {
                 return reaction.count >= memes_star_threshold;
@@ -331,10 +346,18 @@ export default class Starboard extends BotComponent {
         if (await this.wheatley.database.starboard_entries.findOne({ message: reaction.message.id })) {
             // Update counts
             await this.update_starboard(await departialize(reaction.message));
-        } else if (
+            return;
+        }
+        // M.info(
+        //     "Testing meets_threshold",
+        //     reaction.message.createdTimestamp,
+        //     reaction.message.createdTimestamp >= starboard_epoch,
+        // );
+        if (
             this.meets_threshold(await departialize(reaction)) &&
             reaction.message.createdTimestamp >= starboard_epoch
         ) {
+            // M.info("meets_threshold, going into update");
             // Send
             await this.update_starboard(await departialize(reaction.message));
         }
