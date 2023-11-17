@@ -3,3 +3,6 @@
 	url = https://github.com/TCCPP/empty.git
 	# url = git@github.com:TCCPP/wheatley-private.git
 
+# [submodule "dyno-import"]
+# 	path = dyno-import
+# 	url = git@github.com:TCCPP/dyno-import.git
