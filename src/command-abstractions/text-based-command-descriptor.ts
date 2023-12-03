@@ -52,7 +52,7 @@ export class BotTextBasedCommand<Args extends unknown[] = []> extends BaseBotInt
                             `${display_name} ${sub_name}`,
                             sub_description,
                             sub_slash,
-                            undefined,
+                            permissions,
                             allow_trailing_junk,
                             subcommand,
                             wheatley,
@@ -112,8 +112,7 @@ export class BotTextBasedCommand<Args extends unknown[] = []> extends BaseBotInt
                     assert(false, "unhandled option type");
                 }
             }
-            if (this.permissions !== undefined) {
-                assert(djs_command instanceof Discord.SlashCommandBuilder);
+            if (this.permissions !== undefined && djs_command instanceof Discord.SlashCommandBuilder) {
                 djs_command.setDefaultMemberPermissions(this.permissions);
             }
             return <B>djs_command;
