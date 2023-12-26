@@ -27,9 +27,9 @@ export type auto_delete_threshold_notifications = {
 const star_threshold = 5;
 const other_threshold = 5;
 const memes_star_threshold = 14;
-const memes_other_threshold = 12;
+const memes_other_threshold = 14;
 
-const auto_delete_threshold = 7;
+const auto_delete_threshold = 5;
 
 const max_deletes_in_24h = 5;
 
@@ -320,13 +320,13 @@ export default class Starboard extends BotComponent {
             // M.info("DEPARTIALIZING REACTION");
             reaction = await reaction.fetch();
         }
-        M.log(
-            reaction,
-            reaction.count,
-            reaction.message.reactions.cache.get(reaction.emoji.name ?? "")?.count,
-            reaction.message.reactions.resolve(reaction.emoji.name ?? "")?.count,
-            reaction.message.url,
-        );
+        // M.log(
+        //     reaction,
+        //     reaction.count,
+        //     reaction.message.reactions.cache.get(reaction.emoji.name ?? "")?.count,
+        //     reaction.message.reactions.resolve(reaction.emoji.name ?? "")?.count,
+        //     reaction.message.url,
+        // );
         // Check delete emojis
         if (
             reaction.emoji.name &&
