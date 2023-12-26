@@ -109,6 +109,7 @@ export default class Starboard extends BotComponent {
             this.wheatley.channels.the_button.id,
             this.wheatley.channels.introductions.id,
             this.wheatley.channels.starboard.id,
+            this.wheatley.channels.goals2024.id,
         ]);
 
         await this.get_emoji_config();
