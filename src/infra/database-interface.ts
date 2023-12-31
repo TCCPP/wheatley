@@ -10,7 +10,7 @@ import { buzzword_scoreboard_entry } from "../components/buzzwords.js";
 import { auto_delete_threshold_notifications, starboard_entry } from "../components/starboard.js";
 import { button_scoreboard_entry } from "../components/the-button.js";
 import { TRACKER_START_TIME, suggestion_entry } from "../components/server-suggestion-tracker.js";
-import { link_blacklist_entry } from "../private-types.js";
+import { link_blacklist_entry, watchlist_entry } from "../private-types.js";
 import { moderation_entry } from "../components/moderation/moderation-common.js";
 import { wheatley_database_credentials, wheatley_database_info } from "../wheatley.js";
 
@@ -116,6 +116,7 @@ export type WheatleyDatabaseProxy = WheatleyDatabase & {
     button_scoreboard: mongo.Collection<button_scoreboard_entry>;
     buzzword_scoreboard: mongo.Collection<buzzword_scoreboard_entry>;
     link_blacklist: mongo.Collection<link_blacklist_entry>;
+    watchlist: mongo.Collection<watchlist_entry>;
     nodistractions: mongo.Collection<no_distraction_entry>;
     roulette_leaderboard: mongo.Collection<roulette_leaderboard_entry>;
     server_suggestions: mongo.Collection<suggestion_entry>;
