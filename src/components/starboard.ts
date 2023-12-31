@@ -130,7 +130,12 @@ export default class Starboard extends BotComponent {
                 .filter(({ emoji }) => emoji instanceof Discord.GuildEmoji || emoji.id === null)
                 .filter(({ emoji }) => !(emoji.name && this.ignored_emojis.includes(emoji.name)))
                 .sort((a, b) => b.count - a.count)
-                .map(({ emoji, count }) => `${emoji.id ? `<:${emoji.name}:${emoji.id}>` : emoji.name} **${count}**`),
+                .map(
+                    ({ emoji, count }) =>
+                        `${
+                            emoji.id ? `<${emoji.animated ? "a" : ""}:${emoji.name}:${emoji.id}>` : emoji.name
+                        } **${count}**`,
+                ),
             `<#${message.channel.id}>`,
         ].join(" | ");
     }
