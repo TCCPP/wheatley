@@ -155,7 +155,7 @@ export default class Modlogs extends BotComponent {
                             }),
                     )
                     .setFooter({
-                        text: `${pluralize(moderations.length, "log")}, ${pluralize(pages, "page")}`,
+                        text: `${pluralize(moderations.length, "log")}, ${pluralize(pages, "page")} | ID: ${user.id}`,
                     }),
             ],
             components:
