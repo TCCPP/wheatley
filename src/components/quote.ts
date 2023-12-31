@@ -146,7 +146,9 @@ export async function make_quote_embeds(
                 ] as MediaDescriptor[],
         )
         .flat();
+    // M.log(media);
     const other_embeds = messages.map(message => message.embeds.filter(e => !is_media_link_embed(e))).flat();
+    // M.log(other_embeds);
     const media_embeds: Discord.EmbedBuilder[] = [];
     const attachments: (Discord.Attachment | Discord.AttachmentPayload)[] = [];
     const other_attachments: (Discord.Attachment | Discord.AttachmentPayload)[] = messages
@@ -191,6 +193,7 @@ export async function make_quote_embeds(
         attachments.splice(0, attachments.length);
         other_attachments.splice(0, other_attachments.length);
     }
+    // M.log([embed, ...media_embeds, ...other_embeds], [...attachments, ...other_attachments]);
     return {
         embeds: [embed, ...media_embeds, ...other_embeds],
         files: attachments.length + other_attachments.length == 0 ? undefined : [...attachments, ...other_attachments],
