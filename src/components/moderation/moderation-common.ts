@@ -5,7 +5,7 @@ import { EventEmitter } from "events";
 import { strict as assert } from "assert";
 
 import { unwrap } from "../../utils/misc.js";
-import { build_description } from "../../utils/strings.js";
+import { build_description, capitalize } from "../../utils/strings.js";
 import { time_to_human } from "../../utils/strings.js";
 import { DistributedOmit } from "../../utils/typing.js";
 import { SleepList } from "../../utils/containers.js";
@@ -167,7 +167,20 @@ export async function reply_with_success_action(
 }
 
 export abstract class ModerationComponent extends BotComponent {
+    // Basic moderation component properties: Type, has_duration, persist_moderation
     abstract get type(): moderation_type;
+
+    abstract get past_participle(): string;
+
+    get is_once_off() {
+        // Warns and kicks are once-off, they don't have duration and can't be already applied
+        return true;
+    }
+
+    get persist_moderation() {
+        // Mutes and rolepersists need to be persisted, other moderations aren't susceptible to leave+rejoin
+        return false;
+    }
 
     // Sorted by moderation end time
     sleep_list: SleepList<mongo.WithId<moderation_entry>, mongo.BSON.ObjectId>;
@@ -213,24 +226,22 @@ export abstract class ModerationComponent extends BotComponent {
         }
     }
 
-    // Address users trying to leave and rejoin
-    override async on_guild_member_add(member: Discord.GuildMember) {
-        const moderations = await this.wheatley.database.moderations
-            .find({ user: member.user.id, type: this.type, active: true })
-            .toArray();
-        for (const moderation of moderations) {
-            if (!(await this.is_moderation_applied(moderation))) {
-                await this.apply_moderation(moderation);
-            }
-        }
-    }
+    //
+    // Basic moderation component interface: Apply, remove, is_applied
+    //
 
     // Add the moderation to the user (e.g. add a role or issue a ban)
     abstract apply_moderation(entry: moderation_entry): Promise<void>;
+
     // Remove the moderation to the user (e.g. remove a role or unban)
     abstract remove_moderation(entry: mongo.WithId<moderation_entry>): Promise<void>;
+
     // Check if the moderation is in effect
     abstract is_moderation_applied(moderation: basic_moderation_with_user): Promise<boolean>;
+
+    //
+    // Moderation events
+    //
 
     async handle_moderation_expire(entry: mongo.WithId<moderation_entry>) {
         if (await this.is_moderation_applied(entry)) {
@@ -278,6 +289,175 @@ export abstract class ModerationComponent extends BotComponent {
                     await this.remove_moderation(entry);
                 }
             }
+        }
+    }
+
+    //
+    // Persistance
+    //
+
+    // Address users trying to leave and rejoin
+    override async on_guild_member_add(member: Discord.GuildMember) {
+        const moderations = await this.wheatley.database.moderations
+            .find({ user: member.user.id, type: this.type, active: true })
+            .toArray();
+        for (const moderation of moderations) {
+            if (!(await this.is_moderation_applied(moderation))) {
+                await this.apply_moderation(moderation);
+            }
+        }
+    }
+
+    //
+    // Command handlers
+    //
+
+    // TODO sleep_list handling
+
+    async moderation_issue_handler(
+        command: TextBasedCommand,
+        user: Discord.User,
+        duration: string | null,
+        reason: string | null,
+        basic_moderation_info: basic_moderation,
+    ) {
+        try {
+            if (this.wheatley.is_authorized_mod(user)) {
+                await reply_with_error(command, moderation_on_team_member_message);
+                return;
+            }
+            const base_moderation: basic_moderation_with_user = { ...basic_moderation_info, user: user.id };
+            if (!this.is_once_off && (await this.is_moderation_applied(base_moderation))) {
+                await reply_with_error(command, `User is already ${this.past_participle}`);
+                return;
+            }
+            const moderation: moderation_entry = {
+                ...basic_moderation_info,
+                case_number: -1,
+                user: user.id,
+                user_name: user.displayName,
+                moderator: command.user.id,
+                moderator_name: (await command.get_member()).displayName,
+                reason,
+                issued_at: Date.now(),
+                duration: parse_duration(duration),
+                active: true,
+                removed: null,
+                expunged: null,
+                link: command.get_or_forge_url(),
+            };
+            // TODO: reply_and_notify?
+            await this.notify_user(command, user, this.past_participle, moderation);
+            await this.register_new_moderation(moderation);
+            await reply_with_success_action(
+                command,
+                user,
+                this.past_participle,
+                this.is_once_off ? false : duration === null,
+                reason === null,
+                moderation.case_number,
+            );
+        } catch (e) {
+            await reply_with_error(command, `Error issuing ${this.type}`);
+            critical_error(e);
+        }
+    }
+
+    async moderation_multi_issue_handler(
+        command: TextBasedCommand,
+        users: Discord.User[],
+        duration: string | null,
+        reason: string | null,
+        basic_moderation_info: basic_moderation,
+    ) {
+        try {
+            for (const user of users) {
+                if (this.wheatley.is_authorized_mod(user)) {
+                    await reply_with_error(command, moderation_on_team_member_message);
+                    continue;
+                }
+                const base_moderation: basic_moderation_with_user = { ...basic_moderation_info, user: user.id };
+                if (!this.is_once_off && (await this.is_moderation_applied(base_moderation))) {
+                    await reply_with_error(command, `${user.displayName} is already ${this.past_participle}`);
+                    continue;
+                }
+                const moderation: moderation_entry = {
+                    ...basic_moderation_info,
+                    case_number: -1,
+                    user: user.id,
+                    user_name: user.displayName,
+                    moderator: command.user.id,
+                    moderator_name: (await command.get_member()).displayName,
+                    reason,
+                    issued_at: Date.now(),
+                    duration: parse_duration(duration),
+                    active: true,
+                    removed: null,
+                    expunged: null,
+                    link: command.get_or_forge_url(),
+                };
+                await this.notify_user(command, user, this.past_participle, moderation);
+                // TODO: reply_and_notify?
+                await this.register_new_moderation(moderation);
+            }
+            await (command.replied && !command.is_editing ? command.followUp : command.reply).bind(command)({
+                embeds: [
+                    new Discord.EmbedBuilder()
+                        .setColor(colors.wheatley)
+                        .setDescription(
+                            `<:success:1138616548630745088> ***${capitalize(this.past_participle)} all users***`,
+                        ),
+                ],
+            });
+        } catch (e) {
+            await reply_with_error(command, `Error issuing multi-${this.type}`);
+            critical_error(e);
+        }
+    }
+
+    async moderation_revoke_handler(
+        command: TextBasedCommand,
+        user: Discord.User,
+        reason: string | null,
+        additional_moderation_properties: any = {},
+    ) {
+        assert(!this.is_once_off);
+        try {
+            const res = await this.wheatley.database.moderations.findOneAndUpdate(
+                { user: user.id, type: this.type, active: true, ...additional_moderation_properties },
+                {
+                    $set: {
+                        active: false,
+                        removed: {
+                            moderator: command.user.id,
+                            moderator_name: (await command.get_member()).displayName,
+                            reason: reason,
+                            timestamp: Date.now(),
+                        },
+                    },
+                },
+                {
+                    returnDocument: "after",
+                },
+            );
+            if (!res || !(await this.is_moderation_applied(res))) {
+                await reply_with_error(command, `User is not ${this.past_participle}`);
+            } else {
+                await this.remove_moderation(res);
+                this.sleep_list.remove(res._id);
+                await reply_with_success_action(command, user, `un${this.past_participle}`, false, false);
+                // TODO: reply_and_notify?
+                await this.wheatley.channels.staff_action_log.send({
+                    embeds: [
+                        Modlogs.case_summary(res, await this.wheatley.client.users.fetch(res.user)).setTitle(
+                            `Case ${res.case_number}: Un${this.past_participle}`,
+                        ),
+                    ],
+                });
+            }
+        } catch (e) {
+            await reply_with_error(command, `Error undoing ${this.type}`);
+            critical_error(e);
         }
     }
 

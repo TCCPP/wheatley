@@ -4,7 +4,6 @@ import * as mongo from "mongodb";
 import { strict as assert } from "assert";
 
 import { unwrap } from "../../utils/misc.js";
-import { critical_error } from "../../utils/debugging-and-logging.js";
 import { M } from "../../utils/debugging-and-logging.js";
 import { Wheatley } from "../../wheatley.js";
 import {
@@ -12,12 +11,9 @@ import {
     basic_moderation_with_user,
     duration_regex,
     moderation_entry,
-    moderation_type,
     parse_duration,
     reply_with_error,
-    moderation_on_team_member_message,
 } from "./moderation-common.js";
-import Modlogs from "./modlogs.js";
 import { TextBasedCommandBuilder } from "../../command-abstractions/text-based-command-builder.js";
 import { TextBasedCommand } from "../../command-abstractions/text-based-command.js";
 import { DAY } from "../../common.js";
@@ -26,8 +22,12 @@ import { DAY } from "../../common.js";
  * Implements !timeout
  */
 export default class Timeout extends ModerationComponent {
-    get type(): moderation_type {
-        return "timeout";
+    get type() {
+        return "timeout" as const;
+    }
+
+    get past_participle() {
+        return "timed out";
     }
 
     constructor(wheatley: Wheatley) {
@@ -56,7 +56,23 @@ export default class Timeout extends ModerationComponent {
                             description: "Reason",
                             required: false,
                         })
-                        .set_handler(this.timeout_add_handler.bind(this)),
+                        .set_handler(
+                            async (
+                                command: TextBasedCommand,
+                                user: Discord.User,
+                                duration: string | null,
+                                reason: string | null,
+                            ) => {
+                                const duration_ms = parse_duration(duration);
+                                if (duration_ms == null || duration_ms > 28 * DAY) {
+                                    await reply_with_error(command, "Maximum allowable duration is 28 days");
+                                    return;
+                                }
+                                return await this.moderation_issue_handler(command, user, duration, reason, {
+                                    type: this.type,
+                                });
+                            },
+                        ),
                 )
                 .add_subcommand(
                     new TextBasedCommandBuilder("remove")
@@ -71,7 +87,7 @@ export default class Timeout extends ModerationComponent {
                             description: "Reason",
                             required: true,
                         })
-                        .set_handler(this.timeout_remove_handler.bind(this)),
+                        .set_handler(this.moderation_revoke_handler.bind(this)),
                 ),
         );
     }
@@ -92,88 +108,5 @@ export default class Timeout extends ModerationComponent {
         assert(moderation.type == this.type);
         const member = await this.wheatley.TCCPP.members.fetch(moderation.user);
         return member.communicationDisabledUntil !== null;
-    }
-
-    async timeout_add_handler(
-        command: TextBasedCommand,
-        user: Discord.User,
-        duration: string | null,
-        reason: string | null,
-    ) {
-        try {
-            if (this.wheatley.is_authorized_mod(user)) {
-                await reply_with_error(command, moderation_on_team_member_message);
-                return;
-            }
-            const base_moderation: basic_moderation_with_user = { type: "timeout", user: user.id };
-            if (await this.is_moderation_applied(base_moderation)) {
-                await reply_with_error(command, "User is already timed-out");
-                return;
-            }
-            const duration_ms = parse_duration(duration);
-            if (duration_ms == null || duration_ms > 28 * DAY) {
-                await reply_with_error(command, "Maximum allowable duration is 28 days");
-                return;
-            }
-            const moderation: moderation_entry = {
-                case_number: -1,
-                user: user.id,
-                user_name: user.displayName,
-                moderator: command.user.id,
-                moderator_name: (await command.get_member()).displayName,
-                type: "timeout",
-                reason,
-                issued_at: Date.now(),
-                duration: duration_ms,
-                active: true,
-                removed: null,
-                expunged: null,
-                link: command.get_or_forge_url(),
-            };
-            await this.register_new_moderation(moderation);
-            await this.reply_and_notify(command, user, "timed-out", moderation, duration === null, reason === null);
-        } catch (e) {
-            await reply_with_error(command, "Error applying timeout");
-            critical_error(e);
-        }
-    }
-
-    async timeout_remove_handler(command: TextBasedCommand, user: Discord.User, reason: string) {
-        try {
-            const res = await this.wheatley.database.moderations.findOneAndUpdate(
-                { user: user.id, type: "timeout", active: true },
-                {
-                    $set: {
-                        active: false,
-                        removed: {
-                            moderator: command.user.id,
-                            moderator_name: (await command.get_member()).displayName,
-                            reason: reason,
-                            timestamp: Date.now(),
-                        },
-                    },
-                },
-                {
-                    returnDocument: "after",
-                },
-            );
-            if (!res || !(await this.is_moderation_applied(res))) {
-                await reply_with_error(command, "User is not timed-out");
-            } else {
-                await this.remove_moderation(res);
-                this.sleep_list.remove(res._id);
-                await this.reply_and_notify(command, user, "removed from timeout", res, false, false, true);
-                await this.wheatley.channels.staff_action_log.send({
-                    embeds: [
-                        Modlogs.case_summary(res, await this.wheatley.client.users.fetch(res.user)).setTitle(
-                            `Case ${res.case_number}: Removed from timeout`,
-                        ),
-                    ],
-                });
-            }
-        } catch (e) {
-            await reply_with_error(command, "Error removing from timeout");
-            critical_error(e);
-        }
     }
 }
