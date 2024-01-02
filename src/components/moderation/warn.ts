@@ -63,29 +63,4 @@ export default class Warn extends ModerationComponent {
         void moderation;
         assert(false);
     }
-
-    async warn_handler(command: TextBasedCommand, user: Discord.User, reason: string) {
-        try {
-            const moderation: moderation_entry = {
-                case_number: -1,
-                user: user.id,
-                user_name: user.displayName,
-                moderator: command.user.id,
-                moderator_name: (await command.get_member()).displayName,
-                type: "warn",
-                reason,
-                issued_at: Date.now(),
-                duration: null,
-                active: false,
-                removed: null,
-                expunged: null,
-                link: command.get_or_forge_url(),
-            };
-            await this.register_new_moderation(moderation);
-            await this.reply_and_notify(command, user, "warned", moderation, false, false);
-        } catch (e) {
-            await reply_with_error(command, "Error warning");
-            critical_error(e);
-        }
-    }
 }

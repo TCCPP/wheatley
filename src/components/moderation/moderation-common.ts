@@ -200,6 +200,8 @@ export abstract class ModerationComponent extends BotComponent {
     }
 
     override async on_ready() {
+        // Handle re-applications and sleep lists
+        // If once-off active is false so the rest is all fine
         const moderations = await this.wheatley.database.moderations.find({ type: this.type, active: true }).toArray();
         M.debug(
             `Adding moderations to sleep list for ${this.type}`,
@@ -211,19 +213,8 @@ export abstract class ModerationComponent extends BotComponent {
                 .filter(entry => entry.duration !== null)
                 .map(entry => [entry.issued_at + unwrap(entry.duration), entry]),
         );
-        // Ensure moderations are in place
-        for (const moderation of moderations.sort(
-            (a, b) => a.issued_at + (a.duration ?? 0) - (b.issued_at + (b.duration ?? 0)),
-        )) {
-            try {
-                if (!(await this.is_moderation_applied(moderation))) {
-                    M.debug("Reapplying moderation", moderation);
-                    await this.apply_moderation(moderation);
-                }
-            } catch (e) {
-                critical_error(e);
-            }
-        }
+        // Persistance:
+        await this.ensure_moderations_are_in_place(moderations);
     }
 
     //
@@ -244,6 +235,7 @@ export abstract class ModerationComponent extends BotComponent {
     //
 
     async handle_moderation_expire(entry: mongo.WithId<moderation_entry>) {
+        assert(!this.is_once_off);
         if (await this.is_moderation_applied(entry)) {
             M.debug("Handling moderation expire", entry);
             await this.remove_moderation(entry);
@@ -274,19 +266,21 @@ export abstract class ModerationComponent extends BotComponent {
         if (entry.type === this.type) {
             M.debug("Handling update for", entry);
             // Update sleep list entry
-            this.sleep_list.remove(entry._id);
-            if (entry.active) {
-                if (entry.duration) {
-                    this.sleep_list.insert([entry.issued_at + entry.duration, entry]);
-                }
-                // Entry is active, check if it needs to be applied
-                if (!(await this.is_moderation_applied(entry))) {
-                    await this.apply_moderation(entry);
-                }
-            } else {
-                // Entry is not active, check if it needs to be removed
-                if (await this.is_moderation_applied(entry)) {
-                    await this.remove_moderation(entry);
+            if (!this.is_once_off) {
+                this.sleep_list.remove(entry._id);
+                if (entry.active) {
+                    if (entry.duration) {
+                        this.sleep_list.insert([entry.issued_at + entry.duration, entry]);
+                    }
+                    // Entry is active, check if it needs to be applied
+                    if (!(await this.is_moderation_applied(entry))) {
+                        await this.apply_moderation(entry);
+                    }
+                } else {
+                    // Entry is not active, check if it needs to be removed
+                    if (await this.is_moderation_applied(entry)) {
+                        await this.remove_moderation(entry);
+                    }
                 }
             }
         }
@@ -296,8 +290,28 @@ export abstract class ModerationComponent extends BotComponent {
     // Persistance
     //
 
+    // called from on_ready to recover from being off
+    async ensure_moderations_are_in_place(moderations: mongo.WithId<moderation_entry>[]) {
+        // Ensure moderations are in place
+        // Go in order of end time
+        moderations.sort((a, b) => a.issued_at + (a.duration ?? 0) - (b.issued_at + (b.duration ?? 0)));
+        for (const moderation of moderations) {
+            try {
+                if (!(await this.is_moderation_applied(moderation))) {
+                    M.debug("Reapplying moderation", moderation);
+                    await this.apply_moderation(moderation);
+                }
+            } catch (e) {
+                critical_error(e);
+            }
+        }
+    }
+
     // Address users trying to leave and rejoin
     override async on_guild_member_add(member: Discord.GuildMember) {
+        if (this.is_once_off) {
+            return;
+        }
         const moderations = await this.wheatley.database.moderations
             .find({ user: member.user.id, type: this.type, active: true })
             .toArray();
@@ -331,7 +345,7 @@ export abstract class ModerationComponent extends BotComponent {
     static case_id_mutex = new Mutex();
 
     // Handle applying, adding to the sleep list, inserting into the database, and figuring out the case number
-    async register_new_moderation(moderation: moderation_entry) {
+    async issue_moderation(moderation: moderation_entry) {
         try {
             await ModerationComponent.case_id_mutex.lock();
             await this.apply_moderation(moderation);
@@ -456,14 +470,13 @@ export abstract class ModerationComponent extends BotComponent {
                 reason,
                 issued_at: Date.now(),
                 duration: parse_duration(duration),
-                active: true,
+                active: !this.is_once_off,
                 removed: null,
                 expunged: null,
                 link: command.get_or_forge_url(),
             };
-            // TODO: reply_and_notify?
             await this.notify_user(command, user, this.past_participle, moderation);
-            await this.register_new_moderation(moderation);
+            await this.issue_moderation(moderation);
             await reply_with_success_action(
                 command,
                 user,
@@ -506,14 +519,13 @@ export abstract class ModerationComponent extends BotComponent {
                     reason,
                     issued_at: Date.now(),
                     duration: parse_duration(duration),
-                    active: true,
+                    active: !this.is_once_off,
                     removed: null,
                     expunged: null,
                     link: command.get_or_forge_url(),
                 };
                 await this.notify_user(command, user, this.past_participle, moderation);
-                // TODO: reply_and_notify?
-                await this.register_new_moderation(moderation);
+                await this.issue_moderation(moderation);
             }
             await (command.replied && !command.is_editing ? command.followUp : command.reply).bind(command)({
                 embeds: [
@@ -561,7 +573,6 @@ export abstract class ModerationComponent extends BotComponent {
                 await this.remove_moderation(res);
                 this.sleep_list.remove(res._id);
                 await reply_with_success_action(command, user, `un${this.past_participle}`, false, false);
-                // TODO: reply_and_notify?
                 await this.wheatley.channels.staff_action_log.send({
                     embeds: [
                         Modlogs.case_summary(res, await this.wheatley.client.users.fetch(res.user)).setTitle(
