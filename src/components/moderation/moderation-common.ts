@@ -309,6 +309,121 @@ export abstract class ModerationComponent extends BotComponent {
     }
 
     //
+    // Moderation entry handling
+    //
+
+    async get_case_id() {
+        return (await this.wheatley.database.get_bot_singleton()).moderation_case_number;
+    }
+
+    async increment_case_id() {
+        const res = await this.wheatley.database.wheatley.updateOne(
+            { id: "main" },
+            {
+                $inc: {
+                    moderation_case_number: 1,
+                },
+            },
+        );
+        assert(res.acknowledged);
+    }
+
+    static case_id_mutex = new Mutex();
+
+    // Handle applying, adding to the sleep list, inserting into the database, and figuring out the case number
+    async register_new_moderation(moderation: moderation_entry) {
+        try {
+            await ModerationComponent.case_id_mutex.lock();
+            await this.apply_moderation(moderation);
+            moderation.case_number = await this.get_case_id();
+            const res = await this.wheatley.database.moderations.insertOne(moderation);
+            await this.increment_case_id();
+            if (moderation.duration) {
+                this.sleep_list.insert([
+                    moderation.issued_at + moderation.duration,
+                    {
+                        _id: res.insertedId,
+                        ...moderation,
+                    },
+                ]);
+            }
+            this.wheatley.channels.staff_action_log
+                .send({
+                    embeds: [Modlogs.case_summary(moderation, await this.wheatley.client.users.fetch(moderation.user))],
+                })
+                .catch(critical_error);
+        } finally {
+            ModerationComponent.case_id_mutex.unlock();
+        }
+    }
+
+    //
+    // Notification stuff
+    //
+
+    async notify_user(
+        command: TextBasedCommand,
+        user: Discord.User,
+        action: string,
+        moderation: DistributedOmit<moderation_entry, "case">,
+        is_removal = false,
+    ) {
+        const duration = moderation.duration ? time_to_human(moderation.duration) : "Permanent";
+        try {
+            await (
+                await user.createDM()
+            ).send({
+                embeds: [
+                    new Discord.EmbedBuilder()
+                        .setColor(colors.wheatley)
+                        .setTitle(`You have been ${action} in Together C & C++.`)
+                        .setDescription(
+                            build_description(
+                                is_removal || ModerationComponent.non_duration_moderation_set.has(moderation.type)
+                                    ? null
+                                    : `**Duration:** ${duration}`,
+                                `**Reason:** ${moderation.reason}`,
+                                moderation.type === "rolepersist" ? `**Role:** ${moderation.role_name}` : null,
+                            ),
+                        )
+                        .setFooter(
+                            is_removal
+                                ? null
+                                : {
+                                      text:
+                                          `To appeal this you may open a modmail in Server Guide -> #rules ` +
+                                          `or reach out to a staff member.`,
+                                  },
+                        ),
+                ],
+            });
+        } catch (e) {
+            await reply_with_error(command, "Error notifying");
+            critical_error(e);
+        }
+    }
+
+    async reply_and_notify(
+        command: TextBasedCommand,
+        user: Discord.User,
+        action: string,
+        moderation: moderation_entry,
+        remind_to_duration: boolean,
+        remind_to_reason: boolean,
+        is_removal = false,
+    ) {
+        await reply_with_success_action(
+            command,
+            user,
+            action,
+            remind_to_duration,
+            remind_to_reason,
+            is_removal ? undefined : moderation.case_number,
+        );
+        await this.notify_user(command, user, action, moderation, is_removal);
+    }
+
+    //
     // Command handlers
     //
 
@@ -459,112 +574,5 @@ export abstract class ModerationComponent extends BotComponent {
             await reply_with_error(command, `Error undoing ${this.type}`);
             critical_error(e);
         }
-    }
-
-    async get_case_id() {
-        return (await this.wheatley.database.get_bot_singleton()).moderation_case_number;
-    }
-
-    async increment_case_id() {
-        const res = await this.wheatley.database.wheatley.updateOne(
-            { id: "main" },
-            {
-                $inc: {
-                    moderation_case_number: 1,
-                },
-            },
-        );
-        assert(res.acknowledged);
-    }
-
-    static case_id_mutex = new Mutex();
-
-    // Handle applying, adding to the sleep list, inserting into the database, and figuring out the case number
-    async register_new_moderation(moderation: moderation_entry) {
-        try {
-            await ModerationComponent.case_id_mutex.lock();
-            await this.apply_moderation(moderation);
-            moderation.case_number = await this.get_case_id();
-            const res = await this.wheatley.database.moderations.insertOne(moderation);
-            await this.increment_case_id();
-            if (moderation.duration) {
-                this.sleep_list.insert([
-                    moderation.issued_at + moderation.duration,
-                    {
-                        _id: res.insertedId,
-                        ...moderation,
-                    },
-                ]);
-            }
-            this.wheatley.channels.staff_action_log
-                .send({
-                    embeds: [Modlogs.case_summary(moderation, await this.wheatley.client.users.fetch(moderation.user))],
-                })
-                .catch(critical_error);
-        } finally {
-            ModerationComponent.case_id_mutex.unlock();
-        }
-    }
-
-    async notify_user(
-        command: TextBasedCommand,
-        user: Discord.User,
-        action: string,
-        moderation: DistributedOmit<moderation_entry, "case">,
-        is_removal = false,
-    ) {
-        const duration = moderation.duration ? time_to_human(moderation.duration) : "Permanent";
-        try {
-            await (
-                await user.createDM()
-            ).send({
-                embeds: [
-                    new Discord.EmbedBuilder()
-                        .setColor(colors.wheatley)
-                        .setTitle(`You have been ${action} in Together C & C++.`)
-                        .setDescription(
-                            build_description(
-                                is_removal || ModerationComponent.non_duration_moderation_set.has(moderation.type)
-                                    ? null
-                                    : `**Duration:** ${duration}`,
-                                `**Reason:** ${moderation.reason}`,
-                                moderation.type === "rolepersist" ? `**Role:** ${moderation.role_name}` : null,
-                            ),
-                        )
-                        .setFooter(
-                            is_removal
-                                ? null
-                                : {
-                                      text:
-                                          `To appeal this you may open a modmail in Server Guide -> #rules ` +
-                                          `or reach out to a staff member.`,
-                                  },
-                        ),
-                ],
-            });
-        } catch (e) {
-            await reply_with_error(command, "Error notifying");
-            critical_error(e);
-        }
-    }
-
-    async reply_and_notify(
-        command: TextBasedCommand,
-        user: Discord.User,
-        action: string,
-        moderation: moderation_entry,
-        remind_to_duration: boolean,
-        remind_to_reason: boolean,
-        is_removal = false,
-    ) {
-        await reply_with_success_action(
-            command,
-            user,
-            action,
-            remind_to_duration,
-            remind_to_reason,
-            is_removal ? undefined : moderation.case_number,
-        );
-        await this.notify_user(command, user, action, moderation, is_removal);
     }
 }
