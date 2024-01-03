@@ -4,14 +4,15 @@ import { EventEmitter } from "events";
 
 import { strict as assert } from "assert";
 
+import { critical_error } from "../../utils/debugging-and-logging.js";
+import { M } from "../../utils/debugging-and-logging.js";
+
 import { unwrap } from "../../utils/misc.js";
 import { build_description, capitalize } from "../../utils/strings.js";
 import { time_to_human } from "../../utils/strings.js";
 import { DistributedOmit } from "../../utils/typing.js";
 import { SleepList } from "../../utils/containers.js";
-import { critical_error } from "../../utils/debugging-and-logging.js";
 import { Mutex } from "../../utils/containers.js";
-import { M } from "../../utils/debugging-and-logging.js";
 import { BotComponent } from "../../bot-component.js";
 import { Wheatley } from "../../wheatley.js";
 import { colors } from "../../common.js";
@@ -125,45 +126,6 @@ export function parse_duration(duration: string | null) {
         const [_, n, unit] = match;
         return parseInt(n) * parse_unit(unit);
     }
-}
-
-export async function reply_with_error(command: TextBasedCommand, message: string) {
-    await (command.replied && !command.is_editing ? command.followUp : command.reply).bind(command)({
-        embeds: [
-            new Discord.EmbedBuilder()
-                .setColor(colors.alert_color)
-                .setDescription(`<:error:1138616562958483496> ***${message}***`),
-        ],
-    });
-}
-
-export async function reply_with_success(command: TextBasedCommand, message: string, extra?: string) {
-    await command.reply({
-        embeds: [
-            new Discord.EmbedBuilder()
-                .setColor(colors.wheatley)
-                .setDescription(`<:success:1138616548630745088> ***${message}***${extra ? " " + extra : ""}`),
-        ],
-    });
-}
-
-export async function reply_with_success_action(
-    command: TextBasedCommand,
-    user: Discord.User,
-    action: string,
-    remind_to_duration: boolean,
-    remind_to_reason: boolean,
-    case_number?: number,
-) {
-    const reminders = build_description(
-        remind_to_duration ? "**Remember to provide a duration with !duration**" : null,
-        remind_to_reason ? "**Remember to provide a reason with !reason**" : null,
-    );
-    await reply_with_success(
-        command,
-        `${user.displayName} was ${action}`,
-        (case_number !== undefined ? `(case ${case_number})` : "") + reminders === "" ? "" : "\n\n" + reminders,
-    );
 }
 
 export abstract class ModerationComponent extends BotComponent {
@@ -375,6 +337,7 @@ export abstract class ModerationComponent extends BotComponent {
     // Notification stuff
     //
 
+    // returns true if unable to dm user
     async notify_user(
         command: TextBasedCommand,
         user: Discord.User,
@@ -412,9 +375,14 @@ export abstract class ModerationComponent extends BotComponent {
                 ],
             });
         } catch (e) {
-            await reply_with_error(command, "Error notifying");
-            critical_error(e);
+            if (e instanceof Discord.DiscordAPIError && e.code === 50007) {
+                // 50007: Cannot send messages to this user
+                return true;
+            } else {
+                await this.reply_with_error(command, "Error notifying");
+            }
         }
+        return false;
     }
 
     //
@@ -430,12 +398,12 @@ export abstract class ModerationComponent extends BotComponent {
     ) {
         try {
             if (this.wheatley.is_authorized_mod(user)) {
-                await reply_with_error(command, moderation_on_team_member_message);
+                await this.reply_with_error(command, moderation_on_team_member_message);
                 return;
             }
             const base_moderation: basic_moderation_with_user = { ...basic_moderation_info, user: user.id };
             if (!this.is_once_off && (await this.is_moderation_applied(base_moderation))) {
-                await reply_with_error(command, `User is already ${this.past_participle}`);
+                await this.reply_with_error(command, `User is already ${this.past_participle}`);
                 return;
             }
             const moderation: moderation_entry = {
@@ -453,18 +421,34 @@ export abstract class ModerationComponent extends BotComponent {
                 expunged: null,
                 link: command.get_or_forge_url(),
             };
-            await this.notify_user(command, user, this.past_participle, moderation);
+            const cant_dm = await this.notify_user(command, user, this.past_participle, moderation);
             await this.issue_moderation(moderation);
-            await reply_with_success_action(
-                command,
-                user,
-                this.past_participle,
-                this.is_once_off ? false : duration === null,
-                reason === null,
-                moderation.case_number,
-            );
+            await command.reply({
+                embeds: [
+                    new Discord.EmbedBuilder()
+                        .setColor(colors.wheatley)
+                        .setDescription(
+                            build_description(
+                                `${this.wheatley.success} ***${user.displayName} was ${this.past_participle}***`,
+                                command.is_slash() && reason ? `**Reason:** ${reason}` : null,
+                                (!this.is_once_off && duration === null) || reason === null
+                                    ? `Remember to provide a ${[
+                                          !this.is_once_off && duration === null ? "duration" : null,
+                                          reason === null ? "reason" : null,
+                                      ]
+                                          .filter(x => x != null)
+                                          .join(" and ")}`
+                                    : null,
+                                cant_dm ? "Note: Couldn't DM user. Their loss." : null,
+                            ),
+                        )
+                        .setFooter({
+                            text: `Case ${moderation.case_number}`,
+                        }),
+                ],
+            });
         } catch (e) {
-            await reply_with_error(command, `Error issuing ${this.type}`);
+            await this.reply_with_error(command, `Error issuing ${this.type}`);
             critical_error(e);
         }
     }
@@ -479,12 +463,12 @@ export abstract class ModerationComponent extends BotComponent {
         try {
             for (const user of users) {
                 if (this.wheatley.is_authorized_mod(user)) {
-                    await reply_with_error(command, moderation_on_team_member_message);
+                    await this.reply_with_error(command, moderation_on_team_member_message);
                     continue;
                 }
                 const base_moderation: basic_moderation_with_user = { ...basic_moderation_info, user: user.id };
                 if (!this.is_once_off && (await this.is_moderation_applied(base_moderation))) {
-                    await reply_with_error(command, `${user.displayName} is already ${this.past_participle}`);
+                    await this.reply_with_error(command, `${user.displayName} is already ${this.past_participle}`);
                     continue;
                 }
                 const moderation: moderation_entry = {
@@ -509,13 +493,11 @@ export abstract class ModerationComponent extends BotComponent {
                 embeds: [
                     new Discord.EmbedBuilder()
                         .setColor(colors.wheatley)
-                        .setDescription(
-                            `<:success:1138616548630745088> ***${capitalize(this.past_participle)} all users***`,
-                        ),
+                        .setDescription(`${this.wheatley.success} ***${capitalize(this.past_participle)} all users***`),
                 ],
             });
         } catch (e) {
-            await reply_with_error(command, `Error issuing multi-${this.type}`);
+            await this.reply_with_error(command, `Error issuing multi-${this.type}`);
             critical_error(e);
         }
     }
@@ -546,11 +528,25 @@ export abstract class ModerationComponent extends BotComponent {
                 },
             );
             if (!res || !(await this.is_moderation_applied(res))) {
-                await reply_with_error(command, `User is not ${this.past_participle}`);
+                await this.reply_with_error(command, `User is not ${this.past_participle}`);
             } else {
                 await this.remove_moderation(res);
                 this.sleep_list.remove(res._id);
-                await reply_with_success_action(command, user, `un${this.past_participle}`, false, false);
+                await command.reply({
+                    embeds: [
+                        new Discord.EmbedBuilder()
+                            .setColor(colors.wheatley)
+                            .setDescription(
+                                build_description(
+                                    `${this.wheatley.success} ***${user.displayName} was un${this.past_participle}***`,
+                                    command.is_slash() && reason ? `**Reason:** ${reason}` : null,
+                                ),
+                            )
+                            .setFooter({
+                                text: `Case ${res.case_number}`,
+                            }),
+                    ],
+                });
                 await this.wheatley.channels.staff_action_log.send({
                     embeds: [
                         Modlogs.case_summary(res, await this.wheatley.client.users.fetch(res.user)).setTitle(
@@ -560,8 +556,22 @@ export abstract class ModerationComponent extends BotComponent {
                 });
             }
         } catch (e) {
-            await reply_with_error(command, `Error undoing ${this.type}`);
+            await this.reply_with_error(command, `Error undoing ${this.type}`);
             critical_error(e);
         }
+    }
+
+    //
+    // Responses
+    //
+
+    async reply_with_error(command: TextBasedCommand, message: string) {
+        await (command.replied && !command.is_editing ? command.followUp : command.reply).bind(command)({
+            embeds: [
+                new Discord.EmbedBuilder()
+                    .setColor(colors.alert_color)
+                    .setDescription(`${this.wheatley.error} ***${message}***`),
+            ],
+        });
     }
 }

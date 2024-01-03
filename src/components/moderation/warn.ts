@@ -6,7 +6,7 @@ import * as mongo from "mongodb";
 import { critical_error } from "../../utils/debugging-and-logging.js";
 import { M } from "../../utils/debugging-and-logging.js";
 import { Wheatley } from "../../wheatley.js";
-import { ModerationComponent, basic_moderation, moderation_entry, reply_with_error } from "./moderation-common.js";
+import { ModerationComponent, basic_moderation, moderation_entry } from "./moderation-common.js";
 import { TextBasedCommandBuilder } from "../../command-abstractions/text-based-command-builder.js";
 import { TextBasedCommand } from "../../command-abstractions/text-based-command.js";
 

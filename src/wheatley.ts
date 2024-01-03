@@ -209,6 +209,8 @@ export class Wheatley extends EventEmitter {
     readonly microsoft_emote = "<:microsoft:1165512917047853127>";
     readonly tux_emote = "<:tux:1165505626894520361>";
     readonly apple_emote = "<:apple:1165508607798943754>";
+    readonly success = "<:success:1138616548630745088>";
+    readonly error = "<:error:1138616562958483496>";
 
     // TCCPP stuff
     TCCPP: Discord.Guild;

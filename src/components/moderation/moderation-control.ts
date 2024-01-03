@@ -6,7 +6,7 @@ import { time_to_human } from "../../utils/strings.js";
 import { M } from "../../utils/debugging-and-logging.js";
 import { BotComponent } from "../../bot-component.js";
 import { Wheatley } from "../../wheatley.js";
-import { ModerationComponent, parse_duration, reply_with_error, reply_with_success } from "./moderation-common.js";
+import { ModerationComponent, parse_duration } from "./moderation-common.js";
 import { colors } from "../../common.js";
 import Modlogs from "./modlogs.js";
 import { TextBasedCommandBuilder } from "../../command-abstractions/text-based-command-builder.js";
@@ -71,17 +71,28 @@ export default class ModerationControl extends BotComponent {
         );
     }
 
-    async notify_user(user: string, case_number: number, message: string) {
-        await (
-            await (await this.wheatley.client.users.fetch(user)).createDM()
-        ).send({
-            embeds: [
-                new Discord.EmbedBuilder()
-                    .setColor(colors.wheatley)
-                    .setTitle(`Case ${case_number} updated`)
-                    .setDescription(message),
-            ],
-        });
+    // returns true if unable to dm user
+    async notify_user(command: TextBasedCommand, user: string, case_number: number, message: string) {
+        try {
+            await (
+                await (await this.wheatley.client.users.fetch(user)).createDM()
+            ).send({
+                embeds: [
+                    new Discord.EmbedBuilder()
+                        .setColor(colors.wheatley)
+                        .setTitle(`Case ${case_number} updated`)
+                        .setDescription(message),
+                ],
+            });
+        } catch (e) {
+            if (e instanceof Discord.DiscordAPIError && e.code === 50007) {
+                // 50007: Cannot send messages to this user
+                return true;
+            } else {
+                await this.reply_with_error(command, "Error notifying");
+            }
+        }
+        return false;
     }
 
     async reason(command: TextBasedCommand, case_number: number, reason: string) {
@@ -98,7 +109,7 @@ export default class ModerationControl extends BotComponent {
             },
         );
         if (res) {
-            await reply_with_success(command, "Reason updated");
+            await this.reply_with_success(command, "Reason updated");
             await this.wheatley.channels.staff_action_log.send({
                 embeds: [
                     Modlogs.case_summary(res, await this.wheatley.client.users.fetch(res.user)).setTitle(
@@ -106,9 +117,9 @@ export default class ModerationControl extends BotComponent {
                     ),
                 ],
             });
-            await this.notify_user(res.user, case_number, `**Reason:** ${reason}`);
+            await this.notify_user(command, res.user, case_number, `**Reason:** ${reason}`);
         } else {
-            await reply_with_error(command, `Case ${case_number} not found`);
+            await this.reply_with_error(command, `Case ${case_number} not found`);
         }
     }
 
@@ -116,11 +127,11 @@ export default class ModerationControl extends BotComponent {
         M.log("Received duration command");
         const item = await this.wheatley.database.moderations.findOne({ case_number });
         if (!item) {
-            await reply_with_error(command, `Case ${case_number} not found`);
+            await this.reply_with_error(command, `Case ${case_number} not found`);
             return;
         }
         if (ModerationComponent.non_duration_moderation_set.has(item.type)) {
-            await reply_with_error(command, `Case ${case_number} can't take a duration`);
+            await this.reply_with_error(command, `Case ${case_number} can't take a duration`);
             return;
         }
         const res = await this.wheatley.database.moderations.findOneAndUpdate(
@@ -136,7 +147,7 @@ export default class ModerationControl extends BotComponent {
             },
         );
         if (res) {
-            await reply_with_success(command, "Duration updated");
+            await this.reply_with_success(command, "Duration updated");
             // Update sleep lists and remove moderation if needed
             ModerationComponent.event_hub.emit("moderation_update", res);
             await this.wheatley.channels.staff_action_log.send({
@@ -147,7 +158,7 @@ export default class ModerationControl extends BotComponent {
                 ],
             });
             const duration_str = res.duration ? time_to_human(res.duration) : "Permanent";
-            await this.notify_user(res.user, case_number, `**Duration:** ${duration_str}`);
+            await this.notify_user(command, res.user, case_number, `**Duration:** ${duration_str}`);
         }
     }
 
@@ -171,8 +182,9 @@ export default class ModerationControl extends BotComponent {
             },
         );
         if (res) {
-            await reply_with_success(command, "Case expunged");
+            await this.reply_with_success(command, "Case expunged");
             // Update sleep lists and remove moderation if needed
+            // TODO: Make sure it gets removed too
             ModerationComponent.event_hub.emit("moderation_update", res);
             await this.wheatley.channels.staff_action_log.send({
                 embeds: [
@@ -181,9 +193,30 @@ export default class ModerationControl extends BotComponent {
                     ),
                 ],
             });
-            await this.notify_user(res.user, case_number, `**Expunged:** ${reason}`);
+            await this.notify_user(command, res.user, case_number, `**Expunged:** ${reason}`);
         } else {
-            await reply_with_error(command, `Case ${case_number} not found`);
+            await this.reply_with_error(command, `Case ${case_number} not found`);
         }
+    }
+
+    // TODO: Code duplication
+    async reply_with_error(command: TextBasedCommand, message: string) {
+        await (command.replied && !command.is_editing ? command.followUp : command.reply).bind(command)({
+            embeds: [
+                new Discord.EmbedBuilder()
+                    .setColor(colors.alert_color)
+                    .setDescription(`${this.wheatley.error} ***${message}***`),
+            ],
+        });
+    }
+
+    async reply_with_success(command: TextBasedCommand, message: string) {
+        await (command.replied && !command.is_editing ? command.followUp : command.reply).bind(command)({
+            embeds: [
+                new Discord.EmbedBuilder()
+                    .setColor(colors.green)
+                    .setDescription(`${this.wheatley.success} ***${message}***`),
+            ],
+        });
     }
 }

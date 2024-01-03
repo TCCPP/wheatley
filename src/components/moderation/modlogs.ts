@@ -8,7 +8,7 @@ import { remove } from "../../utils/typing.js";
 import { M } from "../../utils/debugging-and-logging.js";
 import { BotComponent } from "../../bot-component.js";
 import { Wheatley } from "../../wheatley.js";
-import { moderation_entry, reply_with_error } from "./moderation-common.js";
+import { moderation_entry } from "./moderation-common.js";
 import { colors } from "../../common.js";
 import { TextBasedCommandBuilder } from "../../command-abstractions/text-based-command-builder.js";
 import { CommandAbstractionReplyOptions, TextBasedCommand } from "../../command-abstractions/text-based-command.js";
@@ -201,7 +201,18 @@ export default class Modlogs extends BotComponent {
                 embeds: [Modlogs.case_summary(moderation, await this.wheatley.client.users.fetch(moderation.user))],
             });
         } else {
-            await reply_with_error(command, `Case ${case_number} not found`);
+            await this.reply_with_error(command, `Case ${case_number} not found`);
         }
+    }
+
+    // TODO: Code duplication
+    async reply_with_error(command: TextBasedCommand, message: string) {
+        await (command.replied && !command.is_editing ? command.followUp : command.reply).bind(command)({
+            embeds: [
+                new Discord.EmbedBuilder()
+                    .setColor(colors.alert_color)
+                    .setDescription(`${this.wheatley.error} ***${message}***`),
+            ],
+        });
     }
 }

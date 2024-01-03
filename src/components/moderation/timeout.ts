@@ -12,7 +12,6 @@ import {
     duration_regex,
     moderation_entry,
     parse_duration,
-    reply_with_error,
 } from "./moderation-common.js";
 import { TextBasedCommandBuilder } from "../../command-abstractions/text-based-command-builder.js";
 import { TextBasedCommand } from "../../command-abstractions/text-based-command.js";
@@ -65,7 +64,7 @@ export default class Timeout extends ModerationComponent {
                             ) => {
                                 const duration_ms = parse_duration(duration);
                                 if (duration_ms == null || duration_ms > 28 * DAY) {
-                                    await reply_with_error(command, "Maximum allowable duration is 28 days");
+                                    await this.reply_with_error(command, "Maximum allowable duration is 28 days");
                                     return;
                                 }
                                 return await this.moderation_issue_handler(command, user, duration, reason, {
