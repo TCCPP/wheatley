@@ -417,31 +417,9 @@ export abstract class ModerationComponent extends BotComponent {
         }
     }
 
-    async reply_and_notify(
-        command: TextBasedCommand,
-        user: Discord.User,
-        action: string,
-        moderation: moderation_entry,
-        remind_to_duration: boolean,
-        remind_to_reason: boolean,
-        is_removal = false,
-    ) {
-        await reply_with_success_action(
-            command,
-            user,
-            action,
-            remind_to_duration,
-            remind_to_reason,
-            is_removal ? undefined : moderation.case_number,
-        );
-        await this.notify_user(command, user, action, moderation, is_removal);
-    }
-
     //
     // Command handlers
     //
-
-    // TODO sleep_list handling
 
     async moderation_issue_handler(
         command: TextBasedCommand,
