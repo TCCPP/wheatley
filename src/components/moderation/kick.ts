@@ -5,27 +5,24 @@ import * as mongo from "mongodb";
 
 import { TextBasedCommandBuilder } from "../../command-abstractions/text-based-command-builder.js";
 import { TextBasedCommand } from "../../command-abstractions/text-based-command.js";
-import { critical_error } from "../../utils/debugging-and-logging.js";
 import { M } from "../../utils/debugging-and-logging.js";
 import { Wheatley } from "../../wheatley.js";
-import {
-    ModerationComponent,
-    basic_moderation_with_user,
-    moderation_entry,
-    moderation_type,
-    reply_with_error,
-    reply_with_success_action,
-    moderation_on_team_member_message,
-} from "./moderation-common.js";
-import { unwrap } from "../../utils/misc.js";
-import { MINUTE } from "../../common.js";
+import { ModerationComponent, basic_moderation_with_user, moderation_entry } from "./moderation-common.js";
 
 /**
  * Implements !kick
  */
 export default class Kick extends ModerationComponent {
-    get type(): moderation_type {
-        return "kick";
+    get type() {
+        return "kick" as const;
+    }
+
+    override get is_once_off() {
+        return true;
+    }
+
+    get past_participle() {
+        return "kicked";
     }
 
     constructor(wheatley: Wheatley) {
@@ -45,7 +42,9 @@ export default class Kick extends ModerationComponent {
                     description: "Reason",
                     required: false,
                 })
-                .set_handler(this.kick_handler.bind(this)),
+                .set_handler((command: TextBasedCommand, user: Discord.User, reason: string | null) =>
+                    this.moderation_issue_handler(command, user, null, reason, { type: this.type }),
+                ),
         );
     }
 
@@ -62,36 +61,6 @@ export default class Kick extends ModerationComponent {
     is_moderation_applied(moderation: basic_moderation_with_user): never {
         void moderation;
         assert(false);
-    }
-
-    async kick_handler(command: TextBasedCommand, user: Discord.User, reason: string | null) {
-        try {
-            if (this.wheatley.is_authorized_mod(user)) {
-                await reply_with_error(command, moderation_on_team_member_message);
-                return;
-            }
-            const moderation: moderation_entry = {
-                case_number: -1,
-                user: user.id,
-                user_name: user.displayName,
-                moderator: command.user.id,
-                moderator_name: (await command.get_member()).displayName,
-                type: "kick",
-                reason,
-                issued_at: Date.now(),
-                duration: null,
-                active: false,
-                removed: null,
-                expunged: null,
-                link: command.get_or_forge_url(),
-            };
-            await this.notify_user(command, user, "kicked", moderation);
-            await this.register_new_moderation(moderation);
-            await reply_with_success_action(command, user, "kicked", false, reason === null, moderation.case_number);
-        } catch (e) {
-            await reply_with_error(command, "Error kicking");
-            critical_error(e);
-        }
     }
 
     override async on_guild_member_remove(member: Discord.GuildMember | Discord.PartialGuildMember) {
