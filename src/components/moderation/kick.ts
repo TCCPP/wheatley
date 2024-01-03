@@ -17,6 +17,10 @@ export default class Kick extends ModerationComponent {
         return "kick" as const;
     }
 
+    override get is_once_off() {
+        return true;
+    }
+
     get past_participle() {
         return "kicked";
     }

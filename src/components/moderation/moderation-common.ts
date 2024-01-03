@@ -174,7 +174,7 @@ export abstract class ModerationComponent extends BotComponent {
 
     get is_once_off() {
         // Warns and kicks are once-off, they don't have duration and can't be already applied
-        return true;
+        return false;
     }
 
     get persist_moderation() {
