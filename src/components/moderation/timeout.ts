@@ -105,7 +105,12 @@ export default class Timeout extends ModerationComponent {
 
     async is_moderation_applied(moderation: basic_moderation_with_user) {
         assert(moderation.type == this.type);
-        const member = await this.wheatley.TCCPP.members.fetch(moderation.user);
-        return member.communicationDisabledUntil !== null;
+        try {
+            const member = await this.wheatley.TCCPP.members.fetch(moderation.user);
+            return member.communicationDisabledUntil !== null;
+        } catch (e) {
+            // there's no way to check if a timeout is applied to a user outside the guild, just presume it is...
+            return true;
+        }
     }
 }
