@@ -8,7 +8,6 @@ import { colors } from "../common.js";
 import { BotComponent } from "../bot-component.js";
 import { Wheatley } from "../wheatley.js";
 import { build_description, capitalize } from "../utils/strings.js";
-import { make_quote_embeds } from "./quote.js";
 
 /**
  * Prevent executables and check for viruses
@@ -92,7 +91,7 @@ export default class AntiExecutable extends BotComponent {
     }
 
     async handle_executables(message: Discord.Message, executables: Discord.Attachment[]) {
-        const quote = await make_quote_embeds([message], null, this.wheatley, true);
+        const quote = await this.wheatley.make_quote_embeds([message]);
         await message.delete();
         await message.channel.send(`<@${message.author.id}> Please do not send executable files`);
         const flag_messsage = await this.wheatley.channels.staff_flag_log.send({

@@ -26,6 +26,7 @@ import { GuildCommandManager } from "./infra/guild-command-manager.js";
 import { MemberTracker } from "./infra/member-tracker.js";
 import { forge_snowflake } from "./components/snowflake.js";
 import { Virustotal } from "./infra/virustotal.js";
+import { is_media_link_embed } from "./utils/discord.js";
 
 export function create_basic_embed(title: string | undefined, color: number, content: string) {
     const embed = new Discord.EmbedBuilder().setColor(color).setDescription(content);
@@ -174,6 +175,19 @@ export const root_mod_ids = [
 ];
 
 export const root_mod_ids_set = new Set(root_mod_ids);
+
+type quote_options = {
+    // description template
+    template?: string;
+    // only include an image in the single embed, omit all other media or attachments
+    no_extra_media_embeds?: boolean;
+    // override message content
+    custom_content?: string;
+    // who requested this quote to be made
+    requested_by?: Discord.GuildMember;
+    // is the link safe to click? (default true)
+    safe_link?: boolean;
+};
 
 export class Wheatley extends EventEmitter {
     components = new Map<string, BotComponent>();
@@ -477,6 +491,155 @@ export class Wheatley extends EventEmitter {
                 throw e;
             }
         }
+    }
+
+    async get_display_name(thing: Discord.Message | Discord.User): Promise<string> {
+        if (thing instanceof Discord.User) {
+            const user = thing;
+            try {
+                return (await this.TCCPP.members.fetch(user.id)).displayName;
+            } catch {
+                // user could potentially not be in the server
+                return user.tag;
+            }
+        } else if (thing instanceof Discord.Message) {
+            const message = thing;
+            if (message.member == null) {
+                return this.get_display_name(message.author);
+            } else {
+                return message.member.displayName;
+            }
+        } else {
+            assert(false);
+        }
+    }
+
+    async make_quote_embeds(
+        messages: Discord.Message[],
+        options?: quote_options,
+    ): Promise<{
+        embeds: (Discord.EmbedBuilder | Discord.Embed)[];
+        files?: (Discord.AttachmentPayload | Discord.Attachment)[];
+    }> {
+        assert(messages.length >= 1);
+        const head = messages[0];
+        const contents = options?.custom_content ?? messages.map(m => m.content).join("\n");
+        const template = options?.template ?? "\n\nFrom <##> [[Jump to message]]($$)";
+        const template_string = template.replaceAll("##", "#" + head.channel.id).replaceAll("$$", head.url);
+        const safe_link = options?.safe_link === undefined ? true : options.safe_link;
+        const embed = new Discord.EmbedBuilder()
+            .setColor(colors.default)
+            .setAuthor({
+                name: `${await this.get_display_name(head)}`,
+                iconURL: head.member?.avatarURL() ?? head.author.displayAvatarURL(),
+            })
+            .setDescription(
+                contents + template_string + (safe_link ? "" : " ⚠️ Unexpected domain, be careful clicking this link"),
+            )
+            .setTimestamp(head.createdAt);
+        if (options?.requested_by) {
+            embed.setFooter({
+                text: `Quoted by ${options.requested_by.displayName}`,
+                iconURL: options.requested_by.user.displayAvatarURL(),
+            });
+        }
+        type MediaDescriptor = {
+            type: "image" | "video";
+            attachment: Discord.Attachment | { attachment: string };
+        };
+        const media = messages
+            .map(
+                message =>
+                    [
+                        ...message.attachments
+                            .filter(a => a.contentType?.indexOf("image") == 0)
+                            .map(a => ({
+                                type: "image",
+                                attachment: a,
+                            })),
+                        ...message.attachments
+                            .filter(a => a.contentType?.indexOf("video") == 0)
+                            .map(a => ({
+                                type: "video",
+                                attachment: a,
+                            })),
+                        ...message.embeds.filter(is_media_link_embed).map(e => {
+                            if (e.video) {
+                                // Check video first, as videos can have thumbnails
+                                return {
+                                    type: "video",
+                                    attachment: {
+                                        attachment: unwrap(e.video.url),
+                                    } as Discord.AttachmentPayload,
+                                };
+                            } else if (e.image || e.thumbnail) {
+                                // Webp can be thumbnail only, no image. Very weird.
+                                return {
+                                    type: "image",
+                                    attachment: {
+                                        attachment: unwrap(unwrap(e.image ? e.image : e.thumbnail).url),
+                                    } as Discord.AttachmentPayload,
+                                };
+                            } else {
+                                assert(false);
+                            }
+                        }),
+                    ] as MediaDescriptor[],
+            )
+            .flat();
+        // M.log(media);
+        const other_embeds = messages.map(message => message.embeds.filter(e => !is_media_link_embed(e))).flat();
+        // M.log(other_embeds);
+        const media_embeds: Discord.EmbedBuilder[] = [];
+        const attachments: (Discord.Attachment | Discord.AttachmentPayload)[] = [];
+        const other_attachments: (Discord.Attachment | Discord.AttachmentPayload)[] = messages
+            .map(message => [
+                ...message.attachments
+                    .map(a => a)
+                    .filter(a => !(a.contentType?.indexOf("image") == 0 || a.contentType?.indexOf("video") == 0)),
+            ])
+            .flat();
+        let set_primary_image = false;
+        if (media.length > 0) {
+            for (const medium of media) {
+                if (medium.type == "image") {
+                    if (!set_primary_image) {
+                        embed.setImage(
+                            medium.attachment instanceof Discord.Attachment
+                                ? medium.attachment.url
+                                : medium.attachment.attachment,
+                        );
+                        set_primary_image = true;
+                    } else {
+                        media_embeds.push(
+                            new Discord.EmbedBuilder({
+                                image: {
+                                    url:
+                                        medium.attachment instanceof Discord.Attachment
+                                            ? medium.attachment.url
+                                            : medium.attachment.attachment,
+                                },
+                            }),
+                        );
+                    }
+                } else {
+                    // video
+                    attachments.push(medium.attachment);
+                }
+            }
+        }
+        if (options?.no_extra_media_embeds) {
+            media_embeds.splice(0, media_embeds.length);
+            other_embeds.splice(0, other_embeds.length);
+            attachments.splice(0, attachments.length);
+            other_attachments.splice(0, other_attachments.length);
+        }
+        // M.log([embed, ...media_embeds, ...other_embeds], [...attachments, ...other_attachments]);
+        return {
+            embeds: [embed, ...media_embeds, ...other_embeds],
+            files:
+                attachments.length + other_attachments.length == 0 ? undefined : [...attachments, ...other_attachments],
+        };
     }
 
     async populate_caches() {

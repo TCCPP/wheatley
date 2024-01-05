@@ -10,7 +10,6 @@ import { M } from "../utils/debugging-and-logging.js";
 import { MINUTE } from "../common.js";
 import { BotComponent } from "../bot-component.js";
 import { Wheatley } from "../wheatley.js";
-import { make_quote_embeds } from "./quote.js";
 import { TextBasedCommandBuilder } from "../command-abstractions/text-based-command-builder.js";
 import { TextBasedCommand } from "../command-abstractions/text-based-command.js";
 
@@ -184,7 +183,7 @@ export default class Starboard extends BotComponent {
         await this.mutex.lock(message.id);
         try {
             const make_embeds = () =>
-                make_quote_embeds([message], null, this.wheatley, true, {
+                this.wheatley.make_quote_embeds([message], {
                     template: "\n\n**[Jump to message!]($$)**",
                 });
             const starboard_entry = await this.wheatley.database.starboard_entries.findOne({ message: message.id });
@@ -283,7 +282,7 @@ export default class Starboard extends BotComponent {
                         `\n${this.reactions_string(message)}` +
                         "\n" +
                         (await delete_reaction.users.fetch()).map(user => `<@${user.id}> ${user.tag}`).join("\n"),
-                    ...(await make_quote_embeds([message], null, this.wheatley, true)),
+                    ...(await this.wheatley.make_quote_embeds([message])),
                     allowedMentions: { parse: [] },
                 });
                 // E11000 duplicate key error collection can happen here if somehow the key is inserted but the delete

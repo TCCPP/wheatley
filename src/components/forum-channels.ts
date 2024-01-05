@@ -8,7 +8,6 @@ import { colors, DAY, HOUR, MINUTE } from "../common.js";
 import { decode_snowflake } from "./snowflake.js"; // todo: eliminate decode_snowflake
 import { BotComponent } from "../bot-component.js";
 import { Wheatley } from "../wheatley.js";
-import { make_quote_embeds } from "./quote.js";
 
 // TODO: Take into account thread's inactivity setting
 
@@ -275,7 +274,7 @@ export default class ForumChannels extends BotComponent {
             .replaceAll(/\n{2,}/g, "\n\n");
         // mirror to the text channel
         const text_channel = this.wheatley.get_corresponding_text_help_channel(thread);
-        const quote = await make_quote_embeds([message], null, this.wheatley, true, {
+        const quote = await this.wheatley.make_quote_embeds([message], {
             no_extra_media_embeds: true,
             custom_content: content,
         });

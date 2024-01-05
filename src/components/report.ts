@@ -8,7 +8,6 @@ import { M } from "../utils/debugging-and-logging.js";
 import { colors, MINUTE } from "../common.js";
 import { BotComponent } from "../bot-component.js";
 import { Wheatley } from "../wheatley.js";
-import { make_quote_embeds } from "./quote.js";
 import { MessageContextMenuInteractionBuilder } from "../command-abstractions/context-menu.js";
 import { ModalInteractionBuilder } from "../command-abstractions/modal.js";
 
@@ -89,7 +88,7 @@ export default class Report extends BotComponent {
             if (message.length > 0) {
                 report_embed.setDescription(`Message: ${message}`);
             }
-            const quote_embeds = await make_quote_embeds([target_message], null, this.wheatley, true);
+            const quote_embeds = await this.wheatley.make_quote_embeds([target_message]);
             // ninja in a custom footer
             (quote_embeds.embeds[0] as Discord.EmbedBuilder).setFooter({
                 text: `ID: ${target_message.author.id}`,

@@ -12,7 +12,6 @@ import { BotComponent } from "../bot-component.js";
 import { Wheatley } from "../wheatley.js";
 import { TextBasedCommandBuilder } from "../command-abstractions/text-based-command-builder.js";
 import { TextBasedCommand } from "../command-abstractions/text-based-command.js";
-import { make_quote_embeds } from "./quote.js";
 
 export const TRACKER_START_TIME = 1625112000000; // Thu Jul 01 2021 00:00:00 GMT-0400 (Eastern Daylight Time)
 // export const TRACKER_START_TIME = 1630468800000; // Wed Sep 01 2021 00:00:00 GMT-0400 (Eastern Daylight Time)
@@ -98,27 +97,6 @@ export default class ServerSuggestionTracker extends BotComponent {
         }
     }
 
-    async get_display_name(thing: Discord.Message | Discord.User): Promise<string> {
-        if (thing instanceof Discord.User) {
-            const user = thing;
-            try {
-                return (await this.wheatley.TCCPP.members.fetch(user.id)).displayName;
-            } catch {
-                // user could potentially not be in the server
-                return user.tag;
-            }
-        } else if (thing instanceof Discord.Message) {
-            const message = thing;
-            if (message.member == null) {
-                return this.get_display_name(message.author);
-            } else {
-                return message.member.displayName;
-            }
-        } else {
-            assert(false);
-        }
-    }
-
     async reverse_lookup(status_id: string) {
         const entry = await this.wheatley.database.server_suggestions.findOne({ status_message: status_id });
         return entry ? entry.suggestion : null;
@@ -165,7 +143,7 @@ export default class ServerSuggestionTracker extends BotComponent {
         const up = (reactions.get("👍") || { count: 0 }).count;
         const down = (reactions.get("👎") || { count: 0 }).count;
         const maybe = (reactions.get("🤷") || { count: 0 }).count;
-        const quote_embeds = await make_quote_embeds([message], null, this.wheatley, true);
+        const quote_embeds = await this.wheatley.make_quote_embeds([message]);
         // ninja in a custom footer
         (quote_embeds.embeds[0] as Discord.EmbedBuilder).setFooter({
             text: `${up} 👍 ${down} 👎 ${maybe} 🤷`,
@@ -182,12 +160,12 @@ export default class ServerSuggestionTracker extends BotComponent {
         const embed = new Discord.EmbedBuilder()
             .setColor(color)
             .setAuthor({
-                name: `${await this.get_display_name(message)}`,
+                name: `${await this.wheatley.get_display_name(message)}`,
                 iconURL: message.author.displayAvatarURL(),
             })
             .setDescription(message.content + `\n\n[[Jump to message]](${message.url})`)
             .setFooter({
-                text: `${await this.get_display_name(reaction.user)}: ${reaction.emoji}`,
+                text: `${await this.wheatley.get_display_name(reaction.user)}: ${reaction.emoji}`,
                 iconURL: reaction.user.displayAvatarURL(),
             })
             .setTimestamp(message.createdAt);
@@ -198,7 +176,7 @@ export default class ServerSuggestionTracker extends BotComponent {
         const embed = new Discord.EmbedBuilder()
             .setColor(color)
             .setAuthor({
-                name: `${await this.get_display_name(message)}`,
+                name: `${await this.wheatley.get_display_name(message)}`,
                 iconURL: message.author.displayAvatarURL(),
             })
             .setDescription(message.content + `\n\n[[Jump to message]](${message.url})`)
