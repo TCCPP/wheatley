@@ -8,6 +8,8 @@ import { TextBasedCommand } from "../../command-abstractions/text-based-command.
 import { M } from "../../utils/debugging-and-logging.js";
 import { Wheatley } from "../../wheatley.js";
 import { ModerationComponent, basic_moderation_with_user, moderation_entry } from "./moderation-common.js";
+import { unwrap } from "../../utils/misc.js";
+import { MINUTE } from "../../common.js";
 
 /**
  * Implements !kick
@@ -64,30 +66,30 @@ export default class Kick extends ModerationComponent {
     }
 
     override async on_guild_member_remove(member: Discord.GuildMember | Discord.PartialGuildMember) {
-        // const logs = await member.guild.fetchAuditLogs({
-        //     limit: 10,
-        //     type: Discord.AuditLogEvent.MemberKick,
-        // });
-        // const entry = logs.entries
-        //     .filter(entry => entry.createdAt > new Date(Date.now() - 10 * MINUTE))
-        //     .find(entry => unwrap(entry.target).id == member.user.id);
-        // if (entry) {
-        //     const moderation: moderation_entry = {
-        //         case_number: -1,
-        //         user: unwrap(entry.target).id,
-        //         user_name: unwrap(entry.target).displayName,
-        //         moderator: unwrap(entry.executor).id,
-        //         moderator_name: unwrap(entry.executor).displayName,
-        //         type: "kick",
-        //         reason: entry.reason,
-        //         issued_at: Date.now(),
-        //         duration: null,
-        //         active: false,
-        //         removed: null,
-        //         expunged: null,
-        //         link: null,
-        //     };
-        //     await this.register_new_moderation(moderation);
-        // }
+        const logs = await member.guild.fetchAuditLogs({
+            limit: 10,
+            type: Discord.AuditLogEvent.MemberKick,
+        });
+        const entry = logs.entries
+            .filter(entry => entry.createdAt > new Date(Date.now() - 10 * MINUTE))
+            .find(entry => unwrap(entry.target).id == member.user.id);
+        if (entry && entry.executorId != this.wheatley.id) {
+            const moderation: moderation_entry = {
+                case_number: -1,
+                user: unwrap(entry.target).id,
+                user_name: unwrap(entry.target).displayName,
+                moderator: unwrap(entry.executor).id,
+                moderator_name: unwrap(entry.executor).displayName,
+                type: "kick",
+                reason: entry.reason,
+                issued_at: Date.now(),
+                duration: null,
+                active: false,
+                removed: null,
+                expunged: null,
+                link: null,
+            };
+            await this.issue_moderation(moderation);
+        }
     }
 }
