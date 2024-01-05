@@ -295,7 +295,15 @@ export class TextBasedCommand {
                 assert(this.reply_object instanceof Discord.ChatInputCommandInteraction);
                 await this.reply_object.deleteReply();
             } else {
-                await this.response.delete();
+                try {
+                    await this.response.delete();
+                } catch (e) {
+                    if (e instanceof Discord.DiscordAPIError && e.code === 10008) {
+                        // Unknown message, presumably already deleted
+                    } else {
+                        throw e;
+                    }
+                }
             }
         }
     }
