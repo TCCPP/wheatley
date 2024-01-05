@@ -3,12 +3,13 @@ import { strict as assert } from "assert";
 import * as Discord from "discord.js";
 
 import { ConditionalOptional, MoreThanOne, ConditionalNull } from "../utils/typing.js";
-import { Append, intersection } from "../utils/typing.js";
+import { Append } from "../utils/typing.js";
 import { TextBasedCommand } from "./text-based-command.js";
 import { BaseBuilder } from "./interaction-base.js";
 import { BotTextBasedCommand } from "./text-based-command-descriptor.js";
 import { Wheatley } from "../wheatley.js";
 import { zip } from "../utils/iterables.js";
+import { intersection } from "../utils/arrays.js";
 
 export type TextBasedCommandOptionType = "string" | "number" | "user" | "users" | "role";
 

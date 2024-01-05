@@ -2,7 +2,7 @@ import * as Discord from "discord.js";
 import XXH from "xxhashjs";
 import { DAY, HOUR, MINUTE, MONTH, YEAR } from "../common.js";
 import { round } from "./misc.js";
-import { remove } from "./typing.js";
+import { remove } from "./arrays.js";
 
 export function pluralize(n: number, word: string, round_to: null | number = null) {
     if (n == 1) {
