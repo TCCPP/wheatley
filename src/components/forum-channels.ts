@@ -315,8 +315,8 @@ export default class ForumChannels extends BotComponent {
                         ),
                     ],
                 });
+                await this.mirror_forum_post(message, thread);
             }
-            await this.mirror_forum_post(message, thread);
         } else {
             if (channel instanceof Discord.ThreadChannel && this.wheatley.is_forum_help_thread(channel)) {
                 await this.handle_message_for_solved_prompt(message);

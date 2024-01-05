@@ -423,7 +423,6 @@ export class Wheatley extends EventEmitter {
         } else if (thread.parentId == this.channels.c_help.id) {
             return this.channels.c_help_text;
         }
-        M.log("get_corresponding_text_help_channel assertion failure", thread);
         assert(false);
     }
 
