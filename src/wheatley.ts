@@ -564,12 +564,16 @@ export class Wheatley extends EventEmitter {
                                 attachment: a,
                             })),
                         ...message.embeds.filter(is_media_link_embed).map(e => {
-                            if (e.video) {
+                            // while we're here, filter out youtube embeds, the only way to embed these would be to
+                            // shove them in the message content but then the quote interface will be tricky to work
+                            // with
+                            // for now fallback to a thumbnail
+                            if (e.video && !(e.video.url.includes("youtube.com") || e.video.url.includes("youtu.be"))) {
                                 // Check video first, as videos can have thumbnails
                                 return {
                                     type: "video",
                                     attachment: {
-                                        attachment: unwrap(e.video.url),
+                                        attachment: e.video.url,
                                     } as Discord.AttachmentPayload,
                                 };
                             } else if (e.image || e.thumbnail) {
@@ -577,7 +581,7 @@ export class Wheatley extends EventEmitter {
                                 return {
                                     type: "image",
                                     attachment: {
-                                        attachment: unwrap(unwrap(e.image ? e.image : e.thumbnail).url),
+                                        attachment: unwrap(e.image ? e.image : e.thumbnail).url,
                                     } as Discord.AttachmentPayload,
                                 };
                             } else {
