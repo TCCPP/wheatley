@@ -83,10 +83,18 @@ export default class ForumControl extends BotComponent {
     async solve(command: TextBasedCommand) {
         if (await this.try_to_control_thread(command, command.name.startsWith("!solve") ? "solve" : "close")) {
             const channel = await command.get_channel();
-            assert(channel.isThread());
+            if (!channel.isThread() || !(channel.parent instanceof Discord.ForumChannel)) {
+                await command.reply({
+                    embeds: [
+                        new Discord.EmbedBuilder()
+                            .setColor(colors.red)
+                            .setDescription("Command must be used on a forum help thread."),
+                    ],
+                });
+                return;
+            }
             const thread = channel;
-            const forum = thread.parent;
-            assert(forum instanceof Discord.ForumChannel);
+            const forum = channel.parent;
             const solved_tag = get_tag(forum, "Solved").id;
             const open_tag = get_tag(forum, "Open").id;
             const stale_tag = get_tag(forum, "Stale").id;
@@ -127,10 +135,18 @@ export default class ForumControl extends BotComponent {
     async unsolve(command: TextBasedCommand) {
         if (await this.try_to_control_thread(command, command.name.startsWith("!unsolve") ? "unsolve" : "open")) {
             const channel = await command.get_channel();
-            assert(channel.isThread());
+            if (!channel.isThread() || !(channel.parent instanceof Discord.ForumChannel)) {
+                await command.reply({
+                    embeds: [
+                        new Discord.EmbedBuilder()
+                            .setColor(colors.red)
+                            .setDescription("Command must be used on a forum help thread."),
+                    ],
+                });
+                return;
+            }
             const thread = channel;
-            const forum = thread.parent;
-            assert(forum instanceof Discord.ForumChannel);
+            const forum = channel.parent;
             const solved_tag = get_tag(forum, "Solved").id;
             const open_tag = get_tag(forum, "Open").id;
             if (this.wheatley.is_forum_help_thread(thread)) {
