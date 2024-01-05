@@ -99,8 +99,17 @@ export default class Timeout extends ModerationComponent {
 
     async remove_moderation(entry: mongo.WithId<moderation_entry>) {
         M.info(`Removing timeout from ${entry.user_name}`);
-        const member = await this.wheatley.TCCPP.members.fetch(entry.user);
-        await member.timeout(null);
+        try {
+            const member = await this.wheatley.TCCPP.members.fetch(entry.user);
+            await member.timeout(null);
+        } catch (e) {
+            if (e instanceof Discord.DiscordAPIError && e.code === 10007) {
+                // Unknown member
+                // For now can't really do anything....
+            } else {
+                throw e;
+            }
+        }
     }
 
     async is_moderation_applied(moderation: basic_moderation_with_user) {
@@ -109,8 +118,13 @@ export default class Timeout extends ModerationComponent {
             const member = await this.wheatley.TCCPP.members.fetch(moderation.user);
             return member.communicationDisabledUntil !== null;
         } catch (e) {
-            // there's no way to check if a timeout is applied to a user outside the guild, just presume it is...
-            return true;
+            if (e instanceof Discord.DiscordAPIError && e.code === 10007) {
+                // Unknown member
+                // There's no way to check if a timeout is applied to a user outside the guild, just presume it is...
+                return true;
+            } else {
+                throw e;
+            }
         }
     }
 }

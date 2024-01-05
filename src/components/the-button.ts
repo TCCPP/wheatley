@@ -191,6 +191,8 @@ export default class TheButton extends BotComponent {
                 });
                 return;
             }
+            // it might take a moment to go through everything
+            await interaction.deferReply();
             // add user to the scoreboard if needed
             const entry = await this.wheatley.database.button_scoreboard.findOne({ user: interaction.user.id });
             // check to see if the user has pressed it within the last 24 hours
