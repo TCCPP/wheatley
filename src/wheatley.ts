@@ -564,31 +564,38 @@ export class Wheatley extends EventEmitter {
                                 type: "video",
                                 attachment: a,
                             })),
-                        ...message.embeds.filter(is_media_link_embed).map(e => {
-                            // while we're here, filter out youtube embeds, the only way to embed these would be to
-                            // shove them in the message content but then the quote interface will be tricky to work
-                            // with
-                            // for now fallback to a thumbnail
-                            if (e.video && !(e.video.url.includes("youtube.com") || e.video.url.includes("youtu.be"))) {
-                                // Check video first, as videos can have thumbnails
-                                return {
-                                    type: "video",
-                                    attachment: {
-                                        attachment: e.video.url,
-                                    } as Discord.AttachmentPayload,
-                                };
-                            } else if (e.image || e.thumbnail) {
-                                // Webp can be thumbnail only, no image. Very weird.
-                                return {
-                                    type: "image",
-                                    attachment: {
-                                        attachment: unwrap(e.image ? e.image : e.thumbnail).url,
-                                    } as Discord.AttachmentPayload,
-                                };
-                            } else {
-                                assert(false);
-                            }
-                        }),
+                        ...message.embeds
+                            .filter(is_media_link_embed)
+                            .map(e => {
+                                // Ignore video embeds for now and just defer to a thumbnail. Video embeds come from
+                                // links, such as youtube or imgur etc., but embedded that as the bot would be tricky.
+                                // Either the video would have to be downloaded and attached (which may be tricky or
+                                // tos-violating e.g. in youtube's case) or the link could be shoved in the content for
+                                // auto-embedding but then the quote interface will be tricky to work (and it might not
+                                // look good).
+                                /*if (e.video) {
+                                    // Check video first, as videos can have thumbnails
+                                    return {
+                                        type: "video",
+                                        attachment: {
+                                            attachment: e.video.url,
+                                        } as Discord.AttachmentPayload,
+                                    };
+                                } else*/ if (e.image || e.thumbnail) {
+                                    // Webp can be thumbnail only, no image. Very weird.
+                                    return {
+                                        type: "image",
+                                        attachment: {
+                                            attachment: unwrap(e.image ? e.image : e.thumbnail).url,
+                                        } as Discord.AttachmentPayload,
+                                    };
+                                } else if (e.video) {
+                                    // video but no thumbnail? just fallthrough...
+                                } else {
+                                    assert(false);
+                                }
+                            })
+                            .filter(x => x !== undefined),
                     ] as MediaDescriptor[],
             )
             .flat();
