@@ -345,6 +345,7 @@ export abstract class ModerationComponent extends BotComponent {
         moderation: DistributedOmit<moderation_entry, "case">,
         is_removal = false,
     ) {
+        assert(moderation.type == this.type);
         const duration = moderation.duration ? time_to_human(moderation.duration) : "Permanent";
         try {
             await (
@@ -356,10 +357,8 @@ export abstract class ModerationComponent extends BotComponent {
                         .setTitle(`You have been ${action} in Together C & C++.`)
                         .setDescription(
                             build_description(
-                                is_removal || ModerationComponent.non_duration_moderation_set.has(moderation.type)
-                                    ? null
-                                    : `**Duration:** ${duration}`,
-                                `**Reason:** ${moderation.reason}`,
+                                is_removal || this.is_once_off ? null : `**Duration:** ${duration}`,
+                                moderation.reason ? `**Reason:** ${moderation.reason}` : null,
                                 moderation.type === "rolepersist" ? `**Role:** ${moderation.role_name}` : null,
                             ),
                         )
