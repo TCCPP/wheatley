@@ -155,8 +155,8 @@ export const root_ids = new Set([
     "199943082441965577", // zelis
     "110756651694297088", // vincent
     "89441674844995584", // styx
-    // prevent Wheatley reactions being removed in server suggestions and also allow some elegant handling
     "313597351262683138", // dot
+    // prevent Wheatley reactions being removed in server suggestions and also allow some elegant handling
     "597216680271282192", // wheatley
 ]);
 
