@@ -4,9 +4,11 @@ import * as Discord from "discord.js";
 import { get_url_for } from "../utils/discord.js";
 import { critical_error } from "../utils/debugging-and-logging.js";
 import { M } from "../utils/debugging-and-logging.js";
-import { colors, MINUTE } from "../common.js";
+import { colors, HOUR, MINUTE } from "../common.js";
 import { BotComponent } from "../bot-component.js";
 import { Wheatley } from "../wheatley.js";
+import { SelfClearingMap } from "../utils/containers.js";
+import { unwrap } from "../utils/misc.js";
 
 /*
  * Flow:
@@ -34,6 +36,8 @@ export default class Modmail extends BotComponent {
     // Spam prevention, user is added to the timeout set when clicking the modmail_continue button,
     readonly timeout_set = new Set<string>();
     modmail_id_counter = -1;
+
+    readonly monke_set = new SelfClearingMap<Discord.Snowflake, number>(HOUR, HOUR);
 
     constructor(wheatley: Wheatley) {
         super(wheatley);
@@ -159,30 +163,46 @@ export default class Modmail extends BotComponent {
                 });
                 await this.log_action(interaction.member, "Monkey pressed the button");
                 try {
-                    assert(interaction.member);
-                    if (!this.wheatley.is_root(interaction.member.user)) {
-                        // permissions, the .setNickname will fail
-                        const member = await this.wheatley.TCCPP.members.fetch(interaction.member.user.id);
+                    // can't apply roles to root
+                    if (!this.wheatley.is_root(interaction.user)) {
+                        const member = await this.wheatley.TCCPP.members.fetch(interaction.user.id);
                         await member.roles.add(this.wheatley.roles.monke);
+                        this.monke_set.set(interaction.user.id, Date.now());
                     }
                 } catch (e) {
                     critical_error(e);
                 }
             } else if (interaction.customId == "modmail_not_monkey") {
-                await interaction.reply({
-                    content: "Congratulations on graduating from your monke status.",
-                    ephemeral: true,
-                });
                 await this.log_action(interaction.member, "Monkey pressed the not monkey button");
-                try {
-                    assert(interaction.member);
-                    if (!this.wheatley.is_root(interaction.member.user)) {
-                        // permissions, the .setNickname will fail
-                        const member = await this.wheatley.TCCPP.members.fetch(interaction.member.user.id);
-                        await member.roles.remove(this.wheatley.roles.monke);
+                const member = await this.wheatley.TCCPP.members.fetch(interaction.user.id);
+                if (member.roles.cache.has(this.wheatley.roles.monke.id)) {
+                    if (!this.monke_set.has(member.id) || Date.now() - unwrap(this.monke_set.get(member.id)) >= HOUR) {
+                        await interaction.reply({
+                            content: "Congratulations on graduating from your monke status.",
+                            ephemeral: true,
+                        });
+                        try {
+                            // can't apply roles to root
+                            if (!this.wheatley.is_root(interaction.user)) {
+                                await member.roles.remove(this.wheatley.roles.monke);
+                                this.monke_set.remove(member.id);
+                            }
+                        } catch (e) {
+                            critical_error(e);
+                        }
+                    } else {
+                        await interaction.reply({
+                            content: "You must wait at least an hour to remove your monke status.",
+                            ephemeral: true,
+                        });
                     }
-                } catch (e) {
-                    critical_error(e);
+                } else {
+                    await interaction.reply({
+                        content:
+                            "No monke role present. If you'd like to become a monke press the " +
+                            '"I\'m a monke" button.',
+                        ephemeral: true,
+                    });
                 }
             } else if (interaction.customId == "modmail_create") {
                 if (this.timeout_set.has(interaction.user.id)) {
