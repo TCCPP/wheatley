@@ -192,7 +192,9 @@ export default class TheButton extends BotComponent {
                 return;
             }
             // it might take a moment to go through everything
-            await interaction.deferReply();
+            await interaction.deferReply({
+                ephemeral: true,
+            });
             // add user to the scoreboard if needed
             const entry = await this.wheatley.database.button_scoreboard.findOne({ user: interaction.user.id });
             // check to see if the user has pressed it within the last 24 hours
@@ -200,10 +202,9 @@ export default class TheButton extends BotComponent {
                 // ~~x converts the float x to an integer
                 // next_possible is the unix-time for the next possible button press
                 const next_possible = ~~((entry.last_press + PRESS_TIMEOUT) / 1000);
-                await interaction.reply({
+                await interaction.editReply({
                     // string highlighting is screwed, because of the '<' and '>' characters
                     content: `You can press the button again <t:${next_possible}:R>`,
-                    ephemeral: true,
                 });
                 return;
             }
@@ -246,7 +247,7 @@ export default class TheButton extends BotComponent {
             const scoreboard_index = await this.wheatley.database.button_scoreboard.countDocuments({
                 score: { $gt: res.score },
             });
-            await interaction.reply({
+            await interaction.editReply({
                 embeds: [
                     new Discord.EmbedBuilder()
                         .setDescription(
@@ -256,7 +257,6 @@ export default class TheButton extends BotComponent {
                         )
                         .setColor(colors.wheatley),
                 ],
-                ephemeral: true,
             });
             await this.update_metadata();
         }
