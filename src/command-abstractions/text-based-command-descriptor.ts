@@ -259,10 +259,17 @@ export class BotTextBasedCommand<Args extends unknown[] = []> extends BaseBotInt
                         .map(role => escape_regex(role.name))
                         .filter(name => name !== "@everyone")
                         .join("|"),
+                    "i",
                 );
                 const match = command_body.match(re);
                 if (match) {
-                    command_options.push(unwrap(this.wheatley.TCCPP.roles.cache.find(role => role.name === match[0])));
+                    command_options.push(
+                        unwrap(
+                            this.wheatley.TCCPP.roles.cache.find(
+                                role => role.name.toLowerCase() === match[0].toLowerCase(),
+                            ),
+                        ),
+                    );
                     command_body = command_body.slice(match[0].length).trim();
                 } else if (!option.required) {
                     command_options.push(null);
