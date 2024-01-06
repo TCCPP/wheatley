@@ -102,34 +102,49 @@ export default class Modmail extends BotComponent {
         }
     }
 
+    create_modmail_system_embed_and_components() {
+        const row = new Discord.ActionRowBuilder<Discord.MessageActionRowComponentBuilder>().addComponents(
+            new Discord.ButtonBuilder()
+                .setCustomId("modmail_monkey")
+                .setLabel("I'm a monkey")
+                .setStyle(Discord.ButtonStyle.Primary),
+            new Discord.ButtonBuilder()
+                .setCustomId("modmail_create")
+                .setLabel("Start a modmail thread")
+                .setStyle(Discord.ButtonStyle.Danger),
+            new Discord.ButtonBuilder()
+                .setCustomId("modmail_not_monkey")
+                .setLabel("I'm not a monkey")
+                .setStyle(Discord.ButtonStyle.Secondary),
+        );
+        return {
+            embeds: [
+                create_embed(
+                    "Modmail",
+                    "If you have a **moderation** or **administration** related issue you " +
+                        "can reach out to the staff team by pressing the modmail thread button below.\n\n" +
+                        "Because, in our experience, a surprising number of users also can't read, there is also " +
+                        "a monkey button.",
+                ),
+            ],
+            components: [row],
+        };
+    }
+
     override async on_message_create(message: Discord.Message) {
         // Ignore bots
         if (message.author.bot) {
             return;
         }
-        if (message.content == "!wsetupmodmailsystem" && this.wheatley.is_authorized_mod(message.member!)) {
-            const row = new Discord.ActionRowBuilder<Discord.MessageActionRowComponentBuilder>().addComponents(
-                new Discord.ButtonBuilder()
-                    .setCustomId("modmail_monkey")
-                    .setLabel("I'm a monkey")
-                    .setStyle(Discord.ButtonStyle.Primary),
-                new Discord.ButtonBuilder()
-                    .setCustomId("modmail_create")
-                    .setLabel("Start a modmail thread")
-                    .setStyle(Discord.ButtonStyle.Danger),
-            );
-            await message.channel.send({
-                embeds: [
-                    create_embed(
-                        "Modmail",
-                        "If you have a **moderation** or **administration** related issue you " +
-                            "can reach out to the staff team by pressing the modmail thread button below.\n\n" +
-                            "Because, in our experience, a surprising number of users also can't read, there is also " +
-                            "a monkey button.",
-                    ),
-                ],
-                components: [row],
-            });
+        if (message.content == "!wsetupmodmailsystem" && this.wheatley.is_root(message.author)) {
+            await message.channel.send(this.create_modmail_system_embed_and_components());
+        }
+        if (message.content.startsWith("!wupdatemodmailsystem") && this.wheatley.is_root(message.author)) {
+            // get argument
+            const id = message.content.slice("!wupdatemodmailsystem".length).trim();
+            await message.delete();
+            const target = await message.channel.messages.fetch(id);
+            await target.edit(this.create_modmail_system_embed_and_components());
         }
     }
 
@@ -149,7 +164,22 @@ export default class Modmail extends BotComponent {
                         // permissions, the .setNickname will fail
                         const member = await this.wheatley.TCCPP.members.fetch(interaction.member.user.id);
                         await member.roles.add(this.wheatley.roles.monke);
-                        await member.setNickname("Monke");
+                    }
+                } catch (e) {
+                    critical_error(e);
+                }
+            } else if (interaction.customId == "modmail_not_monkey") {
+                await interaction.reply({
+                    content: "Congratulations on graduating from your monke status.",
+                    ephemeral: true,
+                });
+                await this.log_action(interaction.member, "Monkey pressed the not monkey button");
+                try {
+                    assert(interaction.member);
+                    if (!this.wheatley.is_root(interaction.member.user)) {
+                        // permissions, the .setNickname will fail
+                        const member = await this.wheatley.TCCPP.members.fetch(interaction.member.user.id);
+                        await member.roles.remove(this.wheatley.roles.monke);
                     }
                 } catch (e) {
                     critical_error(e);
