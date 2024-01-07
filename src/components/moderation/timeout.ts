@@ -102,6 +102,9 @@ export default class Timeout extends ModerationComponent {
 
     async remove_moderation(entry: mongo.WithId<moderation_entry>) {
         M.info(`Removing timeout from ${entry.user_name}`);
+        if (this.dummy_rounds) {
+            return;
+        }
         try {
             const member = await this.wheatley.TCCPP.members.fetch(entry.user);
             await member.timeout(null);

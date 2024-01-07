@@ -118,6 +118,9 @@ export default class Ban extends ModerationComponent {
 
     async remove_moderation(entry: mongo.WithId<moderation_entry>) {
         M.info(`Unbanning ${entry.user_name}`);
+        if (this.dummy_rounds) {
+            return;
+        }
         await this.wheatley.TCCPP.members.unban(
             entry.user,
             entry.removed?.reason ?? entry.expunged?.reason ?? undefined,

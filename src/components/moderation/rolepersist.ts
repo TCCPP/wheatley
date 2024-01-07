@@ -157,6 +157,10 @@ export default class Rolepersist extends ModerationComponent {
         if (this.dummy_rounds) {
             return;
         }
+        // for a role that no longer exists
+        if (entry.role === "") {
+            return;
+        }
         const member = await this.wheatley.try_fetch_member(entry.user);
         if (member) {
             await member.roles.add(entry.role);
@@ -166,6 +170,13 @@ export default class Rolepersist extends ModerationComponent {
     async remove_moderation(entry: mongo.WithId<moderation_entry>) {
         assert(entry.type == this.type);
         M.info(`Removing rolepersist from ${entry.user_name}`);
+        if (this.dummy_rounds) {
+            return;
+        }
+        // for a role that no longer exists
+        if (entry.role === "") {
+            return;
+        }
         const member = await this.wheatley.try_fetch_member(entry.user);
         if (member) {
             await member.roles.remove(entry.role);
@@ -175,6 +186,10 @@ export default class Rolepersist extends ModerationComponent {
     async is_moderation_applied(moderation: basic_moderation_with_user) {
         assert(moderation.type == this.type);
         const member = await this.wheatley.try_fetch_member(moderation.user);
+        // for a role that no longer exists
+        if (moderation.role === "") {
+            return false;
+        }
         if (member) {
             return member.roles.cache.filter(role => role.id == moderation.role).size > 0;
         } else {

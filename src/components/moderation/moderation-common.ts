@@ -146,7 +146,7 @@ export abstract class ModerationComponent extends BotComponent {
 
     // should apply_moderation be a no-op? (useful for development)
     get dummy_rounds() {
-        return true;
+        return false;
     }
 
     // Sorted by moderation end time
@@ -170,15 +170,28 @@ export abstract class ModerationComponent extends BotComponent {
         // Handle re-applications and sleep lists
         // If once-off active is false so the rest is all fine
         const moderations = await this.wheatley.database.moderations.find({ type: this.type, active: true }).toArray();
+        const moderations_to_sleep = moderations.filter(
+            entry => entry.duration !== null || entry.removed || entry.expunged,
+        );
         M.debug(
             `Adding moderations to sleep list for ${this.type}`,
-            moderations.map(moderation => moderation.case_number),
+            moderations_to_sleep.map(moderation => moderation.case_number),
         );
         // Any catch up will be done in order
+        // Handle removed moderations right away
         this.sleep_list.bulk_insert(
-            moderations
-                .filter(entry => entry.duration !== null)
-                .map(entry => [entry.issued_at + unwrap(entry.duration), entry]),
+            moderations_to_sleep
+                .map(entry => {
+                    if (entry.removed || entry.expunged) {
+                        M.log(entry.issued_at, entry.issued_at < Date.now());
+                    }
+                    return entry;
+                })
+                .map(entry =>
+                    entry.removed || entry.expunged
+                        ? [entry.issued_at, entry]
+                        : [entry.issued_at + unwrap(entry.duration), entry],
+                ),
         );
         // Persistance:
         await this.ensure_moderations_are_in_place(moderations);
@@ -209,6 +222,21 @@ export abstract class ModerationComponent extends BotComponent {
             this.sleep_list.remove(entry._id);
         } else {
             M.debug("Handling moderation expire - not applied", entry);
+        }
+        if (entry.removed || entry.expunged) {
+            // marked active but removed (can happen from data import)
+            const item = unwrap(await this.wheatley.database.moderations.findOne({ _id: entry._id }));
+            if (item.active && (item.removed || item.expunged)) {
+                await this.wheatley.database.moderations.updateOne(
+                    { _id: entry._id },
+                    {
+                        $set: {
+                            active: false,
+                        },
+                    },
+                );
+            }
+            return;
         }
         // check if moderation is still active, if so resolve it
         if (unwrap(await this.wheatley.database.moderations.findOne({ _id: entry._id })).active) {
@@ -272,6 +300,13 @@ export abstract class ModerationComponent extends BotComponent {
                     // If end time <= now, moderation is expired
                     await this.wheatley.zelis.send("Skipping ensure_moderations_are_in_place on moderation");
                     M.debug("Skipping ensure_moderations_are_in_place on moderation", moderation);
+                    continue;
+                }
+                // Skip anything that's active but removed
+                if (moderation.removed || moderation.expunged) {
+                    // If end time <= now, moderation is expired
+                    await this.wheatley.zelis.send("Skipping ensure_moderations_are_in_place on removed moderation");
+                    M.debug("Skipping ensure_moderations_are_in_place on removed moderation", moderation);
                     continue;
                 }
                 if (!(await this.is_moderation_applied(moderation))) {

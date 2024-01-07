@@ -90,6 +90,9 @@ export default class Mute extends ModerationComponent {
 
     async remove_moderation(entry: mongo.WithId<moderation_entry>) {
         M.info(`Removing mute from ${entry.user_name}`);
+        if (this.dummy_rounds) {
+            return;
+        }
         const member = await this.wheatley.try_fetch_member(entry.user);
         if (member) {
             await member.roles.remove(this.wheatley.roles.muted);
