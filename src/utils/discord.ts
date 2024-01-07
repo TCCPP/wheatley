@@ -57,7 +57,8 @@ export function get_tag(channel: Discord.ForumChannel, name: string) {
     const candidates = channel.availableTags.filter(tag => tag.name == name);
     assert(
         candidates.length == 1,
-        `Did someone change the tag name?? ${channel.availableTags.map(tag => tag.name).join(",")}`,
+        `Did someone change the tag name?? ` +
+            `Looking for ${name} in ${channel.availableTags.map(tag => tag.name).join(",")}`,
     );
     return candidates[0];
 }
