@@ -52,6 +52,9 @@ export default class Kick extends ModerationComponent {
 
     async apply_moderation(entry: moderation_entry) {
         M.info(`Kicking ${entry.user_name}`);
+        if (this.dummy_rounds) {
+            return;
+        }
         await this.wheatley.TCCPP.members.kick(entry.user, entry.reason ?? undefined);
     }
 

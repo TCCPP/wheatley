@@ -144,6 +144,11 @@ export abstract class ModerationComponent extends BotComponent {
         return false;
     }
 
+    // should apply_moderation be a no-op? (useful for development)
+    get dummy_rounds() {
+        return true;
+    }
+
     // Sorted by moderation end time
     sleep_list: SleepList<mongo.WithId<moderation_entry>, mongo.BSON.ObjectId>;
     timer: NodeJS.Timer | null = null;

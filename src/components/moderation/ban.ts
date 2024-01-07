@@ -108,6 +108,9 @@ export default class Ban extends ModerationComponent {
 
     async apply_moderation(entry: moderation_entry) {
         M.info(`Banning ${entry.user_name}`);
+        if (this.dummy_rounds) {
+            return;
+        }
         await this.wheatley.TCCPP.members.ban(entry.user, {
             reason: entry.reason ?? undefined,
         });

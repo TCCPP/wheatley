@@ -79,6 +79,9 @@ export default class Mute extends ModerationComponent {
 
     async apply_moderation(entry: moderation_entry) {
         M.info(`Applying mute to ${entry.user_name}`);
+        if (this.dummy_rounds) {
+            return;
+        }
         const member = await this.wheatley.try_fetch_member(entry.user);
         if (member) {
             await member.roles.add(this.wheatley.roles.muted);
@@ -99,7 +102,8 @@ export default class Mute extends ModerationComponent {
         if (member) {
             return member.roles.cache.filter(role => role.id == this.wheatley.roles.muted.id).size > 0;
         } else {
-            return false;
+            // if the member isn't in the guild then let's call the moderation applied
+            return true;
         }
     }
 }

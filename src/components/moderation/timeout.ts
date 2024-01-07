@@ -93,6 +93,9 @@ export default class Timeout extends ModerationComponent {
 
     async apply_moderation(entry: moderation_entry) {
         M.info(`Applying timeout to ${entry.user_name}`);
+        if (this.dummy_rounds) {
+            return;
+        }
         const member = await this.wheatley.TCCPP.members.fetch(entry.user);
         await member.timeout(unwrap(entry.duration), entry.reason ?? "No reason provided");
     }
