@@ -163,7 +163,15 @@ export default class Rolepersist extends ModerationComponent {
         }
         const member = await this.wheatley.try_fetch_member(entry.user);
         if (member) {
-            await member.roles.add(entry.role);
+            try {
+                await member.roles.add(entry.role);
+            } catch (e) {
+                if (e instanceof Discord.DiscordAPIError && e.code === 10011) {
+                    return; // Unknown Role - nop
+                } else {
+                    throw e;
+                }
+            }
         }
     }
 
@@ -179,7 +187,15 @@ export default class Rolepersist extends ModerationComponent {
         }
         const member = await this.wheatley.try_fetch_member(entry.user);
         if (member) {
-            await member.roles.remove(entry.role);
+            try {
+                await member.roles.remove(entry.role);
+            } catch (e) {
+                if (e instanceof Discord.DiscordAPIError && e.code === 10011) {
+                    return; // Unknown Role - nop
+                } else {
+                    throw e;
+                }
+            }
         }
     }
 
