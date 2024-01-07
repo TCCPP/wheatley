@@ -43,7 +43,7 @@ import { TextBasedCommand } from "../../command-abstractions/text-based-command.
  *
  */
 
-export type moderation_type = "mute" | "warn" | "ban" | "kick" | "rolepersist" | "timeout";
+export type moderation_type = "mute" | "warn" | "ban" | "kick" | "rolepersist" | "timeout" | "softban";
 
 export type moderation_edit_info = {
     moderator: string;
@@ -151,7 +151,7 @@ export abstract class ModerationComponent extends BotComponent {
     // moderation_update(mongo.WithId<moderation_entry>)
     static event_hub = new EventEmitter();
 
-    static non_duration_moderation_set = new Set(["warn", "kick"]);
+    static non_duration_moderation_set = new Set(["warn", "kick", "softban"]);
 
     constructor(wheatley: Wheatley) {
         super(wheatley);
@@ -259,6 +259,16 @@ export abstract class ModerationComponent extends BotComponent {
         moderations.sort((a, b) => a.issued_at + (a.duration ?? 0) - (b.issued_at + (b.duration ?? 0)));
         for (const moderation of moderations) {
             try {
+                // Only bother if the moderation should in fact still be active, if not it will shortly be deactivated
+                // by the sleep list
+                // This is important mainly for bans and such in circumstances like the moderation import
+                // Allow a short leeway period
+                if (moderation.duration && moderation.issued_at + unwrap(moderation.duration) <= Date.now()) {
+                    // If end time <= now, moderation is expired
+                    await this.wheatley.zelis.send("Skipping ensure_moderations_are_in_place on moderation");
+                    M.debug("Skipping ensure_moderations_are_in_place on moderation", moderation);
+                    continue;
+                }
                 if (!(await this.is_moderation_applied(moderation))) {
                     M.debug("Reapplying moderation", moderation);
                     await this.apply_moderation(moderation);

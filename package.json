@@ -44,7 +44,8 @@
         "lint-staged": "^15.1.0",
         "mocha": "^10.2.0",
         "node-fetch": "^3.3.2",
-        "prettier": "3.0.3"
+        "prettier": "3.0.3",
+        "tsx": "^4.7.0"
     },
     "lint-staged": {
         "*.[jt]s": [
