@@ -36,7 +36,7 @@ const starboard_epoch = new Date("2023-04-01T00:00:00.000Z").getTime();
 
 // https://stackoverflow.com/questions/64053658/get-emojis-from-message-discord-js-v12
 // https://www.reddit.com/r/Discord_Bots/comments/gteo6t/discordjs_is_there_a_way_to_detect_emojis_in_a/
-const EMOJIREGEX = /((?<!\\)<a?:[^:]+:(\d+)>)|\p{Emoji_Presentation}|\p{Extended_Pictographic}/gmu;
+const EMOJIREGEX = /((?<!\\)<a?:[^:]+:(\d+)>)|\p{Emoji_Presentation}\S+|\p{Extended_Pictographic}\S+/gmu;
 
 /**
  * Reaction highscores.
@@ -45,6 +45,10 @@ export default class Starboard extends BotComponent {
     mutex = new KeyedMutexSet<string>();
 
     deletes: number[] = [];
+
+    // delete emojis: will trigger deletion if a threshold is reached relative to non-negative emojis
+    // ignored emojis: these don't count towards the starboard
+    // negative emojis: these don't count against deleted emojis and also don't go to the starboard
 
     delete_emojis: string[];
     ignored_emojis: string[];
@@ -151,7 +155,16 @@ export default class Starboard extends BotComponent {
         if (!(reaction.emoji instanceof Discord.GuildEmoji || reaction.emoji.id === null)) {
             return false;
         }
-        // M.info("------------->", reaction.emoji.name == "⭐", reaction.count);
+        // M.info(
+        //     "------------->",
+        //     this.negative_emojis.includes(reaction.emoji.name),
+        //     this.negative_emojis,
+        //     reaction.count,
+        // );
+        // M.log(
+        //     debug_unicode(reaction.emoji.name),
+        //     this.negative_emojis.map(v => [v, debug_unicode(v)]),
+        // );
         if (reaction.emoji.name == "⭐") {
             if (reaction.message.channel.id == this.wheatley.channels.memes.id) {
                 return reaction.count >= memes_star_threshold;

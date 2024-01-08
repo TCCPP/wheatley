@@ -1,7 +1,7 @@
 import * as Discord from "discord.js";
 import XXH from "xxhashjs";
 import { DAY, HOUR, MINUTE, MONTH, YEAR } from "../common.js";
-import { round } from "./misc.js";
+import { round, unwrap } from "./misc.js";
 import { remove } from "./arrays.js";
 
 export function pluralize(n: number, word: string, round_to: null | number = null) {
@@ -123,4 +123,11 @@ export function to_string(obj: any) {
         }
     }
     return str;
+}
+
+export function debug_unicode(str: string) {
+    return Array.from(str)
+        .map(v => unwrap(v.codePointAt(0)).toString(16))
+        .map(v => `\\u${v}`)
+        .join(", ");
 }
