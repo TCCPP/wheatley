@@ -53,7 +53,8 @@ export default class AntiExecutable extends BotComponent {
             https
                 .get(url, res => {
                     if (res.statusCode !== 200) {
-                        throw new Error(`Request failed status code: ${res.statusCode}`);
+                        reject(new Error(`Request failed status code: ${res.statusCode}`));
+                        return;
                     }
                     res.on("data", chunk => {
                         buffer = Buffer.concat([buffer, chunk]);
