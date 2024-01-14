@@ -14,7 +14,7 @@ export async function delay(n: number): Promise<void> {
     return new Promise<void>(resolve => setTimeout(resolve, n));
 }
 
-export function unwrap<T>(x: T | null | undefined): T {
+export function unwrap<T>(x: T): T & NonNullable<unknown> {
     assert(x !== null && x !== undefined);
     return x;
 }

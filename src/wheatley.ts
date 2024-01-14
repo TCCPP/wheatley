@@ -26,7 +26,7 @@ import { MemberTracker } from "./infra/member-tracker.js";
 import { forge_snowflake } from "./components/snowflake.js";
 import { Virustotal } from "./infra/virustotal.js";
 import { is_media_link_embed } from "./utils/discord.js";
-import { TypedEventEmitter } from "./utils/event-hub.js";
+import { TypedEventEmitter } from "./utils/event-emitter.js";
 import { moderation_entry } from "./components/moderation/moderation-common.js";
 
 export function create_basic_embed(title: string | undefined, color: number, content: string) {

@@ -7,21 +7,21 @@ export class TypedEventEmitter<EventMap extends { [x: string]: (...args: any[]) 
     } = {};
 
     on<E extends keyof EventMap>(event: E, listener: EventMap[E]) {
-        if (!(event in this.listeners)) {
+        if (!this.listeners[event]) {
             this.listeners[event] = [];
         }
-        unwrap(this.listeners[event])!.push(listener);
+        unwrap(this.listeners[event]).push(listener);
     }
 
     off<E extends keyof EventMap>(event: E, listener: EventMap[E]) {
-        if (event in this.listeners) {
-            this.listeners[event] = unwrap(this.listeners[event])!.filter(callback => callback !== listener);
+        if (this.listeners[event]) {
+            this.listeners[event] = unwrap(this.listeners[event]).filter(callback => callback !== listener);
         }
     }
 
     emit<E extends keyof EventMap>(event: E, ...args: Parameters<EventMap[E]>) {
-        if (event in this.listeners) {
-            for (const listener of unwrap(this.listeners[event])!) {
+        if (this.listeners[event]) {
+            for (const listener of unwrap(this.listeners[event])) {
                 listener(...args);
             }
         }
