@@ -153,15 +153,12 @@ export abstract class ModerationComponent extends BotComponent {
     sleep_list: SleepList<mongo.WithId<moderation_entry>, mongo.BSON.ObjectId>;
     timer: NodeJS.Timer | null = null;
 
-    // moderation_update(mongo.WithId<moderation_entry>)
-    static event_hub = new EventEmitter();
-
     static non_duration_moderation_set = new Set(["warn", "kick", "softban"]);
 
     constructor(wheatley: Wheatley) {
         super(wheatley);
         this.sleep_list = new SleepList(this.handle_moderation_expire.bind(this), item => item._id);
-        ModerationComponent.event_hub.on("moderation_update", (entry: mongo.WithId<moderation_entry>) => {
+        this.wheatley.event_hub.on("update_moderation", (entry: mongo.WithId<moderation_entry>) => {
             this.handle_moderation_update(entry).catch(critical_error);
         });
     }
@@ -378,6 +375,7 @@ export abstract class ModerationComponent extends BotComponent {
                     embeds: [Modlogs.case_summary(moderation, await this.wheatley.client.users.fetch(moderation.user))],
                 })
                 .catch(critical_error);
+            this.wheatley.event_hub.emit("issue_moderation", moderation);
         } finally {
             ModerationComponent.case_id_mutex.unlock();
         }

@@ -149,7 +149,7 @@ export default class ModerationControl extends BotComponent {
         if (res) {
             await this.reply_with_success(command, "Duration updated");
             // Update sleep lists and remove moderation if needed
-            ModerationComponent.event_hub.emit("moderation_update", res);
+            this.wheatley.event_hub.emit("update_moderation", res);
             await this.wheatley.channels.staff_action_log.send({
                 embeds: [
                     Modlogs.case_summary(res, await this.wheatley.client.users.fetch(res.user)).setTitle(
@@ -185,7 +185,7 @@ export default class ModerationControl extends BotComponent {
             await this.reply_with_success(command, "Case expunged");
             // Update sleep lists and remove moderation if needed
             // TODO: Make sure it gets removed too
-            ModerationComponent.event_hub.emit("moderation_update", res);
+            this.wheatley.event_hub.emit("update_moderation", res);
             await this.wheatley.channels.staff_action_log.send({
                 embeds: [
                     Modlogs.case_summary(res, await this.wheatley.client.users.fetch(res.user)).setTitle(

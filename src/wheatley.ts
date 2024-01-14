@@ -1,8 +1,7 @@
 import { strict as assert } from "assert";
 
 import * as Discord from "discord.js";
-
-import { EventEmitter } from "events";
+import * as mongo from "mongodb";
 
 import { colors, MINUTE } from "./common.js";
 import { unwrap } from "./utils/misc.js";
@@ -27,6 +26,8 @@ import { MemberTracker } from "./infra/member-tracker.js";
 import { forge_snowflake } from "./components/snowflake.js";
 import { Virustotal } from "./infra/virustotal.js";
 import { is_media_link_embed } from "./utils/discord.js";
+import { TypedEventEmitter } from "./utils/event-hub.js";
+import { moderation_entry } from "./components/moderation/moderation-common.js";
 
 export function create_basic_embed(title: string | undefined, color: number, content: string) {
     const embed = new Discord.EmbedBuilder().setColor(color).setDescription(content);
@@ -189,8 +190,15 @@ type quote_options = {
     safe_link?: boolean;
 };
 
-export class Wheatley extends EventEmitter {
-    components = new Map<string, BotComponent>();
+type EventMap = {
+    wheatley_ready: () => void;
+    issue_moderation: (moderation: moderation_entry) => void;
+    update_moderation: (moderation: mongo.WithId<moderation_entry>) => void;
+};
+
+export class Wheatley {
+    readonly event_hub = new TypedEventEmitter<EventMap>();
+    readonly components = new Map<string, BotComponent>();
     readonly guild_command_manager: GuildCommandManager;
     readonly tracker: MemberTracker; // TODO: Rename
 
@@ -256,8 +264,6 @@ export class Wheatley extends EventEmitter {
         readonly client: Discord.Client,
         auth: wheatley_auth,
     ) {
-        super();
-
         this.id = auth.id;
         this.freestanding = auth.freestanding ?? false;
         this.guildId = auth.guild ?? TCCPP_ID;
@@ -267,7 +273,6 @@ export class Wheatley extends EventEmitter {
 
         // Every module sets a lot of listeners. This is not a leak.
         this.client.setMaxListeners(35);
-        this.setMaxListeners(35);
 
         this.client.on("error", error => {
             M.error(error);
@@ -299,7 +304,7 @@ export class Wheatley extends EventEmitter {
                 }
             }
             await this.guild_command_manager.finalize(auth.token);
-            this.emit("wheatley_ready");
+            this.event_hub.emit("wheatley_ready");
             this.ready = true;
             this.client.on("messageCreate", this.on_message.bind(this));
             this.client.on("interactionCreate", this.on_interaction.bind(this));

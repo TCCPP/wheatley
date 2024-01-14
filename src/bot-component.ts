@@ -28,7 +28,7 @@ export class BotComponent {
     }
 
     constructor(protected readonly wheatley: Wheatley) {
-        wheatley.on("wheatley_ready", wrap(this.on_wheatley_ready.bind(this)));
+        wheatley.event_hub.on("wheatley_ready", wrap(this.on_wheatley_ready.bind(this)));
     }
 
     // Called after all components are constructed and the bot logs in, but before bot commands are finalized
