@@ -40,8 +40,8 @@ export function time_to_human_core(diff: number, seconds_with_higher_precision =
     return seconds == 0 ? [] : [pluralize(round(diff / 1000, seconds_with_higher_precision ? 1 : 0), "second", 2)];
 }
 
-export function time_to_human(diff: number): string {
-    return time_to_human_core(diff).join(" ");
+export function time_to_human(diff: number, levels?: number): string {
+    return time_to_human_core(diff).slice(0, levels).join(" ");
 }
 
 const code_re = /`[^`]+`(?!`)/gi;
