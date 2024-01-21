@@ -331,7 +331,9 @@ export default class ForumChannels extends BotComponent {
             ) {
                 await this.mirror_forum_post(
                     message,
-                    `New post: ${thread.name}`,
+                    `New ${
+                        thread.parentId == this.wheatley.channels.code_review.id ? "code review" : "showcase"
+                    } post: ${thread.name}`,
                     false,
                     this.wheatley.channels.general_discussion,
                 );
