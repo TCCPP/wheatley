@@ -251,7 +251,12 @@ export default class ForumChannels extends BotComponent {
         }
     }
 
-    async mirror_forum_post(message: Discord.Message, thread: Discord.ThreadChannel) {
+    async mirror_forum_post(
+        message: Discord.Message,
+        title: string,
+        no_extra_media_embeds: boolean,
+        to: Discord.TextChannel,
+    ) {
         const lines: string[] = [];
         let in_code = false;
         for (const line of message.content.split("\n")) {
@@ -273,14 +278,13 @@ export default class ForumChannels extends BotComponent {
             .replaceAll(/\s+$/g, "")
             .replaceAll(/\n{2,}/g, "\n\n");
         // mirror to the text channel
-        const text_channel = this.wheatley.get_corresponding_text_help_channel(thread);
         const quote = await this.wheatley.make_quote_embeds([message], {
-            no_extra_media_embeds: true,
+            no_extra_media_embeds,
             custom_content: content,
         });
         // ninja in a title
-        (quote.embeds[0] as Discord.EmbedBuilder).setTitle(`New question: ${thread.name}`);
-        await text_channel.send(quote);
+        (quote.embeds[0] as Discord.EmbedBuilder).setTitle(title);
+        await to.send(quote);
     }
 
     override async on_message_create(message: Discord.Message) {
@@ -315,7 +319,22 @@ export default class ForumChannels extends BotComponent {
                         ),
                     ],
                 });
-                await this.mirror_forum_post(message, thread);
+                await this.mirror_forum_post(
+                    message,
+                    `New question: ${thread.name}`,
+                    true,
+                    this.wheatley.get_corresponding_text_help_channel(thread),
+                );
+            } else if (
+                thread.parentId != null &&
+                [this.wheatley.channels.code_review.id, this.wheatley.channels.showcase.id].includes(thread.parentId)
+            ) {
+                await this.mirror_forum_post(
+                    message,
+                    `New post: ${thread.name}`,
+                    false,
+                    this.wheatley.channels.general_discussion,
+                );
             }
         } else {
             if (channel instanceof Discord.ThreadChannel && this.wheatley.is_forum_help_thread(channel)) {

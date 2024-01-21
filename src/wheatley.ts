@@ -111,6 +111,8 @@ const channels_map = {
     c_help_text: tuple("331718539738087426", Discord.TextChannel),
     c_cpp_discussion: tuple("851121440425639956", Discord.TextChannel),
     general_discussion: tuple("855220264149057556", Discord.TextChannel),
+    code_review: tuple("1078717238678409369", Discord.ForumChannel),
+    showcase: tuple("1014328785685979136", Discord.ForumChannel),
     // off-topic
     starboard: tuple("800509841424252968", Discord.TextChannel),
     memes: tuple("526518219549442071", Discord.TextChannel),
