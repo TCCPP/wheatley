@@ -37,6 +37,40 @@ export default class AntiExecutable extends BotComponent {
         Buffer.from([0xca, 0xfe, 0xba, 0xbe]), // mach-o universal
         Buffer.from([0xbe, 0xba, 0xfe, 0xca]), // mach-o universal swapped
         Buffer.from([0x4d, 0x5a]), // DOS MZ / PE
+        // Source for the archives and compressed files magic values:
+        //  https://en.wikipedia.org/wiki/List_of_file_signatures
+        Buffer.from([0x1f, 0x9d]), // Compressed file using Lempel-Ziv-Welch algorithm.
+        Buffer.from([0x1f, 0xa0]), // Compressed file using LZH algorithm
+        Buffer.from([0x1f, 0x8b]), // GZIP compressed files
+        Buffer.from([0x78, 0xf9]), // ZLIB (Best compression, with preset dictionary)
+        Buffer.from([0x78, 0x01]), // ZLIB (No Compression)
+        Buffer.from([0x78, 0x5e]), // ZLIB (Best Speed, no preset dictionary)
+        Buffer.from([0x78, 0x9c]), // ZLIB (Default compresson, no preset dictionary)
+        Buffer.from([0x78, 0xda]), // ZLIB (Best compression, no preset dictionary)
+        Buffer.from([0x78, 0x20]), // ZLIB (No compression, with preset dictionary)
+        Buffer.from([0x78, 0x7d]), // ZLIB (Best speed, with preset dictionary)
+        Buffer.from([0x78, 0xbb]), // ZLIB (Default compression, with preset dictionary)
+        Buffer.from([0x1a, 0x08]), // ARC archive file
+        Buffer.from([0x4F, 0x41, 0x52]), // OAR file archive
+        Buffer.from([0x2d, 0x68, 0x6c, 0x30, 0x2d]), // Lempel Ziv Huffman archive file method 0 (No compression)
+        Buffer.from([0x2d, 0x68, 0x6c, 0x35, 0x2d]), // Lempel Ziv Huffman archive file method 5 (8KiB sliding window)
+        Buffer.from([0x4c, 0x5a, 0x49, 0x50]), // LZIP Compressed file
+        Buffer.from([0x50, 0x4b, 0x03, 0x04]), // ZIP File
+        Buffer.from([0x50, 0x4b, 0x05, 0x06]), // ZIP File (Empty)
+        Buffer.from([0x50, 0x4b, 0x07, 0x08]), // ZIP File (Spanned Archive)
+        Buffer.from([0x78, 0x61, 0x72, 0x21]), // eXtensible ARchive format
+        Buffer.from([0x30, 0x37, 0x30, 0x37, 0x30, 0x37]), // CPIO archive file
+        Buffer.from([0x52, 0x61, 0x72, 0x21, 0xa1, 0x07, 0x00]), // Roshal ARchive compressed archive. (v1.50 onwards)
+        Buffer.from([0x52, 0x61, 0x72, 0x21, 0xa1, 0x07, 0x01, 0x00]), // Roshal ARchive compressed arhive (v5.00 onwards)
+        Buffer.from([0x75, 0x73, 0x74, 0x61, 0x72, 0x00, 0x30, 0x30]), // tar archive
+        Buffer.from([0x75, 0x73, 0x74, 0x61, 0x72, 0x20, 0x20, 0x00]), // tar archive 
+        Buffer.from([0x53, 0x5a, 0x44, 0x44, 0x88, 0xf0, 0x27, 0x33]), // Microsoft compressed file using Quantum format.
+        Buffer.from([0x52, 0x53, 0x56, 0x4b, 0x44, 0x41, 0x54, 0x41]), // QuickZip rs compressed archive
+        Buffer.from([0x37, 0x7a, 0xbc, 0xaf, 0x27, 0x1c]), // 7zip File Format
+        Buffer.from([0xfd, 0x37, 0x7a, 0x58, 0x5a, 0x00]), // XZ compression utility
+        Buffer.from([0x62, 0x76, 0x78, 0x32]), // LZFSE - Lempel-Ziv style data compression algorithm.
+        Buffer.from([0x28, 0xb5, 0x2f, 0xfd]), // Zstandard compress
+        Buffer.from([0x2a, 0x2a, 0x41, 0x43, 0x45, 0x2a, 0x2a]), // ACE compressed file format
     ];
     looks_like_executable(buffer: Buffer) {
         for (const magic of AntiExecutable.executable_magic) {
