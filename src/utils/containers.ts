@@ -35,17 +35,22 @@ export class SelfClearingMap<K, V> {
     contents = new Map<K, [number, V]>();
     duration: number;
     interval: NodeJS.Timeout;
-    constructor(duration: number, interval?: number) {
+    on_remove?: (key: K, value: V) => void;
+    constructor(duration: number, interval?: number, on_remove?: (key: K, value: V) => void) {
         this.duration = duration;
         this.interval = setInterval(this.sweep.bind(this), interval ?? this.duration);
+        this.on_remove = on_remove;
     }
     destroy() {
         clearInterval(this.interval);
     }
     sweep() {
         const now = Date.now();
-        for (const [key, [timestamp, _]] of this.contents) {
+        for (const [key, [timestamp, value]] of this.contents) {
             if (now - timestamp >= this.duration) {
+                if (this.on_remove) {
+                    this.on_remove(key, value);
+                }
                 this.contents.delete(key);
             }
         }
