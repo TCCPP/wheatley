@@ -49,7 +49,7 @@ const PRESS_TIMEOUT = DAY;
  * Provides "the button" minigame.
  */
 export default class TheButton extends BotComponent {
-    readonly button_message_id = "1069819685786370108";
+    readonly button_message_id = "1205725580578787368";
     button_message: Discord.Message | undefined;
     last_update = {
         epoch: 0,
