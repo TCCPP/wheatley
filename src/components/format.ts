@@ -96,7 +96,7 @@ const code_begin = [
     "long",
 ];
 
-const code_begin_re = new RegExp(`\b(?:${code_begin.join("|")})\b`);
+const code_begin_re = new RegExp(`\\b(?:${code_begin.join("|")})\\b`);
 
 const code_block_re = new RegExp(`(\`\`\`(?:${languages_re.source}\b)?)(.*?)\`\`\``, "gims");
 
