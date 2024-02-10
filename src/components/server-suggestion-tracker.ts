@@ -2,7 +2,7 @@ import * as Discord from "discord.js";
 import { strict as assert } from "assert";
 import { unwrap } from "../utils/misc.js";
 import { xxh3 } from "../utils/strings.js";
-import { departialize } from "../utils/discord.js";
+import { api_wrap, departialize } from "../utils/discord.js";
 import { critical_error } from "../utils/debugging-and-logging.js";
 import { KeyedMutexSet, SelfClearingSet } from "../utils/containers.js";
 import { M } from "../utils/debugging-and-logging.js";
@@ -524,13 +524,18 @@ export default class ServerSuggestionTracker extends BotComponent {
                         // NOTE: Assuming no identical snowflakes between channels, this should be pretty safe though
                         try {
                             await this.mutex.lock(message.id);
-                            const suggestion =
-                                await this.wheatley.channels.server_suggestions.messages.fetch(suggestion_id);
-                            await suggestion.react(reaction.emoji.name!);
-                            await this.log_resolution(suggestion, {
-                                user: await departialize(user),
-                                emoji: reaction.emoji,
-                            });
+                            // in case the message vanishes by the time we get here
+                            const suggestion = await api_wrap(
+                                () => this.wheatley.channels.server_suggestions.messages.fetch(suggestion_id),
+                                [Discord.RESTJSONErrorCodes.UnknownMessage],
+                            );
+                            if (suggestion) {
+                                await suggestion.react(reaction.emoji.name!);
+                                await this.log_resolution(suggestion, {
+                                    user: await departialize(user),
+                                    emoji: reaction.emoji,
+                                });
+                            }
                         } finally {
                             this.mutex.unlock(message.id);
                         }

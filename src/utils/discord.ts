@@ -3,6 +3,7 @@ import * as Discord from "discord.js";
 import { client } from "./debugging-and-logging.js";
 import { unwrap } from "./misc.js";
 import { TextBasedCommand } from "../command-abstractions/text-based-command.js";
+import { is_string } from "./strings.js";
 
 type PotentiallyPartial =
     | Discord.User
@@ -191,5 +192,19 @@ export async function send_long_response(
             content: unwrap(queue.shift()),
             flags,
         });
+    }
+}
+
+export async function api_wrap<R>(fn: () => Promise<R>, ignored_errors: Discord.RESTJSONErrorCodes[]) {
+    try {
+        return await fn();
+    } catch (e) {
+        if (e instanceof Discord.DiscordAPIError) {
+            assert(!is_string(e.code));
+            if (ignored_errors.includes(e.code)) {
+                return null;
+            }
+        }
+        throw e;
     }
 }
