@@ -91,6 +91,7 @@ const tuple = <T extends any[]>(...args: T): T => args;
 const channels_map = {
     // staff
     staff_flag_log: tuple("1026972603019169842", Discord.TextChannel),
+    staff_experimental_log: tuple("1207899185790197760", Discord.TextChannel),
     staff_action_log: tuple("845290775692443699", Discord.TextChannel),
     staff_watch_log: tuple("1191147767733694585", Discord.TextChannel),
     welcome: tuple("778017793567490078", Discord.TextChannel),
