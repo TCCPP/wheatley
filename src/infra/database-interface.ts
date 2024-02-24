@@ -79,6 +79,7 @@ export class WheatleyDatabase {
                     negative_emojis: [],
                 },
                 moderation_case_number: 0,
+                watch_number: 0,
             };
             const ires = await wheatley.insertOne(document);
             assert(ires.acknowledged);

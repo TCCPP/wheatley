@@ -81,6 +81,7 @@ export type wheatley_database_info = {
         negative_emojis: string[];
     };
     moderation_case_number: number;
+    watch_number: number;
 };
 
 const TCCPP_ID = "331718482485837825";
