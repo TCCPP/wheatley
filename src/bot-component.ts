@@ -49,18 +49,20 @@ export class BotComponent {
     }
 
     private on_wheatley_ready() {
-        this.setup_listener("messageCreate", this.on_message_create);
-        this.setup_listener("messageDelete", this.on_message_delete);
-        this.setup_listener("messageUpdate", this.on_message_update);
-        this.setup_listener("messageReactionAdd", this.on_reaction_add);
-        this.setup_listener("messageReactionRemove", this.on_reaction_remove);
-        this.setup_listener("interactionCreate", this.on_interaction_create);
-        this.setup_listener("guildMemberAdd", this.on_guild_member_add);
-        this.setup_listener("guildMemberUpdate", this.on_guild_member_update);
-        this.setup_listener("guildMemberRemove", this.on_guild_member_remove);
-        this.setup_listener("threadCreate", this.on_thread_create);
-
-        this.on_ready().catch(critical_error);
+        this.on_ready()
+            .catch(critical_error)
+            .finally(() => {
+                this.setup_listener("messageCreate", this.on_message_create);
+                this.setup_listener("messageDelete", this.on_message_delete);
+                this.setup_listener("messageUpdate", this.on_message_update);
+                this.setup_listener("messageReactionAdd", this.on_reaction_add);
+                this.setup_listener("messageReactionRemove", this.on_reaction_remove);
+                this.setup_listener("interactionCreate", this.on_interaction_create);
+                this.setup_listener("guildMemberAdd", this.on_guild_member_add);
+                this.setup_listener("guildMemberUpdate", this.on_guild_member_update);
+                this.setup_listener("guildMemberRemove", this.on_guild_member_remove);
+                this.setup_listener("threadCreate", this.on_thread_create);
+            });
     }
 
     add_command<T extends unknown[]>(
