@@ -5,7 +5,7 @@ import * as Discord from "discord.js";
 import { escape_discord } from "../utils/strings.js";
 import { M } from "../utils/debugging-and-logging.js";
 import { BotComponent } from "../bot-component.js";
-import { Wheatley } from "../wheatley.js";
+import { Wheatley, create_basic_embed } from "../wheatley.js";
 import { url_re } from "./quote.js";
 import { colors } from "../common.js";
 import { MessageContextMenuInteractionBuilder } from "../command-abstractions/context-menu.js";
@@ -109,6 +109,17 @@ export default class Inspect extends BotComponent {
         message: Discord.Message,
         command_object: Discord.MessageContextMenuCommandInteraction | TextBasedCommand,
     ) {
+        if (message.type == Discord.MessageType.Reply) {
+            await command_object.reply({
+                embeds: [
+                    create_basic_embed(
+                        undefined,
+                        colors.default,
+                        `Reply to message id: \`${message.reference?.messageId}\`\n`,
+                    ),
+                ],
+            });
+        }
         await send_long_response(
             command_object,
             message.content.length > 0 ? escape_discord(message.content) : "<empty>",
