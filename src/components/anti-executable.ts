@@ -138,30 +138,43 @@ export default class AntiExecutable extends BotComponent {
         });
     }
 
-    async handle_executables(message: Discord.Message, executables: Discord.Attachment[]) {
-        const quote = await this.wheatley.make_quote_embeds([message]);
-        await message.delete();
-        await message.channel.send(`<@${message.author.id}> Please do not send executable files`);
-        const flag_messsage = await this.wheatley.channels.staff_flag_log.send({
-            content: `:warning: Executable file detected`,
-            ...quote,
-        });
+    async scan_attachments(attachments: Discord.Attachment[], flag_message: Discord.Message) {
         await Promise.all(
-            executables.map(async executable => {
+            attachments.map(async attachment => {
                 // download
                 let file_buffer: Buffer;
                 try {
-                    file_buffer = await this.fetch(executable.url);
+                    file_buffer = await this.fetch(attachment.url);
                 } catch (e) {
                     critical_error(e);
                     return;
                 }
                 // virustotal
                 if (!this.wheatley.freestanding) {
-                    await this.virustotal_scan(file_buffer, flag_messsage);
+                    await this.virustotal_scan(file_buffer, flag_message);
                 }
             }),
         );
+    }
+
+    async handle_executables(message: Discord.Message, attachments: Discord.Attachment[]) {
+        const quote = await this.wheatley.make_quote_embeds([message]);
+        await message.delete();
+        await message.channel.send(`<@${message.author.id}> Please do not send executable files`);
+        const flag_message = await this.wheatley.channels.staff_flag_log.send({
+            content: `:warning: Executable file(s) detected`,
+            ...quote,
+        });
+        await this.scan_attachments(attachments, flag_message);
+    }
+
+    async handle_archives(message: Discord.Message, attachments: Discord.Attachment[]) {
+        const quote = await this.wheatley.make_quote_embeds([message]);
+        const flag_message = await this.wheatley.channels.staff_flag_log.send({
+            content: `:warning: Archive file(s) detected`,
+            ...quote,
+        });
+        await this.scan_attachments(attachments, flag_message);
     }
 
     override async on_message_create(message: Discord.Message) {
@@ -170,14 +183,19 @@ export default class AntiExecutable extends BotComponent {
         }
         if (message.attachments.size > 0) {
             const executables: Discord.Attachment[] = [];
+            const archives: Discord.Attachment[] = [];
             for (const [_, attachment] of message.attachments) {
-                const res = await this.fetch(attachment.url, 64);
+                const res = await this.fetch(attachment.url, 512);
                 if (this.looks_like_executable(res)) {
                     executables.push(attachment);
+                } else if (this.looks_like_archive(res)) {
+                    archives.push(attachment);
                 }
             }
             if (executables.length > 0) {
-                await this.handle_executables(message, executables);
+                await this.handle_executables(message, [...executables, ...archives]);
+            } else if (archives.length > 0) {
+                await this.handle_archives(message, archives);
             }
         }
     }
