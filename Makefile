@@ -14,14 +14,10 @@ SERVER:=x0
 prereqs: package.json package-lock.json
 	$(NPM) i
 
-.PHONY: lint
-lint: prereqs  ## Ts-check and lint
+.PHONY: check
+check: prereqs  ## Ts-check and lint
 	$(NPM) run ts-check
 	$(NPM) run lint
-
-.PHONY: check
-check: prereqs  ## Run ts-check
-	$(NPM) run ts-check
 
 .PHONY: format
 format: prereqs  ## Formats source files
@@ -39,13 +35,16 @@ clean:  ## Cleans up everything
 build: prereqs  ## Cleans up everything
 	$(NPM) run build
 
-.PHONY: dev
-dev: build  ## Runs the bot locally
+.PHONY: run
+run: build  ## Runs the bot locally
 	$(NODE) build/src/main.js
 
-.PHONY: prod
-prod:  ## Runs the site as a developer; including live reload support and installation of git hooks
+.PHONY: deploy
+deploy:  ## Deploys code
 	./scripts/scp.sh
+
+.PHONY: prod
+prod: deploy  ## Deploys code and restarts the bot
 	ssh $(SERVER) "screen -XS _Wheatley quit; cd projects/wheatley; ./start.sh"
 
 .PHONY: npm-update
