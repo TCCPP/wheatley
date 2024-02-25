@@ -129,6 +129,7 @@ export default class Modmail extends BotComponent {
                 .setStyle(Discord.ButtonStyle.Secondary),
         );
         return {
+            content: "",
             embeds: [
                 create_embed(
                     "Modmail",
