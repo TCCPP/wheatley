@@ -34,27 +34,27 @@ export default class RoleManager extends BotComponent {
     async check_users() {
         try {
             const members = await this.wheatley.TCCPP.members.fetch();
-            members.map((m, _) => {
+            members.map((member, _) => {
                 // pink
-                if (m.roles.cache.some(r => r.id == this.wheatley.roles.pink.id)) {
-                    if (m.premiumSince == null) {
-                        M.log("removing pink for", m.user.tag);
-                        m.roles.remove(this.pink_role).catch(M.error);
+                if (member.roles.cache.some(role => role.id == this.wheatley.roles.pink.id)) {
+                    if (member.premiumSince == null) {
+                        M.log("removing pink for", member.user.tag);
+                        member.roles.remove(this.pink_role).catch(M.error);
                     }
                 }
                 // skill roles
-                const s = m.roles.cache.filter(r =>
-                    Object.values(this.wheatley.skill_roles).some(skill_role => r.id == skill_role.id),
+                const skill_roles = member.roles.cache.filter(role =>
+                    Object.values(this.wheatley.skill_roles).some(skill_role => role.id == skill_role.id),
                 );
-                if (s.size > 1) {
-                    M.log("removing duplicate skill roles for", m.user.tag);
-                    M.debug(m.user.tag);
+                if (skill_roles.size > 1) {
+                    M.log("removing duplicate skill roles for", member.user.tag);
+                    M.debug(member.user.tag);
                     //M.debug(s);
-                    s.sort((a, b) => b.rawPosition - a.rawPosition);
-                    M.debug(s.map(x => x.name));
-                    M.debug(s.map(x => x.name).slice(1));
-                    for (const role of s.map(x => x).slice(1)) {
-                        m.roles.remove(role).catch(M.error);
+                    skill_roles.sort((a, b) => b.rawPosition - a.rawPosition);
+                    M.debug(skill_roles.map(x => x.name));
+                    M.debug(skill_roles.map(x => x.name).slice(1));
+                    for (const role of skill_roles.map(x => x).slice(1)) {
+                        member.roles.remove(role).catch(M.error);
                     }
                 }
             });
