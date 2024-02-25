@@ -11,7 +11,7 @@ NPX:=npx
 SERVER:=x0
 
 .PHONY: prereqs
-prereqs: package-lock.json
+prereqs: package.json package-lock.json
 	$(NPM) i
 
 .PHONY: lint
@@ -47,3 +47,7 @@ dev: build  ## Runs the bot locally
 prod:  ## Runs the site as a developer; including live reload support and installation of git hooks
 	./scripts/scp.sh
 	ssh $(SERVER) "screen -XS _Wheatley quit; cd projects/wheatley; ./start.sh"
+
+.PHONY: npm-update
+npm-update:  ## Updates npm packages
+	./scripts/update_packages.sh
