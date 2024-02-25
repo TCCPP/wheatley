@@ -152,132 +152,152 @@ export default class Modmail extends BotComponent {
         }
     }
 
-    override async on_interaction_create(interaction: Discord.Interaction) {
-        if (interaction.isButton()) {
-            if (interaction.customId == "modmail_monkey") {
+    async monkey_button_press(interaction: Discord.ButtonInteraction) {
+        await interaction.reply({
+            content:
+                "Hello and welcome to Together C&C++ :wave: Please read before pressing buttons and only " +
+                "use the modmail system system when there is an __issue requiring staff attention__.",
+            ephemeral: true,
+        });
+        await this.log_action(interaction.member, "Monkey pressed the button");
+        try {
+            // can't apply roles to root
+            if (!this.wheatley.is_root(interaction.user)) {
+                const member = await this.wheatley.TCCPP.members.fetch(interaction.user.id);
+                await member.roles.add(this.wheatley.roles.monke);
+                this.monke_set.set(interaction.user.id, Date.now());
+            }
+        } catch (e) {
+            critical_error(e);
+        }
+    }
+
+    async not_monkey_button_press(interaction: Discord.ButtonInteraction) {
+        await this.log_action(interaction.member, "Monkey pressed the not monkey button");
+        const member = await this.wheatley.TCCPP.members.fetch(interaction.user.id);
+        if (member.roles.cache.has(this.wheatley.roles.monke.id)) {
+            if (!this.monke_set.has(member.id) || Date.now() - unwrap(this.monke_set.get(member.id)) >= HOUR) {
                 await interaction.reply({
-                    content:
-                        "Hello and welcome to Together C&C++ :wave: Please read before pressing buttons and only " +
-                        "use the modmail system system when there is an __issue requiring staff attention__.",
+                    content: "Congratulations on graduating from your monke status.",
                     ephemeral: true,
                 });
-                await this.log_action(interaction.member, "Monkey pressed the button");
                 try {
                     // can't apply roles to root
                     if (!this.wheatley.is_root(interaction.user)) {
-                        const member = await this.wheatley.TCCPP.members.fetch(interaction.user.id);
-                        await member.roles.add(this.wheatley.roles.monke);
-                        this.monke_set.set(interaction.user.id, Date.now());
+                        await member.roles.remove(this.wheatley.roles.monke);
+                        this.monke_set.remove(member.id);
                     }
                 } catch (e) {
                     critical_error(e);
                 }
-            } else if (interaction.customId == "modmail_not_monkey") {
-                await this.log_action(interaction.member, "Monkey pressed the not monkey button");
-                const member = await this.wheatley.TCCPP.members.fetch(interaction.user.id);
-                if (member.roles.cache.has(this.wheatley.roles.monke.id)) {
-                    if (!this.monke_set.has(member.id) || Date.now() - unwrap(this.monke_set.get(member.id)) >= HOUR) {
-                        await interaction.reply({
-                            content: "Congratulations on graduating from your monke status.",
-                            ephemeral: true,
-                        });
-                        try {
-                            // can't apply roles to root
-                            if (!this.wheatley.is_root(interaction.user)) {
-                                await member.roles.remove(this.wheatley.roles.monke);
-                                this.monke_set.remove(member.id);
-                            }
-                        } catch (e) {
-                            critical_error(e);
-                        }
-                    } else {
-                        await interaction.reply({
-                            content: "You must wait at least an hour to remove your monke status.",
-                            ephemeral: true,
-                        });
-                    }
-                } else {
-                    await interaction.reply({
-                        content:
-                            "No monke role present. If you'd like to become a monke press the " +
-                            '"I\'m a monke" button.',
-                        ephemeral: true,
-                    });
-                }
-            } else if (interaction.customId == "modmail_create") {
-                if (this.timeout_set.has(interaction.user.id)) {
-                    await interaction.reply({
-                        ephemeral: true,
-                        content: "Please don't spam modmail requests -- This button has a 5 minute cooldown",
-                    });
-                    await this.log_action(interaction.member, "Modmail button spammed");
-                } else {
-                    const row = new Discord.ActionRowBuilder<Discord.MessageActionRowComponentBuilder>().addComponents(
-                        new Discord.ButtonBuilder()
-                            .setCustomId("modmail_create_abort")
-                            .setLabel("Cancel")
-                            .setStyle(Discord.ButtonStyle.Primary),
-                        new Discord.ButtonBuilder()
-                            .setCustomId("modmail_create_continue")
-                            .setLabel("Continue")
-                            .setStyle(Discord.ButtonStyle.Danger),
-                    );
-                    await interaction.reply({
-                        ephemeral: true,
-                        content:
-                            "Please only submit a modmail request if you have a server issue requiring staff " +
-                            'attention! If you really intend to submit a modmail request enter the word "foobar" ' +
-                            "backwards when prompted",
-                        components: [row],
-                    });
-                    await this.log_action(interaction.member, "Modmail button pressed");
-                }
-            } else if (interaction.customId == "modmail_create_abort") {
-                await interaction.update({
-                    content: "All good :+1:",
-                    components: [],
+            } else {
+                await interaction.reply({
+                    content: "You must wait at least an hour to remove your monke status.",
+                    ephemeral: true,
                 });
-                await this.log_action(interaction.member, "Modmail abort sequence");
+            }
+        } else {
+            await interaction.reply({
+                content: "No monke role present. If you'd like to become a monke press the \"I'm a monke\" button.",
+                ephemeral: true,
+            });
+        }
+    }
+
+    async modmail_create_button_press(interaction: Discord.ButtonInteraction) {
+        if (this.timeout_set.has(interaction.user.id)) {
+            await interaction.reply({
+                ephemeral: true,
+                content: "Please don't spam modmail requests -- This button has a 5 minute cooldown",
+            });
+            await this.log_action(interaction.member, "Modmail button spammed");
+        } else {
+            const row = new Discord.ActionRowBuilder<Discord.MessageActionRowComponentBuilder>().addComponents(
+                new Discord.ButtonBuilder()
+                    .setCustomId("modmail_create_abort")
+                    .setLabel("Cancel")
+                    .setStyle(Discord.ButtonStyle.Primary),
+                new Discord.ButtonBuilder()
+                    .setCustomId("modmail_create_continue")
+                    .setLabel("Continue")
+                    .setStyle(Discord.ButtonStyle.Danger),
+            );
+            await interaction.reply({
+                ephemeral: true,
+                content:
+                    "Please only submit a modmail request if you have a server issue requiring staff " +
+                    'attention! If you really intend to submit a modmail request enter the word "foobar" ' +
+                    "backwards when prompted",
+                components: [row],
+            });
+            await this.log_action(interaction.member, "Modmail button pressed");
+        }
+    }
+
+    async modmail_abort_button_press(interaction: Discord.ButtonInteraction) {
+        await interaction.update({
+            content: "All good :+1:",
+            components: [],
+        });
+        await this.log_action(interaction.member, "Modmail abort sequence");
+    }
+
+    async modmail_continue_button_press(interaction: Discord.ButtonInteraction) {
+        this.timeout_set.add(interaction.user.id);
+        setTimeout(() => {
+            this.timeout_set.delete(interaction.user.id);
+        }, RATELIMIT_TIME);
+        const modal = new Discord.ModalBuilder().setCustomId("modmail_create_confirm").setTitle("Confirm Modmail");
+        const row = new Discord.ActionRowBuilder<Discord.TextInputBuilder>().addComponents(
+            new Discord.TextInputBuilder()
+                .setCustomId("modmail_create_confirm_codeword")
+                .setLabel("Codeword")
+                .setPlaceholder("You'll know if you read the last message")
+                .setStyle(Discord.TextInputStyle.Short),
+        );
+        modal.addComponents(row);
+        await interaction.showModal(modal);
+        await this.log_action(interaction.member, "Modmail continue");
+    }
+
+    async modmail_modal_submit(interaction: Discord.ModalSubmitInteraction) {
+        const codeword = interaction.fields.getTextInputValue("modmail_create_confirm_codeword");
+        if (codeword.toLowerCase().replace(/\s/g, "").includes("raboof")) {
+            await interaction.deferUpdate();
+            await this.create_modmail_thread(interaction);
+            await interaction.editReply({
+                content:
+                    "Your modmail request has been processed. A thread has been created and the staff " +
+                    "team have been notified.",
+                components: [],
+            });
+            await this.log_action(interaction.member, "Modmail submit");
+        } else {
+            assert(interaction.isFromMessage());
+            await interaction.update({
+                content: "Codeword was incorrect, do you really mean to start a modmail thread?",
+                components: [],
+            });
+            await this.log_action(interaction.member, "Modmail incorrect codeword");
+        }
+    }
+
+    override async on_interaction_create(interaction: Discord.Interaction) {
+        if (interaction.isButton()) {
+            if (interaction.customId == "modmail_monkey") {
+                return this.monkey_button_press(interaction);
+            } else if (interaction.customId == "modmail_not_monkey") {
+                return this.not_monkey_button_press(interaction);
+            } else if (interaction.customId == "modmail_create") {
+                return this.modmail_create_button_press(interaction);
+            } else if (interaction.customId == "modmail_create_abort") {
+                return this.modmail_abort_button_press(interaction);
             } else if (interaction.customId == "modmail_create_continue") {
-                this.timeout_set.add(interaction.user.id);
-                setTimeout(() => {
-                    this.timeout_set.delete(interaction.user.id);
-                }, RATELIMIT_TIME);
-                const modal = new Discord.ModalBuilder()
-                    .setCustomId("modmail_create_confirm")
-                    .setTitle("Confirm Modmail");
-                const row = new Discord.ActionRowBuilder<Discord.TextInputBuilder>().addComponents(
-                    new Discord.TextInputBuilder()
-                        .setCustomId("modmail_create_confirm_codeword")
-                        .setLabel("Codeword")
-                        .setPlaceholder("You'll know if you read the last message")
-                        .setStyle(Discord.TextInputStyle.Short),
-                );
-                modal.addComponents(row);
-                await interaction.showModal(modal);
-                await this.log_action(interaction.member, "Modmail continue");
+                return this.modmail_continue_button_press(interaction);
             }
         } else if (interaction.isModalSubmit()) {
             if (interaction.customId == "modmail_create_confirm") {
-                const codeword = interaction.fields.getTextInputValue("modmail_create_confirm_codeword");
-                if (codeword.toLowerCase().replace(/\s/g, "").includes("raboof")) {
-                    await interaction.deferUpdate();
-                    await this.create_modmail_thread(interaction);
-                    await interaction.editReply({
-                        content:
-                            "Your modmail request has been processed. A thread has been created and the staff " +
-                            "team have been notified.",
-                        components: [],
-                    });
-                    await this.log_action(interaction.member, "Modmail submit");
-                } else {
-                    assert(interaction.isFromMessage());
-                    await interaction.update({
-                        content: "Codeword was incorrect, do you really mean to start a modmail thread?",
-                        components: [],
-                    });
-                    await this.log_action(interaction.member, "Modmail incorrect codeword");
-                }
+                return this.modmail_modal_submit(interaction);
             }
         }
     }
