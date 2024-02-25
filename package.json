@@ -27,7 +27,8 @@
         "format": "prettier . --write",
         "format-check": "prettier . --check",
         "format-files": "prettier --write --ignore-unknown",
-        "ts-check": "tsc --noEmit"
+        "ts-check": "tsc --noEmit",
+        "build": "tsc"
     },
     "devDependencies": {
         "@types/chai": "^4.3.10",
