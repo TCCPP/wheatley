@@ -3,7 +3,7 @@ import * as mongo from "mongodb";
 
 import { strict as assert } from "assert";
 import { unwrap } from "../utils/misc.js";
-import { departialize } from "../utils/discord.js";
+import { EMOJIREGEX, departialize } from "../utils/discord.js";
 import { critical_error } from "../utils/debugging-and-logging.js";
 import { KeyedMutexSet } from "../utils/containers.js";
 import { M } from "../utils/debugging-and-logging.js";
@@ -33,10 +33,6 @@ const auto_delete_threshold = 5;
 const max_deletes_in_24h = 5;
 
 const starboard_epoch = new Date("2023-04-01T00:00:00.000Z").getTime();
-
-// https://stackoverflow.com/questions/64053658/get-emojis-from-message-discord-js-v12
-// https://www.reddit.com/r/Discord_Bots/comments/gteo6t/discordjs_is_there_a_way_to_detect_emojis_in_a/
-const EMOJIREGEX = /((?<!\\)<a?:[^:]+:(\d+)>)|\p{Emoji_Presentation}\S+|\p{Extended_Pictographic}\S+/gmu;
 
 /**
  * Reaction highscores.

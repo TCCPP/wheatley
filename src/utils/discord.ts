@@ -5,6 +5,11 @@ import { unwrap } from "./misc.js";
 import { TextBasedCommand } from "../command-abstractions/text-based-command.js";
 import { is_string } from "./strings.js";
 
+// https://stackoverflow.com/questions/64053658/get-emojis-from-message-discord-js-v12
+// https://www.reddit.com/r/Discord_Bots/comments/gteo6t/discordjs_is_there_a_way_to_detect_emojis_in_a/
+export const EMOJIREGEX = /((?<!\\)<a?:[^:]+:(\d+)>)|\p{Emoji_Presentation}\S+|\p{Extended_Pictographic}\S+/gmu;
+export const CUSTOM_EMOJIREGEX = /((?<!\\)<(a?):([^:]+):(\d+)>)/gmu;
+
 type PotentiallyPartial =
     | Discord.User
     | Discord.PartialUser
