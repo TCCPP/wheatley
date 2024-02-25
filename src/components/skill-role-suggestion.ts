@@ -80,7 +80,7 @@ export default class SkillRoleSuggestion extends BotComponent {
         );
         const skill_roles_available = skill_roles_order.slice(
             target_skill_index + 1, // can't suggest anything <= the target's skill
-            suggestor_skill_index + 2, // can't suggest anything >= suggestor's skill + 1
+            Math.max(suggestor_skill_index, 0) + 2, // can't suggest anything >= suggestor's skill + 1
         );
         if (skill_roles_available.length == 0) {
             await interaction.reply({
