@@ -217,30 +217,32 @@ export default class Buzzwords extends BotComponent {
         const p80 = Buzzwords.quantile(scores, 0.7);
         const p70 = Buzzwords.quantile(scores, 0.5);
         const p60 = Buzzwords.quantile(scores, 0.3);
-        members.map(async (member, _) => {
-            const member_entry = await this.wheatley.database.buzzword_scoreboard.findOne({ user: member.id });
-            if (member_entry) {
-                const score = member_entry.score;
-                const current_role_raw = [...member.roles.cache.filter(r => roles.includes(r.id)).keys()];
-                const current_role = current_role_raw.length > 0 ? current_role_raw[0] : null;
-                let new_role: string;
-                if (score >= p90) {
-                    new_role = expert;
-                } else if (score >= p80) {
-                    new_role = advanced;
-                } else if (score >= p70) {
-                    new_role = proficient;
-                } else if (score >= p60) {
-                    new_role = intermediate;
-                } else {
-                    new_role = beginner;
+        await Promise.all(
+            members.map(async (member, _) => {
+                const member_entry = await this.wheatley.database.buzzword_scoreboard.findOne({ user: member.id });
+                if (member_entry) {
+                    const score = member_entry.score;
+                    const current_role_raw = [...member.roles.cache.filter(r => roles.includes(r.id)).keys()];
+                    const current_role = current_role_raw.length > 0 ? current_role_raw[0] : null;
+                    let new_role: string;
+                    if (score >= p90) {
+                        new_role = expert;
+                    } else if (score >= p80) {
+                        new_role = advanced;
+                    } else if (score >= p70) {
+                        new_role = proficient;
+                    } else if (score >= p60) {
+                        new_role = intermediate;
+                    } else {
+                        new_role = beginner;
+                    }
+                    if (current_role != new_role) {
+                        await member.roles.remove(roles);
+                        await member.roles.add(new_role);
+                    }
                 }
-                if (current_role != new_role) {
-                    await member.roles.remove(roles);
-                    await member.roles.add(new_role);
-                }
-            }
-        });
+            }),
+        );
     }
 
     async updateRolesSingle(member: Discord.GuildMember) {

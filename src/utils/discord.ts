@@ -187,10 +187,11 @@ export async function send_long_response(
         queue.push(msg);
     }
     while (queue.length > 0) {
-        await (command_object.replied &&
-        (command_object instanceof Discord.MessageContextMenuCommandInteraction || !command_object.is_editing)
-            ? command_object.followUp
-            : command_object.reply
+        await (
+            command_object.replied &&
+            (command_object instanceof Discord.MessageContextMenuCommandInteraction || !command_object.is_editing)
+                ? command_object.followUp
+                : command_object.reply
         ).bind(command_object)({
             ephemeral: ephemeral_if_possible,
             ephemeral_if_possible,
