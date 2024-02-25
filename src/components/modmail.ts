@@ -48,9 +48,8 @@ export default class Modmail extends BotComponent {
         this.modmail_id_counter = singleton.modmail_id_counter;
     }
 
-    async create_modmail_thread(interaction: Discord.ModalSubmitInteraction) {
+    async create_modmail_thread(interaction: Discord.ModalSubmitInteraction | Discord.ButtonInteraction) {
         try {
-            assert(interaction.isFromMessage());
             try {
                 // fetch full member
                 assert(interaction.member);
@@ -95,10 +94,18 @@ export default class Modmail extends BotComponent {
                     },
                 });
             } catch (e) {
-                await interaction.update({
-                    content: "Something went wrong internally...",
-                    components: [],
-                });
+                if (interaction instanceof Discord.ModalSubmitInteraction) {
+                    assert(interaction.isFromMessage());
+                    await interaction.update({
+                        content: "Something went wrong internally...",
+                        components: [],
+                    });
+                } else {
+                    await interaction.reply({
+                        content: "Something went wrong internally...",
+                        components: [],
+                    });
+                }
                 throw e; // rethrow
             }
         } catch (e) {
@@ -212,25 +219,45 @@ export default class Modmail extends BotComponent {
             });
             await this.log_action(interaction.member, "Modmail button spammed");
         } else {
-            const row = new Discord.ActionRowBuilder<Discord.MessageActionRowComponentBuilder>().addComponents(
-                new Discord.ButtonBuilder()
-                    .setCustomId("modmail_create_abort")
-                    .setLabel("Cancel")
-                    .setStyle(Discord.ButtonStyle.Primary),
-                new Discord.ButtonBuilder()
-                    .setCustomId("modmail_create_continue")
-                    .setLabel("Continue")
-                    .setStyle(Discord.ButtonStyle.Danger),
+            const member = await this.wheatley.TCCPP.members.fetch(interaction.user.id);
+            const non_beginner_skill_roles = member.roles.cache.filter(role =>
+                Object.values(this.wheatley.skill_roles).some(
+                    skill_role => role.id == skill_role.id && skill_role.name != "Beginner",
+                ),
             );
-            await interaction.reply({
-                ephemeral: true,
-                content:
-                    "Please only submit a modmail request if you have a server issue requiring staff " +
-                    'attention! If you really intend to submit a modmail request enter the word "foobar" ' +
-                    "backwards when prompted",
-                components: [row],
-            });
-            await this.log_action(interaction.member, "Modmail button pressed");
+            if (non_beginner_skill_roles.size > 0) {
+                // fast-path people who can read
+                await interaction.deferUpdate();
+                await this.create_modmail_thread(interaction);
+                await interaction.reply({
+                    content:
+                        "Your modmail request has been processed. A thread has been created and the staff " +
+                        "team have been notified.",
+                    components: [],
+                });
+                await this.log_action(interaction.member, "Modmail button pressed, fast path");
+            } else {
+                // make sure they can read
+                const row = new Discord.ActionRowBuilder<Discord.MessageActionRowComponentBuilder>().addComponents(
+                    new Discord.ButtonBuilder()
+                        .setCustomId("modmail_create_abort")
+                        .setLabel("Cancel")
+                        .setStyle(Discord.ButtonStyle.Primary),
+                    new Discord.ButtonBuilder()
+                        .setCustomId("modmail_create_continue")
+                        .setLabel("Continue")
+                        .setStyle(Discord.ButtonStyle.Danger),
+                );
+                await interaction.reply({
+                    ephemeral: true,
+                    content:
+                        "Please only submit a modmail request if you have a server issue requiring staff " +
+                        'attention! If you really intend to submit a modmail request enter the word "foobar" ' +
+                        "backwards when prompted",
+                    components: [row],
+                });
+                await this.log_action(interaction.member, "Modmail button pressed");
+            }
         }
     }
 
