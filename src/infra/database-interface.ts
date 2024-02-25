@@ -13,6 +13,7 @@ import { TRACKER_START_TIME, suggestion_entry } from "../components/server-sugge
 import { link_blacklist_entry, watchlist_entry } from "../private-types.js";
 import { moderation_entry } from "../components/moderation/moderation-common.js";
 import { wheatley_database_credentials, wheatley_database_info } from "../wheatley.js";
+import { skill_suggestion_entry } from "../components/skill-role-suggestion.js";
 
 export class WheatleyDatabase {
     private mutex = new Mutex();
@@ -124,6 +125,7 @@ export type WheatleyDatabaseProxy = WheatleyDatabase & {
     starboard_entries: mongo.Collection<starboard_entry>;
     wheatley: mongo.Collection<wheatley_database_info>;
     moderations: mongo.Collection<moderation_entry>;
+    skill_role_suggestions: mongo.Collection<skill_suggestion_entry>;
 };
 // & {
 //    [key: string] : Promise<mongo.Collection>

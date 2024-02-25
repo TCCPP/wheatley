@@ -104,7 +104,7 @@ const channels_map = {
     rules: tuple("659868782877212723", Discord.TextChannel),
     announcements: tuple("331881381477089282", Discord.NewsChannel),
     server_suggestions: tuple("802541516655951892", Discord.TextChannel),
-    skill_role_suggestion_log: tuple("1099193160858599484", Discord.TextChannel),
+    skill_role_suggestions: tuple("1211089633547526204", Discord.ForumChannel),
     resources: tuple("1124619767542718524", Discord.ForumChannel),
     // language channels
     cpp_help: tuple("1013107104678162544", Discord.ForumChannel),
@@ -148,12 +148,22 @@ const roles_map = {
 };
 
 const skill_roles_map = {
+    beginner: "784733371275673600",
     intermediate: "331876085820030978",
     proficient: "849399021838925834",
     advanced: "331719590990184450",
     expert: "331719591405551616",
-    beginner: "784733371275673600",
 };
+
+export const skill_roles_order = ["beginner", "intermediate", "proficient", "advanced", "expert"];
+
+export const skill_roles_order_id = [
+    "784733371275673600",
+    "331876085820030978",
+    "849399021838925834",
+    "331719590990184450",
+    "331719591405551616",
+];
 
 // General config
 // TODO: Can eliminate this stuff
