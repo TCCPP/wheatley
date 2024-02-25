@@ -42,8 +42,8 @@ export default class AntiExecutable extends BotComponent {
     static readonly archive_magic: [number, Buffer][] = [
         // Source for the archives and compressed files magic values:
         //  https://en.wikipedia.org/wiki/List_of_file_signatures
-        [0, Buffer.from([0x1f, 0x9d])], // Compressed file using Lempel-Ziv-Welch algorithm.
-        [0, Buffer.from([0x1f, 0xa0])], // Compressed file using LZH algorithm
+        // [0, Buffer.from([0x1f, 0x9d])], // Compressed file using Lempel-Ziv-Welch algorithm.
+        // [0, Buffer.from([0x1f, 0xa0])], // Compressed file using LZH algorithm
         [0, Buffer.from([0x1f, 0x8b])], // GZIP compressed files
         [0, Buffer.from([0x78, 0xf9])], // ZLIB (Best compression, with preset dictionary)
         [0, Buffer.from([0x78, 0x01])], // ZLIB (No Compression)
@@ -54,26 +54,26 @@ export default class AntiExecutable extends BotComponent {
         [0, Buffer.from([0x78, 0x7d])], // ZLIB (Best speed, with preset dictionary)
         [0, Buffer.from([0x78, 0xbb])], // ZLIB (Default compression, with preset dictionary)
         [0, Buffer.from([0x1a, 0x08])], // ARC archive file
-        [0, Buffer.from([0x4f, 0x41, 0x52])], // OAR file archive
-        [2, Buffer.from([0x2d, 0x68, 0x6c, 0x30, 0x2d])], // LZH archive file method 0 (No compression)
-        [2, Buffer.from([0x2d, 0x68, 0x6c, 0x35, 0x2d])], // LZH archive file method 5 (8KiB sliding window)
+        // [0, Buffer.from([0x4f, 0x41, 0x52])], // OAR file archive
+        // [2, Buffer.from([0x2d, 0x68, 0x6c, 0x30, 0x2d])], // LZH archive file method 0 (No compression)
+        // [2, Buffer.from([0x2d, 0x68, 0x6c, 0x35, 0x2d])], // LZH archive file method 5 (8KiB sliding window)
         [0, Buffer.from([0x4c, 0x5a, 0x49, 0x50])], // LZIP Compressed file
         [0, Buffer.from([0x50, 0x4b, 0x03, 0x04])], // ZIP File
         [0, Buffer.from([0x50, 0x4b, 0x05, 0x06])], // ZIP File (Empty)
         [0, Buffer.from([0x50, 0x4b, 0x07, 0x08])], // ZIP File (Spanned Archive)
-        [0, Buffer.from([0x78, 0x61, 0x72, 0x21])], // eXtensible ARchive format
-        [0, Buffer.from([0x30, 0x37, 0x30, 0x37, 0x30, 0x37])], // CPIO archive file
-        [0, Buffer.from([0x52, 0x61, 0x72, 0x21, 0xa1, 0x07, 0x00])], // Roshal ARchive compressed archive. (v1.50+)
-        [0, Buffer.from([0x52, 0x61, 0x72, 0x21, 0xa1, 0x07, 0x01, 0x00])], // Roshal ARchive compressed arhive (v5.00+)
+        // [0, Buffer.from([0x78, 0x61, 0x72, 0x21])], // eXtensible ARchive format
+        // [0, Buffer.from([0x30, 0x37, 0x30, 0x37, 0x30, 0x37])], // CPIO archive file
+        // [0, Buffer.from([0x52, 0x61, 0x72, 0x21, 0xa1, 0x07, 0x00])], // Roshal ARchive (v1.50+)
+        // [0, Buffer.from([0x52, 0x61, 0x72, 0x21, 0xa1, 0x07, 0x01, 0x00])], // Roshal ARchive (v5.00+)
         [257, Buffer.from([0x75, 0x73, 0x74, 0x61, 0x72, 0x00, 0x30, 0x30])], // tar archive
         [257, Buffer.from([0x75, 0x73, 0x74, 0x61, 0x72, 0x20, 0x20, 0x00])], // tar archive
-        [0, Buffer.from([0x53, 0x5a, 0x44, 0x44, 0x88, 0xf0, 0x27, 0x33])], // Microsoft compressed Quantum format.
-        [0, Buffer.from([0x52, 0x53, 0x56, 0x4b, 0x44, 0x41, 0x54, 0x41])], // QuickZip rs compressed archive
+        // [0, Buffer.from([0x53, 0x5a, 0x44, 0x44, 0x88, 0xf0, 0x27, 0x33])], // Microsoft compressed Quantum format.
+        // [0, Buffer.from([0x52, 0x53, 0x56, 0x4b, 0x44, 0x41, 0x54, 0x41])], // QuickZip rs compressed archive
         [0, Buffer.from([0x37, 0x7a, 0xbc, 0xaf, 0x27, 0x1c])], // 7zip File Format
         [0, Buffer.from([0xfd, 0x37, 0x7a, 0x58, 0x5a, 0x00])], // XZ compression utility
-        [0, Buffer.from([0x62, 0x76, 0x78, 0x32])], // LZFSE - Lempel-Ziv style data compression algorithm.
+        // [0, Buffer.from([0x62, 0x76, 0x78, 0x32])], // LZFSE - Lempel-Ziv style data compression algorithm.
         [0, Buffer.from([0x28, 0xb5, 0x2f, 0xfd])], // Zstandard compress
-        [0, Buffer.from([0x2a, 0x2a, 0x41, 0x43, 0x45, 0x2a, 0x2a])], // ACE compressed file format
+        // [0, Buffer.from([0x2a, 0x2a, 0x41, 0x43, 0x45, 0x2a, 0x2a])], // ACE compressed file format
     ];
 
     looks_like_executable(buffer: Buffer) {
