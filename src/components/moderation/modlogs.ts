@@ -2,7 +2,7 @@ import { strict as assert } from "assert";
 
 import * as Discord from "discord.js";
 
-import { build_description } from "../../utils/strings.js";
+import { build_description, truncate } from "../../utils/strings.js";
 import { pluralize, time_to_human } from "../../utils/strings.js";
 import { M } from "../../utils/debugging-and-logging.js";
 import { BotComponent } from "../../bot-component.js";
@@ -47,7 +47,9 @@ export default class Modlogs extends BotComponent {
         );
     }
 
-    static moderation_description(moderation: moderation_entry) {
+    static moderation_description(moderation: moderation_entry, is_field = false) {
+        // 256 chosen as an ideally generous padding to allow the preceding text before the reason to fit
+        const max_reason = (is_field ? 1024 : 4096) - 256;
         return build_description(
             `**Type:** ${moderation.type}`,
             moderation.type === "rolepersist" ? `**Role:** <@&${moderation.role}>` : null,
@@ -56,7 +58,7 @@ export default class Modlogs extends BotComponent {
                 moderation.link ? `[link](${moderation.link})` : ""
             }`,
             moderation.duration === null ? null : `**Duration:** ${time_to_human(moderation.duration)}`,
-            `**Reason:** ${moderation.reason ? moderation.reason : "No reason provided"}`,
+            `**Reason:** ${moderation.reason ? truncate(moderation.reason, max_reason) : "No reason provided"}`,
         );
     }
 
@@ -75,24 +77,34 @@ export default class Modlogs extends BotComponent {
                         moderation.removed
                             ? {
                                   name: "Removed",
-                                  value: build_description(
-                                      `**By:** <@${moderation.removed.moderator}>`,
-                                      `**At:** <t:${Math.round(moderation.removed.timestamp / 1000)}:f>`,
-                                      `**Reason:** ${
-                                          moderation.removed.reason ? moderation.removed.reason : "No reason provided"
-                                      }`,
+                                  value: truncate(
+                                      build_description(
+                                          `**By:** <@${moderation.removed.moderator}>`,
+                                          `**At:** <t:${Math.round(moderation.removed.timestamp / 1000)}:f>`,
+                                          `**Reason:** ${
+                                              moderation.removed.reason
+                                                  ? moderation.removed.reason
+                                                  : "No reason provided"
+                                          }`,
+                                      ),
+                                      1024,
                                   ),
                               }
                             : null,
                         moderation.expunged
                             ? {
                                   name: "Expunged",
-                                  value: build_description(
-                                      `**By:** <@${moderation.expunged.moderator}>`,
-                                      `**At:** <t:${Math.round(moderation.expunged.timestamp / 1000)}:f>`,
-                                      `**Reason:** ${
-                                          moderation.expunged.reason ? moderation.expunged.reason : "No reason provided"
-                                      }`,
+                                  value: truncate(
+                                      build_description(
+                                          `**By:** <@${moderation.expunged.moderator}>`,
+                                          `**At:** <t:${Math.round(moderation.expunged.timestamp / 1000)}:f>`,
+                                          `**Reason:** ${
+                                              moderation.expunged.reason
+                                                  ? moderation.expunged.reason
+                                                  : "No reason provided"
+                                          }`,
+                                      ),
+                                      1024,
                                   ),
                               }
                             : null,
@@ -150,7 +162,7 @@ export default class Modlogs extends BotComponent {
                             .map(moderation => {
                                 return {
                                     name: `Case ${moderation.case_number}`,
-                                    value: Modlogs.moderation_description(moderation),
+                                    value: Modlogs.moderation_description(moderation, true),
                                 };
                             }),
                     )

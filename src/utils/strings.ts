@@ -131,3 +131,7 @@ export function debug_unicode(str: string) {
         .map(v => `\\u${v}`)
         .join(", ");
 }
+
+export function truncate(str: string, length: number) {
+    return str.length <= length ? str : str.slice(0, length - 3) + "...";
+}
