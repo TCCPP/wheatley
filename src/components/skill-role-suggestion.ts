@@ -122,16 +122,10 @@ export default class SkillRoleSuggestion extends BotComponent {
                     content: `Skill role suggestions for ${member.displayName}`,
                 },
             });
-            const res = await this.wheatley.database.skill_role_suggestions.updateOne(
-                { snowflake: member.user.id },
-                {
-                    $set: {
-                        snowflake: member.user.id,
-                        channel_id: thread.id,
-                    },
-                },
-                { upsert: true },
-            );
+            const res = await this.wheatley.database.skill_role_suggestions.insertOne({
+                user_id: member.user.id,
+                channel_id: thread.id,
+            });
             assert(res.acknowledged);
             return thread;
         } finally {
