@@ -486,6 +486,7 @@ export abstract class ModerationComponent extends BotComponent {
                                           .filter(x => x != null)
                                           .join(" and ")}`
                                     : null,
+                                !this.is_once_off && duration !== null ? `**Duration**: ${duration}` : null,
                                 cant_dm ? "Note: Couldn't DM user. Their loss." : null,
                             ),
                         )
