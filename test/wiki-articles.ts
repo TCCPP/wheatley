@@ -25,7 +25,7 @@ describe("parse wiki articles", () => {
         }
         it(`${name} article should parse`, async () => {
             const content = await fs.promises.readFile(file_path, { encoding: "utf-8" });
-            parse_article(content, {
+            parse_article(null, content, {
                 channels: {
                     resources: { id: null },
                     rules: { id: null },

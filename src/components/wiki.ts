@@ -16,6 +16,7 @@ import { TextBasedCommand } from "../command-abstractions/text-based-command.js"
 export const wiki_dir = "wiki_articles";
 
 type WikiArticle = {
+    name: string | null; // basename for the article
     title: string;
     body?: string;
     fields: WikiField[];
@@ -49,6 +50,7 @@ const reference_link_regex = /\[([^\]]*)]\[([^\]]*)]/g;
 class ArticleParser {
     private readonly aliases = new Set<string>();
 
+    private name: string | null;
     private title: string | undefined;
     private body?: string;
     private fields: WikiField[] = [];
@@ -64,7 +66,8 @@ class ArticleParser {
 
     constructor(private readonly wheatley: Wheatley) {}
 
-    parse(content: string) {
+    parse(name: string | null, content: string) {
+        this.name = name;
         this.body = "";
         const lines = content.split(/\r?\n/);
         this.collect_references(lines);
@@ -284,6 +287,7 @@ class ArticleParser {
     get article(): WikiArticle {
         assert(this.is_done, "Attempting to access article of a parser without success");
         return {
+            name: this.name,
             title: unwrap(this.title),
             body: this.body,
             fields: this.fields,
@@ -300,9 +304,9 @@ class ArticleParser {
     }
 }
 
-export function parse_article(content: string, wheatley: Wheatley): [WikiArticle, Set<string>] {
+export function parse_article(name: string | null, content: string, wheatley: Wheatley): [WikiArticle, Set<string>] {
     const parser = new ArticleParser(wheatley);
-    parser.parse(content);
+    parser.parse(name, content);
     return [parser.article, parser.article_aliases];
 }
 
@@ -373,7 +377,7 @@ export default class Wiki extends BotComponent {
             const content = await fs.promises.readFile(file_path, { encoding: "utf-8" });
             let parsed;
             try {
-                parsed = parse_article(content, this.wheatley);
+                parsed = parse_article(name, content, this.wheatley);
             } catch (e: any) {
                 M.error(`Failed to parse article ${file_path}: ${e.message}`);
                 continue;
@@ -387,6 +391,7 @@ export default class Wiki extends BotComponent {
     }
 
     async send_wiki_article(article: WikiArticle, command: TextBasedCommand) {
+        M.log(`Sending wiki article "${article.name}"`);
         if (article.no_embed) {
             assert(article.body);
             await command.reply({
@@ -424,7 +429,7 @@ export default class Wiki extends BotComponent {
             .filter(([name, { title }]) => name == query.replaceAll("-", "_") || title == query)
             .map(([_, article]) => article);
         const article = matching_articles.length > 0 ? matching_articles[0] : undefined;
-        M.log(`Received !wiki command for ${article}`);
+        M.log(`Received !wiki command for query "${query}"`);
         if (article) {
             await this.send_wiki_article(article, command);
         } else {
@@ -460,7 +465,7 @@ export default class Wiki extends BotComponent {
         }
         let article: WikiArticle;
         try {
-            article = parse_article(content, this.wheatley)[0];
+            article = parse_article(null, content, this.wheatley)[0];
         } catch (e) {
             await command.reply("Parse error: " + e, true, true);
             return;
