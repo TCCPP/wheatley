@@ -77,7 +77,7 @@ export default class AntiExecutable extends BotComponent {
     ];
 
     looks_like_executable(buffer: Buffer) {
-        for (const magic of AntiExecutable.archive_magic) {
+        for (const magic of AntiExecutable.executable_magic) {
             if (buffer.subarray(magic[0], magic[1].length).equals(magic[1])) {
                 return true;
             }
@@ -86,7 +86,7 @@ export default class AntiExecutable extends BotComponent {
     }
 
     looks_like_archive(buffer: Buffer) {
-        for (const magic of AntiExecutable.executable_magic) {
+        for (const magic of AntiExecutable.archive_magic) {
             if (buffer.subarray(magic[0], magic[1].length).equals(magic[1])) {
                 return true;
             }
