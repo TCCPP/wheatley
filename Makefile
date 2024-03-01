@@ -14,10 +14,16 @@ SERVER:=x0
 prereqs: package.json package-lock.json
 	$(NPM) i
 
-.PHONY: check
-check: prereqs  ## Ts-check and lint
+.PHONY: ts-check
+ts-check: prereqs  ## ts-check
 	$(NPM) run ts-check
+
+.PHONY: lint
+lint: prereqs  ## lint
 	$(NPM) run lint
+
+.PHONY: check
+check: ts-check lint  ## Ts-check and lint
 
 .PHONY: format
 format: prereqs  ## Formats source files
@@ -40,7 +46,7 @@ run: build  ## Runs the bot locally
 	$(NODE) build/src/main.js
 
 .PHONY: deploy
-deploy:  ## Deploys code
+deploy: ts-check  ## Deploys code
 	./scripts/scp.sh
 
 .PHONY: prod
