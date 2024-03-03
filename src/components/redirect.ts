@@ -68,19 +68,6 @@ export default class Redirect extends BotComponent {
     }
 
     async r(command: TextBasedCommand, user: Discord.User) {
-        if (
-            !(
-                command.channel_id == this.wheatley.channels.c_cpp_discussion.id ||
-                command.channel_id == this.wheatley.channels.general_discussion.id
-            )
-        ) {
-            await command.reply(
-                `This shortcut is for use in <#${this.wheatley.channels.c_cpp_discussion.id}>` +
-                    ` or <#${this.wheatley.channels.general_discussion.id}>`,
-                true,
-            );
-            return;
-        }
         await command.reply({
             content:
                 `Hello <@${user.id}>, welcome to Together C & C++! This isn't a help channel, please ask your ` +
