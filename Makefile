@@ -56,3 +56,7 @@ prod: deploy  ## Deploys code and restarts the bot
 .PHONY: npm-update
 npm-update:  ## Updates npm packages
 	./scripts/update_packages.sh
+
+.PHONY: mongo
+mongo:
+	ssh -L 27017:127.0.0.1:27017 x0 -N
