@@ -118,6 +118,7 @@ export default class Inspect extends BotComponent {
                         `Reply to message id: \`${message.reference?.messageId}\`\n`,
                     ),
                 ],
+                ephemeral_if_possible: true,
             });
         }
         await send_long_response(
