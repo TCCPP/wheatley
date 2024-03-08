@@ -501,14 +501,24 @@ export class Wheatley {
         return unwrap(this.TCCPP.roles.cache.find(role => role.name.toLowerCase() === name.toLowerCase()));
     }
 
-    async try_fetch_member(options: Discord.UserResolvable | Discord.FetchMemberOptions) {
-        try {
-            return await this.TCCPP.members.fetch(options);
-        } catch (e) {
-            if (e instanceof Discord.DiscordAPIError && e.code === 10007) {
-                return null;
+    async try_fetch_tccpp_member(
+        options: Discord.GuildMember | Discord.UserResolvable | Discord.FetchMemberOptions,
+    ): Promise<Discord.GuildMember | null> {
+        if (options instanceof Discord.GuildMember) {
+            if (options.guild.id == TCCPP_ID) {
+                return options;
             } else {
-                throw e;
+                return await this.try_fetch_tccpp_member(options.id);
+            }
+        } else {
+            try {
+                return await this.TCCPP.members.fetch(options);
+            } catch (e) {
+                if (e instanceof Discord.DiscordAPIError && e.code === 10007) {
+                    return null;
+                } else {
+                    throw e;
+                }
             }
         }
     }
@@ -756,7 +766,7 @@ export class Wheatley {
     static command_regex = new RegExp("^!(\\S+)");
 
     // returns false if the message was not a wheatley command
-    async handle_command(message: Discord.Message, prev_command_obj?: TextBasedCommand) {
+    async handle_text_command(message: Discord.Message, prev_command_obj?: TextBasedCommand) {
         const match = message.content.match(Wheatley.command_regex);
         if (match) {
             const command_name = match[1];
@@ -782,7 +792,8 @@ export class Wheatley {
                     }
                 }
                 if (command.permissions !== undefined) {
-                    if (!(await command_obj.get_member()).permissions.has(command.permissions)) {
+                    const member = await this.try_fetch_tccpp_member(await command_obj.get_member());
+                    if (!member || !member.permissions.has(command.permissions)) {
                         await command_obj.reply(create_error_reply("Invalid permissions"));
                         return;
                     }
@@ -838,7 +849,7 @@ export class Wheatley {
                 const { command } = this.text_command_map.get(new_message.id)!;
                 command.set_editing();
                 const message = !new_message.partial ? new_message : await new_message.fetch();
-                if (!(await this.handle_command(message, command))) {
+                if (!(await this.handle_text_command(message, command))) {
                     // returns false if the message was not a wheatley command; delete replies and remove from map
                     await command.delete_replies_if_replied();
                     this.text_command_map.remove(new_message.id);
@@ -858,7 +869,7 @@ export class Wheatley {
                 return;
             }
             if (message.content.startsWith("!")) {
-                await this.handle_command(message);
+                await this.handle_text_command(message);
             }
         } catch (e) {
             // TODO....
@@ -866,50 +877,58 @@ export class Wheatley {
         }
     }
 
+    async handle_slash_comand(interaction: Discord.ChatInputCommandInteraction) {
+        if (interaction.commandName in this.text_commands) {
+            let command = this.text_commands[interaction.commandName];
+            if (interaction.options.getSubcommand(false)) {
+                command = unwrap(unwrap(command.subcommands).get(interaction.options.getSubcommand()));
+            }
+            const command_options: unknown[] = [];
+            const command_object = new TextBasedCommand(interaction.commandName, command, interaction, this);
+            if (command.permissions !== undefined) {
+                const member = await this.try_fetch_tccpp_member(interaction.user.id);
+                if (!member || !member.permissions.has(command.permissions)) {
+                    await interaction.reply(create_error_reply("Invalid permissions"));
+                    return;
+                }
+            }
+            for (const option of command.options.values()) {
+                if (option.type == "string") {
+                    const option_value = interaction.options.getString(option.title);
+                    if (!option_value && option.required) {
+                        await command_object.reply(create_error_reply("Required argument not found"), true);
+                        critical_error("this shouldn't happen");
+                        return;
+                    }
+                    if (option_value && option.regex && !option_value.trim().match(option.regex)) {
+                        await command_object.reply(
+                            create_error_reply(`Argument ${option.title} doesn't match expected format`),
+                            true,
+                        );
+                        return;
+                    }
+                    command_options.push(option_value);
+                } else if (option.type == "user") {
+                    command_options.push(interaction.options.getUser(option.title));
+                } else if (option.type == "role") {
+                    command_options.push(interaction.options.getRole(option.title));
+                    // eslint-disable-next-line @typescript-eslint/no-unnecessary-condition
+                } else if (option.type == "number") {
+                    command_options.push(interaction.options.getNumber(option.title));
+                } else {
+                    assert(false, "unhandled option type");
+                }
+            }
+            await command.handler(command_object, ...command_options);
+        } else {
+            // TODO unknown command
+        }
+    }
+
     async on_interaction(interaction: Discord.Interaction) {
         try {
             if (interaction.isChatInputCommand()) {
-                if (interaction.commandName in this.text_commands) {
-                    let command = this.text_commands[interaction.commandName];
-                    if (interaction.options.getSubcommand(false)) {
-                        command = unwrap(unwrap(command.subcommands).get(interaction.options.getSubcommand()));
-                    }
-                    const command_options: unknown[] = [];
-                    const command_object = new TextBasedCommand(interaction.commandName, command, interaction, this);
-                    if (command.permissions !== undefined) {
-                        assert((await command_object.get_member()).permissions.has(command.permissions));
-                    }
-                    for (const option of command.options.values()) {
-                        if (option.type == "string") {
-                            const option_value = interaction.options.getString(option.title);
-                            if (!option_value && option.required) {
-                                await command_object.reply(create_error_reply("Required argument not found"), true);
-                                critical_error("this shouldn't happen");
-                                return;
-                            }
-                            if (option_value && option.regex && !option_value.trim().match(option.regex)) {
-                                await command_object.reply(
-                                    create_error_reply(`Argument ${option.title} doesn't match expected format`),
-                                    true,
-                                );
-                                return;
-                            }
-                            command_options.push(option_value);
-                        } else if (option.type == "user") {
-                            command_options.push(interaction.options.getUser(option.title));
-                        } else if (option.type == "role") {
-                            command_options.push(interaction.options.getRole(option.title));
-                            // eslint-disable-next-line @typescript-eslint/no-unnecessary-condition
-                        } else if (option.type == "number") {
-                            command_options.push(interaction.options.getNumber(option.title));
-                        } else {
-                            assert(false, "unhandled option type");
-                        }
-                    }
-                    await command.handler(command_object, ...command_options);
-                } else {
-                    // TODO unknown command
-                }
+                await this.handle_slash_comand(interaction);
             } else if (interaction.isAutocomplete()) {
                 if (interaction.commandName in this.text_commands) {
                     const command = this.text_commands[interaction.commandName];

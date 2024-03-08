@@ -82,7 +82,7 @@ export default class Mute extends ModerationComponent {
         if (this.dummy_rounds) {
             return;
         }
-        const member = await this.wheatley.try_fetch_member(entry.user);
+        const member = await this.wheatley.try_fetch_tccpp_member(entry.user);
         if (member) {
             await member.roles.add(this.wheatley.roles.muted);
         }
@@ -93,7 +93,7 @@ export default class Mute extends ModerationComponent {
         if (this.dummy_rounds) {
             return;
         }
-        const member = await this.wheatley.try_fetch_member(entry.user);
+        const member = await this.wheatley.try_fetch_tccpp_member(entry.user);
         if (member) {
             await member.roles.remove(this.wheatley.roles.muted);
         }
@@ -101,7 +101,7 @@ export default class Mute extends ModerationComponent {
 
     async is_moderation_applied(moderation: basic_moderation_with_user) {
         assert(moderation.type == this.type);
-        const member = await this.wheatley.try_fetch_member(moderation.user);
+        const member = await this.wheatley.try_fetch_tccpp_member(moderation.user);
         if (member) {
             return member.roles.cache.filter(role => role.id == this.wheatley.roles.muted.id).size > 0;
         } else {
