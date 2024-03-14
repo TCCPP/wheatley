@@ -16,7 +16,7 @@ int increment() {
 
 <!-- inline -->
 ## At Global/Namespace Scope
-**Enables internal linkage for functions and variables**. This enables them to become local to the translation unit, which prevents redefinition across TUs from violating the One Definition Rule. Templated variables and ``inline`` cancel this.
+**Enables internal linkage for functions and variables**. This enables them to become local to the translation unit, which prevents redefinition across TUs from violating the One Definition Rule.
 
 ```cpp
 // fileA.cpp and fileB.cpp define these symbols at the top of the file.
@@ -31,5 +31,5 @@ static void foo() { x++; }
 
 <!-- inline -->
 ## Notes:
-- In C, ``static`` has similar behaviour. C99 and above allow ``static`` in array declarations (``T x[static n]``) to denote an array of *minimum size n*.
-- You can use ``thread_local`` (C++/C23) or ``_Thread_local`` (before C23) to convert storage duration to the thread rather than the program.
+- In C, ``static`` has similar behaviour. C99 and above allow ``static`` in parameter array declarations (``T x[static n]``) to denote an array of *minimum size n*.
+- You can use the ``thread_local`` (C++11/C23, include ``<threads.h>`` before C23) keyword to convert static storage duration into thread storage duration.
