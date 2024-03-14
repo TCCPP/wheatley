@@ -1,10 +1,10 @@
 # Understanding The static Keyword
 
-The ``static`` keyword is a common source of confusion among inexperienced C/C++ developers due to its contextualized nature. Depending on its scope, ``static`` can have different meanings.
+The ``static`` keyword is a common source of confusion among inexperienced C/C++ developers due to its contextualized nature. Depending on its scope, ``static`` can have different effects on storage duration (object lifetime), linkage, and access.
 
 <!-- inline -->
-## Variables Inside Functions
-Variables will have **static storage duration**, meaning the variable's lifetime is tied to the program than the scope. They will be **initialized only on the first entry into that scope**. This initialization is thread-safe since C++11.
+## At Function Scope
+Variables will have **static storage duration**, meaning the duration is tied to the program instead of the scope. They will be **initialized only on the first entry into that scope**. This initialization is thread-safe since C++11.
 
 ```cpp
 int increment() {
@@ -15,8 +15,8 @@ int increment() {
 ```
 
 <!-- inline -->
-## Globals
-**This specifies internal linkage**. Internally linking symbols (variables and functions) enables them to become local to the translation unit, allowing for multiple TUs to redefine the same symbols without violating the One Definition Rule.
+## At Global/Namespace Scope
+**Enables internal linkage for functions and variables**. This enables them to become local to the translation unit, which prevents redefinition across TUs from violating the One Definition Rule. Templated variables and ``inline`` cancel this.
 
 ```cpp
 // fileA.cpp and fileB.cpp define these symbols at the top of the file.
@@ -31,6 +31,5 @@ static void foo() { x++; }
 
 <!-- inline -->
 ## Notes:
-- Global variables that are const-qualified are **implicitly static**.
-- In C, the rule is mainly the same to the extent of that language.
-- You can use ``thread_local`` (C++) or ``_Thread_local`` (C) to localize storage duration to the thread rather than the program.
+- In C, ``static`` has similar behaviour. C99 and above allow ``static`` in array declarations (``T x[static n]``) to denote an array of *minimum size n*.
+- You can use ``thread_local`` (C++/C23) or ``_Thread_local`` (before C23) to convert storage duration to the thread rather than the program.
