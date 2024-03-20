@@ -114,6 +114,7 @@ function parse_unit(u: string) {
     return factor;
 }
 
+// Duration string to milliseconds
 export function parse_duration(duration: string | null) {
     if (duration === null) {
         return null;
@@ -127,6 +128,10 @@ export function parse_duration(duration: string | null) {
         return parseInt(n) * parse_unit(unit);
     }
 }
+
+// TODO: How notifications work
+// TODO: How responses work
+// TODO: Stacking
 
 export abstract class ModerationComponent extends BotComponent {
     // Basic moderation component properties: Type, has_duration, persist_moderation
@@ -387,7 +392,6 @@ export abstract class ModerationComponent extends BotComponent {
 
     // returns true if unable to dm user
     async notify_user(
-        command: TextBasedCommand,
         user: Discord.User,
         action: string,
         moderation: DistributedOmit<moderation_entry, "case">,
@@ -426,10 +430,37 @@ export abstract class ModerationComponent extends BotComponent {
                 // 50007: Cannot send messages to this user
                 return true;
             } else {
-                await this.reply_with_error(command, "Error notifying");
+                critical_error(`Error notifying user ${e}`);
+                return true;
             }
         }
         return false;
+    }
+
+    async do_issue(
+        user: Discord.User,
+        duration: number, // ms
+        reason: string | null,
+        basic_moderation_info: basic_moderation,
+        link: string | null = null,
+    ) {
+        const moderation: moderation_entry = {
+            ...basic_moderation_info,
+            case_number: -1,
+            user: user.id,
+            user_name: user.displayName,
+            moderator: user.id,
+            moderator_name: (await this.wheatley.TCCPP.members.fetch(user.id)).displayName,
+            reason,
+            issued_at: Date.now(),
+            duration,
+            active: !this.is_once_off,
+            removed: null,
+            expunged: null,
+            link,
+        };
+        await this.notify_user(user, this.past_participle, moderation);
+        await this.issue_moderation(moderation);
     }
 
     //
@@ -468,7 +499,7 @@ export abstract class ModerationComponent extends BotComponent {
                 expunged: null,
                 link: command.get_or_forge_url(),
             };
-            const cant_dm = await this.notify_user(command, user, this.past_participle, moderation);
+            const cant_dm = await this.notify_user(user, this.past_participle, moderation);
             await this.issue_moderation(moderation);
             await command.reply({
                 embeds: [
@@ -534,7 +565,7 @@ export abstract class ModerationComponent extends BotComponent {
                     expunged: null,
                     link: command.get_or_forge_url(),
                 };
-                await this.notify_user(command, user, this.past_participle, moderation);
+                await this.notify_user(user, this.past_participle, moderation);
                 await this.issue_moderation(moderation);
             }
             await (command.replied && !command.is_editing ? command.followUp : command.reply).bind(command)({

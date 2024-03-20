@@ -29,6 +29,9 @@ export class SelfClearingSet<T> {
     has(value: T) {
         return this.contents.has(value);
     }
+    size() {
+        return this.contents.size;
+    }
 }
 
 export class SelfClearingMap<K, V> {
