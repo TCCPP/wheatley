@@ -2,6 +2,7 @@ import { strict as assert } from "assert";
 
 import * as Discord from "discord.js";
 import * as mongo from "mongodb";
+import PromClient from "prom-client";
 
 import { colors, MINUTE } from "./common.js";
 import { unwrap } from "./utils/misc.js";
@@ -28,6 +29,7 @@ import { Virustotal } from "./infra/virustotal.js";
 import { is_media_link_embed } from "./utils/discord.js";
 import { TypedEventEmitter } from "./utils/event-emitter.js";
 import { moderation_entry } from "./components/moderation/moderation-common.js";
+import { setup_metrics_server } from "./infra/prometheus.js";
 
 export function create_basic_embed(title: string | undefined, color: number, content: string) {
     const embed = new Discord.EmbedBuilder().setColor(color).setDescription(content);
@@ -62,6 +64,10 @@ export type wheatley_auth = {
     mongo?: wheatley_database_credentials;
     sentry?: string;
     virustotal?: string;
+    metrics?: {
+        port: number;
+        hostname: string;
+    };
 };
 
 export type wheatley_database_info = {
@@ -275,6 +281,8 @@ export class Wheatley {
     // TODO: Eliminate pre-set value
     root_mod_list = "jr-#6677, Eisenwave#7675, Styxs#7557, or Vin¢#1293";
 
+    message_counter: PromClient.Counter;
+
     constructor(
         readonly client: Discord.Client,
         auth: wheatley_auth,
@@ -293,6 +301,11 @@ export class Wheatley {
             M.error(error);
         });
 
+        this.message_counter = new PromClient.Counter({
+            name: "tccpp_message_count",
+            help: "TCCPP message count",
+        });
+
         this.setup(auth).catch(critical_error);
     }
 
@@ -300,6 +313,9 @@ export class Wheatley {
         assert(this.freestanding || auth.mongo, "Missing MongoDB credentials");
         if (auth.mongo) {
             this.database = await WheatleyDatabase.create(auth.mongo);
+        }
+        if (auth.metrics) {
+            setup_metrics_server(auth.metrics.port, auth.metrics.hostname);
         }
         assert(this.freestanding || auth.virustotal, "Missing virustotal api key");
         if (!this.freestanding) {
@@ -863,6 +879,13 @@ export class Wheatley {
 
     // TODO: Notify about critical errors.....
     async on_message(message: Discord.Message) {
+        try {
+            if (message.guildId == TCCPP_ID) {
+                this.message_counter.inc();
+            }
+        } catch (e) {
+            critical_error(e);
+        }
         try {
             // skip bots
             if (message.author.bot) {
