@@ -281,7 +281,11 @@ export class Wheatley {
     // TODO: Eliminate pre-set value
     root_mod_list = "jr-#6677, Eisenwave#7675, Styxs#7557, or Vin¢#1293";
 
-    message_counter: PromClient.Counter;
+    message_counter = new PromClient.Counter({
+        name: "tccpp_message_count",
+        help: "TCCPP message count",
+        labelNames: ["type"],
+    });
 
     constructor(
         readonly client: Discord.Client,
@@ -299,11 +303,6 @@ export class Wheatley {
 
         this.client.on("error", error => {
             M.error(error);
-        });
-
-        this.message_counter = new PromClient.Counter({
-            name: "tccpp_message_count",
-            help: "TCCPP message count",
         });
 
         this.setup(auth).catch(critical_error);
@@ -877,15 +876,26 @@ export class Wheatley {
         }
     }
 
-    // TODO: Notify about critical errors.....
-    async on_message(message: Discord.Message) {
+    increment_message_counters(message: Discord.Message) {
         try {
             if (message.guildId == TCCPP_ID) {
-                this.message_counter.inc();
+                if (!message.author.bot) {
+                    this.message_counter.labels({ type: "normal" }).inc();
+                } else {
+                    this.message_counter.labels({ type: "bot" }).inc();
+                }
+                if (message.author.id == unwrap(this.client.user).id) {
+                    this.message_counter.labels({ type: "wheatley" }).inc();
+                }
             }
         } catch (e) {
             critical_error(e);
         }
+    }
+
+    // TODO: Notify about critical errors.....
+    async on_message(message: Discord.Message) {
+        this.increment_message_counters(message);
         try {
             // skip bots
             if (message.author.bot) {
