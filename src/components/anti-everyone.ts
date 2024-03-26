@@ -3,6 +3,7 @@ import { BotComponent } from "../bot-component.js";
 import { Wheatley } from "../wheatley.js";
 import { colors } from "../common.js";
 import { M } from "../utils/debugging-and-logging.js";
+import { SelfClearingMap } from "../utils/containers.js";
 
 const failed_everyone_re = /(?:@everyone|@here)/g; // todo: word boundaries?
 
@@ -16,7 +17,7 @@ export default class AntiEveryone extends BotComponent {
      * 
      * @note This is limited to 50 replies, in order to keep memory usage down.
      */
-    public replies: Discord.Message[] = [];
+    public replies: SelfClearingMap<Discord.User, Discord.Message[]> = new SelfClearingMap(1000 * 60 * 60 * 24, 1000 * 60 * 60 * 24);
     constructor(wheatley: Wheatley) {
         super(wheatley);
     }
@@ -40,8 +41,10 @@ export default class AntiEveryone extends BotComponent {
             await message.reply({
                 content: `Did you really just try to ping ${memberCount} people?`,
             });
-            if(this.replies.length >= 50) this.replies.shift();
-            this.replies.push(message);
+
+            // Store the reply for later deletion, if necessary
+            if(!this.replies.has(message.author)) this.replies.set(message.author, []);
+            this.replies.get(message.author)!.push(message);
         }
     }
 
@@ -51,8 +54,10 @@ export default class AntiEveryone extends BotComponent {
      * @TODO: Actually bind this into the anti-spam system
      */
     async deleteReplies(user: Discord.User) {
-        const deletedAll = Promise.all(this.replies.filter(reply => reply.author.id === user.id).map(message => message.deleteReply()));
-        this.replies = this.replies.filter(reply => reply.author.id === user.id);
+        if(!this.replies.has(user)) return;
+
+        const deletedAll = Promise.all(this.replies.get(user)!.map(reply => reply.delete()));
+        this.replies.remove(user);
         return deletedAll;
     }
 
@@ -63,10 +68,12 @@ export default class AntiEveryone extends BotComponent {
     override async on_message_delete(message: Discord.Message<boolean>): Promise<void> {
         if(Math.abs(Date.now() - message.createdTimestamp) > 1000) return; // Message was likely deleted by the user
 
-        const reply = this.replies.find(reply => reply.id === message.id);
+        const author = message.author;
+        const replies = this.replies.get(author);
+        const reply = replies?.find(reply => reply.reference?.messageId == message.id);
         if(reply) {
             reply.deleteReply();
-            this.replies = this.replies.filter(reply => reply.id !== message.id);
+            this.replies.set(author, replies?.filter(reply => reply.id !== message.id) ?? []);
         }
     }
 }
