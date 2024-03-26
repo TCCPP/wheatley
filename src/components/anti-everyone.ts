@@ -5,7 +5,11 @@ import { colors } from "../common.js";
 import { M } from "../utils/debugging-and-logging.js";
 
 const failed_everyone_re = /(?:@everyone|@here)/g; // todo: word boundaries?
-const link_re = /(\s|^)https?:\/\/\S/g;
+
+/**
+ * @TODO: This will likely grow rather large, thus it may be a good idea to offload this into a full database/disk storage
+ */
+const replies = new Map();
 
 /**
  * Responds to users attempting to ping @everyone or @here
@@ -29,12 +33,24 @@ export default class AntiEveryone extends BotComponent {
         ) {
             return;
         }
-        if (message.content.match(failed_everyone_re) != null && link_re.test(message.content)) {
+        if (message.content.match(failed_everyone_re) != null) {
             // NOTE: .toLocaleString("en-US") formats this number with commas.
             const memberCount = this.wheatley.TCCPP.members.cache.size.toLocaleString("en-US");
             await message.reply({
                 content: `Did you really just try to ping ${memberCount} people?`,
             });
+            if(!replies.has(message.author.id) replies[message.author.id] = [];
+            replies[message.author.id].push(message);
         }
     }
+}
+
+/**
+ * Deletes all Replies that were made to a particular user
+ * @note this should be used to auto-hide spam message replies in order to try and reduce the effect of spam
+ * @TODO: Actually bind this into the anti-spam system
+ */
+export function deleteReplies(user: Discord.User) {
+    if(replies[user.id]) replies.forEach(reply => reply.deleteReply());
+    replies.delete(user.id);
 }
