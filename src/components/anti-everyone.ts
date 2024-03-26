@@ -5,7 +5,7 @@ import { colors } from "../common.js";
 import { M } from "../utils/debugging-and-logging.js";
 
 const failed_everyone_re = /(?:@everyone|@here)/g; // todo: word boundaries?
-const link_re = /(\s|^)https?:\/\/[\w\d]/g; // todo: be a bit more specific
+const link_re = /(\s|^)https?:\/\/\S/g;
 
 /**
  * Responds to users attempting to ping @everyone or @here
