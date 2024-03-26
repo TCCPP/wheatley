@@ -7,15 +7,16 @@ import { M } from "../utils/debugging-and-logging.js";
 const failed_everyone_re = /(?:@everyone|@here)/g; // todo: word boundaries?
 
 /**
- * @TODO: This will likely grow rather large, thus it may be a good idea to offload this into a full database/disk storage
- */
-const replies = new Map();
-
-/**
  * Responds to users attempting to ping @everyone or @here
  * with a message discouraging the behavior.
  */
 export default class AntiEveryone extends BotComponent {
+    /**
+     * Replies that have been made to users who attempted to ping everyone.
+     * 
+     * @note This is limited to 50 replies, in order to keep memory usage down.
+     */
+    public replies: Discord.Message[] = [];
     constructor(wheatley: Wheatley) {
         super(wheatley);
     }
@@ -39,18 +40,33 @@ export default class AntiEveryone extends BotComponent {
             await message.reply({
                 content: `Did you really just try to ping ${memberCount} people?`,
             });
-            if(!replies.has(message.author.id) replies[message.author.id] = [];
-            replies[message.author.id].push(message);
+            if(this.replies.length >= 50) this.replies.shift();
+            this.replies.push(message);
         }
     }
-}
 
-/**
- * Deletes all Replies that were made to a particular user
- * @note this should be used to auto-hide spam message replies in order to try and reduce the effect of spam
- * @TODO: Actually bind this into the anti-spam system
- */
-export function deleteReplies(user: Discord.User) {
-    if(replies[user.id]) replies.forEach(reply => reply.deleteReply());
-    replies.delete(user.id);
+    /**
+     * Deletes all Replies that were made to a particular user
+     * @note this should be used to auto-hide spam message replies in order to try and reduce the effect of spam
+     * @TODO: Actually bind this into the anti-spam system
+     */
+    async deleteReplies(user: Discord.User) {
+        const deletedAll = Promise.all(this.replies.filter(reply => reply.author.id === user.id).map(message => message.deleteReply()));
+        this.replies = this.replies.filter(reply => reply.author.id === user.id);
+        return deletedAll;
+    }
+
+    /**
+     * Auto-delete replies to messages that were deleted
+     * @param message The message that was deleted
+     */
+    override async on_message_delete(message: Discord.Message<boolean>): Promise<void> {
+        if(Math.abs(Date.now() - message.createdTimestamp) > 1000) return; // Message was likely deleted by the user
+
+        const reply = this.replies.find(reply => reply.id === message.id);
+        if(reply) {
+            reply.deleteReply();
+            this.replies = this.replies.filter(reply => reply.id !== message.id);
+        }
+    }
 }
