@@ -5,6 +5,7 @@ import { colors } from "../common.js";
 import { M } from "../utils/debugging-and-logging.js";
 
 const failed_everyone_re = /(?:@everyone|@here)/g; // todo: word boundaries?
+const link_re = /(\s|^)https?:\/\/[\w\d]/g; // todo: be a bit more specific
 
 /**
  * Responds to users attempting to ping @everyone or @here
@@ -28,7 +29,7 @@ export default class AntiEveryone extends BotComponent {
         ) {
             return;
         }
-        if (message.content.match(failed_everyone_re) != null) {
+        if (message.content.match(failed_everyone_re) != null && link_re.test(message.content)) {
             // NOTE: .toLocaleString("en-US") formats this number with commas.
             const memberCount = this.wheatley.TCCPP.members.cache.size.toLocaleString("en-US");
             await message.reply({
