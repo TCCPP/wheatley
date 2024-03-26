@@ -17,7 +17,7 @@ export default class AntiEveryone extends BotComponent {
      * 
      * @note This is limited to 50 replies, in order to keep memory usage down.
      */
-    public replies: SelfClearingMap<Discord.User, Discord.Message[]> = new SelfClearingMap(1000 * 60 * 60 * 24, 1000 * 60 * 60 * 24);
+    public replies: SelfClearingMap<Discord.User, Discord.Message[]> = new SelfClearingMap<Discord.User, Discord.Message[]>(1000 * 60 * 60, 1000 * 60);
     constructor(wheatley: Wheatley) {
         super(wheatley);
     }
