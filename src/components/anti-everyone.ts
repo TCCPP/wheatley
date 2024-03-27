@@ -7,8 +7,9 @@ import { SelfClearingMap } from "../utils/containers.js";
 
 const failed_everyone_re = /(?:@everyone|@here)/g; // todo: word boundaries?
 
-export interface AntiEveryoneMessageCache extends Discord.Message {
+export interface AntiEveryoneMessageCache {
     replyTo: Discord.Message["id"];
+    reply: Discord.Message;
 }
 
 /**
@@ -55,14 +56,7 @@ export default class AntiEveryone extends BotComponent {
             });
 
             // Store the reply for later deletion, along with the message it was replying to
-            this.replies.get(message.author)!.push(
-                Object.assign(
-                    {
-                        replyTo: message.id,
-                    },
-                    reply,
-                ),
-            );
+            this.replies.get(message.author)!.push({ replyTo: message.id, reply });
         }
     }
 
@@ -76,7 +70,7 @@ export default class AntiEveryone extends BotComponent {
             return;
         }
 
-        const deletedAll = Promise.all(this.replies.get(user)!.map(reply => reply.delete()));
+        const deletedAll = Promise.all(this.replies.get(user)!.map(replyCache => replyCache.reply.delete()));
         this.replies.remove(user);
         return deletedAll;
     }
@@ -93,10 +87,10 @@ export default class AntiEveryone extends BotComponent {
 
         const author = message.author;
         const replies = this.replies.get(author);
-        const reply = replies?.find(reply => reply.replyTo == message.id);
-        if (reply) {
-            await reply.delete();
-            this.replies.set(author, replies?.filter(reply => reply.id !== message.id) ?? []);
+        const replyCache = replies?.find(reply => reply.replyTo == message.id);
+        if (replyCache) {
+            await replyCache.reply.delete();
+            this.replies.set(author, replies?.filter(reply => reply.replyTo !== message.id) ?? []);
         }
     }
 }
