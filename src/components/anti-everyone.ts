@@ -4,6 +4,7 @@ import { Wheatley } from "../wheatley.js";
 import { colors, MINUTE, HOUR } from "../common.js";
 import { M } from "../utils/debugging-and-logging.js";
 import { SelfClearingMap } from "../utils/containers.js";
+import { unwrap } from "../utils/misc.js";
 
 const failed_everyone_re = /(?:@everyone|@here)/g; // todo: word boundaries?
 
@@ -22,7 +23,7 @@ export default class AntiEveryone extends BotComponent {
      *
      * @note This is limited to the last hour, in order to keep memory usage down.
      */
-    public replies: SelfClearingMap<Discord.User, AntiEveryoneMessageCache[]> = new SelfClearingMap(HOUR, MINUTE);
+    replies = new SelfClearingMap<Discord.User, AntiEveryoneMessageCache[]>(HOUR, MINUTE);
     constructor(wheatley: Wheatley) {
         super(wheatley);
     }
@@ -53,12 +54,12 @@ export default class AntiEveryone extends BotComponent {
             });
 
             // Store the reply for later deletion, along with the message it was replying to
-            this.replies.get(message.author)!.push({ reply_to: message.id, reply });
+            unwrap(this.replies.get(message.author)).push({ reply_to: message.id, reply });
         }
     }
 
     /**
-     * Deletes all Replies that were made to a particular user
+     * Deletes all `Did you really try to ping ... people?` replies that were made to a particular user
      * @note this should be used to auto-hide spam message replies in order to try and reduce the effect of spam
      * @TODO: Actually bind this into the anti-spam system
      */
@@ -67,17 +68,19 @@ export default class AntiEveryone extends BotComponent {
             return;
         }
 
-        const deletedAll = Promise.all(
-            this.replies.get(user)!.map(async reply_cache => {
-                try {
-                    await reply_cache.reply.delete();
-                } catch (e) {
-                    // If the message was already deleted, we don't need to do anything
-                }
-            }),
-        );
+        // For loop to wait for each reply to be deleted, before moving on to the next one
+        for (const reply_cache of unwrap(this.replies.get(user))) {
+            try {
+                await reply_cache.reply.delete();
+            } catch (e) {
+                // If the message was already deleted, we don't need to do anything
+            }
+        }
+        // Remove the user from the cache, mainly to reduce clutter
         this.replies.remove(user);
-        return deletedAll;
+
+        // Wait for all the replies to be deleted
+        return;
     }
 
     /**
@@ -92,6 +95,8 @@ export default class AntiEveryone extends BotComponent {
 
         const author = message.author;
         const replies = this.replies.get(author);
+
+        // Get the reply that was made to this message, if it exists
         const reply_cache = replies?.find(reply => reply.reply_to == message.id);
         if (reply_cache) {
             try {
@@ -99,6 +104,8 @@ export default class AntiEveryone extends BotComponent {
             } catch (e) {
                 // If the message was already deleted, we don't need to do anything
             }
+
+            // Remove the reply from the cache
             this.replies.set(author, replies?.filter(reply => reply.reply_to !== message.id) ?? []);
         }
     }
