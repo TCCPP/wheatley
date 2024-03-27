@@ -8,7 +8,7 @@ import { SelfClearingMap } from "../utils/containers.js";
 const failed_everyone_re = /(?:@everyone|@here)/g; // todo: word boundaries?
 
 export interface AntiEveryoneMessageCache {
-    replyTo: Discord.Message["id"];
+    reply_to: Discord.Message["id"];
     reply: Discord.Message;
 }
 
@@ -53,7 +53,7 @@ export default class AntiEveryone extends BotComponent {
             });
 
             // Store the reply for later deletion, along with the message it was replying to
-            this.replies.get(message.author)!.push({ replyTo: message.id, reply });
+            this.replies.get(message.author)!.push({ reply_to: message.id, reply });
         }
     }
 
@@ -62,7 +62,7 @@ export default class AntiEveryone extends BotComponent {
      * @note this should be used to auto-hide spam message replies in order to try and reduce the effect of spam
      * @TODO: Actually bind this into the anti-spam system
      */
-    async deleteReplies(user: Discord.User) {
+    async delete_replies(user: Discord.User) {
         if (!this.replies.has(user)) {
             return;
         }
@@ -84,10 +84,10 @@ export default class AntiEveryone extends BotComponent {
 
         const author = message.author;
         const replies = this.replies.get(author);
-        const replyCache = replies?.find(reply => reply.replyTo == message.id);
-        if (replyCache) {
-            await replyCache.reply.delete();
-            this.replies.set(author, replies?.filter(reply => reply.replyTo !== message.id) ?? []);
+        const reply_cache = replies?.find(reply => reply.reply_to == message.id);
+        if (reply_cache) {
+            await reply_cache.reply.delete();
+            this.replies.set(author, replies?.filter(reply => reply.reply_to !== message.id) ?? []);
         }
     }
 }
