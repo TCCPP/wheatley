@@ -1,6 +1,6 @@
 # How Is C/C++ Source Code Compiled?
 
-\:hash: The **preprocessor** expands macros and copy-pastes the content of 
+:hash: The **preprocessor** expands macros and copy-pastes the content of 
 included files at their point of inclusion. After being preprocessed, a source 
 file no longer contains preprocessor directives. The result is called a
 _translation unit_ (TU).
