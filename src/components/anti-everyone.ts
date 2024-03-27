@@ -67,7 +67,15 @@ export default class AntiEveryone extends BotComponent {
             return;
         }
 
-        const deletedAll = Promise.all(this.replies.get(user)!.map(replyCache => replyCache.reply.delete()));
+        const deletedAll = Promise.all(
+            this.replies.get(user)!.map(async reply_cache => {
+                try {
+                    await reply_cache.reply.delete();
+                } catch (e) {
+                    // If the message was already deleted, we don't need to do anything
+                }
+            }),
+        );
         this.replies.remove(user);
         return deletedAll;
     }
@@ -86,7 +94,11 @@ export default class AntiEveryone extends BotComponent {
         const replies = this.replies.get(author);
         const reply_cache = replies?.find(reply => reply.reply_to == message.id);
         if (reply_cache) {
-            await reply_cache.reply.delete();
+            try {
+                await reply_cache.reply.delete();
+            } catch (e) {
+                // If the message was already deleted, we don't need to do anything
+            }
             this.replies.set(author, replies?.filter(reply => reply.reply_to !== message.id) ?? []);
         }
     }
