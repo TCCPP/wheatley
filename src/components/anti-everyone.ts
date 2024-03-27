@@ -78,9 +78,6 @@ export default class AntiEveryone extends BotComponent {
         }
         // Remove the user from the cache, mainly to reduce clutter
         this.replies.remove(user);
-
-        // Wait for all the replies to be deleted
-        return;
     }
 
     /**
