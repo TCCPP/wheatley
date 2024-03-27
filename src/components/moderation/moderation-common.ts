@@ -1,5 +1,7 @@
 import * as Discord from "discord.js";
 import * as mongo from "mongodb";
+import PromClient from "prom-client";
+
 import { EventEmitter } from "events";
 
 import { strict as assert } from "assert";
@@ -15,7 +17,7 @@ import { SleepList } from "../../utils/containers.js";
 import { Mutex } from "../../utils/containers.js";
 import { BotComponent } from "../../bot-component.js";
 import { Wheatley } from "../../wheatley.js";
-import { colors } from "../../common.js";
+import { colors, HOUR } from "../../common.js";
 import Modlogs from "./modlogs.js";
 import { TextBasedCommand } from "../../command-abstractions/text-based-command.js";
 
@@ -160,6 +162,18 @@ export abstract class ModerationComponent extends BotComponent {
 
     static non_duration_moderation_set = new Set(["warn", "kick", "softban"]);
 
+    static moderations_count = new PromClient.Gauge({
+        name: "tccpp_moderations_count",
+        help: "tccpp_moderations_count",
+        labelNames: ["type"],
+    });
+
+    static active_moderations_count = new PromClient.Gauge({
+        name: "tccpp_active_moderations_count",
+        help: "tccpp_active_moderations_count",
+        labelNames: ["type"],
+    });
+
     constructor(wheatley: Wheatley) {
         super(wheatley);
         this.sleep_list = new SleepList(this.handle_moderation_expire.bind(this), item => item._id);
@@ -168,7 +182,21 @@ export abstract class ModerationComponent extends BotComponent {
         });
     }
 
+    update_counters() {
+        (async () => {
+            ModerationComponent.moderations_count
+                .labels({ type: this.type })
+                .set(await this.wheatley.database.moderations.countDocuments({ type: this.type }));
+            if (!this.is_once_off) {
+                ModerationComponent.active_moderations_count
+                    .labels({ type: this.type })
+                    .set(await this.wheatley.database.moderations.countDocuments({ type: this.type, active: true }));
+            }
+        })().catch(critical_error);
+    }
+
     override async on_ready() {
+        this.update_counters();
         // Handle re-applications and sleep lists
         // If once-off active is false so the rest is all fine
         const moderations = await this.wheatley.database.moderations.find({ type: this.type, active: true }).toArray();
@@ -197,6 +225,8 @@ export abstract class ModerationComponent extends BotComponent {
         );
         // Persistance:
         await this.ensure_moderations_are_in_place(moderations);
+        // Update counters every hour
+        setInterval(() => this.update_counters(), HOUR);
     }
 
     //
