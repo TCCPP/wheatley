@@ -20,7 +20,7 @@ export default class AntiEveryone extends BotComponent {
     /**
      * Replies that have been made to users who attempted to ping everyone.
      *
-     * @note This is limited to 50 replies, in order to keep memory usage down.
+     * @note This is limited to the last hour, in order to keep memory usage down.
      */
     public replies: SelfClearingMap<Discord.User, AntiEveryoneMessageCache[]> = new SelfClearingMap(HOUR, MINUTE);
     constructor(wheatley: Wheatley) {
