@@ -1,7 +1,7 @@
 import * as Discord from "discord.js";
 import { BotComponent } from "../bot-component.js";
 import { Wheatley } from "../wheatley.js";
-import { colors } from "../common.js";
+import { colors, MINUTE, HOUR } from "../common.js";
 import { M } from "../utils/debugging-and-logging.js";
 import { SelfClearingMap } from "../utils/containers.js";
 
@@ -22,10 +22,7 @@ export default class AntiEveryone extends BotComponent {
      *
      * @note This is limited to 50 replies, in order to keep memory usage down.
      */
-    public replies: SelfClearingMap<Discord.User, AntiEveryoneMessageCache[]> = new SelfClearingMap(
-        1000 * 60 * 60,
-        1000 * 60,
-    );
+    public replies: SelfClearingMap<Discord.User, AntiEveryoneMessageCache[]> = new SelfClearingMap(HOUR, MINUTE);
     constructor(wheatley: Wheatley) {
         super(wheatley);
     }
