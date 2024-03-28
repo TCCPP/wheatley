@@ -9,7 +9,7 @@ import { unwrap } from "../utils/misc.js";
 const failed_everyone_re = /(?:@everyone|@here)/g; // todo: word boundaries?
 
 export interface AntiEveryoneMessageCache {
-    reply_to: Discord.Message["id"];
+    reply_to: string;
     reply: Discord.Message;
 }
 
@@ -20,10 +20,8 @@ export interface AntiEveryoneMessageCache {
 export default class AntiEveryone extends BotComponent {
     /**
      * Replies that have been made to users who attempted to ping everyone.
-     *
-     * @note This is limited to the last hour, in order to keep memory usage down.
      */
-    replies = new SelfClearingMap<Discord.User, AntiEveryoneMessageCache[]>(HOUR, MINUTE);
+    replies = new SelfClearingMap<Discord.User, AntiEveryoneMessageCache[]>(10 * MINUTE);
     constructor(wheatley: Wheatley) {
         super(wheatley);
     }
@@ -60,8 +58,6 @@ export default class AntiEveryone extends BotComponent {
 
     /**
      * Deletes all `Did you really try to ping ... people?` replies that were made to a particular user
-     * @note this should be used to auto-hide spam message replies in order to try and reduce the effect of spam
-     * @TODO: Actually bind this into the anti-spam system
      */
     async delete_replies(user: Discord.User) {
         if (!this.replies.has(user)) {
@@ -82,7 +78,6 @@ export default class AntiEveryone extends BotComponent {
 
     /**
      * Auto-delete replies to messages that were deleted
-     * @param message The message that was deleted
      */
     override async on_message_delete(message: Discord.Message<boolean>): Promise<void> {
         if (Math.abs(Date.now() - message.createdTimestamp) > 1000) {
