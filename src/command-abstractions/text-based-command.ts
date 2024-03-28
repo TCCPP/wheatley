@@ -7,6 +7,7 @@ import { unwrap } from "../utils/misc.js";
 import { is_string } from "../utils/strings.js";
 import { Wheatley } from "../wheatley.js";
 import { BotTextBasedCommand } from "./text-based-command-descriptor.js";
+import { critical_error } from "../utils/debugging-and-logging.js";
 
 export type CommandAbstractionReplyOptions = {
     // default: false
@@ -250,6 +251,20 @@ export class TextBasedCommand {
 
     is_slash() {
         return this.reply_object instanceof Discord.ChatInputCommandInteraction;
+    }
+
+    async get_reply_target() {
+        if (this.reply_object instanceof Discord.Message) {
+            if (this.reply_object.type === Discord.MessageType.Reply) {
+                try {
+                    const reply_message = await this.wheatley.fetch_message_reply(this.reply_object);
+                    return reply_message;
+                } catch (e) {
+                    critical_error(e);
+                }
+            }
+        }
+        return null;
     }
 
     // get_text_command_content() {

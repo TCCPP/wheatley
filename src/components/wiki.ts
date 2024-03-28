@@ -23,6 +23,7 @@ type WikiArticle = {
     footer?: string;
     image?: string;
     set_author: boolean;
+    reply_to_target: boolean;
     no_embed: boolean;
 };
 
@@ -56,8 +57,9 @@ class ArticleParser {
     private fields: WikiField[] = [];
     private footer?: string;
     private image?: string;
-    private set_author?: true;
-    private no_embed?: true;
+    private set_author = false;
+    private reply_to_target = false;
+    private no_embed = false;
     private readonly reference_definitions = new Map<string, string>();
 
     private current_state = parse_state.body;
@@ -154,6 +156,8 @@ class ArticleParser {
             this.current_state = parse_state.footer;
         } else if (directive === "user author") {
             this.set_author = true;
+        } else if (directive === "reply to target") {
+            this.reply_to_target = true;
         } else if (directive === "no embed") {
             this.no_embed = true;
         } else if (directive.match(image_regex)) {
@@ -293,8 +297,9 @@ class ArticleParser {
             fields: this.fields,
             footer: this.footer,
             image: this.image,
-            set_author: this.set_author ?? false,
-            no_embed: this.no_embed ?? false,
+            set_author: this.set_author,
+            reply_to_target: this.reply_to_target,
+            no_embed: this.no_embed,
         };
     }
 
@@ -392,10 +397,17 @@ export default class Wiki extends BotComponent {
 
     async send_wiki_article(article: WikiArticle, command: TextBasedCommand) {
         M.log(`Sending wiki article "${article.name}"`);
+        let mention: string | null = null;
+        if (!command.is_slash()) {
+            const reply = await command.get_reply_target();
+            if (reply) {
+                mention = reply.author.toString();
+            }
+        }
         if (article.no_embed) {
             assert(article.body);
             await command.reply({
-                content: article.body,
+                content: (mention ? mention + "\n" : "") + article.body,
                 should_text_reply: true,
             });
         } else {
@@ -418,6 +430,7 @@ export default class Wiki extends BotComponent {
                 });
             }
             await command.reply({
+                content: mention ?? undefined,
                 embeds: [embed],
                 should_text_reply: true,
             });
