@@ -10,7 +10,7 @@ const snowflakes_re = /\d+/g;
 const DISCORD_EPOCH = 1420070400000;
 
 /**
- * Decode a snowflake as milliseconds
+ * Decode a snowflake as milliseconds since unix epoch
  */
 export function decode_snowflake(snowflake_text: string) {
     const snowflake = BigInt.asUintN(64, BigInt(snowflake_text));
@@ -18,7 +18,7 @@ export function decode_snowflake(snowflake_text: string) {
 }
 
 /**
- * Milliseconds to snowflake
+ * Milliseconds since unix epoch to snowflake
  */
 export function forge_snowflake(timestamp: number) {
     assert(timestamp > DISCORD_EPOCH);
