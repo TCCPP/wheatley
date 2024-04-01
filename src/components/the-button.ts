@@ -270,6 +270,11 @@ export default class TheButton extends BotComponent {
                 const tag = entry.tag == "" ? `<@${entry.user}>` : entry.tag;
                 description += `${tag}: ${round(entry.score, 1)}\n`;
             }
+            // Users current score
+            const user = scores.find(entry => entry.user == interaction.user.id);
+            if (user) {
+                description += `\nYour score: ${round(user.score, 1)}`;
+            }
             embed.setDescription(description);
             await interaction.reply({
                 embeds: [embed],
