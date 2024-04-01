@@ -80,6 +80,7 @@ export default class ThreadControl extends BotComponent {
                 channel.parentId == this.wheatley.channels.rules.id &&
                 channel.type == Discord.ChannelType.PrivateThread
             ) {
+                await command.reply("Archiving", true);
                 await channel.setArchived();
             } else {
                 await command.reply("You can't use that here", true);
