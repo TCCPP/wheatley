@@ -439,7 +439,7 @@ export default class Wiki extends BotComponent {
 
     async wiki(command: TextBasedCommand, query: string) {
         const matching_articles = Object.entries(this.articles)
-            .filter(([name, { title }]) => name == query.replaceAll("-", "_") || title == query)
+            .filter(([name, { title }]) => name == query || title == query)
             .map(([_, article]) => article);
         const article = matching_articles.length > 0 ? matching_articles[0] : undefined;
         M.log(`Received !wiki command for query "${query}"`);
