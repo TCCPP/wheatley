@@ -8,7 +8,7 @@ letting the compiler infer them instead.
 ```cpp
 template<typename T>
 void print(T arg) {
-    std::cout << arg << ' ';
+    std::cout<<arg<<' ';
 }
 ```
 

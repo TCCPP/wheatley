@@ -12,13 +12,12 @@ is why templates are typically declared **and** defined entirely in headers.
 ```cpp
 template<typename T>
 void print(T arg) {
-    std::cout << arg << ' ';
+    std::cout<<arg<<' ';
 }
 ```
 
 <!-- inline -->
 ## Usage
-?inline
 ```cpp
 print(42);
 print("Hello");
@@ -34,5 +33,5 @@ argument to `print`.
 
 **Output:**
 ```
-42 Hello 
+42 Hello
 ```
