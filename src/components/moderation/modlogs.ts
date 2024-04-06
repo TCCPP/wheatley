@@ -7,11 +7,11 @@ import { pluralize, time_to_human } from "../../utils/strings.js";
 import { M } from "../../utils/debugging-and-logging.js";
 import { BotComponent } from "../../bot-component.js";
 import { Wheatley } from "../../wheatley.js";
-import { moderation_entry } from "./moderation-common.js";
 import { colors } from "../../common.js";
 import { TextBasedCommandBuilder } from "../../command-abstractions/text-based-command-builder.js";
 import { CommandAbstractionReplyOptions, TextBasedCommand } from "../../command-abstractions/text-based-command.js";
 import { remove } from "../../utils/arrays.js";
+import { moderation_entry } from "../../infra/schemata/moderation-common.js";
 
 const moderations_per_page = 5;
 

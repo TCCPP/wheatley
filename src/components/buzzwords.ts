@@ -7,13 +7,7 @@ import { M } from "../utils/debugging-and-logging.js";
 import { MINUTE, colors } from "../common.js";
 import { BotComponent } from "../bot-component.js";
 import { Wheatley } from "../wheatley.js";
-
-export type buzzword_scoreboard_entry = {
-    user: string;
-    tag: string;
-    score: number;
-    count: number;
-};
+import { buzzword_scoreboard_entry } from "../infra/schemata/buzzwords.js";
 
 const ENABLED = false;
 

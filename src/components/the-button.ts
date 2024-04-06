@@ -7,15 +7,7 @@ import { M } from "../utils/debugging-and-logging.js";
 import { DAY, MINUTE, colors } from "../common.js";
 import { BotComponent } from "../bot-component.js";
 import { Wheatley } from "../wheatley.js";
-
-export type button_scoreboard_entry = {
-    user: string;
-    tag: string;
-    score: number;
-    presses: number;
-    last_press: number;
-    legacy_score: number;
-};
+import { button_scoreboard_entry } from "../infra/schemata/the-button.js";
 
 function dissectDelta(delta: number) {
     let seconds = delta / 1000;

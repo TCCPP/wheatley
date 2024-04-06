@@ -4,11 +4,11 @@ import { strict as assert } from "assert";
 
 import { BotComponent } from "../../bot-component.js";
 import { Wheatley } from "../../wheatley.js";
-import { moderation_entry } from "./moderation-common.js";
 import { critical_error } from "../../utils/debugging-and-logging.js";
 import { unwrap } from "../../utils/misc.js";
 import { time_to_human } from "../../utils/strings.js";
 import { MINUTE } from "../../common.js";
+import { moderation_entry } from "../../infra/schemata/moderation-common.js";
 
 export default class DaysSinceLastIncident extends BotComponent {
     last_incident = 0;

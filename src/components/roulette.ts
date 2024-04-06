@@ -8,11 +8,7 @@ import { BotComponent } from "../bot-component.js";
 import { Wheatley } from "../wheatley.js";
 import { TextBasedCommandBuilder } from "../command-abstractions/text-based-command-builder.js";
 import { TextBasedCommand } from "../command-abstractions/text-based-command.js";
-
-export type roulette_leaderboard_entry = {
-    user: string;
-    highscore: number;
-};
+import { roulette_leaderboard_entry } from "../infra/schemata/roulette.js";
 
 const LEADERBOARD_ENTRIES = 20;
 

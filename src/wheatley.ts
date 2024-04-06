@@ -27,8 +27,11 @@ import { MemberTracker } from "./infra/member-tracker.js";
 import { Virustotal } from "./infra/virustotal.js";
 import { forge_snowflake, is_media_link_embed } from "./utils/discord.js";
 import { TypedEventEmitter } from "./utils/event-emitter.js";
-import { moderation_entry } from "./components/moderation/moderation-common.js";
 import { setup_metrics_server } from "./infra/prometheus.js";
+import { moderation_entry } from "./infra/schemata/moderation-common.js";
+
+// Thu Jul 01 2021 00:00:00 GMT-0400 (Eastern Daylight Time)
+export const SERVER_SUGGESTION_TRACKER_START_TIME = 1625112000000;
 
 export function create_basic_embed(title: string | undefined, color: number, content: string) {
     const embed = new Discord.EmbedBuilder().setColor(color).setDescription(content);
@@ -310,7 +313,7 @@ export class Wheatley {
     async setup(auth: wheatley_auth) {
         assert(this.freestanding || auth.mongo, "Missing MongoDB credentials");
         if (auth.mongo) {
-            this.database = await WheatleyDatabase.create(auth.mongo);
+            this.database = await WheatleyDatabase.create(this.get_initial_wheatley_info.bind(this), auth.mongo);
         }
         if (auth.metrics) {
             setup_metrics_server(auth.metrics.port, auth.metrics.hostname);
@@ -998,5 +1001,27 @@ export class Wheatley {
             // TODO....
             critical_error(e);
         }
+    }
+
+    get_initial_wheatley_info(): wheatley_database_info {
+        return {
+            id: "main",
+            server_suggestions: {
+                last_scanned_timestamp: SERVER_SUGGESTION_TRACKER_START_TIME,
+            },
+            modmail_id_counter: 0,
+            the_button: {
+                button_presses: 0,
+                last_reset: Date.now(),
+                longest_time_without_reset: 0,
+            },
+            starboard: {
+                delete_emojis: [],
+                ignored_emojis: [],
+                negative_emojis: [],
+            },
+            moderation_case_number: 0,
+            watch_number: 0,
+        };
     }
 }

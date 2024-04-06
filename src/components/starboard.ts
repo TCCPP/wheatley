@@ -13,16 +13,6 @@ import { Wheatley } from "../wheatley.js";
 import { TextBasedCommandBuilder } from "../command-abstractions/text-based-command-builder.js";
 import { TextBasedCommand } from "../command-abstractions/text-based-command.js";
 
-export type starboard_entry = {
-    message: string;
-    starboard_entry: string;
-    deleted?: boolean;
-};
-
-export type auto_delete_threshold_notifications = {
-    message: string;
-};
-
 const star_threshold = 5;
 const other_threshold = 5;
 const memes_star_threshold = 14;

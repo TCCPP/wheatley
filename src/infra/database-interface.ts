@@ -4,22 +4,24 @@ import { is_string } from "../utils/strings.js";
 import { Mutex } from "../utils/containers.js";
 
 import * as mongo from "mongodb";
-import { no_distraction_entry } from "../components/nodistractions.js";
-import { roulette_leaderboard_entry } from "../components/roulette.js";
-import { buzzword_scoreboard_entry } from "../components/buzzwords.js";
-import { auto_delete_threshold_notifications, starboard_entry } from "../components/starboard.js";
-import { button_scoreboard_entry } from "../components/the-button.js";
-import { TRACKER_START_TIME, suggestion_entry } from "../components/server-suggestion-tracker.js";
 import { link_blacklist_entry, watchlist_entry } from "../private-types.js";
-import { moderation_entry } from "../components/moderation/moderation-common.js";
 import { wheatley_database_credentials, wheatley_database_info } from "../wheatley.js";
-import { skill_suggestion_entry } from "../components/skill-role-suggestion.js";
+
+import { buzzword_scoreboard_entry } from "./schemata/buzzwords.js";
+import { moderation_entry } from "./schemata/moderation-common.js";
+import { no_distraction_entry } from "./schemata/nodistractions.js";
+import { roulette_leaderboard_entry } from "./schemata/roulette.js";
+import { suggestion_entry } from "./schemata/server-suggestion-tracker.js";
+import { skill_suggestion_entry } from "./schemata/skill-role-suggestion.js";
+import { auto_delete_threshold_notifications, starboard_entry } from "./schemata/starboard.js";
+import { button_scoreboard_entry } from "./schemata/the-button.js";
 
 export class WheatleyDatabase {
     private mutex = new Mutex();
     private collections = new Map<string, mongo.Collection>();
 
     private constructor(
+        private get_initial_wheatley_info: () => wheatley_database_info,
         private client: mongo.MongoClient | null,
         private db: mongo.Db | null,
     ) {}
@@ -28,13 +30,13 @@ export class WheatleyDatabase {
         await this.client?.close();
     }
 
-    static async create(credentials: wheatley_database_credentials) {
+    static async create(get_initial_wheatley_info: () => wheatley_database_info, credentials: wheatley_database_credentials) {
         const [user, password] = [credentials.user, credentials.password].map(encodeURIComponent);
         const url = `mongodb://${user}:${password}@localhost:27017/?authMechanism=DEFAULT&authSource=wheatley`;
         const client = new mongo.MongoClient(url);
         await client.connect();
         const db = client.db("wheatley");
-        const instance = new WheatleyDatabase(client, db);
+        const instance = new WheatleyDatabase(get_initial_wheatley_info, client, db);
         return new Proxy(instance, {
             get: (instance, key, _proxy) => {
                 if (key in instance) {
@@ -58,30 +60,11 @@ export class WheatleyDatabase {
         }
     }
 
-    // TODO: typing, schema verification? Utility wrapper?
     async get_bot_singleton(): Promise<mongo.WithId<wheatley_database_info>> {
         const wheatley = this.get_collection("wheatley");
         const res = await wheatley.findOne();
         if (res == null) {
-            const document = {
-                id: "main",
-                server_suggestions: {
-                    last_scanned_timestamp: TRACKER_START_TIME,
-                },
-                modmail_id_counter: 0,
-                the_button: {
-                    button_presses: 0,
-                    last_reset: Date.now(),
-                    longest_time_without_reset: 0,
-                },
-                starboard: {
-                    delete_emojis: [],
-                    ignored_emojis: [],
-                    negative_emojis: [],
-                },
-                moderation_case_number: 0,
-                watch_number: 0,
-            };
+            const document = this.get_initial_wheatley_info();
             const ires = await wheatley.insertOne(document);
             assert(ires.acknowledged);
             return {

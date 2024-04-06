@@ -8,14 +8,13 @@ import { M } from "../../utils/debugging-and-logging.js";
 import { Wheatley } from "../../wheatley.js";
 import {
     ModerationComponent,
-    basic_moderation_with_user,
     duration_regex,
-    moderation_entry,
     parse_duration,
 } from "./moderation-common.js";
 import { TextBasedCommandBuilder } from "../../command-abstractions/text-based-command-builder.js";
 import { TextBasedCommand } from "../../command-abstractions/text-based-command.js";
 import { DAY } from "../../common.js";
+import { moderation_entry, basic_moderation_with_user } from "../../infra/schemata/moderation-common.js";
 
 /**
  * Implements !timeout

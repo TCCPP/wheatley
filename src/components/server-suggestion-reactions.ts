@@ -5,9 +5,8 @@ import { delay } from "../utils/misc.js";
 import { file_exists } from "../utils/filesystem.js";
 import { critical_error } from "../utils/debugging-and-logging.js";
 import { M } from "../utils/debugging-and-logging.js";
-import { TRACKER_START_TIME } from "./server-suggestion-tracker.js";
 import { BotComponent } from "../bot-component.js";
-import { Wheatley } from "../wheatley.js";
+import { SERVER_SUGGESTION_TRACKER_START_TIME, Wheatley } from "../wheatley.js";
 import { forge_snowflake } from "../utils/discord.js";
 
 let react_blacklist = new Set<string>();
@@ -62,7 +61,7 @@ export default class ServerSuggestionReactions extends BotComponent {
         }
     }
 
-    // handle *everything* since TRACKER_START_TIME
+    // handle *everything* since SERVER_SUGGESTION_TRACKER_START_TIME
     // 100 messages every 3 minutes, avoid ratelimits
     // runs only on restart, no rush
     async hard_catch_up() {
@@ -83,8 +82,8 @@ export default class ServerSuggestionReactions extends BotComponent {
                 break;
             }
             for (const [_, message] of messages) {
-                if (message.createdTimestamp < TRACKER_START_TIME) {
-                    oldest_seen = TRACKER_START_TIME;
+                if (message.createdTimestamp < SERVER_SUGGESTION_TRACKER_START_TIME) {
+                    oldest_seen = SERVER_SUGGESTION_TRACKER_START_TIME;
                     continue;
                 }
                 await this.handle_fetched_message(message);
@@ -92,7 +91,7 @@ export default class ServerSuggestionReactions extends BotComponent {
                     oldest_seen = message.createdTimestamp;
                 }
             }
-            if (oldest_seen <= TRACKER_START_TIME) {
+            if (oldest_seen <= SERVER_SUGGESTION_TRACKER_START_TIME) {
                 break;
             }
         }

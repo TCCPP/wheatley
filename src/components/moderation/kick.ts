@@ -7,9 +7,10 @@ import { TextBasedCommandBuilder } from "../../command-abstractions/text-based-c
 import { TextBasedCommand } from "../../command-abstractions/text-based-command.js";
 import { M } from "../../utils/debugging-and-logging.js";
 import { Wheatley } from "../../wheatley.js";
-import { ModerationComponent, basic_moderation_with_user, moderation_entry } from "./moderation-common.js";
+import { ModerationComponent } from "./moderation-common.js";
 import { unwrap } from "../../utils/misc.js";
 import { MINUTE } from "../../common.js";
+import { moderation_entry, basic_moderation_with_user } from "../../infra/schemata/moderation-common.js";
 
 /**
  * Implements !kick

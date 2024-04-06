@@ -6,6 +6,7 @@ import { BotComponent } from "../bot-component.js";
 import { Wheatley } from "../wheatley.js";
 import { TextBasedCommandBuilder } from "../command-abstractions/text-based-command-builder.js";
 import { TextBasedCommand } from "../command-abstractions/text-based-command.js";
+import { no_distraction_entry } from "../infra/schemata/nodistractions.js";
 
 /*
  * !nodistractions
@@ -57,12 +58,6 @@ function parse_unit(u: string) {
 
 const nodistractions_arg_re = /^(\d*)\s*(\w*)/i;
 const INT_MAX = 0x7fffffff;
-
-export type no_distraction_entry = {
-    user: string;
-    start: number;
-    duration: number;
-};
 
 /**
  * Adds /nodistractions command, allowing users to give themselves a no-off-topic role.

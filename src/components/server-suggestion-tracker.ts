@@ -12,22 +12,9 @@ import { Wheatley } from "../wheatley.js";
 import { TextBasedCommandBuilder } from "../command-abstractions/text-based-command-builder.js";
 import { TextBasedCommand } from "../command-abstractions/text-based-command.js";
 
-export const TRACKER_START_TIME = 1625112000000; // Thu Jul 01 2021 00:00:00 GMT-0400 (Eastern Daylight Time)
-// export const TRACKER_START_TIME = 1630468800000; // Wed Sep 01 2021 00:00:00 GMT-0400 (Eastern Daylight Time)
-// export const TRACKER_START_TIME = 1636693200000; // debug: Fri Nov 12 2021 00:00:00 GMT-0500 (Eastern Standard Time)
-
 const resolution_reactions = ["🟢", "🔴", "🟡", "🚫"];
 const resolution_reactions_set = new Set(resolution_reactions);
 const vote_reaction_set = new Set(["👍", "👎"]);
-
-export type suggestion_entry = {
-    suggestion: string;
-    status_message: string; // dashboard snowflake
-    hash: string; // to check if message is updated, currently using xxh3 (64-bit hash)
-    up: number;
-    down: number;
-    maybe: number;
-};
 
 const color = 0x7e78fe; //0xA931FF;
 

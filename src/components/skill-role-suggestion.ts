@@ -15,12 +15,6 @@ import {
 } from "../command-abstractions/context-menu.js";
 import { build_description, capitalize } from "../utils/strings.js";
 
-// schema
-export type skill_suggestion_entry = {
-    user_id: string;
-    channel_id: string;
-};
-
 /**
  * Adds commands for users to suggest skill roles for other members.
  */
