@@ -1,4 +1,4 @@
-import { assert, expect } from "chai";
+import { assert, describe, expect, it } from "vitest";
 
 import { Man7Index } from "../src/components/man7.js";
 
@@ -42,11 +42,10 @@ describe("man cases", () => {
     for (const test_case of cases) {
         const queries = test_case.query instanceof Array ? test_case.query : [test_case.query];
         for (const query of queries) {
-            it(`!cref should find ${query}`, done => {
+            it(`!cref should find ${query}`, () => {
                 const result = index.lookup(query);
                 assert(result, "search did not find a result when it should have");
                 expect(result.path).to.equal(test_case.path);
-                done();
             });
         }
     }

@@ -1,4 +1,4 @@
-import { assert, expect } from "chai";
+import { assert, describe, expect, it } from "vitest";
 
 import { CpprefSubIndex } from "../indexes/cppref/types.js";
 import { CpprefIndex } from "../src/components/cppref.js";
@@ -162,17 +162,15 @@ describe("cref cases", () => {
         const queries = test_case.query instanceof Array ? test_case.query : [test_case.query];
         for (const query of queries) {
             if (test_case.cref) {
-                it(`!cref should find ${query}`, done => {
+                it(`!cref should find ${query}`, () => {
                     const result = index.lookup(query, CpprefSubIndex.C);
                     assert(result, "search did not find a result when it should have");
                     expect(path_to_url(result.path)).to.equal(test_case.cref);
-                    done();
                 });
             } else if (test_case.cref === null) {
-                it(`!cref shouldn't find ${query}`, done => {
+                it(`!cref shouldn't find ${query}`, () => {
                     const result = index.lookup(query, CpprefSubIndex.C);
                     assert(!result, "search found a result when it shouldn't have");
-                    done();
                 });
             }
         }
@@ -184,17 +182,15 @@ describe("cppref cases", () => {
         const queries = test_case.query instanceof Array ? test_case.query : [test_case.query];
         for (const query of queries) {
             if (test_case.cppref) {
-                it(`!cppref should find ${query}`, done => {
+                it(`!cppref should find ${query}`, () => {
                     const result = index.lookup(query, CpprefSubIndex.CPP);
                     assert(result, "search did not find a result when it should have");
                     expect(path_to_url(result.path)).to.equal(test_case.cppref);
-                    done();
                 });
             } else if (test_case.cppref === null) {
-                it(`!cppref shouldn't find ${query}`, done => {
+                it(`!cppref shouldn't find ${query}`, () => {
                     const result = index.lookup(query, CpprefSubIndex.CPP);
                     assert(!result, "search found a result when it shouldn't have");
-                    done();
                 });
             }
         }
