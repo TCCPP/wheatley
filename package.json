@@ -26,7 +26,7 @@
         "lint": "eslint src",
         "lint-files": "eslint --color",
         "prepare": "husky install",
-        "test": "tsc && mocha build/test",
+        "test": "vitest run",
         "format": "prettier . --write",
         "format-check": "prettier . --check",
         "format-files": "prettier --write --ignore-unknown",
@@ -34,22 +34,19 @@
         "build": "tsc"
     },
     "devDependencies": {
-        "@types/chai": "^4.3.12",
-        "@types/mocha": "^10.0.6",
         "@types/node-fetch": "^2.6.11",
         "@typescript-eslint/eslint-plugin": "^7.0.2",
         "@typescript-eslint/parser": "^7.0.2",
-        "chai": "^5.1.0",
         "eslint": "^8.57.0",
         "eslint-config-prettier": "^9.1.0",
         "eslint-plugin-prettier": "^5.1.3",
         "husky": "^9.0.11",
         "linkedom": "^0.16.8",
         "lint-staged": "^15.2.2",
-        "mocha": "^10.3.0",
         "node-fetch": "^3.3.2",
         "prettier": "3.2.5",
-        "tsx": "^4.7.1"
+        "tsx": "^4.7.1",
+        "vitest": "^1.4.0"
     },
     "lint-staged": {
         "*.[jt]s": [

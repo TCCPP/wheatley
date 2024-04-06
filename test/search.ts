@@ -1,4 +1,4 @@
-import { assert, expect } from "chai";
+import { describe, expect, it } from "vitest";
 import {
     smart_split_list,
     strip_parentheses,
@@ -7,38 +7,31 @@ import {
 } from "../src/algorithm/search.js";
 
 describe("nested parentheses handling", () => {
-    it("should handle unbalanced parentheses 1", done => {
+    it("should handle unbalanced parentheses 1", () => {
         expect(strip_parentheses("a)b", "(", ")")).to.equal("a)b");
-        done();
     });
-    it("should handle unbalanced parentheses 2", done => {
+    it("should handle unbalanced parentheses 2", () => {
         expect(strip_parentheses("a(b", "(", ")")).to.equal("a(b");
-        done();
     });
-    it("should handle unbalanced parentheses 3", done => {
+    it("should handle unbalanced parentheses 3", () => {
         expect(strip_parentheses("a(b))", "(", ")")).to.equal("a)");
-        done();
     });
-    it("should handle unbalanced parentheses 4", done => {
+    it("should handle unbalanced parentheses 4", () => {
         expect(strip_parentheses("a((b)", "(", ")")).to.equal("a(");
-        done();
     });
-    it("should handle nested parentheses 1", done => {
+    it("should handle nested parentheses 1", () => {
         expect(strip_parentheses("foo(bar((baz)))", "(", ")")).to.equal("foo");
-        done();
     });
-    it("should handle nested parentheses 2", done => {
+    it("should handle nested parentheses 2", () => {
         expect(strip_parentheses("foo(bar((baz))))", "(", ")")).to.equal("foo)");
-        done();
     });
-    it("shouldn't strip operator arguments", done => {
+    it("shouldn't strip operator arguments", () => {
         expect(strip_parentheses("operator==, !=, <, <=, >, >=, <=>(std::optional)", "(", ")")).to.equal(
             "operator==, !=, <, <=, >, >=, <=>(std::optional)",
         );
         expect(strip_parentheses("std::expected<t,e>::operator->, std::expected<t,e>::operator*", "<", ">")).to.equal(
             "std::expected::operator->, std::expected::operator*",
         );
-        done();
     });
 });
 
@@ -62,20 +55,18 @@ const title_sanitization_test_cases: {
 
 describe("title sanitization", () => {
     for (const test_case of title_sanitization_test_cases) {
-        it(`should handle "${test_case.title}"`, done => {
+        it(`should handle "${test_case.title}"`, () => {
             expect(normalize_and_sanitize_title(test_case.title)).to.equal(test_case.expected);
-            done();
         });
     }
 });
 
 describe("smart splitting", () => {
-    it("should smartly split titles", done => {
+    it("should smartly split titles", () => {
         expect(smart_split_list("foo(std::string, int), bar(std::string, float)")).to.deep.equal([
             "foo(std::string, int)",
             "bar(std::string, float)",
         ]);
-        done();
     });
 });
 
@@ -147,9 +138,8 @@ const title_splitting_cases: {
 
 describe("title splitting", () => {
     for (const test_case of title_splitting_cases) {
-        it(`should handle "${test_case.title}"`, done => {
+        it(`should handle "${test_case.title}"`, () => {
             expect(normalize_and_split_cppref_title(test_case.title)).to.deep.equal(test_case.expected);
-            done();
         });
     }
 });

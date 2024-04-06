@@ -1,4 +1,4 @@
-import { assert } from "chai";
+import { describe, test } from "vitest";
 
 import * as fs from "fs";
 import * as path from "path";
@@ -23,7 +23,7 @@ describe("parse wiki articles", () => {
         if (name === "README") {
             continue;
         }
-        it(`${name} article should parse`, async () => {
+        test(`${name} article should parse`, async () => {
             const content = await fs.promises.readFile(file_path, { encoding: "utf-8" });
             parse_article(null, content, {
                 channels: {
