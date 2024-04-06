@@ -9,12 +9,12 @@ import { Wheatley } from "../wheatley.js";
 import { TextBasedCommandBuilder } from "../command-abstractions/text-based-command-builder.js";
 import { CommandAbstractionReplyOptions, TextBasedCommand } from "../command-abstractions/text-based-command.js";
 import { duration_regex, parse_duration } from "./moderation/moderation-common.js";
-import { decode_snowflake, forge_snowflake } from "./snowflake.js";
 import { pluralize } from "../utils/strings.js";
 import { SelfClearingMap } from "../utils/containers.js";
 import { url_re } from "./quote.js";
 import { ascending, unwrap } from "../utils/misc.js";
 import { MessageContextMenuInteractionBuilder } from "../command-abstractions/context-menu.js";
+import { decode_snowflake, forge_snowflake } from "../utils/discord.js";
 
 /**
  * Adds a !purge command.

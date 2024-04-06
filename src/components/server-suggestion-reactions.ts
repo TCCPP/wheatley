@@ -6,9 +6,9 @@ import { file_exists } from "../utils/filesystem.js";
 import { critical_error } from "../utils/debugging-and-logging.js";
 import { M } from "../utils/debugging-and-logging.js";
 import { TRACKER_START_TIME } from "./server-suggestion-tracker.js";
-import { forge_snowflake } from "./snowflake.js";
 import { BotComponent } from "../bot-component.js";
 import { Wheatley } from "../wheatley.js";
+import { forge_snowflake } from "../utils/discord.js";
 
 let react_blacklist = new Set<string>();
 

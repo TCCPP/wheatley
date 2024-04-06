@@ -1,11 +1,10 @@
 import * as Discord from "discord.js";
 import { strict as assert } from "assert";
-import { fetch_all_threads_archive_count, get_tag } from "../utils/discord.js";
+import { decode_snowflake, fetch_all_threads_archive_count, get_tag } from "../utils/discord.js";
 import { critical_error } from "../utils/debugging-and-logging.js";
 import { SelfClearingSet } from "../utils/containers.js";
 import { M } from "../utils/debugging-and-logging.js";
 import { colors, DAY, HOUR, MINUTE } from "../common.js";
-import { decode_snowflake } from "./snowflake.js"; // todo: eliminate decode_snowflake
 import { BotComponent } from "../bot-component.js";
 import { Wheatley } from "../wheatley.js";
 

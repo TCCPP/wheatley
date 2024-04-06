@@ -2,12 +2,12 @@ import { strict as assert } from "assert";
 
 import * as Discord from "discord.js";
 
-import { forge_snowflake } from "../components/snowflake.js";
 import { unwrap } from "../utils/misc.js";
 import { is_string } from "../utils/strings.js";
 import { Wheatley } from "../wheatley.js";
 import { BotTextBasedCommand } from "./text-based-command-descriptor.js";
 import { critical_error } from "../utils/debugging-and-logging.js";
+import { forge_snowflake } from "../utils/discord.js";
 
 export type CommandAbstractionReplyOptions = {
     // default: false
