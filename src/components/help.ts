@@ -55,7 +55,7 @@ export default class Help extends BotComponent {
                                     .map((_, alias) => `\`${alias}\``)
                                     .join(", "),
                             "Article contributions are welcome " +
-                                "[here](https://github.com/TCCPP/wheatley/tree/main/wiki_articles)!",
+                                "[here](https://github.com/TCCPP/wheatley/tree/main/wiki-articles)!",
                         ),
                     },
                     {
