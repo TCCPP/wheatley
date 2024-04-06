@@ -8,6 +8,8 @@ if [ -f log.txt ]; then
     mv -v log.txt.gz log_archive/log.$t.txt.gz
 fi
 
+npm i
+
 screen -dmLS _Wheatley ./run-persist.sh
 
 echo "Wheatley started in screen"
