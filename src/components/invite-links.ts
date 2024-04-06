@@ -20,6 +20,9 @@ export default class InviteLinks extends BotComponent {
     }
 
     async handle_message(message: Discord.Message) {
+        if (this.wheatley.is_authorized_mod(message.author)) {
+            return;
+        }
         if (should_block(message.content)) {
             const quote = await this.wheatley.make_quote_embeds([message]);
             await message.delete();
