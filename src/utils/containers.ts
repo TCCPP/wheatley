@@ -1,5 +1,6 @@
 import { strict as assert } from "assert";
-import { critical_error } from "./debugging-and-logging.js";
+import { critical_error, M } from "./debugging-and-logging.js";
+import { set_interval, clear_interval, clear_timeout, set_timeout } from "./node.js";
 
 export class SelfClearingSet<T> {
     contents = new Map<T, number>();
@@ -7,10 +8,10 @@ export class SelfClearingSet<T> {
     interval: NodeJS.Timeout;
     constructor(duration: number, interval?: number) {
         this.duration = duration;
-        this.interval = setInterval(this.sweep.bind(this), interval ?? this.duration);
+        this.interval = set_interval(this.sweep.bind(this), interval ?? this.duration);
     }
     destroy() {
-        clearInterval(this.interval);
+        clear_interval(this.interval);
     }
     sweep() {
         const now = Date.now();
@@ -41,11 +42,11 @@ export class SelfClearingMap<K, V> {
     on_remove?: (key: K, value: V) => void;
     constructor(duration: number, interval?: number, on_remove?: (key: K, value: V) => void) {
         this.duration = duration;
-        this.interval = setInterval(this.sweep.bind(this), interval ?? this.duration);
+        this.interval = set_interval(this.sweep.bind(this), interval ?? this.duration);
         this.on_remove = on_remove;
     }
     destroy() {
-        clearInterval(this.interval);
+        clear_interval(this.interval);
     }
     sweep() {
         const now = Date.now();
@@ -162,7 +163,7 @@ export class SleepList<T, ID> {
 
     destroy() {
         if (this.timer) {
-            clearTimeout(this.timer);
+            clear_timeout(this.timer);
         }
     }
 
@@ -187,11 +188,11 @@ export class SleepList<T, ID> {
 
     reset_timer() {
         if (this.timer !== null) {
-            clearTimeout(this.timer);
+            clear_timeout(this.timer);
         }
         if (this.list.length > 0) {
             const delta = Math.max(this.list[0][0] - Date.now(), 0);
-            this.timer = setTimeout(
+            this.timer = set_timeout(
                 () => {
                     this.handle_timer().catch(critical_error).finally(this.reset_timer.bind(this));
                 },

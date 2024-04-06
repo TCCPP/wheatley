@@ -1,4 +1,6 @@
 import { strict as assert } from "assert";
+import { M } from "./debugging-and-logging.js";
+import { set_timeout } from "./node.js";
 
 // Round n to p decimal places
 export function round(n: number, p: number) {
@@ -11,7 +13,7 @@ export function floor(n: number, p: number) {
 
 // wait n milliseconds
 export async function delay(n: number): Promise<void> {
-    return new Promise<void>(resolve => setTimeout(resolve, n));
+    return new Promise<void>(resolve => set_timeout(resolve, n));
 }
 
 export function unwrap<T>(x: T): T & NonNullable<unknown> {

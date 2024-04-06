@@ -7,6 +7,7 @@ import { M } from "../utils/debugging-and-logging.js";
 import { colors, DAY, HOUR, MINUTE } from "../common.js";
 import { BotComponent } from "../bot-component.js";
 import { Wheatley } from "../wheatley.js";
+import { clear_timeout, set_interval, set_timeout } from "../utils/node.js";
 
 // TODO: Take into account thread's inactivity setting
 
@@ -197,7 +198,7 @@ export default class ForumChannels extends BotComponent {
         //await get_initial_active();
         await this.forum_cleanup();
         // every hour try to cleanup
-        this.interval = setInterval(() => {
+        this.interval = set_interval(() => {
             this.forum_cleanup().catch(critical_error);
         }, 60 * MINUTE);
     }
@@ -227,7 +228,7 @@ export default class ForumChannels extends BotComponent {
                         );
                         this.timeout_map.set(
                             thread.id,
-                            setTimeout(() => {
+                            set_timeout(() => {
                                 this.prompt_close(thread).catch(critical_error);
                             }, thank_you_timeout),
                         );
@@ -239,10 +240,10 @@ export default class ForumChannels extends BotComponent {
             // if we reach here, it's a non-thank message
             // might need to restart the timeout
             if (this.timeout_map.has(thread.id)) {
-                clearTimeout(this.timeout_map.get(thread.id));
+                clear_timeout(this.timeout_map.get(thread.id));
                 this.timeout_map.set(
                     thread.id,
-                    setTimeout(() => {
+                    set_timeout(() => {
                         this.prompt_close(thread).catch(critical_error);
                     }, thank_you_timeout),
                 );

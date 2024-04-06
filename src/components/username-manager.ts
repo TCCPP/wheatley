@@ -7,6 +7,7 @@ import { Wheatley } from "../wheatley.js";
 import { MINUTE } from "../common.js";
 
 import anyAscii from "any-ascii";
+import { set_interval } from "../utils/node.js";
 
 function is_valid_codepoint(c: string) {
     return (c.codePointAt(0) ?? 0) < 128;
@@ -58,7 +59,7 @@ export default class UsernameManager extends BotComponent {
     override async on_ready() {
         await this.cleanup();
         // Every hour give it a scan
-        this.interval = setInterval(() => {
+        this.interval = set_interval(() => {
             this.cleanup().catch(critical_error);
         }, 60 * MINUTE);
     }

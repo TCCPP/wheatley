@@ -4,11 +4,12 @@ import { strict as assert } from "assert";
 
 import { BotComponent } from "../../bot-component.js";
 import { Wheatley } from "../../wheatley.js";
-import { critical_error } from "../../utils/debugging-and-logging.js";
+import { critical_error, M } from "../../utils/debugging-and-logging.js";
 import { unwrap } from "../../utils/misc.js";
 import { time_to_human } from "../../utils/strings.js";
 import { MINUTE } from "../../common.js";
 import { moderation_entry } from "../../infra/schemata/moderation-common.js";
+import { set_interval } from "../../utils/node.js";
 
 export default class DaysSinceLastIncident extends BotComponent {
     last_incident = 0;
@@ -66,7 +67,7 @@ export default class DaysSinceLastIncident extends BotComponent {
                 embeds: [this.make_embed(this.last_time)],
             });
         }
-        this.timer = setInterval(() => {
+        this.timer = set_interval(() => {
             this.update_or_send_if_needed().catch(critical_error);
         }, MINUTE);
     }

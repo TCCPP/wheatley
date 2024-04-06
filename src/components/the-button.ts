@@ -8,6 +8,7 @@ import { DAY, MINUTE, colors } from "../common.js";
 import { BotComponent } from "../bot-component.js";
 import { Wheatley } from "../wheatley.js";
 import { button_scoreboard_entry } from "../infra/schemata/the-button.js";
+import { set_interval } from "../utils/node.js";
 
 function dissectDelta(delta: number) {
     let seconds = delta / 1000;
@@ -122,7 +123,7 @@ export default class TheButton extends BotComponent {
 
         this.button_message = await this.wheatley.channels.the_button.messages.fetch(this.button_message_id);
         let waiting = false;
-        this.interval = setInterval(() => {
+        this.interval = set_interval(() => {
             if (
                 this.last_update.epoch != this.last_reset ||
                 Date.now() - this.last_update.timestamp - this.last_update.remaining_seconds * 1000 >= -1500

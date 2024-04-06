@@ -26,6 +26,7 @@ import {
     basic_moderation_with_user,
     basic_moderation,
 } from "../../infra/schemata/moderation-common.js";
+import { set_interval } from "../../utils/node.js";
 
 /*
  * !mute !unmute
@@ -193,7 +194,7 @@ export abstract class ModerationComponent extends BotComponent {
         // Persistance:
         await this.ensure_moderations_are_in_place(moderations);
         // Update counters every hour
-        setInterval(() => this.update_counters(), HOUR);
+        set_interval(() => this.update_counters(), HOUR);
     }
 
     //

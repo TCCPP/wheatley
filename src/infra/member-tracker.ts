@@ -4,6 +4,7 @@ import { critical_error } from "../utils/debugging-and-logging.js";
 import { M } from "../utils/debugging-and-logging.js";
 import { MINUTE } from "../common.js";
 import { Wheatley } from "../wheatley.js";
+import { set_interval } from "../utils/node.js";
 
 type member_entry = {
     tag: string;
@@ -39,7 +40,7 @@ export class MemberTracker {
     interval: NodeJS.Timeout;
     constructor(readonly wheatley: Wheatley) {
         // every 10 minutes, trim extraneous entries
-        this.interval = setInterval(this.trim.bind(this), 10 * MINUTE);
+        this.interval = set_interval(this.trim.bind(this), 10 * MINUTE);
         wheatley.client.on("guildMemberAdd", this.on_join.bind(this));
         wheatley.client.on("guildBanAdd", this.on_ban.bind(this));
     }

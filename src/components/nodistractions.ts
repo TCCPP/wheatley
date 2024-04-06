@@ -7,6 +7,7 @@ import { Wheatley } from "../wheatley.js";
 import { TextBasedCommandBuilder } from "../command-abstractions/text-based-command-builder.js";
 import { TextBasedCommand } from "../command-abstractions/text-based-command.js";
 import { no_distraction_entry } from "../infra/schemata/nodistractions.js";
+import { set_timeout, clear_timeout } from "../utils/node.js";
 
 /*
  * !nodistractions
@@ -146,7 +147,7 @@ export default class Nodistractions extends BotComponent {
         const next = this.undistract_queue[0];
         // next.start + next.duration - Date.now() but make sure overflow is prevented
         const sleep_time = next.start - Date.now() + next.duration;
-        this.timer = setTimeout(
+        this.timer = set_timeout(
             () => {
                 this.handle_timer().catch(critical_error);
             },
@@ -208,7 +209,7 @@ export default class Nodistractions extends BotComponent {
         // apply
         i = this.undistract_queue.findIndex(entry => entry.user == target.id); // index may have changed
         if (i == 0 && this.timer != null) {
-            clearTimeout(this.timer);
+            clear_timeout(this.timer);
             this.timer = null;
         }
         if (this.timer == null) {
@@ -222,7 +223,7 @@ export default class Nodistractions extends BotComponent {
         // timer
         const reschedule = this.timer != null;
         if (this.timer != null) {
-            clearTimeout(this.timer);
+            clear_timeout(this.timer);
             this.timer = null;
         }
         // remove role

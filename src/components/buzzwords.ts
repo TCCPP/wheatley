@@ -8,6 +8,7 @@ import { MINUTE, colors } from "../common.js";
 import { BotComponent } from "../bot-component.js";
 import { Wheatley } from "../wheatley.js";
 import { buzzword_scoreboard_entry } from "../infra/schemata/buzzwords.js";
+import { set_interval } from "../utils/node.js";
 
 const ENABLED = false;
 
@@ -180,11 +181,11 @@ export default class Buzzwords extends BotComponent {
         // eslint-disable-next-line @typescript-eslint/no-unnecessary-condition
         if (ENABLED) {
             //await this.update_database();
-            //this.timeout = setTimeout(() => {
+            //this.timeout = set_timeout(() => {
             //    this.update_database().catch(critical_error);
             //}, MINUTE);
             await this.reflowRoles();
-            this.interval = setInterval(() => {
+            this.interval = set_interval(() => {
                 this.reflowRoles().catch(critical_error);
             }, 10 * MINUTE);
         }

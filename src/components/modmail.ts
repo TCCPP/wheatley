@@ -9,6 +9,7 @@ import { BotComponent } from "../bot-component.js";
 import { Wheatley } from "../wheatley.js";
 import { SelfClearingMap } from "../utils/containers.js";
 import { unwrap } from "../utils/misc.js";
+import { set_timeout } from "../utils/node.js";
 
 /*
  * Flow:
@@ -272,7 +273,7 @@ export default class Modmail extends BotComponent {
 
     async modmail_continue_button_press(interaction: Discord.ButtonInteraction) {
         this.timeout_set.add(interaction.user.id);
-        setTimeout(() => {
+        set_timeout(() => {
             this.timeout_set.delete(interaction.user.id);
         }, RATELIMIT_TIME);
         const modal = new Discord.ModalBuilder().setCustomId("modmail_create_confirm").setTitle("Confirm Modmail");

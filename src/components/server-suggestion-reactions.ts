@@ -8,6 +8,7 @@ import { M } from "../utils/debugging-and-logging.js";
 import { BotComponent } from "../bot-component.js";
 import { SERVER_SUGGESTION_TRACKER_START_TIME, Wheatley } from "../wheatley.js";
 import { forge_snowflake } from "../utils/discord.js";
+import { set_timeout } from "../utils/node.js";
 
 let react_blacklist = new Set<string>();
 
@@ -132,7 +133,7 @@ export default class ServerSuggestionReactions extends BotComponent {
             if (reaction.users.cache.some(user => react_blacklist.has(user.id))) {
                 // Remove but not immediately
                 M.debug("scheduling blacklisted user reaction removal");
-                setTimeout(() => {
+                set_timeout(() => {
                     M.log("removing reaction by blacklisted user from", {
                         content: reaction.message.content,
                         reaction: reaction.emoji.name,

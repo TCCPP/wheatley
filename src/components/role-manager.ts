@@ -6,6 +6,7 @@ import { critical_error } from "../utils/debugging-and-logging.js";
 import { M } from "../utils/debugging-and-logging.js";
 import { BotComponent } from "../bot-component.js";
 import { Wheatley } from "../wheatley.js";
+import { set_interval } from "../utils/node.js";
 
 // Role cleanup
 // Auto-remove pink roles when members are no longer boosting
@@ -26,7 +27,7 @@ export default class RoleManager extends BotComponent {
 
     override async on_ready() {
         this.pink_role = unwrap(await this.wheatley.TCCPP.roles.fetch(this.wheatley.roles.pink.id));
-        this.interval = setInterval(() => {
+        this.interval = set_interval(() => {
             this.check_users().catch(critical_error);
         }, 30 * MINUTE);
     }
