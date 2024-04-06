@@ -1,6 +1,6 @@
 import { M } from "./debugging-and-logging.js";
 
-const DEBUG_TIMEOUTS = true;
+const DEBUG_TIMEOUTS = false;
 
 export function set_interval<Args extends any[]>(
     callback: (...args: Args) => void,
@@ -31,7 +31,7 @@ export function set_timeout<Args extends any[]>(
 export function clear_interval(id: NodeJS.Timeout | string | number | undefined) {
     // eslint-disable-next-line @typescript-eslint/no-unnecessary-condition
     if (DEBUG_TIMEOUTS) {
-        M.debug("clear_interval", id);
+        M.debug("clear_interval");
         // console.log(new Error().stack);
     }
     clearInterval(id);
@@ -40,7 +40,7 @@ export function clear_interval(id: NodeJS.Timeout | string | number | undefined)
 export function clear_timeout(id: NodeJS.Timeout | string | number | undefined) {
     // eslint-disable-next-line @typescript-eslint/no-unnecessary-condition
     if (DEBUG_TIMEOUTS) {
-        M.debug("clear_timeout", id);
+        M.debug("clear_timeout");
         // console.log(new Error().stack);
     }
     clearTimeout(id);
