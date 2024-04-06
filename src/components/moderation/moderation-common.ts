@@ -20,7 +20,12 @@ import { Wheatley } from "../../wheatley.js";
 import { colors, HOUR } from "../../common.js";
 import Modlogs from "./modlogs.js";
 import { TextBasedCommand } from "../../command-abstractions/text-based-command.js";
-import { moderation_type, moderation_entry, basic_moderation_with_user, basic_moderation } from "../../infra/schemata/moderation-common.js";
+import {
+    moderation_type,
+    moderation_entry,
+    basic_moderation_with_user,
+    basic_moderation,
+} from "../../infra/schemata/moderation-common.js";
 
 /*
  * !mute !unmute

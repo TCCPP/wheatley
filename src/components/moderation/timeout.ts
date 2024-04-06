@@ -6,11 +6,7 @@ import { strict as assert } from "assert";
 import { unwrap } from "../../utils/misc.js";
 import { M } from "../../utils/debugging-and-logging.js";
 import { Wheatley } from "../../wheatley.js";
-import {
-    ModerationComponent,
-    duration_regex,
-    parse_duration,
-} from "./moderation-common.js";
+import { ModerationComponent, duration_regex, parse_duration } from "./moderation-common.js";
 import { TextBasedCommandBuilder } from "../../command-abstractions/text-based-command-builder.js";
 import { TextBasedCommand } from "../../command-abstractions/text-based-command.js";
 import { DAY } from "../../common.js";

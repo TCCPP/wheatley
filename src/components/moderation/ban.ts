@@ -7,10 +7,7 @@ import { TextBasedCommandBuilder } from "../../command-abstractions/text-based-c
 import { TextBasedCommand } from "../../command-abstractions/text-based-command.js";
 import { M } from "../../utils/debugging-and-logging.js";
 import { Wheatley } from "../../wheatley.js";
-import {
-    ModerationComponent,
-    duration_regex,
-} from "./moderation-common.js";
+import { ModerationComponent, duration_regex } from "./moderation-common.js";
 import { MINUTE } from "../../common.js";
 import { unwrap } from "../../utils/misc.js";
 import { moderation_entry, basic_moderation_with_user } from "../../infra/schemata/moderation-common.js";
