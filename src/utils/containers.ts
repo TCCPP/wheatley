@@ -47,6 +47,11 @@ export class SelfClearingMap<K, V> {
     }
     destroy() {
         clear_interval(this.interval);
+        if (this.on_remove) {
+            for (const [key, [_, value]] of this.contents) {
+                this.on_remove(key, value);
+            }
+        }
     }
     sweep() {
         const now = Date.now();
