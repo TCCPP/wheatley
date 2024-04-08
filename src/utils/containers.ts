@@ -1,17 +1,56 @@
 import { strict as assert } from "assert";
 import { critical_error, M } from "./debugging-and-logging.js";
-import { set_interval, clear_interval, clear_timeout, set_timeout } from "./node.js";
+import { clear_timeout, set_timeout } from "./node.js";
 
-export class SelfClearingSet<T> {
+let interval_timeout: NodeJS.Timeout | null = null;
+let next_interval: number = Infinity;
+const containers: WeakRef<SelfClearingContainer>[] = [];
+function sweep_containers() {
+    for (const container of containers) {
+        if (container.deref()!.next_interval() <= 50) {
+            // 50ms buffer
+            container.deref()!.sweep();
+        } else if (container.deref() === undefined) {
+            containers.splice(containers.indexOf(container), 1);
+        }
+    }
+
+    if (containers.length === 0) {
+        // No more containers, stop the interval
+        interval_timeout = null;
+        next_interval = Infinity;
+        return;
+    }
+
+    next_interval = Math.min(...containers.map(c => c.deref()!.next_interval()).map(n => (n > 50 ? n : 50)));
+    const timeout_setter = () => set_timeout(sweep_containers, next_interval);
+    process.nextTick(timeout_setter); // Unroll the stack, so we don't get a stack overflow
+}
+
+abstract class SelfClearingContainer {
+    private start_time: number;
+    constructor(private interval: number) {
+        this.interval = interval;
+        this.start_time = Date.now();
+        containers.push(new WeakRef(this));
+        if (!interval_timeout || next_interval > interval) {
+            clear_timeout(interval_timeout!);
+            sweep_containers();
+        }
+    }
+    destroy() {}
+    abstract sweep(): void;
+    next_interval(): number {
+        return (Date.now() - this.start_time) % this.interval;
+    }
+}
+
+export class SelfClearingSet<T> extends SelfClearingContainer {
     contents = new Map<T, number>();
     duration: number;
-    interval: NodeJS.Timeout;
     constructor(duration: number, interval?: number) {
+        super(interval ?? duration);
         this.duration = duration;
-        this.interval = set_interval(this.sweep.bind(this), interval ?? this.duration);
-    }
-    destroy() {
-        clear_interval(this.interval);
     }
     sweep() {
         const now = Date.now();
@@ -35,18 +74,17 @@ export class SelfClearingSet<T> {
     }
 }
 
-export class SelfClearingMap<K, V> {
+export class SelfClearingMap<K, V> extends SelfClearingContainer {
     contents = new Map<K, [number, V]>();
     duration: number;
-    interval: NodeJS.Timeout;
     on_remove?: (key: K, value: V) => void;
     constructor(duration: number, interval?: number, on_remove?: (key: K, value: V) => void) {
+        super(interval ?? duration);
         this.duration = duration;
-        this.interval = set_interval(this.sweep.bind(this), interval ?? this.duration);
         this.on_remove = on_remove;
     }
-    destroy() {
-        clear_interval(this.interval);
+    override destroy() {
+        super.destroy();
         if (this.on_remove) {
             for (const [key, [_, value]] of this.contents) {
                 this.on_remove(key, value);
