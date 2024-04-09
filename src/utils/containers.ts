@@ -4,14 +4,14 @@ import { clear_timeout, set_timeout } from "./node.js";
 
 let interval_timeout: NodeJS.Timeout | null = null;
 let next_interval: number = Infinity;
-const containers: WeakRef<SelfClearingContainer>[] = [];
+let containers: WeakRef<SelfClearingContainer>[] = [];
+
 function sweep_containers() {
+    containers = containers.filter(c => c.deref() !== undefined);
     for (const container of containers) {
-        if (container.deref()!.next_interval() <= 50) {
+        if (container.deref()!.should_run()) {
             // 50ms buffer
             container.deref()!.sweep();
-        } else if (container.deref() === undefined) {
-            containers.splice(containers.indexOf(container), 1);
         }
     }
 
@@ -22,26 +22,36 @@ function sweep_containers() {
         return;
     }
 
-    next_interval = Math.min(...containers.map(c => c.deref()!.next_interval()).map(n => (n > 50 ? n : 50)));
-    const timeout_setter = () => set_timeout(sweep_containers, next_interval);
+    set_next_interval();
+}
+
+function set_next_interval() {
+    const timeout_setter = () =>
+        set_timeout(
+            sweep_containers,
+            Math.min(...containers.map(c => c.deref()!.next_interval()).map(n => (n > 50 ? n : 50))),
+        );
     process.nextTick(timeout_setter); // Unroll the stack, so we don't get a stack overflow
 }
 
 abstract class SelfClearingContainer {
     private start_time: number;
-    constructor(private interval: number) {
+    constructor(protected interval: number) {
         this.interval = interval;
         this.start_time = Date.now();
         containers.push(new WeakRef(this));
         if (!interval_timeout || next_interval > interval) {
             clear_timeout(interval_timeout!);
-            sweep_containers();
+            set_next_interval();
         }
     }
     destroy() {}
     abstract sweep(): void;
     next_interval(): number {
-        return (Date.now() - this.start_time) % this.interval;
+        return this.interval - ((Date.now() - this.start_time) % this.interval);
+    }
+    should_run(): boolean {
+        return Math.abs(this.next_interval() - this.interval) <= 50;
     }
 }
 
@@ -51,6 +61,11 @@ export class SelfClearingSet<T> extends SelfClearingContainer {
     constructor(duration: number, interval?: number) {
         super(interval ?? duration);
         this.duration = duration;
+        containers.push(new WeakRef(this));
+        if (!interval_timeout || next_interval > this.interval) {
+            clear_timeout(interval_timeout!);
+            set_next_interval();
+        }
     }
     sweep() {
         const now = Date.now();
