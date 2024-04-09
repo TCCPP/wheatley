@@ -1,9 +1,8 @@
-import { describe, expect, beforeEach, vi, it } from "vitest";
+import { describe, expect, beforeEach, afterEach, vi, it } from "vitest";
 import { SelfClearingMap, SelfClearingSet } from "../containers.js";
 
 import { setFlagsFromString } from "v8";
 import { runInNewContext } from "vm";
-import { afterEach } from "node:test";
 
 /**
  * Ensure we garbage collect the maps between tests, otherwise we might get false failures
@@ -15,7 +14,7 @@ if (!(gc as unknown as boolean)) {
 }
 
 async function moveForwardBy(time: number) {
-    vi.setSystemTime(vi.getMockedSystemTime()?.getTime() || 0 + time);
+    vi.setSystemTime((vi.getMockedSystemTime()?.getTime() || 0) + time);
     return vi.advanceTimersByTimeAsync(time);
 }
 
@@ -28,10 +27,6 @@ describe.sequential("SelfClearingMap", () => {
     afterEach(() => {
         gc();
         vi.runOnlyPendingTimers();
-        gc();
-        vi.runOnlyPendingTimers();
-        gc();
-        vi.clearAllTimers();
         gc();
     });
 
@@ -63,8 +58,10 @@ describe.sequential("SelfClearingMap", () => {
         await vi.advanceTimersToNextTimerAsync();
         map.set("a", 0);
         expect(map.has("a")).to.equal(true);
+        console.log(map);
 
         await moveForwardBy(1000);
+        console.log(vi.getMockedSystemTime()?.getTime());
 
         expect(map.has("a")).to.equal(true);
     });
@@ -83,10 +80,6 @@ describe.sequential("SelfClearingSet", () => {
     afterEach(() => {
         gc();
         vi.runOnlyPendingTimers();
-        gc();
-        vi.runOnlyPendingTimers();
-        gc();
-        vi.clearAllTimers();
         gc();
     });
 
@@ -110,6 +103,7 @@ describe.sequential("SelfClearingSet", () => {
         expect(set.has("a")).to.equal(true);
 
         await moveForwardBy(500);
+        console.log(vi.getMockedSystemTime()?.getTime());
 
         expect(set.has("a")).to.equal(true);
     });

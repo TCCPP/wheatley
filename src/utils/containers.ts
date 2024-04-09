@@ -8,6 +8,7 @@ let containers: WeakRef<SelfClearingContainer>[] = [];
 
 function sweep_containers() {
     containers = containers.filter(c => c.deref() !== undefined);
+    set_next_interval();
     for (const container of containers) {
         if (container.deref()!.should_run()) {
             // 50ms buffer
@@ -21,8 +22,6 @@ function sweep_containers() {
         next_interval = Infinity;
         return;
     }
-
-    set_next_interval();
 }
 
 function set_next_interval() {
