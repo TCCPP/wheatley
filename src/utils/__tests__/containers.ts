@@ -190,7 +190,7 @@ describe.sequential("SelfClearingSet", () => {
         expect(set.has("a")).to.equal(true);
     });
 
-    it.sequential.only("Should call the on_remove callback", async () => {
+    it.sequential("Should call the on_remove callback", async () => {
         const on_remove = vi.fn();
         const set = new SelfClearingSet<string>(1000, 1000, on_remove);
 
