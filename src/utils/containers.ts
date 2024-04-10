@@ -11,7 +11,6 @@ function sweep_containers() {
     set_next_interval();
     for (const container of containers) {
         if (container.deref()!.should_run()) {
-            // 50ms buffer
             container.deref()!.sweep();
         }
     }
@@ -26,18 +25,29 @@ function sweep_containers() {
 
 function set_next_interval() {
     const timeout_setter = () =>
-        set_timeout(
-            sweep_containers,
-            Math.min(...containers.map(c => c.deref()!.next_interval()).map(n => (n > 50 ? n : 50))),
-        );
-    process.nextTick(timeout_setter); // Unroll the stack, so we don't get a stack overflow
+        set_timeout(sweep_containers, Math.min(...containers.map(c => c.deref()?.next_interval() ?? Infinity)));
+    setImmediate(timeout_setter); // Unroll the stack, so we don't get a stack overflow
+}
+
+/**
+ * Force clear all containers. This is useful for testing, but should not be used in production.
+ */
+export async function force_clear_containers() {
+    containers = [];
+    if (interval_timeout) {
+        clear_timeout(interval_timeout);
+        interval_timeout = null;
+        next_interval = Infinity;
+    }
 }
 
 abstract class SelfClearingContainer {
+    protected static fudge_factor = 50;
     private start_time: number;
+    private last_sweep: number;
     constructor(protected interval: number) {
-        this.interval = interval;
         this.start_time = Date.now();
+        this.last_sweep = this.start_time;
         containers.push(new WeakRef(this));
         if (!interval_timeout || next_interval > interval) {
             clear_timeout(interval_timeout!);
@@ -45,31 +55,41 @@ abstract class SelfClearingContainer {
         }
     }
     destroy() {}
-    abstract sweep(): void;
+    sweep(): void {
+        this.last_sweep = Date.now();
+    }
     next_interval(): number {
-        return this.interval - ((Date.now() - this.start_time) % this.interval);
+        const next_interval = this.interval - ((Date.now() - this.start_time) % this.interval);
+        if (next_interval < SelfClearingContainer.fudge_factor) {
+            return next_interval + this.interval;
+        }
+        return next_interval;
     }
     should_run(): boolean {
-        return Math.abs(this.next_interval() - this.interval) <= 50;
+        return this.last_sweep + this.interval <= Date.now();
     }
 }
 
 export class SelfClearingSet<T> extends SelfClearingContainer {
     contents = new Map<T, number>();
     duration: number;
-    constructor(duration: number, interval?: number) {
+    private on_remove: (value: T) => void;
+    constructor(duration: number, interval?: number, on_remove: (value: T) => void = () => {}) {
         super(interval ?? duration);
         this.duration = duration;
+        this.on_remove = on_remove;
         containers.push(new WeakRef(this));
         if (!interval_timeout || next_interval > this.interval) {
             clear_timeout(interval_timeout!);
             set_next_interval();
         }
     }
-    sweep() {
+    override sweep() {
+        super.sweep();
         const now = Date.now();
         for (const [value, timestamp] of this.contents) {
-            if (now - timestamp >= this.duration) {
+            if (now - timestamp >= this.duration - SelfClearingContainer.fudge_factor) {
+                this.on_remove(value);
                 this.contents.delete(value);
             }
         }
@@ -78,6 +98,7 @@ export class SelfClearingSet<T> extends SelfClearingContainer {
         this.contents.set(value, Date.now());
     }
     remove(value: T) {
+        this.on_remove(value);
         this.contents.delete(value);
     }
     has(value: T) {
@@ -105,10 +126,11 @@ export class SelfClearingMap<K, V> extends SelfClearingContainer {
             }
         }
     }
-    sweep() {
+    override sweep() {
+        super.sweep();
         const now = Date.now();
         for (const [key, [timestamp, value]] of this.contents) {
-            if (now - timestamp >= this.duration) {
+            if (now - timestamp >= this.duration - SelfClearingContainer.fudge_factor) {
                 if (this.on_remove) {
                     this.on_remove(key, value);
                 }
