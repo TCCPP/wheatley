@@ -264,9 +264,9 @@ export default class TheButton extends BotComponent {
                 description += `${tag}: ${round(entry.score, 1)}\n`;
             }
             // If user exists in the scoreboard, show their score.
-            const currentUser = await this.wheatley.database.button_scoreboard.findOne({ user: interaction.user.id });
-            if (currentUser != null) {
-                description += `\n\nYour Current score: ${round(currentUser.score, 1)}`;
+            const current_user = await this.wheatley.database.button_scoreboard.findOne({ user: interaction.user.id });
+            if (current_user != null) {
+                description += `\n\nYour Current score: ${round(current_user.score, 1)}`;
             }
             embed.setDescription(description);
             await interaction.reply({

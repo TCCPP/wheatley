@@ -8,8 +8,8 @@ export function remove<U, V extends U>(arr: U[], v: V) {
 // https://www.typescriptlang.org/play?#code/KYDwDg9gTgLgBAMwK4DsDGMCWEVysAWwgDdgAeAVQBo4A1OUGYFAEwGc4KA+ACgEMoUAFycA2gF0axEbQCUcAN4AoOKrzAYSKLgFQAdAkwAbJlB6YmBOAF4ucC4TgBCa9bjF5fDgFEQaI0gs5NR0DCBMrBwoSEZGcAA+cKhBhijALHAA-KEiaaRQXBIA3EoAvkpKQf4CwHBoOGzwuiI8jVCYKADmCXDRsbLFFfUojXAgNupEpPyCNH1GsiUA9EtqcAB6mUMN8ACeE-hTwDNQNABECBAQZ4tKK2ubFUA
 
 export function intersection<V>(a: V[], b: V[]): V[] {
-    const B = new Set(b);
-    return [...a].filter(item => B.has(item));
+    const b_set = new Set(b);
+    return [...a].filter(item => b_set.has(item));
 }
 
 export function partition<V>(arr: V[], predicate: (item: V) => boolean): [V[], V[]] {

@@ -80,3 +80,15 @@ rules:
     - "error"
   "@typescript-eslint/await-thenable":
     - "error"
+  "@typescript-eslint/naming-convention":
+    - error
+    - selector: variable
+      format:
+        - snake_case
+        - UPPER_CASE
+        - snake_case
+      leadingUnderscore: allow
+    - selector: variable
+      format: null
+      modifiers:
+        - destructured
