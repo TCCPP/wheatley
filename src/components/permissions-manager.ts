@@ -6,6 +6,7 @@ import { critical_error, M } from "../utils/debugging-and-logging.js";
 import { HOUR } from "../common.js";
 import { BotComponent } from "../bot-component.js";
 import { Wheatley } from "../wheatley.js";
+import { unwrap } from "../utils/misc.js";
 
 type permissions_entry = {
     allow?: bigint[];
@@ -40,17 +41,21 @@ export default class PermissionManager extends BotComponent {
     }
 
     setup_permissions_map() {
+        const write_permissions = [
+            Discord.PermissionsBitField.Flags.SendMessages,
+            Discord.PermissionsBitField.Flags.SendMessagesInThreads,
+            Discord.PermissionsBitField.Flags.CreatePublicThreads,
+            Discord.PermissionsBitField.Flags.CreatePrivateThreads,
+            Discord.PermissionsBitField.Flags.AddReactions,
+            Discord.PermissionsBitField.Flags.Speak,
+            Discord.PermissionsBitField.Flags.SendTTSMessages,
+            Discord.PermissionsBitField.Flags.UseApplicationCommands,
+        ];
         const muted_permissions: permissions_entry = {
-            deny: [
-                Discord.PermissionsBitField.Flags.SendMessages,
-                Discord.PermissionsBitField.Flags.SendMessagesInThreads,
-                Discord.PermissionsBitField.Flags.CreatePublicThreads,
-                Discord.PermissionsBitField.Flags.CreatePrivateThreads,
-                Discord.PermissionsBitField.Flags.AddReactions,
-                Discord.PermissionsBitField.Flags.Speak,
-                Discord.PermissionsBitField.Flags.SendTTSMessages,
-                Discord.PermissionsBitField.Flags.UseApplicationCommands,
-            ],
+            deny: write_permissions,
+        };
+        const no_interaction_at_all: permissions_entry = {
+            deny: [...write_permissions, Discord.PermissionsBitField.Flags.ViewChannel],
         };
         const default_permissions: permission_overwrites = {
             [this.wheatley.roles.muted.id]: muted_permissions,
@@ -68,8 +73,12 @@ export default class PermissionManager extends BotComponent {
                 deny: [Discord.PermissionsBitField.Flags.EmbedLinks, Discord.PermissionsBitField.Flags.AttachFiles],
             },
             [this.wheatley.roles.moderators.id]: {
-                allow: [Discord.PermissionsBitField.Flags.ManageThreads],
+                allow: [Discord.PermissionsBitField.Flags.ManageThreads, Discord.PermissionsBitField.Flags.ViewChannel],
             },
+        };
+        const off_topic_permissions: permission_overwrites = {
+            ...default_permissions,
+            [this.wheatley.roles.no_off_topic.id]: no_interaction_at_all,
         };
 
         this.add_entry(this.wheatley.categories.cpp_help, default_permissions);
@@ -77,10 +86,51 @@ export default class PermissionManager extends BotComponent {
         this.add_entry(this.wheatley.categories.discussion, default_permissions);
         this.add_entry(this.wheatley.categories.specialized, default_permissions);
         this.add_entry(this.wheatley.categories.community, default_permissions);
+        this.add_entry(this.wheatley.categories.off_topic, off_topic_permissions);
 
+        // community overrides
         this.add_channel_overwrite(this.wheatley.channels.today_i_learned, {
             ...default_permissions,
             [this.wheatley.roles.no_til.id]: muted_permissions,
+        });
+        // off topic overrides
+        this.add_channel_overwrite(this.wheatley.channels.memes, {
+            ...off_topic_permissions,
+            [this.wheatley.roles.no_memes.id]: no_interaction_at_all,
+        });
+        this.add_channel_overwrite(this.wheatley.channels.starboard, {
+            ...off_topic_permissions,
+            [this.wheatley.roles.no_memes.id]: no_interaction_at_all,
+            [this.wheatley.TCCPP.roles.everyone.id]: {
+                deny: [
+                    Discord.PermissionsBitField.Flags.SendMessages,
+                    Discord.PermissionsBitField.Flags.CreatePublicThreads,
+                    Discord.PermissionsBitField.Flags.CreatePrivateThreads,
+                ],
+            },
+        });
+        this.add_channel_overwrite(this.wheatley.channels.serious_off_topic, {
+            ...off_topic_permissions,
+            [this.wheatley.roles.no_serious_off_topic.id]: no_interaction_at_all,
+        });
+        this.add_channel_overwrite(this.wheatley.channels.room_of_requirement, {
+            ...off_topic_permissions,
+            [this.wheatley.roles.moderators.id]: {
+                allow: [
+                    Discord.PermissionsBitField.Flags.ManageThreads,
+                    Discord.PermissionsBitField.Flags.ViewChannel,
+                    Discord.PermissionsBitField.Flags.ManageChannels,
+                ],
+            },
+        });
+        this.add_channel_overwrite(this.wheatley.channels.boosters_only, {
+            ...default_permissions,
+            [this.wheatley.TCCPP.roles.everyone.id]: {
+                deny: [Discord.PermissionsBitField.Flags.ViewChannel],
+            },
+            [this.wheatley.roles.server_booster.id]: {
+                allow: [Discord.PermissionsBitField.Flags.ViewChannel],
+            },
         });
     }
 
@@ -104,7 +154,7 @@ export default class PermissionManager extends BotComponent {
                 `Setting permissions for channel ${channel.id} ${channel.name} ` +
                     `with category ${category.id} ${category.name}`,
             );
-            await category.permissionOverwrites.set(
+            await channel.permissionOverwrites.set(
                 Object.entries(this.channel_overrides[channel.id].permissions).map(([id, permissions]) => ({
                     id,
                     ...permissions,
