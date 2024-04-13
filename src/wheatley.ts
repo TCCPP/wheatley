@@ -139,6 +139,26 @@ const channels_map = {
     red_telephone_alerts: tuple("1140096352278290512", Discord.TextChannel),
 };
 
+const categories_map = {
+    staff_logs: "1135927261472755712",
+    staff: "873125551064363028",
+    meta: "360691699288113163",
+    tutoring: "923430684041818153",
+    cpp_help: "897465499535949874",
+    c_help: "931970218442493992",
+    discussion: "855220194887335977",
+    specialized: "360691955031867392",
+    community: "1131921460034801747",
+    off_topic: "360691500985745409",
+    misc: "506274316623544320",
+    bot_dev: "1166516815472640050",
+    voice: "360692425242705921",
+    archive: "910306041969913938",
+    private_archive: "455278783352537099",
+    challenges_archive: "429594248099135488",
+    meta_archive: "910308747929321492",
+};
+
 const roles_map = {
     muted: "815987333094178825",
     monke: "1139378060450332752",
@@ -146,6 +166,7 @@ const roles_map = {
     no_suggestions: "831567015457980447",
     no_suggestions_at_all: "895011256023535657",
     no_reactions: "880152014036819968",
+    no_images: "1181029004866760854",
     no_threads: "870181444742447135",
     no_serious_off_topic: "921116034948272260",
     no_til: "883474632370454588",
@@ -265,6 +286,10 @@ export class Wheatley {
         // ["prototype"] gets the instance type, eliminating the `typeof`. InstanceType<T> doesn't work for a protected
         // constructor, weirdly.
         [k in keyof typeof channels_map]: (typeof channels_map)[k][1]["prototype"];
+    } = {} as any;
+
+    categories: {
+        [k in keyof typeof categories_map]: Discord.CategoryChannel;
     } = {} as any;
 
     thread_based_channel_ids = new Set([
@@ -407,6 +432,19 @@ export class Wheatley {
                 assert(channel instanceof type, `Channel ${k} ${id} not of the expected type`);
                 this.channels[k as keyof typeof channels_map] = channel as any;
                 M.log(`Fetched channel ${k}`);
+            }),
+        );
+        // Categories
+        await Promise.all(
+            Object.entries(categories_map).map(async ([k, id]) => {
+                const category = await wrap(() => this.client.channels.fetch(id));
+                if (this.freestanding && category === null) {
+                    return;
+                }
+                assert(category !== null, `Category ${k} ${id} not found`);
+                assert(category instanceof Discord.CategoryChannel, `Category ${k} ${id} not of the expected type`);
+                this.categories[k as keyof typeof categories_map] = category;
+                M.log(`Fetched category ${k}`);
             }),
         );
         // Roles
