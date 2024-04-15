@@ -56,14 +56,13 @@ export const duration_regex = /(?:perm\b|(\d+)\s*([mhdwMys]))/;
 
 export const moderation_on_team_member_message: string = "Can't apply this moderation on team members";
 export const joke_responses: Array<string> = new Array<string>(
-    "You won't get off that easy ;)",
-    "Try again lmao",
-    "Didn't work. Maybe a skill issue?"
+    "You won't get off that easy! ;)",
+    "Try again next time lmao",
+    "Didn't work. Maybe a skill issue?",
 );
 
-function get_random_array_element(arr: any[])
-{
-    return arr.length ? arr[Math.floor(Math.random() * arr.length)] : undefined
+function get_random_array_element(arr: any[]) {
+    return arr.length ? arr[Math.floor(Math.random() * arr.length)] : undefined;
 }
 
 // returns duration in ms
@@ -485,14 +484,12 @@ export abstract class ModerationComponent extends BotComponent {
         try {
             if (this.wheatley.is_authorized_mod(user)) {
                 // Check if the mod is trying to ban themselves
-                if (command.name == "ban")
-                {
-                    if (await command.get_member() == user.id)
-                    {
+                if (command.name == "ban") {
+                    // If the mod is trying to ban themselves then troll them ;)
+                    if (command.user.id == user.id) {
                         await this.reply_with_joke_error(command);
                     }
-                } else
-                {
+                } else {
                     await this.reply_with_error(command, moderation_on_team_member_message);
                     return;
                 }
