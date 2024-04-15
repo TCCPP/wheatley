@@ -55,6 +55,16 @@ import { set_interval } from "../../utils/node.js";
 export const duration_regex = /(?:perm\b|(\d+)\s*([mhdwMys]))/;
 
 export const moderation_on_team_member_message: string = "Can't apply this moderation on team members";
+export const joke_responses: Array<string> = new Array<string>(
+    "You won't get off that easy ;)",
+    "Try again lmao",
+    "Didn't work. Maybe a skill issue?"
+);
+
+function get_random_array_element(arr: any[])
+{
+    return arr.length ? arr[Math.floor(Math.random() * arr.length)] : undefined
+}
 
 // returns duration in ms
 function parse_unit(u: string) {
@@ -474,8 +484,18 @@ export abstract class ModerationComponent extends BotComponent {
     ) {
         try {
             if (this.wheatley.is_authorized_mod(user)) {
-                await this.reply_with_error(command, moderation_on_team_member_message);
-                return;
+                // Check if the mod is trying to ban themselves
+                if (command.name == "ban")
+                {
+                    if (await command.get_member() == user.id)
+                    {
+                        await this.reply_with_joke_error(command);
+                    }
+                } else
+                {
+                    await this.reply_with_error(command, moderation_on_team_member_message);
+                    return;
+                }
             }
             const base_moderation: basic_moderation_with_user = { ...basic_moderation_info, user: user.id };
             if (!this.is_once_off && (await this.is_moderation_applied(base_moderation))) {
@@ -648,6 +668,16 @@ export abstract class ModerationComponent extends BotComponent {
                 new Discord.EmbedBuilder()
                     .setColor(colors.alert_color)
                     .setDescription(`${this.wheatley.error} ***${message}***`),
+            ],
+        });
+    }
+
+    async reply_with_joke_error(command: TextBasedCommand) {
+        await (command.replied && !command.is_editing ? command.followUp : command.reply).bind(command)({
+            embeds: [
+                new Discord.EmbedBuilder()
+                    .setColor(colors.alert_color)
+                    .setDescription(`${this.wheatley.error} ***${get_random_array_element(joke_responses)}***`),
             ],
         });
     }
