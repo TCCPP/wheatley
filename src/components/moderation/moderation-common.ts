@@ -484,15 +484,13 @@ export abstract class ModerationComponent extends BotComponent {
         try {
             if (this.wheatley.is_authorized_mod(user)) {
                 // Check if the mod is trying to ban themselves
-                if (command.name == "ban") {
+                if (command.name == "ban" && command.user.id == user.id) {
                     // If the mod is trying to ban themselves then troll them ;)
-                    if (command.user.id == user.id) {
-                        await this.reply_with_joke_error(command);
-                    }
+                    await this.reply_with_error(command, get_random_array_element(joke_responses));
                 } else {
                     await this.reply_with_error(command, moderation_on_team_member_message);
-                    return;
                 }
+                return;
             }
             const base_moderation: basic_moderation_with_user = { ...basic_moderation_info, user: user.id };
             if (!this.is_once_off && (await this.is_moderation_applied(base_moderation))) {
@@ -665,16 +663,6 @@ export abstract class ModerationComponent extends BotComponent {
                 new Discord.EmbedBuilder()
                     .setColor(colors.alert_color)
                     .setDescription(`${this.wheatley.error} ***${message}***`),
-            ],
-        });
-    }
-
-    async reply_with_joke_error(command: TextBasedCommand) {
-        await (command.replied && !command.is_editing ? command.followUp : command.reply).bind(command)({
-            embeds: [
-                new Discord.EmbedBuilder()
-                    .setColor(colors.alert_color)
-                    .setDescription(`${this.wheatley.error} ***${get_random_array_element(joke_responses)}***`),
             ],
         });
     }
