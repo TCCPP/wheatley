@@ -24,13 +24,19 @@ function set_clearing_interval(container: WeakRef<SelfClearingContainer>, interv
         }
         container_ref = undefined;
     }, interval_time);
+    return interval;
 }
 
 abstract class SelfClearingContainer {
+    private interval_ref: NodeJS.Timeout | null = null;
     constructor(protected interval: number) {
-        set_clearing_interval(new WeakRef(this), interval);
+        this.interval_ref = set_clearing_interval(new WeakRef(this), interval);
     }
-    destroy() {}
+    destroy() {
+        if (this.interval_ref !== null) {
+            clear_interval(this.interval_ref);
+        }
+    }
     abstract sweep(): void;
 }
 
