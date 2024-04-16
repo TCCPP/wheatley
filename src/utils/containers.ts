@@ -1,73 +1,37 @@
 import { strict as assert } from "assert";
 import { critical_error, M } from "./debugging-and-logging.js";
-import { clear_timeout, set_timeout } from "./node.js";
+import { set_interval, clear_interval, set_timeout, clear_timeout } from "./node.js";
 
-let interval_timeout: NodeJS.Timeout | null = null;
-let next_interval: number = Infinity;
-let containers: WeakRef<SelfClearingContainer>[] = [];
+export function force_clear_containers() {}
 
-function sweep_containers() {
-    containers = containers.filter(c => c.deref() !== undefined);
-    set_next_interval();
-    for (const container of containers) {
-        if (container.deref()!.should_run()) {
-            container.deref()!.sweep();
+let had_error = false;
+
+function set_clearing_interval(container: WeakRef<SelfClearingContainer>, interval_time: number) {
+    let cleared = false;
+    const interval: NodeJS.Timeout | null = set_interval(() => {
+        let container_ref = container.deref();
+        if (container_ref) {
+            container_ref.sweep();
+        } else if (interval !== null) {
+            clear_interval(interval);
+            cleared = true;
         }
-    }
-
-    if (containers.length === 0) {
-        // No more containers, stop the interval
-        interval_timeout = null;
-        next_interval = Infinity;
-        return;
-    }
-}
-
-function set_next_interval() {
-    const timeout_setter = () =>
-        set_timeout(sweep_containers, Math.min(...containers.map(c => c.deref()?.next_interval() ?? Infinity)));
-    setImmediate(timeout_setter); // Unroll the stack, so we don't get a stack overflow
-}
-
-/**
- * Force clear all containers. This is useful for testing, but should not be used in production.
- */
-export async function force_clear_containers() {
-    containers = [];
-    if (interval_timeout) {
-        clear_timeout(interval_timeout);
-        interval_timeout = null;
-        next_interval = Infinity;
-    }
+        if (cleared && !had_error) {
+            // This is a warning because it's a sign of cleanup not happening properly, but it's not a critical error
+            // Also, it happens in tests, for some reason
+            M.warn(`Running cleared interval ${interval} at ${new Error().stack}`);
+            had_error = true;
+        }
+        container_ref = undefined;
+    }, interval_time);
 }
 
 abstract class SelfClearingContainer {
-    protected static fudge_factor = 50;
-    private start_time: number;
-    private last_sweep: number;
     constructor(protected interval: number) {
-        this.start_time = Date.now();
-        this.last_sweep = this.start_time;
-        containers.push(new WeakRef(this));
-        if (!interval_timeout || next_interval > interval) {
-            clear_timeout(interval_timeout!);
-            set_next_interval();
-        }
+        set_clearing_interval(new WeakRef(this), interval);
     }
     destroy() {}
-    sweep(): void {
-        this.last_sweep = Date.now();
-    }
-    next_interval(): number {
-        const next_interval = this.interval - ((Date.now() - this.start_time) % this.interval);
-        if (next_interval < SelfClearingContainer.fudge_factor) {
-            return next_interval + this.interval;
-        }
-        return next_interval;
-    }
-    should_run(): boolean {
-        return this.last_sweep + this.interval <= Date.now();
-    }
+    abstract sweep(): void;
 }
 
 export class SelfClearingSet<T> extends SelfClearingContainer {
@@ -78,17 +42,11 @@ export class SelfClearingSet<T> extends SelfClearingContainer {
         super(interval ?? duration);
         this.duration = duration;
         this.on_remove = on_remove;
-        containers.push(new WeakRef(this));
-        if (!interval_timeout || next_interval > this.interval) {
-            clear_timeout(interval_timeout!);
-            set_next_interval();
-        }
     }
     override sweep() {
-        super.sweep();
         const now = Date.now();
         for (const [value, timestamp] of this.contents) {
-            if (now - timestamp >= this.duration - SelfClearingContainer.fudge_factor) {
+            if (now - timestamp >= this.duration) {
                 this.on_remove(value);
                 this.contents.delete(value);
             }
@@ -127,10 +85,9 @@ export class SelfClearingMap<K, V> extends SelfClearingContainer {
         }
     }
     override sweep() {
-        super.sweep();
         const now = Date.now();
         for (const [key, [timestamp, value]] of this.contents) {
-            if (now - timestamp >= this.duration - SelfClearingContainer.fudge_factor) {
+            if (now - timestamp >= this.duration) {
                 if (this.on_remove) {
                     this.on_remove(key, value);
                 }
