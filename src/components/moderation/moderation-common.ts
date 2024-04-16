@@ -28,6 +28,8 @@ import {
 } from "../../infra/schemata/moderation-common.js";
 import { set_interval } from "../../utils/node.js";
 
+import { get_random_array_element } from "../../utils/arrays.js";
+
 /*
  * !mute !unmute
  * !ban !unban
@@ -60,10 +62,6 @@ export const joke_responses = [
     "Try again next time lmao",
     "Didn't work. Maybe a skill issue?",
 ];
-
-function get_random_array_element<T>(arr: T[]) {
-    return arr.length ? arr[Math.floor(Math.random() * arr.length)] : undefined;
-}
 
 // returns duration in ms
 function parse_unit(u: string) {
