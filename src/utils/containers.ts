@@ -82,27 +82,23 @@ export class SelfClearingSet<T> extends SelfClearingContainer {
 export class SelfClearingMap<K, V> extends SelfClearingContainer {
     contents = new Map<K, [number, V]>();
     duration: number;
-    on_remove?: (key: K, value: V) => void;
-    constructor(duration: number, interval?: number, on_remove?: (key: K, value: V) => void) {
+    on_remove: (key: K, value: V) => void;
+    constructor(duration: number, interval?: number, on_remove: (key: K, value: V) => void = () => {}) {
         super(interval ?? duration);
         this.duration = duration;
         this.on_remove = on_remove;
     }
     override destroy() {
         super.destroy();
-        if (this.on_remove) {
-            for (const [key, [_, value]] of this.contents) {
-                this.on_remove(key, value);
-            }
+        for (const [key, [_, value]] of this.contents) {
+            this.on_remove(key, value);
         }
     }
     override sweep() {
         const now = Date.now();
         for (const [key, [timestamp, value]] of this.contents) {
             if (now - timestamp >= this.duration) {
-                if (this.on_remove) {
-                    this.on_remove(key, value);
-                }
+                this.on_remove(key, value);
                 this.contents.delete(key);
             }
         }
@@ -133,6 +129,7 @@ export class SelfClearingMap<K, V> extends SelfClearingContainer {
     }
     */
     remove(key: K) {
+        this.on_remove(key, this.contents.get(key)![1]);
         this.contents.delete(key);
     }
     has(key: K) {
