@@ -55,11 +55,11 @@ import { set_interval } from "../../utils/node.js";
 export const duration_regex = /(?:perm\b|(\d+)\s*([mhdwMys]))/;
 
 export const moderation_on_team_member_message: string = "Can't apply this moderation on team members";
-export const joke_responses: Array<string> = new Array<string>(
+export const joke_responses = [
     "You won't get off that easy! ;)",
     "Try again next time lmao",
     "Didn't work. Maybe a skill issue?",
-);
+];
 
 function get_random_array_element<T>(arr: T[]) {
     return arr.length ? arr[Math.floor(Math.random() * arr.length)] : undefined;
