@@ -1,5 +1,5 @@
 import { describe, expect, beforeEach, afterEach, vi, it } from "vitest";
-import { SelfClearingMap, SelfClearingSet } from "../containers.js";
+import { SelfClearingMap, SelfClearingSet } from "../src/utils/containers.js";
 
 import { setFlagsFromString } from "v8";
 import { runInNewContext } from "vm";
