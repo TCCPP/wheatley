@@ -49,6 +49,12 @@ export class SelfClearingSet<T> extends SelfClearingContainer {
         this.duration = duration;
         this.on_remove = on_remove;
     }
+    override destroy() {
+        super.destroy();
+        for (const [value, _] of this.contents) {
+            this.on_remove(value);
+        }
+    }
     override sweep() {
         const now = Date.now();
         for (const [value, timestamp] of this.contents) {
