@@ -5,8 +5,8 @@ import * as Discord from "discord.js";
 import { ConditionalOptional } from "../utils/typing.js";
 import {
     BaseInteractionBuilder,
-    APPLICATION_COMMAND_TYPE_MESSAGE,
-    APPLICATION_COMMAND_TYPE_USER,
+    ApplicationCommandTypeMessage,
+    ApplicationCommandTypeUser,
     BaseBotInteraction,
 } from "./interaction-base.js";
 
@@ -39,7 +39,7 @@ export class MessageContextMenuInteractionBuilder<HasHandler extends boolean = f
                 new Discord.ContextMenuCommandBuilder()
                     .setName(this.name)
                     .setDefaultMemberPermissions(this.permissions)
-                    .setType(APPLICATION_COMMAND_TYPE_MESSAGE),
+                    .setType(ApplicationCommandTypeMessage),
             ];
         }
     }
@@ -79,7 +79,7 @@ export class UserContextMenuInteractionBuilder<HasHandler extends boolean = fals
                 new Discord.ContextMenuCommandBuilder()
                     .setName(this.name)
                     .setDefaultMemberPermissions(this.permissions)
-                    .setType(APPLICATION_COMMAND_TYPE_USER),
+                    .setType(ApplicationCommandTypeUser),
             ];
         }
     }
