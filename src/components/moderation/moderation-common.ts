@@ -61,7 +61,7 @@ export const joke_responses: Array<string> = new Array<string>(
     "Didn't work. Maybe a skill issue?",
 );
 
-function get_random_array_element(arr: any[]) {
+function get_random_array_element<T>(arr: T[]) {
     return arr.length ? arr[Math.floor(Math.random() * arr.length)] : undefined;
 }
 
