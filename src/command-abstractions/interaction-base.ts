@@ -1,7 +1,9 @@
 import { strict as assert } from "assert";
 import { ConditionalOptional } from "../utils/typing.js";
 
+// eslint-disable-next-line @typescript-eslint/naming-convention
 export const ApplicationCommandTypeUser = 2;
+// eslint-disable-next-line @typescript-eslint/naming-convention
 export const ApplicationCommandTypeMessage = 3;
 
 export abstract class BaseBuilder<HasHandler extends boolean = false, HandlerArgs extends unknown[] = []> {

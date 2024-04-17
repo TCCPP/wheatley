@@ -41,14 +41,14 @@ export default class AntiEveryone extends BotComponent {
         }
         if (message.content.match(failed_everyone_re) != null) {
             // NOTE: .toLocaleString("en-US") formats this number with commas.
-            const memberCount = this.wheatley.TCCPP.members.cache.size.toLocaleString("en-US");
+            const member_count = this.wheatley.TCCPP.members.cache.size.toLocaleString("en-US");
 
             // Store the reply for later deletion, if necessary
             if (!this.replies.has(message.author)) {
                 this.replies.set(message.author, []);
             }
             const reply = await message.reply({
-                content: `Did you really just try to ping ${memberCount} people?`,
+                content: `Did you really just try to ping ${member_count} people?`,
             });
 
             // Store the reply for later deletion, along with the message it was replying to
