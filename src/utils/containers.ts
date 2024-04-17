@@ -12,7 +12,6 @@ function set_clearing_interval(container: WeakRef<SelfClearingContainer>, interv
         let container_ref = container.deref();
         if (cleared && !had_error) {
             // This is a warning because it's a sign of cleanup not happening properly, but it's not a critical error
-            // Also, it happens in tests, for some reason
             M.warn(`Running cleared interval ${interval} at ${new Error().stack}`);
             had_error = true;
             return;
