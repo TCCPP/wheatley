@@ -68,9 +68,6 @@ export class SelfClearingSet<T> extends SelfClearingContainer {
         this.contents.set(value, Date.now());
     }
     remove(value: T) {
-        if (this.has(value)) {
-            this.on_remove(value);
-        }
         this.contents.delete(value);
     }
     has(value: T) {
@@ -131,9 +128,6 @@ export class SelfClearingMap<K, V> extends SelfClearingContainer {
     }
     */
     remove(key: K) {
-        if (this.has(key)) {
-            this.on_remove(key, this.contents.get(key)![1]);
-        }
         this.contents.delete(key);
     }
     has(key: K) {
