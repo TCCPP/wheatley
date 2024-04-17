@@ -1,22 +1,65 @@
 import { strict as assert } from "assert";
 import { critical_error, M } from "./debugging-and-logging.js";
-import { set_interval, clear_interval, clear_timeout, set_timeout } from "./node.js";
+import { set_interval, clear_interval, set_timeout, clear_timeout } from "./node.js";
 
-export class SelfClearingSet<T> {
-    contents = new Map<T, number>();
-    duration: number;
-    interval: NodeJS.Timeout;
-    constructor(duration: number, interval?: number) {
-        this.duration = duration;
-        this.interval = set_interval(this.sweep.bind(this), interval ?? this.duration);
+export function force_clear_containers() {}
+
+let had_error = false;
+
+function set_clearing_interval(container: WeakRef<SelfClearingContainer>, interval_time: number) {
+    let cleared = false;
+    const interval: NodeJS.Timeout | null = set_interval(() => {
+        let container_ref = container.deref();
+        if (cleared && !had_error) {
+            // This is a warning because it's a sign of cleanup not happening properly, but it's not a critical error
+            M.warn(`Running cleared interval ${interval} at ${new Error().stack}`);
+            had_error = true;
+            return;
+        }
+        if (container_ref) {
+            container_ref.sweep();
+        } else if (interval !== null) {
+            clear_interval(interval);
+            cleared = true;
+        }
+        container_ref = undefined;
+    }, interval_time);
+    return interval;
+}
+
+abstract class SelfClearingContainer {
+    private interval_ref: NodeJS.Timeout | null = null;
+    constructor(protected interval: number) {
+        this.interval_ref = set_clearing_interval(new WeakRef(this), interval);
     }
     destroy() {
-        clear_interval(this.interval);
+        if (this.interval_ref !== null) {
+            clear_interval(this.interval_ref);
+        }
     }
-    sweep() {
+    abstract sweep(): void;
+}
+
+export class SelfClearingSet<T> extends SelfClearingContainer {
+    contents = new Map<T, number>();
+    duration: number;
+    private on_remove: (value: T) => void;
+    constructor(duration: number, interval?: number, on_remove: (value: T) => void = () => {}) {
+        super(interval ?? duration);
+        this.duration = duration;
+        this.on_remove = on_remove;
+    }
+    override destroy() {
+        super.destroy();
+        for (const [value, _] of this.contents) {
+            this.on_remove(value);
+        }
+    }
+    override sweep() {
         const now = Date.now();
         for (const [value, timestamp] of this.contents) {
             if (now - timestamp >= this.duration) {
+                this.on_remove(value);
                 this.contents.delete(value);
             }
         }
@@ -25,6 +68,9 @@ export class SelfClearingSet<T> {
         this.contents.set(value, Date.now());
     }
     remove(value: T) {
+        if (this.has(value)) {
+            this.on_remove(value);
+        }
         this.contents.delete(value);
     }
     has(value: T) {
@@ -35,31 +81,26 @@ export class SelfClearingSet<T> {
     }
 }
 
-export class SelfClearingMap<K, V> {
+export class SelfClearingMap<K, V> extends SelfClearingContainer {
     contents = new Map<K, [number, V]>();
     duration: number;
-    interval: NodeJS.Timeout;
-    on_remove?: (key: K, value: V) => void;
-    constructor(duration: number, interval?: number, on_remove?: (key: K, value: V) => void) {
+    on_remove: (key: K, value: V) => void;
+    constructor(duration: number, interval?: number, on_remove: (key: K, value: V) => void = () => {}) {
+        super(interval ?? duration);
         this.duration = duration;
-        this.interval = set_interval(this.sweep.bind(this), interval ?? this.duration);
         this.on_remove = on_remove;
     }
-    destroy() {
-        clear_interval(this.interval);
-        if (this.on_remove) {
-            for (const [key, [_, value]] of this.contents) {
-                this.on_remove(key, value);
-            }
+    override destroy() {
+        super.destroy();
+        for (const [key, [_, value]] of this.contents) {
+            this.on_remove(key, value);
         }
     }
-    sweep() {
+    override sweep() {
         const now = Date.now();
         for (const [key, [timestamp, value]] of this.contents) {
             if (now - timestamp >= this.duration) {
-                if (this.on_remove) {
-                    this.on_remove(key, value);
-                }
+                this.on_remove(key, value);
                 this.contents.delete(key);
             }
         }
@@ -90,6 +131,9 @@ export class SelfClearingMap<K, V> {
     }
     */
     remove(key: K) {
+        if (this.has(key)) {
+            this.on_remove(key, this.contents.get(key)![1]);
+        }
         this.contents.delete(key);
     }
     has(key: K) {
