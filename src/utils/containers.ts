@@ -10,17 +10,18 @@ function set_clearing_interval(container: WeakRef<SelfClearingContainer>, interv
     let cleared = false;
     const interval: NodeJS.Timeout | null = set_interval(() => {
         let container_ref = container.deref();
-        if (container_ref) {
-            container_ref.sweep();
-        } else if (interval !== null) {
-            clear_interval(interval);
-            cleared = true;
-        }
         if (cleared && !had_error) {
             // This is a warning because it's a sign of cleanup not happening properly, but it's not a critical error
             // Also, it happens in tests, for some reason
             M.warn(`Running cleared interval ${interval} at ${new Error().stack}`);
             had_error = true;
+            return;
+        }
+        if (container_ref) {
+            container_ref.sweep();
+        } else if (interval !== null) {
+            clear_interval(interval);
+            cleared = true;
         }
         container_ref = undefined;
     }, interval_time);
