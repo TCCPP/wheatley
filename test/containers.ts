@@ -10,7 +10,7 @@ import { runInNewContext } from "vm";
 let gc: () => void = global.gc as unknown as () => void;
 if (!(gc as unknown as boolean)) {
     setFlagsFromString("--expose_gc");
-    gc = runInNewContext("gc"); // nocommit
+    gc = runInNewContext("gc");
 }
 
 async function moveForwardBy(time: number) {
