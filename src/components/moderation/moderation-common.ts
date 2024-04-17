@@ -484,7 +484,7 @@ export abstract class ModerationComponent extends BotComponent {
                 // Check if the mod is trying to ban themselves
                 if (command.name == "ban" && command.user.id == user.id) {
                     // If the mod is trying to ban themselves then troll them ;)
-                    await this.reply_with_error(command, get_random_array_element(joke_responses));
+                    await this.reply_with_error(command, unwrap(get_random_array_element(joke_responses)));
                 } else {
                     await this.reply_with_error(command, moderation_on_team_member_message);
                 }

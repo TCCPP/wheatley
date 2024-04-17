@@ -25,6 +25,6 @@ export function partition<V>(arr: V[], predicate: (item: V) => boolean): [V[], V
     return [pass, fail];
 }
 
-export function get_random_array_element(arr: any[]) {
+export function get_random_array_element<T>(arr: T[]) {
     return arr.length ? arr[Math.floor(Math.random() * arr.length)] : undefined;
 }
