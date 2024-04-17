@@ -138,6 +138,8 @@ const channels_map = {
     today_i_learned: tuple("873682069325217802", Discord.TextChannel),
     goals2024: tuple("1189255286364569640", Discord.TextChannel),
     days_since_last_incident: tuple("1195920462958575676", Discord.TextChannel),
+    lore: tuple("890067781628866620", Discord.TextChannel),
+    bot_dev_internal: tuple("1166517065763536977", Discord.TextChannel),
     // red telephone
     red_telephone_alerts: tuple("1140096352278290512", Discord.TextChannel),
 };
@@ -178,6 +180,8 @@ const roles_map = {
     root: "331719468440879105",
     pink: "888158339878490132",
     server_booster: "643013330616844333",
+    historian: "890067617069551646",
+    official_bot: "331886851784704001",
 };
 
 const skill_roles_map = {
