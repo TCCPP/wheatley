@@ -96,7 +96,17 @@ const code_begin = [
     "long",
 ];
 
-const code_begin_re = new RegExp(`\\b(?:${code_begin.join("|")})\\b`);
+function word_boundary(regex: string) {
+    if (regex.length > 0 && /\w/.test(regex[0])) {
+        regex = "\\b" + regex;
+    }
+    if (regex.length > 0 && /\w/.test(regex[regex.length - 1])) {
+        regex += "\\b";
+    }
+    return regex;
+}
+
+const code_begin_re = new RegExp(`(?:${code_begin.map(word_boundary).join("|")})`);
 
 const code_block_re = new RegExp(`(\`\`\`(?:${languages_re.source}\b)?)(.*?)\`\`\``, "gims");
 
