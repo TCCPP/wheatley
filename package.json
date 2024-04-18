@@ -27,9 +27,9 @@
         "lint-files": "eslint --color",
         "prepare": "husky install",
         "test": "vitest run",
-        "format": "prettier . --write",
-        "format-check": "prettier . --check",
-        "format-files": "prettier --write --ignore-unknown",
+        "format": "prettier src test --write",
+        "format-check": "prettier src test --check",
+        "format-files": "prettier src test --write --ignore-unknown",
         "ts-check": "tsc --noEmit",
         "build": "tsc"
     },
