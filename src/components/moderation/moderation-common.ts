@@ -28,6 +28,8 @@ import {
 } from "../../infra/schemata/moderation-common.js";
 import { set_interval } from "../../utils/node.js";
 
+import { get_random_array_element } from "../../utils/arrays.js";
+
 /*
  * !mute !unmute
  * !ban !unban
@@ -55,6 +57,11 @@ import { set_interval } from "../../utils/node.js";
 export const duration_regex = /(?:perm\b|(\d+)\s*([mhdwMys]))/;
 
 export const moderation_on_team_member_message: string = "Can't apply this moderation on team members";
+export const joke_responses = [
+    "You won't get off that easy! ;)",
+    "Try again next time lmao",
+    "Didn't work. Maybe a skill issue?",
+];
 
 // returns duration in ms
 function parse_unit(u: string) {
@@ -474,7 +481,13 @@ export abstract class ModerationComponent extends BotComponent {
     ) {
         try {
             if (this.wheatley.is_authorized_mod(user)) {
-                await this.reply_with_error(command, moderation_on_team_member_message);
+                // Check if the mod is trying to ban themselves
+                if (command.name == "ban" && command.user.id == user.id) {
+                    // If the mod is trying to ban themselves then troll them ;)
+                    await this.reply_with_error(command, unwrap(get_random_array_element(joke_responses)));
+                } else {
+                    await this.reply_with_error(command, moderation_on_team_member_message);
+                }
                 return;
             }
             const base_moderation: basic_moderation_with_user = { ...basic_moderation_info, user: user.id };
