@@ -413,6 +413,8 @@ export default class Starboard extends BotComponent {
             );
             await this.get_emoji_config();
             await command.reply(`Added ${names.join(", ")} to the negative emojis`);
+        } else {
+            await command.reply("No emojis found");
         }
     }
 
@@ -432,6 +434,8 @@ export default class Starboard extends BotComponent {
             );
             await this.get_emoji_config();
             await command.reply(`Added ${names.join(", ")} to the delete emojis`);
+        } else {
+            await command.reply("No emojis found");
         }
     }
 
@@ -451,6 +455,8 @@ export default class Starboard extends BotComponent {
             );
             await this.get_emoji_config();
             await command.reply(`Added ${names.join(", ")} to the ignored emojis`);
+        } else {
+            await command.reply("No emojis found");
         }
     }
 
