@@ -6,6 +6,7 @@ import { M } from "../utils/debugging-and-logging.js";
 import { colors } from "../common.js";
 import { BotComponent } from "../bot-component.js";
 import { Wheatley } from "../wheatley.js";
+import { discord_timestamp } from "../utils/discord.js";
 
 /**
  * Tracks "getting banned speedruns".
@@ -46,8 +47,8 @@ export default class Speedrun extends BotComponent {
                 iconURL: avatar,
             })
             .setDescription(
-                `User <@${user.id}> joined at <t:${Math.round(entry.joined_at / 1000)}:T> and` +
-                    ` banned at <t:${Math.round(now / 1000)}:T>.\n` +
+                `User <@${user.id}> joined at ${discord_timestamp(entry.joined_at, "T")} and` +
+                    ` banned at ${discord_timestamp(now, "T")}.\n` +
                     `Final timer: ${time_to_human(now - entry.joined_at)}.` +
                     (is_auto_ban ? "\n**AUTO BAN**" : ""),
             )

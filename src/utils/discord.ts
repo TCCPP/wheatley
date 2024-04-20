@@ -234,6 +234,8 @@ export function forge_snowflake(timestamp: number) {
     return snowflake.toString();
 }
 
-export function discord_timestamp(timestamp: number) {
-    return `<t:${Math.round(timestamp / 1000)}:f>`;
+// https://gist.github.com/LeviSnoot/d9147767abeef2f770e9ddcd91eb85aa
+// Takes ms since epoch
+export function discord_timestamp(timestamp: number, suffix = "f") {
+    return `<t:${Math.round(timestamp / 1000)}:${suffix}>`;
 }

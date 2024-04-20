@@ -91,7 +91,7 @@ export default class Modlogs extends BotComponent {
                                   value: truncate(
                                       build_description(
                                           `**By:** <@${moderation.removed.moderator}>`,
-                                          `**At:** <t:${Math.round(moderation.removed.timestamp / 1000)}:f>`,
+                                          `**At:** ${discord_timestamp(moderation.removed.timestamp)}`,
                                           `**Reason:** ${
                                               moderation.removed.reason
                                                   ? moderation.removed.reason
@@ -108,7 +108,7 @@ export default class Modlogs extends BotComponent {
                                   value: truncate(
                                       build_description(
                                           `**By:** <@${moderation.expunged.moderator}>`,
-                                          `**At:** <t:${Math.round(moderation.expunged.timestamp / 1000)}:f>`,
+                                          `**At:** ${discord_timestamp(moderation.expunged.timestamp)}`,
                                           `**Reason:** ${
                                               moderation.expunged.reason
                                                   ? moderation.expunged.reason

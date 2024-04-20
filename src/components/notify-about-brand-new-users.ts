@@ -6,6 +6,7 @@ import { M } from "../utils/debugging-and-logging.js";
 import { colors, MINUTE } from "../common.js";
 import { BotComponent } from "../bot-component.js";
 import { Wheatley } from "../wheatley.js";
+import { discord_timestamp } from "../utils/discord.js";
 
 const NEW_USER_THRESHOLD = MINUTE * 30;
 
@@ -26,7 +27,7 @@ export default class NotifyAboutBrandNewUsers extends BotComponent {
             })
             .setDescription(
                 `User <@${member.user.id}>'s account was created at created at:` +
-                    ` <t:${Math.round(member.user.createdTimestamp / 1000)}>\n` +
+                    ` ${discord_timestamp(member.user.createdTimestamp)}\n` +
                     `Account age: ${time_to_human(Date.now() - member.user.createdTimestamp)}`,
             )
             .setFooter({

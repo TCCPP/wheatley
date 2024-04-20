@@ -9,6 +9,7 @@ import { BotComponent } from "../bot-component.js";
 import { Wheatley } from "../wheatley.js";
 import { button_scoreboard_entry } from "../infra/schemata/the-button.js";
 import { set_interval } from "../utils/node.js";
+import { discord_timestamp } from "../utils/discord.js";
 
 function dissectDelta(delta: number) {
     let seconds = delta / 1000;
@@ -83,7 +84,7 @@ export default class TheButton extends BotComponent {
                 new Discord.EmbedBuilder()
                     .setDescription(
                         `Time until doomsday: ${fmt(hours, "hour")} ${fmt(minutes, "minute")} ` +
-                            `(next minute <t:${Math.floor(Date.now() / 1000) + Math.floor(seconds)}:R>)\n\n` +
+                            `(next minute ${discord_timestamp(Date.now() + seconds * 1000, "R")})\n\n` +
                             `Points right now: ${round(points, 1)}\n` +
                             `Points in a minute: ${round(points_next, 1)}`,
                     )
@@ -192,12 +193,9 @@ export default class TheButton extends BotComponent {
             const entry = await this.wheatley.database.button_scoreboard.findOne({ user: interaction.user.id });
             // check to see if the user has pressed it within the last 24 hours
             if (entry && Date.now() - entry.last_press <= PRESS_TIMEOUT) {
-                // ~~x converts the float x to an integer
-                // next_possible is the unix-time for the next possible button press
-                const next_possible = ~~((entry.last_press + PRESS_TIMEOUT) / 1000);
                 await interaction.editReply({
-                    // string highlighting is screwed, because of the '<' and '>' characters
-                    content: `You can press the button again <t:${next_possible}:R>`,
+                    content:
+                        "You can press the button again " + discord_timestamp(entry.last_press + PRESS_TIMEOUT, "R"),
                 });
                 return;
             }

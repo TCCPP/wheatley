@@ -14,7 +14,7 @@ import { SelfClearingMap } from "../utils/containers.js";
 import { url_re } from "./quote.js";
 import { ascending, unwrap } from "../utils/misc.js";
 import { MessageContextMenuInteractionBuilder } from "../command-abstractions/context-menu.js";
-import { decode_snowflake, forge_snowflake } from "../utils/discord.js";
+import { decode_snowflake, discord_timestamp, forge_snowflake } from "../utils/discord.js";
 
 /**
  * Adds a !purge command.
@@ -177,7 +177,7 @@ export default class Purge extends BotComponent {
                 new Discord.EmbedBuilder()
                     .setColor(colors.wheatley)
                     .setTitle(reply_title)
-                    .setDescription(`Purged ${handled} messages, last seen <t:${Math.round(last_seen / 1000)}:f>`)
+                    .setDescription(`Purged ${handled} messages, last seen ${discord_timestamp(last_seen)}`)
                     .setFooter({
                         text: unwrap(this.tasks.get(id))[0] === false ? "Aborted" : done ? "Finished" : "Working...",
                     }),

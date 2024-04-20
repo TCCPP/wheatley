@@ -4,7 +4,7 @@ import { BotComponent } from "../bot-component.js";
 import { Wheatley } from "../wheatley.js";
 import { TextBasedCommandBuilder } from "../command-abstractions/text-based-command-builder.js";
 import { TextBasedCommand } from "../command-abstractions/text-based-command.js";
-import { decode_snowflake } from "../utils/discord.js";
+import { decode_snowflake, discord_timestamp } from "../utils/discord.js";
 
 const snowflakes_re = /\d+/g;
 
@@ -35,9 +35,7 @@ export default class Snowflake extends BotComponent {
         const match = input.match(snowflakes_re);
         if (match != null) {
             await command.reply(
-                match
-                    .map(snowflake => `${snowflake}: <t:${Math.round(decode_snowflake(snowflake) / 1000)}>`)
-                    .join("\n"),
+                match.map(snowflake => `${snowflake}: ${discord_timestamp(decode_snowflake(snowflake))}`).join("\n"),
                 true,
             );
         }
