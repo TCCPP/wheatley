@@ -6,14 +6,19 @@ import { build_description, truncate } from "../../utils/strings.js";
 import { pluralize, time_to_human } from "../../utils/strings.js";
 import { M } from "../../utils/debugging-and-logging.js";
 import { BotComponent } from "../../bot-component.js";
-import { Wheatley } from "../../wheatley.js";
+import { Wheatley, WHEATLEY_ID } from "../../wheatley.js";
 import { colors } from "../../common.js";
 import { TextBasedCommandBuilder } from "../../command-abstractions/text-based-command-builder.js";
 import { CommandAbstractionReplyOptions, TextBasedCommand } from "../../command-abstractions/text-based-command.js";
 import { remove } from "../../utils/arrays.js";
-import { moderation_entry } from "../../infra/schemata/moderation-common.js";
+import { moderation_edit_info, moderation_entry } from "../../infra/schemata/moderation-common.js";
+import { discord_timestamp } from "../../utils/discord.js";
 
 const moderations_per_page = 5;
+
+function is_autoremove(info: moderation_edit_info) {
+    return info.reason == "Auto" && info.moderator == WHEATLEY_ID;
+}
 
 /**
  * Implements !modlogs
@@ -50,16 +55,22 @@ export default class Modlogs extends BotComponent {
     static moderation_description(moderation: moderation_entry, is_field = false) {
         // 256 chosen as an ideally generous padding to allow the preceding text before the reason to fit
         const max_reason = (is_field ? 1024 : 4096) - 256;
-        return build_description(
+        const description = build_description(
             `**Type:** ${moderation.type}`,
             moderation.type === "rolepersist" ? `**Role:** <@&${moderation.role}>` : null,
             `**Moderator:** <@${moderation.moderator}>`,
-            `**Issued At:** <t:${Math.round(moderation.issued_at / 1000)}:f> ${
+            `**Issued At:** ${discord_timestamp(moderation.issued_at)} ${
                 moderation.link ? `[link](${moderation.link})` : ""
             }`,
             moderation.duration === null ? null : `**Duration:** ${time_to_human(moderation.duration)}`,
             `**Reason:** ${moderation.reason ? truncate(moderation.reason, max_reason) : "No reason provided"}`,
+            moderation.removed && !is_autoremove(moderation.removed)
+                ? `**Removed:** ${discord_timestamp(moderation.removed.timestamp)}` +
+                      ` by <@${moderation.removed.moderator}> ` +
+                      `with reason: "${moderation.removed.reason ? truncate(moderation.removed.reason, 100) : "None"}"`
+                : null,
         );
+        return moderation.expunged ? `~~${description}~~` : description;
     }
 
     static case_summary(moderation: moderation_entry, user: Discord.User) {
@@ -156,6 +167,7 @@ export default class Modlogs extends BotComponent {
                 new Discord.EmbedBuilder()
                     .setTitle(`Modlogs for ${user.displayName} (page ${page + 1} of ${pages})`)
                     .setColor(colors.wheatley)
+                    .setDescription(`<@${user.id}>`)
                     .setFields(
                         moderations
                             .slice(page * moderations_per_page, (page + 1) * moderations_per_page)

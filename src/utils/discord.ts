@@ -233,3 +233,7 @@ export function forge_snowflake(timestamp: number) {
     const snowflake = BigInt(timestamp - DISCORD_EPOCH) << 22n;
     return snowflake.toString();
 }
+
+export function discord_timestamp(timestamp: number) {
+    return `<t:${Math.round(timestamp / 1000)}:f>`;
+}
