@@ -15,12 +15,14 @@ import {
 } from "../command-abstractions/context-menu.js";
 import { build_description, capitalize } from "../utils/strings.js";
 
+type interaction_context = { member: Discord.GuildMember; role?: string; context?: Discord.Message };
+
 /**
  * Adds commands for users to suggest skill roles for other members.
  */
 export default class SkillRoleSuggestion extends BotComponent {
-    // string -> initial target message from context menu interaction
-    readonly target_map = new SelfClearingMap<string, { member: Discord.GuildMember; role?: string }>(15 * MINUTE);
+    // string -> interaction context
+    readonly target_map = new SelfClearingMap<string, interaction_context>(15 * MINUTE);
 
     constructor(wheatley: Wheatley) {
         super(wheatley);
@@ -61,7 +63,9 @@ export default class SkillRoleSuggestion extends BotComponent {
                 : await this.wheatley.TCCPP.members.fetch(interaction.user.id);
         assert(member);
         M.log("Received skill suggest interaction", interaction.user.tag, interaction.user.id, interaction.targetId);
-        this.target_map.set(interaction.user.id, { member });
+        const context =
+            interaction instanceof Discord.MessageContextMenuCommandInteraction ? interaction.targetMessage : undefined;
+        this.target_map.set(interaction.user.id, { member, context });
         const target_skill_index = Math.max(
             ...member.roles.cache
                 .filter(r => Object.values(this.wheatley.skill_roles).some(skill_role => r.id == skill_role.id))
@@ -150,7 +154,7 @@ export default class SkillRoleSuggestion extends BotComponent {
             interaction.member instanceof Discord.GuildMember
                 ? interaction.member
                 : await this.wheatley.TCCPP.members.fetch(interaction.user.id);
-        const { member, role } = unwrap(this.target_map.get(interaction.user.id));
+        const { member, role, context } = unwrap(this.target_map.get(interaction.user.id));
         const suggestion_modal = new Discord.EmbedBuilder()
             .setColor(colors.wheatley)
             .setAuthor({
@@ -164,6 +168,7 @@ export default class SkillRoleSuggestion extends BotComponent {
         const description = build_description(
             `Skill role suggestion for <@${member.user.id}>: **${role}**`,
             `Suggested by: <@${suggester.user.id}>`,
+            `Context: ${context ? `[link](${context.url})` : "None (user context menu)"}`,
             comments.length > 0 ? `Comments: ${comments}` : null,
         );
         suggestion_modal.setDescription(description);
