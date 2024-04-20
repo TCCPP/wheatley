@@ -51,6 +51,7 @@ export function create_error_reply(message: string): Discord.BaseMessageOptions 
 type text_command_map_target = {
     command: TextBasedCommand;
     deletable: boolean;
+    content: string;
 };
 
 export type wheatley_database_credentials = {
@@ -795,7 +796,7 @@ export class Wheatley {
     // command edit/deletion
 
     register_text_command(trigger: Discord.Message, command: TextBasedCommand, deletable = true) {
-        this.text_command_map.set(trigger.id, { command, deletable });
+        this.text_command_map.set(trigger.id, { command, deletable, content: trigger.content });
     }
 
     make_deletable(trigger: Discord.Message, message: Discord.Message) {
@@ -912,9 +913,13 @@ export class Wheatley {
     ) {
         try {
             if (this.text_command_map.has(new_message.id)) {
-                const { command } = this.text_command_map.get(new_message.id)!;
-                command.set_editing();
+                const { command, content } = this.text_command_map.get(new_message.id)!;
                 const message = !new_message.partial ? new_message : await new_message.fetch();
+                // probably an embed update
+                if (message.content === content) {
+                    return;
+                }
+                command.set_editing();
                 if (!(await this.handle_text_command(message, command))) {
                     // returns false if the message was not a wheatley command; delete replies and remove from map
                     await command.delete_replies_if_replied();
