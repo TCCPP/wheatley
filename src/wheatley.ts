@@ -94,6 +94,7 @@ export type wheatley_database_info = {
 
 const TCCPP_ID = "331718482485837825";
 export const zelis_id = "199943082441965577";
+export let WHEATLEY_ID: string;
 
 const tuple = <T extends any[]>(...args: T): T => args;
 
@@ -339,6 +340,8 @@ export class Wheatley {
         this.client.on("error", error => {
             M.error(error);
         });
+
+        WHEATLEY_ID = this.id;
 
         this.setup(auth).catch(critical_error);
     }
