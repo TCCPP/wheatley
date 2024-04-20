@@ -26,3 +26,4 @@ The only thing we can say is that your solution is not efficient enough. Finding
 
 - [how to ask a good question](https://codeblog.jonskeet.uk/2010/08/29/writing-the-perfect-question/)
 - [why to avoid screenshots](https://idownvotedbecau.se/imageofcode)
+-
