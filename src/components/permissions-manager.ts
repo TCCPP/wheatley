@@ -41,6 +41,7 @@ export default class PermissionManager extends BotComponent {
     }
 
     setup_permissions_map() {
+        // permission sets
         const write_permissions = [
             Discord.PermissionsBitField.Flags.SendMessages,
             Discord.PermissionsBitField.Flags.SendMessagesInThreads,
@@ -57,6 +58,7 @@ export default class PermissionManager extends BotComponent {
         const no_interaction_at_all: permissions_entry = {
             deny: [...write_permissions, Discord.PermissionsBitField.Flags.ViewChannel],
         };
+        // channel permissions
         const default_permissions: permission_overwrites = {
             [this.wheatley.roles.muted.id]: muted_permissions,
             [this.wheatley.roles.no_reactions.id]: {
@@ -72,6 +74,9 @@ export default class PermissionManager extends BotComponent {
             [this.wheatley.roles.no_images.id]: {
                 deny: [Discord.PermissionsBitField.Flags.EmbedLinks, Discord.PermissionsBitField.Flags.AttachFiles],
             },
+            [this.wheatley.roles.announcements.id]: {
+                deny: [Discord.PermissionsBitField.Flags.ViewChannel],
+            },
             [this.wheatley.roles.moderators.id]: {
                 allow: [Discord.PermissionsBitField.Flags.ManageThreads, Discord.PermissionsBitField.Flags.ViewChannel],
             },
@@ -81,6 +86,7 @@ export default class PermissionManager extends BotComponent {
             [this.wheatley.roles.no_off_topic.id]: no_interaction_at_all,
         };
         const read_only_channel: permission_overwrites = {
+            ...default_permissions,
             [this.wheatley.TCCPP.roles.everyone.id]: {
                 deny: [
                     Discord.PermissionsBitField.Flags.SendMessages,
@@ -90,6 +96,7 @@ export default class PermissionManager extends BotComponent {
             },
         };
         const read_only_archive_channel: permission_overwrites = {
+            ...default_permissions,
             [this.wheatley.TCCPP.roles.everyone.id]: {
                 deny: [
                     Discord.PermissionsBitField.Flags.SendMessages,
@@ -165,6 +172,7 @@ export default class PermissionManager extends BotComponent {
             },
         });
         this.add_channel_overwrite(this.wheatley.channels.the_button, {
+            ...default_permissions,
             [this.wheatley.TCCPP.roles.everyone.id]: {
                 deny: [
                     Discord.PermissionsBitField.Flags.SendMessages,
