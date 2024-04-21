@@ -135,7 +135,7 @@ export abstract class ModerationComponent extends BotComponent {
     sleep_list: SleepList<mongo.WithId<moderation_entry>, mongo.BSON.ObjectId>;
     timer: NodeJS.Timer | null = null;
 
-    static non_duration_moderation_set = new Set(["warn", "kick", "softban"]);
+    static non_duration_moderation_set = new Set(["warn", "kick", "softban", "note"]);
 
     static moderations_count = new PromClient.Gauge({
         name: "tccpp_moderations_count",

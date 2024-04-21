@@ -1,4 +1,4 @@
-export type moderation_type = "mute" | "warn" | "ban" | "kick" | "rolepersist" | "timeout" | "softban";
+export type moderation_type = "mute" | "warn" | "ban" | "kick" | "rolepersist" | "timeout" | "softban" | "note";
 
 export type moderation_edit_info = {
     moderator: string;
