@@ -21,6 +21,15 @@ type submodule = {
     on_ban?: (_ban: Discord.GuildBan, _now: number) => void;
 };
 
+export type basic_message_info = {
+    content: string;
+    channel_id: string;
+    author: Discord.User;
+    url: string;
+    mentions_everyone: boolean;
+    created_timestamp: number;
+};
+
 // how long we retain join info - 30 minutes for now
 const LOG_DURATION = 30 * MINUTE;
 
@@ -29,9 +38,9 @@ export class MemberTracker {
     // map from user id -> member entry
     id_map: Map<Discord.Snowflake, member_entry> = new Map();
     // user id snowflake -> messages with pings
-    ping_map: Map<string, Discord.Message[]> = new Map();
+    ping_map: Map<string, basic_message_info[]> = new Map();
     // user id snowflake -> messages with links
-    link_map: Map<string, Discord.Message[]> = new Map();
+    link_map: Map<string, basic_message_info[]> = new Map();
     // set of user id snowflakes to prevent race condition
     // snowflake -> timestamp of addition to this set
     currently_banning: Map<string, number> = new Map();
@@ -68,7 +77,7 @@ export class MemberTracker {
         // -- ping/link maps --
         for (const map of [this.ping_map, this.link_map]) {
             for (let [k, v] of map) {
-                v = v.filter(m => now - m.createdTimestamp <= LOG_DURATION);
+                v = v.filter(m => now - m.created_timestamp <= LOG_DURATION);
                 if (v.length == 0) {
                     this.ping_map.delete(k);
                 }
