@@ -25,7 +25,7 @@ import { WheatleyDatabase, WheatleyDatabaseProxy } from "./infra/database-interf
 import { GuildCommandManager } from "./infra/guild-command-manager.js";
 import { MemberTracker } from "./infra/member-tracker.js";
 import { Virustotal } from "./infra/virustotal.js";
-import { forge_snowflake, is_media_link_embed } from "./utils/discord.js";
+import { decode_snowflake, forge_snowflake, is_media_link_embed } from "./utils/discord.js";
 import { TypedEventEmitter } from "./utils/event-emitter.js";
 import { setup_metrics_server } from "./infra/prometheus.js";
 import { moderation_entry } from "./infra/schemata/moderation.js";
@@ -243,6 +243,28 @@ type quote_options = {
     requested_by?: Discord.GuildMember;
     // is the link safe to click? (default true)
     safe_link?: boolean;
+};
+
+type MediaDescriptor = {
+    type: "image" | "video";
+    attachment: Discord.Attachment | { attachment: string };
+};
+
+type UserData = {
+    display_name: string;
+    iconURL: string;
+    username: string;
+    id: string;
+};
+
+type MessageData = {
+    author: UserData;
+    guild: string;
+    channel: string;
+    id: string;
+    content: string;
+    embeds: Discord.APIEmbed[];
+    attachments: Discord.Attachment[];
 };
 
 type EventMap = {
@@ -591,14 +613,14 @@ export class Wheatley {
         }
     }
 
-    async get_display_name(thing: Discord.Message | Discord.User): Promise<string> {
+    async get_display_name(thing: Discord.Message | Discord.User | UserData): Promise<string> {
         if (thing instanceof Discord.User) {
             const user = thing;
             try {
                 return (await this.TCCPP.members.fetch(user.id)).displayName;
             } catch {
                 // user could potentially not be in the server
-                return user.tag;
+                return user.displayName;
             }
         } else if (thing instanceof Discord.Message) {
             const message = thing;
@@ -608,100 +630,115 @@ export class Wheatley {
                 return message.member.displayName;
             }
         } else {
-            assert(false);
+            // UserData
+            const user = thing;
+            try {
+                return (await this.TCCPP.members.fetch(user.id)).displayName;
+            } catch {
+                // user could potentially not be in the server
+                return user.display_name;
+            }
         }
     }
 
+    async get_raw_message_data(message: Discord.Message): Promise<MessageData> {
+        return {
+            author: {
+                display_name: await this.get_display_name(message),
+                iconURL: message.member?.avatarURL() ?? message.author.displayAvatarURL(),
+                username: message.author.username,
+                id: message.author.id,
+            },
+            guild: message.guildId ?? "",
+            channel: message.channelId,
+            id: message.id,
+            content: message.content,
+            embeds: message.embeds.map(embed => embed.data),
+            attachments: [...message.attachments.values()],
+        };
+    }
+
+    async get_media(message: MessageData) {
+        return [
+            ...message.attachments
+                .filter(a => a.contentType?.indexOf("image") == 0)
+                .map(a => ({
+                    type: "image",
+                    attachment: a,
+                })),
+            ...message.attachments
+                .filter(a => a.contentType?.indexOf("video") == 0)
+                .map(a => ({
+                    type: "video",
+                    attachment: a,
+                })),
+            ...message.embeds
+                .filter(is_media_link_embed)
+                .map(e => {
+                    // Ignore video embeds for now and just defer to a thumbnail. Video embeds come from
+                    // links, such as youtube or imgur etc., but embedded that as the bot would be tricky.
+                    // Either the video would have to be downloaded and attached (which may be tricky or
+                    // tos-violating e.g. in youtube's case) or the link could be shoved in the content for
+                    // auto-embedding but then the quote interface will be tricky to work (and it might not
+                    // look good).
+                    if (e.image || e.thumbnail) {
+                        // Webp can be thumbnail only, no image. Very weird.
+                        return {
+                            type: "image",
+                            attachment: {
+                                attachment: unwrap(e.image ? e.image : e.thumbnail).url,
+                            } as Discord.AttachmentPayload,
+                        };
+                    } else if (e.video) {
+                        // video but no thumbnail? just fallthrough...
+                    } else {
+                        assert(false);
+                    }
+                })
+                .filter(x => x !== undefined),
+        ] as MediaDescriptor[];
+    }
+
     async make_quote_embeds(
-        messages: Discord.Message[],
+        messages_objects: Discord.Message[],
         options?: quote_options,
     ): Promise<{
         embeds: (Discord.EmbedBuilder | Discord.Embed)[];
         files?: (Discord.AttachmentPayload | Discord.Attachment)[];
     }> {
+        const messages = await Promise.all(messages_objects.map(this.get_raw_message_data.bind(this)));
         assert(messages.length >= 1);
         const head = messages[0];
         const contents = options?.custom_content ?? messages.map(m => m.content).join("\n");
         const template = options?.template ?? "\n\nFrom <##> [[Jump to message]]($$)";
-        const template_string = template.replaceAll("##", "#" + head.channel.id).replaceAll("$$", head.url);
+        const url = `https://discord.com/channels/${head.guild}/${head.channel}/${head.id}`;
+        const template_string = template.replaceAll("##", "#" + head.channel).replaceAll("$$", url);
         const safe_link = options?.safe_link === undefined ? true : options.safe_link;
+        const member = await this.try_fetch_tccpp_member(head.author.id);
+        const user = await this.client.users.fetch(head.author.id);
         const embed = new Discord.EmbedBuilder()
             .setColor(colors.default)
             .setAuthor({
-                name: `${await this.get_display_name(head)}`,
-                iconURL: head.member?.avatarURL() ?? head.author.displayAvatarURL(),
+                name: `${await this.get_display_name(head.author)}`,
+                iconURL: member?.avatarURL() ?? user.displayAvatarURL(),
             })
             .setDescription(
                 contents + template_string + (safe_link ? "" : " ⚠️ Unexpected domain, be careful clicking this link"),
             )
-            .setTimestamp(head.createdAt);
+            .setTimestamp(decode_snowflake(head.id));
         if (options?.requested_by) {
             embed.setFooter({
                 text: `Quoted by ${options.requested_by.displayName}`,
                 iconURL: options.requested_by.user.displayAvatarURL(),
             });
         }
-        type MediaDescriptor = {
-            type: "image" | "video";
-            attachment: Discord.Attachment | { attachment: string };
-        };
-        const media = messages
-            .map(
-                message =>
-                    [
-                        ...message.attachments
-                            .filter(a => a.contentType?.indexOf("image") == 0)
-                            .map(a => ({
-                                type: "image",
-                                attachment: a,
-                            })),
-                        ...message.attachments
-                            .filter(a => a.contentType?.indexOf("video") == 0)
-                            .map(a => ({
-                                type: "video",
-                                attachment: a,
-                            })),
-                        ...message.embeds
-                            .filter(is_media_link_embed)
-                            .map(e => {
-                                // Ignore video embeds for now and just defer to a thumbnail. Video embeds come from
-                                // links, such as youtube or imgur etc., but embedded that as the bot would be tricky.
-                                // Either the video would have to be downloaded and attached (which may be tricky or
-                                // tos-violating e.g. in youtube's case) or the link could be shoved in the content for
-                                // auto-embedding but then the quote interface will be tricky to work (and it might not
-                                // look good).
-                                /*if (e.video) {
-                                    // Check video first, as videos can have thumbnails
-                                    return {
-                                        type: "video",
-                                        attachment: {
-                                            attachment: e.video.url,
-                                        } as Discord.AttachmentPayload,
-                                    };
-                                } else*/ if (e.image || e.thumbnail) {
-                                    // Webp can be thumbnail only, no image. Very weird.
-                                    return {
-                                        type: "image",
-                                        attachment: {
-                                            attachment: unwrap(e.image ? e.image : e.thumbnail).url,
-                                        } as Discord.AttachmentPayload,
-                                    };
-                                } else if (e.video) {
-                                    // video but no thumbnail? just fallthrough...
-                                } else {
-                                    assert(false);
-                                }
-                            })
-                            .filter(x => x !== undefined),
-                    ] as MediaDescriptor[],
-            )
-            .flat();
+        const media = (await Promise.all(messages.map(this.get_media))).flat();
         // M.log(media);
         const other_embeds = messages.map(message => message.embeds.filter(e => !is_media_link_embed(e))).flat();
         // M.log(other_embeds);
         const media_embeds: Discord.EmbedBuilder[] = [];
         const attachments: (Discord.Attachment | Discord.AttachmentPayload)[] = [];
-        const other_attachments: (Discord.Attachment | Discord.AttachmentPayload)[] = messages
+        const other_attachments: Discord.Attachment[] = messages
             .map(message => [
                 ...message.attachments
                     .map(a => a)
@@ -745,7 +782,7 @@ export class Wheatley {
         }
         // M.log([embed, ...media_embeds, ...other_embeds], [...attachments, ...other_attachments]);
         return {
-            embeds: [embed, ...media_embeds, ...other_embeds],
+            embeds: [embed, ...media_embeds, ...other_embeds.map(api_embed => new Discord.EmbedBuilder(api_embed))],
             files:
                 attachments.length + other_attachments.length == 0 ? undefined : [...attachments, ...other_attachments],
         };
