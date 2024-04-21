@@ -37,6 +37,27 @@ export default class ModerationControl extends BotComponent {
         );
 
         this.add_command(
+            new TextBasedCommandBuilder("context")
+                .set_permissions(Discord.PermissionFlagsBits.BanMembers)
+                .set_description("Update case context")
+                .add_subcommand(
+                    new TextBasedCommandBuilder("add")
+                        .set_description("Add context")
+                        .add_number_option({
+                            title: "case",
+                            description: "Case to update",
+                            required: true,
+                        })
+                        .add_string_option({
+                            title: "context",
+                            description: "Context",
+                            required: true,
+                        })
+                        .set_handler(this.context_add.bind(this)),
+                ),
+        );
+
+        this.add_command(
             new TextBasedCommandBuilder("duration")
                 .set_description("Update the duration for a case")
                 .set_permissions(Discord.PermissionFlagsBits.BanMembers)
@@ -118,6 +139,33 @@ export default class ModerationControl extends BotComponent {
                 ],
             });
             await this.notify_user(command, res.user, case_number, `**Reason:** ${reason}`);
+        } else {
+            await this.reply_with_error(command, `Case ${case_number} not found`);
+        }
+    }
+
+    async context_add(command: TextBasedCommand, case_number: number, context: string) {
+        M.log("Received context add command");
+        const res = await this.wheatley.database.moderations.findOneAndUpdate(
+            { case_number },
+            {
+                $push: {
+                    context,
+                },
+            },
+            {
+                returnDocument: "after",
+            },
+        );
+        if (res) {
+            await this.reply_with_success(command, "Context updated");
+            await this.wheatley.channels.staff_action_log.send({
+                embeds: [
+                    Modlogs.case_summary(res, await this.wheatley.client.users.fetch(res.user)).setTitle(
+                        `Case ${res.case_number} context updated`,
+                    ),
+                ],
+            });
         } else {
             await this.reply_with_error(command, `Case ${case_number} not found`);
         }

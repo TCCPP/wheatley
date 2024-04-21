@@ -69,6 +69,7 @@ export default class Modlogs extends BotComponent {
                       ` by <@${moderation.removed.moderator}> ` +
                       `with reason: "${moderation.removed.reason ? truncate(moderation.removed.reason, 100) : "None"}"`
                 : null,
+            moderation.context ? `**Context:** ${moderation.context.join(", ")}` : null,
         );
         return moderation.expunged ? `~~${description}~~` : description;
     }

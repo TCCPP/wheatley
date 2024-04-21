@@ -35,4 +35,5 @@ export type moderation_entry = basic_moderation & {
     removed: moderation_edit_info | null;
     expunged: moderation_edit_info | null;
     link: string | null;
+    context?: string[];
 };
