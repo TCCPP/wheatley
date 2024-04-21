@@ -140,6 +140,7 @@ const channels_map = {
     today_i_learned: tuple("873682069325217802", Discord.TextChannel),
     goals2024: tuple("1189255286364569640", Discord.TextChannel),
     days_since_last_incident: tuple("1195920462958575676", Discord.TextChannel),
+    literally_1984: tuple("1097993854214488154", Discord.TextChannel),
     lore: tuple("890067781628866620", Discord.TextChannel),
     bot_dev_internal: tuple("1166517065763536977", Discord.TextChannel),
     // red telephone

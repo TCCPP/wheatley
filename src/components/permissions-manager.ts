@@ -171,6 +171,10 @@ export default class PermissionManager extends BotComponent {
             ...default_permissions,
             ...read_only_channel,
         });
+        this.add_channel_overwrite(this.wheatley.channels.literally_1984, {
+            ...default_permissions,
+            ...read_only_channel,
+        });
         this.add_channel_overwrite(this.wheatley.channels.lore, {
             ...default_permissions,
             [this.wheatley.TCCPP.roles.everyone.id]: {
