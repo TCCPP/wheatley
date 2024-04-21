@@ -318,6 +318,7 @@ export class Wheatley {
 
     // TCCPP stuff
     TCCPP: Discord.Guild;
+    user: Discord.User;
     zelis: Discord.User;
 
     channels: {
@@ -460,6 +461,7 @@ export class Wheatley {
         };
         // Preliminary loads
         this.TCCPP = fudged_unwrap(await wrap(() => this.client.guilds.fetch(this.guildId)));
+        this.user = fudged_unwrap(await wrap(() => this.client.users.fetch(this.id)));
         this.zelis = fudged_unwrap(await wrap(() => this.client.users.fetch(zelis_id)));
         // Channels
         await Promise.all(

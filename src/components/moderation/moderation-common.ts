@@ -444,6 +444,7 @@ export abstract class ModerationComponent extends BotComponent {
 
     async do_issue(
         user: Discord.User,
+        moderator: Discord.User,
         duration: number, // ms
         reason: string | null,
         basic_moderation_info: basic_moderation,
@@ -454,8 +455,8 @@ export abstract class ModerationComponent extends BotComponent {
             case_number: -1,
             user: user.id,
             user_name: user.displayName,
-            moderator: user.id,
-            moderator_name: (await this.wheatley.TCCPP.members.fetch(user.id)).displayName,
+            moderator: moderator.id,
+            moderator_name: (await this.wheatley.TCCPP.members.fetch(moderator.id)).displayName,
             reason,
             issued_at: Date.now(),
             duration,
