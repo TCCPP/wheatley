@@ -613,7 +613,7 @@ export class Wheatley {
         }
     }
 
-    async get_display_name(thing: Discord.Message | Discord.User | UserData): Promise<string> {
+    async get_display_name(thing: Discord.Message | Discord.User): Promise<string> {
         if (thing instanceof Discord.User) {
             const user = thing;
             try {
@@ -630,14 +630,7 @@ export class Wheatley {
                 return message.member.displayName;
             }
         } else {
-            // UserData
-            const user = thing;
-            try {
-                return (await this.TCCPP.members.fetch(user.id)).displayName;
-            } catch {
-                // user could potentially not be in the server
-                return user.display_name;
-            }
+            assert(false);
         }
     }
 
@@ -719,7 +712,7 @@ export class Wheatley {
         const embed = new Discord.EmbedBuilder()
             .setColor(colors.default)
             .setAuthor({
-                name: `${await this.get_display_name(head.author)}`,
+                name: head.author.display_name, // already resolved
                 iconURL: member?.avatarURL() ?? user.displayAvatarURL(),
             })
             .setDescription(
