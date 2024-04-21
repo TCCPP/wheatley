@@ -9,7 +9,7 @@ import { Wheatley } from "../../wheatley.js";
 import { ModerationComponent, duration_regex } from "./moderation-common.js";
 import { TextBasedCommandBuilder } from "../../command-abstractions/text-based-command-builder.js";
 import { TextBasedCommand } from "../../command-abstractions/text-based-command.js";
-import { moderation_entry, basic_moderation_with_user } from "../../infra/schemata/moderation-common.js";
+import { moderation_entry, basic_moderation_with_user } from "../../infra/schemata/moderation.js";
 
 /**
  * Implements !rolepersist

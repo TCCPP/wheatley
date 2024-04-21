@@ -28,7 +28,7 @@ import { Virustotal } from "./infra/virustotal.js";
 import { forge_snowflake, is_media_link_embed } from "./utils/discord.js";
 import { TypedEventEmitter } from "./utils/event-emitter.js";
 import { setup_metrics_server } from "./infra/prometheus.js";
-import { moderation_entry } from "./infra/schemata/moderation-common.js";
+import { moderation_entry } from "./infra/schemata/moderation.js";
 
 // Thu Jul 01 2021 00:00:00 GMT-0400 (Eastern Daylight Time)
 export const SERVER_SUGGESTION_TRACKER_START_TIME = 1625112000000;

@@ -8,7 +8,7 @@ import { critical_error, M } from "../../utils/debugging-and-logging.js";
 import { unwrap } from "../../utils/misc.js";
 import { time_to_human } from "../../utils/strings.js";
 import { MINUTE } from "../../common.js";
-import { moderation_entry } from "../../infra/schemata/moderation-common.js";
+import { moderation_entry } from "../../infra/schemata/moderation.js";
 import { set_interval } from "../../utils/node.js";
 
 export default class DaysSinceLastIncident extends BotComponent {

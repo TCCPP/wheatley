@@ -25,7 +25,7 @@ import {
     moderation_entry,
     basic_moderation_with_user,
     basic_moderation,
-} from "../../infra/schemata/moderation-common.js";
+} from "../../infra/schemata/moderation.js";
 import { set_interval } from "../../utils/node.js";
 
 import { get_random_array_element } from "../../utils/arrays.js";

@@ -9,7 +9,7 @@ import { Wheatley } from "../../wheatley.js";
 import { ModerationComponent } from "./moderation-common.js";
 import { TextBasedCommandBuilder } from "../../command-abstractions/text-based-command-builder.js";
 import { TextBasedCommand } from "../../command-abstractions/text-based-command.js";
-import { moderation_entry, basic_moderation } from "../../infra/schemata/moderation-common.js";
+import { moderation_entry, basic_moderation } from "../../infra/schemata/moderation.js";
 import { colors } from "../../common.js";
 import { build_description } from "../../utils/strings.js";
 

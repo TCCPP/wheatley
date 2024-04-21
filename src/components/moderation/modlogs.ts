@@ -11,7 +11,7 @@ import { colors } from "../../common.js";
 import { TextBasedCommandBuilder } from "../../command-abstractions/text-based-command-builder.js";
 import { CommandAbstractionReplyOptions, TextBasedCommand } from "../../command-abstractions/text-based-command.js";
 import { remove } from "../../utils/arrays.js";
-import { moderation_edit_info, moderation_entry } from "../../infra/schemata/moderation-common.js";
+import { moderation_edit_info, moderation_entry } from "../../infra/schemata/moderation.js";
 import { discord_timestamp } from "../../utils/discord.js";
 
 const moderations_per_page = 5;

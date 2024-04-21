@@ -8,7 +8,7 @@ import { link_blacklist_entry, watchlist_entry } from "../private-types.js";
 import { wheatley_database_credentials, wheatley_database_info } from "../wheatley.js";
 
 import { buzzword_scoreboard_entry } from "./schemata/buzzwords.js";
-import { moderation_entry } from "./schemata/moderation-common.js";
+import { moderation_entry } from "./schemata/moderation.js";
 import { no_distraction_entry } from "./schemata/nodistractions.js";
 import { roulette_leaderboard_entry } from "./schemata/roulette.js";
 import { suggestion_entry } from "./schemata/server-suggestion-tracker.js";
