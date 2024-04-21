@@ -115,7 +115,11 @@ const channels_map = {
     announcements: tuple("331881381477089282", Discord.NewsChannel),
     server_suggestions: tuple("802541516655951892", Discord.TextChannel),
     skill_role_suggestions: tuple("1211089633547526204", Discord.ForumChannel),
+    skill_roles_meta: tuple("1182536717056618557", Discord.TextChannel),
     resources: tuple("1124619767542718524", Discord.ForumChannel),
+    partners: tuple("904790565000986745", Discord.TextChannel),
+    the_button: tuple("1069678919667687455", Discord.TextChannel),
+    articles: tuple("1130174377539940475", Discord.TextChannel),
     // language channels
     cpp_help: tuple("1013107104678162544", Discord.ForumChannel),
     c_help: tuple("1013104018739974194", Discord.ForumChannel),
@@ -133,7 +137,6 @@ const channels_map = {
     boosters_only: tuple("792183875241639977", Discord.TextChannel),
     // other
     bot_spam: tuple("506274405500977153", Discord.TextChannel),
-    the_button: tuple("1069678919667687455", Discord.TextChannel),
     introductions: tuple("933113495304679494", Discord.TextChannel),
     suggestion_dashboard: tuple("908928083879415839", Discord.ThreadChannel),
     suggestion_action_log: tuple("909309608512880681", Discord.ThreadChannel),
@@ -185,6 +188,7 @@ const roles_map = {
     server_booster: "643013330616844333",
     historian: "890067617069551646",
     official_bot: "331886851784704001",
+    jedi_council: "1138950835208990750",
 };
 
 const skill_roles_map = {

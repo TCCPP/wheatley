@@ -114,6 +114,7 @@ export default class PermissionManager extends BotComponent {
         };
 
         this.add_entry(this.wheatley.categories.staff_logs, mod_only_channel);
+        this.add_entry(this.wheatley.categories.meta, default_permissions);
         this.add_entry(this.wheatley.categories.cpp_help, default_permissions);
         this.add_entry(this.wheatley.categories.c_help, default_permissions);
         this.add_entry(this.wheatley.categories.discussion, default_permissions);
@@ -127,6 +128,60 @@ export default class PermissionManager extends BotComponent {
         this.add_entry(this.wheatley.categories.private_archive, mod_only_channel);
         this.add_entry(this.wheatley.categories.challenges_archive, mod_only_channel);
         this.add_entry(this.wheatley.categories.meta_archive, mod_only_channel);
+
+        // meta overrides
+        this.add_channel_overwrite(this.wheatley.channels.rules, {
+            [this.wheatley.TCCPP.roles.everyone.id]: {
+                deny: [
+                    Discord.PermissionsBitField.Flags.SendMessages,
+                    Discord.PermissionsBitField.Flags.CreatePublicThreads,
+                    Discord.PermissionsBitField.Flags.CreatePrivateThreads,
+                    Discord.PermissionsBitField.Flags.AddReactions,
+                ],
+            },
+        });
+        this.add_channel_overwrite(this.wheatley.channels.announcements, read_only_channel);
+        this.add_channel_overwrite(this.wheatley.channels.partners, read_only_channel);
+        this.add_channel_overwrite(this.wheatley.channels.articles, read_only_channel);
+        this.add_channel_overwrite(this.wheatley.channels.server_suggestions, {
+            ...default_permissions,
+            [this.wheatley.TCCPP.roles.everyone.id]: {
+                deny: [
+                    Discord.PermissionsBitField.Flags.CreatePublicThreads,
+                    Discord.PermissionsBitField.Flags.CreatePrivateThreads,
+                ],
+            },
+            [this.wheatley.roles.no_suggestions.id]: {
+                deny: [
+                    Discord.PermissionsBitField.Flags.SendMessages,
+                    Discord.PermissionsBitField.Flags.CreatePublicThreads,
+                    Discord.PermissionsBitField.Flags.CreatePrivateThreads,
+                    Discord.PermissionsBitField.Flags.SendMessagesInThreads,
+                    Discord.PermissionsBitField.Flags.AddReactions,
+                ],
+            },
+            [this.wheatley.roles.no_suggestions_at_all.id]: {
+                deny: [Discord.PermissionsBitField.Flags.ViewChannel],
+            },
+        });
+        this.add_channel_overwrite(this.wheatley.channels.the_button, {
+            [this.wheatley.TCCPP.roles.everyone.id]: {
+                deny: [
+                    Discord.PermissionsBitField.Flags.SendMessages,
+                    Discord.PermissionsBitField.Flags.CreatePublicThreads,
+                    Discord.PermissionsBitField.Flags.CreatePrivateThreads,
+                    Discord.PermissionsBitField.Flags.AddReactions,
+                ],
+            },
+        });
+        const jedi_council: permission_overwrites = {
+            ...mod_only_channel,
+            [this.wheatley.roles.jedi_council.id]: {
+                allow: [Discord.PermissionsBitField.Flags.ViewChannel],
+            },
+        };
+        this.add_channel_overwrite(this.wheatley.channels.skill_roles_meta, jedi_council);
+        this.add_channel_overwrite(this.wheatley.channels.skill_role_suggestions, jedi_council);
 
         // community overrides
         this.add_channel_overwrite(this.wheatley.channels.today_i_learned, {
