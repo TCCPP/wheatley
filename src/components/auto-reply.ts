@@ -9,7 +9,7 @@ import { Wheatley } from "../wheatley.js";
 import { TextBasedCommandBuilder } from "../command-abstractions/text-based-command-builder.js";
 import { TextBasedCommand } from "../command-abstractions/text-based-command.js";
 
-const LLM_REGEX = /\b(?<!!)llm\b/gi;
+const LLM_REGEX = /\b(?<!!)llms?\b/gi;
 
 const RATELIMIT = 5 * MINUTE;
 
