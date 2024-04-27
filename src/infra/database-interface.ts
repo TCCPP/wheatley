@@ -15,6 +15,11 @@ import { suggestion_entry } from "./schemata/server-suggestion-tracker.js";
 import { skill_suggestion_entry } from "./schemata/skill-role-suggestion.js";
 import { auto_delete_threshold_notifications, starboard_entry } from "./schemata/starboard.js";
 import { button_scoreboard_entry } from "./schemata/the-button.js";
+import {
+    message_database_entry,
+    message_database_status_entry,
+    message_database_thread_status_entry,
+} from "./schemata/logged-messages.js";
 import { wheatley_database_info } from "./schemata/wheatley.js";
 
 export class WheatleyDatabase {
@@ -113,6 +118,9 @@ export type WheatleyDatabaseProxy = WheatleyDatabase & {
     wheatley: mongo.Collection<wheatley_database_info>;
     moderations: mongo.Collection<moderation_entry>;
     skill_role_suggestions: mongo.Collection<skill_suggestion_entry>;
+    message_database: mongo.Collection<message_database_entry>;
+    message_database_status: mongo.Collection<message_database_status_entry>;
+    message_database_thread_status: mongo.Collection<message_database_thread_status_entry>;
 };
 // & {
 //    [key: string] : Promise<mongo.Collection>

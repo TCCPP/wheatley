@@ -12,6 +12,10 @@ export function intersection<V>(a: V[], b: V[]): V[] {
     return [...a].filter(item => b_set.has(item));
 }
 
+export function setxor<V>(a: Set<V>, b: Set<V>): Set<V> {
+    return new Set([...[...a].filter(item => !b.has(item)), ...[...b].filter(item => !a.has(item))]);
+}
+
 export function partition<V>(arr: V[], predicate: (item: V) => boolean): [V[], V[]] {
     const pass: V[] = [];
     const fail: V[] = [];
