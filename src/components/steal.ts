@@ -24,7 +24,7 @@ export default class Steal extends BotComponent {
         super(wheatley);
 
         this.add_command(
-            new TextBasedCommandBuilder("steal-emojis-url")
+            new TextBasedCommandBuilder("steal-emojis-message-url")
                 .set_description("Steal emojis from a message")
                 .add_string_option({
                     title: "url",
@@ -33,6 +33,23 @@ export default class Steal extends BotComponent {
                 })
                 .set_permissions(Discord.PermissionFlagsBits.BanMembers)
                 .set_handler(this.steal_url.bind(this)),
+        );
+
+        this.add_command(
+            new TextBasedCommandBuilder("add-emojis-url")
+                .set_description("Add emojis from a message")
+                .add_string_option({
+                    title: "name",
+                    description: "name",
+                    required: true,
+                })
+                .add_string_option({
+                    title: "url",
+                    description: "url",
+                    required: true,
+                })
+                .set_permissions(Discord.PermissionFlagsBits.BanMembers)
+                .set_handler(this.add_url.bind(this)),
         );
 
         this.add_command(
@@ -102,5 +119,17 @@ export default class Steal extends BotComponent {
     async steal_text(command: TextBasedCommand, message: string) {
         M.log("Received steal command");
         await this.steal(command, message);
+    }
+
+    async add_url(command: TextBasedCommand, name: string, url: string) {
+        M.log("Received add-url command");
+        assert(url.startsWith("https://") || url.startsWith("http://"));
+        await this.wheatley.TCCPP.emojis.create({
+            attachment: url,
+            name,
+        });
+        await command.reply({
+            content: "Done",
+        });
     }
 }
