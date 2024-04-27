@@ -29,6 +29,7 @@ import { decode_snowflake, forge_snowflake, is_media_link_embed } from "./utils/
 import { TypedEventEmitter } from "./utils/event-emitter.js";
 import { setup_metrics_server } from "./infra/prometheus.js";
 import { moderation_entry } from "./infra/schemata/moderation.js";
+import { wheatley_database_info } from "./infra/schemata/wheatley.js";
 
 // Thu Jul 01 2021 00:00:00 GMT-0400 (Eastern Daylight Time)
 export const SERVER_SUGGESTION_TRACKER_START_TIME = 1625112000000;
@@ -71,26 +72,6 @@ export type wheatley_auth = {
         port: number;
         hostname: string;
     };
-};
-
-export type wheatley_database_info = {
-    id: string;
-    server_suggestions: {
-        last_scanned_timestamp: number;
-    };
-    modmail_id_counter: number;
-    the_button: {
-        button_presses: number;
-        last_reset: number;
-        longest_time_without_reset: number;
-    };
-    starboard: {
-        delete_emojis: string[];
-        ignored_emojis: string[];
-        negative_emojis: string[];
-    };
-    moderation_case_number: number;
-    watch_number: number;
 };
 
 const TCCPP_ID = "331718482485837825";
@@ -1111,6 +1092,7 @@ export class Wheatley {
                 delete_emojis: [],
                 ignored_emojis: [],
                 negative_emojis: [],
+                repost_emojis: [],
             },
             moderation_case_number: 0,
             watch_number: 0,

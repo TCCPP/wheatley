@@ -24,6 +24,11 @@ const max_deletes_in_24h = 5;
 
 const starboard_epoch = new Date("2023-04-01T00:00:00.000Z").getTime();
 
+enum delete_trigger_type {
+    delete_this,
+    repost,
+}
+
 /**
  * Reaction highscores.
  */
@@ -35,10 +40,12 @@ export default class Starboard extends BotComponent {
     // delete emojis: will trigger deletion if a threshold is reached relative to non-negative emojis
     // ignored emojis: these don't count towards the starboard
     // negative emojis: these don't count against deleted emojis and also don't go to the starboard
+    // repost emojis: will trigger deletion if a threshold is reached relative to non-negative emojis
 
     delete_emojis: string[];
     ignored_emojis: string[];
     negative_emojis: string[];
+    repost_emojis: string[];
 
     excluded_channels: Set<string>;
 
@@ -82,6 +89,18 @@ export default class Starboard extends BotComponent {
         );
 
         this.add_command(
+            new TextBasedCommandBuilder("add-repost-emoji")
+                .set_description("Register a repost emoji")
+                .add_string_option({
+                    title: "emojis",
+                    description: "emojis",
+                    required: true,
+                })
+                .set_permissions(Discord.PermissionFlagsBits.Administrator)
+                .set_handler(this.add_repost_emoji.bind(this)),
+        );
+
+        this.add_command(
             new TextBasedCommandBuilder("list-starboard-config")
                 .set_description("List starboard config")
                 .set_permissions(Discord.PermissionFlagsBits.Administrator)
@@ -109,6 +128,7 @@ export default class Starboard extends BotComponent {
         this.delete_emojis = singleton.starboard.delete_emojis;
         this.ignored_emojis = singleton.starboard.ignored_emojis;
         this.negative_emojis = singleton.starboard.negative_emojis;
+        this.repost_emojis = singleton.starboard.repost_emojis;
     }
 
     reactions_string(message: Discord.Message) {
@@ -245,18 +265,24 @@ export default class Starboard extends BotComponent {
         return this.deletes.length;
     }
 
-    async handle_auto_delete(message: Discord.Message, delete_reaction: Discord.MessageReaction) {
+    async handle_auto_delete(
+        message: Discord.Message,
+        trigger_reaction: Discord.MessageReaction,
+        trigger_type: delete_trigger_type,
+    ) {
         const reactions = message.reactions.cache.map(r => [r.emoji, r.count] as [Discord.Emoji, number]);
         const non_negative_reactions = reactions.filter(
             ([emoji, _]) =>
-                !this.negative_emojis.includes(unwrap(emoji.name)) && !this.delete_emojis.includes(unwrap(emoji.name)),
+                !this.negative_emojis.includes(unwrap(emoji.name)) &&
+                !this.delete_emojis.includes(unwrap(emoji.name)) &&
+                !this.repost_emojis.includes(unwrap(emoji.name)),
         );
         const max_non_negative = Math.max(...non_negative_reactions.map(([_, count]) => count)); // -inf if |a|=0
         let do_delete = true;
         if (message.channel.id != this.wheatley.channels.memes.id) {
             do_delete = false;
         }
-        if (delete_reaction.count <= max_non_negative) {
+        if (trigger_reaction.count <= max_non_negative) {
             do_delete = false;
         }
         if (this.wheatley.is_root(message.author) || message.author.bot) {
@@ -267,7 +293,7 @@ export default class Starboard extends BotComponent {
             M.info(">> DELETE IN 24H THRESHOLD EXCEEDED");
         }
         const action = do_delete ? "Auto-deleting" : "Auto-delete threshold reached";
-        M.log(`${action} ${message.url} for ${delete_reaction.count} ${delete_reaction.emoji.name} reactions`);
+        M.log(`${action} ${message.url} for ${trigger_reaction.count} ${trigger_reaction.emoji.name} reactions`);
         try {
             await this.wheatley.database.lock();
             if (
@@ -277,10 +303,10 @@ export default class Starboard extends BotComponent {
                 await this.wheatley.channels.staff_flag_log.send({
                     content:
                         `${action} message from <@${message.author.id}> for ` +
-                        `${delete_reaction.count} ${delete_reaction.emoji.name} reactions` +
+                        `${trigger_reaction.count} ${trigger_reaction.emoji.name} reactions` +
                         `\n${this.reactions_string(message)}` +
                         "\n" +
-                        (await delete_reaction.users.fetch()).map(user => `<@${user.id}> ${user.tag}`).join("\n"),
+                        (await trigger_reaction.users.fetch()).map(user => `<@${user.id}> ${user.tag}`).join("\n"),
                     ...(await this.wheatley.make_quote_embeds([message])),
                     allowedMentions: { parse: [] },
                 });
@@ -303,12 +329,19 @@ export default class Starboard extends BotComponent {
         }
         if (do_delete) {
             await message.delete();
-            await message.channel.send(
-                `<@${message.author.id}> A message of yours was automatically deleted because a threshold for` +
-                    " <:delet_this:669598943117836312> reactions (or similar) was reached.\n\n" +
-                    "FAQ: How can I avoid this in the future?\n" +
-                    "Answer: Post less cringe",
-            );
+            if (trigger_type == delete_trigger_type.delete_this) {
+                await message.channel.send(
+                    `<@${message.author.id}> A message of yours was automatically deleted because a threshold for` +
+                        " <:delet_this:669598943117836312> reactions (or similar) was reached.\n\n" +
+                        "FAQ: How can I avoid this in the future?\n" +
+                        "Answer: Post less cringe",
+                );
+            } else {
+                await message.channel.send(
+                    `<@${message.author.id}> A message of yours was automatically deleted because a threshold for` +
+                        " :recycle: reactions (or similar) was reached.",
+                );
+            }
             this.deletes.push(Date.now());
         }
     }
@@ -335,9 +368,20 @@ export default class Starboard extends BotComponent {
             reaction.emoji.name &&
             this.delete_emojis.includes(reaction.emoji.name) &&
             reaction.count >= auto_delete_threshold
-            //&& !is_authorized_admin((await departialize(reaction.message)).author.id)
         ) {
-            await this.handle_auto_delete(await departialize(reaction.message), reaction);
+            await this.handle_auto_delete(
+                await departialize(reaction.message),
+                reaction,
+                delete_trigger_type.delete_this,
+            );
+            return;
+        }
+        if (
+            reaction.emoji.name &&
+            this.repost_emojis.includes(reaction.emoji.name) &&
+            reaction.count >= auto_delete_threshold
+        ) {
+            await this.handle_auto_delete(await departialize(reaction.message), reaction, delete_trigger_type.repost);
             return;
         }
         if (await this.wheatley.database.starboard_entries.findOne({ message: reaction.message.id })) {
@@ -460,12 +504,34 @@ export default class Starboard extends BotComponent {
         }
     }
 
+    async add_repost_emoji(command: TextBasedCommand, arg: string) {
+        const emojis = arg.match(EMOJIREGEX);
+        if (emojis) {
+            const names = emojis.map(emoji => (emoji.startsWith("<") ? emoji.split(":")[1] : emoji));
+            await this.wheatley.database.wheatley.updateOne(
+                { id: "main" },
+                {
+                    $push: {
+                        "starboard.repost_emojis": {
+                            $each: names.filter(name => !this.repost_emojis.includes(name)),
+                        },
+                    },
+                },
+            );
+            await this.get_emoji_config();
+            await command.reply(`Added ${names.join(", ")} to the ignored emojis`);
+        } else {
+            await command.reply("No emojis found");
+        }
+    }
+
     async list_config(command: TextBasedCommand) {
         await command.reply(
             [
                 `Negative emojis: ${this.negative_emojis.join(", ")}`,
                 `Delete emojis: ${this.delete_emojis.join(", ")}`,
                 `Ignored emojis: ${this.ignored_emojis.join(", ")}`,
+                `Repost emojis: ${this.repost_emojis.join(", ")}`,
             ].join("\n"),
         );
     }

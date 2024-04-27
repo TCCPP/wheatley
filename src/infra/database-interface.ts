@@ -5,7 +5,7 @@ import { Mutex } from "../utils/containers.js";
 
 import * as mongo from "mongodb";
 import { link_blacklist_entry, watchlist_entry } from "../private-types.js";
-import { wheatley_database_credentials, wheatley_database_info } from "../wheatley.js";
+import { wheatley_database_credentials } from "../wheatley.js";
 
 import { buzzword_scoreboard_entry } from "./schemata/buzzwords.js";
 import { moderation_entry } from "./schemata/moderation.js";
@@ -15,6 +15,7 @@ import { suggestion_entry } from "./schemata/server-suggestion-tracker.js";
 import { skill_suggestion_entry } from "./schemata/skill-role-suggestion.js";
 import { auto_delete_threshold_notifications, starboard_entry } from "./schemata/starboard.js";
 import { button_scoreboard_entry } from "./schemata/the-button.js";
+import { wheatley_database_info } from "./schemata/wheatley.js";
 
 export class WheatleyDatabase {
     private mutex = new Mutex();
