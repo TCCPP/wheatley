@@ -880,7 +880,10 @@ export class Wheatley {
                 if (command.permissions !== undefined) {
                     const member = await this.try_fetch_tccpp_member(await command_obj.get_member());
                     if (!member || !member.permissions.has(command.permissions)) {
-                        await command_obj.reply(create_error_reply("Invalid permissions"));
+                        await command_obj.reply({
+                            files: ["https://miro.medium.com/v2/resize:fit:750/1*lMV_u6tnu9WmFuJRyhTsFQ.jpeg"],
+                            should_text_reply: true,
+                        });
                         return;
                     }
                 }
@@ -996,7 +999,9 @@ export class Wheatley {
             if (command.permissions !== undefined) {
                 const member = await this.try_fetch_tccpp_member(interaction.user.id);
                 if (!member || !member.permissions.has(command.permissions)) {
-                    await interaction.reply(create_error_reply("Invalid permissions"));
+                    await interaction.reply({
+                        files: ["https://miro.medium.com/v2/resize:fit:750/1*lMV_u6tnu9WmFuJRyhTsFQ.jpeg"],
+                    });
                     return;
                 }
             }
