@@ -108,5 +108,10 @@ argument to \`print\`.
         ).to.equal(false);
         expect(should_block(".gg/")).to.equal(false);
         expect(should_block("foo .gg/ bar")).to.equal(false);
+        expect(should_block(`Check out https://stunlock.gg/posts/emscripten_with_cmake/ sounds like ...`)).to.equal(
+            false,
+        );
+        expect(should_block(`paste.gg/p/foobar`)).to.equal(false);
+        expect(should_block(`https://redirect.compiler.gg/foobar`)).to.equal(false);
     });
 });
