@@ -11,9 +11,9 @@ import { TextBasedCommand } from "../command-abstractions/text-based-command.js"
 import { build_description } from "../utils/strings.js";
 
 /**
- * !nothingtoseehere
+ * !nothingtoseehere and other shortcuts
  */
-export default class Nothingtoseehere extends BotComponent {
+export default class Shortcuts extends BotComponent {
     static override get is_freestanding() {
         return true;
     }
@@ -27,10 +27,21 @@ export default class Nothingtoseehere extends BotComponent {
                 .set_description("Nothing to see here")
                 .set_handler(this.nothingtoseehere.bind(this)),
         );
+
+        this.add_command(
+            new TextBasedCommandBuilder(["tryitandsee", "tias"])
+                .set_description("Try it and see")
+                .set_handler(this.tryitandsee.bind(this)),
+        );
     }
 
     async nothingtoseehere(command: TextBasedCommand) {
         M.log("Received nothingtoseehere command");
         await command.reply("https://youtu.be/NuAKnbIr6TE");
+    }
+
+    async tryitandsee(command: TextBasedCommand) {
+        M.log("Received tryitandsee command");
+        await command.reply("https://tryitands.ee/");
     }
 }
