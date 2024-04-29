@@ -1,16 +1,22 @@
 import { describe, expect, it } from "vitest";
 
-import { should_block } from "../src/components/invite-links.js";
+import { should_block } from "../src/components/anti-invite-links.js";
 
 describe("invite link tests", () => {
     it("should block invite links", () => {
+        expect(should_block("discord.gg/foo")).to.equal(true);
+        expect(should_block("discord.com/invite/foo")).to.equal(true);
+        expect(should_block("discordapp.com/invite/foo")).to.equal(true);
+        expect(should_block("disboard.org/server/join/foo")).to.equal(true);
+        expect(should_block("discord.me/server/join/foo")).to.equal(true);
+        expect(should_block("discord.gg/f")).to.equal(true);
         expect(should_block("foobar https://discord.gg/randomserver foobar")).to.equal(true);
         expect(should_block("foobar discord.gg/randomserver foobar")).to.equal(true);
-        expect(should_block("foobar .gg/randomserver foobar")).to.equal(true);
-        expect(should_block("foobar .gg/T897FfR foobar")).to.equal(true);
-        expect(should_block("foobar .GG/random foobar")).to.equal(true);
-        expect(should_block("foobar .gg/12*(*^&^)asdggascn foobar")).to.equal(true);
-        expect(should_block(".gg/1")).to.equal(true);
+        expect(should_block("foobar discord.gg/randomserver foobar")).to.equal(true);
+        expect(should_block("foobar discord.gg/T897FfR foobar")).to.equal(true);
+        expect(should_block("foobar discord.GG/random foobar")).to.equal(true);
+        expect(should_block("foobar discord.gg/12*(*^&^)asdggascn foobar")).to.equal(true);
+        expect(should_block("discord.gg/1")).to.equal(true);
         expect(
             should_block(`
 !wp
@@ -36,7 +42,7 @@ void print(T arg) {
 ## Usage
 ?inline
 \`\`\`cpp
-.gg/randomserver
+discord.gg/randomserver
 print(42);
 print("Hello");
 \`\`\`

@@ -5,7 +5,7 @@ import * as Discord from "discord.js";
 import { BotComponent } from "../bot-component.js";
 import { departialize } from "../utils/discord.js";
 
-const INVITE_RE = /\.gg\/\S+/i;
+const INVITE_RE = /(discord(app)?|disboard)\.(gg|(com|org|me)\/(invite|server\/join))\/\S+/i;
 
 export function should_block(content: string) {
     return INVITE_RE.test(content);
@@ -14,7 +14,7 @@ export function should_block(content: string) {
 /**
  * Invite link blocking
  */
-export default class InviteLinks extends BotComponent {
+export default class AntiInviteLinks extends BotComponent {
     static override get is_freestanding() {
         return true;
     }
