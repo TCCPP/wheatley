@@ -77,10 +77,6 @@ function repackage_embed({
     };
 }
 
-/**
- * Adds an /inspect application command for displaying the markdown used to
- * generate a message.
- */
 export default class Inspect extends BotComponent {
     static override get is_freestanding() {
         return true;

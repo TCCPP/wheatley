@@ -29,9 +29,6 @@ enum delete_trigger_type {
     repost,
 }
 
-/**
- * Reaction highscores.
- */
 export default class Starboard extends BotComponent {
     mutex = new KeyedMutexSet<string>();
 

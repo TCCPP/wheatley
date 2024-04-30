@@ -13,9 +13,6 @@ import { moderation_entry, basic_moderation } from "../../infra/schemata/moderat
 import { colors } from "../../common.js";
 import { build_description } from "../../utils/strings.js";
 
-/**
- * Implements !note
- */
 export default class Note extends ModerationComponent {
     get type() {
         return "note" as const;

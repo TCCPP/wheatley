@@ -12,9 +12,6 @@ import { TextBasedCommandBuilder } from "../command-abstractions/text-based-comm
 import { TextBasedCommand } from "../command-abstractions/text-based-command.js";
 import Wiki from "./wiki.js";
 
-/**
- * !help
- */
 export default class Help extends BotComponent {
     static override get is_freestanding() {
         return true;

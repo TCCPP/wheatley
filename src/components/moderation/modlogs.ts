@@ -20,9 +20,6 @@ function is_autoremove(info: moderation_edit_info) {
     return info.reason == "Auto" && info.moderator == WHEATLEY_ID;
 }
 
-/**
- * Implements !modlogs
- */
 export default class Modlogs extends BotComponent {
     constructor(wheatley: Wheatley) {
         super(wheatley);

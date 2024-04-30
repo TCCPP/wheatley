@@ -8,9 +8,6 @@ import { BotComponent } from "../bot-component.js";
 import { Wheatley } from "../wheatley.js";
 import { discord_timestamp } from "../utils/discord.js";
 
-/**
- * Tracks "getting banned speedruns".
- */
 export default class Speedrun extends BotComponent {
     constructor(wheatley: Wheatley) {
         super(wheatley);

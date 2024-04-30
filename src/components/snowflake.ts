@@ -8,9 +8,6 @@ import { decode_snowflake, discord_timestamp } from "../utils/discord.js";
 
 const snowflakes_re = /\d+/g;
 
-/**
- * Adds the /snowflake command.
- */
 export default class Snowflake extends BotComponent {
     static override get is_freestanding() {
         return true;

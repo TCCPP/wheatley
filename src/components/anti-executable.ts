@@ -9,9 +9,6 @@ import { BotComponent } from "../bot-component.js";
 import { Wheatley } from "../wheatley.js";
 import { build_description, capitalize } from "../utils/strings.js";
 
-/**
- * Prevent executables and check for viruses
- */
 export default class AntiExecutable extends BotComponent {
     static override get is_freestanding() {
         return true;

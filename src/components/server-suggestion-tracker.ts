@@ -23,9 +23,6 @@ type reaction = {
     emoji: Discord.Emoji;
 };
 
-/**
- * Provides a dashboard for server suggestions.
- */
 export default class ServerSuggestionTracker extends BotComponent {
     recovering = true;
 

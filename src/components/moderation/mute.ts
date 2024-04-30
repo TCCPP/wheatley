@@ -10,9 +10,6 @@ import { TextBasedCommandBuilder } from "../../command-abstractions/text-based-c
 import { TextBasedCommand } from "../../command-abstractions/text-based-command.js";
 import { moderation_entry, basic_moderation_with_user } from "../../infra/schemata/moderation.js";
 
-/**
- * Implements !mute
- */
 export default class Mute extends ModerationComponent {
     get type() {
         return "mute" as const;

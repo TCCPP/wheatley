@@ -12,9 +12,6 @@ import { MINUTE } from "../../common.js";
 import { unwrap } from "../../utils/misc.js";
 import { moderation_entry, basic_moderation_with_user } from "../../infra/schemata/moderation.js";
 
-/**
- * Implements !ban
- */
 export default class Ban extends ModerationComponent {
     get type() {
         return "ban" as const;

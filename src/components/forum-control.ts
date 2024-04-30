@@ -23,9 +23,6 @@ function create_embed(title: string | undefined, color: number, msg: string) {
     return embed;
 }
 
-/**
- * Adds commands for handling help forum channels.
- */
 export default class ForumControl extends BotComponent {
     constructor(wheatley: Wheatley) {
         super(wheatley);

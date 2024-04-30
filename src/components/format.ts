@@ -215,9 +215,6 @@ function should_replace_original(replying_to: Discord.Message, request_timestamp
     );
 }
 
-/**
- * Adds formatting commands.
- */
 export default class Format extends BotComponent {
     static override get is_freestanding() {
         return true;

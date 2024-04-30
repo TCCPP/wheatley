@@ -16,9 +16,6 @@ import { ascending, unwrap } from "../utils/misc.js";
 import { MessageContextMenuInteractionBuilder } from "../command-abstractions/context-menu.js";
 import { decode_snowflake, discord_timestamp, forge_snowflake } from "../utils/discord.js";
 
-/**
- * Adds a !purge command.
- */
 export default class Purge extends BotComponent {
     static override get is_freestanding() {
         return true;

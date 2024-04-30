@@ -45,9 +45,6 @@ const image_regex = /!\[[^\]]*]\(([^)]*)\)/;
 const reference_definition_regex = /\s*\[([^\]]*)]: (.+)/;
 const reference_link_regex = /\[([^\]]*)]\[([^\]]*)]/g;
 
-/**
- * One-time use class for parsing articles.
- */
 class ArticleParser {
     private readonly aliases = new Set<string>();
 
@@ -315,9 +312,6 @@ export function parse_article(name: string | null, content: string, wheatley: Wh
     return [parser.article, parser.article_aliases];
 }
 
-/**
- * Parses wiki articles and adds the /wiki or /howto command for displaying them.
- */
 export default class Wiki extends BotComponent {
     static override get is_freestanding() {
         return true;

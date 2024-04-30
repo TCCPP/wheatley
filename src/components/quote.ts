@@ -32,9 +32,6 @@ type QuoteDescriptor = {
     block: boolean;
 };
 
-/**
- * Adds a /quote command for quoting messages within TCCPP.
- */
 export default class Quote extends BotComponent {
     constructor(wheatley: Wheatley) {
         super(wheatley);

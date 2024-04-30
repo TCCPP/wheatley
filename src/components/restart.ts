@@ -9,9 +9,6 @@ import { Wheatley } from "../wheatley.js";
 import { TextBasedCommandBuilder } from "../command-abstractions/text-based-command-builder.js";
 import { TextBasedCommand } from "../command-abstractions/text-based-command.js";
 
-/**
- * Adds a /restart command.
- */
 export default class Restart extends BotComponent {
     static override get is_freestanding() {
         return true;

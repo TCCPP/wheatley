@@ -9,9 +9,6 @@ import { TextBasedCommandBuilder } from "../command-abstractions/text-based-comm
 import { TextBasedCommand } from "../command-abstractions/text-based-command.js";
 import { format_list } from "../utils/strings.js";
 
-/**
- * Adds the /redirect command for redirecting conversations between channels.
- */
 export default class Redirect extends BotComponent {
     constructor(wheatley: Wheatley) {
         super(wheatley);

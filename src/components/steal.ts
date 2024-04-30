@@ -12,9 +12,6 @@ import { url_re } from "./quote.js";
 import { CUSTOM_EMOJIREGEX } from "../utils/discord.js";
 import { remove } from "../utils/arrays.js";
 
-/**
- * Adds a /ping command.
- */
 export default class Steal extends BotComponent {
     static override get is_freestanding() {
         return true;

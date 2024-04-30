@@ -11,9 +11,6 @@ import { TextBasedCommandBuilder } from "../../command-abstractions/text-based-c
 import { TextBasedCommand } from "../../command-abstractions/text-based-command.js";
 import { moderation_entry, basic_moderation_with_user } from "../../infra/schemata/moderation.js";
 
-/**
- * Implements !rolepersist
- */
 export default class Rolepersist extends ModerationComponent {
     get type() {
         return "rolepersist" as const;

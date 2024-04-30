@@ -15,9 +15,6 @@ function create_embed(title: string | undefined, color: number, msg: string) {
     return embed;
 }
 
-/**
- * Informs users that they shouldn't delete forum thread messages.
- */
 export default class AntiForumPostDelete extends BotComponent {
     override async on_message_delete(message: Discord.Message<boolean> | Discord.PartialMessage) {
         if (message.channel.id == message.id) {

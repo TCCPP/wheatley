@@ -53,9 +53,6 @@ export class CoreGuidelinesIndex {
     }
 }
 
-/**
- * Adds the /guide command for searching cpp core guidelines.
- */
 export default class CoreGuidelines extends BotComponent {
     static override get is_freestanding() {
         return true;

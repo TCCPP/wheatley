@@ -7,12 +7,6 @@ import { Wheatley } from "../wheatley.js";
 import { TextBasedCommandBuilder } from "../command-abstractions/text-based-command-builder.js";
 import { TextBasedCommand } from "../command-abstractions/text-based-command.js";
 
-/**
- * Thread control for threads in thread-based (non-forum) channels
- * Really just:
- * - !rename
- * - !archive
- */
 export default class ThreadControl extends BotComponent {
     constructor(wheatley: Wheatley) {
         super(wheatley);

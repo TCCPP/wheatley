@@ -12,9 +12,6 @@ import Modlogs from "./modlogs.js";
 import { TextBasedCommandBuilder } from "../../command-abstractions/text-based-command-builder.js";
 import { TextBasedCommand } from "../../command-abstractions/text-based-command.js";
 
-/**
- * Implements !reason, !duration, ane !expunge
- */
 export default class ModerationControl extends BotComponent {
     constructor(wheatley: Wheatley) {
         super(wheatley);

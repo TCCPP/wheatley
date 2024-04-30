@@ -13,10 +13,6 @@ export interface AntiEveryoneMessageCache {
     reply: Discord.Message;
 }
 
-/**
- * Responds to users attempting to ping @everyone or @here
- * with a message discouraging the behavior.
- */
 export default class AntiEveryone extends BotComponent {
     /**
      * Replies that have been made to users who attempted to ping everyone.

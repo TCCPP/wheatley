@@ -11,9 +11,6 @@ export function should_block(content: string) {
     return INVITE_RE.test(content);
 }
 
-/**
- * Invite link blocking
- */
 export default class AntiInviteLinks extends BotComponent {
     static override get is_freestanding() {
         return true;

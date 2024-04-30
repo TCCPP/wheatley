@@ -87,9 +87,6 @@ export class Man7Index {
     }
 }
 
-/**
- * Adds the /man command for searching manual pages.
- */
 export default class Man7 extends BotComponent {
     static override get is_freestanding() {
         return true;

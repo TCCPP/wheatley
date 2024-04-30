@@ -4,13 +4,6 @@ import { M } from "../utils/debugging-and-logging.js";
 
 // Shamelessly stolen from compiler explorer
 
-/**
- * Will launch the Prometheus metrics server
- *
- * @param serverPort - The listening port to bind into this metrics server.
- * @param hostname - The TCP host to attach the listener.
- * @returns void
- */
 export function setup_metrics_server(serverPort: number, hostname: string | undefined): void {
     M.debug("Starting prometheus server");
 

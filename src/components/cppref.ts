@@ -146,9 +146,6 @@ export class CpprefIndex {
     }
 }
 
-/**
- * Adds /cref and /cppref commands.
- */
 export default class Cppref extends BotComponent {
     static override get is_freestanding() {
         return true;

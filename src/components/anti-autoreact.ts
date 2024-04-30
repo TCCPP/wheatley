@@ -4,9 +4,6 @@ import { departialize } from "../utils/discord.js";
 import { M } from "../utils/debugging-and-logging.js";
 import { BotComponent } from "../bot-component.js";
 
-/**
- * Prevents some auto-reactions being placed on some users.
- */
 export default class AntiAutoreact extends BotComponent {
     obnoxious_autoreact_ids = new Set([
         "841482328693669900", // "eisie"

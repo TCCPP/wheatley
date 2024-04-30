@@ -12,9 +12,6 @@ import { TextBasedCommand } from "../../command-abstractions/text-based-command.
 import { DAY } from "../../common.js";
 import { moderation_entry, basic_moderation_with_user } from "../../infra/schemata/moderation.js";
 
-/**
- * Implements !timeout
- */
 export default class Timeout extends ModerationComponent {
     get type() {
         return "timeout" as const;

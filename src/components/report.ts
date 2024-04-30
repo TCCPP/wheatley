@@ -11,9 +11,6 @@ import { Wheatley } from "../wheatley.js";
 import { MessageContextMenuInteractionBuilder } from "../command-abstractions/context-menu.js";
 import { ModalInteractionBuilder } from "../command-abstractions/modal.js";
 
-/**
- * Provides a command for reporting other users' messages.
- */
 export default class Report extends BotComponent {
     private readonly report_modal = new Discord.ModalBuilder()
         .setCustomId("report-modal")

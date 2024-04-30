@@ -10,9 +10,6 @@ import { TextBasedCommandBuilder } from "../command-abstractions/text-based-comm
 import { TextBasedCommand } from "../command-abstractions/text-based-command.js";
 import { build_description } from "../utils/strings.js";
 
-/**
- * !nothingtoseehere and other shortcuts
- */
 export default class Shortcuts extends BotComponent {
     static override get is_freestanding() {
         return true;

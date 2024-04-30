@@ -46,9 +46,6 @@ function is_valid_name(name: string) {
     return is_all_ascii(name) || is_valid_codepoint(name[0]) || has_three_continuous_valid_asciis(name);
 }
 
-/**
- * Manages users with invalid names, such as unicode spam.
- */
 export default class UsernameManager extends BotComponent {
     interval: NodeJS.Timeout | null = null;
 

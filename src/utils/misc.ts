@@ -31,9 +31,7 @@ function compare<T>(a: T, b: T) {
     }
 }
 
-/**
- * Utility for Array.prototype.sort
- */
+// Utility for Array.prototype.sort
 export function ascending<T, P>(a: T, b: T, pick?: (item: T) => P) {
     if (pick) {
         return compare(pick(a), pick(b));
@@ -42,9 +40,7 @@ export function ascending<T, P>(a: T, b: T, pick?: (item: T) => P) {
     }
 }
 
-/**
- * Utility for Array.prototype.sort
- */
+// Utility for Array.prototype.sort
 export function descending<T, P>(a: T, b: T, pick?: (item: T) => P) {
     return -ascending(a, b, pick);
 }

@@ -25,9 +25,6 @@ type channel_permission_entry = {
     permissions: permission_overwrites;
 };
 
-/**
- * Manage channel and category permissions
- */
 export default class PermissionManager extends BotComponent {
     static override get is_freestanding() {
         return true;

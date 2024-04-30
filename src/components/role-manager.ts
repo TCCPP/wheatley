@@ -12,11 +12,6 @@ import { set_interval } from "../utils/node.js";
 // Auto-remove pink roles when members are no longer boosting
 // Auto-remove duplicate skill roles
 
-/**
- * Performs automated role management tasks, such as:
- * - removing @Pink roles for non-boosting members
- * - removing duplicate skill roles
- */
 export default class RoleManager extends BotComponent {
     pink_role: Discord.Role;
     interval: NodeJS.Timeout | null = null;

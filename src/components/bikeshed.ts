@@ -17,10 +17,6 @@ const OPTIONS = [
     { symbol: "⏬", text: "Strongly Against" },
 ];
 
-/**
- * Adds a /bikeshed command for creating polls with responses ranging from
- * strongly favor to strongly against.
- */
 export default class Bikeshed extends BotComponent {
     static override get is_freestanding() {
         return true;

@@ -11,9 +11,6 @@ import { TextBasedCommandBuilder } from "../../command-abstractions/text-based-c
 import { TextBasedCommand } from "../../command-abstractions/text-based-command.js";
 import { moderation_entry, basic_moderation } from "../../infra/schemata/moderation.js";
 
-/**
- * Implements !warn
- */
 export default class Warn extends ModerationComponent {
     get type() {
         return "warn" as const;

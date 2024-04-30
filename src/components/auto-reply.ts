@@ -9,9 +9,6 @@ import { SelfClearingSet } from "../utils/containers.js";
 
 const LLM_REGEX = /\b(?<!!)llms?\b/gi;
 
-/**
- * Adds autoreplies
- */
 export default class Autoreply extends BotComponent {
     static override get is_freestanding() {
         return true;

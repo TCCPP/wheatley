@@ -22,9 +22,6 @@ const root_only_reacts = new Set([
     "🫑", "🍏", "🎾", "🍅", "🍎", "🏮",
 ]);
 
-/**
- * Adds reactions to server suggestions and allows root users to approve/reject suggestions via reactions.
- */
 export default class ServerSuggestionReactions extends BotComponent {
     readonly monitored_channels = new Map<string, Discord.TextChannel | Discord.AnyThreadChannel>();
     stop = false;

@@ -12,9 +12,6 @@ import { roulette_leaderboard_entry } from "../infra/schemata/roulette.js";
 
 const LEADERBOARD_ENTRIES = 20;
 
-/**
- * "Russian roulette" game where users risk timing themselves out.
- */
 export default class Roulette extends BotComponent {
     readonly warned_users = new SelfClearingSet<string>(60 * MINUTE);
     readonly disabled_users = new SelfClearingSet<string>(20 * MINUTE); // prevent mod abuse (1984)

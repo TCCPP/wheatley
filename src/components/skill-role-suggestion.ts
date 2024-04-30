@@ -17,9 +17,6 @@ import { build_description, capitalize } from "../utils/strings.js";
 
 type interaction_context = { member: Discord.GuildMember; role?: string; context?: Discord.Message };
 
-/**
- * Adds commands for users to suggest skill roles for other members.
- */
 export default class SkillRoleSuggestion extends BotComponent {
     // string -> interaction context
     readonly target_map = new SelfClearingMap<string, interaction_context>(15 * MINUTE);

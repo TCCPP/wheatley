@@ -60,9 +60,6 @@ function parse_unit(u: string) {
 const nodistractions_arg_re = /^(\d*)\s*(\w*)/i;
 const INT_MAX = 0x7fffffff;
 
-/**
- * Adds /nodistractions command, allowing users to give themselves a no-off-topic role.
- */
 export default class Nodistractions extends BotComponent {
     // Sorted by !nodistractions end time
     undistract_queue: no_distraction_entry[] = [];

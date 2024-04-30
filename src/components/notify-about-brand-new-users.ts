@@ -10,9 +10,6 @@ import { discord_timestamp } from "../utils/discord.js";
 
 const NEW_USER_THRESHOLD = MINUTE * 30;
 
-/**
- * Warns about fresh Discord accounts joining the server.
- */
 export default class NotifyAboutBrandNewUsers extends BotComponent {
     constructor(wheatley: Wheatley) {
         super(wheatley);
