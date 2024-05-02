@@ -278,9 +278,8 @@ export default class ForumChannels extends BotComponent {
         const quote = await this.wheatley.make_quote_embeds([message], {
             no_extra_media_embeds,
             custom_content: content,
+            title,
         });
-        // ninja in a title
-        (quote.embeds[0] as Discord.EmbedBuilder).setTitle(title);
         await to.send(quote);
     }
 

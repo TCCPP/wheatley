@@ -221,6 +221,9 @@ export const root_mod_ids_set = new Set(root_mod_ids);
 type quote_options = {
     // description template
     template?: string;
+    footer?: string;
+    title?: string;
+    id_footer?: boolean;
     // only include an image in the single embed, omit all other media or attachments
     no_extra_media_embeds?: boolean;
     // override message content
@@ -681,13 +684,21 @@ export class Wheatley {
     }
 
     async make_quote_embeds(
-        messages_objects: Discord.Message[],
+        messages_objects: (MessageData | Discord.Message)[],
         options?: quote_options,
     ): Promise<{
         embeds: (Discord.EmbedBuilder | Discord.Embed)[];
         files?: (Discord.AttachmentPayload | Discord.Attachment)[];
     }> {
-        const messages = await Promise.all(messages_objects.map(this.get_raw_message_data.bind(this)));
+        const messages = await Promise.all(
+            messages_objects.map(async message_object => {
+                if (message_object instanceof Discord.Message) {
+                    return await this.get_raw_message_data(message_object);
+                } else {
+                    return message_object;
+                }
+            }),
+        );
         assert(messages.length >= 1);
         const head = messages[0];
         const contents = options?.custom_content ?? messages.map(m => m.content).join("\n");
@@ -712,6 +723,19 @@ export class Wheatley {
                 text: `Quoted by ${options.requested_by.displayName}`,
                 iconURL: options.requested_by.user.displayAvatarURL(),
             });
+        }
+        if (options?.footer) {
+            embed.setFooter({
+                text: options.footer,
+            });
+        }
+        if (options?.id_footer) {
+            embed.setFooter({
+                text: `ID: ${head.id}`,
+            });
+        }
+        if (options?.title) {
+            embed.setTitle(options.title);
         }
         const media = (await Promise.all(messages.map(this.get_media))).flat();
         // M.log(media);

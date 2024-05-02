@@ -85,10 +85,8 @@ export default class Report extends BotComponent {
             if (message.length > 0) {
                 report_embed.setDescription(`Message: ${message}`);
             }
-            const quote_embeds = await this.wheatley.make_quote_embeds([target_message]);
-            // ninja in a custom footer
-            (quote_embeds.embeds[0] as Discord.EmbedBuilder).setFooter({
-                text: `ID: ${target_message.author.id}`,
+            const quote_embeds = await this.wheatley.make_quote_embeds([target_message], {
+                id_footer: true,
             });
             await this.wheatley.channels.staff_flag_log.send({
                 content: `<@&${this.wheatley.roles.moderators.id}>`,
