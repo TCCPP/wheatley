@@ -54,6 +54,7 @@ export class BotComponent {
             .finally(() => {
                 this.setup_listener("messageCreate", this.on_message_create);
                 this.setup_listener("messageDelete", this.on_message_delete);
+                this.setup_listener("messageDeleteBulk", this.on_message_delete_bulk);
                 this.setup_listener("messageUpdate", this.on_message_update);
                 this.setup_listener("messageReactionAdd", this.on_reaction_add);
                 this.setup_listener("messageReactionRemove", this.on_reaction_remove);
@@ -80,6 +81,10 @@ export class BotComponent {
     async on_ready() {} // actually on wheatley ready
     async on_message_create?(message: Discord.Message): Promise<void>;
     async on_message_delete?(message: Discord.Message | Discord.PartialMessage): Promise<void>;
+    async on_message_delete_bulk?(
+        messages: Discord.Collection<string, Discord.Message | Discord.PartialMessage>,
+        channel: Discord.GuildTextBasedChannel,
+    ): Promise<void>;
     async on_message_update?(
         old_message: Discord.Message | Discord.PartialMessage,
         new_message: Discord.Message | Discord.PartialMessage,
