@@ -319,6 +319,7 @@ export class Wheatley {
         "802541516655951892", // server-suggestions
         "594212045621035030", // showcase
         "873682069325217802", // today-i-learned
+        "1235740912638890105", // daily-standup
     ]);
 
     roles: {
