@@ -8,11 +8,6 @@ experience of the author of this article, `clangd` is just much better.
 1. Open up Marketplace and install `clangd` by LLVM
 2. It should automatically detect clangd and should work as-is.
 
-## Code Formatter
-1. Install `Clang-Format` Extension by Xaver Hellauer from Marketplace.
-2. Press `Ctrl+,` keys, it should open up VSCode settings.
-3. Search for `formatter`, and then set the `Default Formatter` setting to `clang-format`.
-
 ## CMake
 1. Have cmake installed on your system. If using msys2, then `pacman -S mingw-w64-ucrt-x86_64-cmake`
 2. Install the extension pack from Microsoft called `CMake Tools`
