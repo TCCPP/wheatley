@@ -1,14 +1,14 @@
-# How Is C/C++ Source Code Compiled?
+# How Is C and C++ Source Code Compiled?
 
 :hash: The **preprocessor** expands macros and copy-pastes the content of 
 included files at their point of inclusion. After being preprocessed, a source 
 file no longer contains preprocessor directives. The result is called a
 _translation unit_ (TU).
 
-> :bulb: _The preprocessor merely does text replacement, it does not care about any aspect of C/C++._
+> :bulb: _The preprocessor merely does text replacement, it does not care about any aspect of C or C++._
 
 <:ce:1211139919884582943> The **compiler** turns instructions into machine code 
-and enforces C/C++ syntax rules. In particular, anything that is used must be 
+and enforces C or C++ syntax rules. In particular, anything that is used must be 
 have been declared beforehand. The compiler only needs to know that something
 **exists**, not how it is _defined_.
 

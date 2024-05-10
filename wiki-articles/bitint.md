@@ -1,4 +1,4 @@
-# _BitInt and Extended Integers in C/C++
+# _BitInt and Extended Integers in C and C++
 
 **[_BitInt(N)][1]** is an N-bit integer available since [C23](https://en.cppreference.com/w/c/23), but may not be
 available in C++. Major compilers have limited support for extended integers.
@@ -23,5 +23,5 @@ available in C++. Major compilers have limited support for extended integers.
 
 ## 3rd-Party Solutions
 - [Boost.Multiprecision](https://www.boost.org/doc/libs/1_82_0/libs/multiprecision/doc/html/index.html) provides **[boost::cpp_int](https://www.boost.org/doc/libs/1_82_0/libs/multiprecision/doc/html/boost_multiprecision/tut/ints/cpp_int.html)** and other types. (C++)
-- [GMP](https://en.wikipedia.org/wiki/GNU_Multiple_Precision_Arithmetic_Library) provides **[mpz_t](https://gmplib.org/manual/Integer-Functions)** and other types. (C/C++)
+- [GMP](https://en.wikipedia.org/wiki/GNU_Multiple_Precision_Arithmetic_Library) provides **[mpz_t](https://gmplib.org/manual/Integer-Functions)** and other types. (C and C++)
 - [Wikipedia: List of arbitrary-precision arithmetic software](https://en.wikipedia.org/wiki/List_of_arbitrary-precision_arithmetic_software)

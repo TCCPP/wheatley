@@ -1,4 +1,4 @@
-# C/C++ Operator Precedence
+# C and C++ Operator Precedence
 
 ⬅ means *right-to-left associative*,
 everything else is left-to-right associative.

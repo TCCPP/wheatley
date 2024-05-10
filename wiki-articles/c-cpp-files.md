@@ -1,4 +1,4 @@
-# What Are the File Types in C/C++
+# What Are the File Types in C and C++
 
 <!-- inline -->
 ## Source Files: `.c|.cpp|.cxx|...`
