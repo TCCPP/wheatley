@@ -1,6 +1,6 @@
 # Choosing an IDE/Editor
 
-There is no "best" editor for C and C++.
+There is no "best" editor for C or C++.
 Each has its strengths and weaknesses.
 
 <!-- inline -->

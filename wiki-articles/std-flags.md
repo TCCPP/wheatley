@@ -25,7 +25,7 @@ Updating to a newer compiler is recommended.
 
 <!-- inline -->
 ## Visual Studio
-Project → <name> → Settings → C and C++ → Language →  C++ Language Standard
+Project → <name> → Settings → C/C++ → Language →  C++ Language Standard
 
 ## CMake
 ```cmake
