@@ -1,4 +1,4 @@
-# What Are the Sizes of Integers in C/C++?
+# What Are the Sizes of Integers in C and C++?
 
 ```cpp
 Integer   │ signed min │ signed max │ unsigned max

@@ -1,5 +1,5 @@
 <!-- alias pi -->
-# How Do I Get Pi and Other Math Constants in C/C++?
+# How Do I Get Pi and Other Math Constants in C and C++?
 
 ## C++
 ```cpp

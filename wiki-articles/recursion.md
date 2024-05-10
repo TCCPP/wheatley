@@ -1,4 +1,4 @@
-# Recursion in C/C++
+# Recursion in C and C++
 [Recursion](https://en.wikipedia.org/wiki/Recursion_(computer_science)) occurs when a function calls itself.
 For example, consider two implementations of the [factorial function](https://en.wikipedia.org/wiki/Factorial):
 

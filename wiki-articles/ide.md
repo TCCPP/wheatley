@@ -1,6 +1,6 @@
 # Choosing an IDE/Editor
 
-There is no "best" editor for C/C++.
+There is no "best" editor for C and C++.
 Each has its strengths and weaknesses.
 
 <!-- inline -->
@@ -23,7 +23,7 @@ Extra tools for building, running, etc. can be installed via plugins.
 - **[Sublime Text](https://sublimetext.com)** (free, any OS)
 - **[Vim](https://www.vim.org)**, **[Emacs](https://www.gnu.org/software/emacs/)**, **[Micro](https://micro-editor.github.io)**: (free, terminal)
 
-All the above work for many languages, not just C/C++.
+All the above work for many languages, not just C and C++.
 
 ## More Alternatives
 
