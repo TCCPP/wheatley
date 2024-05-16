@@ -330,7 +330,7 @@ export class Wheatley {
     } = {} as any;
 
     // TODO: Eliminate pre-set value
-    root_mod_list = "jr-#6677, Eisenwave#7675, Styxs#7557, or Vin¢#1293";
+    root_mod_list = "jr.0, dot42, styxs, or _64";
 
     message_counter = new PromClient.Counter({
         name: "tccpp_message_count",
