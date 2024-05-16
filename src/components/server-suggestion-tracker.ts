@@ -182,6 +182,9 @@ export default class ServerSuggestionTracker extends BotComponent {
     readonly status_lock = new SelfClearingSet<string>(5 * MINUTE, 5 * MINUTE);
 
     async open_suggestion(message: Discord.Message, reopen = false) {
+        if (message.author.bot) {
+            return;
+        }
         try {
             M.log("New suggestion", message.author.tag, message.author.id, message.url);
             const quote = await this.make_embeds(message);
