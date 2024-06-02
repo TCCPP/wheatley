@@ -86,7 +86,8 @@ export default class Report extends BotComponent {
                 report_embed.setDescription(`Message: ${message}`);
             }
             const quote_embeds = await this.wheatley.make_quote_embeds([target_message], {
-                id_footer: true,
+                message_id_footer: true,
+                user_id_footer: true,
             });
             await this.wheatley.channels.staff_flag_log.send({
                 content: `<@&${this.wheatley.roles.moderators.id}>`,

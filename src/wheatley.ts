@@ -223,7 +223,8 @@ type quote_options = {
     template?: string;
     footer?: string;
     title?: string;
-    id_footer?: boolean;
+    message_id_footer?: boolean;
+    user_id_footer?: boolean;
     // only include an image in the single embed, omit all other media or attachments
     no_extra_media_embeds?: boolean;
     // override message content
@@ -729,9 +730,16 @@ export class Wheatley {
                 text: options.footer,
             });
         }
-        if (options?.id_footer) {
+        const footer: string[] = [];
+        if (options?.message_id_footer) {
+            footer.push(`Message ID: ${head.id}`);
+        }
+        if (options?.user_id_footer) {
+            footer.push(`User ID: ${user.id}`);
+        }
+        if (footer.length > 0) {
             embed.setFooter({
-                text: `ID: ${head.id}`,
+                text: footer.join(" | "),
             });
         }
         if (options?.title) {
