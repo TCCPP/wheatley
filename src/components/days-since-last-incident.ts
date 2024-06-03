@@ -12,7 +12,6 @@ import { moderation_entry } from "../infra/schemata/moderation.js";
 import { set_interval } from "../utils/node.js";
 
 export default class DaysSinceLastIncident extends BotComponent {
-    last_incident = 0;
     message: Discord.Message | null = null;
     last_time = "";
     timer: NodeJS.Timeout;
@@ -35,11 +34,9 @@ export default class DaysSinceLastIncident extends BotComponent {
             .sort({ issued_at: -1 })
             .limit(1)
             .toArray();
-        if (moderations.length > 0) {
-            assert(moderations.length == 1);
-            this.last_incident = Math.max(this.last_incident, moderations[0].issued_at);
-        }
-        const delta = Date.now() - this.last_incident;
+        assert(moderations.length == 1);
+        const last_incident = moderations[0].issued_at;
+        const delta = Date.now() - last_incident;
         if (delta < MINUTE) {
             return "0 minutes";
         } else {
