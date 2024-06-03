@@ -54,7 +54,7 @@ import { get_random_array_element } from "../../utils/arrays.js";
  *
  */
 
-export const duration_regex = /(?:perm\b|(\d+)\s*([mhdwMys]))/;
+export const duration_regex = /(?:perm\b|(\d+)\s*([a-zA-Z]))/;
 
 export const moderation_on_team_member_message: string = "Can't apply this moderation on team members";
 export const joke_responses = [
@@ -83,6 +83,7 @@ function parse_unit(u: string) {
             factor *= 7 * parse_unit("d");
             break;
         case "M":
+        case "mo":
             factor *= 30 * parse_unit("d");
             break;
         default:
@@ -97,7 +98,7 @@ export function parse_duration(duration: string | null) {
         return null;
     }
     const match = duration.match(duration_regex);
-    assert(match);
+    assert(match, "Failed to match against expected duration format");
     if (duration == "perm") {
         return null;
     } else {
