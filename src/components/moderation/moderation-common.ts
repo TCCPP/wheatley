@@ -442,7 +442,7 @@ export abstract class ModerationComponent extends BotComponent {
         return false;
     }
 
-    async do_issue(
+    async issue_moderation_internal(
         user: Discord.User,
         moderator: Discord.User,
         duration: number, // ms
