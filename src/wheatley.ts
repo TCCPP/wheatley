@@ -225,7 +225,7 @@ type quote_options = {
     title?: string;
     message_id_footer?: boolean;
     user_id_footer?: boolean;
-    // only include an image in the single embed, omit all other media or attachments
+    // only include one image in the single embed, omit all other media or attachments
     no_extra_media_embeds?: boolean;
     // override message content
     custom_content?: string;

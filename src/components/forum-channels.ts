@@ -330,7 +330,7 @@ export default class ForumChannels extends BotComponent {
                     `New ${
                         thread.parentId == this.wheatley.channels.code_review.id ? "code review" : "showcase"
                     } post: ${thread.name}`,
-                    false,
+                    true,
                     this.wheatley.channels.general_discussion,
                 );
             }
