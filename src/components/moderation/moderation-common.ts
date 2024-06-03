@@ -228,6 +228,13 @@ export abstract class ModerationComponent extends BotComponent {
             M.debug("Handling moderation expire", entry);
             await this.remove_moderation(entry);
             this.sleep_list.remove(entry._id);
+            await this.wheatley.channels.staff_action_log.send({
+                embeds: [
+                    Modlogs.case_summary(entry, await this.wheatley.client.users.fetch(entry.user)).setTitle(
+                        `${capitalize(this.type)} is being lifted (case ${entry.case_number})`,
+                    ),
+                ],
+            });
         } else {
             M.debug("Handling moderation expire - not applied", entry);
         }
