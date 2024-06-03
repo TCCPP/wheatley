@@ -21,16 +21,20 @@ export default class ModStats extends BotComponent {
                 .add_user_option({
                     title: "moderator",
                     description: "Moderator",
-                    required: true,
+                    required: false,
                 })
                 .set_handler(this.modstats.bind(this)),
         );
     }
 
-    async get_stats(moderator_id: string, cutoff = 0) {
+    async get_stats(moderator: Discord.User | null, cutoff = 0) {
         const res = await this.wheatley.database.moderations
             .aggregate([
-                { $match: { moderator: moderator_id, issued_at: { $gte: cutoff } } },
+                {
+                    $match: moderator
+                        ? { moderator: moderator.id, issued_at: { $gte: cutoff } }
+                        : { issued_at: { $gte: cutoff } },
+                },
                 { $group: { _id: "$type", count: { $sum: 1 } } },
             ])
             .toArray();
@@ -49,8 +53,8 @@ export default class ModStats extends BotComponent {
         return stats;
     }
 
-    async modstats(command: TextBasedCommand, moderator: Discord.User) {
-        if (!this.wheatley.is_authorized_mod(moderator)) {
+    async modstats(command: TextBasedCommand, moderator: Discord.User | null) {
+        if (moderator && !(this.wheatley.is_authorized_mod(moderator) || moderator.id == this.wheatley.id)) {
             await command.reply(`<@${moderator.id}> is not a moderator`);
             return;
         }
@@ -61,10 +65,10 @@ export default class ModStats extends BotComponent {
             await command.reply(`Please use in <#${this.wheatley.channels.bot_spam.id}>`, true);
             return;
         }
-        const moderator_member = unwrap(await this.wheatley.try_fetch_tccpp_member(moderator));
-        const stats_7d = await this.get_stats(moderator.id, Date.now() - 7 * DAY);
-        const stats_30d = await this.get_stats(moderator.id, Date.now() - 30 * DAY);
-        const stats_all = await this.get_stats(moderator.id);
+        const moderator_member = moderator ? await this.wheatley.try_fetch_tccpp_member(moderator) : null;
+        const stats_7d = await this.get_stats(moderator, Date.now() - 7 * DAY);
+        const stats_30d = await this.get_stats(moderator, Date.now() - 30 * DAY);
+        const stats_all = await this.get_stats(moderator);
         const type_map: Record<string, string> = {
             mute: "mutes",
             warn: "warns",
@@ -82,8 +86,10 @@ export default class ModStats extends BotComponent {
                     .setColor(colors.default)
                     .setTitle("Mod stats")
                     .setAuthor({
-                        name: moderator_member.displayName,
-                        iconURL: moderator_member.avatarURL() ?? moderator_member.displayAvatarURL(),
+                        name: moderator_member ? moderator_member.displayName : "Total",
+                        iconURL: moderator_member
+                            ? moderator_member.avatarURL() ?? moderator_member.displayAvatarURL()
+                            : undefined,
                     })
                     .addFields(
                         {
