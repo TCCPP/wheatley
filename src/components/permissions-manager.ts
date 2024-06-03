@@ -145,6 +145,7 @@ export default class PermissionManager extends BotComponent {
             },
         });
         this.add_channel_overwrite(this.wheatley.channels.announcements, read_only_channel);
+        this.add_channel_overwrite(this.wheatley.channels.resources, read_only_channel);
         this.add_channel_overwrite(this.wheatley.channels.partners, read_only_channel);
         this.add_channel_overwrite(this.wheatley.channels.articles, read_only_channel);
         this.add_channel_overwrite(this.wheatley.channels.server_suggestions, {
