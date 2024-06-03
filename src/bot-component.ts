@@ -82,7 +82,7 @@ export class BotComponent {
     async on_message_create?(message: Discord.Message): Promise<void>;
     async on_message_delete?(message: Discord.Message | Discord.PartialMessage): Promise<void>;
     async on_message_delete_bulk?(
-        messages: Discord.Collection<string, Discord.Message | Discord.PartialMessage>,
+        messages: Discord.ReadonlyCollection<string, Discord.Message | Discord.PartialMessage>,
         channel: Discord.GuildTextBasedChannel,
     ): Promise<void>;
     async on_message_update?(
