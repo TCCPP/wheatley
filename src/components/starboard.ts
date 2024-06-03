@@ -412,8 +412,8 @@ export default class Starboard extends BotComponent {
     }
 
     override async on_message_update(
-        old_message: Discord.Message<boolean> | Discord.PartialMessage,
-        new_message: Discord.Message<boolean> | Discord.PartialMessage,
+        old_message: Discord.Message | Discord.PartialMessage,
+        new_message: Discord.Message | Discord.PartialMessage,
     ) {
         if (!(await this.is_valid_channel(new_message.channel))) {
             return;
@@ -425,7 +425,7 @@ export default class Starboard extends BotComponent {
         }
     }
 
-    override async on_message_delete(message: Discord.Message<boolean> | Discord.PartialMessage) {
+    override async on_message_delete(message: Discord.Message | Discord.PartialMessage) {
         const entry = await this.wheatley.database.starboard_entries.findOne({ message: message.id });
         if (entry) {
             await this.mutex.lock(message.id);

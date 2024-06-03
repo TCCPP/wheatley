@@ -22,7 +22,7 @@ export default class AntiEveryone extends BotComponent {
         super(wheatley);
     }
 
-    override async on_message_create(message: Discord.Message<boolean>): Promise<void> {
+    override async on_message_create(message: Discord.Message): Promise<void> {
         if (
             // self
             message.author.id == this.wheatley.client.user!.id ||
@@ -75,7 +75,7 @@ export default class AntiEveryone extends BotComponent {
     /**
      * Auto-delete replies to messages that were deleted
      */
-    override async on_message_delete(message: Discord.Message<boolean>): Promise<void> {
+    override async on_message_delete(message: Discord.Message): Promise<void> {
         if (Math.abs(Date.now() - message.createdTimestamp) > 1000) {
             // Message was likely deleted by the user, rather than automatically
             return;

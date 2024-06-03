@@ -44,8 +44,8 @@ export default class AntiSelfStar extends BotComponent {
     }
 
     override async on_message_update(
-        old_message: Discord.Message<boolean> | Discord.PartialMessage,
-        new_message: Discord.Message<boolean> | Discord.PartialMessage
+        old_message: Discord.Message | Discord.PartialMessage,
+        new_message: Discord.Message | Discord.PartialMessage
     ) {
         await this.check_message(await departialize(new_message));
     }

@@ -91,8 +91,8 @@ export default class Autoreact extends BotComponent {
 
     // Primarily here to catch url embeds, sometimes they aren't present in the initial message create
     override async on_message_update(
-        old_message: Discord.Message<boolean> | Discord.PartialMessage,
-        new_message: Discord.Message<boolean> | Discord.PartialMessage,
+        old_message: Discord.Message | Discord.PartialMessage,
+        new_message: Discord.Message | Discord.PartialMessage,
     ): Promise<void> {
         if (
             new_message.author?.id == this.wheatley.client.user!.id || // Ignore self

@@ -950,7 +950,7 @@ export class Wheatley {
         }
     }
 
-    async on_message_delete(message: Discord.Message<boolean> | Discord.PartialMessage) {
+    async on_message_delete(message: Discord.Message | Discord.PartialMessage) {
         try {
             if (this.text_command_map.has(message.id)) {
                 const { command, deletable } = this.text_command_map.get(message.id)!;
