@@ -29,7 +29,16 @@ export default class DaysSinceLastIncident extends BotComponent {
             .setDescription(`# \`${count}\` \`${unit}\` since last incident`);
     }
 
-    time_diff() {
+    async time_since_last_incident() {
+        const moderations = await this.wheatley.database.moderations
+            .find({ type: { $ne: "note" } })
+            .sort({ issued_at: -1 })
+            .limit(1)
+            .toArray();
+        if (moderations.length > 0) {
+            assert(moderations.length == 1);
+            this.last_incident = Math.max(this.last_incident, moderations[0].issued_at);
+        }
         const delta = Date.now() - this.last_incident;
         if (delta < MINUTE) {
             return "0 minutes";
@@ -39,7 +48,7 @@ export default class DaysSinceLastIncident extends BotComponent {
     }
 
     async update_or_send_if_needed() {
-        const time = this.time_diff();
+        const time = await this.time_since_last_incident();
         if (time !== this.last_time) {
             this.last_time = time;
             await unwrap(this.message).edit({
@@ -49,11 +58,6 @@ export default class DaysSinceLastIncident extends BotComponent {
     }
 
     override async on_ready() {
-        const moderations = await this.wheatley.database.moderations.find().sort({ issued_at: -1 }).limit(1).toArray();
-        if (moderations.length > 0) {
-            assert(moderations.length == 1);
-            this.last_incident = Math.max(this.last_incident, moderations[0].issued_at);
-        }
         const messages = (await this.wheatley.channels.days_since_last_incident.messages.fetch()).filter(
             message => message.author.id == this.wheatley.id,
         );
@@ -62,7 +66,7 @@ export default class DaysSinceLastIncident extends BotComponent {
             this.message = unwrap(messages.first());
             await this.update_or_send_if_needed();
         } else {
-            this.last_time = this.time_diff();
+            this.last_time = await this.time_since_last_incident();
             await this.wheatley.channels.days_since_last_incident.send({
                 embeds: [this.make_embed(this.last_time)],
             });
@@ -74,7 +78,6 @@ export default class DaysSinceLastIncident extends BotComponent {
 
     handle_incident(moderation: moderation_entry) {
         (async () => {
-            this.last_incident = Math.max(this.last_incident, moderation.issued_at);
             await this.update_or_send_if_needed();
         })().catch(critical_error);
     }
