@@ -67,12 +67,15 @@ export default class Redirect extends BotComponent {
     async r(command: TextBasedCommand, user: Discord.User) {
         await command.reply({
             content:
-                `Hello <@${user.id}>, welcome to Together C & C++! This isn't a help channel, please ask your ` +
+                `Hello <@${user.id}>, welcome to Together C & C++! This is not a help channel, please ask your ` +
                 `question in one of the help channels above (${format_list(
                     (<(keyof Wheatley["channels"])[]>[])
                         .concat("cpp_help", "cpp_help_text", "c_help", "c_help_text")
                         .map(name => `<#${this.wheatley.channels[name].id}>`),
-                )})`,
+                )}), ` +
+                `or <#${this.wheatley.channels.tooling.id}> if your question is about tooling, ` +
+                `or <#${this.wheatley.channels.algorithms_and_compsci.id}> if your question pertains more to theory, ` +
+                `or any other help channel more suited for your quesiton.`,
             should_text_reply: false,
         });
     }

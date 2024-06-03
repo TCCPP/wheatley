@@ -110,6 +110,8 @@ const channels_map = {
     general_discussion: tuple("855220264149057556", Discord.TextChannel),
     code_review: tuple("1078717238678409369", Discord.ForumChannel),
     showcase: tuple("1014328785685979136", Discord.ForumChannel),
+    tooling: tuple("331913460080181258", Discord.TextChannel),
+    algorithms_and_compsci: tuple("857668280012242944", Discord.TextChannel),
     // off-topic
     starboard: tuple("800509841424252968", Discord.TextChannel),
     memes: tuple("526518219549442071", Discord.TextChannel),
