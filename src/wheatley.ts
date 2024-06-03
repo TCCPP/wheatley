@@ -374,28 +374,44 @@ export class Wheatley {
             this.virustotal = new Virustotal(auth);
         }
 
-        this.client.on("ready", async () => {
-            milestone("Bot started");
+        this.client.on("ready", () => {
+            (async () => {
+                milestone("Bot started");
 
-            await this.fetch_guild_info();
+                await this.fetch_guild_info();
 
-            for (const component of this.components.values()) {
-                try {
-                    await component.setup();
-                } catch (e) {
-                    critical_error(e);
+                for (const component of this.components.values()) {
+                    try {
+                        await component.setup();
+                    } catch (e) {
+                        critical_error(e);
+                    }
                 }
-            }
-            await this.guild_command_manager.finalize(auth.token);
-            this.event_hub.emit("wheatley_ready");
-            this.ready = true;
-            this.client.on("messageCreate", this.on_message.bind(this));
-            this.client.on("interactionCreate", this.on_interaction.bind(this));
-            this.client.on("messageDelete", this.on_message_delete.bind(this));
-            this.client.on("messageUpdate", this.on_message_update.bind(this));
-            if (!this.freestanding) {
-                await this.populate_caches();
-            }
+                await this.guild_command_manager.finalize(auth.token);
+                this.event_hub.emit("wheatley_ready");
+                this.ready = true;
+                this.client.on("messageCreate", (message: Discord.Message) => {
+                    this.on_message(message).catch(critical_error);
+                });
+                this.client.on("interactionCreate", (interaction: Discord.Interaction) => {
+                    this.on_interaction(interaction).catch(critical_error);
+                });
+                this.client.on("messageDelete", (message: Discord.Message | Discord.PartialMessage) => {
+                    this.on_message_delete(message).catch(critical_error);
+                });
+                this.client.on(
+                    "messageUpdate",
+                    (
+                        old_message: Discord.Message | Discord.PartialMessage,
+                        new_message: Discord.Message | Discord.PartialMessage,
+                    ) => {
+                        this.on_message_update(old_message, new_message).catch(critical_error);
+                    },
+                );
+                if (!this.freestanding) {
+                    await this.populate_caches();
+                }
+            })().catch(critical_error);
         });
 
         for await (const file of walk_dir("src/components")) {
