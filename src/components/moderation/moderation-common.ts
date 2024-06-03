@@ -484,7 +484,7 @@ export abstract class ModerationComponent extends BotComponent {
     async moderation_issue_handler(
         command: TextBasedCommand,
         user: Discord.User,
-        duration: string | null,
+        duration_string: string | null,
         reason: string | null,
         basic_moderation_info: basic_moderation,
     ) {
@@ -504,6 +504,7 @@ export abstract class ModerationComponent extends BotComponent {
                 await this.reply_with_error(command, `User is already ${this.past_participle}`);
                 return;
             }
+            const duration = parse_duration(duration_string);
             const moderation: moderation_entry = {
                 ...basic_moderation_info,
                 case_number: -1,
@@ -513,7 +514,7 @@ export abstract class ModerationComponent extends BotComponent {
                 moderator_name: (await command.get_member()).displayName,
                 reason,
                 issued_at: Date.now(),
-                duration: parse_duration(duration),
+                duration,
                 active: !this.is_once_off,
                 removed: null,
                 expunged: null,
@@ -537,7 +538,9 @@ export abstract class ModerationComponent extends BotComponent {
                                           .filter(x => x != null)
                                           .join(" and ")}`
                                     : null,
-                                !this.is_once_off && duration !== null ? `**Duration**: ${duration}` : null,
+                                !this.is_once_off && duration_string !== null
+                                    ? `**Duration**: ${duration ? time_to_human(duration) : "perm"}`
+                                    : null,
                                 cant_dm ? "Note: Couldn't DM user. Their loss." : null,
                             ),
                         )
