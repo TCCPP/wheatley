@@ -226,9 +226,11 @@ export default class Modmail extends BotComponent {
             );
             if (non_beginner_skill_roles.size > 0) {
                 // fast-path people who can read
-                await interaction.deferUpdate();
+                await interaction.deferReply({
+                    ephemeral: true,
+                });
                 await this.create_modmail_thread(interaction);
-                await interaction.reply({
+                await interaction.editReply({
                     content:
                         "Your modmail request has been processed. A thread has been created and the staff " +
                         "team have been notified.",
