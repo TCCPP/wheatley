@@ -1,6 +1,7 @@
 import { strict as assert } from "assert";
 
 import * as Discord from "discord.js";
+import * as mongo from "mongodb";
 
 import { build_description, truncate } from "../../utils/strings.js";
 import { pluralize, time_to_human } from "../../utils/strings.js";
@@ -130,12 +131,14 @@ export default class Modlogs extends BotComponent {
     async modlogs_message(
         user: Discord.User,
         page: number,
+        show_private_logs = false,
     ): Promise<Discord.BaseMessageOptions & CommandAbstractionReplyOptions> {
         // TODO: Expunged or irrelevant? Show how things were removed / why?
-        const moderations = await this.wheatley.database.moderations
-            .find({ user: user.id, expunged: null })
-            .sort({ issued_at: -1 })
-            .toArray();
+        const query: mongo.Filter<moderation_entry> = { user: user.id, expunged: null };
+        if (!show_private_logs) {
+            query.type = { $ne: "note" };
+        }
+        const moderations = await this.wheatley.database.moderations.find(query).sort({ issued_at: -1 }).toArray();
         const pages = Math.ceil(moderations.length / moderations_per_page);
         const buttons: Discord.ButtonBuilder[] = [];
         if (pages <= 1) {
@@ -191,9 +194,16 @@ export default class Modlogs extends BotComponent {
         };
     }
 
+    is_mod_only(channel: Discord.GuildTextBasedChannel | Discord.TextBasedChannel) {
+        if (channel.isDMBased() || !channel.parent) {
+            return false;
+        }
+        return [this.wheatley.categories.staff.id, this.wheatley.categories.staff_logs.id].includes(channel.parent.id);
+    }
+
     async modlogs(command: TextBasedCommand, user: Discord.User) {
         M.log("Received modlogs command");
-        await command.reply(await this.modlogs_message(user, 0));
+        await command.reply(await this.modlogs_message(user, 0, this.is_mod_only(await command.get_channel())));
     }
 
     override async on_interaction_create(interaction: Discord.Interaction<Discord.CacheType>) {
