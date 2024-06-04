@@ -7,7 +7,7 @@ import { EMOJIREGEX, departialize } from "../utils/discord.js";
 import { critical_error } from "../utils/debugging-and-logging.js";
 import { KeyedMutexSet } from "../utils/containers.js";
 import { M } from "../utils/debugging-and-logging.js";
-import { MINUTE } from "../common.js";
+import { DAY, MINUTE } from "../common.js";
 import { BotComponent } from "../bot-component.js";
 import { Wheatley } from "../wheatley.js";
 import { TextBasedCommandBuilder } from "../command-abstractions/text-based-command-builder.js";
@@ -23,6 +23,9 @@ const auto_delete_threshold = 5;
 const max_deletes_in_24h = 5;
 
 const starboard_epoch = new Date("2023-04-01T00:00:00.000Z").getTime();
+
+// how long does a post have to reach the required reaction count
+const starboard_window = 7 * DAY;
 
 enum delete_trigger_type {
     delete_this,
@@ -401,7 +404,8 @@ export default class Starboard extends BotComponent {
         // );
         if (
             this.meets_threshold(await departialize(reaction)) &&
-            reaction.message.createdTimestamp >= starboard_epoch
+            reaction.message.createdTimestamp >= starboard_epoch &&
+            reaction.message.createdTimestamp >= Date.now() - starboard_window
         ) {
             // M.info("meets_threshold, going into update");
             // Send
