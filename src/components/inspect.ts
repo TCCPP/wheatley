@@ -153,6 +153,18 @@ export default class Inspect extends BotComponent {
                 ],
             });
         }
+        if (message.stickers.size > 0) {
+            await command_object.followUp({
+                ephemeral: true,
+                ephemeral_if_possible: true,
+                content: "Stickers:",
+                files: [
+                    new Discord.AttachmentBuilder(Buffer.from(JSON.stringify(message.stickers, null, 4)), {
+                        name: "stickers.txt",
+                    }),
+                ],
+            });
+        }
     }
 
     async inspect(interaction: Discord.MessageContextMenuCommandInteraction) {
