@@ -4,7 +4,7 @@ Sometimes, it is possible to omit template arguments when using a template,
 letting the compiler infer them instead.
 
 <!-- inline -->
-## Template function
+## Function template
 ```cpp
 template<typename T>
 void print(T arg) {
@@ -21,12 +21,12 @@ print<std::string>("Hi");
 ```
 
 ## Deduction
-In the first two calls to `print`, no template argument is provided. Since `print`
-takes a parameter of type `T`, the compiler can match `T` to the type of
+In the first two calls to `print`, no template argument is explicitly specified.
+Since `print` takes a parameter of type `T`, the compiler can deduce `T` from the type of
 the provided arguments: `int` for `42`, and `const char*` for `"Hello"`.
 
-The third call inhibits deduction by imposing `T`. A `std::string` is constructed
-from `"Hi"`, and a copy of it is passed to the function.
+The third call inhibits deduction by explicitly specifying `T`.
+A `std::string` is constructed from `"Hi"` and passed to the function.
 
 The compiler cannot always deduce template parameters, for example when they
 appear only in the return type of a function:
@@ -53,7 +53,7 @@ Foo bar = make(45);
 Template parameters can be partially deduced independently of each other:
 
 <!-- inline -->
-## Template function
+## Function template
 ```cpp
 template<class T, class A>
 T make(A arg) {
