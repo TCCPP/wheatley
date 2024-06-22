@@ -9,7 +9,7 @@ import { time_to_human } from "../utils/strings.js";
 
 export default class JoinLeaveLog extends BotComponent {
     override async on_guild_member_add(member: Discord.GuildMember) {
-        await this.wheatley.channels.staff_message_log.send({
+        await this.wheatley.channels.staff_member_log.send({
             embeds: [
                 new Discord.EmbedBuilder()
                     .setTitle("Member Joined")
@@ -33,7 +33,7 @@ export default class JoinLeaveLog extends BotComponent {
     }
 
     override async on_guild_member_remove(member: Discord.GuildMember | Discord.PartialGuildMember) {
-        await this.wheatley.channels.staff_message_log.send({
+        await this.wheatley.channels.staff_member_log.send({
             embeds: [
                 new Discord.EmbedBuilder()
                     .setTitle("Member Left")
@@ -56,7 +56,7 @@ export default class JoinLeaveLog extends BotComponent {
         old_member: Discord.GuildMember | Discord.PartialGuildMember,
         new_member: Discord.GuildMember,
     ) {
-        await this.wheatley.channels.staff_message_log.send({
+        await this.wheatley.channels.staff_member_log.send({
             embeds: [
                 new Discord.EmbedBuilder()
                     .setTitle("Member Updated")
