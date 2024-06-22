@@ -62,6 +62,9 @@ export class BotComponent {
                 this.setup_listener("guildMemberAdd", this.on_guild_member_add);
                 this.setup_listener("guildMemberUpdate", this.on_guild_member_update);
                 this.setup_listener("guildMemberRemove", this.on_guild_member_remove);
+                this.setup_listener("emojiCreate", this.on_emoji_create);
+                this.setup_listener("emojiDelete", this.on_emoji_delete);
+                this.setup_listener("emojiUpdate", this.on_emoji_update);
                 this.setup_listener("threadCreate", this.on_thread_create);
             });
     }
@@ -96,6 +99,9 @@ export class BotComponent {
         new_member: Discord.GuildMember,
     ): Promise<void>;
     async on_guild_member_remove?(member: Discord.GuildMember | Discord.PartialGuildMember): Promise<void>;
+    async on_emoji_create?(emoji: Discord.GuildEmoji): Promise<void>;
+    async on_emoji_delete?(emoji: Discord.GuildEmoji): Promise<void>;
+    async on_emoji_update?(old_emoji: Discord.GuildEmoji, new_emoji: Discord.GuildEmoji): Promise<void>;
     async on_reaction_add?(
         reaction: Discord.MessageReaction | Discord.PartialMessageReaction,
         user: Discord.User | Discord.PartialUser,
