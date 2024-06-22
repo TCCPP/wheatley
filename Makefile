@@ -1,6 +1,6 @@
 default: help
 
-# Some of this is shamelessly stolen from compiler explorer
+# The general philosophy and functionality of this makefile is shamelessly stolen from compiler explorer
 
 help: # with thanks to Ben Rady
 	@grep -E '^[0-9a-zA-Z_-]+:.*?## .*$$' $(MAKEFILE_LIST) | sort | awk 'BEGIN {FS = ":.*?## "}; {printf "\033[36m%-20s\033[0m %s\n", $$1, $$2}'
@@ -50,7 +50,7 @@ deploy: ts-check  ## Deploys code
 	./scripts/scp.sh
 
 .PHONY: prod
-prod: deploy  ## Deploys code and restarts the bot
+prod: format deploy  ## Deploys code and restarts the bot
 	ssh $(SERVER) "screen -XS _Wheatley quit; cd projects/wheatley; ./start.sh"
 
 .PHONY: npm-update
