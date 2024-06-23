@@ -15,12 +15,13 @@ jobs:
           npm install -g typescript
           npm i
       - name: build bot
-        run: tsc
+        run: |
+          node --version
+          npx tsc --version
+          tsc
       - name: build cppref scraper
         run: |
           cd indexes/cppref
-          node --version
-          npx tsc --version
           npx tsc
       - name: build man7 scraper
         run: |
