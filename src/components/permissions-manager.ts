@@ -53,7 +53,11 @@ export default class PermissionManager extends BotComponent {
             deny: write_permissions,
         };
         const no_interaction_at_all: permissions_entry = {
-            deny: [...write_permissions, Discord.PermissionsBitField.Flags.ViewChannel],
+            deny: [
+                ...write_permissions,
+                Discord.PermissionsBitField.Flags.Connect,
+                Discord.PermissionsBitField.Flags.ViewChannel,
+            ],
         };
         // channel permissions
         const default_permissions: permission_overwrites = {
