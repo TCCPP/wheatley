@@ -84,7 +84,6 @@ export default class Modmail extends BotComponent {
                 });
                 // add everyone
                 await thread.members.add(member.id);
-                // Deliberately not awaiting here
                 await thread.send({
                     content: `<@&${this.wheatley.roles.moderators.id}>`,
                     allowedMentions: {
