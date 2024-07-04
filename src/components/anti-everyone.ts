@@ -6,7 +6,7 @@ import { M } from "../utils/debugging-and-logging.js";
 import { SelfClearingMap } from "../utils/containers.js";
 import { unwrap } from "../utils/misc.js";
 
-const failed_everyone_re = /(?:@everyone|@here)/g; // todo: word boundaries?
+const failed_everyone_re = /\b(?:@everyone|@here)\b/g;
 
 export interface AntiEveryoneMessageCache {
     reply_to: string;
