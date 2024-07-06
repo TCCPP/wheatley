@@ -58,6 +58,8 @@ type text_command_map_target = {
 export type wheatley_database_credentials = {
     user: string;
     password: string;
+    host?: string;
+    port?: number;
 };
 
 export type wheatley_auth = {

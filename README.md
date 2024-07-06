@@ -50,7 +50,9 @@ Secrets and other bot info must be configured in the `auth.json` file. An exampl
   "token": "<discord api token>",
   "mongo": {
     "user": "wheatley",
-    "password": "<mongo password>"
+    "password": "<mongo password>",
+    "host": "127.0.0.1", // optional
+    "port": 27017        // optional
   },
   "freestanding": false
 }

@@ -41,7 +41,9 @@ export class WheatleyDatabase {
         credentials: wheatley_database_credentials,
     ) {
         const [user, password] = [credentials.user, credentials.password].map(encodeURIComponent);
-        const url = `mongodb://${user}:${password}@localhost:27017/?authMechanism=DEFAULT&authSource=wheatley`;
+        const host = credentials.host ?? "localhost";
+        const port = credentials.port ?? 27017;
+        const url = `mongodb://${user}:${password}@${host}:${port}/?authMechanism=DEFAULT&authSource=wheatley`;
         const client = new mongo.MongoClient(url);
         await client.connect();
         const db = client.db("wheatley");
