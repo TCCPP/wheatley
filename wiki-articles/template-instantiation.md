@@ -1,14 +1,14 @@
 # What Is Template Instantiation?
 
-Templates are not real entities until a piece of code uses them with arguments.
+Templates are not real functions until a piece of code uses them with arguments.
 When this happens, the compiler replaces the template parameters with the
-provided arguments, deriving the generic code into specific code.
+provided arguments, turning the generic code into specific code.
 
 The generic code needs to be available in any translation unit that uses it. This
 is why templates are typically declared **and** defined entirely in headers.
 
 <!-- inline -->
-## Template function
+## Function template
 ```cpp
 template<typename T>
 void print(T arg) {
