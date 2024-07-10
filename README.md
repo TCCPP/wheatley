@@ -41,7 +41,7 @@ solution currently is the following:
 
 ## auth.json
 
-Secrets and other bot info must be configured in the bot.json file. An example looks like:
+Secrets and other bot info must be configured in the `auth.json` file. An example looks like:
 
 ```json
 {
@@ -50,7 +50,9 @@ Secrets and other bot info must be configured in the bot.json file. An example l
   "token": "<discord api token>",
   "mongo": {
     "user": "wheatley",
-    "password": "<mongo password>"
+    "password": "<mongo password>",
+    "host": "127.0.0.1", // optional
+    "port": 27017        // optional
   },
   "freestanding": false
 }
