@@ -275,7 +275,7 @@ export class Wheatley {
     readonly tracker: MemberTracker; // TODO: Rename
 
     database: WheatleyDatabaseProxy;
-    virustotal: Virustotal;
+    virustotal?: Virustotal;
 
     link_blacklist: any;
 
@@ -417,8 +417,7 @@ export class Wheatley {
         if (auth.metrics) {
             setup_metrics_server(auth.metrics.port, auth.metrics.hostname);
         }
-        assert(this.freestanding || auth.virustotal, "Missing virustotal api key");
-        if (!this.freestanding) {
+        if (auth.virustotal) {
             this.virustotal = new Virustotal(auth);
         }
 
