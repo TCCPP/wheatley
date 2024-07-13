@@ -2,7 +2,7 @@ import * as Discord from "discord.js";
 
 import { strict as assert } from "assert";
 
-import { critical_error, M } from "../utils/debugging-and-logging.js";
+import { M } from "../utils/debugging-and-logging.js";
 import { HOUR } from "../common.js";
 import { BotComponent } from "../bot-component.js";
 import { Wheatley } from "../wheatley.js";
@@ -304,9 +304,9 @@ export default class PermissionManager extends BotComponent {
 
     override async on_ready() {
         this.setup_permissions_map();
-        this.set_permissions().catch(critical_error);
+        this.set_permissions().catch(this.wheatley.critical_error.bind(this.wheatley));
         setTimeout(() => {
-            this.set_permissions().catch(critical_error);
+            this.set_permissions().catch(this.wheatley.critical_error.bind(this.wheatley));
         }, HOUR);
     }
 }

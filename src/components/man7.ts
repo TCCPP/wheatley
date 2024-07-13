@@ -4,7 +4,6 @@ import { strict as assert } from "assert";
 
 import * as fs from "fs";
 
-import { critical_error } from "../utils/debugging-and-logging.js";
 import { M } from "../utils/debugging-and-logging.js";
 
 import { Index, IndexEntry } from "../algorithm/search.js";
@@ -114,7 +113,7 @@ export default class Man7 extends BotComponent {
         );
 
         // Ok if the bot spins up while this is loading
-        this.index.load_data().catch(critical_error);
+        this.index.load_data().catch(this.wheatley.critical_error.bind(this.wheatley));
     }
 
     async man(command: TextBasedCommand, query: string) {

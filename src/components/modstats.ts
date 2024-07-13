@@ -6,7 +6,6 @@ import { TextBasedCommandBuilder } from "../command-abstractions/text-based-comm
 import { TextBasedCommand } from "../command-abstractions/text-based-command.js";
 
 import { Wheatley } from "../wheatley.js";
-import { M } from "../utils/debugging-and-logging.js";
 import { colors, DAY } from "../common.js";
 import { unwrap } from "../utils/misc.js";
 import { capitalize } from "../utils/strings.js";

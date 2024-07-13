@@ -2,7 +2,6 @@ import * as Discord from "discord.js";
 import { strict as assert } from "assert";
 import { floor, round, unwrap } from "../utils/misc.js";
 import { time_to_human } from "../utils/strings.js";
-import { critical_error } from "../utils/debugging-and-logging.js";
 import { M } from "../utils/debugging-and-logging.js";
 import { DAY, MINUTE, colors } from "../common.js";
 import { BotComponent } from "../bot-component.js";
@@ -131,7 +130,7 @@ export default class TheButton extends BotComponent {
                 }
                 waiting = true;
                 this.update_message()
-                    .catch(critical_error)
+                    .catch(this.wheatley.critical_error.bind(this.wheatley))
                     .finally(() => (waiting = false));
             }
         }, 1000);

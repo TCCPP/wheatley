@@ -6,7 +6,6 @@ import { EventEmitter } from "events";
 
 import { strict as assert } from "assert";
 
-import { critical_error } from "../../utils/debugging-and-logging.js";
 import { M } from "../../utils/debugging-and-logging.js";
 
 import { unwrap } from "../../utils/misc.js";
@@ -152,9 +151,9 @@ export abstract class ModerationComponent extends BotComponent {
 
     constructor(wheatley: Wheatley) {
         super(wheatley);
-        this.sleep_list = new SleepList(this.handle_moderation_expire.bind(this), item => item._id);
+        this.sleep_list = new SleepList(wheatley, this.handle_moderation_expire.bind(this), item => item._id);
         this.wheatley.event_hub.on("update_moderation", (entry: mongo.WithId<moderation_entry>) => {
-            this.handle_moderation_update(entry).catch(critical_error);
+            this.handle_moderation_update(entry).catch(this.wheatley.critical_error.bind(this.wheatley));
         });
     }
 
@@ -168,7 +167,7 @@ export abstract class ModerationComponent extends BotComponent {
                     .labels({ type: this.type })
                     .set(await this.wheatley.database.moderations.countDocuments({ type: this.type, active: true }));
             }
-        })().catch(critical_error);
+        })().catch(this.wheatley.critical_error.bind(this.wheatley));
     }
 
     override async on_ready() {
@@ -313,14 +312,14 @@ export abstract class ModerationComponent extends BotComponent {
                 // Allow a short leeway period
                 if (moderation.duration && moderation.issued_at + unwrap(moderation.duration) <= Date.now()) {
                     // If end time <= now, moderation is expired
-                    await this.wheatley.zelis.send("Skipping ensure_moderations_are_in_place on moderation");
+                    this.wheatley.alert("Skipping ensure_moderations_are_in_place on moderation");
                     M.debug("Skipping ensure_moderations_are_in_place on moderation", moderation);
                     continue;
                 }
                 // Skip anything that's active but removed
                 if (moderation.removed || moderation.expunged) {
                     // If end time <= now, moderation is expired
-                    await this.wheatley.zelis.send("Skipping ensure_moderations_are_in_place on removed moderation");
+                    this.wheatley.alert("Skipping ensure_moderations_are_in_place on removed moderation");
                     M.debug("Skipping ensure_moderations_are_in_place on removed moderation", moderation);
                     continue;
                 }
@@ -329,7 +328,7 @@ export abstract class ModerationComponent extends BotComponent {
                     await this.apply_moderation(moderation);
                 }
             } catch (e) {
-                critical_error(e);
+                this.wheatley.critical_error(e);
             }
         }
     }
@@ -392,7 +391,7 @@ export abstract class ModerationComponent extends BotComponent {
                 .send({
                     embeds: [Modlogs.case_summary(moderation, await this.wheatley.client.users.fetch(moderation.user))],
                 })
-                .catch(critical_error);
+                .catch(this.wheatley.critical_error.bind(this.wheatley));
             this.wheatley.event_hub.emit("issue_moderation", moderation);
         } finally {
             ModerationComponent.case_id_mutex.unlock();
@@ -443,7 +442,7 @@ export abstract class ModerationComponent extends BotComponent {
                 // 50007: Cannot send messages to this user
                 return true;
             } else {
-                critical_error(`Error notifying user ${e}`);
+                this.wheatley.critical_error(`Error notifying user ${e}`);
                 return true;
             }
         }
@@ -551,7 +550,7 @@ export abstract class ModerationComponent extends BotComponent {
             });
         } catch (e) {
             await this.reply_with_error(command, `Error issuing ${this.type}`);
-            critical_error(e);
+            this.wheatley.critical_error(e);
         }
     }
 
@@ -600,7 +599,7 @@ export abstract class ModerationComponent extends BotComponent {
             });
         } catch (e) {
             await this.reply_with_error(command, `Error issuing multi-${this.type}`);
-            critical_error(e);
+            this.wheatley.critical_error(e);
         }
     }
 
@@ -659,7 +658,7 @@ export abstract class ModerationComponent extends BotComponent {
             }
         } catch (e) {
             await this.reply_with_error(command, `Error undoing ${this.type}`);
-            critical_error(e);
+            this.wheatley.critical_error(e);
         }
     }
 

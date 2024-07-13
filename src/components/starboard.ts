@@ -4,7 +4,6 @@ import * as mongo from "mongodb";
 import { strict as assert } from "assert";
 import { unwrap } from "../utils/misc.js";
 import { EMOJIREGEX, departialize } from "../utils/discord.js";
-import { critical_error } from "../utils/debugging-and-logging.js";
 import { KeyedMutexSet } from "../utils/containers.js";
 import { M } from "../utils/debugging-and-logging.js";
 import { DAY, MINUTE } from "../common.js";
@@ -259,7 +258,7 @@ export default class Starboard extends BotComponent {
                     });
                 } catch (e) {
                     // M.log("--------------->", message.url);
-                    critical_error(e);
+                    this.wheatley.critical_error(e);
                 }
             }
         } finally {
@@ -330,7 +329,7 @@ export default class Starboard extends BotComponent {
             } else {
                 do_delete = false;
                 M.log("--------------->", message.url);
-                critical_error(e);
+                this.wheatley.critical_error(e);
             }
         } finally {
             this.wheatley.database.unlock();

@@ -6,7 +6,6 @@ import { RequestInfo, RequestInit } from "node-fetch";
 const fetch = (url: RequestInfo, init?: RequestInit) =>
     import("node-fetch").then(({ default: fetch }) => fetch(url, init));
 
-import { critical_error } from "../utils/debugging-and-logging.js";
 import { M } from "../utils/debugging-and-logging.js";
 import { BotComponent } from "../bot-component.js";
 import { Wheatley } from "../wheatley.js";
@@ -286,11 +285,11 @@ export default class Format extends BotComponent {
                 }
             }
         } catch (e) {
-            critical_error(e);
+            this.wheatley.critical_error(e);
             try {
                 await message.reply("Internal error while running !f");
             } catch (e) {
-                critical_error(e);
+                this.wheatley.critical_error(e);
             }
         }
     }

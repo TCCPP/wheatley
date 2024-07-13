@@ -1,6 +1,5 @@
 import * as Discord from "discord.js";
 import { strict as assert } from "assert";
-import { critical_error } from "../utils/debugging-and-logging.js";
 import { SelfClearingMap, SelfClearingSet } from "../utils/containers.js";
 import { M } from "../utils/debugging-and-logging.js";
 import { colors, MINUTE } from "../common.js";
@@ -103,7 +102,7 @@ export default class Roulette extends BotComponent {
                         await (await command.get_member()).timeout(30 * MINUTE, "Bang");
                     }
                 } catch (error) {
-                    critical_error(
+                    this.wheatley.critical_error(
                         `promise failed for timeout of roulette loser ${[command.user.id, command.user.tag]}`,
                     );
                     M.error(error);

@@ -2,7 +2,6 @@ import * as Discord from "discord.js";
 import { strict as assert } from "assert";
 import { MINUTE } from "../common.js";
 import { unwrap } from "../utils/misc.js";
-import { critical_error } from "../utils/debugging-and-logging.js";
 import { M } from "../utils/debugging-and-logging.js";
 import { BotComponent } from "../bot-component.js";
 import { Wheatley } from "../wheatley.js";
@@ -23,7 +22,7 @@ export default class RoleManager extends BotComponent {
     override async on_ready() {
         this.pink_role = unwrap(await this.wheatley.TCCPP.roles.fetch(this.wheatley.roles.pink.id));
         this.interval = set_interval(() => {
-            this.check_users().catch(critical_error);
+            this.check_users().catch(this.wheatley.critical_error.bind(this.wheatley));
         }, 30 * MINUTE);
     }
 
@@ -55,7 +54,7 @@ export default class RoleManager extends BotComponent {
                 }
             });
         } catch (e) {
-            critical_error(e);
+            this.wheatley.critical_error(e);
         }
     }
 }

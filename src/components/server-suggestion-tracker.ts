@@ -3,7 +3,6 @@ import { strict as assert } from "assert";
 import { unwrap } from "../utils/misc.js";
 import { xxh3 } from "../utils/strings.js";
 import { api_wrap, departialize, forge_snowflake } from "../utils/discord.js";
-import { critical_error } from "../utils/debugging-and-logging.js";
 import { KeyedMutexSet, SelfClearingSet } from "../utils/containers.js";
 import { M } from "../utils/debugging-and-logging.js";
 import { MINUTE } from "../common.js";
@@ -217,7 +216,7 @@ export default class ServerSuggestionTracker extends BotComponent {
                 }
             }
         } catch (e) {
-            critical_error(e);
+            this.wheatley.critical_error(e);
         }
     }
 
@@ -232,7 +231,7 @@ export default class ServerSuggestionTracker extends BotComponent {
             await status_message.delete();
             await this.wheatley.database.server_suggestions.deleteOne({ suggestion: message_id });
         } catch (e) {
-            critical_error(e);
+            this.wheatley.critical_error(e);
         }
     }
 
@@ -279,7 +278,7 @@ export default class ServerSuggestionTracker extends BotComponent {
             }
             return false;
         } catch (e) {
-            critical_error(e);
+            this.wheatley.critical_error(e);
         }
     }
 
@@ -306,7 +305,7 @@ export default class ServerSuggestionTracker extends BotComponent {
                 // already resolved
             }
         } catch (e) {
-            critical_error(e);
+            this.wheatley.critical_error(e);
         }
     }
 
@@ -331,7 +330,7 @@ export default class ServerSuggestionTracker extends BotComponent {
                 await this.handle_suggestion_channel_message(message);
             }
         } catch (e) {
-            critical_error(e);
+            this.wheatley.critical_error(e);
         }
     }
 
@@ -379,7 +378,7 @@ export default class ServerSuggestionTracker extends BotComponent {
                 M.log("Wheatley message deleted", message);
             }
         } catch (e) {
-            critical_error(e);
+            this.wheatley.critical_error(e);
         }
     }
 
@@ -401,7 +400,7 @@ export default class ServerSuggestionTracker extends BotComponent {
                 this.mutex.unlock(new_message.id);
             }
         } catch (e) {
-            critical_error(e);
+            this.wheatley.critical_error(e);
         }
     }
 
@@ -529,7 +528,7 @@ export default class ServerSuggestionTracker extends BotComponent {
                 }
             }
         } catch (e) {
-            critical_error(e);
+            this.wheatley.critical_error(e);
             try {
                 if (this.wheatley.is_root(user)) {
                     // only send diagnostics to root
@@ -537,7 +536,7 @@ export default class ServerSuggestionTracker extends BotComponent {
                     await member.send("Error while resolving suggestion");
                 }
             } catch (e) {
-                critical_error(e);
+                this.wheatley.critical_error(e);
             }
         }
     }
@@ -569,7 +568,7 @@ export default class ServerSuggestionTracker extends BotComponent {
                 }
             }
         } catch (e) {
-            critical_error(e);
+            this.wheatley.critical_error(e);
         }
     }
 
@@ -685,7 +684,7 @@ export default class ServerSuggestionTracker extends BotComponent {
                 }
             }
         } catch (e) {
-            critical_error(e);
+            this.wheatley.critical_error(e);
         }
         M.debug("server_suggestion tracker finished checking this.wheatley.database entries");
     }

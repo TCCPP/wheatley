@@ -1,4 +1,5 @@
 import { strict as assert } from "assert";
+import * as Sentry from "@sentry/node";
 
 import * as Discord from "discord.js";
 import * as mongo from "mongodb";
@@ -6,10 +7,9 @@ import PromClient from "prom-client";
 
 import { colors, MINUTE } from "./common.js";
 import { unwrap } from "./utils/misc.js";
-import { is_string } from "./utils/strings.js";
+import { to_string, is_string } from "./utils/strings.js";
 import { directory_exists } from "./utils/filesystem.js";
 import { walk_dir } from "./utils/filesystem.js";
-import { critical_error, milestone } from "./utils/debugging-and-logging.js";
 import { SelfClearingMap } from "./utils/containers.js";
 import { M } from "./utils/debugging-and-logging.js";
 import { BotComponent } from "./bot-component.js";
@@ -25,7 +25,7 @@ import { WheatleyDatabase, WheatleyDatabaseProxy } from "./infra/database-interf
 import { GuildCommandManager } from "./infra/guild-command-manager.js";
 import { MemberTracker } from "./infra/member-tracker.js";
 import { Virustotal } from "./infra/virustotal.js";
-import { decode_snowflake, forge_snowflake, is_media_link_embed } from "./utils/discord.js";
+import { decode_snowflake, forge_snowflake, is_media_link_embed, send_long_message } from "./utils/discord.js";
 import { TypedEventEmitter } from "./utils/event-emitter.js";
 import { setup_metrics_server } from "./infra/prometheus.js";
 import { moderation_entry } from "./infra/schemata/moderation.js";
@@ -77,7 +77,6 @@ export type wheatley_auth = {
 };
 
 const TCCPP_ID = "331718482485837825";
-export const zelis_id = "199943082441965577";
 export let WHEATLEY_ID: string;
 
 const tuple = <T extends any[]>(...args: T): T => args;
@@ -133,6 +132,8 @@ const channels_map = {
     bot_dev_internal: tuple("1166517065763536977", Discord.TextChannel),
     // red telephone
     red_telephone_alerts: tuple("1140096352278290512", Discord.TextChannel),
+    // error log
+    log: tuple("1260777903700971581", Discord.TextChannel),
 };
 
 const categories_map = {
@@ -308,7 +309,6 @@ export class Wheatley {
     // TCCPP stuff
     TCCPP: Discord.Guild;
     user: Discord.User;
-    zelis: Discord.User;
 
     channels: {
         // ["prototype"] gets the instance type, eliminating the `typeof`. InstanceType<T> doesn't work for a protected
@@ -342,6 +342,50 @@ export class Wheatley {
         labelNames: ["type"],
     });
 
+    critical_error(arg: any) {
+        M.error(arg);
+        send_long_message(this.channels.log, `🛑 Critical error occurred: ${to_string(arg)}`)
+            .catch(() => void 0)
+            .finally(() => {
+                if (arg instanceof Error) {
+                    Sentry.captureException(arg);
+                } else {
+                    Sentry.captureMessage(to_string(arg));
+                }
+            });
+    }
+
+    ignorable_error(arg: any) {
+        M.error(arg);
+        send_long_message(this.channels.log, `⚠️ Ignorable error occurred: ${to_string(arg)}`)
+            .catch(() => void 0)
+            .finally(() => {
+                if (arg instanceof Error) {
+                    Sentry.captureException(arg);
+                } else {
+                    Sentry.captureMessage(to_string(arg));
+                }
+            });
+    }
+
+    milestone(message: string) {
+        M.info(message);
+        send_long_message(this.channels.log, message)
+            .catch(() => void 0)
+            .finally(() => {
+                Sentry.captureMessage(message);
+            });
+    }
+
+    alert(message: string) {
+        M.info(message);
+        send_long_message(this.channels.log, message)
+            .catch(() => void 0)
+            .finally(() => {
+                Sentry.captureMessage(message);
+            });
+    }
+
     constructor(
         readonly client: Discord.Client,
         auth: wheatley_auth,
@@ -362,7 +406,7 @@ export class Wheatley {
 
         WHEATLEY_ID = this.id;
 
-        this.setup(auth).catch(critical_error);
+        this.setup(auth).catch(this.critical_error.bind(this));
     }
 
     async setup(auth: wheatley_auth) {
@@ -380,7 +424,7 @@ export class Wheatley {
 
         this.client.on("ready", () => {
             (async () => {
-                milestone("Bot started");
+                this.milestone("Bot started");
 
                 await this.fetch_guild_info();
 
@@ -388,20 +432,20 @@ export class Wheatley {
                     try {
                         await component.setup();
                     } catch (e) {
-                        critical_error(e);
+                        this.critical_error(e);
                     }
                 }
                 await this.guild_command_manager.finalize(auth.token);
                 this.event_hub.emit("wheatley_ready");
                 this.ready = true;
                 this.client.on("messageCreate", (message: Discord.Message) => {
-                    this.on_message(message).catch(critical_error);
+                    this.on_message(message).catch(this.critical_error.bind(this));
                 });
                 this.client.on("interactionCreate", (interaction: Discord.Interaction) => {
-                    this.on_interaction(interaction).catch(critical_error);
+                    this.on_interaction(interaction).catch(this.critical_error.bind(this));
                 });
                 this.client.on("messageDelete", (message: Discord.Message | Discord.PartialMessage) => {
-                    this.on_message_delete(message).catch(critical_error);
+                    this.on_message_delete(message).catch(this.critical_error.bind(this));
                 });
                 this.client.on(
                     "messageUpdate",
@@ -409,13 +453,13 @@ export class Wheatley {
                         old_message: Discord.Message | Discord.PartialMessage,
                         new_message: Discord.Message | Discord.PartialMessage,
                     ) => {
-                        this.on_message_update(old_message, new_message).catch(critical_error);
+                        this.on_message_update(old_message, new_message).catch(this.critical_error.bind(this));
                     },
                 );
                 if (!this.freestanding) {
                     await this.populate_caches();
                 }
-            })().catch(critical_error);
+            })().catch(this.critical_error.bind(this));
         });
 
         for await (const file of walk_dir("src/components")) {
@@ -448,7 +492,7 @@ export class Wheatley {
                 return await fn();
             } catch (e) {
                 if (!this.freestanding) {
-                    critical_error(e);
+                    this.critical_error(e);
                     throw e;
                 } else {
                     // absorb error
@@ -467,7 +511,6 @@ export class Wheatley {
         // Preliminary loads
         this.TCCPP = fudged_unwrap(await wrap(() => this.client.guilds.fetch(this.guildId)));
         this.user = fudged_unwrap(await wrap(() => this.client.users.fetch(this.id)));
-        this.zelis = fudged_unwrap(await wrap(() => this.client.users.fetch(zelis_id)));
         // Channels
         await Promise.all(
             Object.entries(channels_map).map(async ([k, [id, type]]) => {
@@ -977,7 +1020,7 @@ export class Wheatley {
             }
         } catch (e) {
             // TODO....
-            critical_error(e);
+            this.critical_error(e);
         }
     }
 
@@ -1002,7 +1045,7 @@ export class Wheatley {
             }
         } catch (e) {
             // TODO....
-            critical_error(e);
+            this.critical_error(e);
         }
     }
 
@@ -1019,7 +1062,7 @@ export class Wheatley {
                 }
             }
         } catch (e) {
-            critical_error(e);
+            this.critical_error(e);
         }
     }
 
@@ -1036,7 +1079,7 @@ export class Wheatley {
             }
         } catch (e) {
             // TODO....
-            critical_error(e);
+            this.critical_error(e);
         }
     }
 
@@ -1062,7 +1105,7 @@ export class Wheatley {
                     const option_value = interaction.options.getString(option.title);
                     if (!option_value && option.required) {
                         await command_object.reply(create_error_reply("Required argument not found"), true);
-                        critical_error("this shouldn't happen");
+                        this.critical_error("this shouldn't happen");
                         return;
                     }
                     if (option_value && option.regex && !option_value.trim().match(option.regex)) {
@@ -1129,7 +1172,7 @@ export class Wheatley {
             // TODO: Notify if errors occur in the handler....
         } catch (e) {
             // TODO....
-            critical_error(e);
+            this.critical_error(e);
         }
     }
 

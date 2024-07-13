@@ -1,7 +1,6 @@
 import { strict as assert } from "assert";
 
 import * as Discord from "discord.js";
-import { critical_error } from "./utils/debugging-and-logging.js";
 import { M } from "./utils/debugging-and-logging.js";
 
 import { Wheatley } from "./wheatley.js";
@@ -10,17 +9,6 @@ import { ModalInteractionBuilder } from "./command-abstractions/modal.js";
 import { TextBasedCommandBuilder } from "./command-abstractions/text-based-command-builder.js";
 
 type Arr = readonly unknown[];
-const wrap = <T extends Arr>(f: (...args: [...T]) => void | Promise<void>) => {
-    return (...args: [...T]) => {
-        (async () => {
-            try {
-                await f(...args);
-            } catch (e) {
-                critical_error(e);
-            }
-        })().catch(critical_error);
-    };
-};
 
 export class BotComponent {
     static get is_freestanding() {
@@ -28,7 +16,19 @@ export class BotComponent {
     }
 
     constructor(protected readonly wheatley: Wheatley) {
-        wheatley.event_hub.on("wheatley_ready", wrap(this.on_wheatley_ready.bind(this)));
+        wheatley.event_hub.on("wheatley_ready", this.wrap(this.on_wheatley_ready.bind(this)));
+    }
+
+    private wrap<T extends Arr>(f: (...args: [...T]) => void | Promise<void>) {
+        return (...args: [...T]) => {
+            (async () => {
+                try {
+                    await f(...args);
+                } catch (e) {
+                    this.wheatley.critical_error(e);
+                }
+            })().catch(this.wheatley.critical_error.bind(this.wheatley));
+        };
     }
 
     // Called after all components are constructed and the bot logs in, but before bot commands are finalized
@@ -42,7 +42,7 @@ export class BotComponent {
     ) {
         if (f) {
             M.log("Adding listener", event, this.constructor.name);
-            const listener = wrap(f.bind(this));
+            const listener = this.wrap(f.bind(this));
             this.wheatley.client.on(event, listener);
             this.listeners.push([event, listener]);
         }
@@ -50,7 +50,7 @@ export class BotComponent {
 
     private on_wheatley_ready() {
         this.on_ready()
-            .catch(critical_error)
+            .catch(this.wheatley.critical_error.bind(this.wheatley))
             .finally(() => {
                 this.setup_listener("messageCreate", this.on_message_create);
                 this.setup_listener("messageDelete", this.on_message_delete);

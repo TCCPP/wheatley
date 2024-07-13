@@ -1,6 +1,5 @@
 import * as Discord from "discord.js";
 import { strict as assert } from "assert";
-import { critical_error } from "../utils/debugging-and-logging.js";
 import { M } from "../utils/debugging-and-logging.js";
 import { colors } from "../common.js";
 import { BotComponent } from "../bot-component.js";
@@ -32,7 +31,7 @@ export default class Massban extends BotComponent {
                 }
             }
         } catch (e) {
-            critical_error(e);
+            this.wheatley.critical_error(e);
         }
     }
 
