@@ -1,6 +1,5 @@
 import * as Discord from "discord.js";
 import { strict as assert } from "assert";
-import { critical_error } from "../utils/debugging-and-logging.js";
 import { M } from "../utils/debugging-and-logging.js";
 import { BotComponent } from "../bot-component.js";
 import { Wheatley } from "../wheatley.js";
@@ -134,7 +133,7 @@ export default class Nodistractions extends BotComponent {
                 this.set_timer();
             }
         } catch (e) {
-            critical_error(e);
+            this.wheatley.critical_error(e);
         }
     }
 
@@ -146,7 +145,7 @@ export default class Nodistractions extends BotComponent {
         const sleep_time = next.start - Date.now() + next.duration;
         this.timer = set_timeout(
             () => {
-                this.handle_timer().catch(critical_error);
+                this.handle_timer().catch(this.wheatley.critical_error.bind(this.wheatley));
             },
             Math.min(sleep_time, INT_MAX),
         );
@@ -165,9 +164,7 @@ export default class Nodistractions extends BotComponent {
                 await command.reply("You're already in !nodistractions", true, true);
             } else {
                 await command.reply("Nice try.", true, true);
-                await this.wheatley.zelis.send(
-                    "Exploit attempt" + (command.is_slash() ? "" : " " + command.get_or_forge_url()),
-                );
+                this.wheatley.alert("Exploit attempt" + (command.is_slash() ? "" : " " + command.get_or_forge_url()));
             }
             return;
         }
@@ -228,7 +225,7 @@ export default class Nodistractions extends BotComponent {
         // check again
         assert((await this.wheatley.database.nodistractions.findOne({ user: target.id })) !== null);
         if (!this.undistract_queue.some(e => e.user == target.id)) {
-            critical_error("Not good");
+            this.wheatley.critical_error("Not good");
         }
         // remove entry
         this.undistract_queue = this.undistract_queue.filter(e => e.user != target.id);
@@ -285,9 +282,7 @@ export default class Nodistractions extends BotComponent {
         }
         if ((await this.wheatley.database.nodistractions.findOne({ user: member.id })) === null) {
             await command.reply("Nice try.", true, true);
-            await this.wheatley.zelis.send(
-                "Exploit attempt" + (command.is_slash() ? "" : " " + command.get_or_forge_url()),
-            );
+            this.wheatley.alert("Exploit attempt" + (command.is_slash() ? "" : " " + command.get_or_forge_url()));
             return;
         }
         await this.early_remove_nodistractions(command, member);

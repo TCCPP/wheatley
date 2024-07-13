@@ -3,7 +3,6 @@ import * as https from "https";
 
 import { strict as assert } from "assert";
 
-import { M, critical_error } from "../utils/debugging-and-logging.js";
 import { colors } from "../common.js";
 import { BotComponent } from "../bot-component.js";
 import { Wheatley } from "../wheatley.js";
@@ -143,7 +142,7 @@ export default class AntiExecutable extends BotComponent {
                 try {
                     file_buffer = await this.fetch(attachment.url);
                 } catch (e) {
-                    critical_error(e);
+                    this.wheatley.critical_error(e);
                     return;
                 }
                 // virustotal

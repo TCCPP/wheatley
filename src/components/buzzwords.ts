@@ -1,7 +1,6 @@
 import * as Discord from "discord.js";
 import { strict as assert } from "assert";
 import { round, unwrap } from "../utils/misc.js";
-import { critical_error } from "../utils/debugging-and-logging.js";
 import { SelfClearingSet } from "../utils/containers.js";
 import { M } from "../utils/debugging-and-logging.js";
 import { MINUTE, colors } from "../common.js";
@@ -186,7 +185,7 @@ export default class Buzzwords extends BotComponent {
             //}, MINUTE);
             await this.reflowRoles();
             this.interval = set_interval(() => {
-                this.reflowRoles().catch(critical_error);
+                this.reflowRoles().catch(this.wheatley.critical_error.bind(this.wheatley));
             }, 10 * MINUTE);
         }
     }

@@ -2,7 +2,6 @@ import * as Discord from "discord.js";
 
 import { strict as assert } from "assert";
 
-import { critical_error } from "../utils/debugging-and-logging.js";
 import { SelfClearingMap } from "../utils/containers.js";
 import { M } from "../utils/debugging-and-logging.js";
 import { colors, MINUTE } from "../common.js";
@@ -105,7 +104,7 @@ export default class Report extends BotComponent {
                     "Something went wrong internally due to the report modal not being submitted after a while." +
                     ` Please re-submit the report. Here is your message so you don't have to re-type it:\n${message}`,
             });
-            critical_error("Slow report thing happened");
+            this.wheatley.critical_error("Slow report thing happened");
         }
     }
 }

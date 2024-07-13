@@ -3,7 +3,6 @@ import * as Discord from "discord.js";
 
 import * as util from "util";
 
-import { critical_error } from "../utils/debugging-and-logging.js";
 import { M } from "../utils/debugging-and-logging.js";
 import { Wheatley } from "../wheatley.js";
 
@@ -30,7 +29,7 @@ export class GuildCommandManager {
             M.log("Finished sending commands");
         } catch (e) {
             M.log(util.inspect({ body: this.commands }, { showHidden: false, depth: null, colors: true }));
-            critical_error(e);
+            this.wheatley.critical_error(e);
         }
     }
 }

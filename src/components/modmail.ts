@@ -2,7 +2,6 @@ import { strict as assert } from "assert";
 import * as Discord from "discord.js";
 
 import { get_url_for } from "../utils/discord.js";
-import { critical_error } from "../utils/debugging-and-logging.js";
 import { M } from "../utils/debugging-and-logging.js";
 import { colors, HOUR, MINUTE } from "../common.js";
 import { BotComponent } from "../bot-component.js";
@@ -106,7 +105,7 @@ export default class Modmail extends BotComponent {
                 throw e; // rethrow
             }
         } catch (e) {
-            critical_error(e);
+            this.wheatley.critical_error(e);
         }
     }
 
@@ -173,7 +172,7 @@ export default class Modmail extends BotComponent {
                 this.monke_set.set(interaction.user.id, Date.now());
             }
         } catch (e) {
-            critical_error(e);
+            this.wheatley.critical_error(e);
         }
     }
 
@@ -193,7 +192,7 @@ export default class Modmail extends BotComponent {
                         this.monke_set.remove(member.id);
                     }
                 } catch (e) {
-                    critical_error(e);
+                    this.wheatley.critical_error(e);
                 }
             } else {
                 await interaction.reply({

@@ -13,7 +13,7 @@ export default class AntiAutoreact extends BotComponent {
 
     override async on_ready() {
         this.obnoxious_autoreact_immunity = new Set([
-            this.wheatley.zelis.id,
+            "199943082441965577", // Zelis
             "551519630578024468", // Swyde
         ]);
     }

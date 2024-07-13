@@ -2,7 +2,7 @@ import * as Discord from "discord.js";
 
 import { strict as assert } from "assert";
 
-import { M, critical_error } from "../utils/debugging-and-logging.js";
+import { M } from "../utils/debugging-and-logging.js";
 import { HOUR, MINUTE, colors } from "../common.js";
 import { BotComponent } from "../bot-component.js";
 import { Wheatley } from "../wheatley.js";
@@ -203,7 +203,7 @@ export default class Purge extends BotComponent {
             await channel.bulkDelete(messages);
             handled += messages.size;
             last_seen = Math.min(...[...messages.values()].map(message => message.createdTimestamp));
-            command.edit(make_message(false)).catch(critical_error);
+            command.edit(make_message(false)).catch(this.wheatley.critical_error.bind(this.wheatley));
         }
         await command.edit(make_message(true));
         if (unwrap(this.tasks.get(id))[1]) {

@@ -3,7 +3,6 @@ import { strict as assert } from "assert";
 import { unwrap } from "../utils/misc.js";
 import { index_of_first_not_satisfying } from "../utils/iterables.js";
 import { decode_snowflake, forge_snowflake, is_media_link_embed } from "../utils/discord.js";
-import { critical_error } from "../utils/debugging-and-logging.js";
 import { M } from "../utils/debugging-and-logging.js";
 import { colors, MINUTE } from "../common.js";
 import { BotComponent } from "../bot-component.js";
@@ -152,7 +151,7 @@ export default class Quote extends BotComponent {
                             .setColor(colors.red)
                             .setDescription("Error: You don't have permissions for that channel"),
                     );
-                    await this.wheatley.zelis.send("quote exploit attempt");
+                    this.wheatley.alert("quote exploit attempt");
                     continue;
                 }
                 let messages: Discord.Message[] = [];
@@ -190,7 +189,7 @@ export default class Quote extends BotComponent {
                 embeds.push(
                     new Discord.EmbedBuilder().setColor(colors.red).setDescription("Error: Channel not a text channel"),
                 );
-                critical_error("Error: Channel not a text channel");
+                this.wheatley.critical_error("Error: Channel not a text channel");
             }
         }
         if (embeds.length > 0) {

@@ -6,7 +6,6 @@ import { unwrap } from "../utils/misc.js";
 import { is_string } from "../utils/strings.js";
 import { Wheatley } from "../wheatley.js";
 import { BotTextBasedCommand } from "./text-based-command-descriptor.js";
-import { critical_error } from "../utils/debugging-and-logging.js";
 import { forge_snowflake } from "../utils/discord.js";
 
 export type CommandAbstractionReplyOptions = {
@@ -260,7 +259,7 @@ export class TextBasedCommand {
                     const reply_message = await this.wheatley.fetch_message_reply(this.reply_object);
                     return reply_message;
                 } catch (e) {
-                    critical_error(e);
+                    this.wheatley.critical_error(e);
                 }
             }
         }

@@ -1,6 +1,5 @@
 import { strict as assert } from "assert";
 import * as Discord from "discord.js";
-import { client } from "./debugging-and-logging.js";
 import { unwrap } from "./misc.js";
 import { TextBasedCommand } from "../command-abstractions/text-based-command.js";
 import { is_string } from "./strings.js";
@@ -36,27 +35,6 @@ export function get_url_for(channel: Discord.GuildChannel | Discord.TextChannel 
 export function textchannelify(x: Discord.Channel): Discord.TextBasedChannel {
     assert(x.isTextBased());
     return x;
-}
-
-export async function fetch_text_channel(id: string) {
-    // TODO: Using the client from init_debugger is very ugly.
-    const channel = await client.channels.fetch(id);
-    assert(channel && channel instanceof Discord.TextChannel);
-    return channel;
-}
-
-export async function fetch_forum_channel(id: string) {
-    // TODO: Using the client from init_debugger is very ugly.
-    const channel = await client.channels.fetch(id);
-    assert(channel && channel instanceof Discord.ForumChannel);
-    return channel;
-}
-
-export async function fetch_thread_channel(channel: Discord.TextChannel, id: string) {
-    // TODO: Using the client from init_debugger is very ugly.
-    const thread = await channel.threads.fetch(id);
-    assert(thread && thread instanceof Discord.ThreadChannel);
-    return thread;
 }
 
 export function get_tag(channel: Discord.ForumChannel, name: string) {
@@ -132,7 +110,10 @@ export function is_media_link_embed(embed: Discord.APIEmbed | Discord.Embed) {
     return embed.image || embed.video || embed.thumbnail;
 }
 
-export async function send_long_message(channel: Discord.TextChannel | Discord.DMChannel, msg: string) {
+export async function send_long_message(
+    channel: Discord.TextChannel | Discord.ThreadChannel | Discord.DMChannel,
+    msg: string,
+) {
     if (msg.length > 2000) {
         const lines = msg.split("\n");
         let partial = "";

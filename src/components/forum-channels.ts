@@ -1,7 +1,6 @@
 import * as Discord from "discord.js";
 import { strict as assert } from "assert";
 import { decode_snowflake, fetch_all_threads_archive_count, get_tag } from "../utils/discord.js";
-import { critical_error } from "../utils/debugging-and-logging.js";
 import { SelfClearingSet } from "../utils/containers.js";
 import { M } from "../utils/debugging-and-logging.js";
 import { colors, DAY, HOUR, MINUTE } from "../common.js";
@@ -94,7 +93,7 @@ export default class ForumChannels extends BotComponent {
         // thread.lastMessageId can be null if there are no messages (possibly and the forum starter has been deleted)
         // if the thread author hasn't sent an initial message it'll mess things up, this needs manual review
         if (thread.lastMessageId == null) {
-            await this.wheatley.zelis.send(`thread.lastMessageId is null for ${thread.url}`);
+            this.wheatley.alert(`thread.lastMessageId is null for ${thread.url}`);
             return;
         }
         const now = Date.now();
@@ -196,7 +195,7 @@ export default class ForumChannels extends BotComponent {
         await this.forum_cleanup();
         // every hour try to cleanup
         this.interval = set_interval(() => {
-            this.forum_cleanup().catch(critical_error);
+            this.forum_cleanup().catch(this.wheatley.critical_error.bind(this.wheatley));
         }, 60 * MINUTE);
     }
 
@@ -226,7 +225,7 @@ export default class ForumChannels extends BotComponent {
                         this.timeout_map.set(
                             thread.id,
                             set_timeout(() => {
-                                this.prompt_close(thread).catch(critical_error);
+                                this.prompt_close(thread).catch(this.wheatley.critical_error.bind(this.wheatley));
                             }, thank_you_timeout),
                         );
                         this.possibly_resolved.insert(thread.id);
@@ -241,7 +240,7 @@ export default class ForumChannels extends BotComponent {
                 this.timeout_map.set(
                     thread.id,
                     set_timeout(() => {
-                        this.prompt_close(thread).catch(critical_error);
+                        this.prompt_close(thread).catch(this.wheatley.critical_error.bind(this.wheatley));
                     }, thank_you_timeout),
                 );
             }

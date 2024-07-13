@@ -3,8 +3,6 @@ import { strict as assert } from "assert";
 import * as Discord from "discord.js";
 import * as mongo from "mongodb";
 
-import { critical_error } from "../../utils/debugging-and-logging.js";
-import { M } from "../../utils/debugging-and-logging.js";
 import { Wheatley } from "../../wheatley.js";
 import { ModerationComponent } from "./moderation-common.js";
 import { TextBasedCommandBuilder } from "../../command-abstractions/text-based-command-builder.js";
@@ -91,7 +89,7 @@ export default class Note extends ModerationComponent {
             });
         } catch (e) {
             await this.reply_with_error(command, `Error issuing ${this.type}`);
-            critical_error(e);
+            this.wheatley.critical_error(e);
         }
     }
 

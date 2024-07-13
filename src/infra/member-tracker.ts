@@ -1,6 +1,5 @@
 import * as Discord from "discord.js";
 import { strict as assert } from "assert";
-import { critical_error } from "../utils/debugging-and-logging.js";
 import { M } from "../utils/debugging-and-logging.js";
 import { MINUTE } from "../common.js";
 import { Wheatley } from "../wheatley.js";
@@ -121,7 +120,7 @@ export class MemberTracker {
                 try {
                     on_join(member, now);
                 } catch (e) {
-                    critical_error(e);
+                    this.wheatley.critical_error(e);
                 }
             }
         }
@@ -141,7 +140,7 @@ export class MemberTracker {
                 try {
                     on_ban(ban, now);
                 } catch (e) {
-                    critical_error(e);
+                    this.wheatley.critical_error(e);
                 }
             }
         }

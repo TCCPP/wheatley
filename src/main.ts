@@ -19,13 +19,10 @@
 import * as Discord from "discord.js";
 import * as Sentry from "@sentry/node";
 
-import { critical_error, init_debugger } from "./utils/debugging-and-logging.js";
 import { M } from "./utils/debugging-and-logging.js";
 
 import { wheatley_auth, Wheatley } from "./wheatley.js";
 import fs from "fs";
-
-let wheatley: Wheatley;
 
 async function main() {
     // Setup client
@@ -72,10 +69,6 @@ async function main() {
         M.log(`Logged in as ${client.user!.tag}`);
     });
 
-    M.debug("Setting up services");
-
-    init_debugger(client);
-
     M.debug("Setting up modules");
 
     // reading sync is okay here, we can't do anything in parallel anyway
@@ -88,15 +81,15 @@ async function main() {
     }
 
     try {
-        wheatley = new Wheatley(client, auth);
+        new Wheatley(client, auth);
     } catch (e) {
-        critical_error(e);
+        M.error(e);
     }
 }
 
 (async () => {
     return main();
-})().catch(critical_error);
+})().catch(M.error);
 
 process.on("uncaughtException", error => {
     M.error("uncaughtException", error);
@@ -105,5 +98,5 @@ process.on("uncaughtException", error => {
 
 // Last line of defense
 process.on("unhandledRejection", (reason, promise) => {
-    critical_error(`unhandledRejection ${reason} ${promise}`);
+    M.error(`unhandledRejection ${reason} ${promise}`);
 });

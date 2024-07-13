@@ -4,7 +4,6 @@ import { strict as assert } from "assert";
 
 import { BotComponent } from "../bot-component.js";
 import { Wheatley } from "../wheatley.js";
-import { critical_error, M } from "../utils/debugging-and-logging.js";
 import { unwrap } from "../utils/misc.js";
 import { time_to_human } from "../utils/strings.js";
 import { MINUTE } from "../common.js";
@@ -69,13 +68,13 @@ export default class DaysSinceLastIncident extends BotComponent {
             });
         }
         this.timer = set_interval(() => {
-            this.update_or_send_if_needed().catch(critical_error);
+            this.update_or_send_if_needed().catch(this.wheatley.critical_error.bind(this.wheatley));
         }, MINUTE);
     }
 
     handle_incident(moderation: moderation_entry) {
         (async () => {
             await this.update_or_send_if_needed();
-        })().catch(critical_error);
+        })().catch(this.wheatley.critical_error.bind(this.wheatley));
     }
 }

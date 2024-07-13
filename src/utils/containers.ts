@@ -1,6 +1,7 @@
 import { strict as assert } from "assert";
-import { critical_error, M } from "./debugging-and-logging.js";
+import { M } from "./debugging-and-logging.js";
 import { set_interval, clear_interval, set_timeout, clear_timeout } from "./node.js";
+import { Wheatley } from "../wheatley.js";
 
 export function force_clear_containers() {}
 
@@ -196,13 +197,12 @@ export class SleepList<T, ID> {
     // timestamp to fire at, T
     list: [number, T][] = [];
     timer: NodeJS.Timeout | null = null;
-    handler: (item: T) => Promise<void>;
-    get_id: (item: T) => ID;
 
-    constructor(handler: (item: T) => Promise<void>, get_id: (item: T) => ID) {
-        this.handler = handler;
-        this.get_id = get_id;
-    }
+    constructor(
+        private wheatley: Wheatley,
+        private handler: (item: T) => Promise<void>,
+        private get_id: (item: T) => ID,
+    ) {}
 
     destroy() {
         if (this.timer) {
@@ -223,7 +223,7 @@ export class SleepList<T, ID> {
                 await this.handler(item);
             }
         } catch (e) {
-            critical_error(e);
+            this.wheatley.critical_error(e);
         } finally {
             this.reset_timer();
         }
@@ -237,7 +237,9 @@ export class SleepList<T, ID> {
             const delta = Math.max(this.list[0][0] - Date.now(), 0);
             this.timer = set_timeout(
                 () => {
-                    this.handle_timer().catch(critical_error).finally(this.reset_timer.bind(this));
+                    this.handle_timer()
+                        .catch(this.wheatley.critical_error.bind(this.wheatley))
+                        .finally(this.reset_timer.bind(this));
                 },
                 Math.min(delta, INT_MAX),
             );

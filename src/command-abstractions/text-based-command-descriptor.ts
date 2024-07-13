@@ -5,7 +5,6 @@ import * as Discord from "discord.js";
 import { unwrap } from "../utils/misc.js";
 import { build_description, escape_regex, wrap } from "../utils/strings.js";
 import { zip } from "../utils/iterables.js";
-import { critical_error } from "../utils/debugging-and-logging.js";
 import { M } from "../utils/debugging-and-logging.js";
 import {
     TextBasedCommandParameterOptions,
@@ -34,7 +33,7 @@ export class BotTextBasedCommand<Args extends unknown[] = []> extends BaseBotInt
         builder: TextBasedCommandBuilder<Args, true, true> | TextBasedCommandBuilder<Args, true, false, true>,
         protected readonly wheatley: Wheatley,
     ) {
-        super(name, builder.handler ?? (async () => critical_error("This shouldn't happen")));
+        super(name, builder.handler ?? (async () => wheatley.critical_error("This shouldn't happen")));
         this.options = builder.options;
         if (builder.type === "top-level") {
             this.subcommands = new Discord.Collection();
@@ -213,7 +212,7 @@ export class BotTextBasedCommand<Args extends unknown[] = []> extends BaseBotInt
                         command_options.push(reply_message.author);
                     } catch (e) {
                         await reply_with_error(`Error fetching reply`, true);
-                        critical_error(e);
+                        this.wheatley.critical_error(e);
                         return;
                     }
                 } else if (!option.required) {

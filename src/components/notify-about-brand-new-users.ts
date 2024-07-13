@@ -1,8 +1,6 @@
 import * as Discord from "discord.js";
 import { strict as assert } from "assert";
 import { time_to_human } from "../utils/strings.js";
-import { critical_error } from "../utils/debugging-and-logging.js";
-import { M } from "../utils/debugging-and-logging.js";
 import { colors, MINUTE } from "../common.js";
 import { BotComponent } from "../bot-component.js";
 import { Wheatley } from "../wheatley.js";
@@ -31,8 +29,9 @@ export default class NotifyAboutBrandNewUsers extends BotComponent {
                 text: `ID: ${member.id}`,
             })
             .setTimestamp();
-        await this.wheatley.channels.welcome.send({ embeds: [embed] }).catch(reason => critical_error(reason));
-        //member_log_channel!.send(`<@!${zelis_id}>`);
+        await this.wheatley.channels.welcome
+            .send({ embeds: [embed] })
+            .catch(reason => this.wheatley.critical_error(reason));
     }
 
     override async on_guild_member_add(member: Discord.GuildMember) {
