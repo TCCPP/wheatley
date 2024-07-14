@@ -17,13 +17,13 @@ export default class NotifyAboutFormerlyBannedUsers extends BotComponent {
         const embed = new Discord.EmbedBuilder()
             .setColor(colors.alert_color)
             .setAuthor({
-                name: `Previously kicked/banned user re-joined: ${member.user.tag}`,
+                name: `Previously ${action} user re-joined: ${member.user.tag}`,
                 iconURL: member.user.displayAvatarURL(),
             })
             .setDescription(
                 build_description(
                     `User <@${member.user.id}> was previously ${action} on ${discord_timestamp(most_recent.issued_at)}`,
-                    `Reason: ${most_recent.reason}`,
+                    most_recent.reason ? `Reason: ${most_recent.reason}` : null,
                 ),
             )
             .setFooter({
