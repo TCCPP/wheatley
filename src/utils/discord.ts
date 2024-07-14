@@ -110,10 +110,7 @@ export function is_media_link_embed(embed: Discord.APIEmbed | Discord.Embed) {
     return embed.image || embed.video || embed.thumbnail;
 }
 
-export async function send_long_message(
-    channel: Discord.TextChannel | Discord.ThreadChannel | Discord.DMChannel,
-    msg: string,
-) {
+export async function send_long_message(channel: Discord.TextBasedChannel, msg: string) {
     if (msg.length > 2000) {
         const lines = msg.split("\n");
         let partial = "";

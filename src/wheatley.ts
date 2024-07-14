@@ -310,6 +310,8 @@ export class Wheatley {
     TCCPP: Discord.Guild;
     user: Discord.User;
 
+    log_channel: Discord.TextBasedChannel | null = null;
+
     channels: {
         // ["prototype"] gets the instance type, eliminating the `typeof`. InstanceType<T> doesn't work for a protected
         // constructor, weirdly.
@@ -344,7 +346,10 @@ export class Wheatley {
 
     critical_error(arg: any) {
         M.error(arg);
-        send_long_message(this.channels.log, `🛑 Critical error occurred: ${to_string(arg)}`)
+        if (!this.log_channel) {
+            return;
+        }
+        send_long_message(this.log_channel, `🛑 Critical error occurred: ${to_string(arg)}`)
             .catch(() => M.error)
             .finally(() => {
                 if (arg instanceof Error) {
@@ -357,7 +362,10 @@ export class Wheatley {
 
     ignorable_error(arg: any) {
         M.error(arg);
-        send_long_message(this.channels.log, `⚠️ Ignorable error occurred: ${to_string(arg)}`)
+        if (!this.log_channel) {
+            return;
+        }
+        send_long_message(this.log_channel, `⚠️ Ignorable error occurred: ${to_string(arg)}`)
             .catch(M.error)
             .finally(() => {
                 if (arg instanceof Error) {
@@ -370,7 +378,10 @@ export class Wheatley {
 
     milestone(message: string) {
         M.info(message);
-        send_long_message(this.channels.log, message)
+        if (!this.log_channel) {
+            return;
+        }
+        send_long_message(this.log_channel, message)
             .catch(M.error)
             .finally(() => {
                 Sentry.captureMessage(message);
@@ -379,7 +390,10 @@ export class Wheatley {
 
     alert(message: string) {
         M.info(message);
-        send_long_message(this.channels.log, message)
+        if (!this.log_channel) {
+            return;
+        }
+        send_long_message(this.log_channel, message)
             .catch(M.error)
             .finally(() => {
                 Sentry.captureMessage(message);
@@ -423,6 +437,12 @@ export class Wheatley {
 
         this.client.on("ready", () => {
             (async () => {
+                // Fetch the log channel immediately
+                if (!auth.freestanding) {
+                    const channel = await this.client.channels.fetch(channels_map.log[0]);
+                    this.log_channel = channel && channel.isTextBased() ? channel : null;
+                }
+
                 this.milestone("Bot started");
 
                 await this.fetch_guild_info();
