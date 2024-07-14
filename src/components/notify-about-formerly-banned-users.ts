@@ -30,9 +30,7 @@ export default class NotifyAboutFormerlyBannedUsers extends BotComponent {
                 text: `ID: ${member.id}`,
             })
             .setTimestamp();
-        await this.wheatley.channels.staff_action_log
-            .send({ embeds: [embed] })
-            .catch(reason => this.wheatley.critical_error(reason));
+        await this.wheatley.channels.welcome.send({ embeds: [embed] });
     }
 
     async find_most_recent_kick_or_ban(member: Discord.GuildMember) {

@@ -29,9 +29,7 @@ export default class NotifyAboutBrandNewUsers extends BotComponent {
                 text: `ID: ${member.id}`,
             })
             .setTimestamp();
-        await this.wheatley.channels.welcome
-            .send({ embeds: [embed] })
-            .catch(reason => this.wheatley.critical_error(reason));
+        await this.wheatley.channels.welcome.send({ embeds: [embed] });
     }
 
     override async on_guild_member_add(member: Discord.GuildMember) {
