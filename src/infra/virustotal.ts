@@ -1,15 +1,11 @@
 import axios from "axios";
 
-import { wheatley_auth } from "../wheatley.js";
-import { delay, unwrap } from "../utils/misc.js";
+import { delay } from "../utils/misc.js";
 import { M } from "../utils/debugging-and-logging.js";
 import { MINUTE } from "../common.js";
 
 export class Virustotal {
-    key: string;
-    constructor(auth: wheatley_auth) {
-        this.key = unwrap(auth.virustotal);
-    }
+    constructor(private readonly key: string) {}
 
     async get_upload_url() {
         const res = await axios.get("https://www.virustotal.com/api/v3/files/upload_url", {

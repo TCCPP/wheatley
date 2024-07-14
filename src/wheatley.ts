@@ -24,7 +24,6 @@ import { BaseBotInteraction } from "./command-abstractions/interaction-base.js";
 import { WheatleyDatabase, WheatleyDatabaseProxy } from "./infra/database-interface.js";
 import { GuildCommandManager } from "./infra/guild-command-manager.js";
 import { MemberTracker } from "./infra/member-tracker.js";
-import { Virustotal } from "./infra/virustotal.js";
 import { decode_snowflake, forge_snowflake, is_media_link_embed, send_long_message } from "./utils/discord.js";
 import { TypedEventEmitter } from "./utils/event-emitter.js";
 import { setup_metrics_server } from "./infra/prometheus.js";
@@ -75,6 +74,26 @@ export type wheatley_auth = {
         hostname: string;
     };
 };
+
+function drop_token({
+    id,
+    guild,
+    freestanding,
+    mongo,
+    sentry,
+    virustotal,
+    metrics,
+}: wheatley_auth): Omit<wheatley_auth, "token"> {
+    return {
+        id,
+        guild,
+        freestanding,
+        mongo,
+        sentry,
+        virustotal,
+        metrics,
+    };
+}
 
 const TCCPP_ID = "331718482485837825";
 export let WHEATLEY_ID: string;
@@ -274,8 +293,9 @@ export class Wheatley {
     readonly guild_command_manager: GuildCommandManager;
     readonly tracker: MemberTracker; // TODO: Rename
 
+    parameters: Omit<wheatley_auth, "token">;
+
     database: WheatleyDatabaseProxy;
-    virustotal?: Virustotal;
 
     link_blacklist: any;
 
@@ -408,6 +428,8 @@ export class Wheatley {
         this.freestanding = auth.freestanding ?? false;
         this.guildId = auth.guild ?? TCCPP_ID;
 
+        this.parameters = drop_token(auth);
+
         this.guild_command_manager = new GuildCommandManager(this);
         this.tracker = new MemberTracker(this);
 
@@ -430,9 +452,6 @@ export class Wheatley {
         }
         if (auth.metrics) {
             setup_metrics_server(auth.metrics.port, auth.metrics.hostname);
-        }
-        if (auth.virustotal) {
-            this.virustotal = new Virustotal(auth);
         }
 
         this.client.on("ready", () => {

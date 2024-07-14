@@ -7,14 +7,21 @@ import { colors } from "../common.js";
 import { BotComponent } from "../bot-component.js";
 import { Wheatley } from "../wheatley.js";
 import { build_description, capitalize } from "../utils/strings.js";
+import { Virustotal } from "../infra/virustotal.js";
 
 export default class AntiExecutable extends BotComponent {
+    virustotal: Virustotal | null;
+
     static override get is_freestanding() {
         return true;
     }
 
     constructor(wheatley: Wheatley) {
         super(wheatley);
+
+        if (wheatley.parameters.virustotal) {
+            this.virustotal = new Virustotal(wheatley.parameters.virustotal);
+        }
     }
 
     // Elf:  0x7F 0x45 0x4c 0x46 at offset 0
@@ -117,10 +124,10 @@ export default class AntiExecutable extends BotComponent {
     }
 
     async virustotal_scan(file_buffer: Buffer, flag_messsage: Discord.Message) {
-        if (!this.wheatley.virustotal) {
+        if (!this.virustotal) {
             return;
         }
-        const res = await this.wheatley.virustotal.upload(file_buffer);
+        const res = await this.virustotal.upload(file_buffer);
         const bad_count = res.stats.suspicious + res.stats.malicious;
         await flag_messsage.reply({
             embeds: [
