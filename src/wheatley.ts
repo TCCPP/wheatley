@@ -345,7 +345,7 @@ export class Wheatley {
     critical_error(arg: any) {
         M.error(arg);
         send_long_message(this.channels.log, `🛑 Critical error occurred: ${to_string(arg)}`)
-            .catch(() => void 0)
+            .catch(() => M.error)
             .finally(() => {
                 if (arg instanceof Error) {
                     Sentry.captureException(arg);
@@ -358,7 +358,7 @@ export class Wheatley {
     ignorable_error(arg: any) {
         M.error(arg);
         send_long_message(this.channels.log, `⚠️ Ignorable error occurred: ${to_string(arg)}`)
-            .catch(() => void 0)
+            .catch(() => M.error)
             .finally(() => {
                 if (arg instanceof Error) {
                     Sentry.captureException(arg);
@@ -371,7 +371,7 @@ export class Wheatley {
     milestone(message: string) {
         M.info(message);
         send_long_message(this.channels.log, message)
-            .catch(() => void 0)
+            .catch(() => M.error)
             .finally(() => {
                 Sentry.captureMessage(message);
             });
@@ -380,7 +380,7 @@ export class Wheatley {
     alert(message: string) {
         M.info(message);
         send_long_message(this.channels.log, message)
-            .catch(() => void 0)
+            .catch(() => M.error)
             .finally(() => {
                 Sentry.captureMessage(message);
             });
