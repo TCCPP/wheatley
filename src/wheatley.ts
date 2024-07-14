@@ -66,6 +66,7 @@ export type wheatley_auth = {
     guild?: string;
     token: string;
     freestanding?: boolean;
+    passive?: boolean;
     mongo?: wheatley_database_credentials;
     sentry?: string;
     virustotal?: string;
@@ -316,6 +317,8 @@ export class Wheatley {
     readonly guildId: string;
     // True if freestanding mode is enabled. Defaults to false.
     readonly freestanding: boolean;
+    // True if passive mode is enabled. Defaults to false.
+    readonly passive: boolean;
 
     // Some emojis
     readonly pepereally = "<:pepereally:643881257624666112>";
@@ -426,6 +429,7 @@ export class Wheatley {
     ) {
         this.id = auth.id;
         this.freestanding = auth.freestanding ?? false;
+        this.passive = auth.passive ?? false;
         this.guildId = auth.guild ?? TCCPP_ID;
 
         this.parameters = drop_token(auth);
@@ -602,8 +606,12 @@ export class Wheatley {
         await wrap(() => this.fetch_root_mod_list(this.client));
     }
 
-    async add_component<T extends BotComponent>(component: { new (w: Wheatley): T; get is_freestanding(): boolean }) {
-        if (!this.freestanding || component.is_freestanding) {
+    async add_component<T extends BotComponent>(component: {
+        new (w: Wheatley): T;
+        get is_freestanding(): boolean;
+        get is_passive(): boolean;
+    }) {
+        if ((!this.passive || component.is_passive) && (!this.freestanding || component.is_freestanding)) {
             M.log(`Initializing ${component.name}`);
             assert(!this.components.has(component.name), "Duplicate component name");
             const instance = new component(this);
@@ -964,6 +972,9 @@ export class Wheatley {
             | MessageContextMenuInteractionBuilder<true>
             | ModalInteractionBuilder<true>,
     ) {
+        if (this.passive) {
+            return;
+        }
         if (command instanceof TextBasedCommandBuilder) {
             for (const descriptor of command.to_command_descriptors(this)) {
                 assert(!(descriptor.name in this.text_commands));
@@ -986,6 +997,9 @@ export class Wheatley {
 
     // returns false if the message was not a wheatley command
     async handle_text_command(message: Discord.Message, prev_command_obj?: TextBasedCommand) {
+        if (this.passive) {
+            return false;
+        }
         const match = message.content.match(Wheatley.command_regex);
         if (match) {
             const command_name = match[1];

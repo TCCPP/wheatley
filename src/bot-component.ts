@@ -15,6 +15,10 @@ export class BotComponent {
         return false;
     }
 
+    static get is_passive() {
+        return false;
+    }
+
     constructor(protected readonly wheatley: Wheatley) {
         wheatley.event_hub.on("wheatley_ready", this.wrap(this.on_wheatley_ready.bind(this)));
     }

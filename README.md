@@ -54,13 +54,15 @@ Secrets and other bot info must be configured in the `auth.json` file. An exampl
     "host": "127.0.0.1", // optional
     "port": 27017        // optional
   },
-  "freestanding": false
+  "freestanding": false, // optional
+  "passive": false       // optional
 }
 ```
 
 Mongo credentials can be omitted locally if you don't need to work on components that use mongo. `freestanding: true`
 can be specified to turn on only components which don't rely on channels etc. specific to Together C & C++ to exist.
 Freestanding mode also disables connecting to MongoDB.
+`passive: true` can be specified to run the bot in passive mode, where it will not advertise or react to commands, and only load components that are marked as passive (useful for testing new features in a second instance without interfering with a running primary instance).
 
 ## Bot Component Abstraction
 
@@ -69,6 +71,9 @@ The bot is built of modular components. The BotComponent base class defines the 
 ```ts
 export class BotComponent {
   static get is_freestanding() {
+    return false;
+  }
+  static get is_passive() {
     return false;
   }
   // Add a command
