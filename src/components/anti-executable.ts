@@ -3,11 +3,14 @@ import * as https from "https";
 
 import { strict as assert } from "assert";
 
-import { colors } from "../common.js";
+import { colors, DAY } from "../common.js";
 import { BotComponent } from "../bot-component.js";
 import { Wheatley } from "../wheatley.js";
 import { build_description, capitalize } from "../utils/strings.js";
 import { Virustotal } from "../infra/virustotal.js";
+import Mute from "./moderation/mute.js";
+
+const ACTION_THRESHOLD = 5;
 
 export default class AntiExecutable extends BotComponent {
     virustotal: Virustotal | null;
@@ -123,13 +126,18 @@ export default class AntiExecutable extends BotComponent {
         });
     }
 
-    async virustotal_scan(file_buffer: Buffer, flag_messsage: Discord.Message) {
+    async virustotal_scan(
+        file_buffer: Buffer,
+        flag_messsage: Discord.Message,
+        author: Discord.User,
+        original_message: Discord.Message | null,
+    ) {
         if (!this.virustotal) {
             return;
         }
         const res = await this.virustotal.upload(file_buffer);
         const bad_count = res.stats.suspicious + res.stats.malicious;
-        await flag_messsage.reply({
+        const flag_reply = await flag_messsage.reply({
             embeds: [
                 new Discord.EmbedBuilder()
                     .setColor(bad_count > 0 ? colors.red : colors.wheatley)
@@ -142,9 +150,44 @@ export default class AntiExecutable extends BotComponent {
                     ),
             ],
         });
+        if (bad_count >= ACTION_THRESHOLD) {
+            if (original_message) {
+                original_message.delete().catch(this.wheatley.critical_error.bind(this.wheatley));
+            }
+            (this.wheatley.components.get("Mute") as Mute)
+                .issue_moderation_internal(
+                    author,
+                    this.wheatley.user,
+                    DAY,
+                    `Automatic mute for uploading a file flagged as potentially malicious. ` +
+                        "A moderator will review this.",
+                    {
+                        type: "mute",
+                    },
+                )
+                .catch(this.wheatley.critical_error.bind(this.wheatley))
+                .finally(() => {
+                    this.wheatley.channels.staff_action_log
+                        .send({
+                            content:
+                                `<@&${this.wheatley.roles.moderators.id}> Please review automatic 24h mute of ` +
+                                `<@${author.id}> (id ${author.id}) for a potentially malicious upload, ` +
+                                `virustotal result: ${flag_reply.url}`,
+                            allowedMentions: {
+                                roles: [this.wheatley.roles.moderators.id],
+                            },
+                        })
+                        .catch(this.wheatley.critical_error.bind(this.wheatley));
+                });
+        }
     }
 
-    async scan_attachments(attachments: Discord.Attachment[], flag_message: Discord.Message) {
+    async scan_attachments(
+        attachments: Discord.Attachment[],
+        flag_message: Discord.Message,
+        author: Discord.User,
+        original_message: Discord.Message | null,
+    ) {
         await Promise.all(
             attachments.map(async attachment => {
                 // download
@@ -156,7 +199,7 @@ export default class AntiExecutable extends BotComponent {
                     return;
                 }
                 // virustotal
-                await this.virustotal_scan(file_buffer, flag_message);
+                await this.virustotal_scan(file_buffer, flag_message, author, original_message);
             }),
         );
     }
@@ -169,7 +212,7 @@ export default class AntiExecutable extends BotComponent {
             content: `:warning: Executable file(s) detected`,
             ...quote,
         });
-        await this.scan_attachments(attachments, flag_message);
+        await this.scan_attachments(attachments, flag_message, message.author, null);
     }
 
     async handle_archives(message: Discord.Message, attachments: Discord.Attachment[]) {
@@ -178,7 +221,7 @@ export default class AntiExecutable extends BotComponent {
             content: `:warning: Archive file(s) detected`,
             ...quote,
         });
-        await this.scan_attachments(attachments, flag_message);
+        await this.scan_attachments(attachments, flag_message, message.author, message);
     }
 
     override async on_message_create(message: Discord.Message) {
