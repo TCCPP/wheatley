@@ -117,6 +117,9 @@ export default class AntiExecutable extends BotComponent {
     }
 
     async virustotal_scan(file_buffer: Buffer, flag_messsage: Discord.Message) {
+        if (!this.wheatley.virustotal) {
+            return;
+        }
         const res = await this.wheatley.virustotal.upload(file_buffer);
         const bad_count = res.stats.suspicious + res.stats.malicious;
         await flag_messsage.reply({
@@ -146,9 +149,7 @@ export default class AntiExecutable extends BotComponent {
                     return;
                 }
                 // virustotal
-                if (!this.wheatley.freestanding) {
-                    await this.virustotal_scan(file_buffer, flag_message);
-                }
+                await this.virustotal_scan(file_buffer, flag_message);
             }),
         );
     }
