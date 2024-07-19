@@ -45,6 +45,10 @@ function is_valid_name(name: string) {
     return is_all_ascii(name) || is_valid_codepoint(name[0]) || has_three_continuous_valid_asciis(name);
 }
 
+function is_herald(name: string) {
+    return /\S, herald of /i.test(name);
+}
+
 export default class UsernameManager extends BotComponent {
     interval: NodeJS.Timeout | null = null;
 
@@ -73,6 +77,27 @@ export default class UsernameManager extends BotComponent {
         }
     }
 
+    has_herald(member: Discord.GuildMember) {
+        return member.roles.cache.filter(role => role.id == this.wheatley.roles.herald.id).size > 0;
+    }
+    async check_herald(member: Discord.GuildMember) {
+        if (
+            member.id == "152543367937392640" || // rald
+            member.id == "125750748272132096" || // dragon
+            is_herald(member.displayName.trim())
+        ) {
+            if (!this.has_herald(member)) {
+                M.info("a new herald was born:", member.displayName);
+                await member.roles.add(this.wheatley.roles.herald);
+            }
+        } else {
+            if (this.has_herald(member)) {
+                M.info("an illegitimate herald was found:", member.displayName);
+                await member.roles.remove(this.wheatley.roles.herald);
+            }
+        }
+    }
+
     async check_member(member: Discord.GuildMember) {
         //M.debug(
         //    member.displayName, // server nickname, user display name
@@ -95,9 +120,8 @@ export default class UsernameManager extends BotComponent {
                 new_name,
             );
             await member.setNickname(new_name);
-        } else {
-            return;
         }
+        await this.check_herald(member);
     }
 
     async cleanup() {
