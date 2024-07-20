@@ -742,6 +742,15 @@ export class Wheatley {
         M.debug("root_mod_list", [this.root_mod_list]);
     }
 
+    async is_public_channel(channel: Discord.GuildTextBasedChannel | Discord.TextBasedChannel) {
+        return (
+            !(channel instanceof Discord.ForumChannel) &&
+            !channel.isDMBased() &&
+            !(channel.isThread() && channel.type == Discord.ChannelType.PrivateThread) &&
+            channel.permissionsFor(this.TCCPP.roles.everyone).has("ViewChannel")
+        );
+    }
+
     // case-insensitive
     get_role_by_name(name: string) {
         return unwrap(this.TCCPP.roles.cache.find(role => role.name.toLowerCase() === name.toLowerCase()));

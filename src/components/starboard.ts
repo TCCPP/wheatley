@@ -196,13 +196,7 @@ export default class Starboard extends BotComponent {
     }
 
     async is_valid_channel(channel: Discord.GuildTextBasedChannel | Discord.TextBasedChannel) {
-        return (
-            !this.excluded_channels.has(channel.id) &&
-            !(channel instanceof Discord.ForumChannel) &&
-            !channel.isDMBased() &&
-            !(channel.isThread() && channel.type == Discord.ChannelType.PrivateThread) &&
-            channel.permissionsFor(this.wheatley.TCCPP.roles.everyone).has("ViewChannel")
-        );
+        return !this.excluded_channels.has(channel.id) && this.wheatley.is_public_channel(channel);
     }
 
     async update_starboard(message: Discord.Message) {
