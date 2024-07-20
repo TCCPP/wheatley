@@ -368,61 +368,9 @@ export class Wheatley {
         labelNames: ["type"],
     });
 
-    critical_error(arg: any) {
-        M.error(arg);
-        if (!this.log_channel) {
-            return;
-        }
-        send_long_message(this.log_channel, `🛑 Critical error occurred: ${to_string(arg)}`)
-            .catch(() => M.error)
-            .finally(() => {
-                if (arg instanceof Error) {
-                    Sentry.captureException(arg);
-                } else {
-                    Sentry.captureMessage(to_string(arg));
-                }
-            });
-    }
-
-    ignorable_error(arg: any) {
-        M.error(arg);
-        if (!this.log_channel) {
-            return;
-        }
-        send_long_message(this.log_channel, `⚠️ Ignorable error occurred: ${to_string(arg)}`)
-            .catch(M.error)
-            .finally(() => {
-                if (arg instanceof Error) {
-                    Sentry.captureException(arg);
-                } else {
-                    Sentry.captureMessage(to_string(arg));
-                }
-            });
-    }
-
-    milestone(message: string) {
-        M.info(message);
-        if (!this.log_channel) {
-            return;
-        }
-        send_long_message(this.log_channel, message)
-            .catch(M.error)
-            .finally(() => {
-                Sentry.captureMessage(message);
-            });
-    }
-
-    alert(message: string) {
-        M.info(message);
-        if (!this.log_channel) {
-            return;
-        }
-        send_long_message(this.log_channel, message)
-            .catch(M.error)
-            .finally(() => {
-                Sentry.captureMessage(message);
-            });
-    }
+    //
+    // Bot setup
+    //
 
     constructor(
         readonly client: Discord.Client,
@@ -623,6 +571,113 @@ export class Wheatley {
         }
     }
 
+    async populate_caches() {
+        // Load a couple hundred messages for every channel we're in
+        const channels: Record<string, { channel: Discord.TextBasedChannel; last_seen: number; done: boolean }> = {};
+        for (const [_, channel] of await this.TCCPP.channels.fetch()) {
+            if (channel?.isTextBased() && !channel.name.includes("archived-")) {
+                M.debug(`Loading recent messages from ${channel.name}`);
+                //await channel.messages.fetch({
+                //    limit: 100,
+                //    cache: true
+                //});
+                channels[channel.id] = {
+                    channel,
+                    last_seen: Date.now(),
+                    done: false,
+                };
+            }
+        }
+        for (let i = 0; i < 3; i++) {
+            M.log("Fetches round", i);
+            const promises: Promise<any>[] = [];
+            for (const [id, { channel, last_seen, done }] of Object.entries(channels)) {
+                if (!done) {
+                    promises.push(
+                        (async () => {
+                            const messages = await channel.messages.fetch({
+                                limit: 100,
+                                cache: true,
+                                before: forge_snowflake(last_seen - 1),
+                            });
+                            channels[id].last_seen = Math.min(
+                                ...[...messages.values()].map(message => message.createdTimestamp),
+                            );
+                            if (messages.size == 0) {
+                                channels[id].done = true;
+                            }
+                        })(),
+                    );
+                }
+            }
+            await Promise.all(promises);
+        }
+    }
+
+    //
+    // Logging
+    //
+
+    critical_error(arg: any) {
+        M.error(arg);
+        if (!this.log_channel) {
+            return;
+        }
+        send_long_message(this.log_channel, `🛑 Critical error occurred: ${to_string(arg)}`)
+            .catch(() => M.error)
+            .finally(() => {
+                if (arg instanceof Error) {
+                    Sentry.captureException(arg);
+                } else {
+                    Sentry.captureMessage(to_string(arg));
+                }
+            });
+    }
+
+    ignorable_error(arg: any) {
+        M.error(arg);
+        if (!this.log_channel) {
+            return;
+        }
+        send_long_message(this.log_channel, `⚠️ Ignorable error occurred: ${to_string(arg)}`)
+            .catch(M.error)
+            .finally(() => {
+                if (arg instanceof Error) {
+                    Sentry.captureException(arg);
+                } else {
+                    Sentry.captureMessage(to_string(arg));
+                }
+            });
+    }
+
+    milestone(message: string) {
+        M.info(message);
+        if (!this.log_channel) {
+            return;
+        }
+        send_long_message(this.log_channel, message)
+            .catch(M.error)
+            .finally(() => {
+                Sentry.captureMessage(message);
+            });
+    }
+
+    alert(message: string) {
+        M.info(message);
+        if (!this.log_channel) {
+            return;
+        }
+        send_long_message(this.log_channel, message)
+            .catch(M.error)
+            .finally(() => {
+                Sentry.captureMessage(message);
+            });
+    }
+
+    //
+    // Common discord utilities
+    //
+
     is_forum_help_thread(thread: Discord.ThreadChannel) {
         return (
             thread.parentId != null && [this.channels.cpp_help.id, this.channels.c_help.id].includes(thread.parentId)
@@ -657,7 +712,6 @@ export class Wheatley {
         return reply_message;
     }
 
-    // Some common tools
     is_root(user: Discord.User | Discord.PartialUser | Discord.APIUser): boolean {
         //return member.roles.cache.some(r => r.id == root_role_id);
         return root_ids.has(user.id);
@@ -735,6 +789,10 @@ export class Wheatley {
             assert(false);
         }
     }
+
+    //
+    // Message quoting
+    //
 
     async get_raw_message_data(message: Discord.Message): Promise<MessageData> {
         return {
@@ -911,50 +969,9 @@ export class Wheatley {
         };
     }
 
-    async populate_caches() {
-        // Load a couple hundred messages for every channel we're in
-        const channels: Record<string, { channel: Discord.TextBasedChannel; last_seen: number; done: boolean }> = {};
-        for (const [_, channel] of await this.TCCPP.channels.fetch()) {
-            if (channel?.isTextBased() && !channel.name.includes("archived-")) {
-                M.debug(`Loading recent messages from ${channel.name}`);
-                //await channel.messages.fetch({
-                //    limit: 100,
-                //    cache: true
-                //});
-                channels[channel.id] = {
-                    channel,
-                    last_seen: Date.now(),
-                    done: false,
-                };
-            }
-        }
-        for (let i = 0; i < 3; i++) {
-            M.log("Fetches round", i);
-            const promises: Promise<any>[] = [];
-            for (const [id, { channel, last_seen, done }] of Object.entries(channels)) {
-                if (!done) {
-                    promises.push(
-                        (async () => {
-                            const messages = await channel.messages.fetch({
-                                limit: 100,
-                                cache: true,
-                                before: forge_snowflake(last_seen - 1),
-                            });
-                            channels[id].last_seen = Math.min(
-                                ...[...messages.values()].map(message => message.createdTimestamp),
-                            );
-                            if (messages.size == 0) {
-                                channels[id].done = true;
-                            }
-                        })(),
-                    );
-                }
-            }
-            await Promise.all(promises);
-        }
-    }
-
-    // command edit/deletion
+    //
+    // Command stuff
+    //
 
     register_text_command(trigger: Discord.Message, command: TextBasedCommand, deletable = true) {
         this.text_command_map.set(trigger.id, { command, deletable, content: trigger.content });
@@ -963,8 +980,6 @@ export class Wheatley {
     make_deletable(trigger: Discord.Message, message: Discord.Message) {
         this.deletable_map.set(trigger.id, message);
     }
-
-    // command stuff
 
     add_command<T extends unknown[]>(
         command:
