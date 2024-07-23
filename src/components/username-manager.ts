@@ -87,12 +87,12 @@ export default class UsernameManager extends BotComponent {
             is_herald(member.displayName.trim())
         ) {
             if (!this.has_herald(member)) {
-                M.info("a new herald was born:", member.displayName);
+                this.wheatley.info(`A new herald was born: ${member.displayName}`);
                 await member.roles.add(this.wheatley.roles.herald);
             }
         } else {
             if (this.has_herald(member)) {
-                M.info("an illegitimate herald was found:", member.displayName);
+                this.wheatley.info(`An illegitimate herald was found: ${member.displayName}`);
                 await member.roles.remove(this.wheatley.roles.herald);
             }
         }

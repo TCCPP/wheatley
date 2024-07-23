@@ -265,7 +265,7 @@ export default class Starboard extends BotComponent {
         }
         if (this.deletes_in_last_24h() >= max_deletes_in_24h) {
             do_delete = false;
-            M.info(">> DELETE IN 24H THRESHOLD EXCEEDED");
+            this.wheatley.info(">> DELETE IN 24H THRESHOLD EXCEEDED");
         }
         const action = do_delete ? "Auto-deleting" : "Auto-delete threshold reached";
         M.log(`${action} ${message.url} for ${trigger_reaction.count} ${trigger_reaction.emoji.name} reactions`);

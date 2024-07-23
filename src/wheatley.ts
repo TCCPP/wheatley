@@ -415,7 +415,7 @@ export class Wheatley {
                     this.log_channel = channel && channel.isTextBased() ? channel : null;
                 }
 
-                this.milestone("Bot started");
+                this.info("Bot started");
 
                 await this.fetch_guild_info();
 
@@ -623,7 +623,7 @@ export class Wheatley {
         if (!this.log_channel) {
             return;
         }
-        send_long_message(this.log_channel, `🛑 Critical error occurred: ${to_string(arg)}`)
+        send_long_message(this.log_channel, `🛑 Critical error: ${to_string(arg)}`)
             .catch(() => M.error)
             .finally(() => {
                 if (arg instanceof Error) {
@@ -639,7 +639,7 @@ export class Wheatley {
         if (!this.log_channel) {
             return;
         }
-        send_long_message(this.log_channel, `⚠️ Ignorable error occurred: ${to_string(arg)}`)
+        send_long_message(this.log_channel, `⚠️ Ignorable error: ${to_string(arg)}`)
             .catch(M.error)
             .finally(() => {
                 if (arg instanceof Error) {
@@ -650,12 +650,12 @@ export class Wheatley {
             });
     }
 
-    milestone(message: string) {
+    info(message: string) {
         M.info(message);
         if (!this.log_channel) {
             return;
         }
-        send_long_message(this.log_channel, message)
+        send_long_message(this.log_channel, `ℹ️ Info: ${message}`)
             .catch(M.error)
             .finally(() => {
                 Sentry.captureMessage(message);
@@ -667,7 +667,7 @@ export class Wheatley {
         if (!this.log_channel) {
             return;
         }
-        send_long_message(this.log_channel, message)
+        send_long_message(this.log_channel, `🚨 Alert: ${message}`)
             .catch(M.error)
             .finally(() => {
                 Sentry.captureMessage(message);

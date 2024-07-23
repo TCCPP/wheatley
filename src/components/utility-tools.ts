@@ -19,19 +19,19 @@ export default class UtilityTools extends BotComponent {
         }
         if (this.wheatley.is_authorized_mod(message.author)) {
             if (message.content == "!channel-rename") {
-                M.info("got !channel-rename");
+                M.log("got !channel-rename");
                 const m = await message.channel.send("working...");
                 const channels = await this.wheatley.TCCPP.channels.fetch();
                 for (const [_, channel] of channels) {
                     assert(channel);
                     const r = channel.name.replace(/_/g, "-");
-                    M.info("Renaming", channel.name, r);
+                    M.log("Renaming", channel.name, r);
                     await channel.setName(r);
                 }
-                M.info("Done");
+                M.log("Done");
                 await m.edit(":+1:");
             } else if (message.content == "!sync-archive-permissions") {
-                M.info("got !sync-archive-permissions");
+                M.log("got !sync-archive-permissions");
                 const archive = await this.wheatley.TCCPP.channels.fetch("910306041969913938");
                 assert(archive instanceof Discord.CategoryChannel);
                 for (const [_, channel] of archive.children.cache) {
@@ -39,7 +39,7 @@ export default class UtilityTools extends BotComponent {
                 }
                 await message.reply("Done");
             } else if (message.content == "!prefix-archive-channels") {
-                M.info("got !prefix-archive-channels");
+                M.log("got !prefix-archive-channels");
                 for (const id of [
                     "910306041969913938",
                     "455278783352537099",
