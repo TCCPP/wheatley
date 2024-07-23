@@ -13,7 +13,7 @@ import { no_distraction_entry } from "./schemata/nodistractions.js";
 import { roulette_leaderboard_entry } from "./schemata/roulette.js";
 import { suggestion_entry } from "./schemata/server-suggestion-tracker.js";
 import { skill_suggestion_entry } from "./schemata/skill-role-suggestion.js";
-import { auto_delete_threshold_notifications, starboard_entry } from "./schemata/starboard.js";
+import { auto_delete_entry, auto_delete_threshold_notifications, starboard_entry } from "./schemata/starboard.js";
 import { button_scoreboard_entry } from "./schemata/the-button.js";
 import {
     message_database_entry,
@@ -117,6 +117,7 @@ export type WheatleyDatabaseProxy = WheatleyDatabase & {
     roulette_leaderboard: mongo.Collection<roulette_leaderboard_entry>;
     server_suggestions: mongo.Collection<suggestion_entry>;
     starboard_entries: mongo.Collection<starboard_entry>;
+    auto_deletes: mongo.Collection<auto_delete_entry>;
     wheatley: mongo.Collection<wheatley_database_info>;
     moderations: mongo.Collection<moderation_entry>;
     skill_role_suggestions: mongo.Collection<skill_suggestion_entry>;

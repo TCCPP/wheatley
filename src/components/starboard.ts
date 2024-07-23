@@ -269,13 +269,14 @@ export default class Starboard extends BotComponent {
         }
         const action = do_delete ? "Auto-deleting" : "Auto-delete threshold reached";
         M.log(`${action} ${message.url} for ${trigger_reaction.count} ${trigger_reaction.emoji.name} reactions`);
+        let flag_message: Discord.Message | null = null;
         try {
             await this.wheatley.database.lock();
             if (
                 do_delete ||
                 !(await this.wheatley.database.auto_delete_threshold_notifications.findOne({ message: message.id }))
             ) {
-                await this.wheatley.channels.staff_flag_log.send({
+                flag_message = await this.wheatley.channels.staff_flag_log.send({
                     content:
                         `${action} message from <@${message.author.id}> for ` +
                         `${trigger_reaction.count} ${trigger_reaction.emoji.name} reactions` +
@@ -303,6 +304,12 @@ export default class Starboard extends BotComponent {
             this.wheatley.database.unlock();
         }
         if (do_delete) {
+            await this.wheatley.database.auto_deletes.insertOne({
+                user: message.author.id,
+                message_id: message.id,
+                flag_link: flag_message?.url,
+                timestamp: Date.now(),
+            });
             await message.delete();
             if (trigger_type == delete_trigger_type.delete_this) {
                 await message.channel.send(
