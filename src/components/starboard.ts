@@ -131,7 +131,6 @@ export default class Starboard extends BotComponent {
     }
 
     reactions_string(message: Discord.Message) {
-        //M.info("reactions string:", message.url, message.reactions.cache.map(reaction => reaction));
         return [
             ...message.reactions.cache
                 .map(reaction => reaction)
@@ -149,27 +148,10 @@ export default class Starboard extends BotComponent {
     }
 
     meets_threshold(reaction: Discord.MessageReaction) {
-        // M.info(
-        //     "meets_threshold",
-        //     reaction,
-        //     reaction.emoji,
-        //     reaction.emoji instanceof Discord.GuildEmoji,
-        //     reaction.emoji.id === null,
-        // );
         assert(reaction.emoji.name);
         if (!(reaction.emoji instanceof Discord.GuildEmoji || reaction.emoji.id === null)) {
             return false;
         }
-        // M.info(
-        //     "------------->",
-        //     this.negative_emojis.includes(reaction.emoji.name),
-        //     this.negative_emojis,
-        //     reaction.count,
-        // );
-        // M.log(
-        //     debug_unicode(reaction.emoji.name),
-        //     this.negative_emojis.map(v => [v, debug_unicode(v)]),
-        // );
         if (reaction.emoji.name == "⭐") {
             if (reaction.message.channel.id == this.wheatley.channels.memes.id) {
                 return reaction.count >= memes_star_threshold;
@@ -244,7 +226,6 @@ export default class Starboard extends BotComponent {
                         starboard_entry: starboard_message.id,
                     });
                 } catch (e) {
-                    // M.log("--------------->", message.url);
                     this.wheatley.critical_error(e);
                 }
             }
@@ -344,19 +325,9 @@ export default class Starboard extends BotComponent {
         if (!(await this.is_valid_channel(reaction.message.channel))) {
             return;
         }
-        // M.info("------------- on_reaction_add -------------");
-        // M.info(reaction.partial);
         if (reaction.partial) {
-            // M.info("DEPARTIALIZING REACTION");
             reaction = await reaction.fetch();
         }
-        // M.log(
-        //     reaction,
-        //     reaction.count,
-        //     reaction.message.reactions.cache.get(reaction.emoji.name ?? "")?.count,
-        //     reaction.message.reactions.resolve(reaction.emoji.name ?? "")?.count,
-        //     reaction.message.url,
-        // );
         // Check delete emojis
         if (
             reaction.emoji.name &&
@@ -383,17 +354,11 @@ export default class Starboard extends BotComponent {
             await this.update_starboard(await departialize(reaction.message));
             return;
         }
-        // M.info(
-        //     "Testing meets_threshold",
-        //     reaction.message.createdTimestamp,
-        //     reaction.message.createdTimestamp >= starboard_epoch,
-        // );
         if (
             this.meets_threshold(await departialize(reaction)) &&
             reaction.message.createdTimestamp >= starboard_epoch &&
             reaction.message.createdTimestamp >= Date.now() - starboard_window
         ) {
-            // M.info("meets_threshold, going into update");
             // Send
             await this.update_starboard(await departialize(reaction.message));
         }
@@ -435,6 +400,10 @@ export default class Starboard extends BotComponent {
             }
         }
     }
+
+    //
+    // Starboard config commands
+    //
 
     async add_negative_emoji(command: TextBasedCommand, arg: string) {
         const emojis = arg.match(EMOJIREGEX);
