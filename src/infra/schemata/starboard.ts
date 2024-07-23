@@ -11,6 +11,7 @@ export type auto_delete_threshold_notifications = {
 export type auto_delete_entry = {
     user: string;
     message_id: string;
+    message_timestamp: number;
+    delete_timestamp: number;
     flag_link: string | undefined;
-    timestamp: number;
 };

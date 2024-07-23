@@ -307,8 +307,9 @@ export default class Starboard extends BotComponent {
             await this.wheatley.database.auto_deletes.insertOne({
                 user: message.author.id,
                 message_id: message.id,
+                message_timestamp: message.createdTimestamp,
+                delete_timestamp: Date.now(),
                 flag_link: flag_message?.url,
-                timestamp: Date.now(),
             });
             await message.delete();
             if (trigger_type == delete_trigger_type.delete_this) {
