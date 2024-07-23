@@ -105,13 +105,6 @@ export default class Starboard extends BotComponent {
                 .set_permissions(Discord.PermissionFlagsBits.Administrator)
                 .set_handler(this.list_config.bind(this)),
         );
-
-        this.add_command(
-            new TextBasedCommandBuilder("test-channel-starboard-validity")
-                .set_description("Test channel starboard validity")
-                .set_permissions(Discord.PermissionFlagsBits.Administrator)
-                .set_handler(this.test_channel_starboard_validity.bind(this)),
-        );
     }
 
     override async on_ready() {
@@ -536,11 +529,5 @@ export default class Starboard extends BotComponent {
                 `Repost emojis: ${this.repost_emojis.join(", ")}`,
             ].join("\n"),
         );
-    }
-
-    async test_channel_starboard_validity(command: TextBasedCommand) {
-        const channel = await command.get_channel();
-        M.log(channel);
-        await command.reply(`${await this.is_valid_channel(channel)}`, true);
     }
 }
