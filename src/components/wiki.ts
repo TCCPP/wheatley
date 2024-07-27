@@ -15,6 +15,10 @@ import { TextBasedCommand } from "../command-abstractions/text-based-command.js"
 
 export const wiki_dir = "wiki";
 
+export function is_article(filename: string) {
+    return filename.endsWith(".md");
+}
+
 type WikiArticle = {
     name: string | null; // basename for the article
     title: string;
@@ -368,11 +372,10 @@ export default class Wiki extends BotComponent {
 
     async load_wiki_pages() {
         for await (const file_path of walk_dir(wiki_dir)) {
-            const name = path.basename(file_path, path.extname(file_path));
-            //M.debug(file_path, name);
-            if (name == "README") {
+            if (!is_article(file_path)) {
                 continue;
             }
+            const name = path.basename(file_path, path.extname(file_path));
             const content = await fs.promises.readFile(file_path, { encoding: "utf-8" });
             let parsed;
             try {

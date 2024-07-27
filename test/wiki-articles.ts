@@ -3,7 +3,7 @@ import { describe, test } from "vitest";
 import * as fs from "fs";
 import * as path from "path";
 
-import { parse_article, wiki_dir } from "../src/components/wiki.js";
+import { is_article, parse_article, wiki_dir } from "../src/components/wiki.js";
 
 function* walk_dir(dir: string): Generator<string> {
     // todo: duplicate
@@ -19,10 +19,10 @@ function* walk_dir(dir: string): Generator<string> {
 
 describe("parse wiki articles", () => {
     for (const file_path of walk_dir(wiki_dir)) {
-        const name = path.basename(file_path, path.extname(file_path));
-        if (name === "README") {
+        if (!is_article(file_path)) {
             continue;
         }
+        const name = path.basename(file_path, path.extname(file_path));
         test(`${name} article should parse`, async () => {
             const content = await fs.promises.readFile(file_path, { encoding: "utf-8" });
             parse_article(null, content, {
