@@ -1,9 +1,10 @@
+.vscode
+.idea
 node_modules
+build
 auth.*
-.idea/
 *.js
 ./W*/
-.vscode
-build
 _bot.json
 bot.json
+backup
