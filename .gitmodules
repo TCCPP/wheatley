@@ -6,3 +6,6 @@
 # [submodule "dyno-import"]
 # 	path = dyno-import
 # 	url = git@github.com:TCCPP/dyno-import.git
+[submodule "wiki"]
+	path = wiki
+	url = git@github.com:TCCPP/wiki-articles.git

@@ -13,7 +13,7 @@ import { Wheatley } from "../wheatley.js";
 import { TextBasedCommandBuilder } from "../command-abstractions/text-based-command-builder.js";
 import { TextBasedCommand } from "../command-abstractions/text-based-command.js";
 
-export const wiki_dir = "wiki-articles";
+export const wiki_dir = "wiki";
 
 type WikiArticle = {
     name: string | null; // basename for the article

@@ -51,8 +51,7 @@ export default class Help extends BotComponent {
                                 (unwrap(this.wheatley.components.get("Wiki")) as Wiki).article_aliases
                                     .map((_, alias) => `\`${alias}\``)
                                     .join(", "),
-                            "Article contributions are welcome " +
-                                "[here](https://github.com/TCCPP/wheatley/tree/main/wiki-articles)!",
+                            "Article contributions are welcome [here](https://github.com/TCCPP/wiki-articles)!",
                         ),
                     },
                     {
