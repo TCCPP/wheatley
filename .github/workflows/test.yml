@@ -10,6 +10,8 @@ jobs:
     steps:
       - name: checkout
         uses: actions/checkout@v3
+        with:
+          submodules: 'true'
       - name: dependencies
         run: npm i --dev
       - name: run test
