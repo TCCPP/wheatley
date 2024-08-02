@@ -87,7 +87,7 @@ export default class ModStats extends BotComponent {
                     .setAuthor({
                         name: moderator_member ? moderator_member.displayName : "Total",
                         iconURL: moderator_member
-                            ? moderator_member.avatarURL() ?? moderator_member.displayAvatarURL()
+                            ? (moderator_member.avatarURL() ?? moderator_member.displayAvatarURL())
                             : undefined,
                     })
                     .addFields(

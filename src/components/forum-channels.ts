@@ -119,7 +119,7 @@ export default class ForumChannels extends BotComponent {
             );
             await thread.setArchived(true, "Automatically archiving: Stale");
         } else if (
-            // eslint-disable-next-line @typescript-eslint/no-unnecessary-condition
+            // eslint-disable-next-line @typescript-eslint/no-unnecessary-condition, no-constant-binary-expression
             false && // temporarily disabled
             (thread.appliedTags.includes(stale_tag) || thread.appliedTags.includes(solved_tag)) &&
             !thread.locked &&

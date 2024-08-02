@@ -36,7 +36,7 @@ export class BotComponent {
     }
 
     // Called after all components are constructed and the bot logs in, but before bot commands are finalized
-    async setup() {} // eslint-disable-line @typescript-eslint/no-empty-function
+    async setup() {}
 
     listeners: [keyof Discord.ClientEvents, (...args: any[]) => any][] = [];
 
@@ -84,7 +84,6 @@ export class BotComponent {
     }
 
     // events
-    /* eslint-disable @typescript-eslint/no-empty-function, @typescript-eslint/no-unused-vars */
     async on_ready() {} // actually on wheatley ready
     async on_message_create?(message: Discord.Message): Promise<void>;
     async on_message_delete?(message: Discord.Message | Discord.PartialMessage): Promise<void>;
@@ -115,5 +114,4 @@ export class BotComponent {
         user: Discord.User | Discord.PartialUser,
     ): Promise<void>;
     async on_thread_create?(thread: Discord.ThreadChannel): Promise<void>;
-    /* eslint-enable @typescript-eslint/no-empty-function, @typescript-eslint/no-unused-vars */
 }

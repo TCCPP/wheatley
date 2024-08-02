@@ -265,7 +265,7 @@ export default class Format extends BotComponent {
                         const formatted_message = await message.channel.send({
                             embeds: [embed],
                             content,
-                            files: attachments.filter(x => x != null) as Discord.AttachmentBuilder[],
+                            files: attachments.filter(x => x != null),
                             allowedMentions: {
                                 parse: ["users"],
                             },
@@ -336,7 +336,7 @@ export default class Format extends BotComponent {
             await interaction.reply({
                 embeds,
                 content,
-                files: attachments.filter(x => x != null) as Discord.AttachmentBuilder[],
+                files: attachments.filter(x => x != null),
                 allowedMentions: {
                     parse: ["users"],
                 },

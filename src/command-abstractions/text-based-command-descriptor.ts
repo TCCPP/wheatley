@@ -99,7 +99,6 @@ export class BotTextBasedCommand<Args extends unknown[] = []> extends BaseBotInt
                             .setDescription(option.description)
                             .setRequired(!!option.required),
                     );
-                    // eslint-disable-next-line @typescript-eslint/no-unnecessary-condition
                 } else if (option.type == "role") {
                     djs_command.addRoleOption(slash_option =>
                         slash_option

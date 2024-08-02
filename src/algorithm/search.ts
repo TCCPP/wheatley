@@ -165,13 +165,13 @@ export function split_cppref_title_list(title: string) {
             parts
                 .map(p => p.match(/^.*\boperator\b/))
                 .filter(o => o != null)
-                .map(m => m![0]),
+                .map(m => m[0]),
         );
         const args_parts = new Set(
             parts
                 .map(p => p.match(/(?<!operator)\s*\(.*\)$/))
                 .filter(o => o != null)
-                .map(m => m![0]),
+                .map(m => m[0]),
         );
         ///assert(operator_parts.size <= 1 && args_parts.size <= 1);
         // sorting by size because of cases like
@@ -212,7 +212,7 @@ export function split_cppref_title_list(title: string) {
             parts
                 .map(p => p.match(/\s*\(.*\)$/))
                 .filter(o => o != null)
-                .map(m => m![0]),
+                .map(m => m[0]),
         );
         const args_part = args_parts.size ? [...args_parts].sort((a, b) => b.length - a.length)[0] : null;
         const corrected_parts = parts.map(part => {
@@ -255,7 +255,7 @@ type EntryScore = {
 };
 
 // TODO: Find a way to make Record<string, never> work?
-// eslint-disable-next-line @typescript-eslint/ban-types
+// eslint-disable-next-line @typescript-eslint/no-empty-object-type
 abstract class BaseIndex<T extends IndexEntry, ExtraEntryData = {}> {
     // hack because ts doesn't allow type aliases here
     protected entries: (T & BaseEntryData & ExtraEntryData)[];
@@ -271,7 +271,6 @@ abstract class BaseIndex<T extends IndexEntry, ExtraEntryData = {}> {
         this.entries = this.process_entries(entries, normalizer);
         //this.entries.map(entry => console.log(entry.title, entry.parsed_title));
     }
-    // eslint-disable-next-line @typescript-eslint/no-empty-function
     init_bookkeeping() {}
     process_entries(entries: T[], normalizer: (_: string) => string[]): (T & BaseEntryData & ExtraEntryData)[] {
         return entries.map(entry => {
@@ -281,7 +280,6 @@ abstract class BaseIndex<T extends IndexEntry, ExtraEntryData = {}> {
             } as T & BaseEntryData & ExtraEntryData;
         });
     }
-    // eslint-disable-next-line @typescript-eslint/no-unused-vars
     abstract score(query: string, title: string): EntryScore;
     score_entry(query: string, entry: T & BaseEntryData & ExtraEntryData) {
         const scores: EntryScore[] = [];
@@ -294,7 +292,6 @@ abstract class BaseIndex<T extends IndexEntry, ExtraEntryData = {}> {
         }
         return max(scores, s => s.score);
     }
-    // eslint-disable-next-line @typescript-eslint/no-unused-vars
     meets_threshold(score: number) {
         return true;
     }
@@ -358,7 +355,6 @@ class BasicIndex<T extends index_entry> extends BaseIndex<T> {
 
 // Strategy 0: Baseline ------------------------------------------------------------------------------------------------
 
-// eslint-disable-next-line @typescript-eslint/no-unused-vars
 class BasicIndex<T extends IndexEntry> extends BaseIndex<T> {
     constructor(entries: T[], normalizer = normalize_and_split_cppref_title) {
         super(entries, normalizer);
@@ -378,7 +374,6 @@ class BasicIndex<T extends IndexEntry> extends BaseIndex<T> {
 
 // Strategy 1: WeightedLevenshteinIndex --------------------------------------------------------------------------------
 
-// eslint-disable-next-line @typescript-eslint/no-unused-vars
 class WeightedLevenshteinIndex<T extends IndexEntry> extends BaseIndex<T> {
     constructor(entries: T[], normalizer = normalize_and_split_cppref_title) {
         super(entries, normalizer);
@@ -424,7 +419,6 @@ class WeightedLevenshteinIndex<T extends IndexEntry> extends BaseIndex<T> {
 
 const MAGIC_NGRAM_SIMILARITY_THRESHOLD = 0.39;
 
-// eslint-disable-next-line @typescript-eslint/no-unused-vars
 class NgramIndex<T extends IndexEntry> extends BaseIndex<T> {
     magic_threshold = MAGIC_NGRAM_SIMILARITY_THRESHOLD;
     constructor(entries: T[], normalizer = normalize_and_split_cppref_title) {
@@ -460,7 +454,6 @@ class NgramIndex<T extends IndexEntry> extends BaseIndex<T> {
 
 // Strategy 3: IDF Ngrams ----------------------------------------------------------------------------------------------
 
-// eslint-disable-next-line @typescript-eslint/no-unused-vars
 class IDFNgramIndex<T extends IndexEntry> extends NgramIndex<T> {
     ngram_idf: Record<string, number> = {};
     default_idf: number; // idf for something we haven't seen, important for weighting the cosine

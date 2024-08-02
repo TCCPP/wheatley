@@ -386,9 +386,6 @@ export class Wheatley {
         this.guild_command_manager = new GuildCommandManager(this);
         this.tracker = new MemberTracker(this);
 
-        // Every module sets a lot of listeners. This is not a leak.
-        this.client.setMaxListeners(35);
-
         this.client.on("error", error => {
             M.error(error);
         });
@@ -1197,7 +1194,6 @@ export class Wheatley {
                     command_options.push(interaction.options.getUser(option.title));
                 } else if (option.type == "role") {
                     command_options.push(interaction.options.getRole(option.title));
-                    // eslint-disable-next-line @typescript-eslint/no-unnecessary-condition
                 } else if (option.type == "number") {
                     command_options.push(interaction.options.getNumber(option.title));
                 } else {

@@ -10,7 +10,8 @@
         "noImplicitOverride": true,
         "outDir": "build",
         "esModuleInterop": true,
-        "incremental": true
+        "incremental": true,
+        "skipLibCheck": true,
     },
     "exclude": ["node_modules", "build", "indexes/"]
 }

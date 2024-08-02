@@ -70,7 +70,7 @@ function eliminate_aliases_and_duplicates(pages: cppref_page[]) {
             title_map[page.title] = [page];
         }
     }
-    // eslint-disable-next-line @typescript-eslint/no-unused-vars
+
     for (const [title, pages] of Object.entries(title_map)) {
         if (pages.length > 1) {
             if (new Set(pages.map(e => e.wgPageName)).size == 1) {
