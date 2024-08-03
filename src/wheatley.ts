@@ -386,6 +386,9 @@ export class Wheatley {
         this.guild_command_manager = new GuildCommandManager(this);
         this.tracker = new MemberTracker(this);
 
+        // temporary until fixed in djs or @types/node
+        (this.client as any).setMaxListeners(35);
+
         this.client.on("error", error => {
             M.error(error);
         });
