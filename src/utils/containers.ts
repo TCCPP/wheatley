@@ -254,7 +254,6 @@ export class SleepList<T, ID> {
     }
 
     insert(item: [number, T]) {
-        this.list.push(item);
         let i = 0;
         // TODO: Binary search
         for (; i < this.list.length; i++) {
