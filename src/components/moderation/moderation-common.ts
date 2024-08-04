@@ -226,8 +226,36 @@ export abstract class ModerationComponent extends BotComponent {
     // Moderation events
     //
 
-    async handle_moderation_expire(entry: mongo.WithId<moderation_entry>) {
+    async handle_moderation_expire(entry_from_sleep: mongo.WithId<moderation_entry>) {
         assert(!this.is_once_off);
+        // It's possible the moderation could have been removed or been updated by the time this runs, so fetch the
+        // current state
+        const entry = unwrap(await this.wheatley.database.moderations.findOne({ _id: entry_from_sleep._id }));
+        // Check for active but removed (can happen from data import)
+        if (entry.active && (entry.removed || entry.expunged)) {
+            await this.wheatley.database.moderations.updateOne(
+                { _id: entry._id },
+                {
+                    $set: {
+                        active: false,
+                    },
+                },
+            );
+            return;
+        }
+        // Check for time, just as a safety measure
+        if (
+            !entry.duration ||
+            (entry.issued_at + entry.duration > Date.now() + 1000 && !entry.removed && !entry.expunged)
+        ) {
+            // time may have been extended
+            this.wheatley.alert(
+                `Somehow handle_moderation_expire fired on a moderation that hasn't expired yet, ` +
+                    `${JSON.stringify(entry)}`,
+            );
+            return;
+        }
+        // Check if remove logic should be done
         if (await this.is_moderation_applied(entry)) {
             M.debug("Handling moderation expire", entry);
             await this.remove_moderation(entry);
@@ -242,23 +270,8 @@ export abstract class ModerationComponent extends BotComponent {
         } else {
             M.debug("Handling moderation expire - not applied", entry);
         }
-        if (entry.removed || entry.expunged) {
-            // marked active but removed (can happen from data import)
-            const item = unwrap(await this.wheatley.database.moderations.findOne({ _id: entry._id }));
-            if (item.active && (item.removed || item.expunged)) {
-                await this.wheatley.database.moderations.updateOne(
-                    { _id: entry._id },
-                    {
-                        $set: {
-                            active: false,
-                        },
-                    },
-                );
-            }
-            return;
-        }
-        // check if moderation is still active, if so resolve it
-        if (unwrap(await this.wheatley.database.moderations.findOne({ _id: entry._id })).active) {
+        // Check if moderation is still marked active, if so resolve it
+        if (entry.active) {
             await this.wheatley.database.moderations.updateOne(
                 { _id: entry._id },
                 {
