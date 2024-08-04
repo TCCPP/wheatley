@@ -202,6 +202,7 @@ export class SleepList<T, ID> {
         private wheatley: Wheatley,
         private handler: (item: T) => Promise<void>,
         private get_id: (item: T) => ID,
+        private id_equal = (a: ID, b: ID) => a === b,
     ) {}
 
     destroy() {
@@ -266,12 +267,12 @@ export class SleepList<T, ID> {
     }
 
     remove(id: ID) {
-        this.list = this.list.filter(([_, entry]) => this.get_id(entry) !== id);
+        this.list = this.list.filter(([_, entry]) => !this.id_equal(this.get_id(entry), id));
         this.reset_timer();
     }
 
     replace(id: ID, item: [number, T]) {
-        this.list = this.list.filter(([_, entry]) => this.get_id(entry) !== id);
+        this.list = this.list.filter(([_, entry]) => !this.id_equal(this.get_id(entry), id));
         this.insert(item);
     }
 }

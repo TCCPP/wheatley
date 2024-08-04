@@ -151,7 +151,12 @@ export abstract class ModerationComponent extends BotComponent {
 
     constructor(wheatley: Wheatley) {
         super(wheatley);
-        this.sleep_list = new SleepList(wheatley, this.handle_moderation_expire.bind(this), item => item._id);
+        this.sleep_list = new SleepList(
+            wheatley,
+            this.handle_moderation_expire.bind(this),
+            item => item._id,
+            (a: mongo.BSON.ObjectId, b: mongo.BSON.ObjectId) => a.equals(b),
+        );
         this.wheatley.event_hub.on("update_moderation", (entry: mongo.WithId<moderation_entry>) => {
             this.handle_moderation_update(entry).catch(this.wheatley.critical_error.bind(this.wheatley));
         });
