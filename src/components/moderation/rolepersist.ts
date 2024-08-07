@@ -86,11 +86,15 @@ export default class Rolepersist extends ModerationComponent {
                         .add_string_option({
                             title: "reason",
                             description: "Reason",
-                            required: true,
+                            required: false,
                         })
                         .set_handler(
-                            (command: TextBasedCommand, user: Discord.User, role: Discord.Role, reason: string) =>
-                                this.moderation_revoke_handler(command, user, reason, { role: role.id }),
+                            (
+                                command: TextBasedCommand,
+                                user: Discord.User,
+                                role: Discord.Role,
+                                reason: string | null,
+                            ) => this.moderation_revoke_handler(command, user, reason, { role: role.id }),
                         ),
                 ),
         );

@@ -64,7 +64,7 @@ export default class Mute extends ModerationComponent {
                 .add_string_option({
                     title: "reason",
                     description: "Reason",
-                    required: true,
+                    required: false,
                 })
                 .set_handler(this.moderation_revoke_handler.bind(this)),
         );
