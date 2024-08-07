@@ -27,7 +27,6 @@ type WikiArticle = {
     footer?: string;
     image?: string;
     set_author: boolean;
-    reply_to_target: boolean;
     no_embed: boolean;
 };
 
@@ -59,7 +58,6 @@ class ArticleParser {
     private footer?: string;
     private image?: string;
     private set_author = false;
-    private reply_to_target = false;
     private no_embed = false;
     private readonly reference_definitions = new Map<string, string>();
 
@@ -157,8 +155,6 @@ class ArticleParser {
             this.current_state = parse_state.footer;
         } else if (directive === "user author") {
             this.set_author = true;
-        } else if (directive === "reply to target") {
-            this.reply_to_target = true;
         } else if (directive === "no embed") {
             this.no_embed = true;
         } else if (directive.match(image_regex)) {
@@ -299,7 +295,6 @@ class ArticleParser {
             footer: this.footer,
             image: this.image,
             set_author: this.set_author,
-            reply_to_target: this.reply_to_target,
             no_embed: this.no_embed,
         };
     }
@@ -341,6 +336,11 @@ export default class Wiki extends BotComponent {
                             .map(title => ({ name: title, value: title }))
                             .slice(0, 25),
                 })
+                .add_user_option({
+                    title: "user",
+                    description: "ping the requested user in the bot reply",
+                    required: false,
+                })
                 .set_handler(this.wiki.bind(this)),
         );
 
@@ -365,6 +365,11 @@ export default class Wiki extends BotComponent {
             this.add_command(
                 new TextBasedCommandBuilder(alias)
                     .set_description(article.title)
+                    .add_user_option({
+                        title: "user",
+                        description: "ping the requested user in the bot reply",
+                        required: false,
+                    })
                     .set_handler(this.wiki_alias.bind(this)),
             );
         }
@@ -392,14 +397,11 @@ export default class Wiki extends BotComponent {
         }
     }
 
-    async send_wiki_article(article: WikiArticle, command: TextBasedCommand) {
+    async send_wiki_article(article: WikiArticle, command: TextBasedCommand, user: Discord.User | null) {
         M.log(`Sending wiki article "${article.name}"`);
         let mention: string | null = null;
-        if (!command.is_slash()) {
-            const reply = await command.get_reply_target();
-            if (reply) {
-                mention = reply.author.toString();
-            }
+        if (user) {
+            mention = user.toString();
         }
         if (article.no_embed) {
             assert(article.body);
@@ -434,25 +436,24 @@ export default class Wiki extends BotComponent {
         }
     }
 
-    async wiki(command: TextBasedCommand, query: string) {
+    async wiki(command: TextBasedCommand, query: string, user: Discord.User | null) {
         const matching_articles = Object.entries(this.articles)
             .filter(([name, { title }]) => name == query || title == query)
             .map(([_, article]) => article);
         const article = matching_articles.length > 0 ? matching_articles[0] : undefined;
         M.log(`Received !wiki command for query "${query}"`);
         if (article) {
-            await this.send_wiki_article(article, command);
+            await this.send_wiki_article(article, command, user);
         } else {
             await command.reply("Couldn't find article", true, true);
-            return;
         }
     }
 
-    async wiki_alias(command: TextBasedCommand) {
+    async wiki_alias(command: TextBasedCommand, user: Discord.User | null) {
         assert(this.article_aliases.has(command.name));
         M.log(`Received ${command.name} (wiki alias)`, command.user.id, command.user.tag, command.get_or_forge_url());
         const article_name = this.article_aliases.get(command.name)!;
-        await this.send_wiki_article(this.articles[article_name], command);
+        await this.send_wiki_article(this.articles[article_name], command, user);
     }
 
     async wiki_preview(command: TextBasedCommand, content: string) {
@@ -481,7 +482,7 @@ export default class Wiki extends BotComponent {
             return;
         }
         try {
-            await this.send_wiki_article(article, command);
+            await this.send_wiki_article(article, command, null);
         } catch (e) {
             await command.reply("Error while building / sending: " + e, true, true);
         }
