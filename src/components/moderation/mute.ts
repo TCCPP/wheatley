@@ -98,8 +98,13 @@ export default class Mute extends ModerationComponent {
         if (member) {
             return member.roles.cache.filter(role => role.id == this.wheatley.roles.muted.id).size > 0;
         } else {
-            // if the member isn't in the guild then let's call the moderation applied
-            return true;
+            // if the member isn't in the guild then lookup
+            const res = await this.wheatley.database.moderations.findOne({
+                user: moderation.user,
+                type: this.type,
+                active: true,
+            });
+            return res !== null;
         }
     }
 }
