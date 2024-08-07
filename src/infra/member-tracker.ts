@@ -36,10 +36,6 @@ export class MemberTracker {
     entries: member_entry[] = [];
     // map from user id -> member entry
     id_map: Map<Discord.Snowflake, member_entry> = new Map();
-    // user id snowflake -> messages with pings
-    ping_map: Map<string, basic_message_info[]> = new Map();
-    // user id snowflake -> messages with links
-    link_map: Map<string, basic_message_info[]> = new Map();
     // set of user id snowflakes to prevent race condition
     // snowflake -> timestamp of addition to this set
     currently_banning: Map<string, number> = new Map();
@@ -73,15 +69,6 @@ export class MemberTracker {
         }
         // remove entries before cutoff
         this.entries = this.entries.slice(first_in_timeframe);
-        // -- ping/link maps --
-        for (const map of [this.ping_map, this.link_map]) {
-            for (let [k, v] of map) {
-                v = v.filter(m => now - m.created_timestamp <= LOG_DURATION);
-                if (v.length == 0) {
-                    this.ping_map.delete(k);
-                }
-            }
-        }
         for (const [id, timestamp] of this.currently_banning) {
             // Don't keep around for more than 10 minutes, just need to address race condition
             if (now - timestamp <= 5 * MINUTE) {
