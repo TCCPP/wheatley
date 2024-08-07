@@ -53,7 +53,7 @@ import { get_random_array_element } from "../../utils/arrays.js";
  *
  */
 
-export const duration_regex = /(?:perm\b|(\d+)\s*([a-zA-Z]))/;
+export const duration_regex = /(?:perm\b|(\d+)\s*([a-zA-Z]+))/;
 
 export const moderation_on_team_member_message: string = "Can't apply this moderation on team members";
 export const joke_responses = [
