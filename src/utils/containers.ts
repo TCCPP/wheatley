@@ -74,6 +74,11 @@ export class SelfClearingSet<T> extends SelfClearingContainer {
     has(value: T) {
         return this.contents.has(value);
     }
+    poke(value: T) {
+        if (this.contents.has(value)) {
+            this.contents.set(value, Date.now());
+        }
+    }
     size() {
         return this.contents.size;
     }
@@ -108,7 +113,7 @@ export class SelfClearingMap<K, V> extends SelfClearingContainer {
     }
     get(key: K) {
         const p = this.contents.get(key);
-        if (p == undefined) {
+        if (p === undefined) {
             return undefined;
         }
         return p[1];
@@ -133,6 +138,12 @@ export class SelfClearingMap<K, V> extends SelfClearingContainer {
     }
     has(key: K) {
         return this.contents.has(key);
+    }
+    poke(key: K) {
+        const p = this.contents.get(key);
+        if (p !== undefined) {
+            p[0] = Date.now();
+        }
     }
 }
 
