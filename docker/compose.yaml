@@ -1,0 +1,33 @@
+name: wheatley
+
+services:
+  bot:
+    container_name: wheatley_bot
+    image: TCCPP/wheatley
+    build:
+      context: ../
+      dockerfile: docker/bot/Dockerfile
+    # pull_policy: build
+    depends_on:
+      - db
+    # restart: always
+
+  db:
+    container_name: wheatley_db
+    image: mongo:latest
+    environment:
+      - MONGO_INITDB_ROOT_USERNAME=admin
+      - MONGO_INITDB_ROOT_PASSWORD=password
+      - MONGO_INITDB_DATABASE=wheatley
+    volumes:
+      - ./db/mongo-init.js:/docker-entrypoint-initdb.d/mongo-init.js:ro
+      - ./db/mongod.conf:/etc/mongod.conf:ro
+      - wheatley_data:/data/db
+    # expose:
+    #   - 27017
+    ports:
+      - 127.0.0.1:27017:27017
+    # restart: always
+
+volumes:
+  wheatley_data:
