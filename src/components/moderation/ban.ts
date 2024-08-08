@@ -126,7 +126,13 @@ export default class Ban extends ModerationComponent {
             await this.wheatley.TCCPP.bans.fetch(moderation.user);
             return true;
         } catch (e) {
-            return false;
+            // fallback to the database
+            const res = await this.wheatley.database.moderations.findOne({
+                user: moderation.user,
+                type: this.type,
+                active: true,
+            });
+            return res !== null;
         }
     }
 
