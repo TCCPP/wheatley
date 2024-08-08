@@ -38,6 +38,7 @@ export default class NotifyAboutFormerlyBannedUsers extends BotComponent {
             {
                 user: member.id,
                 $or: [{ type: "ban" }, { type: "softban" }, { type: "kick" }],
+                expunged: null,
             },
             {
                 sort: {
