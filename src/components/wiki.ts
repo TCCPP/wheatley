@@ -13,7 +13,7 @@ import { Wheatley } from "../wheatley.js";
 import { TextBasedCommandBuilder } from "../command-abstractions/text-based-command-builder.js";
 import { TextBasedCommand } from "../command-abstractions/text-based-command.js";
 
-export const wiki_dir = "wiki";
+export const wiki_dir = "wiki/articles";
 
 export function is_article(filename: string) {
     return filename.endsWith(".md");
@@ -169,6 +169,8 @@ class ArticleParser {
                 assert(!this.aliases.has(alias));
                 this.aliases.add(alias);
             }
+        } else {
+            M.warn(`Unknown directive encountered while parsing article: ${directive}`);
         }
     }
 
