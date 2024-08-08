@@ -301,11 +301,13 @@ export abstract class ModerationComponent extends BotComponent {
                     }
                     // Entry is active, check if it needs to be applied
                     if (!(await this.is_moderation_applied(entry))) {
+                        M.debug("Moderation wasn't applied, applying", entry.case_number);
                         await this.apply_moderation(entry);
                     }
                 } else {
                     // Entry is not active, check if it needs to be removed
                     if (await this.is_moderation_applied(entry)) {
+                        M.debug("Moderation was applied, removing", entry.case_number);
                         await this.remove_moderation(entry);
                     }
                 }

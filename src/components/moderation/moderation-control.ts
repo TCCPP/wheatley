@@ -209,11 +209,11 @@ export default class ModerationControl extends BotComponent {
 
     async expunge(command: TextBasedCommand, case_number: number, reason: string | null) {
         M.log("Received expunge command");
-        // TODO: Remove if active....
         const res = await this.wheatley.database.moderations.findOneAndUpdate(
             { case_number },
             {
                 $set: {
+                    active: false, // moderation update handler will handle the removal if necessary
                     expunged: {
                         moderator: command.user.id,
                         moderator_name: (await command.get_member()).displayName,
@@ -229,7 +229,6 @@ export default class ModerationControl extends BotComponent {
         if (res) {
             await this.reply_with_success(command, "Case expunged");
             // Update sleep lists and remove moderation if needed
-            // TODO: Make sure it gets removed too
             this.wheatley.event_hub.emit("update_moderation", res);
             await this.wheatley.channels.staff_action_log.send({
                 embeds: [
