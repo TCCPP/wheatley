@@ -17,7 +17,7 @@ const other_threshold = 5;
 const memes_star_threshold = 14;
 const memes_other_threshold = 14;
 
-const auto_delete_threshold = 5;
+const auto_delete_threshold = 6; // +1 because wheatley also reacts to the message
 
 const max_deletes_in_24h = 5;
 
@@ -336,6 +336,7 @@ export default class Starboard extends BotComponent {
         if (reaction.partial) {
             reaction = await reaction.fetch();
         }
+        
         // Check delete emojis
         if (
             reaction.emoji.name &&
@@ -354,7 +355,11 @@ export default class Starboard extends BotComponent {
             this.repost_emojis.includes(reaction.emoji.name) &&
             reaction.count >= auto_delete_threshold
         ) {
-            await this.handle_auto_delete(await departialize(reaction.message), reaction, delete_trigger_type.repost);
+            await this.handle_auto_delete(
+                await departialize(reaction.message), 
+                reaction, 
+                delete_trigger_type.repost
+            );
             return;
         }
         if (await this.wheatley.database.starboard_entries.findOne({ message: reaction.message.id })) {
