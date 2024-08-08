@@ -237,7 +237,7 @@ export default class ModerationControl extends BotComponent {
                     ),
                 ],
             });
-            await this.notify_user(command, res.user, case_number, `**Expunged:** ${reason}`);
+            await this.notify_user(command, res.user, case_number, `**Expunged:** ${reason ?? "No reason provided"}`);
         } else {
             await this.reply_with_error(command, `Case ${case_number} not found`);
         }
