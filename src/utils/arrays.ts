@@ -32,3 +32,9 @@ export function partition<V>(arr: V[], predicate: (item: V) => boolean): [V[], V
 export function get_random_array_element<T>(arr: T[]) {
     return arr.length ? arr[Math.floor(Math.random() * arr.length)] : undefined;
 }
+
+export function* chunks<T>(arr: T[], n: number) {
+    for (let i = 0; i < arr.length; i += n) {
+        yield arr.slice(i, i + n);
+    }
+}

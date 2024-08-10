@@ -3,7 +3,7 @@ import * as Discord from "discord.js";
 import { strict as assert } from "assert";
 
 import { M } from "../utils/debugging-and-logging.js";
-import { HOUR, MINUTE, colors } from "../common.js";
+import { DAY, HOUR, MINUTE, colors } from "../common.js";
 import { BotComponent } from "../bot-component.js";
 import { Wheatley } from "../wheatley.js";
 import { TextBasedCommandBuilder } from "../command-abstractions/text-based-command-builder.js";
@@ -15,6 +15,12 @@ import { url_re } from "./quote.js";
 import { ascending, unwrap } from "../utils/misc.js";
 import { MessageContextMenuInteractionBuilder } from "../command-abstractions/context-menu.js";
 import { decode_snowflake, discord_timestamp, forge_snowflake } from "../utils/discord.js";
+import { message_database_entry } from "../infra/schemata/logged-messages.js";
+import { chunks } from "../utils/arrays.js";
+
+type PurgableChannel = Exclude<Discord.TextBasedChannel, Discord.DMChannel | Discord.PartialDMChannel>;
+type PurgableMessages = Discord.Collection<string, Discord.Message> | string[];
+type PurgeWork = [PurgableChannel, Iterable<PurgableMessages> | AsyncGenerator<PurgableMessages>];
 
 export default class Purge extends BotComponent {
     static override get is_freestanding() {
@@ -76,7 +82,23 @@ export default class Purge extends BotComponent {
                         .set_description("Purge the all messages from a user over a specific timeframe")
                         .add_user_option({
                             title: "user",
-                            description: "User to purge",
+                            description: "User whose messages to purge",
+                            required: true,
+                        })
+                        .add_string_option({
+                            title: "timeframe",
+                            description: "Timeframe for which to purge messages (less than one day)",
+                            regex: duration_regex,
+                            required: true,
+                        })
+                        .set_handler(this.purge_user.bind(this)),
+                )
+                .add_subcommand(
+                    new TextBasedCommandBuilder("user-in-channel")
+                        .set_description("Purge the all messages from a user over a specific timeframe in one channel")
+                        .add_user_option({
+                            title: "user",
+                            description: "User whose messages to purge",
                             required: true,
                         })
                         .add_string_option({
@@ -85,7 +107,7 @@ export default class Purge extends BotComponent {
                             regex: duration_regex,
                             required: true,
                         })
-                        .set_handler(this.purge_user.bind(this)),
+                        .set_handler(this.purge_user_channel.bind(this)),
                 ),
         );
 
@@ -160,9 +182,9 @@ export default class Purge extends BotComponent {
 
     async purge_core(
         command: TextBasedCommand,
-        channel: Exclude<Discord.TextBasedChannel, Discord.DMChannel | Discord.PartialDMChannel>,
         reply_title: string,
-        generator: () => AsyncGenerator<Discord.Collection<string, Discord.Message>>,
+        message_generator_per_channel: Iterable<PurgeWork> | AsyncIterable<PurgeWork>,
+        include_last_seen = true,
     ) {
         const id = command.get_command_invocation_snowflake();
         assert(!this.tasks.has(id));
@@ -174,7 +196,10 @@ export default class Purge extends BotComponent {
                 new Discord.EmbedBuilder()
                     .setColor(colors.wheatley)
                     .setTitle(reply_title)
-                    .setDescription(`Purged ${handled} messages, last seen ${discord_timestamp(last_seen)}`)
+                    .setDescription(
+                        `Purged ${handled} messages` +
+                            (include_last_seen ? ` last seen ${discord_timestamp(last_seen)}` : ""),
+                    )
                     .setFooter({
                         text: unwrap(this.tasks.get(id))[0] === false ? "Aborted" : done ? "Finished" : "Working...",
                     }),
@@ -192,18 +217,22 @@ export default class Purge extends BotComponent {
                   ],
         });
         await command.reply(make_message(false));
-        const generator_instance = generator();
-        for await (const messages of generator_instance) {
-            assert(this.tasks.has(id));
-            if (unwrap(this.tasks.get(id))[0] === false) {
-                await generator_instance.return("x");
-                continue;
+        outer: for await (const [channel, message_generator] of message_generator_per_channel) {
+            for await (const messages of message_generator) {
+                assert(this.tasks.has(id));
+                if (unwrap(this.tasks.get(id))[0] === false) {
+                    break outer;
+                }
+                const n_messages = messages instanceof Discord.Collection ? messages.size : messages.length;
+                M.debug("Purge got", n_messages, "messages");
+                await channel.bulkDelete(messages);
+                handled += n_messages;
+                if (include_last_seen) {
+                    assert(messages instanceof Discord.Collection);
+                    last_seen = Math.min(...[...messages.values()].map(message => message.createdTimestamp));
+                }
+                command.edit(make_message(false)).catch(this.wheatley.critical_error.bind(this.wheatley));
             }
-            M.debug("Purge got", messages.size, "messages");
-            await channel.bulkDelete(messages);
-            handled += messages.size;
-            last_seen = Math.min(...[...messages.values()].map(message => message.createdTimestamp));
-            command.edit(make_message(false)).catch(this.wheatley.critical_error.bind(this.wheatley));
         }
         await command.edit(make_message(true));
         if (unwrap(this.tasks.get(id))[1]) {
@@ -240,7 +269,7 @@ export default class Purge extends BotComponent {
             }
         }
         assert(channel.isTextBased() && !channel.isDMBased());
-        await this.purge_core(command, channel, `Purging ${pluralize(count, "message")}`, generator);
+        await this.purge_core(command, `Purging ${pluralize(count, "message")}`, [[channel, generator()]]);
     }
 
     async purge_after(command: TextBasedCommand, url: string) {
@@ -299,11 +328,68 @@ export default class Purge extends BotComponent {
                 last_seen = Math.min(...[...messages.values()].map(message => message.createdTimestamp));
             }
         }
-        await this.purge_core(command, channel, `Purging range`, generator);
+        await this.purge_core(command, `Purging range`, [[channel, generator()]]);
     }
 
     async purge_user(command: TextBasedCommand, user: Discord.User, raw_timeframe: string) {
         M.log("Received purge user command");
+        const timeframe = unwrap(parse_duration(raw_timeframe)); // ms
+        if (timeframe > DAY) {
+            await command.reply("Max timeframe for user purge is 1 day");
+            return;
+        }
+        M.debug("Querying messages");
+        const all_messages = await this.wheatley.database.message_database
+            .find({
+                "author.id": user.id,
+                guild: this.wheatley.TCCPP.id,
+                channel: {
+                    $nin: [this.wheatley.channels.staff_flag_log.id, this.wheatley.channels.welcome.id],
+                },
+                timestamp: {
+                    $gte: Date.now() - timeframe,
+                },
+                deleted: undefined,
+            })
+            .toArray();
+        M.debug("Finished querying");
+        const messages_by_channel = Map.groupBy(all_messages, message => message.channel);
+        // await command.edit(`Purging ${all_messages.length} messages across ${messages_by_channel.size} channels`);
+        const wheatley = this.wheatley;
+        M.debug("Purging", messages_by_channel);
+        const messages_by_channel_iter = messages_by_channel.entries();
+        async function* generator() {
+            while (true) {
+                const res = messages_by_channel_iter.next();
+                if (res.done) {
+                    return;
+                }
+                const [channel_id, messages] = res.value;
+                try {
+                    const channel = await wheatley.TCCPP.channels.fetch(channel_id);
+                    yield [
+                        unwrap(channel),
+                        chunks(
+                            messages.map(message => message.id),
+                            100,
+                        ),
+                    ] as [PurgableChannel, Generator<string[]>];
+                } catch (e) {
+                    wheatley.alert(`Failed to fetch channel ${channel_id} ${e}`);
+                    // try again
+                }
+            }
+        }
+        await this.purge_core(
+            command,
+            `Purging ${all_messages.length} messages across ${messages_by_channel.size} channels`,
+            generator(),
+            false,
+        );
+    }
+
+    async purge_user_channel(command: TextBasedCommand, user: Discord.User, raw_timeframe: string) {
+        M.log("Received purge user channel command");
         const timeframe = unwrap(parse_duration(raw_timeframe)); // ms
         const id = command.get_command_invocation_snowflake();
         const end = decode_snowflake(id) - 2;

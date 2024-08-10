@@ -3,6 +3,8 @@ import { strict as assert } from "assert";
 import { M } from "../utils/debugging-and-logging.js";
 import { BotComponent } from "../bot-component.js";
 import { Wheatley } from "../wheatley.js";
+import { TextBasedCommandBuilder } from "../command-abstractions/text-based-command-builder.js";
+import { TextBasedCommand } from "../command-abstractions/text-based-command.js";
 
 /**
  * Provides TCCPP-specific utilities for renaming channels etc.
@@ -10,6 +12,17 @@ import { Wheatley } from "../wheatley.js";
 export default class UtilityTools extends BotComponent {
     constructor(wheatley: Wheatley) {
         super(wheatley);
+        this.add_command(
+            new TextBasedCommandBuilder("count")
+                .set_permissions(Discord.PermissionFlagsBits.BanMembers)
+                .set_description("Count")
+                .add_number_option({
+                    title: "count",
+                    description: "count",
+                    required: true,
+                })
+                .set_handler(this.count.bind(this)),
+        );
     }
 
     override async on_message_create(message: Discord.Message) {
@@ -56,6 +69,14 @@ export default class UtilityTools extends BotComponent {
                 }
                 await message.reply("Done");
             }
+        }
+    }
+
+    async count(command: TextBasedCommand, count: number) {
+        await command.reply("Sending...");
+        const channel = await command.get_channel();
+        for (let i = 0; i < count; i++) {
+            await channel.send(i.toString());
         }
     }
 }
