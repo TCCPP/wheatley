@@ -7,6 +7,7 @@ import { Wheatley } from "./wheatley.js";
 import { MessageContextMenuInteractionBuilder } from "./command-abstractions/context-menu.js";
 import { ModalInteractionBuilder } from "./command-abstractions/modal.js";
 import { TextBasedCommandBuilder } from "./command-abstractions/text-based-command-builder.js";
+import { ButtonInteractionBuilder } from "./command-abstractions/button.js";
 
 type Arr = readonly unknown[];
 
@@ -78,7 +79,8 @@ export class BotComponent {
             | TextBasedCommandBuilder<T, true, true>
             | TextBasedCommandBuilder<T, true, false, true>
             | MessageContextMenuInteractionBuilder<true>
-            | ModalInteractionBuilder<true>,
+            | ModalInteractionBuilder<true>
+            | ButtonInteractionBuilder<true>,
     ) {
         this.wheatley.add_command(command);
     }

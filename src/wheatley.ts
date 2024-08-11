@@ -29,6 +29,7 @@ import { TypedEventEmitter } from "./utils/event-emitter.js";
 import { setup_metrics_server } from "./infra/prometheus.js";
 import { moderation_entry } from "./infra/schemata/moderation.js";
 import { wheatley_database_info } from "./infra/schemata/wheatley.js";
+import { ButtonInteractionBuilder } from "./command-abstractions/button.js";
 
 // Thu Jul 01 2021 00:00:00 GMT-0400 (Eastern Daylight Time)
 export const SERVER_SUGGESTION_TRACKER_START_TIME = 1625112000000;
@@ -995,7 +996,8 @@ export class Wheatley {
             | TextBasedCommandBuilder<T, true, true>
             | TextBasedCommandBuilder<T, true, false, true>
             | MessageContextMenuInteractionBuilder<true>
-            | ModalInteractionBuilder<true>,
+            | ModalInteractionBuilder<true>
+            | ButtonInteractionBuilder<true>,
     ) {
         if (this.passive) {
             return;
@@ -1244,6 +1246,10 @@ export class Wheatley {
                     const fields = command.fields.map(id => interaction.fields.getTextInputValue(id));
                     await command.handler(interaction, ...(id ? [id, ...fields] : fields));
                 }
+            } else if (interaction.isButton()) {
+                // TODO: permissions
+                assert(interaction.customId in this.other_commands);
+                await this.other_commands[interaction.customId].handler(interaction);
             }
             // TODO: Notify if errors occur in the handler....
         } catch (e) {
