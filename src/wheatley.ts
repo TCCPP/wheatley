@@ -1248,8 +1248,9 @@ export class Wheatley {
                 }
             } else if (interaction.isButton()) {
                 // TODO: permissions
-                assert(interaction.customId in this.other_commands);
-                await this.other_commands[interaction.customId].handler(interaction);
+                if (interaction.customId in this.other_commands) {
+                    await this.other_commands[interaction.customId].handler(interaction);
+                }
             }
             // TODO: Notify if errors occur in the handler....
         } catch (e) {
