@@ -2,7 +2,7 @@ import * as Discord from "discord.js";
 
 import { strict as assert } from "assert";
 
-import { SelfClearingMap } from "../utils/containers.js";
+import { KeyedMutexSet, SelfClearingMap } from "../utils/containers.js";
 import { M } from "../utils/debugging-and-logging.js";
 import { colors, MINUTE } from "../common.js";
 import { BotComponent } from "../bot-component.js";
@@ -43,7 +43,8 @@ export default class Report extends BotComponent {
         .setStyle(Discord.ButtonStyle.Secondary);
 
     // string -> initial target message from context menu interaction
-    readonly target_map = new SelfClearingMap<string, Discord.Message>(5 * MINUTE);
+    readonly target_map = new SelfClearingMap<string, Discord.Message>(10 * MINUTE);
+    readonly mutex = new KeyedMutexSet<string>();
 
     constructor(wheatley: Wheatley) {
         super(wheatley);
@@ -136,48 +137,30 @@ export default class Report extends BotComponent {
         }
     }
 
-    async handling_handler(interaction: Discord.ButtonInteraction) {
+    async locked_interaction(interaction: Discord.ButtonInteraction, callback: (m: Discord.Message) => Promise<void>) {
         const message = interaction.message;
-        const row = new Discord.ActionRowBuilder<Discord.MessageActionRowComponentBuilder>().addComponents(
-            this.nvm,
-            this.resolved,
-            this.invalid,
-        );
-        await message.edit({
-            content:
-                `<@&${this.wheatley.roles.moderators.id}> -- ` +
-                `**Being handled by ${await this.wheatley.get_display_name(interaction.user)}**`,
-            components: [row],
+        if (!this.mutex.try_lock(message.id)) {
+            await interaction.reply({
+                content: `Race condition with button presses`,
+                ephemeral: true,
+            });
+            return;
+        }
+        await interaction.reply({
+            content: `Received button press, updating message...`,
+            ephemeral: true,
         });
-        await interaction.deferUpdate();
+        try {
+            await callback(message);
+            await interaction.editReply({
+                content: `Done`,
+            });
+        } finally {
+            this.mutex.unlock(message.id);
+        }
     }
 
-    async resolved_handler(interaction: Discord.ButtonInteraction) {
-        const message = interaction.message;
-        await message.edit({
-            content:
-                `<@&${this.wheatley.roles.moderators.id}> -- ` +
-                `**Marked resolved by ${await this.wheatley.get_display_name(interaction.user)}**`,
-            components: [],
-        });
-        await message.react("✅");
-        await interaction.deferUpdate();
-    }
-
-    async invalid_handler(interaction: Discord.ButtonInteraction) {
-        const message = interaction.message;
-        await message.edit({
-            content:
-                `<@&${this.wheatley.roles.moderators.id}> -- ` +
-                `**Marked resolved by ${await this.wheatley.get_display_name(interaction.user)}**`,
-            components: [],
-        });
-        await message.react("⛔");
-        await interaction.deferUpdate();
-    }
-
-    async nvm_handler(interaction: Discord.ButtonInteraction) {
-        const message = interaction.message;
+    async nvm_logic(interaction: Discord.ButtonInteraction, message: Discord.Message) {
         const row = new Discord.ActionRowBuilder<Discord.MessageActionRowComponentBuilder>().addComponents(
             this.handling,
             this.resolved,
@@ -187,6 +170,58 @@ export default class Report extends BotComponent {
             content: `<@&${this.wheatley.roles.moderators.id}>`,
             components: [row],
         });
-        await interaction.deferUpdate();
+    }
+
+    async handling_handler(interaction: Discord.ButtonInteraction) {
+        await this.locked_interaction(interaction, async (message: Discord.Message) => {
+            if (message.content.includes("Being handled by")) {
+                await this.nvm_logic(interaction, message);
+                return;
+            }
+            const row = new Discord.ActionRowBuilder<Discord.MessageActionRowComponentBuilder>().addComponents(
+                new Discord.ButtonBuilder(this.handling.data).setLabel(
+                    `Being handled by ${await this.wheatley.get_display_name(interaction.user)}`,
+                ),
+                this.nvm,
+                this.resolved,
+                this.invalid,
+            );
+            await message.edit({
+                content:
+                    `<@&${this.wheatley.roles.moderators.id}> -- ` +
+                    `**Being handled by ${await this.wheatley.get_display_name(interaction.user)}**`,
+                components: [row],
+            });
+        });
+    }
+
+    async resolved_handler(interaction: Discord.ButtonInteraction) {
+        await this.locked_interaction(interaction, async (message: Discord.Message) => {
+            await message.edit({
+                content:
+                    `<@&${this.wheatley.roles.moderators.id}> -- ` +
+                    `**Marked resolved by ${await this.wheatley.get_display_name(interaction.user)}**`,
+                components: [],
+            });
+            await message.react("✅");
+        });
+    }
+
+    async invalid_handler(interaction: Discord.ButtonInteraction) {
+        await this.locked_interaction(interaction, async (message: Discord.Message) => {
+            await message.edit({
+                content:
+                    `<@&${this.wheatley.roles.moderators.id}> -- ` +
+                    `**Marked invalid by ${await this.wheatley.get_display_name(interaction.user)}**`,
+                components: [],
+            });
+            await message.react("⛔");
+        });
+    }
+
+    async nvm_handler(interaction: Discord.ButtonInteraction) {
+        await this.locked_interaction(interaction, async (message: Discord.Message) => {
+            await this.nvm_logic(interaction, message);
+        });
     }
 }

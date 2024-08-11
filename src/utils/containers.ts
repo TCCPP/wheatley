@@ -188,6 +188,14 @@ export class KeyedMutexSet<T> {
             this.locks.add(value);
         }
     }
+    try_lock(value: T) {
+        if (this.locks.has(value)) {
+            return false;
+        } else {
+            this.locks.add(value);
+            return true;
+        }
+    }
     unlock(value: T) {
         if (this.waiting.has(value)) {
             assert(this.waiting.get(value)!.length > 0); // If this fails, see TODO above ^^
