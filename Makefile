@@ -51,7 +51,7 @@ deploy: ts-check  ## Deploys code
 
 .PHONY: prod
 prod: format deploy  ## Deploys code and restarts the bot
-	ssh $(SERVER) "screen -XS _Wheatley quit; cd projects/wheatley; ./start.sh"
+	ssh $(SERVER) "export NVM_DIR=\"$$HOME/.nvm\"; source $$NVM_DIR/nvm.sh; screen -XS _Wheatley quit; cd projects/wheatley; ./start.sh"
 
 .PHONY: npm-update
 npm-update:  ## Updates npm packages
