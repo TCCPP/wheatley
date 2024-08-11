@@ -26,13 +26,21 @@ export default class Report extends BotComponent {
             ),
         );
     private readonly handling = new Discord.ButtonBuilder()
-        .setCustomId("handling")
-        .setLabel("I'm looking at this")
+        .setCustomId("report-handling")
+        .setLabel("I'm looking into this")
         .setStyle(Discord.ButtonStyle.Secondary);
     private readonly resolved = new Discord.ButtonBuilder()
-        .setCustomId("resolved")
+        .setCustomId("report-resolved")
         .setLabel("Resolved")
         .setStyle(Discord.ButtonStyle.Success);
+    private readonly invalid = new Discord.ButtonBuilder()
+        .setCustomId("report-invalid")
+        .setLabel("Invalid")
+        .setStyle(Discord.ButtonStyle.Danger);
+    private readonly nvm = new Discord.ButtonBuilder()
+        .setCustomId("report-nvm")
+        .setLabel("I'm no longer looking into this")
+        .setStyle(Discord.ButtonStyle.Secondary);
 
     // string -> initial target message from context menu interaction
     readonly target_map = new SelfClearingMap<string, Discord.Message>(5 * MINUTE);
@@ -46,6 +54,8 @@ export default class Report extends BotComponent {
 
         this.add_command(new ButtonInteractionBuilder(this.handling, this.handling_handler.bind(this)));
         this.add_command(new ButtonInteractionBuilder(this.resolved, this.resolved_handler.bind(this)));
+        this.add_command(new ButtonInteractionBuilder(this.invalid, this.invalid_handler.bind(this)));
+        this.add_command(new ButtonInteractionBuilder(this.nvm, this.nvm_handler.bind(this)));
     }
 
     async report(interaction: Discord.MessageContextMenuCommandInteraction) {
@@ -103,6 +113,7 @@ export default class Report extends BotComponent {
             const row = new Discord.ActionRowBuilder<Discord.MessageActionRowComponentBuilder>().addComponents(
                 this.handling,
                 this.resolved,
+                this.invalid,
             );
             await this.wheatley.channels.staff_flag_log.send({
                 content: `<@&${this.wheatley.roles.moderators.id}>`,
@@ -128,7 +139,9 @@ export default class Report extends BotComponent {
     async handling_handler(interaction: Discord.ButtonInteraction) {
         const message = interaction.message;
         const row = new Discord.ActionRowBuilder<Discord.MessageActionRowComponentBuilder>().addComponents(
+            this.nvm,
             this.resolved,
+            this.invalid,
         );
         await message.edit({
             content:
@@ -148,6 +161,32 @@ export default class Report extends BotComponent {
             components: [],
         });
         await message.react("✅");
+        await interaction.deferUpdate();
+    }
+
+    async invalid_handler(interaction: Discord.ButtonInteraction) {
+        const message = interaction.message;
+        await message.edit({
+            content:
+                `<@&${this.wheatley.roles.moderators.id}> -- ` +
+                `**Marked resolved by ${await this.wheatley.get_display_name(interaction.user)}**`,
+            components: [],
+        });
+        await message.react("⛔");
+        await interaction.deferUpdate();
+    }
+
+    async nvm_handler(interaction: Discord.ButtonInteraction) {
+        const message = interaction.message;
+        const row = new Discord.ActionRowBuilder<Discord.MessageActionRowComponentBuilder>().addComponents(
+            this.handling,
+            this.resolved,
+            this.invalid,
+        );
+        await message.edit({
+            content: `<@&${this.wheatley.roles.moderators.id}>`,
+            components: [row],
+        });
         await interaction.deferUpdate();
     }
 }
