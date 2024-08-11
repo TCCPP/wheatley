@@ -68,8 +68,12 @@ export default class Autoreact extends BotComponent {
                     await message.react("👋");
                 }
             } else if (message.channel.id == this.wheatley.channels.memes.id && has_media(message)) {
-                M.log("Adding star reaction", message.author.tag, message.author.id, message.url);
+                M.log("Adding star & delete this reaction", message.author.tag, message.author.id, message.url);
                 await message.react("⭐");
+                const reaction = message.guild!.emojis.cache.find(emoji => emoji.name === "delet_this");
+                if (reaction !== undefined) {
+                    await message.react(reaction);
+                }
             } else if (message.channel.id == this.wheatley.channels.server_suggestions.id) {
                 M.log("Adding server suggestion reactions", message.author.tag, message.author.id, message.url);
                 await message.react("👍");
