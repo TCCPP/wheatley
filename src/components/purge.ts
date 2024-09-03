@@ -225,6 +225,7 @@ export default class Purge extends BotComponent {
                 }
                 const n_messages = messages instanceof Discord.Collection ? messages.size : messages.length;
                 M.debug("Purge got", n_messages, "messages");
+                assert(!(channel instanceof Discord.PartialGroupDMChannel));
                 await channel.bulkDelete(messages);
                 handled += n_messages;
                 if (include_last_seen) {

@@ -262,6 +262,7 @@ export default class Format extends BotComponent {
                                 iconURL: message.author.displayAvatarURL(),
                             });
                         }
+                        assert(!(message.channel instanceof Discord.PartialGroupDMChannel));
                         const formatted_message = await message.channel.send({
                             embeds: [embed],
                             content,

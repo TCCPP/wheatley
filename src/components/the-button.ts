@@ -146,6 +146,7 @@ export default class TheButton extends BotComponent {
         if (message.content == "!wsetupthebutton" && this.wheatley.is_authorized_mod(message.member!)) {
             const time_since_last_reset = Date.now() - this.last_reset;
             const time_until_doomsday = Math.max(0, DAY - time_since_last_reset);
+            assert(!(message.channel instanceof Discord.PartialGroupDMChannel));
             await message.channel.send(this.make_message(time_until_doomsday));
             await message.delete();
         }

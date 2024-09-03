@@ -312,6 +312,7 @@ export default class Starboard extends BotComponent {
                 flag_link: flag_message?.url,
             });
             await message.delete();
+            assert(!(message.channel instanceof Discord.PartialGroupDMChannel));
             if (trigger_type == delete_trigger_type.delete_this) {
                 await message.channel.send(
                     `<@${message.author.id}> A message of yours was automatically deleted because a threshold for` +

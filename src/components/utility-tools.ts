@@ -33,6 +33,7 @@ export default class UtilityTools extends BotComponent {
         if (this.wheatley.is_authorized_mod(message.author)) {
             if (message.content == "!channel-rename") {
                 M.log("got !channel-rename");
+                assert(!(message.channel instanceof Discord.PartialGroupDMChannel));
                 const m = await message.channel.send("working...");
                 const channels = await this.wheatley.TCCPP.channels.fetch();
                 for (const [_, channel] of channels) {
@@ -75,6 +76,7 @@ export default class UtilityTools extends BotComponent {
     async count(command: TextBasedCommand, count: number) {
         await command.reply("Sending...");
         const channel = await command.get_channel();
+        assert(!(channel instanceof Discord.PartialGroupDMChannel));
         for (let i = 0; i < count; i++) {
             await channel.send(i.toString());
         }

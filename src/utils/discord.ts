@@ -111,6 +111,7 @@ export function is_media_link_embed(embed: Discord.APIEmbed | Discord.Embed) {
 }
 
 export async function send_long_message(channel: Discord.TextBasedChannel, msg: string) {
+    assert(!(channel instanceof Discord.PartialGroupDMChannel));
     if (msg.length > 2000) {
         const lines = msg.split("\n");
         let partial = "";

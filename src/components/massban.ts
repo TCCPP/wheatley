@@ -43,6 +43,7 @@ export default class Massban extends BotComponent {
         const ids = msg.content.match(snowflake_re);
         if (ids != null && ids.length > 0) {
             M.debug("Banning...");
+            assert(!(msg.channel instanceof Discord.PartialGroupDMChannel));
             await msg.channel.send("Banning...");
             M.debug(ids);
             await Promise.all(ids.map(id => msg.guild!.members.ban(id, { reason: "[[Wheatley]] Manual mass-ban" })));

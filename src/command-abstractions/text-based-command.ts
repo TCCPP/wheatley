@@ -195,6 +195,7 @@ export class TextBasedCommand {
                 if (message_options.should_text_reply) {
                     this.response = await this.reply_object.reply(message_options);
                 } else {
+                    assert(!(this.reply_object.channel instanceof Discord.PartialGroupDMChannel));
                     this.response = await this.reply_object.channel.send(message_options);
                 }
             }
@@ -238,6 +239,7 @@ export class TextBasedCommand {
             if (message_options.should_text_reply) {
                 this.response = await this.reply_object.reply(message_options);
             } else {
+                assert(!(this.reply_object.channel instanceof Discord.PartialGroupDMChannel));
                 this.response = await this.reply_object.channel.send(message_options);
             }
         }

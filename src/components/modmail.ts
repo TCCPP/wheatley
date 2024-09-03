@@ -145,6 +145,7 @@ export default class Modmail extends BotComponent {
             return;
         }
         if (message.content == "!wsetupmodmailsystem" && this.wheatley.is_root(message.author)) {
+            assert(!(message.channel instanceof Discord.PartialGroupDMChannel));
             await message.channel.send(this.create_modmail_system_embed_and_components());
         }
         if (message.content.startsWith("!wupdatemodmailsystem") && this.wheatley.is_root(message.author)) {
