@@ -151,6 +151,7 @@ const channels_map = {
     literally_1984: tuple("1097993854214488154", Discord.TextChannel),
     lore: tuple("890067781628866620", Discord.TextChannel),
     bot_dev_internal: tuple("1166517065763536977", Discord.TextChannel),
+    pin_archive: tuple("1284234644396572714", Discord.TextChannel),
     // red telephone
     red_telephone_alerts: tuple("1140096352278290512", Discord.TextChannel),
     // error log

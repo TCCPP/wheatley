@@ -171,7 +171,7 @@ export default class Starboard extends BotComponent {
     }
 
     async is_valid_channel(channel: Discord.GuildTextBasedChannel | Discord.TextBasedChannel) {
-        return !this.excluded_channels.has(channel.id) && this.wheatley.is_public_channel(channel);
+        return !this.excluded_channels.has(channel.id) && (await this.wheatley.is_public_channel(channel));
     }
 
     async update_starboard(message: Discord.Message) {

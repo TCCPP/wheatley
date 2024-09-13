@@ -21,6 +21,7 @@ import {
     message_database_thread_status_entry,
 } from "./schemata/logged-messages.js";
 import { wheatley_database_info } from "./schemata/wheatley.js";
+import { pin_archive_entry, pin_entry } from "./schemata/pins.js";
 
 export class WheatleyDatabase {
     private mutex = new Mutex();
@@ -124,6 +125,8 @@ export type WheatleyDatabaseProxy = WheatleyDatabase & {
     message_database: mongo.Collection<message_database_entry>;
     message_database_status: mongo.Collection<message_database_status_entry>;
     message_database_thread_status: mongo.Collection<message_database_thread_status_entry>;
+    pins: mongo.Collection<pin_entry>;
+    pin_archive: mongo.Collection<pin_archive_entry>;
 };
 // & {
 //    [key: string] : Promise<mongo.Collection>
