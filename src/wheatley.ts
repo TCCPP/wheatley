@@ -241,6 +241,7 @@ export const root_mod_ids = [
     "413463039145410560", // karnage
     "512649489300062228", // quicknir
     "446584068746772480", // yinsei
+    "213759964789866496", // levi
 ];
 
 export const root_mod_ids_set = new Set(root_mod_ids);
