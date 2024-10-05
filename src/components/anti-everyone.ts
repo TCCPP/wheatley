@@ -4,8 +4,9 @@ import { Wheatley } from "../wheatley.js";
 import { colors, MINUTE, HOUR } from "../common.js";
 import { SelfClearingMap } from "../utils/containers.js";
 import { unwrap } from "../utils/misc.js";
+import { M } from "../utils/debugging-and-logging.js";
 
-const failed_everyone_re = /\b(?:@everyone|@here)\b/g;
+const failed_everyone_re = /(?:@everyone|@here)\b/g;
 
 export interface AntiEveryoneMessageCache {
     reply_to: string;
@@ -35,6 +36,7 @@ export default class AntiEveryone extends BotComponent {
             return;
         }
         if (message.content.match(failed_everyone_re) != null) {
+            M.log("AntiEveryone: Someone tried to mention here or everyone");
             // NOTE: .toLocaleString("en-US") formats this number with commas.
             const member_count = this.wheatley.TCCPP.members.cache.size.toLocaleString("en-US");
 
