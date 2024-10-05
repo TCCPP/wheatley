@@ -9,6 +9,7 @@ const INVITE_RE =
     /(?:(?:discord(?:app)?|disboard)\.(?:gg|(?:com|org|me)\/(?:invite|server\/join))|(?<!\w)\.gg)\/(\S+)/i;
 
 const whitelist = [
+    "tccpp",
     "python",
     "csharp",
     "bVTPVpYVcv", // cuda
