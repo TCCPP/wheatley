@@ -5,7 +5,7 @@ import * as Discord from "discord.js";
 import { BotComponent } from "../bot-component.js";
 import { departialize } from "../utils/discord.js";
 
-const INVITE_RE = /(discord(app)?|disboard)\.(gg|(com|org|me)\/(invite|server\/join))\/\S+/i;
+const INVITE_RE = /(?:(discord(app)?|disboard)\.(gg|(com|org|me)\/(invite|server\/join))|gg)\/\S+/i;
 
 export function should_block(content: string) {
     return INVITE_RE.test(content);
