@@ -5,10 +5,19 @@ import * as Discord from "discord.js";
 import { BotComponent } from "../bot-component.js";
 import { departialize } from "../utils/discord.js";
 
-const INVITE_RE = /(?:(discord(app)?|disboard)\.(gg|(com|org|me)\/(invite|server\/join))|gg)\/\S+/i;
+const INVITE_RE =
+    /(?:(?:discord(?:app)?|disboard)\.(?:gg|(?:com|org|me)\/(?:invite|server\/join))|(?<!\w)\.gg)\/(\S+)/i;
 
-export function should_block(content: string) {
-    return INVITE_RE.test(content);
+const whitelist = [
+    "python",
+    "csharp",
+    "bVTPVpYVcv", // cuda
+    "Eb7P3wH", // graphics
+];
+
+export function match_invite(content: string): string | null {
+    const match = content.match(INVITE_RE);
+    return match ? match[1] : null;
 }
 
 export default class AntiInviteLinks extends BotComponent {
@@ -20,7 +29,8 @@ export default class AntiInviteLinks extends BotComponent {
         if (this.wheatley.is_authorized_mod(message.author)) {
             return;
         }
-        if (should_block(message.content)) {
+        const match = match_invite(message.content);
+        if (match && !whitelist.includes(match)) {
             const quote = await this.wheatley.make_quote_embeds([message]);
             await message.delete();
             assert(!(message.channel instanceof Discord.PartialGroupDMChannel));

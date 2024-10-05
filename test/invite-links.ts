@@ -1,24 +1,25 @@
 import { describe, expect, it } from "vitest";
 
-import { should_block } from "../src/components/anti-invite-links.js";
+import { match_invite } from "../src/components/anti-invite-links.js";
 
 describe("invite link tests", () => {
     it("should block invite links", () => {
-        expect(should_block("discord.gg/foo")).to.equal(true);
-        expect(should_block("discord.com/invite/foo")).to.equal(true);
-        expect(should_block("discordapp.com/invite/foo")).to.equal(true);
-        expect(should_block("disboard.org/server/join/foo")).to.equal(true);
-        expect(should_block("discord.me/server/join/foo")).to.equal(true);
-        expect(should_block("discord.gg/f")).to.equal(true);
-        expect(should_block("foobar https://discord.gg/randomserver foobar")).to.equal(true);
-        expect(should_block("foobar discord.gg/randomserver foobar")).to.equal(true);
-        expect(should_block("foobar discord.gg/randomserver foobar")).to.equal(true);
-        expect(should_block("foobar discord.gg/T897FfR foobar")).to.equal(true);
-        expect(should_block("foobar discord.GG/random foobar")).to.equal(true);
-        expect(should_block("foobar discord.gg/12*(*^&^)asdggascn foobar")).to.equal(true);
-        expect(should_block("discord.gg/1")).to.equal(true);
+        expect(match_invite("discord.gg/foo")).to.equal("foo");
+        expect(match_invite("discord.com/invite/foo")).to.equal("foo");
+        expect(match_invite("discordapp.com/invite/foo")).to.equal("foo");
+        expect(match_invite("disboard.org/server/join/foo")).to.equal("foo");
+        expect(match_invite("discord.me/server/join/foo")).to.equal("foo");
+        expect(match_invite("discord.gg/f")).to.equal("f");
+        expect(match_invite("foo .gg/bar")).to.equal("bar");
+        expect(match_invite("foobar https://discord.gg/randomserver foobar")).to.equal("randomserver");
+        expect(match_invite("foobar discord.gg/randomserver foobar")).to.equal("randomserver");
+        expect(match_invite("foobar discord.gg/randomserver foobar")).to.equal("randomserver");
+        expect(match_invite("foobar discord.gg/T897FfR foobar")).to.equal("T897FfR");
+        expect(match_invite("foobar discord.GG/random foobar")).to.equal("random");
+        expect(match_invite("foobar discord.gg/12*(*^&^)asdggascn foobar")).to.equal("12*(*^&^)asdggascn");
+        expect(match_invite("discord.gg/1")).to.equal("1");
         expect(
-            should_block(`
+            match_invite(`
 !wp
 # What Is Template Instantiation?
 
@@ -59,13 +60,13 @@ argument to \`print\`.
 \`\`\`
 42 Hello
 \`\`\``),
-        ).to.equal(true);
+        ).to.equal("randomserver");
     });
 
     it("should not block normal messages", () => {
-        expect(should_block("foobar")).to.equal(false);
+        expect(match_invite("foobar")).to.equal(null);
         expect(
-            should_block(`
+            match_invite(`
 !wp
 # What Is Template Instantiation?
 
@@ -105,13 +106,14 @@ argument to \`print\`.
 \`\`\`
 42 Hello
 \`\`\``),
-        ).to.equal(false);
-        expect(should_block(".gg/")).to.equal(false);
-        expect(should_block("foo .gg/ bar")).to.equal(false);
-        expect(should_block(`Check out https://stunlock.gg/posts/emscripten_with_cmake/ sounds like ...`)).to.equal(
-            false,
+        ).to.equal(null);
+        expect(match_invite(".gg/")).to.equal(null);
+        expect(match_invite("foo .gg/ bar")).to.equal(null);
+        expect(match_invite("foo gg/bar")).to.equal(null);
+        expect(match_invite(`Check out https://stunlock.gg/posts/emscripten_with_cmake/ sounds like ...`)).to.equal(
+            null,
         );
-        expect(should_block(`paste.gg/p/foobar`)).to.equal(false);
-        expect(should_block(`https://redirect.compiler.gg/foobar`)).to.equal(false);
+        expect(match_invite(`paste.gg/p/foobar`)).to.equal(null);
+        expect(match_invite(`https://redirect.compiler.gg/foobar`)).to.equal(null);
     });
 });
