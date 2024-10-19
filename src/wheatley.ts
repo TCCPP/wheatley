@@ -30,6 +30,7 @@ import { setup_metrics_server } from "./infra/prometheus.js";
 import { moderation_entry } from "./infra/schemata/moderation.js";
 import { wheatley_database_info } from "./infra/schemata/wheatley.js";
 import { ButtonInteractionBuilder } from "./command-abstractions/button.js";
+import { LoggableChannel, LogLimiter } from "./infra/log-limiter.js";
 
 // Thu Jul 01 2021 00:00:00 GMT-0400 (Eastern Daylight Time)
 export const SERVER_SUGGESTION_TRACKER_START_TIME = 1625112000000;
@@ -298,6 +299,7 @@ export class Wheatley {
     readonly components = new Map<string, BotComponent>();
     readonly guild_command_manager: GuildCommandManager;
     readonly tracker: MemberTracker; // TODO: Rename
+    readonly log_limiter: LogLimiter;
 
     parameters: Omit<wheatley_auth, "token">;
 
@@ -389,6 +391,7 @@ export class Wheatley {
 
         this.guild_command_manager = new GuildCommandManager(this);
         this.tracker = new MemberTracker(this);
+        this.log_limiter = new LogLimiter(this);
 
         // temporary until fixed in djs or @types/node
         (this.client as any).setMaxListeners(35);
@@ -681,6 +684,10 @@ export class Wheatley {
     //
     // Common discord utilities
     //
+
+    llog(channel: LoggableChannel, message: Discord.MessageCreateOptions) {
+        this.log_limiter.log(channel, message);
+    }
 
     is_forum_help_thread(thread: Discord.ThreadChannel) {
         return (
