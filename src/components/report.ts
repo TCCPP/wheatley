@@ -86,54 +86,68 @@ export default class Report extends BotComponent {
     }
 
     async modal_handler(interaction: Discord.ModalSubmitInteraction, id: string, message: string) {
-        const reporter =
-            interaction.member instanceof Discord.GuildMember
-                ? interaction.member
-                : await this.wheatley.TCCPP.members.fetch(interaction.user.id);
         M.log("Received report modal submit", id);
-        if (this.target_map.has(id)) {
-            message = message.trim();
-            const target_message = this.target_map.get(id)!;
-            const report_embed = new Discord.EmbedBuilder()
-                .setColor(colors.alert_color)
-                .setAuthor({
-                    name: reporter.displayName,
-                    iconURL: reporter.avatarURL() ?? interaction.user.displayAvatarURL(),
-                })
-                .setTitle("Report Received")
-                .setFooter({
-                    text: `ID: ${interaction.user.id}`,
+        await interaction.reply({
+            ephemeral: true,
+            content: "Processing...",
+        });
+        try {
+            const reporter =
+                interaction.member instanceof Discord.GuildMember
+                    ? interaction.member
+                    : await this.wheatley.TCCPP.members.fetch(interaction.user.id);
+            if (this.target_map.has(id)) {
+                message = message.trim();
+                const target_message = this.target_map.get(id)!;
+                const report_embed = new Discord.EmbedBuilder()
+                    .setColor(colors.alert_color)
+                    .setAuthor({
+                        name: reporter.displayName,
+                        iconURL: reporter.avatarURL() ?? interaction.user.displayAvatarURL(),
+                    })
+                    .setTitle("Report Received")
+                    .setFooter({
+                        text: `ID: ${interaction.user.id}`,
+                    });
+                if (message.length > 0) {
+                    report_embed.setDescription(`Message: ${message}`);
+                }
+                const quote_embeds = await this.wheatley.make_quote_embeds([target_message], {
+                    message_id_footer: true,
+                    user_id_footer: true,
                 });
-            if (message.length > 0) {
-                report_embed.setDescription(`Message: ${message}`);
+                const row = new Discord.ActionRowBuilder<Discord.MessageActionRowComponentBuilder>().addComponents(
+                    this.handling,
+                    this.resolved,
+                    this.invalid,
+                );
+                await this.wheatley.channels.staff_flag_log.send({
+                    content: `<@&${this.wheatley.roles.moderators.id}>`,
+                    embeds: [report_embed, ...quote_embeds.embeds],
+                    components: [row],
+                    files: quote_embeds.files,
+                });
+                await interaction.editReply({
+                    content: "Thank you for flagging this for moderators",
+                });
+            } else {
+                await interaction.editReply({
+                    content:
+                        "Something went wrong internally due to the report modal not being submitted fast enough." +
+                        ` Please re-submit the report. Here is your message so you don't have to re-type it:\n` +
+                        message,
+                });
+                this.wheatley.critical_error("Slow report thing happened");
             }
-            const quote_embeds = await this.wheatley.make_quote_embeds([target_message], {
-                message_id_footer: true,
-                user_id_footer: true,
-            });
-            const row = new Discord.ActionRowBuilder<Discord.MessageActionRowComponentBuilder>().addComponents(
-                this.handling,
-                this.resolved,
-                this.invalid,
-            );
-            await this.wheatley.channels.staff_flag_log.send({
-                content: `<@&${this.wheatley.roles.moderators.id}>`,
-                embeds: [report_embed, ...quote_embeds.embeds],
-                components: [row],
-                files: quote_embeds.files,
-            });
-            await interaction.reply({
-                ephemeral: true,
-                content: "Thank you for flagging this for moderators",
-            });
-        } else {
-            await interaction.reply({
-                ephemeral: true,
-                content:
-                    "Something went wrong internally due to the report modal not being submitted after a while." +
-                    ` Please re-submit the report. Here is your message so you don't have to re-type it:\n${message}`,
-            });
-            this.wheatley.critical_error("Slow report thing happened");
+        } catch (e) {
+            try {
+                await interaction.editReply({
+                    content: "Internal error, please report to Zelis",
+                });
+            } catch (e2) {
+                this.wheatley.critical_error(e2);
+            }
+            throw e;
         }
     }
 
