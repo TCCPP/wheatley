@@ -896,13 +896,13 @@ export class Wheatley {
         const url = `https://discord.com/channels/${head.guild}/${head.channel}/${head.id}`;
         const template_string = template.replaceAll("##", "#" + head.channel).replaceAll("$$", url);
         const safe_link = options?.safe_link === undefined ? true : options.safe_link;
-        const member = await this.try_fetch_tccpp_member(head.author.id);
-        const user = await this.client.users.fetch(head.author.id);
+        const author = head.author;
+        const member = await this.try_fetch_tccpp_member(author.id);
         const embed = new Discord.EmbedBuilder()
             .setColor(colors.default)
             .setAuthor({
-                name: head.author.display_name, // already resolved
-                iconURL: member?.avatarURL() ?? user.displayAvatarURL(),
+                name: author.display_name, // already resolved
+                iconURL: member?.avatarURL() ?? author.iconURL,
             })
             .setDescription(
                 contents + template_string + (safe_link ? "" : " ⚠️ Unexpected domain, be careful clicking this link"),
@@ -924,7 +924,7 @@ export class Wheatley {
             footer.push(`Message ID: ${head.id}`);
         }
         if (options?.user_id_footer) {
-            footer.push(`User ID: ${user.id}`);
+            footer.push(`User ID: ${author.id}`);
         }
         if (footer.length > 0) {
             embed.setFooter({
