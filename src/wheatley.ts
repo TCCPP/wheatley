@@ -1047,12 +1047,14 @@ export class Wheatley {
                     ? new TextBasedCommand(prev_command_obj, command_name, command, message)
                     : new TextBasedCommand(command_name, command, message, this);
                 this.register_text_command(message, command_obj);
+                let command_log_name = command_name;
                 if (command.subcommands) {
                     // expect a subcommand argument
                     const re = /^\S+/;
                     const match = command_body.match(re);
                     const subcommand = match ? command.subcommands.get(match[0]) : undefined;
                     if (subcommand) {
+                        command_log_name = `${command_name} ${match![0]}`;
                         command = unwrap(subcommand);
                         command_body = command_body.slice(unwrap(match)[0].length).trim();
                         command_obj.command_descriptor = command;
@@ -1061,6 +1063,16 @@ export class Wheatley {
                         return;
                     }
                 }
+                M.log(
+                    `Received !${command_log_name}${prev_command_obj ? " (message edit)" : ""}`,
+                    "From:",
+                    message.author.tag,
+                    message.author.id,
+                    "At:",
+                    message.url,
+                    "Body:",
+                    JSON.stringify(command_body),
+                );
                 if (command.permissions !== undefined) {
                     const member = await this.try_fetch_tccpp_member(await command_obj.get_member());
                     if (!member || !member.permissions.has(command.permissions)) {
@@ -1175,9 +1187,36 @@ export class Wheatley {
     async handle_slash_comand(interaction: Discord.ChatInputCommandInteraction) {
         if (interaction.commandName in this.text_commands) {
             let command = this.text_commands[interaction.commandName];
+            let command_log_name = interaction.commandName;
             if (interaction.options.getSubcommand(false)) {
+                command_log_name = `${interaction.commandName} ${interaction.options.getSubcommand()}`;
                 command = unwrap(unwrap(command.subcommands).get(interaction.options.getSubcommand()));
             }
+            M.log(
+                `Received /${command_log_name}`,
+                "From:",
+                interaction.user.tag,
+                interaction.user.id,
+                "At:",
+                // eslint-disable-next-line max-len
+                `https://discord.com/channels/${interaction.guildId}/${interaction.channelId}/${forge_snowflake(Date.now())}`,
+                "Args:",
+                [
+                    ...[...command.options.values()].map(opt => {
+                        if (opt.type == "string") {
+                            return JSON.stringify(interaction.options.getString(opt.title));
+                        } else if (opt.type == "user") {
+                            return interaction.options.getUser(opt.title)?.id;
+                        } else if (opt.type == "role") {
+                            return interaction.options.getRole(opt.title)?.name;
+                        } else if (opt.type == "number") {
+                            return interaction.options.getNumber(opt.title)?.toString();
+                        } else {
+                            return "<unknown>";
+                        }
+                    }),
+                ],
+            );
             const command_options: unknown[] = [];
             const command_object = new TextBasedCommand(interaction.commandName, command, interaction, this);
             if (command.permissions !== undefined) {

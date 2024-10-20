@@ -23,7 +23,6 @@ export default class Members extends BotComponent {
     }
 
     async members(command: TextBasedCommand) {
-        M.log("Received members command");
         await command.reply({
             embeds: [
                 new Discord.EmbedBuilder()

@@ -50,7 +50,6 @@ export default class Quote extends BotComponent {
     async quote(command: TextBasedCommand, url: string) {
         const match = url.trim().match(url_re);
         if (match != null) {
-            M.log("Received quote command", command.user.tag, command.user.id, url, command.get_or_forge_url());
             assert(match.length == 5);
             const [domain, guild_id, channel_id, message_id] = match.slice(1);
             if (guild_id == this.wheatley.TCCPP.id) {

@@ -127,7 +127,6 @@ export default class Purge extends BotComponent {
                     required: true,
                 })
                 .set_handler(async (command, count) => {
-                    M.log("Received dummymessages command");
                     await command.reply("Messaging");
                     for (let i = 0; i < count; i++) {
                         await command.followUp({
@@ -244,7 +243,6 @@ export default class Purge extends BotComponent {
     }
 
     async purge_count(command: TextBasedCommand, count: number) {
-        M.log("Received purge count command");
         if (count <= 0) {
             await command.reply({
                 embeds: [new Discord.EmbedBuilder().setColor(colors.red).setDescription(`Invalid count specified`)],
@@ -274,7 +272,6 @@ export default class Purge extends BotComponent {
     }
 
     async purge_after(command: TextBasedCommand, url: string) {
-        M.log("Received purge after command");
         await this.purge_range(
             command,
             url,
@@ -291,7 +288,6 @@ export default class Purge extends BotComponent {
         expect_this_channel = false,
         filter = (message: Discord.Message) => true,
     ) {
-        M.log("Received purge range command");
         const [start_channel_id, start_message_id] = this.parse_url_or_snowflake(start);
         const [end_channel_id, end_message_id] = this.parse_url_or_snowflake(end);
         // sort out channel
@@ -333,7 +329,6 @@ export default class Purge extends BotComponent {
     }
 
     async purge_user(command: TextBasedCommand, user: Discord.User, raw_timeframe: string) {
-        M.log("Received purge user command");
         const timeframe = unwrap(parse_duration(raw_timeframe)); // ms
         if (timeframe > DAY) {
             await command.reply("Max timeframe for user purge is 1 day");
@@ -390,7 +385,6 @@ export default class Purge extends BotComponent {
     }
 
     async purge_user_channel(command: TextBasedCommand, user: Discord.User, raw_timeframe: string) {
-        M.log("Received purge user channel command");
         const timeframe = unwrap(parse_duration(raw_timeframe)); // ms
         const id = command.get_command_invocation_snowflake();
         const end = decode_snowflake(id) - 2;

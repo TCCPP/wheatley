@@ -274,7 +274,6 @@ export default class Nodistractions extends BotComponent {
     }
 
     async removenodistractions(command: TextBasedCommand) {
-        M.log("Received !removenodistractions", command.user.id, command.user.tag);
         const member = await command.get_member(this.wheatley.TCCPP);
         if (!member.roles.cache.some(r => r.id == this.wheatley.roles.no_off_topic.id)) {
             await command.reply("You are not currently in !nodistractions", true, true);

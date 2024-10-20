@@ -30,7 +30,6 @@ export default class Help extends BotComponent {
     }
 
     async help(command: TextBasedCommand) {
-        M.log("Received help command");
         const embeds = [
             new Discord.EmbedBuilder()
                 .setColor(colors.wheatley)

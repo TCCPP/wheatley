@@ -33,12 +33,10 @@ export default class Shortcuts extends BotComponent {
     }
 
     async nothingtoseehere(command: TextBasedCommand) {
-        M.log("Received nothingtoseehere command");
         await command.reply("https://youtu.be/NuAKnbIr6TE");
     }
 
     async tryitandsee(command: TextBasedCommand) {
-        M.log("Received tryitandsee command");
         await command.reply("https://tryitands.ee/");
     }
 }

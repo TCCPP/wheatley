@@ -90,7 +90,6 @@ export default class Roulette extends BotComponent {
         }
         if (this.warned_users.has(command.user.id)) {
             const roll = Math.floor(Math.random() * 6);
-            M.log("Received !roulette", command.user.id, command.user.tag, roll);
             if (roll == 0) {
                 let ok = true;
                 this.streaks.set(command.user.id, 0);

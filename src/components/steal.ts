@@ -96,7 +96,6 @@ export default class Steal extends BotComponent {
     }
 
     async steal_url(command: TextBasedCommand, url: string) {
-        M.log("Received steal-url command");
         const match = url.trim().match(url_re);
         if (match) {
             const [_, guild_id, channel_id, message_id] = match.slice(1);
@@ -114,12 +113,10 @@ export default class Steal extends BotComponent {
     }
 
     async steal_text(command: TextBasedCommand, message: string) {
-        M.log("Received steal command");
         await this.steal(command, message);
     }
 
     async add_url(command: TextBasedCommand, name: string, url: string) {
-        M.log("Received add-url command");
         assert(url.startsWith("https://") || url.startsWith("http://"));
         await this.wheatley.TCCPP.emojis.create({
             attachment: url,

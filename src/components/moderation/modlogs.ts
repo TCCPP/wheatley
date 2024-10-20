@@ -202,7 +202,6 @@ export default class Modlogs extends BotComponent {
     }
 
     async modlogs(command: TextBasedCommand, user: Discord.User) {
-        M.log("Received modlogs command");
         await command.reply(await this.modlogs_message(user, 0, this.is_mod_only(await command.get_channel())));
     }
 
@@ -226,7 +225,6 @@ export default class Modlogs extends BotComponent {
     }
 
     async case_info(command: TextBasedCommand, case_number: number) {
-        M.log("Received case command");
         const moderation = await this.wheatley.database.moderations.findOne({ case_number });
         if (moderation) {
             await command.reply({

@@ -114,7 +114,6 @@ export default class ModerationControl extends BotComponent {
     }
 
     async reason(command: TextBasedCommand, case_number: number, reason: string) {
-        M.log("Received reason command");
         const res = await this.wheatley.database.moderations.findOneAndUpdate(
             { case_number },
             {
@@ -142,7 +141,6 @@ export default class ModerationControl extends BotComponent {
     }
 
     async context_add(command: TextBasedCommand, case_number: number, context: string) {
-        M.log("Received context add command");
         const res = await this.wheatley.database.moderations.findOneAndUpdate(
             { case_number },
             {
@@ -169,7 +167,6 @@ export default class ModerationControl extends BotComponent {
     }
 
     async duration(command: TextBasedCommand, case_number: number, duration: string) {
-        M.log("Received duration command");
         const item = await this.wheatley.database.moderations.findOne({ case_number });
         if (!item) {
             await this.reply_with_error(command, `Case ${case_number} not found`);
@@ -208,7 +205,6 @@ export default class ModerationControl extends BotComponent {
     }
 
     async expunge(command: TextBasedCommand, case_number: number, reason: string | null) {
-        M.log("Received expunge command");
         const res = await this.wheatley.database.moderations.findOneAndUpdate(
             { case_number },
             {

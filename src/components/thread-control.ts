@@ -83,7 +83,6 @@ export default class ThreadControl extends BotComponent {
     }
 
     async rename(command: TextBasedCommand, name: string) {
-        M.log("Received rename command", command.user.username, command.get_or_forge_url());
         if (await this.try_to_control_thread(command, "rename")) {
             const channel = await command.get_channel();
             assert(channel.isThread());

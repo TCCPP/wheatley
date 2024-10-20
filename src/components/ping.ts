@@ -34,7 +34,6 @@ export default class Ping extends BotComponent {
     }
 
     async ping(command: TextBasedCommand) {
-        M.log("Received ping command");
         await command.reply({
             embeds: [new Discord.EmbedBuilder().setColor(colors.wheatley).setTitle("pong")],
         });

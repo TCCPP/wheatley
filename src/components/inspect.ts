@@ -173,7 +173,6 @@ export default class Inspect extends BotComponent {
     }
 
     async inspect_text(command: TextBasedCommand, url: string) {
-        M.log("Received inspect text command");
         const match = url.trim().match(url_re);
         if (match) {
             const [_, guild_id, channel_id, message_id] = match.slice(1);

@@ -443,7 +443,6 @@ export default class Wiki extends BotComponent {
             .filter(([name, { title }]) => name == query || title == query)
             .map(([_, article]) => article);
         const article = matching_articles.length > 0 ? matching_articles[0] : undefined;
-        M.log(`Received !wiki command for query "${query}"`);
         if (article) {
             await this.send_wiki_article(article, command, user);
         } else {
@@ -453,13 +452,11 @@ export default class Wiki extends BotComponent {
 
     async wiki_alias(command: TextBasedCommand, user: Discord.User | null) {
         assert(this.article_aliases.has(command.name));
-        M.log(`Received ${command.name} (wiki alias)`, command.user.id, command.user.tag, command.get_or_forge_url());
         const article_name = this.article_aliases.get(command.name)!;
         await this.send_wiki_article(this.articles[article_name], command, user);
     }
 
     async wiki_preview(command: TextBasedCommand, content: string) {
-        M.log("Received wiki preview command", command.user.id, command.user.tag, command.get_or_forge_url());
         const channel = await command.get_channel();
         if (
             !(

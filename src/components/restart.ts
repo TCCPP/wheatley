@@ -26,7 +26,6 @@ export default class Restart extends BotComponent {
     }
 
     async restart(command: TextBasedCommand) {
-        M.log("Received restart command");
         await command.reply("Received restart command", true);
         process.exit();
     }

@@ -27,7 +27,6 @@ export default class Code extends BotComponent {
     }
 
     async code(command: TextBasedCommand) {
-        M.log("Received code command");
         const is_c = [this.wheatley.channels.c_help.id, this.wheatley.channels.c_help_text.id].includes(
             this.wheatley.top_level_channel(await command.get_channel()),
         );
