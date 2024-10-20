@@ -1284,9 +1284,23 @@ export class Wheatley {
                 }
             } else if (interaction.isMessageContextMenuCommand()) {
                 assert(interaction.commandName in this.other_commands);
+                M.log(
+                    `Received message context menu interaction ${interaction.commandName}`,
+                    "From:",
+                    interaction.user.tag,
+                    interaction.user.id,
+                    "At:",
+                    interaction.targetMessage.url,
+                );
                 await this.other_commands[interaction.commandName].handler(interaction);
             } else if (interaction.isUserContextMenuCommand()) {
                 assert(interaction.commandName in this.other_commands);
+                M.log(
+                    `Received user context menu interaction ${interaction.commandName}`,
+                    "From:",
+                    interaction.user.tag,
+                    interaction.user.id,
+                );
                 await this.other_commands[interaction.commandName].handler(interaction);
             } else if (interaction.isModalSubmit()) {
                 const [command_name, id] = interaction.customId.split("--") as [string, string | undefined];
@@ -1297,6 +1311,12 @@ export class Wheatley {
                     await command.handler(interaction, ...(id ? [id, ...fields] : fields));
                 }
             } else if (interaction.isButton()) {
+                M.log(
+                    `Received button interaction ${interaction.customId}`,
+                    "From:",
+                    interaction.user.tag,
+                    interaction.user.id,
+                );
                 // TODO: permissions
                 if (interaction.customId in this.other_commands) {
                     await this.other_commands[interaction.customId].handler(interaction);
