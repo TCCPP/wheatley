@@ -780,7 +780,8 @@ export class Wheatley {
             try {
                 return await this.TCCPP.members.fetch(options);
             } catch (e) {
-                if (e instanceof Discord.DiscordAPIError && e.code === 10007) {
+                // unknown member/user
+                if (e instanceof Discord.DiscordAPIError && (e.code === 10007 || e.code == 10013)) {
                     return null;
                 } else {
                     throw e;
