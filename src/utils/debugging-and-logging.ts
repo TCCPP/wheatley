@@ -15,7 +15,7 @@ function get_caller_location() {
 
 export class M {
     static get_timestamp() {
-        return moment().format("MM.DD.YY HH:mm:ss");
+        return moment().format("YYYY.MM.DD HH:mm:ss.SSS");
     }
     static log(...args: any[]) {
         process.stdout.write(`   [${M.get_timestamp()}] [log]   `);
