@@ -13,8 +13,6 @@ export type CommandAbstractionReplyOptions = {
     should_text_reply?: boolean;
     // default: false
     ephemeral_if_possible?: boolean;
-    // default: true
-    deletable?: boolean;
 };
 
 const default_allowed_mentions: Discord.MessageMentionOptions = {
@@ -35,8 +33,9 @@ export class TextBasedCommand {
     public member: Discord.GuildMember | Discord.APIInteractionGuildMember | null;
     public readonly user: Discord.User;
 
-    public response: Discord.Message | Discord.InteractionResponse | null = null;
+    public replies: (Discord.Message | Discord.InteractionResponse)[] = [];
     public replied = false;
+    // editing flag indicates a reply should overwrite a previous reply, used by the command editing system
     private editing = false;
 
     // normal constructor
@@ -104,7 +103,9 @@ export class TextBasedCommand {
             this.channel_id = command.channel_id;
             this.member = command.member;
             this.user = command.user;
-            this.response = command.response;
+            // Subsuming an existing command with multiple replies would be challenging and confusing
+            assert(command.replies.length == 1);
+            this.replies = command.replies;
             assert(command.replied);
             assert(command.editing);
             this.replied = true;
@@ -113,6 +114,8 @@ export class TextBasedCommand {
             assert(false, "impossible");
         }
     }
+
+    // utilities / accessors
 
     async get_guild() {
         if (this.guild) {
@@ -146,8 +149,67 @@ export class TextBasedCommand {
         }
     }
 
-    async reply(
-        raw_message_options: string | (Discord.BaseMessageOptions & CommandAbstractionReplyOptions),
+    // interaction logic
+
+    private async do_edit(
+        message_options: Discord.InteractionEditReplyOptions | Discord.MessageEditOptions,
+        allow_partial_edit = false,
+    ) {
+        if (allow_partial_edit) {
+            assert(this.replies.length > 0 && this.replied);
+        } else {
+            assert(this.replies.length === 1 && this.replied);
+        }
+        assert(
+            this.reply_object instanceof Discord.ChatInputCommandInteraction ==
+                this.replies[0] instanceof Discord.InteractionResponse,
+        );
+        if (this.replies[0] instanceof Discord.InteractionResponse) {
+            assert(this.reply_object instanceof Discord.ChatInputCommandInteraction);
+            await this.reply_object.editReply({
+                ...message_options,
+            });
+        } else {
+            await this.replies[0].edit(message_options);
+        }
+    }
+
+    private async do_reply(
+        message_options: Discord.BaseMessageOptions & CommandAbstractionReplyOptions,
+        strict: boolean,
+    ) {
+        assert(this.replied || this.replies.length === 0);
+        if (this.reply_object instanceof Discord.ChatInputCommandInteraction) {
+            if (this.replied && !strict) {
+                this.replies.push(
+                    await this.reply_object.followUp({
+                        ephemeral: !!message_options.ephemeral_if_possible,
+                        ...message_options,
+                    }),
+                );
+            } else {
+                this.replies.push(
+                    await this.reply_object.reply({
+                        ephemeral: !!message_options.ephemeral_if_possible,
+                        ...message_options,
+                    }),
+                );
+            }
+        } else {
+            if (message_options.should_text_reply) {
+                this.replies.push(await this.reply_object.reply(message_options));
+            } else {
+                assert(!(this.reply_object.channel instanceof Discord.PartialGroupDMChannel));
+                this.replies.push(await this.reply_object.channel.send(message_options));
+            }
+        }
+    }
+
+    make_message_options(
+        raw_message_options:
+            | string
+            | (Discord.BaseMessageOptions & CommandAbstractionReplyOptions)
+            | Discord.MessageEditOptions,
         positional_ephemeral_if_possible = false,
         positional_should_text_reply = false,
     ) {
@@ -156,8 +218,8 @@ export class TextBasedCommand {
                 content: raw_message_options,
             };
         }
-        const message_options: Discord.BaseMessageOptions & CommandAbstractionReplyOptions = {
-            deletable: true,
+        const message_options: (Discord.BaseMessageOptions | Discord.MessageEditOptions) &
+            CommandAbstractionReplyOptions = {
             allowedMentions: default_allowed_mentions,
             embeds: [],
             files: [],
@@ -169,39 +231,43 @@ export class TextBasedCommand {
             message_options.ephemeral_if_possible || positional_ephemeral_if_possible;
         message_options.should_text_reply = message_options.should_text_reply || positional_should_text_reply;
 
-        assert(!this.replied || this.editing);
-        if (this.editing) {
-            assert(
-                this.reply_object instanceof Discord.ChatInputCommandInteraction ==
-                    this.response instanceof Discord.InteractionResponse,
-            );
-            assert(this.response);
-            if (this.response instanceof Discord.InteractionResponse) {
-                assert(this.reply_object instanceof Discord.ChatInputCommandInteraction);
-                await this.reply_object.editReply({
-                    ...message_options,
-                });
-            } else {
-                await this.response.edit(message_options);
-            }
-        } else {
-            assert(this.response === null);
-            if (this.reply_object instanceof Discord.ChatInputCommandInteraction) {
-                this.response = await this.reply_object.reply({
-                    ephemeral: !!message_options.ephemeral_if_possible,
-                    ...message_options,
-                });
-            } else {
-                if (message_options.should_text_reply) {
-                    this.response = await this.reply_object.reply(message_options);
-                } else {
-                    assert(!(this.reply_object.channel instanceof Discord.PartialGroupDMChannel));
-                    this.response = await this.reply_object.channel.send(message_options);
-                }
-            }
+        return message_options;
+    }
+
+    // core interaction interface
+
+    // replies to a text command or slash command
+    // if the edit flag is set, it edits the previous response
+    // otherwise if the edit flag is not set and a reply has already been sent it does a followup reply
+    // if strict is set a followup will not be done, it will ensure only one reply is sent
+    async reply(
+        raw_message_options: string | (Discord.BaseMessageOptions & CommandAbstractionReplyOptions),
+        positional_ephemeral_if_possible = false,
+        positional_should_text_reply = false,
+        strict = true,
+    ) {
+        const message_options = this.make_message_options(
+            raw_message_options,
+            positional_ephemeral_if_possible,
+            positional_should_text_reply,
+        );
+
+        if (strict) {
+            assert(!this.replied || this.editing);
         }
-        this.replied = true;
-        this.editing = false;
+        if (this.editing) {
+            await this.do_edit(message_options);
+            this.editing = false;
+        } else {
+            await this.do_reply(
+                {
+                    ...message_options,
+                    content: message_options.content ?? undefined,
+                },
+                strict,
+            );
+            this.replied = true;
+        }
     }
 
     async followUp(
@@ -209,45 +275,23 @@ export class TextBasedCommand {
         positional_ephemeral_if_possible = false,
         positional_should_text_reply = false,
     ) {
-        // TODO: Duplicate
-        if (is_string(raw_message_options)) {
-            raw_message_options = {
-                content: raw_message_options,
-            };
-        }
-        const message_options: Discord.BaseMessageOptions & CommandAbstractionReplyOptions = {
-            deletable: true,
-            allowedMentions: default_allowed_mentions,
-            embeds: [],
-            files: [],
-            components: [],
-            content: "",
-            ...raw_message_options,
-        };
-        message_options.ephemeral_if_possible =
-            message_options.ephemeral_if_possible || positional_ephemeral_if_possible;
-        message_options.should_text_reply = message_options.should_text_reply || positional_should_text_reply;
-        /// -----
-        assert(this.replied && !this.editing);
-        // TODO: Better handling for this kind of thing
-        if (this.reply_object instanceof Discord.ChatInputCommandInteraction) {
-            this.response = await this.reply_object.followUp({
-                ephemeral: !!message_options.ephemeral_if_possible,
-                ...message_options,
-            });
-        } else {
-            if (message_options.should_text_reply) {
-                this.response = await this.reply_object.reply(message_options);
-            } else {
-                assert(!(this.reply_object.channel instanceof Discord.PartialGroupDMChannel));
-                this.response = await this.reply_object.channel.send(message_options);
-            }
-        }
+        assert(this.replied);
+        await this.reply(raw_message_options, positional_ephemeral_if_possible, positional_should_text_reply, false);
     }
 
-    async edit(raw_message_options: string | (Discord.BaseMessageOptions & CommandAbstractionReplyOptions)) {
-        this.editing = true;
-        await this.reply(raw_message_options);
+    async replyOrFollowUp(
+        raw_message_options: string | (Discord.BaseMessageOptions & CommandAbstractionReplyOptions),
+        positional_ephemeral_if_possible = false,
+        positional_should_text_reply = false,
+    ) {
+        await this.reply(raw_message_options, positional_ephemeral_if_possible, positional_should_text_reply, false);
+    }
+
+    async edit(raw_message_options: string | Discord.MessageEditOptions, allow_partial = false) {
+        assert(allow_partial || this.replies.length == 1); // It doesn't make sense to edit a multi-message reply
+        const message_options = this.make_message_options(raw_message_options, false, false);
+        await this.do_edit(message_options, allow_partial);
+        this.editing = false;
     }
 
     is_slash() {
@@ -306,14 +350,34 @@ export class TextBasedCommand {
     async delete_replies_if_replied() {
         // note can be called while editing if edited from a command to a non-command
         if (this.replied) {
-            assert(this.response !== null);
-            if (this.response instanceof Discord.InteractionResponse) {
+            assert(this.replies.length > 0);
+            if (this.replies[0] instanceof Discord.InteractionResponse) {
                 assert(this.reply_object instanceof Discord.ChatInputCommandInteraction);
                 await this.reply_object.deleteReply();
             } else {
-                try {
-                    await this.response.delete();
-                } catch (e) {
+                const res = await Promise.allSettled(this.replies.map(reply => reply.delete()));
+                for (const item of res) {
+                    if (item.status === "rejected") {
+                        const e = item.reason;
+                        if (e instanceof Discord.DiscordAPIError && e.code === 10008) {
+                            // Unknown message, presumably already deleted
+                        } else {
+                            throw e;
+                        }
+                    }
+                }
+            }
+        }
+    }
+
+    async delete_follow_ups() {
+        // note can be called while editing if edited from a command to a non-command
+        if (this.replied) {
+            assert(this.replies.length > 0);
+            const res = await Promise.allSettled(this.replies.slice(1).map(reply => reply.delete()));
+            for (const item of res) {
+                if (item.status === "rejected") {
+                    const e = item.reason;
                     if (e instanceof Discord.DiscordAPIError && e.code === 10008) {
                         // Unknown message, presumably already deleted
                     } else {
@@ -332,9 +396,9 @@ export class TextBasedCommand {
         return this.editing;
     }
 
-    get_reply() {
+    get_replies() {
         assert(this.replied);
-        return this.response;
+        return this.replies;
     }
 
     get_command_invocation_snowflake() {

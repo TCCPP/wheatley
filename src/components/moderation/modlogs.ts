@@ -237,7 +237,7 @@ export default class Modlogs extends BotComponent {
 
     // TODO: Code duplication
     async reply_with_error(command: TextBasedCommand, message: string) {
-        await (command.replied && !command.is_editing ? command.followUp : command.reply).bind(command)({
+        await command.replyOrFollowUp({
             embeds: [
                 new Discord.EmbedBuilder()
                     .setColor(colors.alert_color)

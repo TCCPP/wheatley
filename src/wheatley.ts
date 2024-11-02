@@ -1140,6 +1140,14 @@ export class Wheatley {
                 if (message.content === content) {
                     return;
                 }
+                if (command.replies.length > 1) {
+                    await command.edit(
+                        "Can't edit command that replied in multiple parts, please re-issue your command",
+                        true,
+                    );
+                    await command.delete_follow_ups();
+                    return;
+                }
                 command.set_editing();
                 if (!(await this.handle_text_command(message, command))) {
                     // returns false if the message was not a wheatley command; delete replies and remove from map

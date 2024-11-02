@@ -120,7 +120,7 @@ export default class Quote extends BotComponent {
                     this.wheatley,
                 );
                 await this.do_quote(command, quote_descriptors);
-                const reply = command.get_reply();
+                const reply = command.get_replies()[0];
                 assert(reply instanceof Discord.Message);
                 this.wheatley.make_deletable(message, reply);
                 await message.suppressEmbeds();
