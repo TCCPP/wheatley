@@ -50,13 +50,13 @@ export default class Modlogs extends BotComponent {
         );
     }
 
-    static moderation_description(moderation: moderation_entry, is_field = false) {
+    static moderation_description(moderation: moderation_entry, is_field: boolean, show_private_logs: boolean) {
         // 256 chosen as an ideally generous padding to allow the preceding text before the reason to fit
         const max_reason = (is_field ? 1024 : 4096) - 256;
         const description = build_description(
             `**Type:** ${moderation.type}`,
             moderation.type === "rolepersist" ? `**Role:** <@&${moderation.role}>` : null,
-            `**Moderator:** <@${moderation.moderator}>`,
+            show_private_logs ? `**Moderator:** <@${moderation.moderator}>` : null,
             `**Issued At:** ${discord_timestamp(moderation.issued_at)} ${
                 moderation.link ? `[link](${moderation.link})` : ""
             }`,
@@ -64,15 +64,15 @@ export default class Modlogs extends BotComponent {
             `**Reason:** ${moderation.reason ? truncate(moderation.reason, max_reason) : "No reason provided"}`,
             moderation.removed && !is_autoremove(moderation.removed)
                 ? `**Removed:** ${discord_timestamp(moderation.removed.timestamp)}` +
-                      ` by <@${moderation.removed.moderator}> ` +
-                      `with reason: "${moderation.removed.reason ? truncate(moderation.removed.reason, 100) : "None"}"`
+                      (show_private_logs ? ` by <@${moderation.removed.moderator}>` : "") +
+                      ` with reason: "${moderation.removed.reason ? truncate(moderation.removed.reason, 100) : "None"}"`
                 : null,
             moderation.context ? `**Context:** ${moderation.context.join(", ")}` : null,
         );
         return moderation.expunged ? `~~${description}~~` : description;
     }
 
-    static case_summary(moderation: moderation_entry, user: Discord.User) {
+    static case_summary(moderation: moderation_entry, user: Discord.User, show_private_logs: boolean) {
         return new Discord.EmbedBuilder()
             .setTitle(`Case ${moderation.case_number}`)
             .setAuthor({
@@ -80,7 +80,7 @@ export default class Modlogs extends BotComponent {
                 iconURL: user.avatarURL() ?? undefined,
             })
             .setColor(colors.wheatley)
-            .setDescription(Modlogs.moderation_description(moderation))
+            .setDescription(Modlogs.moderation_description(moderation, false, show_private_logs))
             .setFields(
                 remove(
                     [
@@ -89,7 +89,7 @@ export default class Modlogs extends BotComponent {
                                   name: "Removed",
                                   value: truncate(
                                       build_description(
-                                          `**By:** <@${moderation.removed.moderator}>`,
+                                          show_private_logs ? `**By:** <@${moderation.removed.moderator}>` : null,
                                           `**At:** ${discord_timestamp(moderation.removed.timestamp)}`,
                                           `**Reason:** ${
                                               moderation.removed.reason
@@ -106,7 +106,7 @@ export default class Modlogs extends BotComponent {
                                   name: "Expunged",
                                   value: truncate(
                                       build_description(
-                                          `**By:** <@${moderation.expunged.moderator}>`,
+                                          show_private_logs ? `**By:** <@${moderation.expunged.moderator}>` : null,
                                           `**At:** ${discord_timestamp(moderation.expunged.timestamp)}`,
                                           `**Reason:** ${
                                               moderation.expunged.reason
@@ -175,7 +175,7 @@ export default class Modlogs extends BotComponent {
                             .map(moderation => {
                                 return {
                                     name: `Case ${moderation.case_number}`,
-                                    value: Modlogs.moderation_description(moderation, true),
+                                    value: Modlogs.moderation_description(moderation, true, show_private_logs),
                                 };
                             }),
                     )
@@ -228,7 +228,13 @@ export default class Modlogs extends BotComponent {
         const moderation = await this.wheatley.database.moderations.findOne({ case_number });
         if (moderation) {
             await command.reply({
-                embeds: [Modlogs.case_summary(moderation, await this.wheatley.client.users.fetch(moderation.user))],
+                embeds: [
+                    Modlogs.case_summary(
+                        moderation,
+                        await this.wheatley.client.users.fetch(moderation.user),
+                        this.is_mod_only(await command.get_channel()),
+                    ),
+                ],
             });
         } else {
             await this.reply_with_error(command, `Case ${case_number} not found`);

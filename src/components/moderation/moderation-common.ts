@@ -262,7 +262,7 @@ export abstract class ModerationComponent extends BotComponent {
             this.sleep_list.remove(entry._id);
             await this.wheatley.channels.staff_action_log.send({
                 embeds: [
-                    Modlogs.case_summary(entry, await this.wheatley.client.users.fetch(entry.user)).setTitle(
+                    Modlogs.case_summary(entry, await this.wheatley.client.users.fetch(entry.user), true).setTitle(
                         `${capitalize(this.type)} is being lifted (case ${entry.case_number})`,
                     ),
                 ],
@@ -409,7 +409,9 @@ export abstract class ModerationComponent extends BotComponent {
             }
             this.wheatley.channels.staff_action_log
                 .send({
-                    embeds: [Modlogs.case_summary(moderation, await this.wheatley.client.users.fetch(moderation.user))],
+                    embeds: [
+                        Modlogs.case_summary(moderation, await this.wheatley.client.users.fetch(moderation.user), true),
+                    ],
                 })
                 .catch(this.wheatley.critical_error.bind(this.wheatley));
             this.wheatley.event_hub.emit("issue_moderation", moderation);
@@ -670,7 +672,7 @@ export abstract class ModerationComponent extends BotComponent {
                 });
                 await this.wheatley.channels.staff_action_log.send({
                     embeds: [
-                        Modlogs.case_summary(res, await this.wheatley.client.users.fetch(res.user)).setTitle(
+                        Modlogs.case_summary(res, await this.wheatley.client.users.fetch(res.user), true).setTitle(
                             `Case ${res.case_number}: Un${this.past_participle}`,
                         ),
                     ],

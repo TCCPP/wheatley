@@ -129,7 +129,7 @@ export default class ModerationControl extends BotComponent {
             await this.reply_with_success(command, "Reason updated");
             await this.wheatley.channels.staff_action_log.send({
                 embeds: [
-                    Modlogs.case_summary(res, await this.wheatley.client.users.fetch(res.user)).setTitle(
+                    Modlogs.case_summary(res, await this.wheatley.client.users.fetch(res.user), true).setTitle(
                         `Case ${res.case_number} reason updated`,
                     ),
                 ],
@@ -156,7 +156,7 @@ export default class ModerationControl extends BotComponent {
             await this.reply_with_success(command, "Context updated");
             await this.wheatley.channels.staff_action_log.send({
                 embeds: [
-                    Modlogs.case_summary(res, await this.wheatley.client.users.fetch(res.user)).setTitle(
+                    Modlogs.case_summary(res, await this.wheatley.client.users.fetch(res.user), true).setTitle(
                         `Case ${res.case_number} context updated`,
                     ),
                 ],
@@ -194,7 +194,7 @@ export default class ModerationControl extends BotComponent {
             this.wheatley.event_hub.emit("update_moderation", res);
             await this.wheatley.channels.staff_action_log.send({
                 embeds: [
-                    Modlogs.case_summary(res, await this.wheatley.client.users.fetch(res.user)).setTitle(
+                    Modlogs.case_summary(res, await this.wheatley.client.users.fetch(res.user), true).setTitle(
                         `Case ${res.case_number} duration updated`,
                     ),
                 ],
@@ -228,7 +228,7 @@ export default class ModerationControl extends BotComponent {
             this.wheatley.event_hub.emit("update_moderation", res);
             await this.wheatley.channels.staff_action_log.send({
                 embeds: [
-                    Modlogs.case_summary(res, await this.wheatley.client.users.fetch(res.user)).setTitle(
+                    Modlogs.case_summary(res, await this.wheatley.client.users.fetch(res.user), true).setTitle(
                         `Case ${res.case_number} expunged`,
                     ),
                 ],
