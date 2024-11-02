@@ -3,7 +3,7 @@ import { strict as assert } from "assert";
 import * as Discord from "discord.js";
 import * as mongo from "mongodb";
 
-import { TextBasedCommandBuilder } from "../../command-abstractions/text-based-command-builder.js";
+import { EarlyReplyMode, TextBasedCommandBuilder } from "../../command-abstractions/text-based-command-builder.js";
 import { TextBasedCommand } from "../../command-abstractions/text-based-command.js";
 import { M } from "../../utils/debugging-and-logging.js";
 import { Wheatley } from "../../wheatley.js";
@@ -25,7 +25,7 @@ export default class Ban extends ModerationComponent {
         super(wheatley);
 
         this.add_command(
-            new TextBasedCommandBuilder("ban")
+            new TextBasedCommandBuilder("ban", EarlyReplyMode.visible)
                 .set_permissions(Discord.PermissionFlagsBits.BanMembers)
                 .set_description("Ban user")
                 .add_user_option({
@@ -51,7 +51,7 @@ export default class Ban extends ModerationComponent {
         );
 
         this.add_command(
-            new TextBasedCommandBuilder("massban")
+            new TextBasedCommandBuilder("massban", EarlyReplyMode.visible)
                 .set_permissions(Discord.PermissionFlagsBits.BanMembers)
                 .set_description("Ban users")
                 .set_slash(false)
@@ -82,7 +82,7 @@ export default class Ban extends ModerationComponent {
         );
 
         this.add_command(
-            new TextBasedCommandBuilder("unban")
+            new TextBasedCommandBuilder("unban", EarlyReplyMode.visible)
                 .set_permissions(Discord.PermissionFlagsBits.BanMembers)
                 .set_description("Unban user")
                 .add_user_option({

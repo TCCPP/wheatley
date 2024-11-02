@@ -6,7 +6,7 @@ import { M } from "../utils/debugging-and-logging.js";
 import { colors } from "../common.js";
 import { BotComponent } from "../bot-component.js";
 import { Wheatley } from "../wheatley.js";
-import { TextBasedCommandBuilder } from "../command-abstractions/text-based-command-builder.js";
+import { EarlyReplyMode, TextBasedCommandBuilder } from "../command-abstractions/text-based-command-builder.js";
 import { TextBasedCommand } from "../command-abstractions/text-based-command.js";
 
 export default class Ping extends BotComponent {
@@ -18,11 +18,13 @@ export default class Ping extends BotComponent {
         super(wheatley);
 
         this.add_command(
-            new TextBasedCommandBuilder(["ping", "wstatus"]).set_description("Ping").set_handler(this.ping.bind(this)),
+            new TextBasedCommandBuilder(["ping", "wstatus"], EarlyReplyMode.none)
+                .set_description("Ping")
+                .set_handler(this.ping.bind(this)),
         );
 
         this.add_command(
-            new TextBasedCommandBuilder("echo")
+            new TextBasedCommandBuilder("echo", EarlyReplyMode.none)
                 .set_description("Echo")
                 .add_string_option({
                     title: "input",

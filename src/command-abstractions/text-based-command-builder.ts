@@ -21,6 +21,12 @@ export type TextBasedCommandParameterOptions = {
     autocomplete?: (partial: string, command_name: string) => { name: string; value: string }[];
 };
 
+export enum EarlyReplyMode {
+    ephemeral,
+    visible,
+    none,
+}
+
 export class TextBasedCommandBuilder<
     Args extends unknown[] = [],
     HasDescriptions extends boolean = false,
@@ -28,6 +34,7 @@ export class TextBasedCommandBuilder<
     HasSubcommands extends boolean = false,
 > extends BaseBuilder<HasHandler, [TextBasedCommand, ...Args]> {
     readonly names: string[];
+    early_reply_mode: EarlyReplyMode;
     descriptions: ConditionalOptional<HasDescriptions, string[]>;
     options = new Discord.Collection<string, TextBasedCommandParameterOptions & { type: TextBasedCommandOptionType }>();
     slash_config: boolean[];
@@ -36,9 +43,10 @@ export class TextBasedCommandBuilder<
     type: HasSubcommands extends true ? "top-level" : "default";
     allow_trailing_junk: boolean = false;
 
-    constructor(names: string | MoreThanOne<string>) {
+    constructor(names: string | MoreThanOne<string>, early_reply_mode: EarlyReplyMode) {
         super();
         this.names = Array.isArray(names) ? names : [names];
+        this.early_reply_mode = early_reply_mode;
         this.slash_config = new Array(this.names.length).fill(true);
         this.type = "default" as any;
     }
@@ -223,6 +231,7 @@ export class TextBasedCommandBuilder<
                     slash,
                     this.permissions,
                     this.allow_trailing_junk,
+                    this.early_reply_mode,
                     this,
                     wheatley,
                 ) as BotTextBasedCommand<unknown[]>,
@@ -240,6 +249,7 @@ export class TextBasedCommandBuilder<
                         slash,
                         this.permissions,
                         this.allow_trailing_junk,
+                        this.early_reply_mode,
                         this,
                         wheatley,
                     ) as BotTextBasedCommand<unknown[]>,

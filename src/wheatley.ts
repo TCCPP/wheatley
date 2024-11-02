@@ -1265,6 +1265,7 @@ export class Wheatley {
                     assert(false, "unhandled option type");
                 }
             }
+            await command_object.maybe_early_reply();
             await command.handler(command_object, ...command_options);
         } else {
             // TODO unknown command

@@ -6,7 +6,7 @@ import { M } from "../utils/debugging-and-logging.js";
 import { colors } from "../common.js";
 import { BotComponent } from "../bot-component.js";
 import { Wheatley } from "../wheatley.js";
-import { TextBasedCommandBuilder } from "../command-abstractions/text-based-command-builder.js";
+import { EarlyReplyMode, TextBasedCommandBuilder } from "../command-abstractions/text-based-command-builder.js";
 import { TextBasedCommand } from "../command-abstractions/text-based-command.js";
 
 export default class Headbang extends BotComponent {
@@ -18,7 +18,9 @@ export default class Headbang extends BotComponent {
         super(wheatley);
 
         this.add_command(
-            new TextBasedCommandBuilder("headbang").set_description("Headbang").set_handler(this.headbang.bind(this)),
+            new TextBasedCommandBuilder("headbang", EarlyReplyMode.none)
+                .set_description("Headbang")
+                .set_handler(this.headbang.bind(this)),
         );
     }
 

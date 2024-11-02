@@ -9,7 +9,7 @@ import { core_guidelines_entry, core_guidelines_index } from "../../indexes/core
 import { BotComponent } from "../bot-component.js";
 import { Wheatley } from "../wheatley.js";
 import { colors } from "../common.js";
-import { TextBasedCommandBuilder } from "../command-abstractions/text-based-command-builder.js";
+import { EarlyReplyMode, TextBasedCommandBuilder } from "../command-abstractions/text-based-command-builder.js";
 import { TextBasedCommand } from "../command-abstractions/text-based-command.js";
 
 type augmented_core_guidelines_entry = core_guidelines_entry & IndexEntry;
@@ -63,7 +63,7 @@ export default class CoreGuidelines extends BotComponent {
         super(wheatley);
 
         this.add_command(
-            new TextBasedCommandBuilder("guide")
+            new TextBasedCommandBuilder("guide", EarlyReplyMode.none)
                 .set_description("Query C++ Core Guidelines")
                 .add_string_option({
                     title: "query",

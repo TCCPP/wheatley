@@ -3,7 +3,7 @@ import { strict as assert } from "assert";
 import * as Discord from "discord.js";
 import * as mongo from "mongodb";
 
-import { TextBasedCommandBuilder } from "../../command-abstractions/text-based-command-builder.js";
+import { EarlyReplyMode, TextBasedCommandBuilder } from "../../command-abstractions/text-based-command-builder.js";
 import { TextBasedCommand } from "../../command-abstractions/text-based-command.js";
 import { M } from "../../utils/debugging-and-logging.js";
 import { Wheatley } from "../../wheatley.js";
@@ -29,7 +29,7 @@ export default class Kick extends ModerationComponent {
         super(wheatley);
 
         this.add_command(
-            new TextBasedCommandBuilder("kick")
+            new TextBasedCommandBuilder("kick", EarlyReplyMode.visible)
                 .set_permissions(Discord.PermissionFlagsBits.BanMembers)
                 .set_description("Kick user")
                 .add_user_option({

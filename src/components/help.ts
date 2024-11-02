@@ -8,7 +8,7 @@ import { M } from "../utils/debugging-and-logging.js";
 import { colors } from "../common.js";
 import { BotComponent } from "../bot-component.js";
 import { Wheatley } from "../wheatley.js";
-import { TextBasedCommandBuilder } from "../command-abstractions/text-based-command-builder.js";
+import { EarlyReplyMode, TextBasedCommandBuilder } from "../command-abstractions/text-based-command-builder.js";
 import { TextBasedCommand } from "../command-abstractions/text-based-command.js";
 import Wiki from "./wiki.js";
 
@@ -21,7 +21,9 @@ export default class Help extends BotComponent {
         super(wheatley);
 
         this.add_command(
-            new TextBasedCommandBuilder("help").set_description("Bot help and info").set_handler(this.help.bind(this)),
+            new TextBasedCommandBuilder("help", EarlyReplyMode.none)
+                .set_description("Bot help and info")
+                .set_handler(this.help.bind(this)),
         );
     }
 

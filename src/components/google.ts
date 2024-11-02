@@ -5,7 +5,7 @@ import { strict as assert } from "assert";
 import { colors } from "../common.js";
 import { BotComponent } from "../bot-component.js";
 import { Wheatley } from "../wheatley.js";
-import { TextBasedCommandBuilder } from "../command-abstractions/text-based-command-builder.js";
+import { EarlyReplyMode, TextBasedCommandBuilder } from "../command-abstractions/text-based-command-builder.js";
 import { TextBasedCommand } from "../command-abstractions/text-based-command.js";
 
 export default class Google extends BotComponent {
@@ -17,7 +17,7 @@ export default class Google extends BotComponent {
         super(wheatley);
 
         this.add_command(
-            new TextBasedCommandBuilder("google")
+            new TextBasedCommandBuilder("google", EarlyReplyMode.none)
                 .set_description("google")
                 .add_string_option({
                     title: "query",

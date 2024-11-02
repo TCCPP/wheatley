@@ -6,7 +6,7 @@ import { M } from "../utils/debugging-and-logging.js";
 import { colors } from "../common.js";
 import { BotComponent } from "../bot-component.js";
 import { Wheatley, create_error_reply } from "../wheatley.js";
-import { TextBasedCommandBuilder } from "../command-abstractions/text-based-command-builder.js";
+import { EarlyReplyMode, TextBasedCommandBuilder } from "../command-abstractions/text-based-command-builder.js";
 import { TextBasedCommand } from "../command-abstractions/text-based-command.js";
 import { build_description } from "../utils/strings.js";
 
@@ -19,14 +19,14 @@ export default class Shortcuts extends BotComponent {
         super(wheatley);
 
         this.add_command(
-            new TextBasedCommandBuilder("nothingtoseehere")
+            new TextBasedCommandBuilder("nothingtoseehere", EarlyReplyMode.none)
                 .set_permissions(Discord.PermissionFlagsBits.BanMembers)
                 .set_description("Nothing to see here")
                 .set_handler(this.nothingtoseehere.bind(this)),
         );
 
         this.add_command(
-            new TextBasedCommandBuilder(["tryitandsee", "tias"])
+            new TextBasedCommandBuilder(["tryitandsee", "tias"], EarlyReplyMode.none)
                 .set_description("Try it and see")
                 .set_handler(this.tryitandsee.bind(this)),
         );

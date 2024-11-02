@@ -6,7 +6,7 @@ import { M } from "../utils/debugging-and-logging.js";
 import { colors } from "../common.js";
 import { BotComponent } from "../bot-component.js";
 import { Wheatley, create_error_reply } from "../wheatley.js";
-import { TextBasedCommandBuilder } from "../command-abstractions/text-based-command-builder.js";
+import { EarlyReplyMode, TextBasedCommandBuilder } from "../command-abstractions/text-based-command-builder.js";
 import { TextBasedCommand } from "../command-abstractions/text-based-command.js";
 import { build_description } from "../utils/strings.js";
 
@@ -19,7 +19,7 @@ export default class Code extends BotComponent {
         super(wheatley);
 
         this.add_command(
-            new TextBasedCommandBuilder("code")
+            new TextBasedCommandBuilder("code", EarlyReplyMode.visible)
                 .set_description("code formatting help")
                 .set_allow_trailing_junk(true)
                 .set_handler(this.code.bind(this)),

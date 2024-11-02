@@ -2,7 +2,7 @@ import * as Discord from "discord.js";
 import { strict as assert } from "assert";
 
 import { BotComponent } from "../bot-component.js";
-import { TextBasedCommandBuilder } from "../command-abstractions/text-based-command-builder.js";
+import { EarlyReplyMode, TextBasedCommandBuilder } from "../command-abstractions/text-based-command-builder.js";
 import { TextBasedCommand } from "../command-abstractions/text-based-command.js";
 
 import { Wheatley } from "../wheatley.js";
@@ -14,7 +14,7 @@ export default class ModStats extends BotComponent {
     constructor(wheatley: Wheatley) {
         super(wheatley);
         this.add_command(
-            new TextBasedCommandBuilder("modstats")
+            new TextBasedCommandBuilder("modstats", EarlyReplyMode.none)
                 .set_description("Moderator stats")
                 .set_permissions(Discord.PermissionFlagsBits.BanMembers)
                 .add_user_option({
@@ -64,6 +64,7 @@ export default class ModStats extends BotComponent {
             await command.reply(`Please use in <#${this.wheatley.channels.bot_spam.id}>`, true);
             return;
         }
+        await command.do_early_reply_if_slash(false);
         const moderator_member = moderator ? await this.wheatley.try_fetch_tccpp_member(moderator) : null;
         const stats_7d = await this.get_stats(moderator, Date.now() - 7 * DAY);
         const stats_30d = await this.get_stats(moderator, Date.now() - 30 * DAY);

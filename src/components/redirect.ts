@@ -5,7 +5,7 @@ import { Wheatley } from "../wheatley.js";
 import { colors } from "../common.js";
 import { delay } from "../utils/misc.js";
 import { M } from "../utils/debugging-and-logging.js";
-import { TextBasedCommandBuilder } from "../command-abstractions/text-based-command-builder.js";
+import { EarlyReplyMode, TextBasedCommandBuilder } from "../command-abstractions/text-based-command-builder.js";
 import { TextBasedCommand } from "../command-abstractions/text-based-command.js";
 import { format_list } from "../utils/strings.js";
 
@@ -14,7 +14,7 @@ export default class Redirect extends BotComponent {
         super(wheatley);
 
         this.add_command(
-            new TextBasedCommandBuilder("redirect")
+            new TextBasedCommandBuilder("redirect", EarlyReplyMode.visible)
                 .set_description("Redirect a conversation")
                 .add_string_option({
                     title: "channel",
@@ -28,7 +28,7 @@ export default class Redirect extends BotComponent {
 
     override async setup() {
         this.add_command(
-            new TextBasedCommandBuilder("r")
+            new TextBasedCommandBuilder("r", EarlyReplyMode.none)
                 .set_description(
                     `Redirect a conversation from <#${this.wheatley.channels.c_cpp_discussion.id}> or ` +
                         `<#${this.wheatley.channels.general_discussion.id}> to a help channel`,

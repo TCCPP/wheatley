@@ -7,7 +7,7 @@ import { unwrap } from "../../utils/misc.js";
 import { M } from "../../utils/debugging-and-logging.js";
 import { Wheatley } from "../../wheatley.js";
 import { ModerationComponent, duration_regex, parse_duration } from "./moderation-common.js";
-import { TextBasedCommandBuilder } from "../../command-abstractions/text-based-command-builder.js";
+import { EarlyReplyMode, TextBasedCommandBuilder } from "../../command-abstractions/text-based-command-builder.js";
 import { TextBasedCommand } from "../../command-abstractions/text-based-command.js";
 import { DAY } from "../../common.js";
 import { moderation_entry, basic_moderation_with_user } from "../../infra/schemata/moderation.js";
@@ -25,11 +25,11 @@ export default class Timeout extends ModerationComponent {
         super(wheatley);
 
         this.add_command(
-            new TextBasedCommandBuilder("timeout")
+            new TextBasedCommandBuilder("timeout", EarlyReplyMode.visible)
                 .set_permissions(Discord.PermissionFlagsBits.BanMembers)
                 .set_description("Timeout add / remove")
                 .add_subcommand(
-                    new TextBasedCommandBuilder("add")
+                    new TextBasedCommandBuilder("add", EarlyReplyMode.visible)
                         .set_description("Timeout user")
                         .add_user_option({
                             title: "user",
@@ -66,7 +66,7 @@ export default class Timeout extends ModerationComponent {
                         ),
                 )
                 .add_subcommand(
-                    new TextBasedCommandBuilder("remove")
+                    new TextBasedCommandBuilder("remove", EarlyReplyMode.visible)
                         .set_description("Timeout remove user")
                         .add_user_option({
                             title: "user",

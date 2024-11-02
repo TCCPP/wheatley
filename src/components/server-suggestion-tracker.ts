@@ -8,7 +8,7 @@ import { M } from "../utils/debugging-and-logging.js";
 import { MINUTE } from "../common.js";
 import { BotComponent } from "../bot-component.js";
 import { Wheatley } from "../wheatley.js";
-import { TextBasedCommandBuilder } from "../command-abstractions/text-based-command-builder.js";
+import { EarlyReplyMode, TextBasedCommandBuilder } from "../command-abstractions/text-based-command-builder.js";
 import { TextBasedCommand } from "../command-abstractions/text-based-command.js";
 
 const resolution_reactions = ["🟢", "🔴", "🟡", "🚫"];
@@ -29,7 +29,7 @@ export default class ServerSuggestionTracker extends BotComponent {
         super(wheatley);
 
         this.add_command(
-            new TextBasedCommandBuilder("suggestions-dashboard-count")
+            new TextBasedCommandBuilder("suggestions-dashboard-count", EarlyReplyMode.visible)
                 .set_description("Server suggestions count")
                 .set_permissions(Discord.PermissionFlagsBits.BanMembers)
                 .set_handler(this.dashboard_count.bind(this)),

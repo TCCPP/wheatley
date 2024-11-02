@@ -2,7 +2,7 @@ import * as Discord from "discord.js";
 import { strict as assert } from "assert";
 import { BotComponent } from "../bot-component.js";
 import { Wheatley } from "../wheatley.js";
-import { TextBasedCommandBuilder } from "../command-abstractions/text-based-command-builder.js";
+import { EarlyReplyMode, TextBasedCommandBuilder } from "../command-abstractions/text-based-command-builder.js";
 import { TextBasedCommand } from "../command-abstractions/text-based-command.js";
 import { HOUR, DAY } from "../common.js";
 import { M } from "../utils/debugging-and-logging.js";
@@ -69,7 +69,7 @@ export default class CHelpRedirect extends BotComponent {
         super(wheatley);
 
         this.add_command(
-            new TextBasedCommandBuilder("not-c")
+            new TextBasedCommandBuilder("not-c", EarlyReplyMode.none)
                 .set_description("Mark C++ code in the C help channel")
                 .add_user_option({
                     title: "user",
@@ -80,7 +80,7 @@ export default class CHelpRedirect extends BotComponent {
         );
 
         this.add_command(
-            new TextBasedCommandBuilder("not-cpp")
+            new TextBasedCommandBuilder("not-cpp", EarlyReplyMode.none)
                 .set_description("Mark C code in the C++ help channel")
                 .add_user_option({
                     title: "user",

@@ -6,7 +6,7 @@ import { M } from "../utils/debugging-and-logging.js";
 import { DAY, HOUR, MINUTE, colors } from "../common.js";
 import { BotComponent } from "../bot-component.js";
 import { Wheatley } from "../wheatley.js";
-import { TextBasedCommandBuilder } from "../command-abstractions/text-based-command-builder.js";
+import { EarlyReplyMode, TextBasedCommandBuilder } from "../command-abstractions/text-based-command-builder.js";
 import { CommandAbstractionReplyOptions, TextBasedCommand } from "../command-abstractions/text-based-command.js";
 import { duration_regex, parse_duration } from "./moderation/moderation-common.js";
 import { pluralize } from "../utils/strings.js";
@@ -39,11 +39,11 @@ export default class Purge extends BotComponent {
         // purge user
 
         this.add_command(
-            new TextBasedCommandBuilder("purge")
+            new TextBasedCommandBuilder("purge", EarlyReplyMode.visible)
                 .set_permissions(Discord.PermissionFlagsBits.BanMembers)
                 .set_description("Purge messages")
                 .add_subcommand(
-                    new TextBasedCommandBuilder("count")
+                    new TextBasedCommandBuilder("count", EarlyReplyMode.visible)
                         .set_description("Purge the most recent N messages")
                         .add_number_option({
                             title: "count",
@@ -53,7 +53,7 @@ export default class Purge extends BotComponent {
                         .set_handler(this.purge_count.bind(this)),
                 )
                 .add_subcommand(
-                    new TextBasedCommandBuilder("after")
+                    new TextBasedCommandBuilder("after", EarlyReplyMode.visible)
                         .set_description("Purge all messages after snowflake")
                         .add_string_option({
                             title: "url",
@@ -63,7 +63,7 @@ export default class Purge extends BotComponent {
                         .set_handler(this.purge_after.bind(this)),
                 )
                 .add_subcommand(
-                    new TextBasedCommandBuilder("range")
+                    new TextBasedCommandBuilder("range", EarlyReplyMode.visible)
                         .set_description("Purge all messages between start and end")
                         .add_string_option({
                             title: "start",
@@ -78,7 +78,7 @@ export default class Purge extends BotComponent {
                         .set_handler(this.purge_range.bind(this)),
                 )
                 .add_subcommand(
-                    new TextBasedCommandBuilder("user")
+                    new TextBasedCommandBuilder("user", EarlyReplyMode.visible)
                         .set_description("Purge the all messages from a user over a specific timeframe")
                         .add_user_option({
                             title: "user",
@@ -94,7 +94,7 @@ export default class Purge extends BotComponent {
                         .set_handler(this.purge_user.bind(this)),
                 )
                 .add_subcommand(
-                    new TextBasedCommandBuilder("user-in-channel")
+                    new TextBasedCommandBuilder("user-in-channel", EarlyReplyMode.visible)
                         .set_description("Purge the all messages from a user over a specific timeframe in one channel")
                         .add_user_option({
                             title: "user",
@@ -118,7 +118,7 @@ export default class Purge extends BotComponent {
         );
 
         this.add_command(
-            new TextBasedCommandBuilder("dummymessages")
+            new TextBasedCommandBuilder("dummymessages", EarlyReplyMode.visible)
                 .set_permissions(Discord.PermissionFlagsBits.BanMembers)
                 .set_description("dummymessages")
                 .add_number_option({

@@ -6,7 +6,7 @@ import { M } from "../utils/debugging-and-logging.js";
 import { colors } from "../common.js";
 import { BotComponent } from "../bot-component.js";
 import { Wheatley } from "../wheatley.js";
-import { TextBasedCommandBuilder } from "../command-abstractions/text-based-command-builder.js";
+import { EarlyReplyMode, TextBasedCommandBuilder } from "../command-abstractions/text-based-command-builder.js";
 import { TextBasedCommand } from "../command-abstractions/text-based-command.js";
 
 /*
@@ -28,13 +28,13 @@ export default class ForumControl extends BotComponent {
         super(wheatley);
 
         this.add_command(
-            new TextBasedCommandBuilder(["solve", "solved", "close"])
+            new TextBasedCommandBuilder(["solve", "solved", "close"], EarlyReplyMode.visible)
                 .set_description("Close forum post and mark it as solved")
                 .set_handler(this.solve.bind(this)),
         );
 
         this.add_command(
-            new TextBasedCommandBuilder(["unsolve", "unsolved", "open"])
+            new TextBasedCommandBuilder(["unsolve", "unsolved", "open"], EarlyReplyMode.visible)
                 .set_description("Re-open forum post")
                 .set_handler(this.unsolve.bind(this)),
         );

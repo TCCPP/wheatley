@@ -9,7 +9,7 @@ import { Wheatley } from "../../wheatley.js";
 import { ModerationComponent, parse_duration } from "./moderation-common.js";
 import { colors } from "../../common.js";
 import Modlogs from "./modlogs.js";
-import { TextBasedCommandBuilder } from "../../command-abstractions/text-based-command-builder.js";
+import { EarlyReplyMode, TextBasedCommandBuilder } from "../../command-abstractions/text-based-command-builder.js";
 import { TextBasedCommand } from "../../command-abstractions/text-based-command.js";
 
 export default class ModerationControl extends BotComponent {
@@ -17,7 +17,7 @@ export default class ModerationControl extends BotComponent {
         super(wheatley);
 
         this.add_command(
-            new TextBasedCommandBuilder("reason")
+            new TextBasedCommandBuilder("reason", EarlyReplyMode.visible)
                 .set_description("Update the reason for a case")
                 .set_permissions(Discord.PermissionFlagsBits.BanMembers)
                 .add_number_option({
@@ -34,11 +34,11 @@ export default class ModerationControl extends BotComponent {
         );
 
         this.add_command(
-            new TextBasedCommandBuilder("context")
+            new TextBasedCommandBuilder("context", EarlyReplyMode.visible)
                 .set_permissions(Discord.PermissionFlagsBits.BanMembers)
                 .set_description("Update case context")
                 .add_subcommand(
-                    new TextBasedCommandBuilder("add")
+                    new TextBasedCommandBuilder("add", EarlyReplyMode.visible)
                         .set_description("Add context")
                         .add_number_option({
                             title: "case",
@@ -55,7 +55,7 @@ export default class ModerationControl extends BotComponent {
         );
 
         this.add_command(
-            new TextBasedCommandBuilder("duration")
+            new TextBasedCommandBuilder("duration", EarlyReplyMode.visible)
                 .set_description("Update the duration for a case")
                 .set_permissions(Discord.PermissionFlagsBits.BanMembers)
                 .add_number_option({
@@ -72,7 +72,7 @@ export default class ModerationControl extends BotComponent {
         );
 
         this.add_command(
-            new TextBasedCommandBuilder("expunge")
+            new TextBasedCommandBuilder("expunge", EarlyReplyMode.visible)
                 .set_description("Expunge a case")
                 .set_permissions(Discord.PermissionFlagsBits.BanMembers)
                 .add_number_option({

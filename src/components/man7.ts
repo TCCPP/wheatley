@@ -11,7 +11,7 @@ import { man7_entry, man7_index } from "../../indexes/man7/types.js";
 import { BotComponent } from "../bot-component.js";
 import { Wheatley } from "../wheatley.js";
 import { colors } from "../common.js";
-import { TextBasedCommandBuilder } from "../command-abstractions/text-based-command-builder.js";
+import { EarlyReplyMode, TextBasedCommandBuilder } from "../command-abstractions/text-based-command-builder.js";
 import { TextBasedCommand } from "../command-abstractions/text-based-command.js";
 
 type augmented_man7_entry = man7_entry & IndexEntry;
@@ -97,7 +97,7 @@ export default class Man7 extends BotComponent {
         super(wheatley);
 
         this.add_command(
-            new TextBasedCommandBuilder("man")
+            new TextBasedCommandBuilder("man", EarlyReplyMode.none)
                 .set_description("Query linux man pages")
                 .add_string_option({
                     title: "query",

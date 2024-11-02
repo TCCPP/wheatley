@@ -7,7 +7,7 @@ import { M } from "../utils/debugging-and-logging.js";
 import { colors, MINUTE } from "../common.js";
 import { BotComponent } from "../bot-component.js";
 import { Wheatley } from "../wheatley.js";
-import { TextBasedCommandBuilder } from "../command-abstractions/text-based-command-builder.js";
+import { EarlyReplyMode, TextBasedCommandBuilder } from "../command-abstractions/text-based-command-builder.js";
 import { TextBasedCommand } from "../command-abstractions/text-based-command.js";
 
 // https://discord.com/channels/331718482485837825/802541516655951892/877257002584252426
@@ -36,7 +36,7 @@ export default class Quote extends BotComponent {
         super(wheatley);
 
         this.add_command(
-            new TextBasedCommandBuilder(["quote", "quoteb"])
+            new TextBasedCommandBuilder(["quote", "quoteb"], EarlyReplyMode.none)
                 .set_description(["Quote a message", "Quote a block of messages"])
                 .add_string_option({
                     title: "url",
@@ -52,16 +52,7 @@ export default class Quote extends BotComponent {
         if (match != null) {
             assert(match.length == 5);
             const [domain, guild_id, channel_id, message_id] = match.slice(1);
-            if (guild_id == this.wheatley.TCCPP.id) {
-                await this.do_quote(command, [
-                    {
-                        domain,
-                        channel_id,
-                        message_id,
-                        block: command.name == "quoteb",
-                    },
-                ]);
-            } else {
+            if (guild_id != this.wheatley.TCCPP.id) {
                 await command.reply({
                     embeds: [
                         new Discord.EmbedBuilder()
@@ -71,6 +62,15 @@ export default class Quote extends BotComponent {
                     ephemeral_if_possible: true,
                 });
             }
+            await command.do_early_reply_if_slash(false);
+            await this.do_quote(command, [
+                {
+                    domain,
+                    channel_id,
+                    message_id,
+                    block: command.name == "quoteb",
+                },
+            ]);
         } else {
             await command.reply({
                 embeds: [

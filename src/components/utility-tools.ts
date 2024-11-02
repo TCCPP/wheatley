@@ -3,7 +3,7 @@ import { strict as assert } from "assert";
 import { M } from "../utils/debugging-and-logging.js";
 import { BotComponent } from "../bot-component.js";
 import { Wheatley } from "../wheatley.js";
-import { TextBasedCommandBuilder } from "../command-abstractions/text-based-command-builder.js";
+import { EarlyReplyMode, TextBasedCommandBuilder } from "../command-abstractions/text-based-command-builder.js";
 import { TextBasedCommand } from "../command-abstractions/text-based-command.js";
 
 /**
@@ -13,7 +13,7 @@ export default class UtilityTools extends BotComponent {
     constructor(wheatley: Wheatley) {
         super(wheatley);
         this.add_command(
-            new TextBasedCommandBuilder("count")
+            new TextBasedCommandBuilder("count", EarlyReplyMode.none)
                 .set_permissions(Discord.PermissionFlagsBits.BanMembers)
                 .set_description("Count")
                 .add_number_option({

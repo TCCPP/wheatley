@@ -6,7 +6,7 @@ import { M } from "../utils/debugging-and-logging.js";
 import { colors } from "../common.js";
 import { BotComponent } from "../bot-component.js";
 import { Wheatley } from "../wheatley.js";
-import { TextBasedCommandBuilder } from "../command-abstractions/text-based-command-builder.js";
+import { EarlyReplyMode, TextBasedCommandBuilder } from "../command-abstractions/text-based-command-builder.js";
 import { TextBasedCommand } from "../command-abstractions/text-based-command.js";
 import { url_re } from "./quote.js";
 import { CUSTOM_EMOJIREGEX } from "../utils/discord.js";
@@ -21,7 +21,7 @@ export default class Steal extends BotComponent {
         super(wheatley);
 
         this.add_command(
-            new TextBasedCommandBuilder("steal-emojis-message-url")
+            new TextBasedCommandBuilder("steal-emojis-message-url", EarlyReplyMode.visible)
                 .set_description("Steal emojis from a message")
                 .add_string_option({
                     title: "url",
@@ -33,7 +33,7 @@ export default class Steal extends BotComponent {
         );
 
         this.add_command(
-            new TextBasedCommandBuilder("add-emojis-url")
+            new TextBasedCommandBuilder("add-emojis-url", EarlyReplyMode.visible)
                 .set_description("Add emojis from a message")
                 .add_string_option({
                     title: "name",
@@ -50,7 +50,7 @@ export default class Steal extends BotComponent {
         );
 
         this.add_command(
-            new TextBasedCommandBuilder("steal-emojis")
+            new TextBasedCommandBuilder("steal-emojis", EarlyReplyMode.visible)
                 .set_description("Steal emojis from a message")
                 .add_string_option({
                     title: "text",

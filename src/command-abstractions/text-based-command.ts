@@ -7,6 +7,7 @@ import { is_string } from "../utils/strings.js";
 import { Wheatley } from "../wheatley.js";
 import { BotTextBasedCommand } from "./text-based-command-descriptor.js";
 import { forge_snowflake } from "../utils/discord.js";
+import { EarlyReplyMode } from "./text-based-command-builder.js";
 
 export type CommandAbstractionReplyOptions = {
     // default: false
@@ -69,9 +70,9 @@ export class TextBasedCommand {
             : (["c", ..._args] as ["c", TextBasedCommand, string, BotTextBasedCommand<unknown[]>, Discord.Message]);
         if (args[0] == "n") {
             // construct new command
-            const [_, name, command, reply_object, wheatley] = args;
+            const [_, name, command_descriptor, reply_object, wheatley] = args;
             this.name = name;
-            this.command_descriptor = command;
+            this.command_descriptor = command_descriptor;
             this.reply_object = reply_object;
             this.wheatley = wheatley;
             if (reply_object instanceof Discord.ChatInputCommandInteraction) {
@@ -292,6 +293,28 @@ export class TextBasedCommand {
         const message_options = this.make_message_options(raw_message_options, false, false);
         await this.do_edit(message_options, allow_partial);
         this.editing = false;
+    }
+
+    // for timeout reasons
+    async do_early_reply_if_slash(ephemeral: boolean) {
+        assert(!this.replied);
+        if (this.is_slash()) {
+            await this.reply({
+                content: "Working...",
+                ephemeral_if_possible: ephemeral,
+            });
+            this.set_editing();
+        }
+    }
+
+    // for timeout reasons
+    async maybe_early_reply() {
+        if (
+            this.command_descriptor.early_reply_mode == EarlyReplyMode.ephemeral ||
+            this.command_descriptor.early_reply_mode == EarlyReplyMode.visible
+        ) {
+            await this.do_early_reply_if_slash(this.command_descriptor.early_reply_mode == EarlyReplyMode.ephemeral);
+        }
     }
 
     is_slash() {

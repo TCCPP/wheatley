@@ -3,7 +3,7 @@ import { strict as assert } from "assert";
 import { M } from "../utils/debugging-and-logging.js";
 import { BotComponent } from "../bot-component.js";
 import { Wheatley } from "../wheatley.js";
-import { TextBasedCommandBuilder } from "../command-abstractions/text-based-command-builder.js";
+import { EarlyReplyMode, TextBasedCommandBuilder } from "../command-abstractions/text-based-command-builder.js";
 import { TextBasedCommand } from "../command-abstractions/text-based-command.js";
 import { no_distraction_entry } from "../infra/schemata/nodistractions.js";
 import { set_timeout, clear_timeout } from "../utils/node.js";
@@ -68,7 +68,7 @@ export default class Nodistractions extends BotComponent {
         super(wheatley);
 
         this.add_command(
-            new TextBasedCommandBuilder("nodistractions")
+            new TextBasedCommandBuilder("nodistractions", EarlyReplyMode.ephemeral)
                 .set_description("Turns on nodistractions")
                 .add_string_option({
                     title: "time",
@@ -79,7 +79,7 @@ export default class Nodistractions extends BotComponent {
         );
 
         this.add_command(
-            new TextBasedCommandBuilder("removenodistractions")
+            new TextBasedCommandBuilder("removenodistractions", EarlyReplyMode.ephemeral)
                 .set_description("Removes nodistractions")
                 .set_handler(this.removenodistractions.bind(this)),
         );

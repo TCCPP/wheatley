@@ -9,7 +9,7 @@ import { M } from "../../utils/debugging-and-logging.js";
 import { BotComponent } from "../../bot-component.js";
 import { Wheatley, WHEATLEY_ID } from "../../wheatley.js";
 import { colors } from "../../common.js";
-import { TextBasedCommandBuilder } from "../../command-abstractions/text-based-command-builder.js";
+import { EarlyReplyMode, TextBasedCommandBuilder } from "../../command-abstractions/text-based-command-builder.js";
 import { CommandAbstractionReplyOptions, TextBasedCommand } from "../../command-abstractions/text-based-command.js";
 import { remove } from "../../utils/arrays.js";
 import { moderation_edit_info, moderation_entry } from "../../infra/schemata/moderation.js";
@@ -26,7 +26,7 @@ export default class Modlogs extends BotComponent {
         super(wheatley);
 
         this.add_command(
-            new TextBasedCommandBuilder("modlogs")
+            new TextBasedCommandBuilder("modlogs", EarlyReplyMode.visible)
                 .set_description("Get user moderation logs")
                 .set_permissions(Discord.PermissionFlagsBits.BanMembers)
                 .add_user_option({
@@ -38,7 +38,7 @@ export default class Modlogs extends BotComponent {
         );
 
         this.add_command(
-            new TextBasedCommandBuilder("case")
+            new TextBasedCommandBuilder("case", EarlyReplyMode.visible)
                 .set_description("Get case info")
                 .set_permissions(Discord.PermissionFlagsBits.BanMembers)
                 .add_number_option({

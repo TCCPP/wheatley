@@ -4,7 +4,7 @@ import { unwrap } from "../utils/misc.js";
 import { M } from "../utils/debugging-and-logging.js";
 import { BotComponent } from "../bot-component.js";
 import { Wheatley } from "../wheatley.js";
-import { TextBasedCommandBuilder } from "../command-abstractions/text-based-command-builder.js";
+import { EarlyReplyMode, TextBasedCommandBuilder } from "../command-abstractions/text-based-command-builder.js";
 import { TextBasedCommand } from "../command-abstractions/text-based-command.js";
 
 export default class ThreadControl extends BotComponent {
@@ -12,13 +12,13 @@ export default class ThreadControl extends BotComponent {
         super(wheatley);
 
         this.add_command(
-            new TextBasedCommandBuilder("archive")
+            new TextBasedCommandBuilder("archive", EarlyReplyMode.ephemeral)
                 .set_description("Archives the thread")
                 .set_handler(this.archive.bind(this)),
         );
 
         this.add_command(
-            new TextBasedCommandBuilder("rename")
+            new TextBasedCommandBuilder("rename", EarlyReplyMode.ephemeral)
                 .set_description("Rename the thread")
                 .add_string_option({
                     title: "name",

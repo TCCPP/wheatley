@@ -5,7 +5,7 @@ import * as mongo from "mongodb";
 
 import { Wheatley } from "../../wheatley.js";
 import { ModerationComponent } from "./moderation-common.js";
-import { TextBasedCommandBuilder } from "../../command-abstractions/text-based-command-builder.js";
+import { EarlyReplyMode, TextBasedCommandBuilder } from "../../command-abstractions/text-based-command-builder.js";
 import { TextBasedCommand } from "../../command-abstractions/text-based-command.js";
 import { moderation_entry, basic_moderation } from "../../infra/schemata/moderation.js";
 import { colors } from "../../common.js";
@@ -28,7 +28,7 @@ export default class Note extends ModerationComponent {
         super(wheatley);
 
         this.add_command(
-            new TextBasedCommandBuilder("note")
+            new TextBasedCommandBuilder("note", EarlyReplyMode.ephemeral)
                 .set_permissions(Discord.PermissionFlagsBits.BanMembers)
                 .set_description("Enter note in modlogs")
                 .add_user_option({

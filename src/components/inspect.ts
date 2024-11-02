@@ -9,7 +9,7 @@ import { Wheatley, create_basic_embed } from "../wheatley.js";
 import { url_re } from "./quote.js";
 import { colors } from "../common.js";
 import { MessageContextMenuInteractionBuilder } from "../command-abstractions/context-menu.js";
-import { TextBasedCommandBuilder } from "../command-abstractions/text-based-command-builder.js";
+import { EarlyReplyMode, TextBasedCommandBuilder } from "../command-abstractions/text-based-command-builder.js";
 import { TextBasedCommand } from "../command-abstractions/text-based-command.js";
 import { send_long_response } from "../utils/discord.js";
 
@@ -89,7 +89,7 @@ export default class Inspect extends BotComponent {
 
         // Permissions on this command in the interest of preventing spam (intentional or otherwise)
         this.add_command(
-            new TextBasedCommandBuilder("inspect")
+            new TextBasedCommandBuilder("inspect", EarlyReplyMode.ephemeral)
                 .set_description("Inspect a message")
                 .add_string_option({
                     title: "url",

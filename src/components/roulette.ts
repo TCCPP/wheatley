@@ -5,7 +5,7 @@ import { M } from "../utils/debugging-and-logging.js";
 import { colors, MINUTE } from "../common.js";
 import { BotComponent } from "../bot-component.js";
 import { Wheatley } from "../wheatley.js";
-import { TextBasedCommandBuilder } from "../command-abstractions/text-based-command-builder.js";
+import { EarlyReplyMode, TextBasedCommandBuilder } from "../command-abstractions/text-based-command-builder.js";
 import { TextBasedCommand } from "../command-abstractions/text-based-command.js";
 import { roulette_leaderboard_entry } from "../infra/schemata/roulette.js";
 
@@ -21,11 +21,13 @@ export default class Roulette extends BotComponent {
         super(wheatley);
 
         this.add_command(
-            new TextBasedCommandBuilder("roulette").set_description("roulette").set_handler(this.roulette.bind(this)),
+            new TextBasedCommandBuilder("roulette", EarlyReplyMode.none)
+                .set_description("roulette")
+                .set_handler(this.roulette.bind(this)),
         );
 
         this.add_command(
-            new TextBasedCommandBuilder("leaderboard")
+            new TextBasedCommandBuilder("leaderboard", EarlyReplyMode.visible)
                 .set_description("Leaderboard")
                 .set_handler(this.leaderboard.bind(this)),
         );
@@ -91,6 +93,7 @@ export default class Roulette extends BotComponent {
         if (this.warned_users.has(command.user.id)) {
             const roll = Math.floor(Math.random() * 6);
             if (roll == 0) {
+                await command.do_early_reply_if_slash(false);
                 let ok = true;
                 this.streaks.set(command.user.id, 0);
                 await this.update_score(command.user.id); // TODO: I forget why this is here

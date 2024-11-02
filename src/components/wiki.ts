@@ -10,7 +10,7 @@ import { M } from "../utils/debugging-and-logging.js";
 import { colors } from "../common.js";
 import { BotComponent } from "../bot-component.js";
 import { Wheatley } from "../wheatley.js";
-import { TextBasedCommandBuilder } from "../command-abstractions/text-based-command-builder.js";
+import { EarlyReplyMode, TextBasedCommandBuilder } from "../command-abstractions/text-based-command-builder.js";
 import { TextBasedCommand } from "../command-abstractions/text-based-command.js";
 
 export const wiki_dir = "wiki/articles";
@@ -325,7 +325,7 @@ export default class Wiki extends BotComponent {
         super(wheatley);
 
         this.add_command(
-            new TextBasedCommandBuilder(["wiki", "howto"])
+            new TextBasedCommandBuilder(["wiki", "howto"], EarlyReplyMode.none)
                 .set_description(["Retrieve wiki articles", "Retrieve wiki articles (alternatively /wiki)"])
                 .add_string_option({
                     title: "query",
@@ -347,7 +347,7 @@ export default class Wiki extends BotComponent {
         );
 
         this.add_command(
-            new TextBasedCommandBuilder(["wiki-preview", "wp"])
+            new TextBasedCommandBuilder(["wiki-preview", "wp"], EarlyReplyMode.none)
                 .set_slash(false)
                 .set_description("Preview a wiki article")
                 .add_string_option({
@@ -365,7 +365,7 @@ export default class Wiki extends BotComponent {
         for (const [alias, article_name] of this.article_aliases.entries()) {
             const article = this.articles[article_name];
             this.add_command(
-                new TextBasedCommandBuilder(alias)
+                new TextBasedCommandBuilder(alias, EarlyReplyMode.none)
                     .set_description(article.title)
                     .add_user_option({
                         title: "user",
