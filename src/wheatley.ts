@@ -221,6 +221,8 @@ export const skill_roles_order_id = [
     "331719591405551616",
 ];
 
+export const zelis = "199943082441965577";
+
 // General config
 // TODO: Can eliminate this stuff
 export const root_ids = new Set([
@@ -630,7 +632,7 @@ export class Wheatley {
         if (!this.log_channel) {
             return;
         }
-        send_long_message(this.log_channel, `🛑 Critical error: ${to_string(arg)}`)
+        send_long_message(this.log_channel, `🛑 Critical error: ${to_string(arg)} <@${zelis}>`)
             .catch(() => M.error)
             .finally(() => {
                 if (arg instanceof Error) {
@@ -674,7 +676,7 @@ export class Wheatley {
         if (!this.log_channel) {
             return;
         }
-        send_long_message(this.log_channel, `🚨 Alert: ${message}`)
+        send_long_message(this.log_channel, `🚨 Alert: ${message} <@${zelis}>`)
             .catch(M.error)
             .finally(() => {
                 Sentry.captureMessage(message);
