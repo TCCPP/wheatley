@@ -1,16 +1,15 @@
 import moment from "moment";
 import chalk from "chalk";
+import * as stacktrace from "stack-trace";
 
 function get_caller_location() {
     // https://stackoverflow.com/a/53339452/15675011
-    const e = new Error();
-    if (!e.stack) {
-        return "<error>";
-    }
-    const frame = e.stack.split("\n")[3];
-    const line_number = frame.split(":").reverse()[1];
-    const function_name = frame.split(" ")[5];
-    return function_name + ":" + line_number;
+    const trace = stacktrace.get();
+    const file = trace[2].getFileName();
+    const line = trace[2].getLineNumber();
+    const col = trace[2].getColumnNumber();
+    const fn: string | null = trace[2].getFunctionName();
+    return `${fn || ""} ${file}:${line}:${col}`.trim();
 }
 
 export class M {
