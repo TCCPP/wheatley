@@ -53,7 +53,7 @@ import { get_random_array_element } from "../../utils/arrays.js";
  *
  */
 
-export const duration_regex = /(?:perm\b|(\d+)\s*([a-zA-Z]+))/;
+export const duration_regex = /perm\b|(\d+)\s*([a-zA-Z]+)/;
 
 export const moderation_on_team_member_message: string = "Can't apply this moderation on team members";
 export const joke_responses = [
@@ -62,48 +62,74 @@ export const joke_responses = [
     "Didn't work. Maybe a skill issue?",
 ];
 
-// returns duration in ms
-function parse_unit(u: string) {
+function millis_of_time_unit(u: string) {
     let factor = 1;
     switch (u) {
         case "y":
+        case "year":
+        case "years":
             factor *= 365; // 365 days, fallthrough
         case "d":
+        case "day":
+        case "days":
             factor *= 24; // 24 hours, fallthrough
         case "h":
+        case "hr":
+        case "hour":
+        case "hours":
             factor *= 60; // 60 minutes, fallthrough
         case "m":
+        case "min":
+        case "mins":
+        case "minute":
+        case "minutes":
             factor *= 60; // 60 seconds, fallthrough
         case "s":
+        case "sec":
+        case "secs":
+        case "seconds":
             factor *= 1000; // 1000 ms
             break;
         // Weeks and months can't be folded into the above as nicely
         case "w":
-            factor *= 7 * parse_unit("d");
+        case "week":
+        case "weeks":
+            factor *= 7 * millis_of_time_unit("d")!;
             break;
         case "M":
         case "mo":
-            factor *= 30 * parse_unit("d");
+        case "month":
+        case "months":
+            factor *= 30 * millis_of_time_unit("d")!;
             break;
         default:
-            assert(false, "Unexpected unit");
+            return null;
     }
     return factor;
 }
 
-// Duration string to milliseconds
-export function parse_duration(duration: string | null) {
-    if (duration === null) {
+// Returns the corresponding duration in milliseconds,
+// or Infinity for permanent duration,
+// or null if parsing failed.
+export function parse_duration(duration: string) {
+    const match = duration.match(duration_regex);
+    if (!match) {
         return null;
     }
-    const match = duration.match(duration_regex);
-    assert(match, "Failed to match against expected duration format");
-    if (duration == "perm") {
-        return null;
+    if (duration === "perm" || duration === "permanent") {
+        return Infinity;
     } else {
         const [_, n, unit] = match;
-        return parseInt(n) * parse_unit(unit);
+        const unit_millis = millis_of_time_unit(unit);
+        return unit_millis != null ? parseInt(n) * unit_millis : null;
     }
+}
+
+// Returns the corresponding duration in milliseconds,
+// or Infinity for permanent duration or if the input is null,
+// or null if parsing failed.
+export function parse_nullable_duration(duration: string | null) {
+    return duration != null ? parse_duration(duration) : Infinity;
 }
 
 // TODO: How notifications work
@@ -525,7 +551,11 @@ export abstract class ModerationComponent extends BotComponent {
                 await this.reply_with_error(command, `User is already ${this.past_participle}`);
                 return;
             }
-            const duration = parse_duration(duration_string);
+            const duration_ms = parse_nullable_duration(duration_string);
+            if (duration_ms == null) {
+                await this.reply_with_error(command, "Invalid duration");
+                return;
+            }
             const moderation: moderation_entry = {
                 ...basic_moderation_info,
                 case_number: -1,
@@ -535,7 +565,7 @@ export abstract class ModerationComponent extends BotComponent {
                 moderator_name: (await command.get_member()).displayName,
                 reason,
                 issued_at: Date.now(),
-                duration,
+                duration: duration_ms == Infinity ? null : duration_ms,
                 active: !this.is_once_off,
                 removed: null,
                 expunged: null,
@@ -551,16 +581,16 @@ export abstract class ModerationComponent extends BotComponent {
                             build_description(
                                 `${this.wheatley.success} ***${user.displayName} was ${this.past_participle}***`,
                                 command.is_slash() && reason ? `**Reason:** ${reason}` : null,
-                                (!this.is_once_off && duration === null) || reason === null
+                                (!this.is_once_off && duration_string === null) || reason === null
                                     ? `Remember to provide a ${[
-                                          !this.is_once_off && duration === null ? "duration" : null,
+                                          !this.is_once_off && duration_string === null ? "duration" : null,
                                           reason === null ? "reason" : null,
                                       ]
                                           .filter(x => x != null)
                                           .join(" and ")}`
                                     : null,
                                 !this.is_once_off && duration_string !== null
-                                    ? `**Duration**: ${duration ? time_to_human(duration) : "perm"}`
+                                    ? `**Duration**: ${time_to_human(duration_ms)}`
                                     : null,
                                 cant_dm ? "Note: Couldn't DM user. Their loss." : null,
                             ),
@@ -579,7 +609,7 @@ export abstract class ModerationComponent extends BotComponent {
     async moderation_multi_issue_handler(
         command: TextBasedCommand,
         users: Discord.User[],
-        duration: string | null,
+        duration_string: string | null,
         reason: string | null,
         basic_moderation_info: basic_moderation,
     ) {
@@ -594,6 +624,11 @@ export abstract class ModerationComponent extends BotComponent {
                     await this.reply_with_error(command, `${user.displayName} is already ${this.past_participle}`);
                     continue;
                 }
+                const duration = parse_nullable_duration(duration_string);
+                if (duration == null) {
+                    await this.reply_with_error(command, "Invalid duration");
+                    continue;
+                }
                 const moderation: moderation_entry = {
                     ...basic_moderation_info,
                     case_number: -1,
@@ -603,7 +638,7 @@ export abstract class ModerationComponent extends BotComponent {
                     moderator_name: (await command.get_member()).displayName,
                     reason,
                     issued_at: Date.now(),
-                    duration: parse_duration(duration),
+                    duration: duration,
                     active: !this.is_once_off,
                     removed: null,
                     expunged: null,

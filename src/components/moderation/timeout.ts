@@ -6,7 +6,7 @@ import { strict as assert } from "assert";
 import { unwrap } from "../../utils/misc.js";
 import { M } from "../../utils/debugging-and-logging.js";
 import { Wheatley } from "../../wheatley.js";
-import { ModerationComponent, duration_regex, parse_duration } from "./moderation-common.js";
+import { ModerationComponent, duration_regex, parse_nullable_duration } from "./moderation-common.js";
 import { EarlyReplyMode, TextBasedCommandBuilder } from "../../command-abstractions/text-based-command-builder.js";
 import { TextBasedCommand } from "../../command-abstractions/text-based-command.js";
 import { DAY } from "../../common.js";
@@ -54,8 +54,12 @@ export default class Timeout extends ModerationComponent {
                                 duration: string | null,
                                 reason: string | null,
                             ) => {
-                                const duration_ms = parse_duration(duration);
-                                if (duration_ms == null || duration_ms > 28 * DAY) {
+                                const duration_ms = parse_nullable_duration(duration);
+                                if (duration_ms == null) {
+                                    await this.reply_with_error(command, "Invalid duration");
+                                    return;
+                                }
+                                if (duration_ms > 28 * DAY) {
                                     await this.reply_with_error(command, "Maximum allowable duration is 28 days");
                                     return;
                                 }
