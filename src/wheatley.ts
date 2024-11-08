@@ -145,6 +145,7 @@ const channels_map = {
     // other
     bot_spam: tuple("506274405500977153", Discord.TextChannel),
     introductions: tuple("933113495304679494", Discord.TextChannel),
+    cursed_code: tuple("855220292736516128", Discord.TextChannel),
     suggestion_dashboard: tuple("908928083879415839", Discord.ThreadChannel),
     suggestion_action_log: tuple("909309608512880681", Discord.ThreadChannel),
     today_i_learned: tuple("873682069325217802", Discord.TextChannel),

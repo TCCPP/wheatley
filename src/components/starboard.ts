@@ -254,7 +254,7 @@ export default class Starboard extends BotComponent {
         );
         const max_non_negative = Math.max(...non_negative_reactions.map(([_, count]) => count)); // -inf if |a|=0
         let do_delete = true;
-        if (message.channel.id != this.wheatley.channels.memes.id) {
+        if (![this.wheatley.channels.memes.id, this.wheatley.channels.cursed_code.id].includes(message.channel.id)) {
             do_delete = false;
         }
         if (trigger_reaction.count <= max_non_negative) {
