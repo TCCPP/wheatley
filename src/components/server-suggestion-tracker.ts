@@ -361,7 +361,11 @@ export default class ServerSuggestionTracker extends BotComponent {
                     // find and delete this.wheatley.database entry
                     const suggestion_id = await this.reverse_lookup(message.id);
                     if (suggestion_id == null) {
-                        throw 0; // untracked  - this is an internal error or a race condition
+                        // untracked  - this is an internal error or a race condition
+                        throw Error(
+                            "Internal error in server suggestion tracker, most likely a race condition while " +
+                                "handling on_message_delete",
+                        );
                     } else {
                         M.info(
                             "server_suggestion tracker state recovery: Manual status delete",
@@ -501,7 +505,11 @@ export default class ServerSuggestionTracker extends BotComponent {
                     // expensive-ish but this will be rare
                     const suggestion_id = await this.reverse_lookup(message.id);
                     if (suggestion_id == null) {
-                        throw 0; // untracked  - this is an internal error or a race condition
+                        // untracked  - this is an internal error or a race condition
+                        throw Error(
+                            "Internal error in server suggestion tracker, most likely a race condition while " +
+                                "handling on_reaction_add",
+                        );
                     } else {
                         // lock the status message
                         // NOTE: Assuming no identical snowflakes between channels, this should be pretty safe though
