@@ -366,6 +366,7 @@ export default class Wiki extends BotComponent {
             const article = this.articles[article_name];
             this.add_command(
                 new TextBasedCommandBuilder(alias, EarlyReplyMode.none)
+                    .set_slash(false)
                     .set_description(article.title)
                     .add_user_option({
                         title: "user",
