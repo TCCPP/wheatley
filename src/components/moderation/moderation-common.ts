@@ -87,6 +87,7 @@ function millis_of_time_unit(u: string) {
         case "s":
         case "sec":
         case "secs":
+        case "second":
         case "seconds":
             factor *= 1000; // 1000 ms
             break;
