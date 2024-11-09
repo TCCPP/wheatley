@@ -314,12 +314,20 @@ export default class Starboard extends BotComponent {
             await message.delete();
             assert(!(message.channel instanceof Discord.PartialGroupDMChannel));
             if (trigger_type == delete_trigger_type.delete_this) {
-                await message.channel.send(
-                    `<@${message.author.id}> A message of yours was automatically deleted because a threshold for` +
-                        " <:delet_this:669598943117836312> reactions (or similar) was reached.\n\n" +
-                        "FAQ: How can I avoid this in the future?\n" +
-                        "Answer: Post less cringe",
-                );
+                if (message.channel.id == this.wheatley.channels.memes.id) {
+                    await message.channel.send(
+                        `<@${message.author.id}> A message of yours was automatically deleted because a threshold for` +
+                            " <:delet_this:669598943117836312> reactions (or similar) was reached.\n\n" +
+                            "FAQ: How can I avoid this in the future?\n" +
+                            "Answer: Post less cringe",
+                    );
+                } else {
+                    await message.channel.send(
+                        `<@${message.author.id}> A message of yours was automatically deleted because a threshold for` +
+                            " <:delet_this:669598943117836312> reactions (or similar) was reached.\n" +
+                            "This was likely due to your post not actually being cursed code.",
+                    );
+                }
             } else {
                 await message.channel.send(
                     `<@${message.author.id}> A message of yours was automatically deleted because a threshold for` +
