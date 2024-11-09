@@ -555,16 +555,7 @@ export abstract class ModerationComponent extends BotComponent {
                 await this.reply_with_error(command, `User is already ${this.past_participle}`);
                 return;
             }
-            let duration;
-            try {
-                duration = parse_nullable_duration(duration_string);
-            } catch (e) {
-                if (e instanceof ParseError) {
-                    await this.reply_with_error(command, e.message);
-                    return;
-                }
-                throw e;
-            }
+            const duration = parse_nullable_duration(duration_string);
             const moderation: moderation_entry = {
                 ...basic_moderation_info,
                 case_number: -1,
@@ -610,8 +601,12 @@ export abstract class ModerationComponent extends BotComponent {
                 ],
             });
         } catch (e) {
-            await this.reply_with_error(command, `Error issuing ${this.type}`);
-            this.wheatley.critical_error(e);
+            if (e instanceof ParseError) {
+                await this.reply_with_error(command, e.message);
+            } else {
+                await this.reply_with_error(command, `Error issuing ${this.type}`);
+                this.wheatley.critical_error(e);
+            }
         }
     }
 
