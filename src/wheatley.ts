@@ -338,6 +338,7 @@ export class Wheatley {
     readonly apple_emote = "<:apple:1165508607798943754>";
     readonly success = "<:success:1138616548630745088>";
     readonly error = "<:error:1138616562958483496>";
+    readonly wheatley = "<:wheatley:1147938076551827496>";
 
     // TCCPP stuff
     TCCPP: Discord.Guild;

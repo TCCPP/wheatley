@@ -512,7 +512,7 @@ export abstract class ModerationComponent extends BotComponent {
         try {
             if (this.wheatley.is_authorized_mod(user)) {
                 // Check if the mod is trying to ban themselves
-                if (command.name == "ban" && command.user.id == user.id) {
+                if (basic_moderation_info.type == "ban" && command.user.id == user.id) {
                     // If the mod is trying to ban themselves then troll them ;)
                     await this.reply_with_error(command, unwrap(get_random_array_element(joke_responses)));
                 } else {
@@ -544,6 +544,10 @@ export abstract class ModerationComponent extends BotComponent {
             const cant_dm = await this.notify_user(user, this.past_participle, moderation);
             await this.issue_moderation(moderation);
             await command.reply({
+                content:
+                    basic_moderation_info.type === "ban"
+                        ? `"This is the part where I kill you" - ${this.wheatley.wheatley}`
+                        : undefined,
                 embeds: [
                     new Discord.EmbedBuilder()
                         .setColor(colors.wheatley)
