@@ -30,6 +30,18 @@ export default class Shortcuts extends BotComponent {
                 .set_description("Try it and see")
                 .set_handler(this.tryitandsee.bind(this)),
         );
+
+        this.add_command(
+            new TextBasedCommandBuilder("headbang", EarlyReplyMode.none)
+                .set_description("Headbang")
+                .set_handler(this.headbang.bind(this)),
+        );
+
+        this.add_command(
+            new TextBasedCommandBuilder("headbang", EarlyReplyMode.none)
+                .set_description("Headbang")
+                .set_handler(this.headbang.bind(this)),
+        );
     }
 
     async nothingtoseehere(command: TextBasedCommand) {
@@ -38,5 +50,10 @@ export default class Shortcuts extends BotComponent {
 
     async tryitandsee(command: TextBasedCommand) {
         await command.reply("https://tryitands.ee/");
+    }
+
+    async headbang(command: TextBasedCommand) {
+        M.debug("Received headbang command");
+        await command.reply("<a:headbang:1230177508540809216>");
     }
 }
