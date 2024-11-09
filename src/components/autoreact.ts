@@ -88,7 +88,7 @@ export default class Autoreact extends BotComponent {
                 await message.react("👍");
                 await message.react("👎");
                 await message.react("🤷");
-            } else if (message.channel.id == this.wheatley.channels.food.id) {
+            } else if (message.channel.id == this.wheatley.channels.food.id && has_media(message)) {
                 const reaction = message.guild!.emojis.cache.find(emoji => emoji.name === "chefskiss");
                 if (reaction !== undefined) {
                     await message.react(reaction);
