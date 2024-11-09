@@ -103,28 +103,37 @@ function millis_of_time_unit(u: string) {
     }
 }
 
-// Returns the corresponding duration in milliseconds,
-// or Infinity for permanent duration,
-// or null if parsing failed.
-export function parse_duration(duration: string) {
-    const match = duration.match(duration_regex);
-    if (!match) {
-        return null;
-    }
-    if (duration === "perm" || duration === "permanent") {
-        return Infinity;
-    } else {
-        const [_, n, unit] = match;
-        const unit_millis = millis_of_time_unit(unit);
-        return unit_millis != null ? parseInt(n) * unit_millis : null;
+export class ParseError extends Error {
+    constructor(message: string) {
+        super(message);
+        this.name = "ParseError";
     }
 }
 
 // Returns the corresponding duration in milliseconds,
-// or Infinity for permanent duration or if the input is null,
-// or null if parsing failed.
+// or null for permanent duration.
+// Throws ParseError when parsing fails.
+export function parse_duration(duration: string) {
+    const match = duration.match(duration_regex);
+    if (!match) {
+        throw new ParseError("Duration does not match expected pattern");
+    }
+    if (duration === "perm" || duration === "permanent") {
+        return null;
+    }
+    const [_, n, unit] = match;
+    const unit_millis = millis_of_time_unit(unit);
+    if (unit_millis == null) {
+        throw new ParseError(`Invalid time unit in duration: ${unit}`);
+    }
+    return parseInt(n) * unit_millis;
+}
+
+// Returns the corresponding duration in milliseconds,
+// or null for permanent duration (returned if the given duration is null).
+// Throws ParseError when parsing fails.
 export function parse_nullable_duration(duration: string | null) {
-    return duration != null ? parse_duration(duration) : Infinity;
+    return duration != null ? parse_duration(duration) : null;
 }
 
 // TODO: How notifications work
@@ -546,10 +555,15 @@ export abstract class ModerationComponent extends BotComponent {
                 await this.reply_with_error(command, `User is already ${this.past_participle}`);
                 return;
             }
-            const duration_ms = parse_nullable_duration(duration_string);
-            if (duration_ms == null) {
-                await this.reply_with_error(command, "Invalid duration");
-                return;
+            let duration;
+            try {
+                duration = parse_nullable_duration(duration_string);
+            } catch (e) {
+                if (e instanceof ParseError) {
+                    await this.reply_with_error(command, e.message);
+                    return;
+                }
+                throw e;
             }
             const moderation: moderation_entry = {
                 ...basic_moderation_info,
@@ -560,7 +574,7 @@ export abstract class ModerationComponent extends BotComponent {
                 moderator_name: (await command.get_member()).displayName,
                 reason,
                 issued_at: Date.now(),
-                duration: duration_ms == Infinity ? null : duration_ms,
+                duration,
                 active: !this.is_once_off,
                 removed: null,
                 expunged: null,
@@ -585,7 +599,7 @@ export abstract class ModerationComponent extends BotComponent {
                                           .join(" and ")}`
                                     : null,
                                 !this.is_once_off && duration_string !== null
-                                    ? `**Duration**: ${time_to_human(duration_ms)}`
+                                    ? `**Duration**: ${duration == null ? "permanent" : time_to_human(duration)}`
                                     : null,
                                 cant_dm ? "Note: Couldn't DM user. Their loss." : null,
                             ),
@@ -619,10 +633,15 @@ export abstract class ModerationComponent extends BotComponent {
                     await this.reply_with_error(command, `${user.displayName} is already ${this.past_participle}`);
                     continue;
                 }
-                const duration = parse_nullable_duration(duration_string);
-                if (duration == null) {
-                    await this.reply_with_error(command, "Invalid duration");
-                    continue;
+                let duration;
+                try {
+                    duration = parse_nullable_duration(duration_string);
+                } catch (e) {
+                    if (e instanceof ParseError) {
+                        await this.reply_with_error(command, e.message);
+                        return;
+                    }
+                    throw e;
                 }
                 const moderation: moderation_entry = {
                     ...basic_moderation_info,
@@ -633,7 +652,7 @@ export abstract class ModerationComponent extends BotComponent {
                     moderator_name: (await command.get_member()).displayName,
                     reason,
                     issued_at: Date.now(),
-                    duration: duration,
+                    duration,
                     active: !this.is_once_off,
                     removed: null,
                     expunged: null,
