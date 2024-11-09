@@ -38,9 +38,9 @@ export default class Shortcuts extends BotComponent {
         );
 
         this.add_command(
-            new TextBasedCommandBuilder("headbang", EarlyReplyMode.none)
-                .set_description("Headbang")
-                .set_handler(this.headbang.bind(this)),
+            new TextBasedCommandBuilder("initgif", EarlyReplyMode.none)
+                .set_description("initgif")
+                .set_handler(this.initgif.bind(this)),
         );
     }
 
@@ -53,7 +53,12 @@ export default class Shortcuts extends BotComponent {
     }
 
     async headbang(command: TextBasedCommand) {
-        M.debug("Received headbang command");
         await command.reply("<a:headbang:1230177508540809216>");
+    }
+
+    async initgif(command: TextBasedCommand) {
+        await command.reply({
+            files: ["http://mikelui.io/img/c++_init_forest.gif"],
+        });
     }
 }
