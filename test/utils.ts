@@ -1,6 +1,6 @@
 import { describe, expect, it } from "vitest";
 
-import { string_split } from "../src/utils/strings.js";
+import { parse_out, string_split } from "../src/utils/strings.js";
 import { time_to_human } from "../src/utils/strings.js";
 
 describe("Diff to Human Tests", () => {
@@ -30,5 +30,24 @@ describe("Limited string split tests", () => {
     });
     it("should split above the limit", () => {
         expect(string_split("hello there general kenobi", " ", 2)).to.deep.equal(["hello", "there general kenobi"]);
+    });
+});
+
+describe("parse_out tests", () => {
+    it("should remove inline code", () => {
+        expect(parse_out("foo `foo` asdf")).to.deep.equal("foo  asdf");
+        expect(parse_out("foo `foo`asdf")).to.deep.equal("foo asdf");
+        expect(parse_out("foo `foo` `bar` asdf")).to.deep.equal("foo   asdf");
+        // todo: `foo``bar`
+    });
+    it("should remove code blocks", () => {
+        expect(parse_out("foo ```bar``` baz `foo` asdf")).to.deep.equal("foo  baz  asdf");
+    });
+    it("should remove mixed", () => {
+        expect(parse_out("foo ```bar``` baz `foo` asdf")).to.deep.equal("foo  baz  asdf");
+    });
+    it("should handle single ticks within other codeblocks", () => {
+        // this works, not for the right reasons but it does
+        expect(parse_out("foo ```bar `x` bazzz``` baz")).to.deep.equal("foo  baz");
     });
 });

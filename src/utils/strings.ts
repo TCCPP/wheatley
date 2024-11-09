@@ -44,12 +44,14 @@ export function time_to_human(diff: number, levels?: number): string {
     return time_to_human_core(diff).slice(0, levels).join(" ");
 }
 
-const code_re = /`[^`]+`(?!`)/gi;
+const code_re = /(?<!`)`[^`]+`(?!`)/gi;
 const code_block_re = /```(?:[^`]|`(?!``))+```/gi;
 
+// removes code blocks from a message
+// not perfect, but good enough
 export function parse_out(message: string) {
-    message = message.replace(code_re, message);
-    message = message.replace(code_block_re, message);
+    message = message.replace(code_re, "");
+    message = message.replace(code_block_re, "");
     return message;
 }
 
