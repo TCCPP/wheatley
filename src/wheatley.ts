@@ -139,6 +139,7 @@ const channels_map = {
     // off-topic
     starboard: tuple("800509841424252968", Discord.TextChannel),
     memes: tuple("526518219549442071", Discord.TextChannel),
+    food: tuple("1288515484513468436", Discord.TextChannel),
     serious_off_topic: tuple("921113903574958080", Discord.TextChannel),
     room_of_requirement: tuple("1082800064113672192", Discord.TextChannel),
     boosters_only: tuple("792183875241639977", Discord.TextChannel),
