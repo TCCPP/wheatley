@@ -55,6 +55,8 @@ export default class Autoreact extends BotComponent {
                 const reaction = message.guild!.emojis.cache.find(emoji => emoji.name === "what");
                 if (reaction !== undefined) {
                     await message.react(reaction);
+                } else {
+                    M.warn("Unable to find emoji what");
                 }
             }
             if (message.content.trim().match(/^ok\.?$/gi)) {
@@ -64,6 +66,8 @@ export default class Autoreact extends BotComponent {
                 const reaction = message.guild!.emojis.cache.find(emoji => emoji.name === "nog4g");
                 if (reaction !== undefined) {
                     await message.react(reaction);
+                } else {
+                    M.warn("Unable to find emoji nog4g");
                 }
             }
             if (message.channel.id == this.wheatley.channels.introductions.id) {
@@ -84,6 +88,13 @@ export default class Autoreact extends BotComponent {
                 await message.react("👍");
                 await message.react("👎");
                 await message.react("🤷");
+            } else if (message.channel.id == this.wheatley.channels.food.id) {
+                const reaction = message.guild!.emojis.cache.find(emoji => emoji.name === "chefskiss");
+                if (reaction !== undefined) {
+                    await message.react(reaction);
+                } else {
+                    M.warn("Unable to find emoji chefskiss");
+                }
             }
         } catch (e: any) {
             // reaction blocked
