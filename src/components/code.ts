@@ -26,10 +26,25 @@ export default class Code extends BotComponent {
         );
     }
 
-    async code(command: TextBasedCommand) {
-        const is_c = [this.wheatley.channels.c_help.id, this.wheatley.channels.c_help_text.id].includes(
-            this.wheatley.top_level_channel(await command.get_channel()),
+    static make_code_formatting_embeds(wheatley: Wheatley, channel: Discord.TextBasedChannel): Discord.APIEmbedField[] {
+        const is_c = [wheatley.channels.c_help.id, wheatley.channels.c_help_text.id].includes(
+            wheatley.top_level_channel(channel),
         );
+        return [
+            {
+                name: "Markup",
+                inline: true,
+                value: build_description(`\\\`\\\`\\\`${is_c ? "c" : "cpp"}`, `int main() {}`, `\\\`\\\`\\\``),
+            },
+            {
+                name: "Result",
+                inline: true,
+                value: build_description(`\`\`\`${is_c ? "c" : "cpp"}`, `int main() {}`, `\`\`\``),
+            },
+        ];
+    }
+
+    async code(command: TextBasedCommand) {
         if (!command.is_slash()) {
             // text, check for common monke errors
             const message = command.get_message_object();
@@ -56,22 +71,7 @@ export default class Code extends BotComponent {
                 new Discord.EmbedBuilder()
                     .setColor(colors.wheatley)
                     .setTitle("How to Format Code on Discord")
-                    .addFields(
-                        {
-                            name: "Markup",
-                            inline: true,
-                            value: build_description(
-                                `\\\`\\\`\\\`${is_c ? "c" : "cpp"}`,
-                                `int main() {}`,
-                                `\\\`\\\`\\\``,
-                            ),
-                        },
-                        {
-                            name: "Result",
-                            inline: true,
-                            value: build_description(`\`\`\`${is_c ? "c" : "cpp"}`, `int main() {}`, `\`\`\``),
-                        },
-                    )
+                    .addFields(...Code.make_code_formatting_embeds(this.wheatley, await command.get_channel()))
                     .setFooter({
                         text: "Note: Back-tick (`) not quotes (')",
                     }),
