@@ -58,7 +58,7 @@ export default class Shortcuts extends BotComponent {
 
     async initgif(command: TextBasedCommand) {
         await command.reply({
-            files: ["http://mikelui.io/img/c++_init_forest.gif"],
+            files: ["https://mikelui.io/img/c++_init_forest.gif"],
         });
     }
 }
