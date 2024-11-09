@@ -41,9 +41,6 @@ export function time_to_human_core(diff: number, seconds_with_higher_precision =
 }
 
 export function time_to_human(diff: number, levels?: number): string {
-    if (diff == Infinity) {
-        return "permanent";
-    }
     return time_to_human_core(diff).slice(0, levels).join(" ");
 }
 
