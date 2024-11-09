@@ -56,7 +56,7 @@ export default class Autoreact extends BotComponent {
                 if (reaction !== undefined) {
                     await message.react(reaction);
                 } else {
-                    M.warn("Unable to find emoji what");
+                    this.wheatley.ignorable_error("Unable to find emoji what");
                 }
             }
             if (message.content.trim().match(/^ok\.?$/gi)) {
@@ -67,7 +67,7 @@ export default class Autoreact extends BotComponent {
                 if (reaction !== undefined) {
                     await message.react(reaction);
                 } else {
-                    M.warn("Unable to find emoji nog4g");
+                    this.wheatley.ignorable_error("Unable to find emoji nog4g");
                 }
             }
             if (message.channel.id == this.wheatley.channels.introductions.id) {
@@ -93,7 +93,7 @@ export default class Autoreact extends BotComponent {
                 if (reaction !== undefined) {
                     await message.react(reaction);
                 } else {
-                    M.warn("Unable to find emoji chefskiss");
+                    this.wheatley.ignorable_error("Unable to find emoji chefskiss");
                 }
             }
         } catch (e: any) {
