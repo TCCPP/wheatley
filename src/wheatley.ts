@@ -239,7 +239,6 @@ export const root_ids = new Set([
 export const root_mod_ids = [
     "199943082441965577", // zelis
     "230282234085638155", // cas
-    "310536456647081985", // lumi
     "719255892813545502", // sampersand
     "89441674844995584", // styx
     "110756651694297088", // vincent
@@ -249,6 +248,7 @@ export const root_mod_ids = [
     "512649489300062228", // quicknir
     "446584068746772480", // yinsei
     "213759964789866496", // levi
+    "162964325823283200", // eisen
 ];
 
 export const root_mod_ids_set = new Set(root_mod_ids);
