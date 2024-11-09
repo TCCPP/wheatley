@@ -16,7 +16,7 @@ import { SleepList } from "../../utils/containers.js";
 import { Mutex } from "../../utils/containers.js";
 import { BotComponent } from "../../bot-component.js";
 import { Wheatley } from "../../wheatley.js";
-import { colors, HOUR } from "../../common.js";
+import { colors, DAY, HOUR, MINUTE, MONTH, SECOND, WEEK, YEAR } from "../../common.js";
 import Modlogs from "./modlogs.js";
 import { TextBasedCommand } from "../../command-abstractions/text-based-command.js";
 import {
@@ -63,50 +63,44 @@ export const joke_responses = [
 ];
 
 function millis_of_time_unit(u: string) {
-    let factor = 1;
     switch (u) {
         case "y":
         case "year":
         case "years":
-            factor *= 365; // 365 days, fallthrough
+            return YEAR;
         case "d":
         case "day":
         case "days":
-            factor *= 24; // 24 hours, fallthrough
+            return DAY;
         case "h":
         case "hr":
         case "hour":
         case "hours":
-            factor *= 60; // 60 minutes, fallthrough
+            return HOUR;
         case "m":
         case "min":
         case "mins":
         case "minute":
         case "minutes":
-            factor *= 60; // 60 seconds, fallthrough
+            return MINUTE;
         case "s":
         case "sec":
         case "secs":
         case "second":
         case "seconds":
-            factor *= 1000; // 1000 ms
-            break;
-        // Weeks and months can't be folded into the above as nicely
+            return SECOND;
         case "w":
         case "week":
         case "weeks":
-            factor *= 7 * millis_of_time_unit("d")!;
-            break;
+            return WEEK;
         case "M":
         case "mo":
         case "month":
         case "months":
-            factor *= 30 * millis_of_time_unit("d")!;
-            break;
+            return MONTH;
         default:
             return null;
     }
-    return factor;
 }
 
 // Returns the corresponding duration in milliseconds,
