@@ -6,7 +6,7 @@ import { strict as assert } from "assert";
 import { unwrap } from "../../utils/misc.js";
 import { M } from "../../utils/debugging-and-logging.js";
 import { Wheatley } from "../../wheatley.js";
-import { ModerationComponent, duration_regex, parse_duration } from "./moderation-common.js";
+import { ModerationComponent, ParseError, duration_regex, parse_nullable_duration } from "./moderation-common.js";
 import { EarlyReplyMode, TextBasedCommandBuilder } from "../../command-abstractions/text-based-command-builder.js";
 import { TextBasedCommand } from "../../command-abstractions/text-based-command.js";
 import { DAY } from "../../common.js";
@@ -51,15 +51,24 @@ export default class Timeout extends ModerationComponent {
                             async (
                                 command: TextBasedCommand,
                                 user: Discord.User,
-                                duration: string | null,
+                                duration_string: string | null,
                                 reason: string | null,
                             ) => {
-                                const duration_ms = parse_duration(duration);
-                                if (duration_ms == null || duration_ms > 28 * DAY) {
+                                let duration;
+                                try {
+                                    duration = parse_nullable_duration(duration_string);
+                                } catch (e) {
+                                    if (e instanceof ParseError) {
+                                        await this.reply_with_error(command, e.message);
+                                        return;
+                                    }
+                                    throw e;
+                                }
+                                if (duration == null || duration > 28 * DAY) {
                                     await this.reply_with_error(command, "Maximum allowable duration is 28 days");
                                     return;
                                 }
-                                return await this.moderation_issue_handler(command, user, duration, reason, {
+                                return await this.moderation_issue_handler(command, user, duration_string, reason, {
                                     type: this.type,
                                 });
                             },

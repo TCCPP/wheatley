@@ -2,9 +2,11 @@ import { strict as assert } from "assert";
 import { M } from "./utils/debugging-and-logging.js";
 
 // Duration constants (all ms)
-export const MINUTE = 1000 * 60;
+export const SECOND = 1000;
+export const MINUTE = 60 * SECOND;
 export const HOUR = 60 * MINUTE;
 export const DAY = 24 * HOUR;
+export const WEEK = 7 * DAY;
 export const MONTH = 30 * DAY;
 export const YEAR = 365 * DAY;
 
