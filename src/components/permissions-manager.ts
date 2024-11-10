@@ -27,7 +27,7 @@ type channel_permission_entry = {
 
 export default class PermissionManager extends BotComponent {
     static override get is_freestanding() {
-        return true;
+        return false;
     }
 
     category_permissions: Record<string, category_permission_entry> = {};
