@@ -632,16 +632,6 @@ export abstract class ModerationComponent extends BotComponent {
                     await this.reply_with_error(command, `${user.displayName} is already ${this.past_participle}`);
                     continue;
                 }
-                let duration;
-                try {
-                    duration = parse_nullable_duration(duration_string);
-                } catch (e) {
-                    if (e instanceof ParseError) {
-                        await this.reply_with_error(command, e.message);
-                        return;
-                    }
-                    throw e;
-                }
                 const moderation: moderation_entry = {
                     ...basic_moderation_info,
                     case_number: -1,
@@ -651,7 +641,7 @@ export abstract class ModerationComponent extends BotComponent {
                     moderator_name: (await command.get_member()).displayName,
                     reason,
                     issued_at: Date.now(),
-                    duration,
+                    duration: parse_nullable_duration(duration_string),
                     active: !this.is_once_off,
                     removed: null,
                     expunged: null,
@@ -668,6 +658,10 @@ export abstract class ModerationComponent extends BotComponent {
                 ],
             });
         } catch (e) {
+            if (e instanceof ParseError) {
+                await this.reply_with_error(command, e.message);
+                return;
+            }
             await this.reply_with_error(command, `Error issuing multi-${this.type}`);
             this.wheatley.critical_error(e);
         }
