@@ -12,6 +12,7 @@ import { BotComponent } from "../bot-component.js";
 import { Wheatley } from "../wheatley.js";
 import { EarlyReplyMode, TextBasedCommandBuilder } from "../command-abstractions/text-based-command-builder.js";
 import { TextBasedCommand } from "../command-abstractions/text-based-command.js";
+import { index_of_first_unescaped } from "../utils/strings.js";
 
 export const wiki_dir = "wiki/articles";
 
@@ -46,7 +47,6 @@ enum parse_state {
 
 const image_regex = /!\[[^\]]*]\(([^)]*)\)/;
 const reference_definition_regex = /\s*\[([^\]]*)]: (.+)/;
-const reference_link_regex = /\[([^\]]*)]\[([^\]]*)]/g;
 
 class ArticleParser {
     private readonly aliases = new Set<string>();
@@ -217,7 +217,7 @@ class ArticleParser {
 
     /**
      * Substitutes placeholders such as `<br>` or reference-style links in the
-     * string, but only placeholders outside inline code.
+     * string, but only outside inline code.
      * @param line the line, possibly containing backticks for inline code
      */
     private substitute_placeholders(line: string): string {
@@ -226,26 +226,124 @@ class ArticleParser {
         }
         let result = "";
         let piece = "";
-        // NOTE: This code makes the assumption that inline code never spans more than one line.
-        //       Discord allows that, but our articles never use it, and it simplifies parsing.
-        let in_inline_code = false;
-        let prev = "";
-        for (const c of line) {
-            if (c === "`") {
-                if (in_inline_code) {
-                    result += piece + c;
-                    piece = "";
+        let after_escape = false;
+        for (let i = 0; i < line.length; i++) {
+            const c = line[i];
+            if (after_escape) {
+                // Re-inserting the backslash may seem pointless, but remember that we are passing
+                // this Markdown through to Discord, which needs the same escapes as we do.
+                // We still need to be escape-aware so that we know where inline code begins/ends.
+                piece += "\\";
+                piece += c;
+                after_escape = false;
+            } else if (c === "\\") {
+                after_escape = true;
+            } else if (c === "`") {
+                result += this.substitute_placeholders_no_code(piece);
+                const end_of_inline_code = index_of_first_unescaped(line, "`", i + 1);
+                if (end_of_inline_code === null) {
+                    return result + line.substring(i);
+                }
+                result += line.substring(i, end_of_inline_code + 1);
+                i = end_of_inline_code;
+                piece = "";
+            } else if (c === "[") {
+                const masked_link = this.substitute_placeholders_in_link_mask(line, i);
+                if (masked_link.consumed_length === 0) {
+                    piece += c;
                 } else {
                     result += this.substitute_placeholders_no_code(piece);
-                    piece = c;
+                    result += masked_link.result;
+                    piece = "";
+                    // -1 because is already incremented unconditionall each iteration
+                    i += masked_link.consumed_length - 1;
                 }
-                in_inline_code = prev !== "\\" ? !in_inline_code : in_inline_code;
             } else {
                 piece += c;
             }
-            prev = c;
         }
-        return result + (in_inline_code ? piece : this.substitute_placeholders_no_code(piece));
+        return result + this.substitute_placeholders_no_code(piece);
+    }
+
+    /**
+     * Substitutes placeholders in what could be a link mask, such as `[mask][ref]`.
+     * Note that the mask can contain inline code.
+     * If the string turns out not to be a link mask (e.g. `[bla.`), substitution takes place
+     * as usual.
+     * @param line the remainder of the line, where the first character
+     * @param start the start index on the line
+     * shall be `[`
+     * @return An object containing
+     * - the `result` string (may be empty string) of the substitution, and
+     * - the `consumed_length` within the original string (may be zero).
+     */
+    private substitute_placeholders_in_link_mask(line: string, start: number) {
+        assert(line[start] === "[");
+
+        let after_escape = false;
+        let square_brackets_level = 0;
+
+        for (let i = start; i < line.length; i++) {
+            if (after_escape) {
+                after_escape = false;
+            } else if (line[i] === "\\") {
+                after_escape = true;
+            } else if (line[i] === "`") {
+                const end_of_inline_code = index_of_first_unescaped(line, "`", i + 1);
+                if (end_of_inline_code === null) {
+                    // Unterminated masked link with inline code, such as [`abc
+                    return { result: "", consumed_length: 0 };
+                }
+                i = end_of_inline_code;
+            } else if (line[i] == "[") {
+                square_brackets_level++;
+            } else if (line[i] === "]") {
+                assert(square_brackets_level > 0);
+                if (--square_brackets_level > 0) {
+                    continue;
+                }
+                // Links of the form [mask](url).
+                // Discord supports these natively, so no processing is required.
+                if (line[i + 1] === "(") {
+                    const end = index_of_first_unescaped(line, ")", i + 1);
+                    assert(end !== null, "Masked link with unterminated URL found");
+                    return {
+                        result: line.substring(start, end + 1),
+                        consumed_length: end + 1 - start,
+                    };
+                }
+
+                const mask = line.substring(start, i + 1);
+
+                // Links of the form [mask][ref], transformed into [mask](url).
+                if (line[i + 1] === "[") {
+                    const end = index_of_first_unescaped(line, "]", i + 2);
+                    // We could technically allow this and just render it as [mask][,
+                    // or try to interpret it like [mask][mask][.
+                    // However, such links are almost certainly unintentional, so let's error.
+                    // The same reasoning applies to [mask]( below.
+                    assert(end !== null, "Masked link with unterminated reference found");
+                    const ref = line.substring(i + 2, end);
+                    return {
+                        result: `${mask}(${this.get_referenced_link(ref)})`,
+                        consumed_length: end + 1 - start,
+                    };
+                }
+
+                // Links of the form [mask], equivalent to [mask][mask].
+                const ref = line.substring(start + 1, i);
+                return {
+                    result: `${mask}(${this.get_referenced_link(ref)})`,
+                    consumed_length: i + 1 - start,
+                };
+            }
+        }
+
+        // Reaching this point implies that we have an unterminated mask on the current line,
+        // i.e. an opening [ with no closing ].
+        // We could error, but this isn't fatal and may even be intentional if the user simply
+        // wants to put things into square brackets, spanning a few lines.
+        return { result: "", consumed_length: 0 };
     }
 
     private substitute_emojis(str: string) {
@@ -259,21 +357,24 @@ class ArticleParser {
     /**
      * Substitutes placeholders in a string with no backticks, i.e. no
      * possibility of having inline code.
+     * Masked links should also have been processed at an earlier stage.
      * @param str the string to substitute in
      */
     private substitute_placeholders_no_code(str: string): string {
         const freestanding_result = this.substitute_emojis(str)
             .replace(/<br>\n|<br\/>\n/, "\n")
-            .replaceAll(/<br>|<br\/>/g, "\n")
-            .replaceAll(reference_link_regex, (_, text: string, ref: string) => {
-                assert(this.reference_definitions.has(ref), "Unknown reference in reference-style link");
-                return `[${text}](${this.reference_definitions.get(ref)})`;
-            });
+            .replaceAll(/<br>|<br\/>/g, "\n");
         return this.wheatley.freestanding
             ? freestanding_result
             : freestanding_result
                   .replaceAll(/#resources(?![a-zA-Z0-9_])/g, `<#${this.wheatley.channels.resources.id}>`)
                   .replaceAll(/#rules(?![a-zA-Z0-9_])/g, `<#${this.wheatley.channels.rules.id}>`);
+    }
+
+    private get_referenced_link(ref: string): string {
+        const result = this.reference_definitions.get(ref);
+        assert(result !== undefined, `Unknown reference "${ref}" in reference-style link`);
+        return result;
     }
 
     private collect_references(lines: string[]) {
