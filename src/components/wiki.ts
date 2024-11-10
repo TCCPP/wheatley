@@ -216,8 +216,8 @@ class ArticleParser {
     }
 
     /**
-     * Substitutes placeholders such as <br> or reference-style links in the
-     * string, but only outside inline code.
+     * Substitutes placeholders such as `<br>` or reference-style links in the
+     * string, but only placeholders outside inline code.
      * @param line the line, possibly containing backticks for inline code
      */
     private substitute_placeholders(line: string): string {
@@ -226,6 +226,8 @@ class ArticleParser {
         }
         let result = "";
         let piece = "";
+        // NOTE: This code makes the assumption that inline code never spans more than one line.
+        //       Discord allows that, but our articles never use it, and it simplifies parsing.
         let in_inline_code = false;
         let prev = "";
         for (const c of line) {
