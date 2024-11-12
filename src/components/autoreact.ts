@@ -59,6 +59,16 @@ export default class Autoreact extends BotComponent {
                     this.wheatley.ignorable_error("Unable to find emoji what");
                 }
             }
+            if (message.content.trim().match(/^no\.?$/gi)) {
+                // Put an unmanaged non null assertion here because of the precondition requiring that guildId must be
+                // TCCPP (and thus always a valid guild)
+                const reaction = message.guild!.emojis.cache.find(emoji => emoji.name === "no");
+                if (reaction !== undefined) {
+                    await message.react(reaction);
+                } else {
+                    this.wheatley.ignorable_error("Unable to find emoji no");
+                }
+            }
             if (message.content.trim().match(/^ok\.?$/gi)) {
                 await message.react("🆗");
             }
