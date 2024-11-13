@@ -75,7 +75,7 @@ export default class Redirect extends BotComponent {
                 )}), ` +
                 `or <#${this.wheatley.channels.tooling.id}> if your question is about tooling, ` +
                 `or <#${this.wheatley.channels.algorithms_and_compsci.id}> if your question pertains more to theory, ` +
-                `or any other help channel more suited for your quesiton.`,
+                `or any other help channel more suited for your question.`,
             should_text_reply: false,
         });
     }
