@@ -65,6 +65,15 @@ export default class Redirect extends BotComponent {
     }
 
     async r(command: TextBasedCommand, user: Discord.User) {
+        if (
+            ['cpp_help', 'cpp_help_text', 'c_help', 'c_help_text', 'tooling', 'algorithms_and_compsci']
+                .map(name => this.wheatley.channels[name].id)
+                .includes(command.channel_id)
+        ) {
+            await command.reply(`Can't be used in a help channel`, true);
+            return;
+        }
+
         await command.reply({
             content:
                 `Hello <@${user.id}>, welcome to Together C & C++! This is not a help channel, please ask your ` +
