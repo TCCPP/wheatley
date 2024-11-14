@@ -66,11 +66,20 @@ export default class Redirect extends BotComponent {
 
     async r(command: TextBasedCommand, user: Discord.User) {
         if (
-            ['cpp_help', 'cpp_help_text', 'c_help', 'c_help_text', 'tooling', 'algorithms_and_compsci']
+            (
+                [
+                    "cpp_help",
+                    "cpp_help_text",
+                    "c_help",
+                    "c_help_text",
+                    "tooling",
+                    "algorithms_and_compsci",
+                ] as (keyof Wheatley["channels"])[]
+            )
                 .map(name => this.wheatley.channels[name].id)
                 .includes(command.channel_id)
         ) {
-            await command.reply(`Can't be used in a help channel`, true);
+            await command.reply("Can't be used in a help channel", true);
             return;
         }
 
