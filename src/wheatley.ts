@@ -694,10 +694,12 @@ export class Wheatley {
         this.log_limiter.log(channel, message);
     }
 
+    is_forum_help_channel(id: string) {
+        return [this.channels.cpp_help.id, this.channels.c_help.id].includes(id);
+    }
+
     is_forum_help_thread(thread: Discord.ThreadChannel) {
-        return (
-            thread.parentId != null && [this.channels.cpp_help.id, this.channels.c_help.id].includes(thread.parentId)
-        );
+        return thread.parentId != null && this.is_forum_help_channel(thread.parentId);
     }
 
     get_corresponding_text_help_channel(thread: Discord.ThreadChannel) {
