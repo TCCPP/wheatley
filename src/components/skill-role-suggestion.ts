@@ -46,6 +46,10 @@ export default class SkillRoleSuggestion extends BotComponent {
             });
             return;
         }
+        await interaction.reply({
+            ephemeral: true,
+            content: "Processing...",
+        });
         const target_member =
             interaction instanceof Discord.UserContextMenuCommandInteraction
                 ? interaction.targetMember
@@ -78,12 +82,11 @@ export default class SkillRoleSuggestion extends BotComponent {
             Math.max(suggestor_skill_index, 0) + 2, // can't suggest anything >= suggestor's skill + 1
         );
         if (skill_roles_available.length == 0) {
-            await interaction.reply({
+            await interaction.editReply({
                 content: `Unable to suggest skill roles for this user, they are either the max role or exceed yours`,
-                ephemeral: true,
             });
         } else {
-            await interaction.reply({
+            await interaction.editReply({
                 content: `Suggest a skill role for ${member.displayName}`,
                 components: [
                     new Discord.ActionRowBuilder<Discord.StringSelectMenuBuilder>().addComponents(
@@ -95,7 +98,6 @@ export default class SkillRoleSuggestion extends BotComponent {
                         ),
                     ),
                 ],
-                ephemeral: true,
             });
         }
     }
