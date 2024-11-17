@@ -9,10 +9,6 @@ import { parse_out } from "../utils/strings.js";
 import Code from "./code.js";
 
 export default class FormattingErrorDetection extends BotComponent {
-    static override get is_freestanding() {
-        return true;
-    }
-
     async has_likely_format_errors(message: Discord.Message) {
         const non_code_content = parse_out(message.content);
         const has_wrong_triple_tick =
