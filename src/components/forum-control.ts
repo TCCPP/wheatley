@@ -75,8 +75,8 @@ export default class ForumControl extends BotComponent {
         }
     }
 
-    async check_help_channel(command: TextBasedCommand) {
-        if (this.wheatley.is_forum_help_channel((await command.get_channel()).id)) {
+    async check_help_channel(command: TextBasedCommand, thread: Discord.ThreadChannel) {
+        if (this.wheatley.is_forum_help_thread(thread)) {
             return true;
         } else {
             await command.reply("Cannot use outside a help channel");
@@ -87,9 +87,6 @@ export default class ForumControl extends BotComponent {
     // TODO: more to dedupe
 
     async solve(command: TextBasedCommand) {
-        if (!(await this.check_help_channel(command))) {
-            return;
-        }
         if (await this.try_to_control_thread(command, command.name.startsWith("!solve") ? "solve" : "close")) {
             const channel = await command.get_channel();
             if (!channel.isThread() || !(channel.parent instanceof Discord.ForumChannel)) {
@@ -100,6 +97,9 @@ export default class ForumControl extends BotComponent {
                             .setDescription("Command must be used on a forum help thread."),
                     ],
                 });
+                return;
+            }
+            if (!(await this.check_help_channel(command, channel))) {
                 return;
             }
             const thread = channel;
@@ -142,9 +142,6 @@ export default class ForumControl extends BotComponent {
     }
 
     async unsolve(command: TextBasedCommand) {
-        if (!(await this.check_help_channel(command))) {
-            return;
-        }
         if (await this.try_to_control_thread(command, command.name.startsWith("!unsolve") ? "unsolve" : "open")) {
             const channel = await command.get_channel();
             if (!channel.isThread() || !(channel.parent instanceof Discord.ForumChannel)) {
@@ -155,6 +152,9 @@ export default class ForumControl extends BotComponent {
                             .setDescription("Command must be used on a forum help thread."),
                     ],
                 });
+                return;
+            }
+            if (!(await this.check_help_channel(command, channel))) {
                 return;
             }
             const thread = channel;
