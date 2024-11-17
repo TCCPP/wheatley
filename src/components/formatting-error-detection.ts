@@ -3,12 +3,15 @@ import * as Discord from "discord.js";
 import { strict as assert } from "assert";
 
 import { M } from "../utils/debugging-and-logging.js";
-import { colors } from "../common.js";
+import { colors, MINUTE } from "../common.js";
 import { BotComponent } from "../bot-component.js";
 import { parse_out } from "../utils/strings.js";
 import Code from "./code.js";
+import { SelfClearingSet } from "../utils/containers.js";
 
 export default class FormattingErrorDetection extends BotComponent {
+    messaged = new SelfClearingSet<string>(10 * MINUTE);
+
     async has_likely_format_errors(message: Discord.Message) {
         const non_code_content = parse_out(message.content);
         const has_wrong_triple_tick =
@@ -21,7 +24,7 @@ export default class FormattingErrorDetection extends BotComponent {
     }
 
     override async on_message_create(message: Discord.Message) {
-        if (message.author.bot || message.channel.isDMBased()) {
+        if (message.author.bot || message.channel.isDMBased() || this.messaged.has(message.author.id)) {
             return;
         }
         if (await this.has_likely_format_errors(message)) {
@@ -35,6 +38,7 @@ export default class FormattingErrorDetection extends BotComponent {
                         .setDescription("Note: Make sure to use __**back-ticks**__ (`) and not quotes (')"),
                 ],
             });
+            this.messaged.insert(message.author.id);
         }
     }
 }
