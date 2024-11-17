@@ -20,6 +20,7 @@ export default class FormattingErrorDetection extends BotComponent {
             non_code_content.includes(`'''`) || non_code_content.includes(`"""`) || non_code_content.includes("```");
         const is_beginner_and_didnt_highlight =
             message.member &&
+            message.content.includes("```") &&
             !message.content.includes("```c") &&
             !this.wheatley.has_skill_roles_other_than_beginner(message.member);
         return has_wrong_triple_tick || is_beginner_and_didnt_highlight;
