@@ -7,10 +7,12 @@ import { colors, MINUTE } from "../common.js";
 import { BotComponent } from "../bot-component.js";
 import { parse_out } from "../utils/strings.js";
 import Code from "./code.js";
-import { SelfClearingSet } from "../utils/containers.js";
+import { SelfClearingMap, SelfClearingSet } from "../utils/containers.js";
 
 export default class FormattingErrorDetection extends BotComponent {
     messaged = new SelfClearingSet<string>(10 * MINUTE);
+    // trigger message -> reply
+    replies = new SelfClearingMap<string, Discord.Message>(10 * MINUTE);
 
     async has_likely_format_errors(message: Discord.Message) {
         const non_code_content = parse_out(message.content);
@@ -28,7 +30,7 @@ export default class FormattingErrorDetection extends BotComponent {
             return;
         }
         if (await this.has_likely_format_errors(message)) {
-            await message.channel.send({
+            const reply = await message.channel.send({
                 content: `<@${message.author.id}>`,
                 embeds: [
                     new Discord.EmbedBuilder()
@@ -39,6 +41,26 @@ export default class FormattingErrorDetection extends BotComponent {
                 ],
             });
             this.messaged.insert(message.author.id);
+            this.replies.set(message.id, reply);
+        }
+    }
+
+    override async on_message_update(
+        old_message: Discord.Message | Discord.PartialMessage,
+        new_message: Discord.Message | Discord.PartialMessage,
+    ) {
+        if (this.replies.has(new_message.id)) {
+            const message = !new_message.partial ? new_message : await new_message.fetch();
+            if (!(await this.has_likely_format_errors(message))) {
+                await this.replies.get(new_message.id)?.delete();
+                this.replies.remove(new_message.id);
+            }
+        }
+    }
+
+    override async on_message_delete(message: Discord.Message | Discord.PartialMessage) {
+        if (this.replies.has(message.id)) {
+            await this.replies.get(message.id)!.delete();
         }
     }
 }
