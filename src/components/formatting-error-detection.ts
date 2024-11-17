@@ -13,13 +13,22 @@ export default class FormattingErrorDetection extends BotComponent {
         return true;
     }
 
+    async has_likely_format_errors(message: Discord.Message) {
+        const non_code_content = parse_out(message.content);
+        const has_wrong_triple_tick =
+            non_code_content.includes(`'''`) || non_code_content.includes(`"""`) || non_code_content.includes("```");
+        const is_beginner_and_didnt_highlight =
+            message.member &&
+            !message.content.includes("```c") &&
+            !this.wheatley.has_skill_roles_other_than_beginner(message.member);
+        return has_wrong_triple_tick || is_beginner_and_didnt_highlight;
+    }
+
     override async on_message_create(message: Discord.Message) {
-        if (message.author.bot) {
+        if (message.author.bot || message.channel.isDMBased()) {
             return;
         }
-        const non_code_content = parse_out(message.content);
-        if (non_code_content.includes(`'''`) || non_code_content.includes(`"""`) || non_code_content.includes("```")) {
-            assert(!message.channel.isDMBased());
+        if (await this.has_likely_format_errors(message)) {
             await message.channel.send({
                 content: `<@${message.author.id}>`,
                 embeds: [
