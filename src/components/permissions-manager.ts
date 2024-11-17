@@ -143,6 +143,12 @@ export default class PermissionManager extends BotComponent {
                     Discord.PermissionsBitField.Flags.AddReactions,
                 ],
             },
+            [this.wheatley.roles.moderators.id]: {
+                allow: [
+                    Discord.PermissionsBitField.Flags.ManageThreads,
+                    Discord.PermissionsBitField.Flags.AddReactions,
+                ],
+            },
         });
         this.add_channel_overwrite(this.wheatley.channels.announcements, read_only_channel);
         this.add_channel_overwrite(this.wheatley.channels.resources, read_only_channel);
