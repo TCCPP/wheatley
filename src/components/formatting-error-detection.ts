@@ -5,7 +5,7 @@ import { strict as assert } from "assert";
 import { M } from "../utils/debugging-and-logging.js";
 import { colors, MINUTE } from "../common.js";
 import { BotComponent } from "../bot-component.js";
-import { parse_out } from "../utils/strings.js";
+import { build_description, parse_out } from "../utils/strings.js";
 import Code from "./code.js";
 import { SelfClearingMap, SelfClearingSet } from "../utils/containers.js";
 
@@ -38,7 +38,13 @@ export default class FormattingErrorDetection extends BotComponent {
                         .setColor(colors.wheatley)
                         .setTitle("It looks like you may have code formatting errors in your message")
                         .addFields(...Code.make_code_formatting_embeds(this.wheatley, message.channel))
-                        .setDescription("Note: Make sure to use __**back-ticks**__ (`) and not quotes (')"),
+                        .setDescription(
+                            build_description(
+                                "Note: Make sure to use __**back-ticks**__ (\\`) and not quotes (')",
+                                "Note: Make sure to specify a highlighting language, e.g. \\`cpp\\`, " +
+                                    "after the back-ticks",
+                            ),
+                        ),
                 ],
             });
             this.messaged.insert(message.author.id);
