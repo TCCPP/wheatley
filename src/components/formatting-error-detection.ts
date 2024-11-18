@@ -21,7 +21,7 @@ export default class FormattingErrorDetection extends BotComponent {
         const is_beginner_and_didnt_highlight =
             message.member &&
             message.content.includes("```") &&
-            !message.content.includes("```c") &&
+            !message.content.match(/```\w/gi) &&
             !this.wheatley.has_skill_roles_other_than_beginner(message.member);
         return has_wrong_triple_tick || is_beginner_and_didnt_highlight;
     }
