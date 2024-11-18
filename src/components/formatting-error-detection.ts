@@ -40,8 +40,8 @@ export default class FormattingErrorDetection extends BotComponent {
                         .addFields(...Code.make_code_formatting_embeds(this.wheatley, message.channel))
                         .setDescription(
                             build_description(
-                                "Note: Make sure to use __**back-ticks**__ (\\`) and not quotes (')",
-                                "Note: Make sure to specify a highlighting language, e.g. \\`cpp\\`, " +
+                                "**Note:** Make sure to use __**back-ticks**__ (\\`) and not quotes (')",
+                                "**Note:** Make sure to specify a **highlighting language**, e.g. \\`cpp\\`, " +
                                     "after the back-ticks",
                             ),
                         ),
@@ -52,6 +52,19 @@ export default class FormattingErrorDetection extends BotComponent {
         }
     }
 
+    async delete_reply(id: string) {
+        try {
+            await this.replies.get(id)?.delete();
+            this.replies.remove(id);
+        } catch (e) {
+            if (e instanceof Discord.DiscordAPIError && e.code == 10008) {
+                // response deleted
+            } else {
+                throw e;
+            }
+        }
+    }
+
     override async on_message_update(
         old_message: Discord.Message | Discord.PartialMessage,
         new_message: Discord.Message | Discord.PartialMessage,
@@ -59,15 +72,14 @@ export default class FormattingErrorDetection extends BotComponent {
         if (this.replies.has(new_message.id)) {
             const message = !new_message.partial ? new_message : await new_message.fetch();
             if (!(await this.has_likely_format_errors(message))) {
-                await this.replies.get(new_message.id)?.delete();
-                this.replies.remove(new_message.id);
+                await this.delete_reply(new_message.id);
             }
         }
     }
 
     override async on_message_delete(message: Discord.Message | Discord.PartialMessage) {
         if (this.replies.has(message.id)) {
-            await this.replies.get(message.id)!.delete();
+            await this.delete_reply(message.id);
         }
     }
 }
