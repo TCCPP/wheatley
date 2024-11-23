@@ -24,7 +24,7 @@ export class TextBasedCommand {
     public readonly name: string;
     public command_descriptor: BotTextBasedCommand<unknown[]>;
     private readonly wheatley: Wheatley;
-    private readonly reply_object: Discord.ChatInputCommandInteraction | Discord.Message;
+    private readonly reply_object: Discord.ChatInputCommandInteraction | Discord.Message; // TODO: Rename?
 
     public guild: Discord.Guild | null;
     public readonly guild_id: string | null;

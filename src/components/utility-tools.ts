@@ -69,6 +69,13 @@ export default class UtilityTools extends BotComponent {
                     }
                 }
                 await message.reply("Done");
+            } else if (message.content == "!xxx") {
+                const logs = await this.wheatley.TCCPP.fetchAuditLogs({
+                    limit: 10,
+                    type: Discord.AuditLogEvent.MessageDelete,
+                });
+                M.log(logs);
+                await message.reply("Done");
             }
         }
     }
