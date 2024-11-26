@@ -58,13 +58,13 @@ import { document_fragment, markdown_node } from "./markdown_nodes.js";
 //   foo
 
 // regexes based on discord/SimpleAST, which is Copyright [2018] [Discord] under the apache v2 license
-const BOLD_RE = new RegExp("^\\*\\*([\\s\\S]+?)\\*\\*(?!\\*)");
-const UNDERLINE_RE = new RegExp("^__([\\s\\S]+?)__(?!_)");
-const STRIKETHROUGH_RE = new RegExp("^~~([\\s\\S]+?)~~"); // new RegExp("^~~(?=\\S)([\\s\\S]*?\\S)~~");
-const SPOILER_RE = new RegExp("^\\|\\|([\\s\\S]+?)\\|\\|");
+const BOLD_RE = /^\*\*([\s\S]+?)\*\*(?!\*)/;
+const UNDERLINE_RE = /^__([\s\S]+?)__(?!_)/;
+const STRIKETHROUGH_RE = /^~~([\s\S]+?)~~/; // new RegExp("^~~(?=\\S)([\\s\\S]*?\\S)~~");
+const SPOILER_RE = /^\|\|([\s\S]+?)\|\|/;
 // const NEWLINE_RE = new RegExp("^(?:\\n *)*\\n");
-const TEXT_RE = new RegExp("^[\\s\\S]+?(?=[^0-9A-Za-z\\s\\u00c0-\\uffff]|\\n| {2,}\\n|\\w+:\\S|$)");
-const ESCAPE_RE = new RegExp("^\\\\([^0-9A-Za-z\\s])");
+const TEXT_RE = /^[\s\S]+?(?=[^0-9A-Za-z\s\u00c0-\uffff]|\n| {2,}\n|\w+:\S|$)/;
+const ESCAPE_RE = /^\\([^0-9A-Za-z\s])/;
 const ITALICS_RE = new RegExp(
     // only match _s surrounding words.
     "^\\b_" +
@@ -82,11 +82,12 @@ const ITALICS_RE = new RegExp(
         // followed by a non-space, non-* then *
         ")\\*(?!\\*)",
 );
-const CODE_BLOCK_RE = new RegExp("^```(?:([\\w+\\-.]+?)?(\\s*\\n))?([^\\n].*?)\\n*```", "s");
-const INLINE_CODE_RE = new RegExp("^(``?)(.*?)\\1", "s"); // new RegExp("^(``?)([^`]*)\\1", "s");
+const CODE_BLOCK_RE = /^```(?:([\w+\-.]+?)?(\s*\n))?([^\n].*?)\n*```/s;
+const INLINE_CODE_RE = /^(``?)(.*?)\1/s; // new RegExp("^(``?)([^`]*)\\1", "s");
 // eslint-disable-next-line max-len
-const BLOCKQUOTE_RE = new RegExp("^(?: *>>> (.+)| *>(?!>>) ([^\\n]+\\n?))", "s"); // new RegExp("^(?: *>>> ?(.+)| *>(?!>>) ?([^\\n]+\\n?))", "s");
-const SUBTEXT_RE = new RegExp("^-# (?!-#)\\s*([^\\n]+\\n?)");
+const BLOCKQUOTE_RE = /^(?: *>>> (.+)| *>(?!>>) ([^\n]+\n?))/s; // new RegExp("^(?: *>>> ?(.+)| *>(?!>>) ?([^\\n]+\\n?))", "s");
+const SUBTEXT_RE = /^-# (?!-#)\s*([^\n]+\n?)/;
+const HEADER_RE = /^(#{1,3}) (?!#)\s*([^\n]+\n?)/;
 
 // TODO: Headers
 // TODO: Lists
@@ -98,8 +99,6 @@ type match_result = { node: markdown_node; fragment_end: number };
 export class MarkdownParser {
     at_start_of_line = true;
     in_quote = false;
-
-    constructor() {}
 
     static parse(input: string) {
         return new MarkdownParser().parse_document(input);
@@ -242,6 +241,17 @@ export class MarkdownParser {
                     content: this.parse_document(subtext_match[1]),
                 },
                 fragment_end: subtext_match[0].length,
+            };
+        }
+        const header_match = substring.match(HEADER_RE);
+        if (header_match && this.at_start_of_line) {
+            return {
+                node: {
+                    type: "header",
+                    level: header_match[1].length,
+                    content: this.parse_document(header_match[2]),
+                },
+                fragment_end: header_match[0].length,
             };
         }
         const text_match = substring.match(TEXT_RE);

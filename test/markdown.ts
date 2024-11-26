@@ -2341,4 +2341,520 @@ describe("Markdown tests", () => {
             type: "doc",
         });
     });
+    it("should handle headers", () => {
+        expect.soft(MarkdownParser.parse("# foo bar")).to.deep.equal({
+            content: [
+                {
+                    content: {
+                        content: [
+                            {
+                                content: "foo bar",
+                                type: "plain",
+                            },
+                        ],
+                        type: "doc",
+                    },
+                    type: "header",
+                    level: 1,
+                },
+            ],
+            type: "doc",
+        });
+        expect.soft(MarkdownParser.parse("## foo bar")).to.deep.equal({
+            content: [
+                {
+                    content: {
+                        content: [
+                            {
+                                content: "foo bar",
+                                type: "plain",
+                            },
+                        ],
+                        type: "doc",
+                    },
+                    type: "header",
+                    level: 2,
+                },
+            ],
+            type: "doc",
+        });
+        expect.soft(MarkdownParser.parse("### foo bar")).to.deep.equal({
+            content: [
+                {
+                    content: {
+                        content: [
+                            {
+                                content: "foo bar",
+                                type: "plain",
+                            },
+                        ],
+                        type: "doc",
+                    },
+                    type: "header",
+                    level: 3,
+                },
+            ],
+            type: "doc",
+        });
+        expect.soft(MarkdownParser.parse("#### foo bar")).to.deep.equal({
+            content: [
+                {
+                    content: "#",
+                    type: "plain",
+                },
+                {
+                    content: "#",
+                    type: "plain",
+                },
+                {
+                    content: "#",
+                    type: "plain",
+                },
+                {
+                    content: "# foo bar",
+                    type: "plain",
+                },
+            ],
+            type: "doc",
+        });
+        expect.soft(MarkdownParser.parse("# foo\nbar")).to.deep.equal({
+            content: [
+                {
+                    content: {
+                        content: [
+                            {
+                                content: "foo",
+                                type: "plain",
+                            },
+                            {
+                                content: "\n",
+                                type: "plain",
+                            },
+                        ],
+                        type: "doc",
+                    },
+                    type: "header",
+                    level: 1,
+                },
+                {
+                    content: "bar",
+                    type: "plain",
+                },
+            ],
+            type: "doc",
+        });
+        expect.soft(MarkdownParser.parse("# foo\n# bar")).to.deep.equal({
+            content: [
+                {
+                    content: {
+                        content: [
+                            {
+                                content: "foo",
+                                type: "plain",
+                            },
+                            {
+                                content: "\n",
+                                type: "plain",
+                            },
+                        ],
+                        type: "doc",
+                    },
+                    type: "header",
+                    level: 1,
+                },
+                {
+                    content: {
+                        content: [
+                            {
+                                content: "bar",
+                                type: "plain",
+                            },
+                        ],
+                        type: "doc",
+                    },
+                    type: "header",
+                    level: 1,
+                },
+            ],
+            type: "doc",
+        });
+        expect.soft(MarkdownParser.parse("foo # bar")).to.deep.equal({
+            content: [
+                {
+                    content: "foo ",
+                    type: "plain",
+                },
+                {
+                    content: "# bar",
+                    type: "plain",
+                },
+            ],
+            type: "doc",
+        });
+        expect.soft(MarkdownParser.parse("#foo")).to.deep.equal({
+            content: [
+                {
+                    content: "#foo",
+                    type: "plain",
+                },
+            ],
+            type: "doc",
+        });
+        expect.soft(MarkdownParser.parse("#  foo")).to.deep.equal({
+            content: [
+                {
+                    content: {
+                        content: [
+                            {
+                                content: "foo",
+                                type: "plain",
+                            },
+                        ],
+                        type: "doc",
+                    },
+                    type: "header",
+                    level: 1,
+                },
+            ],
+            type: "doc",
+        });
+        expect.soft(MarkdownParser.parse("foo\n  # foo")).to.deep.equal({
+            content: [
+                {
+                    content: "foo",
+                    type: "plain",
+                },
+                {
+                    content: "\n  ", // TODO: Reconsider
+                    type: "plain",
+                },
+                {
+                    content: {
+                        content: [
+                            {
+                                content: "foo",
+                                type: "plain",
+                            },
+                        ],
+                        type: "doc",
+                    },
+                    type: "header",
+                    level: 1,
+                },
+            ],
+            type: "doc",
+        });
+        expect.soft(MarkdownParser.parse("foo\n# bar")).to.deep.equal({
+            content: [
+                {
+                    content: "foo",
+                    type: "plain",
+                },
+                {
+                    content: "\n",
+                    type: "plain",
+                },
+                {
+                    content: {
+                        content: [
+                            {
+                                content: "bar",
+                                type: "plain",
+                            },
+                        ],
+                        type: "doc",
+                    },
+                    type: "header",
+                    level: 1,
+                },
+            ],
+            type: "doc",
+        });
+        expect.soft(MarkdownParser.parse("#")).to.deep.equal({
+            content: [
+                {
+                    content: "#",
+                    type: "plain",
+                },
+            ],
+            type: "doc",
+        });
+        expect.soft(MarkdownParser.parse("# # foo")).to.deep.equal({
+            content: [
+                {
+                    content: "# ",
+                    type: "plain",
+                },
+                {
+                    content: "# foo",
+                    type: "plain",
+                },
+            ],
+            type: "doc",
+        });
+        expect.soft(MarkdownParser.parse("#  # foo")).to.deep.equal({
+            content: [
+                {
+                    content: {
+                        content: [
+                            {
+                                content: {
+                                    content: [
+                                        {
+                                            content: "foo",
+                                            type: "plain",
+                                        },
+                                    ],
+                                    type: "doc",
+                                },
+                                type: "header",
+                                level: 1,
+                            },
+                        ],
+                        type: "doc",
+                    },
+                    type: "header",
+                    level: 1,
+                },
+            ],
+            type: "doc",
+        });
+    });
+    it("should handle mixing headers and other crap", () => {
+        expect.soft(MarkdownParser.parse("*# foo*")).to.deep.equal({
+            content: [
+                {
+                    content: {
+                        content: [
+                            {
+                                content: {
+                                    content: [
+                                        {
+                                            content: "foo",
+                                            type: "plain",
+                                        },
+                                    ],
+                                    type: "doc",
+                                },
+                                type: "header",
+                                level: 1,
+                            },
+                        ],
+                        type: "doc",
+                    },
+                    formatter: "*",
+                    type: "format",
+                },
+            ],
+            type: "doc",
+        });
+        // TODO: FIXME
+        // expect.soft(MarkdownParser.parse("** # foo **")).to.deep.equal({
+        //     content: [
+        //         {
+        //             content: {
+        //                 content: [
+        //                     {
+        //                         content: " # foo ",
+        //                         type: "plain",
+        //                     },
+        //                 ],
+        //                 type: "doc",
+        //             },
+        //             formatter: "**",
+        //             type: "format",
+        //         },
+        //     ],
+        //     type: "doc",
+        // });
+        expect.soft(MarkdownParser.parse("# `foo\nbar`")).to.deep.equal({
+            content: [
+                {
+                    content: {
+                        content: [
+                            {
+                                content: "`foo",
+                                type: "plain",
+                            },
+                            {
+                                content: "\n",
+                                type: "plain",
+                            },
+                        ],
+                        type: "doc",
+                    },
+                    type: "header",
+                    level: 1,
+                },
+                {
+                    content: "bar",
+                    type: "plain",
+                },
+                {
+                    content: "`",
+                    type: "plain",
+                },
+            ],
+            type: "doc",
+        });
+        expect.soft(MarkdownParser.parse("# ```foo\nbar```")).to.deep.equal({
+            content: [
+                {
+                    content: {
+                        content: [
+                            {
+                                content: "`",
+                                type: "plain",
+                            },
+                            {
+                                content: "`",
+                                type: "plain",
+                            },
+                            {
+                                content: "`foo",
+                                type: "plain",
+                            },
+                            {
+                                content: "\n", // TODO: Get rid of the trailing \n here
+                                type: "plain",
+                            },
+                        ],
+                        type: "doc",
+                    },
+                    type: "header",
+                    level: 1,
+                },
+                {
+                    content: "bar",
+                    type: "plain",
+                },
+                {
+                    content: "`",
+                    type: "plain",
+                },
+                {
+                    content: "`",
+                    type: "plain",
+                },
+                {
+                    content: "`",
+                    type: "plain",
+                },
+            ],
+            type: "doc",
+        });
+        expect.soft(MarkdownParser.parse("*test\n#foo*")).to.deep.equal({
+            content: [
+                {
+                    content: {
+                        content: [
+                            {
+                                content: "test",
+                                type: "plain",
+                            },
+                            {
+                                content: "\n",
+                                type: "plain",
+                            },
+                            {
+                                content: "#foo",
+                                type: "plain",
+                            },
+                        ],
+                        type: "doc",
+                    },
+                    formatter: "*",
+                    type: "format",
+                },
+            ],
+            type: "doc",
+        });
+        expect.soft(MarkdownParser.parse("*test\n# foo*")).to.deep.equal({
+            content: [
+                {
+                    content: {
+                        content: [
+                            {
+                                content: "test",
+                                type: "plain",
+                            },
+                            {
+                                content: "\n",
+                                type: "plain",
+                            },
+                            {
+                                content: {
+                                    content: [
+                                        {
+                                            content: "foo",
+                                            type: "plain",
+                                        },
+                                    ],
+                                    type: "doc",
+                                },
+                                type: "header",
+                                level: 1,
+                            },
+                        ],
+                        type: "doc",
+                    },
+                    formatter: "*",
+                    type: "format",
+                },
+            ],
+            type: "doc",
+        });
+        expect.soft(MarkdownParser.parse("`test\n# foo`")).to.deep.equal({
+            content: [
+                {
+                    content: "test\n# foo",
+                    type: "inline code",
+                },
+            ],
+            type: "doc",
+        });
+        expect.soft(MarkdownParser.parse("**test\n# foo**bar")).to.deep.equal({
+            content: [
+                {
+                    content: {
+                        content: [
+                            {
+                                content: "test",
+                                type: "plain",
+                            },
+                            {
+                                content: "\n",
+                                type: "plain",
+                            },
+                            {
+                                content: {
+                                    content: [
+                                        {
+                                            content: "foo",
+                                            type: "plain",
+                                        },
+                                    ],
+                                    type: "doc",
+                                },
+                                type: "header",
+                                level: 1,
+                            },
+                        ],
+                        type: "doc",
+                    },
+                    formatter: "**",
+                    type: "format",
+                },
+                {
+                    content: "bar",
+                    type: "plain",
+                },
+            ],
+            type: "doc",
+        });
+    });
 });
+
+// ```test```> foo
+// `test
+// `> foo
