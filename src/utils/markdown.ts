@@ -1,5 +1,5 @@
 import { strict as assert } from "assert";
-import { document_fragment, markdown_node } from "./markdown_nodes.js";
+import { document_fragment, list, markdown_node } from "./markdown_nodes.js";
 
 // References:
 // https://support.discord.com/hc/en-us/articles/210298617-Markdown-Text-101-Chat-Formatting-Bold-Italic-Underline
@@ -87,13 +87,14 @@ const CODE_BLOCK_RE = /^```(?:([\w+\-.]+?)?(\s*\n))?([^\n].*?)\n*```/s;
 const INLINE_CODE_RE = /^(``?)(.*?)\1/s; // new RegExp("^(``?)([^`]*)\\1", "s");
 // eslint-disable-next-line max-len
 const BLOCKQUOTE_RE = /^(?: *>>> (.+)| *>(?!>>) ([^\n]+\n?))/s; // new RegExp("^(?: *>>> ?(.+)| *>(?!>>) ?([^\\n]+\\n?))", "s");
-const SUBTEXT_RE = /^-# (?!-#)\s*([^\n]+\n?)/;
-const HEADER_RE = /^(#{1,3}) (?!#)\s*([^\n]+\n?)/;
+const SUBTEXT_RE = /^-# (?!-#) *([^\n]+\n?)/;
+const HEADER_RE = /^(#{1,3}) (?!#) *([^\n]+\n?)/;
 // eslint-disable-next-line max-len
 // const LINK_RE = /^\[((?:\\.|[^\]\\])*)\]\((\s*https:\/\/.*?(?:\\.|[^)\\\n])*)\)(?!\]\((\s*https:\/\/.*?(?:\\.|[^)\\\n])*)\))/;
 const LINK_RE = /^\[((?:\\.|[^\]\\])*)\]\((\s*https:\/\/.*?(?:\\[^[\]]|[^)[\]\\\n])*)\)/;
+// const LIST_RE = /^( *)([+*-]|\d+\.) +([^\n]+\n?)/;
+const LIST_RE = /^( *)([+*-]|(\d+)\.) +([^\n]+(?:\n\1 {2}[^\n]+)*\n?)/;
 
-// TODO: Lists
 // TODO: Rework plain text handling
 
 type match_result = { node: markdown_node; fragment_end: number };
@@ -265,6 +266,27 @@ export class MarkdownParser {
                     content: this.parse_document(link_match[1]),
                 },
                 fragment_end: link_match[0].length,
+            };
+        }
+        const list_match = substring.match(LIST_RE);
+        if (list_match && this.at_start_of_line) {
+            const list_node: list = {
+                type: "list",
+                start_number: (list_match[3] as string | null) ? parseInt(list_match[3]) : null,
+                items: [this.parse_document(list_match[4])],
+            };
+            let fragment_end = list_match[0].length;
+            let remaining = substring.substring(fragment_end);
+            let list_match_remaining = remaining.match(LIST_RE);
+            while (list_match_remaining) {
+                list_node.items.push(this.parse_document(list_match_remaining[4]));
+                fragment_end += list_match_remaining[0].length;
+                remaining = remaining.substring(fragment_end);
+                list_match_remaining = remaining.match(LIST_RE);
+            }
+            return {
+                node: list_node,
+                fragment_end,
             };
         }
         const text_match = substring.match(TEXT_RE);

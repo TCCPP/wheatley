@@ -42,11 +42,10 @@ export type masked_link = {
     content: markdown_node;
 };
 
-export type list_node = {
-    type: "list node";
-    numbered: boolean;
-    content: markdown_node;
-    children: list_node | null;
+export type list = {
+    type: "list";
+    start_number: number | null;
+    items: markdown_node[];
 };
 
 export type blockquote = {
@@ -63,5 +62,5 @@ export type markdown_node =
     | header
     | subtext
     | masked_link
-    | list_node
+    | list
     | blockquote;

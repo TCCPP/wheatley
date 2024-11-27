@@ -3196,6 +3196,310 @@ describe("Markdown tests", () => {
         // TODO
         // expect.soft(MarkdownParser.parse("[foo[foo](https://google.com)](https://google.com)")).to.deep.equal(0);
     });
+    it("should handle lists", () => {
+        expect.soft(MarkdownParser.parse("- foo")).to.deep.equal({
+            content: [
+                {
+                    items: [
+                        {
+                            content: [
+                                {
+                                    content: "foo",
+                                    type: "plain",
+                                },
+                            ],
+                            type: "doc",
+                        },
+                    ],
+                    start_number: null,
+                    type: "list",
+                },
+            ],
+            type: "doc",
+        });
+        expect.soft(MarkdownParser.parse("-foo")).to.deep.equal({
+            content: [
+                {
+                    content: "-foo",
+                    type: "plain",
+                },
+            ],
+            type: "doc",
+        });
+        expect.soft(MarkdownParser.parse("foo - bar")).to.deep.equal({
+            content: [
+                {
+                    content: "foo ",
+                    type: "plain",
+                },
+                {
+                    content: "- bar",
+                    type: "plain",
+                },
+            ],
+            type: "doc",
+        });
+        expect.soft(MarkdownParser.parse("1. foo")).to.deep.equal({
+            content: [
+                {
+                    items: [
+                        {
+                            content: [
+                                {
+                                    content: "foo",
+                                    type: "plain",
+                                },
+                            ],
+                            type: "doc",
+                        },
+                    ],
+                    start_number: 1,
+                    type: "list",
+                },
+            ],
+            type: "doc",
+        });
+        expect.soft(MarkdownParser.parse("2. foo")).to.deep.equal({
+            content: [
+                {
+                    items: [
+                        {
+                            content: [
+                                {
+                                    content: "foo",
+                                    type: "plain",
+                                },
+                            ],
+                            type: "doc",
+                        },
+                    ],
+                    start_number: 2,
+                    type: "list",
+                },
+            ],
+            type: "doc",
+        });
+        expect.soft(MarkdownParser.parse("1. 2. 3. foo")).to.deep.equal({
+            content: [
+                {
+                    items: [
+                        {
+                            content: [
+                                {
+                                    items: [
+                                        {
+                                            content: [
+                                                {
+                                                    items: [
+                                                        {
+                                                            content: [
+                                                                {
+                                                                    content: "foo",
+                                                                    type: "plain",
+                                                                },
+                                                            ],
+                                                            type: "doc",
+                                                        },
+                                                    ],
+                                                    start_number: 3,
+                                                    type: "list",
+                                                },
+                                            ],
+                                            type: "doc",
+                                        },
+                                    ],
+                                    start_number: 2,
+                                    type: "list",
+                                },
+                            ],
+                            type: "doc",
+                        },
+                    ],
+                    start_number: 1,
+                    type: "list",
+                },
+            ],
+            type: "doc",
+        });
+        expect.soft(MarkdownParser.parse("- foo\n- bar")).to.deep.equal({
+            content: [
+                {
+                    items: [
+                        {
+                            content: [
+                                {
+                                    content: "foo",
+                                    type: "plain",
+                                },
+                                {
+                                    content: "\n",
+                                    type: "plain",
+                                },
+                            ],
+                            type: "doc",
+                        },
+                        {
+                            content: [
+                                {
+                                    content: "bar",
+                                    type: "plain",
+                                },
+                            ],
+                            type: "doc",
+                        },
+                    ],
+                    start_number: null,
+                    type: "list",
+                },
+            ],
+            type: "doc",
+        });
+        expect.soft(MarkdownParser.parse("- foo\n1. bar")).to.deep.equal({
+            content: [
+                {
+                    items: [
+                        {
+                            content: [
+                                {
+                                    content: "foo",
+                                    type: "plain",
+                                },
+                                {
+                                    content: "\n",
+                                    type: "plain",
+                                },
+                            ],
+                            type: "doc",
+                        },
+                        {
+                            content: [
+                                {
+                                    content: "bar",
+                                    type: "plain",
+                                },
+                            ],
+                            type: "doc",
+                        },
+                    ],
+                    start_number: null,
+                    type: "list",
+                },
+            ],
+            type: "doc",
+        });
+        expect.soft(MarkdownParser.parse("   -   foo")).to.deep.equal({
+            content: [
+                {
+                    items: [
+                        {
+                            content: [
+                                {
+                                    content: "foo",
+                                    type: "plain",
+                                },
+                            ],
+                            type: "doc",
+                        },
+                    ],
+                    start_number: null,
+                    type: "list",
+                },
+            ],
+            type: "doc",
+        });
+        expect.soft(MarkdownParser.parse("- - - - foo")).to.deep.equal({
+            content: [
+                {
+                    items: [
+                        {
+                            content: [
+                                {
+                                    items: [
+                                        {
+                                            content: [
+                                                {
+                                                    items: [
+                                                        {
+                                                            content: [
+                                                                {
+                                                                    items: [
+                                                                        {
+                                                                            content: [
+                                                                                {
+                                                                                    content: "foo",
+                                                                                    type: "plain",
+                                                                                },
+                                                                            ],
+                                                                            type: "doc",
+                                                                        },
+                                                                    ],
+                                                                    start_number: null,
+                                                                    type: "list",
+                                                                },
+                                                            ],
+                                                            type: "doc",
+                                                        },
+                                                    ],
+                                                    start_number: null,
+                                                    type: "list",
+                                                },
+                                            ],
+                                            type: "doc",
+                                        },
+                                    ],
+                                    start_number: null,
+                                    type: "list",
+                                },
+                            ],
+                            type: "doc",
+                        },
+                    ],
+                    start_number: null,
+                    type: "list",
+                },
+            ],
+            type: "doc",
+        });
+        expect.soft(MarkdownParser.parse("- foo\n  - bar")).to.deep.equal({
+            content: [
+                {
+                    items: [
+                        {
+                            content: [
+                                {
+                                    content: "foo",
+                                    type: "plain",
+                                },
+                                {
+                                    content: "\n  ",
+                                    type: "plain",
+                                },
+                                {
+                                    items: [
+                                        {
+                                            content: [
+                                                {
+                                                    content: "bar",
+                                                    type: "plain",
+                                                },
+                                            ],
+                                            type: "doc",
+                                        },
+                                    ],
+                                    start_number: null,
+                                    type: "list",
+                                },
+                            ],
+                            type: "doc",
+                        },
+                    ],
+                    start_number: null,
+                    type: "list",
+                },
+            ],
+            type: "doc",
+        });
+    });
 });
 
 // ```test```> foo
