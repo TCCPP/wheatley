@@ -35,12 +35,13 @@ import { document_fragment, markdown_node } from "./markdown_nodes.js";
 // Some other edge cases:
 // "# # foo" isn't a header, it only matches as text
 // "# > # foo" matches both #'s but "# > # > # > foo" doesn't match beyond the starting "# > #"
-// blockquotes appear to be the only thing that can't nest, so # > # > foo doesn't nest but anything else can, e.g.
-// this is valid up to 11 levels of list items:
+// blockquotes appear to be one of the only things that can't nest, so # > # > foo doesn't nest but anything else can,
+// e.g. this is valid up to 11 levels of list items:
 //  - -# - -# - -# - -# - -# - -# - -# - -# - -# - -# - -# - -# - -# - -# - -# - -# foo
 // and this is valid arbitrarily:
 // eslint-disable-next-line max-len
 // -# # -# # -# # -# # -# # -# # -# # -# # -# # -# # -# # -# # -# # -# # -# # -# # -# # -# # -# # -# # -# # -# # -# # -# # -# # -# # -# # -# # -# # -# # -# # -# # -# # -# # -# # -# # -# # -# # -# # -# # -# # -# # -# # -# # -# # -# # -# # -# # -# # -# # -# # -# # -# # -# # -# # -# # -# # -# # -# # -# # -# # -# # -# # -# # -# # -# # -# # -# # -# # -# # -# # -# # -# # -# # -# # -# # -# # -# # -# # -# # -# # -# # -# # -# # -# # -# # -# # -# # -# # -# # -# # foo
+// Masked links also appear to prevent nesting
 // ````foo```` renders as a code block with the content "`foo" and then a ` at the end of the code block
 // foo * a * bar doesn't do italics (foo * a *bar doesn't either, foo *a * bar does)
 // foo ** a ** bar does do bold, similar with all other formatters
@@ -88,10 +89,11 @@ const INLINE_CODE_RE = /^(``?)(.*?)\1/s; // new RegExp("^(``?)([^`]*)\\1", "s");
 const BLOCKQUOTE_RE = /^(?: *>>> (.+)| *>(?!>>) ([^\n]+\n?))/s; // new RegExp("^(?: *>>> ?(.+)| *>(?!>>) ?([^\\n]+\\n?))", "s");
 const SUBTEXT_RE = /^-# (?!-#)\s*([^\n]+\n?)/;
 const HEADER_RE = /^(#{1,3}) (?!#)\s*([^\n]+\n?)/;
+// eslint-disable-next-line max-len
+// const LINK_RE = /^\[((?:\\.|[^\]\\])*)\]\((\s*https:\/\/.*?(?:\\.|[^)\\\n])*)\)(?!\]\((\s*https:\/\/.*?(?:\\.|[^)\\\n])*)\))/;
+const LINK_RE = /^\[((?:\\.|[^\]\\])*)\]\((\s*https:\/\/.*?(?:\\[^[\]]|[^)[\]\\\n])*)\)/;
 
-// TODO: Headers
 // TODO: Lists
-// TODO: Masked links
 // TODO: Rework plain text handling
 
 type match_result = { node: markdown_node; fragment_end: number };
@@ -252,6 +254,17 @@ export class MarkdownParser {
                     content: this.parse_document(header_match[2]),
                 },
                 fragment_end: header_match[0].length,
+            };
+        }
+        const link_match = substring.match(LINK_RE);
+        if (link_match) {
+            return {
+                node: {
+                    type: "masked link",
+                    target: link_match[2],
+                    content: this.parse_document(link_match[1]),
+                },
+                fragment_end: link_match[0].length,
             };
         }
         const text_match = substring.match(TEXT_RE);

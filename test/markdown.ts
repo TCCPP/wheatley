@@ -2853,8 +2853,354 @@ describe("Markdown tests", () => {
             type: "doc",
         });
     });
+    it("should handle headers", () => {
+        expect.soft(MarkdownParser.parse("foo [ asfd ](asdf)")).to.deep.equal({
+            content: [
+                {
+                    content: "foo ",
+                    type: "plain",
+                },
+                {
+                    content: "[ asfd ",
+                    type: "plain",
+                },
+                {
+                    content: "]",
+                    type: "plain",
+                },
+                {
+                    content: "(asdf",
+                    type: "plain",
+                },
+                {
+                    content: ")",
+                    type: "plain",
+                },
+            ],
+            type: "doc",
+        });
+        expect.soft(MarkdownParser.parse("bar[foo](https://google.com)barz")).to.deep.equal({
+            content: [
+                {
+                    content: "bar",
+                    type: "plain",
+                },
+                {
+                    content: {
+                        content: [
+                            {
+                                content: "foo",
+                                type: "plain",
+                            },
+                        ],
+                        type: "doc",
+                    },
+                    target: "https://google.com",
+                    type: "masked link",
+                },
+                {
+                    content: "barz",
+                    type: "plain",
+                },
+            ],
+            type: "doc",
+        });
+        expect.soft(MarkdownParser.parse("bar[foo\\]bar](https://google.com/\\)bar)barz")).to.deep.equal({
+            content: [
+                {
+                    content: "bar",
+                    type: "plain",
+                },
+                {
+                    content: {
+                        content: [
+                            {
+                                content: "foo",
+                                type: "plain",
+                            },
+                            {
+                                content: "]",
+                                type: "plain",
+                            },
+                            {
+                                content: "bar",
+                                type: "plain",
+                            },
+                        ],
+                        type: "doc",
+                    },
+                    target: "https://google.com/\\)bar",
+                    type: "masked link",
+                },
+                {
+                    content: "barz",
+                    type: "plain",
+                },
+            ],
+            type: "doc",
+        });
+        expect.soft(MarkdownParser.parse("bar[ foobar ]( https://google.com/bar )barz")).to.deep.equal({
+            content: [
+                {
+                    content: "bar",
+                    type: "plain",
+                },
+                {
+                    content: {
+                        content: [
+                            {
+                                content: " foobar ",
+                                type: "plain",
+                            },
+                        ],
+                        type: "doc",
+                    },
+                    target: " https://google.com/bar ",
+                    type: "masked link",
+                },
+                {
+                    content: "barz",
+                    type: "plain",
+                },
+            ],
+            type: "doc",
+        });
+        expect.soft(MarkdownParser.parse("bar[foobar](ftp://google.com/bar)barz")).to.deep.equal({
+            content: [
+                {
+                    content: "bar",
+                    type: "plain",
+                },
+                {
+                    content: "[foobar",
+                    type: "plain",
+                },
+                {
+                    content: "]",
+                    type: "plain",
+                },
+                {
+                    content: "(",
+                    type: "plain",
+                },
+                {
+                    content: "f",
+                    type: "plain",
+                },
+                {
+                    content: "t",
+                    type: "plain",
+                },
+                {
+                    content: "p",
+                    type: "plain",
+                },
+                {
+                    content: ":",
+                    type: "plain",
+                },
+                {
+                    content: "/",
+                    type: "plain",
+                },
+                {
+                    content: "/google",
+                    type: "plain",
+                },
+                {
+                    content: ".com",
+                    type: "plain",
+                },
+                {
+                    content: "/bar",
+                    type: "plain",
+                },
+                {
+                    content: ")barz",
+                    type: "plain",
+                },
+            ],
+            type: "doc",
+        });
+        expect.soft(MarkdownParser.parse("[foo**bar**](https://google.com)")).to.deep.equal({
+            content: [
+                {
+                    content: {
+                        content: [
+                            {
+                                content: "foo",
+                                type: "plain",
+                            },
+                            {
+                                content: {
+                                    content: [
+                                        {
+                                            content: "bar",
+                                            type: "plain",
+                                        },
+                                    ],
+                                    type: "doc",
+                                },
+                                formatter: "**",
+                                type: "format",
+                            },
+                        ],
+                        type: "doc",
+                    },
+                    target: "https://google.com",
+                    type: "masked link",
+                },
+            ],
+            type: "doc",
+        });
+        expect.soft(MarkdownParser.parse("[foo](https://\ngoogle.com)")).to.deep.equal({
+            content: [
+                {
+                    content: "[foo",
+                    type: "plain",
+                },
+                {
+                    content: "]",
+                    type: "plain",
+                },
+                {
+                    content: "(",
+                    type: "plain",
+                },
+                {
+                    content: "h",
+                    type: "plain",
+                },
+                {
+                    content: "t",
+                    type: "plain",
+                },
+                {
+                    content: "t",
+                    type: "plain",
+                },
+                {
+                    content: "p",
+                    type: "plain",
+                },
+                {
+                    content: "s",
+                    type: "plain",
+                },
+                {
+                    content: ":",
+                    type: "plain",
+                },
+                {
+                    content: "/",
+                    type: "plain",
+                },
+                {
+                    content: "/",
+                    type: "plain",
+                },
+                {
+                    content: "\ngoogle",
+                    type: "plain",
+                },
+                {
+                    content: ".com",
+                    type: "plain",
+                },
+                {
+                    content: ")",
+                    type: "plain",
+                },
+            ],
+            type: "doc",
+        });
+        expect.soft(MarkdownParser.parse("[foo\nbar](https://google.com)")).to.deep.equal({
+            content: [
+                {
+                    content: {
+                        content: [
+                            {
+                                content: "foo",
+                                type: "plain",
+                            },
+                            {
+                                content: "\nbar",
+                                type: "plain",
+                            },
+                        ],
+                        type: "doc",
+                    },
+                    target: "https://google.com",
+                    type: "masked link",
+                },
+            ],
+            type: "doc",
+        });
+        expect.soft(MarkdownParser.parse("[foo] (https://google.com)")).to.deep.equal({
+            content: [
+                {
+                    content: "[foo",
+                    type: "plain",
+                },
+                {
+                    content: "] ",
+                    type: "plain",
+                },
+                {
+                    content: "(",
+                    type: "plain",
+                },
+                {
+                    content: "h",
+                    type: "plain",
+                },
+                {
+                    content: "t",
+                    type: "plain",
+                },
+                {
+                    content: "t",
+                    type: "plain",
+                },
+                {
+                    content: "p",
+                    type: "plain",
+                },
+                {
+                    content: "s",
+                    type: "plain",
+                },
+                {
+                    content: ":",
+                    type: "plain",
+                },
+                {
+                    content: "/",
+                    type: "plain",
+                },
+                {
+                    content: "/google",
+                    type: "plain",
+                },
+                {
+                    content: ".com",
+                    type: "plain",
+                },
+                {
+                    content: ")",
+                    type: "plain",
+                },
+            ],
+            type: "doc",
+        });
+        // TODO
+        // expect.soft(MarkdownParser.parse("[foo[foo](https://google.com)](https://google.com)")).to.deep.equal(0);
+    });
 });
 
 // ```test```> foo
 // `test
 // `> foo
+
+// __foo
+// # bar__ baz
