@@ -41,7 +41,9 @@ import { document_fragment, list, markdown_node } from "./markdown_nodes.js";
 // and this is valid arbitrarily:
 // eslint-disable-next-line max-len
 // -# # -# # -# # -# # -# # -# # -# # -# # -# # -# # -# # -# # -# # -# # -# # -# # -# # -# # -# # -# # -# # -# # -# # -# # -# # -# # -# # -# # -# # -# # -# # -# # -# # -# # -# # -# # -# # -# # -# # -# # -# # -# # -# # -# # -# # -# # -# # -# # -# # -# # -# # -# # -# # -# # -# # -# # -# # -# # -# # -# # -# # -# # -# # -# # -# # -# # -# # -# # -# # -# # -# # -# # -# # -# # -# # -# # -# # -# # -# # -# # -# # -# # -# # -# # -# # -# # -# # -# # -# # -# # -# # foo
-// Masked links also appear to prevent nesting
+// Masked links disallow "https://" in the masked text
+// [foo[foo](https://google.com)](https://google.com) is rendered as plain text
+// [foo[foo](google.com)](https://google.com) renders as the masked link "foo[foo](google.com)"
 // ````foo```` renders as a code block with the content "`foo" and then a ` at the end of the code block
 // foo * a * bar doesn't do italics (foo * a *bar doesn't either, foo *a * bar does)
 // foo ** a ** bar does do bold, similar with all other formatters
@@ -97,11 +99,278 @@ const LIST_RE = /^( *)([+*-]|(\d+)\.) +([^\n]+(?:\n\1 {2}[^\n]+)*\n?)/;
 
 // TODO: Rework plain text handling
 
-type match_result = { node: markdown_node; fragment_end: number };
+type parse_result = { node: markdown_node; fragment_end: number };
+type match_result = RegExpMatchArray;
+
+type parser_state = {
+    at_start_of_line: boolean;
+    in_quote: boolean;
+};
+
+abstract class Rule {
+    abstract match(remaining: string, parser: MarkdownParser): match_result | null;
+    abstract parse(match: match_result, parser: MarkdownParser, remaining: string): parse_result;
+}
+
+class EscapeRule extends Rule {
+    override match(remaining: string): match_result | null {
+        return remaining.match(ESCAPE_RE);
+    }
+
+    override parse(match: match_result, parser: MarkdownParser): parse_result {
+        parser.state.at_start_of_line = false;
+        return {
+            node: {
+                type: "plain",
+                content: match[1],
+            },
+            fragment_end: match[0].length,
+        };
+    }
+}
+
+class BoldRule extends Rule {
+    override match(remaining: string): match_result | null {
+        return remaining.match(BOLD_RE);
+    }
+
+    override parse(match: match_result, parser: MarkdownParser): parse_result {
+        return {
+            node: {
+                type: "format",
+                formatter: "**",
+                content: parser.parse_document(match[1]),
+            },
+            fragment_end: match[0].length,
+        };
+    }
+}
+
+class UnderlineRule extends Rule {
+    override match(remaining: string): match_result | null {
+        return remaining.match(UNDERLINE_RE);
+    }
+
+    override parse(match: match_result, parser: MarkdownParser): parse_result {
+        return {
+            node: {
+                type: "format",
+                formatter: "__",
+                content: parser.parse_document(match[1]),
+            },
+            fragment_end: match[0].length,
+        };
+    }
+}
+
+class ItalicsRule extends Rule {
+    override match(remaining: string): match_result | null {
+        return remaining.match(ITALICS_RE);
+    }
+
+    override parse(match: match_result, parser: MarkdownParser): parse_result {
+        return {
+            node: {
+                type: "format",
+                formatter: "*",
+                content: parser.parse_document((match[1] as string | undefined) ?? match[2]),
+            },
+            fragment_end: match[0].length,
+        };
+    }
+}
+
+class StrikethroughRule extends Rule {
+    override match(remaining: string): match_result | null {
+        return remaining.match(STRIKETHROUGH_RE);
+    }
+
+    override parse(match: match_result, parser: MarkdownParser): parse_result {
+        return {
+            node: {
+                type: "format",
+                formatter: "~~",
+                content: parser.parse_document(match[1]),
+            },
+            fragment_end: match[0].length,
+        };
+    }
+}
+
+class SpoilerRule extends Rule {
+    override match(remaining: string): match_result | null {
+        return remaining.match(SPOILER_RE);
+    }
+
+    override parse(match: match_result, parser: MarkdownParser): parse_result {
+        return {
+            node: {
+                type: "format",
+                formatter: "||",
+                content: parser.parse_document(match[1]),
+            },
+            fragment_end: match[0].length,
+        };
+    }
+}
+
+class CodeBlockRule extends Rule {
+    override match(remaining: string): match_result | null {
+        const match = remaining.match(CODE_BLOCK_RE);
+        if (match && /[^`]/.test(match[3])) {
+            return match;
+        } else {
+            return null;
+        }
+    }
+
+    override parse(match: match_result, parser: MarkdownParser): parse_result {
+        return {
+            node: {
+                type: "code",
+                language: (match[1] as string | undefined) ?? null,
+                content: match[3],
+            },
+            fragment_end: match[0].length,
+        };
+    }
+}
+
+class InlineCodeRule extends Rule {
+    override match(remaining: string): match_result | null {
+        const match = remaining.match(INLINE_CODE_RE);
+        if (match && /[^`]/.test(match[2])) {
+            return match;
+        } else {
+            return null;
+        }
+    }
+
+    override parse(match: match_result, parser: MarkdownParser): parse_result {
+        return {
+            node: {
+                type: "inline code",
+                content: match[2],
+            },
+            fragment_end: match[0].length,
+        };
+    }
+}
+
+class BlockquoteRule extends Rule {
+    override match(remaining: string, parser: MarkdownParser): match_result | null {
+        return parser.state.at_start_of_line && !parser.state.in_quote ? remaining.match(BLOCKQUOTE_RE) : null;
+    }
+
+    override parse(match: match_result, parser: MarkdownParser): parse_result {
+        parser.state.in_quote = true;
+        const content = parser.parse_document((match[1] as string | undefined) || match[2]);
+        parser.state.in_quote = false;
+        return {
+            node: {
+                type: "blockquote",
+                content,
+            },
+            fragment_end: match[0].length,
+        };
+    }
+}
+
+class SubtextRule extends Rule {
+    override match(remaining: string, parser: MarkdownParser): match_result | null {
+        return parser.state.at_start_of_line ? remaining.match(SUBTEXT_RE) : null;
+    }
+
+    override parse(match: match_result, parser: MarkdownParser): parse_result {
+        return {
+            node: {
+                type: "subtext",
+                content: parser.parse_document(match[1]),
+            },
+            fragment_end: match[0].length,
+        };
+    }
+}
+
+class HeaderRule extends Rule {
+    override match(remaining: string, parser: MarkdownParser): match_result | null {
+        return parser.state.at_start_of_line ? remaining.match(HEADER_RE) : null;
+    }
+
+    override parse(match: match_result, parser: MarkdownParser): parse_result {
+        return {
+            node: {
+                type: "header",
+                level: match[1].length,
+                content: parser.parse_document(match[2]),
+            },
+            fragment_end: match[0].length,
+        };
+    }
+}
+
+class LinkRule extends Rule {
+    override match(remaining: string, parser: MarkdownParser): match_result | null {
+        return remaining.match(LINK_RE);
+    }
+
+    override parse(match: match_result, parser: MarkdownParser): parse_result {
+        return {
+            node: {
+                type: "masked link",
+                target: match[2],
+                content: parser.parse_document(match[1]),
+            },
+            fragment_end: match[0].length,
+        };
+    }
+}
+
+class ListRule extends Rule {
+    override match(remaining: string, parser: MarkdownParser): match_result | null {
+        return parser.state.at_start_of_line ? remaining.match(LIST_RE) : null;
+    }
+
+    override parse(match: match_result, parser: MarkdownParser, remaining: string): parse_result {
+        const list_node: list = {
+            type: "list",
+            start_number: (match[3] as string | null) ? parseInt(match[3]) : null,
+            items: [parser.parse_document(match[4])],
+        };
+        let fragment_end = match[0].length;
+        let next_match;
+        while ((next_match = this.match(remaining.substring(fragment_end), parser))) {
+            list_node.items.push(parser.parse_document(next_match[4]));
+            fragment_end += next_match[0].length;
+        }
+        return {
+            node: list_node,
+            fragment_end,
+        };
+    }
+}
 
 export class MarkdownParser {
-    at_start_of_line = true;
-    in_quote = false;
+    public state: parser_state = {
+        at_start_of_line: true,
+        in_quote: false,
+    };
+
+    readonly rules = [
+        new EscapeRule(),
+        new BoldRule(),
+        new UnderlineRule(),
+        new ItalicsRule(),
+        new StrikethroughRule(),
+        new SpoilerRule(),
+        new CodeBlockRule(),
+        new InlineCodeRule(),
+        new BlockquoteRule(),
+        new SubtextRule(),
+        new HeaderRule(),
+        new LinkRule(),
+        new ListRule(),
+    ];
 
     static parse(input: string) {
         return new MarkdownParser().parse_document(input);
@@ -123,173 +392,22 @@ export class MarkdownParser {
 
     update_state(slice: string) {
         for (const c of slice) {
-            if (this.at_start_of_line && /\S/.test(c)) {
-                this.at_start_of_line = false;
-            } else if (!this.at_start_of_line && c === "\n") {
-                this.at_start_of_line = true;
+            if (this.state.at_start_of_line && /\S/.test(c)) {
+                this.state.at_start_of_line = false;
+            } else if (!this.state.at_start_of_line && c === "\n") {
+                this.state.at_start_of_line = true;
             }
         }
     }
 
-    parse(substring: string): match_result {
-        const escape_match = substring.match(ESCAPE_RE);
-        if (escape_match) {
-            this.at_start_of_line = false;
-            return {
-                node: {
-                    type: "plain",
-                    content: escape_match[1],
-                },
-                fragment_end: escape_match[0].length,
-            };
-        }
-        const bold_match = substring.match(BOLD_RE);
-        if (bold_match) {
-            return {
-                node: {
-                    type: "format",
-                    formatter: "**",
-                    content: this.parse_document(bold_match[1]),
-                },
-                fragment_end: bold_match[0].length,
-            };
-        }
-        const underline_match = substring.match(UNDERLINE_RE);
-        if (underline_match) {
-            return {
-                node: {
-                    type: "format",
-                    formatter: "__",
-                    content: this.parse_document(underline_match[1]),
-                },
-                fragment_end: underline_match[0].length,
-            };
-        }
-        const italics_match = substring.match(ITALICS_RE);
-        if (italics_match) {
-            return {
-                node: {
-                    type: "format",
-                    formatter: "*",
-                    content: this.parse_document((italics_match[1] as string | undefined) ?? italics_match[2]),
-                },
-                fragment_end: italics_match[0].length,
-            };
-        }
-        const strikethrough_match = substring.match(STRIKETHROUGH_RE);
-        if (strikethrough_match) {
-            return {
-                node: {
-                    type: "format",
-                    formatter: "~~",
-                    content: this.parse_document(strikethrough_match[1]),
-                },
-                fragment_end: strikethrough_match[0].length,
-            };
-        }
-        const spoiler_match = substring.match(SPOILER_RE);
-        if (spoiler_match) {
-            return {
-                node: {
-                    type: "format",
-                    formatter: "||",
-                    content: this.parse_document(spoiler_match[1]),
-                },
-                fragment_end: spoiler_match[0].length,
-            };
-        }
-        const code_block_match = substring.match(CODE_BLOCK_RE);
-        if (code_block_match) {
-            if (/[^`]/.test(code_block_match[3])) {
-                return {
-                    node: {
-                        type: "code",
-                        language: (code_block_match[1] as string | undefined) ?? null,
-                        content: code_block_match[3],
-                    },
-                    fragment_end: code_block_match[0].length,
-                };
+    parse(remaining: string): parse_result {
+        for (const rule of this.rules) {
+            const match = rule.match(remaining, this);
+            if (match) {
+                return rule.parse(match, this, remaining);
             }
         }
-        const inline_code_match = substring.match(INLINE_CODE_RE);
-        if (inline_code_match) {
-            if (/[^`]/.test(inline_code_match[2])) {
-                return {
-                    node: {
-                        type: "inline code",
-                        content: inline_code_match[2],
-                    },
-                    fragment_end: inline_code_match[0].length,
-                };
-            }
-        }
-        const blockquote_match = substring.match(BLOCKQUOTE_RE);
-        if (blockquote_match && this.at_start_of_line && !this.in_quote) {
-            this.in_quote = true;
-            const content = this.parse_document((blockquote_match[1] as string | undefined) || blockquote_match[2]);
-            this.in_quote = false;
-            return {
-                node: {
-                    type: "blockquote",
-                    content,
-                },
-                fragment_end: blockquote_match[0].length,
-            };
-        }
-        const subtext_match = substring.match(SUBTEXT_RE);
-        if (subtext_match && this.at_start_of_line) {
-            return {
-                node: {
-                    type: "subtext",
-                    content: this.parse_document(subtext_match[1]),
-                },
-                fragment_end: subtext_match[0].length,
-            };
-        }
-        const header_match = substring.match(HEADER_RE);
-        if (header_match && this.at_start_of_line) {
-            return {
-                node: {
-                    type: "header",
-                    level: header_match[1].length,
-                    content: this.parse_document(header_match[2]),
-                },
-                fragment_end: header_match[0].length,
-            };
-        }
-        const link_match = substring.match(LINK_RE);
-        if (link_match) {
-            return {
-                node: {
-                    type: "masked link",
-                    target: link_match[2],
-                    content: this.parse_document(link_match[1]),
-                },
-                fragment_end: link_match[0].length,
-            };
-        }
-        const list_match = substring.match(LIST_RE);
-        if (list_match && this.at_start_of_line) {
-            const list_node: list = {
-                type: "list",
-                start_number: (list_match[3] as string | null) ? parseInt(list_match[3]) : null,
-                items: [this.parse_document(list_match[4])],
-            };
-            let fragment_end = list_match[0].length;
-            let remaining = substring.substring(fragment_end);
-            let list_match_remaining = remaining.match(LIST_RE);
-            while (list_match_remaining) {
-                list_node.items.push(this.parse_document(list_match_remaining[4]));
-                fragment_end += list_match_remaining[0].length;
-                remaining = remaining.substring(fragment_end);
-                list_match_remaining = remaining.match(LIST_RE);
-            }
-            return {
-                node: list_node,
-                fragment_end,
-            };
-        }
-        const text_match = substring.match(TEXT_RE);
+        const text_match = remaining.match(TEXT_RE);
         if (text_match) {
             this.update_state(text_match[0]);
             return {
