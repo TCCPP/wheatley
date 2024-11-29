@@ -1,5 +1,6 @@
 import { strict as assert } from "assert";
 import { document_fragment, list, markdown_node } from "./markdown_nodes.js";
+import { unwrap } from "./misc.js";
 
 // References:
 // https://support.discord.com/hc/en-us/articles/210298617-Markdown-Text-101-Chat-Formatting-Bold-Italic-Underline
@@ -110,6 +111,7 @@ type parser_state = {
 abstract class Rule {
     abstract match(remaining: string, parser: MarkdownParser): match_result | null;
     abstract parse(match: match_result, parser: MarkdownParser, remaining: string): parse_result;
+    coalesce?(a: markdown_node, b: markdown_node): markdown_node | null;
 }
 
 class EscapeRule extends Rule {
@@ -365,6 +367,16 @@ class TextRule extends Rule {
             fragment_end: match[0].length,
         };
     }
+
+    override coalesce(a: markdown_node, b: markdown_node): markdown_node | null {
+        if (a.type !== "plain" || b.type !== "plain") {
+            return null;
+        }
+        return {
+            type: "plain",
+            content: a.content + b.content,
+        };
+    }
 }
 
 export class MarkdownParser {
@@ -400,6 +412,7 @@ export class MarkdownParser {
         while (cursor < input.length) {
             const { node, fragment_end } = this.parse(input.substring(cursor));
             parts.push(node);
+            this.try_coalesce_new_parts(parts);
             cursor += fragment_end;
         }
         return {
@@ -426,5 +439,19 @@ export class MarkdownParser {
             }
         }
         throw new Error(`No match when parsing ${remaining}`);
+    }
+
+    try_coalesce_new_parts(parts: markdown_node[]) {
+        if (parts.length < 2) {
+            return;
+        }
+        for (const rule of this.rules) {
+            if (rule.coalesce) {
+                const coalesced = rule.coalesce(unwrap(parts.at(-2)), unwrap(parts.at(-1)));
+                if (coalesced) {
+                    parts.splice(parts.length - 2, 2, coalesced);
+                }
+            }
+        }
     }
 }

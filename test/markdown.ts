@@ -431,15 +431,7 @@ describe("Markdown tests", () => {
         expect.soft(MarkdownParser.parse("foo * bar * baz")).to.deep.equal({
             content: [
                 {
-                    content: "foo ",
-                    type: "plain",
-                },
-                {
-                    content: "* bar ",
-                    type: "plain",
-                },
-                {
-                    content: "* baz",
+                    content: "foo * bar * baz",
                     type: "plain",
                 },
             ],
@@ -450,44 +442,17 @@ describe("Markdown tests", () => {
         expect.soft(MarkdownParser.parse("foo \\*bar\\*")).to.deep.equal({
             content: [
                 {
-                    content: "foo ",
-                    type: "plain",
-                },
-                {
-                    content: "*",
-                    type: "plain",
-                },
-                {
-                    content: "bar",
-                    type: "plain",
-                },
-                {
-                    content: "*",
+                    content: "foo *bar*",
                     type: "plain",
                 },
             ],
             type: "doc",
         });
         expect.soft(MarkdownParser.parse("foo \\**bar\\**")).to.deep.equal({
+            // TODO FIXME
             content: [
                 {
-                    content: "foo ",
-                    type: "plain",
-                },
-                {
-                    content: "*",
-                    type: "plain",
-                },
-                {
-                    content: "*bar",
-                    type: "plain",
-                },
-                {
-                    content: "*",
-                    type: "plain",
-                },
-                {
-                    content: "*",
+                    content: "foo **bar**",
                     type: "plain",
                 },
             ],
@@ -498,11 +463,7 @@ describe("Markdown tests", () => {
         expect.soft(MarkdownParser.parse("foo\nbar")).to.deep.equal({
             content: [
                 {
-                    content: "foo",
-                    type: "plain",
-                },
-                {
-                    content: "\nbar",
+                    content: "foo\nbar",
                     type: "plain",
                 },
             ],
@@ -511,15 +472,7 @@ describe("Markdown tests", () => {
         expect.soft(MarkdownParser.parse("foo\\\nbar")).to.deep.equal({
             content: [
                 {
-                    content: "foo",
-                    type: "plain",
-                },
-                {
-                    content: "\\",
-                    type: "plain",
-                },
-                {
-                    content: "\nbar",
+                    content: "foo\\\nbar",
                     type: "plain",
                 },
             ],
@@ -531,11 +484,7 @@ describe("Markdown tests", () => {
                     content: {
                         content: [
                             {
-                                content: "foo",
-                                type: "plain",
-                            },
-                            {
-                                content: "\nbar",
+                                content: "foo\nbar",
                                 type: "plain",
                             },
                         ],
@@ -620,11 +569,7 @@ describe("Markdown tests", () => {
                     content: {
                         content: [
                             {
-                                content: "foo",
-                                type: "plain",
-                            },
-                            {
-                                content: "*",
+                                content: "foo*",
                                 type: "plain",
                             },
                         ],
@@ -664,15 +609,7 @@ describe("Markdown tests", () => {
                     content: {
                         content: [
                             {
-                                content: "foo",
-                                type: "plain",
-                            },
-                            {
-                                content: "_",
-                                type: "plain",
-                            },
-                            {
-                                content: "_bar",
+                                content: "foo__bar",
                                 type: "plain",
                             },
                         ],
@@ -682,15 +619,7 @@ describe("Markdown tests", () => {
                     type: "format",
                 },
                 {
-                    content: "baz",
-                    type: "plain",
-                },
-                {
-                    content: "_",
-                    type: "plain",
-                },
-                {
-                    content: "_",
+                    content: "baz__",
                     type: "plain",
                 },
             ],
@@ -717,11 +646,7 @@ describe("Markdown tests", () => {
         expect.soft(MarkdownParser.parse("**")).to.deep.equal({
             content: [
                 {
-                    content: "*",
-                    type: "plain",
-                },
-                {
-                    content: "*",
+                    content: "**",
                     type: "plain",
                 },
             ],
@@ -730,15 +655,7 @@ describe("Markdown tests", () => {
         expect.soft(MarkdownParser.parse("***")).to.deep.equal({
             content: [
                 {
-                    content: "*",
-                    type: "plain",
-                },
-                {
-                    content: "*",
-                    type: "plain",
-                },
-                {
-                    content: "*",
+                    content: "***",
                     type: "plain",
                 },
             ],
@@ -750,11 +667,7 @@ describe("Markdown tests", () => {
                     content: {
                         content: [
                             {
-                                content: "*",
-                                type: "plain",
-                            },
-                            {
-                                content: "*",
+                                content: "**",
                                 type: "plain",
                             },
                         ],
@@ -791,11 +704,7 @@ describe("Markdown tests", () => {
                     content: {
                         content: [
                             {
-                                content: "*",
-                                type: "plain",
-                            },
-                            {
-                                content: "*",
+                                content: "**",
                                 type: "plain",
                             },
                         ],
@@ -814,15 +723,7 @@ describe("Markdown tests", () => {
                     content: {
                         content: [
                             {
-                                content: "*",
-                                type: "plain",
-                            },
-                            {
-                                content: "*",
-                                type: "plain",
-                            },
-                            {
-                                content: "*",
+                                content: "***",
                                 type: "plain",
                             },
                         ],
@@ -837,11 +738,7 @@ describe("Markdown tests", () => {
         expect.soft(MarkdownParser.parse("||")).to.deep.equal({
             content: [
                 {
-                    content: "|",
-                    type: "plain",
-                },
-                {
-                    content: "|",
+                    content: "||",
                     type: "plain",
                 },
             ],
@@ -850,15 +747,7 @@ describe("Markdown tests", () => {
         expect.soft(MarkdownParser.parse("|||")).to.deep.equal({
             content: [
                 {
-                    content: "|",
-                    type: "plain",
-                },
-                {
-                    content: "|",
-                    type: "plain",
-                },
-                {
-                    content: "|",
+                    content: "|||",
                     type: "plain",
                 },
             ],
@@ -867,19 +756,7 @@ describe("Markdown tests", () => {
         expect.soft(MarkdownParser.parse("||||")).to.deep.equal({
             content: [
                 {
-                    content: "|",
-                    type: "plain",
-                },
-                {
-                    content: "|",
-                    type: "plain",
-                },
-                {
-                    content: "|",
-                    type: "plain",
-                },
-                {
-                    content: "|",
+                    content: "||||",
                     type: "plain",
                 },
             ],
@@ -910,19 +787,7 @@ describe("Markdown tests", () => {
         expect.soft(MarkdownParser.parse("~~~~")).to.deep.equal({
             content: [
                 {
-                    content: "~",
-                    type: "plain",
-                },
-                {
-                    content: "~",
-                    type: "plain",
-                },
-                {
-                    content: "~",
-                    type: "plain",
-                },
-                {
-                    content: "~",
+                    content: "~~~~",
                     type: "plain",
                 },
             ],
@@ -1227,19 +1092,7 @@ describe("Markdown tests", () => {
                     content: {
                         content: [
                             {
-                                content: "foo",
-                                type: "plain",
-                            },
-                            {
-                                content: "`",
-                                type: "plain",
-                            },
-                            {
-                                content: "`",
-                                type: "plain",
-                            },
-                            {
-                                content: "`bar",
+                                content: "foo```bar",
                                 type: "plain",
                             },
                         ],
@@ -1249,19 +1102,7 @@ describe("Markdown tests", () => {
                     type: "format",
                 },
                 {
-                    content: "baz",
-                    type: "plain",
-                },
-                {
-                    content: "`",
-                    type: "plain",
-                },
-                {
-                    content: "`",
-                    type: "plain",
-                },
-                {
-                    content: "`",
+                    content: "baz```",
                     type: "plain",
                 },
             ],
@@ -1279,11 +1120,7 @@ describe("Markdown tests", () => {
                     type: "code",
                 },
                 {
-                    content: "biz",
-                    type: "plain",
-                },
-                {
-                    content: "*",
+                    content: "biz*",
                     type: "plain",
                 },
             ],
@@ -1303,11 +1140,7 @@ describe("Markdown tests", () => {
         expect.soft(MarkdownParser.parse("``")).to.deep.equal({
             content: [
                 {
-                    content: "`",
-                    type: "plain",
-                },
-                {
-                    content: "`",
+                    content: "``",
                     type: "plain",
                 },
             ],
@@ -1316,15 +1149,7 @@ describe("Markdown tests", () => {
         expect.soft(MarkdownParser.parse("```")).to.deep.equal({
             content: [
                 {
-                    content: "`",
-                    type: "plain",
-                },
-                {
-                    content: "`",
-                    type: "plain",
-                },
-                {
-                    content: "`",
+                    content: "```",
                     type: "plain",
                 },
             ],
@@ -1333,19 +1158,7 @@ describe("Markdown tests", () => {
         expect.soft(MarkdownParser.parse("````")).to.deep.equal({
             content: [
                 {
-                    content: "`",
-                    type: "plain",
-                },
-                {
-                    content: "`",
-                    type: "plain",
-                },
-                {
-                    content: "`",
-                    type: "plain",
-                },
-                {
-                    content: "`",
+                    content: "````",
                     type: "plain",
                 },
             ],
@@ -1354,23 +1167,7 @@ describe("Markdown tests", () => {
         expect.soft(MarkdownParser.parse("`````")).to.deep.equal({
             content: [
                 {
-                    content: "`",
-                    type: "plain",
-                },
-                {
-                    content: "`",
-                    type: "plain",
-                },
-                {
-                    content: "`",
-                    type: "plain",
-                },
-                {
-                    content: "`",
-                    type: "plain",
-                },
-                {
-                    content: "`",
+                    content: "`````",
                     type: "plain",
                 },
             ],
@@ -1379,27 +1176,7 @@ describe("Markdown tests", () => {
         expect.soft(MarkdownParser.parse("``````")).to.deep.equal({
             content: [
                 {
-                    content: "`",
-                    type: "plain",
-                },
-                {
-                    content: "`",
-                    type: "plain",
-                },
-                {
-                    content: "`",
-                    type: "plain",
-                },
-                {
-                    content: "`",
-                    type: "plain",
-                },
-                {
-                    content: "`",
-                    type: "plain",
-                },
-                {
-                    content: "`",
+                    content: "``````",
                     type: "plain",
                 },
             ],
@@ -1408,31 +1185,7 @@ describe("Markdown tests", () => {
         expect.soft(MarkdownParser.parse("```````")).to.deep.equal({
             content: [
                 {
-                    content: "`",
-                    type: "plain",
-                },
-                {
-                    content: "`",
-                    type: "plain",
-                },
-                {
-                    content: "`",
-                    type: "plain",
-                },
-                {
-                    content: "`",
-                    type: "plain",
-                },
-                {
-                    content: "`",
-                    type: "plain",
-                },
-                {
-                    content: "`",
-                    type: "plain",
-                },
-                {
-                    content: "`",
+                    content: "```````",
                     type: "plain",
                 },
             ],
@@ -1482,11 +1235,7 @@ describe("Markdown tests", () => {
                     content: {
                         content: [
                             {
-                                content: "foo",
-                                type: "plain",
-                            },
-                            {
-                                content: "\n",
+                                content: "foo\n",
                                 type: "plain",
                             },
                         ],
@@ -1507,11 +1256,7 @@ describe("Markdown tests", () => {
                     content: {
                         content: [
                             {
-                                content: "foo",
-                                type: "plain",
-                            },
-                            {
-                                content: "\n",
+                                content: "foo\n",
                                 type: "plain",
                             },
                         ],
@@ -1537,11 +1282,7 @@ describe("Markdown tests", () => {
         expect.soft(MarkdownParser.parse("foo > bar")).to.deep.equal({
             content: [
                 {
-                    content: "foo ",
-                    type: "plain",
-                },
-                {
-                    content: "> bar",
+                    content: "foo > bar",
                     type: "plain",
                 },
             ],
@@ -1576,11 +1317,7 @@ describe("Markdown tests", () => {
         expect.soft(MarkdownParser.parse("foo\n  > foo")).to.deep.equal({
             content: [
                 {
-                    content: "foo",
-                    type: "plain",
-                },
-                {
-                    content: "\n  ", // TODO: Reconsider
+                    content: "foo\n  ", // TODO: Reconsider
                     type: "plain",
                 },
                 {
@@ -1601,11 +1338,7 @@ describe("Markdown tests", () => {
         expect.soft(MarkdownParser.parse("foo\n> bar")).to.deep.equal({
             content: [
                 {
-                    content: "foo",
-                    type: "plain",
-                },
-                {
-                    content: "\n",
+                    content: "foo\n",
                     type: "plain",
                 },
                 {
@@ -1700,11 +1433,7 @@ describe("Markdown tests", () => {
                     content: {
                         content: [
                             {
-                                content: "`foo",
-                                type: "plain",
-                            },
-                            {
-                                content: "\n",
+                                content: "`foo\n",
                                 type: "plain",
                             },
                         ],
@@ -1713,11 +1442,7 @@ describe("Markdown tests", () => {
                     type: "blockquote",
                 },
                 {
-                    content: "bar",
-                    type: "plain",
-                },
-                {
-                    content: "`",
+                    content: "bar`",
                     type: "plain",
                 },
             ],
@@ -1729,19 +1454,7 @@ describe("Markdown tests", () => {
                     content: {
                         content: [
                             {
-                                content: "`",
-                                type: "plain",
-                            },
-                            {
-                                content: "`",
-                                type: "plain",
-                            },
-                            {
-                                content: "`foo",
-                                type: "plain",
-                            },
-                            {
-                                content: "\n", // TODO: Get rid of the trailing \n here
+                                content: "```foo\n", // TODO: Get rid of the trailing \n here
                                 type: "plain",
                             },
                         ],
@@ -1750,19 +1463,7 @@ describe("Markdown tests", () => {
                     type: "blockquote",
                 },
                 {
-                    content: "bar",
-                    type: "plain",
-                },
-                {
-                    content: "`",
-                    type: "plain",
-                },
-                {
-                    content: "`",
-                    type: "plain",
-                },
-                {
-                    content: "`",
+                    content: "bar```",
                     type: "plain",
                 },
             ],
@@ -1774,15 +1475,7 @@ describe("Markdown tests", () => {
                     content: {
                         content: [
                             {
-                                content: "test",
-                                type: "plain",
-                            },
-                            {
-                                content: "\n",
-                                type: "plain",
-                            },
-                            {
-                                content: ">foo",
+                                content: "test\n>foo",
                                 type: "plain",
                             },
                         ],
@@ -1800,11 +1493,7 @@ describe("Markdown tests", () => {
                     content: {
                         content: [
                             {
-                                content: "test",
-                                type: "plain",
-                            },
-                            {
-                                content: "\n",
+                                content: "test\n",
                                 type: "plain",
                             },
                             {
@@ -1843,11 +1532,7 @@ describe("Markdown tests", () => {
                     content: {
                         content: [
                             {
-                                content: "test",
-                                type: "plain",
-                            },
-                            {
-                                content: "\n",
+                                content: "test\n",
                                 type: "plain",
                             },
                             {
@@ -1900,11 +1585,7 @@ describe("Markdown tests", () => {
                     content: {
                         content: [
                             {
-                                content: "foo",
-                                type: "plain",
-                            },
-                            {
-                                content: "\n",
+                                content: "foo\n",
                                 type: "plain",
                             },
                         ],
@@ -1925,11 +1606,7 @@ describe("Markdown tests", () => {
                     content: {
                         content: [
                             {
-                                content: "foo",
-                                type: "plain",
-                            },
-                            {
-                                content: "\n",
+                                content: "foo\n",
                                 type: "plain",
                             },
                         ],
@@ -1955,15 +1632,7 @@ describe("Markdown tests", () => {
         expect.soft(MarkdownParser.parse("foo -# bar")).to.deep.equal({
             content: [
                 {
-                    content: "foo ",
-                    type: "plain",
-                },
-                {
-                    content: "-",
-                    type: "plain",
-                },
-                {
-                    content: "# bar",
+                    content: "foo -# bar",
                     type: "plain",
                 },
             ],
@@ -1972,11 +1641,7 @@ describe("Markdown tests", () => {
         expect.soft(MarkdownParser.parse("-#foo")).to.deep.equal({
             content: [
                 {
-                    content: "-",
-                    type: "plain",
-                },
-                {
-                    content: "#foo",
+                    content: "-#foo",
                     type: "plain",
                 },
             ],
@@ -2002,11 +1667,7 @@ describe("Markdown tests", () => {
         expect.soft(MarkdownParser.parse("foo\n  -# foo")).to.deep.equal({
             content: [
                 {
-                    content: "foo",
-                    type: "plain",
-                },
-                {
-                    content: "\n  ", // TODO: Reconsider
+                    content: "foo\n  ", // TODO: Reconsider
                     type: "plain",
                 },
                 {
@@ -2027,11 +1688,7 @@ describe("Markdown tests", () => {
         expect.soft(MarkdownParser.parse("foo\n-# bar")).to.deep.equal({
             content: [
                 {
-                    content: "foo",
-                    type: "plain",
-                },
-                {
-                    content: "\n",
+                    content: "foo\n",
                     type: "plain",
                 },
                 {
@@ -2052,11 +1709,7 @@ describe("Markdown tests", () => {
         expect.soft(MarkdownParser.parse("-#")).to.deep.equal({
             content: [
                 {
-                    content: "-",
-                    type: "plain",
-                },
-                {
-                    content: "#",
+                    content: "-#",
                     type: "plain",
                 },
             ],
@@ -2065,19 +1718,7 @@ describe("Markdown tests", () => {
         expect.soft(MarkdownParser.parse("-# -# foo")).to.deep.equal({
             content: [
                 {
-                    content: "-",
-                    type: "plain",
-                },
-                {
-                    content: "# ",
-                    type: "plain",
-                },
-                {
-                    content: "-",
-                    type: "plain",
-                },
-                {
-                    content: "# foo",
+                    content: "-# -# foo",
                     type: "plain",
                 },
             ],
@@ -2161,11 +1802,7 @@ describe("Markdown tests", () => {
                     content: {
                         content: [
                             {
-                                content: "`foo",
-                                type: "plain",
-                            },
-                            {
-                                content: "\n",
+                                content: "`foo\n",
                                 type: "plain",
                             },
                         ],
@@ -2174,11 +1811,7 @@ describe("Markdown tests", () => {
                     type: "subtext",
                 },
                 {
-                    content: "bar",
-                    type: "plain",
-                },
-                {
-                    content: "`",
+                    content: "bar`",
                     type: "plain",
                 },
             ],
@@ -2190,19 +1823,7 @@ describe("Markdown tests", () => {
                     content: {
                         content: [
                             {
-                                content: "`",
-                                type: "plain",
-                            },
-                            {
-                                content: "`",
-                                type: "plain",
-                            },
-                            {
-                                content: "`foo",
-                                type: "plain",
-                            },
-                            {
-                                content: "\n", // TODO: Get rid of the trailing \n here
+                                content: "```foo\n", // TODO: Get rid of the trailing \n here
                                 type: "plain",
                             },
                         ],
@@ -2211,19 +1832,7 @@ describe("Markdown tests", () => {
                     type: "subtext",
                 },
                 {
-                    content: "bar",
-                    type: "plain",
-                },
-                {
-                    content: "`",
-                    type: "plain",
-                },
-                {
-                    content: "`",
-                    type: "plain",
-                },
-                {
-                    content: "`",
+                    content: "bar```",
                     type: "plain",
                 },
             ],
@@ -2235,19 +1844,7 @@ describe("Markdown tests", () => {
                     content: {
                         content: [
                             {
-                                content: "test",
-                                type: "plain",
-                            },
-                            {
-                                content: "\n",
-                                type: "plain",
-                            },
-                            {
-                                content: "-",
-                                type: "plain",
-                            },
-                            {
-                                content: "#foo",
+                                content: "test\n-#foo",
                                 type: "plain",
                             },
                         ],
@@ -2265,11 +1862,7 @@ describe("Markdown tests", () => {
                     content: {
                         content: [
                             {
-                                content: "test",
-                                type: "plain",
-                            },
-                            {
-                                content: "\n",
+                                content: "test\n",
                                 type: "plain",
                             },
                             {
@@ -2308,11 +1901,7 @@ describe("Markdown tests", () => {
                     content: {
                         content: [
                             {
-                                content: "test",
-                                type: "plain",
-                            },
-                            {
-                                content: "\n",
+                                content: "test\n",
                                 type: "plain",
                             },
                             {
@@ -2399,19 +1988,7 @@ describe("Markdown tests", () => {
         expect.soft(MarkdownParser.parse("#### foo bar")).to.deep.equal({
             content: [
                 {
-                    content: "#",
-                    type: "plain",
-                },
-                {
-                    content: "#",
-                    type: "plain",
-                },
-                {
-                    content: "#",
-                    type: "plain",
-                },
-                {
-                    content: "# foo bar",
+                    content: "#### foo bar",
                     type: "plain",
                 },
             ],
@@ -2423,11 +2000,7 @@ describe("Markdown tests", () => {
                     content: {
                         content: [
                             {
-                                content: "foo",
-                                type: "plain",
-                            },
-                            {
-                                content: "\n",
+                                content: "foo\n",
                                 type: "plain",
                             },
                         ],
@@ -2449,11 +2022,7 @@ describe("Markdown tests", () => {
                     content: {
                         content: [
                             {
-                                content: "foo",
-                                type: "plain",
-                            },
-                            {
-                                content: "\n",
+                                content: "foo\n",
                                 type: "plain",
                             },
                         ],
@@ -2481,11 +2050,7 @@ describe("Markdown tests", () => {
         expect.soft(MarkdownParser.parse("foo # bar")).to.deep.equal({
             content: [
                 {
-                    content: "foo ",
-                    type: "plain",
-                },
-                {
-                    content: "# bar",
+                    content: "foo # bar",
                     type: "plain",
                 },
             ],
@@ -2521,11 +2086,7 @@ describe("Markdown tests", () => {
         expect.soft(MarkdownParser.parse("foo\n  # foo")).to.deep.equal({
             content: [
                 {
-                    content: "foo",
-                    type: "plain",
-                },
-                {
-                    content: "\n  ", // TODO: Reconsider
+                    content: "foo\n  ", // TODO: Reconsider
                     type: "plain",
                 },
                 {
@@ -2547,11 +2108,7 @@ describe("Markdown tests", () => {
         expect.soft(MarkdownParser.parse("foo\n# bar")).to.deep.equal({
             content: [
                 {
-                    content: "foo",
-                    type: "plain",
-                },
-                {
-                    content: "\n",
+                    content: "foo\n",
                     type: "plain",
                 },
                 {
@@ -2582,11 +2139,7 @@ describe("Markdown tests", () => {
         expect.soft(MarkdownParser.parse("# # foo")).to.deep.equal({
             content: [
                 {
-                    content: "# ",
-                    type: "plain",
-                },
-                {
-                    content: "# foo",
+                    content: "# # foo",
                     type: "plain",
                 },
             ],
@@ -2673,11 +2226,7 @@ describe("Markdown tests", () => {
                     content: {
                         content: [
                             {
-                                content: "`foo",
-                                type: "plain",
-                            },
-                            {
-                                content: "\n",
+                                content: "`foo\n",
                                 type: "plain",
                             },
                         ],
@@ -2687,11 +2236,7 @@ describe("Markdown tests", () => {
                     level: 1,
                 },
                 {
-                    content: "bar",
-                    type: "plain",
-                },
-                {
-                    content: "`",
+                    content: "bar`",
                     type: "plain",
                 },
             ],
@@ -2703,19 +2248,7 @@ describe("Markdown tests", () => {
                     content: {
                         content: [
                             {
-                                content: "`",
-                                type: "plain",
-                            },
-                            {
-                                content: "`",
-                                type: "plain",
-                            },
-                            {
-                                content: "`foo",
-                                type: "plain",
-                            },
-                            {
-                                content: "\n", // TODO: Get rid of the trailing \n here
+                                content: "```foo\n", // TODO: Get rid of the trailing \n here
                                 type: "plain",
                             },
                         ],
@@ -2725,19 +2258,7 @@ describe("Markdown tests", () => {
                     level: 1,
                 },
                 {
-                    content: "bar",
-                    type: "plain",
-                },
-                {
-                    content: "`",
-                    type: "plain",
-                },
-                {
-                    content: "`",
-                    type: "plain",
-                },
-                {
-                    content: "`",
+                    content: "bar```",
                     type: "plain",
                 },
             ],
@@ -2749,15 +2270,7 @@ describe("Markdown tests", () => {
                     content: {
                         content: [
                             {
-                                content: "test",
-                                type: "plain",
-                            },
-                            {
-                                content: "\n",
-                                type: "plain",
-                            },
-                            {
-                                content: "#foo",
+                                content: "test\n#foo",
                                 type: "plain",
                             },
                         ],
@@ -2775,11 +2288,7 @@ describe("Markdown tests", () => {
                     content: {
                         content: [
                             {
-                                content: "test",
-                                type: "plain",
-                            },
-                            {
-                                content: "\n",
+                                content: "test\n",
                                 type: "plain",
                             },
                             {
@@ -2819,11 +2328,7 @@ describe("Markdown tests", () => {
                     content: {
                         content: [
                             {
-                                content: "test",
-                                type: "plain",
-                            },
-                            {
-                                content: "\n",
+                                content: "test\n",
                                 type: "plain",
                             },
                             {
@@ -2857,23 +2362,7 @@ describe("Markdown tests", () => {
         expect.soft(MarkdownParser.parse("foo [ asfd ](asdf)")).to.deep.equal({
             content: [
                 {
-                    content: "foo ",
-                    type: "plain",
-                },
-                {
-                    content: "[ asfd ",
-                    type: "plain",
-                },
-                {
-                    content: "]",
-                    type: "plain",
-                },
-                {
-                    content: "(asdf",
-                    type: "plain",
-                },
-                {
-                    content: ")",
+                    content: "foo [ asfd ](asdf)",
                     type: "plain",
                 },
             ],
@@ -2915,15 +2404,7 @@ describe("Markdown tests", () => {
                     content: {
                         content: [
                             {
-                                content: "foo",
-                                type: "plain",
-                            },
-                            {
-                                content: "]",
-                                type: "plain",
-                            },
-                            {
-                                content: "bar",
+                                content: "foo]bar",
                                 type: "plain",
                             },
                         ],
@@ -2968,55 +2449,7 @@ describe("Markdown tests", () => {
         expect.soft(MarkdownParser.parse("bar[foobar](ftp://google.com/bar)barz")).to.deep.equal({
             content: [
                 {
-                    content: "bar",
-                    type: "plain",
-                },
-                {
-                    content: "[foobar",
-                    type: "plain",
-                },
-                {
-                    content: "]",
-                    type: "plain",
-                },
-                {
-                    content: "(",
-                    type: "plain",
-                },
-                {
-                    content: "f",
-                    type: "plain",
-                },
-                {
-                    content: "t",
-                    type: "plain",
-                },
-                {
-                    content: "p",
-                    type: "plain",
-                },
-                {
-                    content: ":",
-                    type: "plain",
-                },
-                {
-                    content: "/",
-                    type: "plain",
-                },
-                {
-                    content: "/google",
-                    type: "plain",
-                },
-                {
-                    content: ".com",
-                    type: "plain",
-                },
-                {
-                    content: "/bar",
-                    type: "plain",
-                },
-                {
-                    content: ")barz",
+                    content: "bar[foobar](ftp://google.com/bar)barz",
                     type: "plain",
                 },
             ],
@@ -3056,59 +2489,7 @@ describe("Markdown tests", () => {
         expect.soft(MarkdownParser.parse("[foo](https://\ngoogle.com)")).to.deep.equal({
             content: [
                 {
-                    content: "[foo",
-                    type: "plain",
-                },
-                {
-                    content: "]",
-                    type: "plain",
-                },
-                {
-                    content: "(",
-                    type: "plain",
-                },
-                {
-                    content: "h",
-                    type: "plain",
-                },
-                {
-                    content: "t",
-                    type: "plain",
-                },
-                {
-                    content: "t",
-                    type: "plain",
-                },
-                {
-                    content: "p",
-                    type: "plain",
-                },
-                {
-                    content: "s",
-                    type: "plain",
-                },
-                {
-                    content: ":",
-                    type: "plain",
-                },
-                {
-                    content: "/",
-                    type: "plain",
-                },
-                {
-                    content: "/",
-                    type: "plain",
-                },
-                {
-                    content: "\ngoogle",
-                    type: "plain",
-                },
-                {
-                    content: ".com",
-                    type: "plain",
-                },
-                {
-                    content: ")",
+                    content: "[foo](https://\ngoogle.com)",
                     type: "plain",
                 },
             ],
@@ -3120,11 +2501,7 @@ describe("Markdown tests", () => {
                     content: {
                         content: [
                             {
-                                content: "foo",
-                                type: "plain",
-                            },
-                            {
-                                content: "\nbar",
+                                content: "foo\nbar",
                                 type: "plain",
                             },
                         ],
@@ -3139,55 +2516,7 @@ describe("Markdown tests", () => {
         expect.soft(MarkdownParser.parse("[foo] (https://google.com)")).to.deep.equal({
             content: [
                 {
-                    content: "[foo",
-                    type: "plain",
-                },
-                {
-                    content: "] ",
-                    type: "plain",
-                },
-                {
-                    content: "(",
-                    type: "plain",
-                },
-                {
-                    content: "h",
-                    type: "plain",
-                },
-                {
-                    content: "t",
-                    type: "plain",
-                },
-                {
-                    content: "t",
-                    type: "plain",
-                },
-                {
-                    content: "p",
-                    type: "plain",
-                },
-                {
-                    content: "s",
-                    type: "plain",
-                },
-                {
-                    content: ":",
-                    type: "plain",
-                },
-                {
-                    content: "/",
-                    type: "plain",
-                },
-                {
-                    content: "/google",
-                    type: "plain",
-                },
-                {
-                    content: ".com",
-                    type: "plain",
-                },
-                {
-                    content: ")",
+                    content: "[foo] (https://google.com)",
                     type: "plain",
                 },
             ],
@@ -3229,11 +2558,7 @@ describe("Markdown tests", () => {
         expect.soft(MarkdownParser.parse("foo - bar")).to.deep.equal({
             content: [
                 {
-                    content: "foo ",
-                    type: "plain",
-                },
-                {
-                    content: "- bar",
+                    content: "foo - bar",
                     type: "plain",
                 },
             ],
@@ -3328,11 +2653,7 @@ describe("Markdown tests", () => {
                         {
                             content: [
                                 {
-                                    content: "foo",
-                                    type: "plain",
-                                },
-                                {
-                                    content: "\n",
+                                    content: "foo\n",
                                     type: "plain",
                                 },
                             ],
@@ -3361,11 +2682,7 @@ describe("Markdown tests", () => {
                         {
                             content: [
                                 {
-                                    content: "foo",
-                                    type: "plain",
-                                },
-                                {
-                                    content: "\n",
+                                    content: "foo\n",
                                     type: "plain",
                                 },
                             ],
@@ -3467,11 +2784,7 @@ describe("Markdown tests", () => {
                         {
                             content: [
                                 {
-                                    content: "foo",
-                                    type: "plain",
-                                },
-                                {
-                                    content: "\n  ",
+                                    content: "foo\n  ", // TODO: Spaces here...
                                     type: "plain",
                                 },
                                 {
