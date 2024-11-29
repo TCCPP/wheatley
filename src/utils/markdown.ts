@@ -350,6 +350,23 @@ class ListRule extends Rule {
     }
 }
 
+class TextRule extends Rule {
+    override match(remaining: string): match_result | null {
+        return remaining.match(TEXT_RE);
+    }
+
+    override parse(match: match_result, parser: MarkdownParser): parse_result {
+        parser.update_state(match[0]);
+        return {
+            node: {
+                type: "plain",
+                content: match[0],
+            },
+            fragment_end: match[0].length,
+        };
+    }
+}
+
 export class MarkdownParser {
     public state: parser_state = {
         at_start_of_line: true,
@@ -370,6 +387,7 @@ export class MarkdownParser {
         new HeaderRule(),
         new LinkRule(),
         new ListRule(),
+        new TextRule(),
     ];
 
     static parse(input: string) {
@@ -390,7 +408,7 @@ export class MarkdownParser {
         };
     }
 
-    update_state(slice: string) {
+    public update_state(slice: string) {
         for (const c of slice) {
             if (this.state.at_start_of_line && /\S/.test(c)) {
                 this.state.at_start_of_line = false;
@@ -407,17 +425,6 @@ export class MarkdownParser {
                 return rule.parse(match, this, remaining);
             }
         }
-        const text_match = remaining.match(TEXT_RE);
-        if (text_match) {
-            this.update_state(text_match[0]);
-            return {
-                node: {
-                    type: "plain",
-                    content: text_match[0],
-                },
-                fragment_end: text_match[0].length,
-            };
-        }
-        assert(false);
+        throw new Error(`No match when parsing ${remaining}`);
     }
 }
