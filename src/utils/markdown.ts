@@ -78,13 +78,13 @@ const ITALICS_RE = new RegExp(
         // Or match *s that are followed by a non-space:
         "^\\*(?=\\S)(" +
         // Match any of:
-        //  - `**`: so that bolds inside italics don't close the
-        // italics
+        //  - `**`: so that bolds inside italics don't close the italics
+        //  - `\*`: so that escaped *'s aren't considered
         //  - whitespace
         //  - non-whitespace, non-* characters
-        "(?:\\*\\*|\\s+(?:[^*\\s]|\\*\\*)|[^\\s*])+?" +
+        "(?:\\\\\\*|\\*\\*|\\s+(?:[^*\\s]|\\\\\\*|\\*\\*)|[^\\s*])+?" +
         // followed by a non-space, non-* then *
-        ")\\*(?!\\*)",
+        ")(?<!\\\\)\\*(?!\\*)",
 );
 const CODE_BLOCK_RE = /^```(?:([\w+\-.]+?)?(\s*\n))?([^\n].*?)\n*```/s;
 const INLINE_CODE_RE = /^(``?)(.*?)\1/s; // new RegExp("^(``?)([^`]*)\\1", "s");

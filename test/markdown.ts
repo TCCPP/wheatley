@@ -341,6 +341,15 @@ describe("Markdown tests", () => {
             ],
             type: "doc",
         });
+        expect.soft(MarkdownParser.parse("*bar\\*")).to.deep.equal({
+            content: [
+                {
+                    content: "*bar*",
+                    type: "plain",
+                },
+            ],
+            type: "doc",
+        });
         expect.soft(MarkdownParser.parse("foo _bar_")).to.deep.equal({
             content: [
                 {
@@ -449,11 +458,23 @@ describe("Markdown tests", () => {
             type: "doc",
         });
         expect.soft(MarkdownParser.parse("foo \\**bar\\**")).to.deep.equal({
-            // TODO FIXME
             content: [
                 {
-                    content: "foo **bar**",
+                    content: "foo *",
                     type: "plain",
+                },
+                {
+                    content: {
+                        content: [
+                            {
+                                content: "bar*",
+                                type: "plain",
+                            },
+                        ],
+                        type: "doc",
+                    },
+                    formatter: "*",
+                    type: "format",
                 },
             ],
             type: "doc",
