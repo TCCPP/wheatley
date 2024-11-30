@@ -1,5 +1,6 @@
 import * as Discord from "discord.js";
 import XXH from "xxhashjs";
+import { strict as assert } from "assert";
 import { DAY, HOUR, MINUTE, MONTH, YEAR } from "../common.js";
 import { round, unwrap } from "./misc.js";
 import { remove } from "./arrays.js";
@@ -136,4 +137,29 @@ export function debug_unicode(str: string) {
 
 export function truncate(str: string, length: number) {
     return str.length <= length ? str : str.slice(0, length - 3) + "...";
+}
+
+/**
+ * Searches for a `c` character in `str` and returns its index,
+ * but respects backslash (`\`) escape characters.
+ * For example, when searching for `"` in `\""`, the result is the index of the second `"`.
+ * @param str the string to search in
+ * @param c the single-character string to search for
+ * @param start the start index, or `0` by default
+ * @return the index of the first unescaped occurrence of `c`, or `null` if none could be found
+ */
+export function index_of_first_unescaped(str: string, c: string, start: number = 0) {
+    assert(c.length === 1, "terminator must be single character");
+    let after_escape = false;
+
+    for (let i = start; i < str.length; i++) {
+        if (after_escape) {
+            after_escape = false;
+        } else if (str[i] === "\\") {
+            after_escape = true;
+        } else if (str[i] === c) {
+            return i;
+        }
+    }
+    return null;
 }
