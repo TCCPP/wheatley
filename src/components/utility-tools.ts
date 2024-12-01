@@ -5,6 +5,7 @@ import { BotComponent } from "../bot-component.js";
 import { Wheatley } from "../wheatley.js";
 import { EarlyReplyMode, TextBasedCommandBuilder } from "../command-abstractions/text-based-command-builder.js";
 import { TextBasedCommand } from "../command-abstractions/text-based-command.js";
+import { markdown_node, MarkdownParser } from "dismark";
 
 /**
  * Provides TCCPP-specific utilities for renaming channels etc.
@@ -76,6 +77,39 @@ export default class UtilityTools extends BotComponent {
                 });
                 M.log(logs);
                 await message.reply("Done");
+            } else if (message.content.startsWith("!md-echo")) {
+                const ast = new MarkdownParser().parse(message.content);
+                const get_first_code_block = (node: markdown_node): string | null => {
+                    switch (node.type) {
+                        case "doc": {
+                            const parts = node.content.map(node => get_first_code_block(node)).filter(result => result);
+                            return parts.length > 0 ? parts[0] : null;
+                        }
+                        case "list": {
+                            const items = node.items.map(node => get_first_code_block(node)).filter(result => result);
+                            return items.length > 0 ? items[0] : null;
+                        }
+                        case "italics":
+                        case "bold":
+                        case "underline":
+                        case "strikethrough":
+                        case "spoiler":
+                        case "header":
+                        case "subtext":
+                        case "masked_link":
+                        case "blockquote":
+                            return get_first_code_block(node.content);
+                        case "plain":
+                        case "inline_code":
+                            return null;
+                        case "code_block":
+                            return node.content;
+                        default:
+                            throw new Error(`Unknown ast node ${(node as markdown_node).type}`);
+                    }
+                };
+                const requested_markdown = get_first_code_block(ast);
+                await message.reply(requested_markdown ?? "Error");
             }
         }
     }

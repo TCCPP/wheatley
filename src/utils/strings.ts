@@ -1,5 +1,7 @@
 import * as Discord from "discord.js";
 import XXH from "xxhashjs";
+import { markdown_node, MarkdownParser } from "dismark";
+
 import { DAY, HOUR, MINUTE, MONTH, YEAR } from "../common.js";
 import { round, unwrap } from "./misc.js";
 import { remove } from "./arrays.js";
@@ -44,15 +46,36 @@ export function time_to_human(diff: number, levels?: number): string {
     return time_to_human_core(diff).slice(0, levels).join(" ");
 }
 
-const code_re = /(?<!`)`[^`]+`(?!`)/gi;
-const code_block_re = /```(?:[^`]|`(?!``))+```/gi;
-
 // removes code blocks from a message
 // not perfect, but good enough
 export function parse_out(message: string) {
-    message = message.replace(code_re, "");
-    message = message.replace(code_block_re, "");
-    return message;
+    const ast = new MarkdownParser().parse(message);
+    const text_content = (node: markdown_node): string => {
+        switch (node.type) {
+            case "doc":
+                return node.content.map(node => text_content(node)).join("");
+            case "list":
+                return node.items.map(item => text_content(item)).join(""); // todo: newlines
+            case "italics":
+            case "bold":
+            case "underline":
+            case "strikethrough":
+            case "spoiler":
+            case "header":
+            case "subtext":
+            case "masked_link":
+            case "blockquote":
+                return text_content(node.content);
+            case "inline_code":
+            case "code_block":
+                return "";
+            case "plain":
+                return node.content;
+            default:
+                throw new Error(`Unknown ast node ${(node as markdown_node).type}`);
+        }
+    };
+    return text_content(ast);
 }
 
 export function format_list(items: string[]) {
