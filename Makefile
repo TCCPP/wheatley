@@ -53,10 +53,10 @@ deploy: ts-check  ## Deploys code
 prod: format deploy  ## Deploys code and restarts the bot
 	ssh $(SERVER) "export NVM_DIR=\"$$HOME/.nvm\"; source $$NVM_DIR/nvm.sh; screen -XS _Wheatley quit; cd projects/wheatley; ./start.sh"
 
-.PHONY: npm-update
-npm-update:  ## Updates npm packages
+.PHONY: update
+update:  ## Updates npm packages
 	./scripts/update_packages.sh
 
 .PHONY: mongo
-mongo:
+mongo:  ## Port forward mongo
 	ssh -L 27017:127.0.0.1:27017 x0 -N
