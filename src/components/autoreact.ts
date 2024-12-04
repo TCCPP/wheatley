@@ -3,9 +3,11 @@ import { strict as assert } from "assert";
 import { delay } from "../utils/misc.js";
 import { is_media_link_embed } from "../utils/discord.js";
 import { M } from "../utils/debugging-and-logging.js";
-import { MINUTE } from "../common.js";
+import { MINUTE, SECOND } from "../common.js";
 import { BotComponent } from "../bot-component.js";
 import { Wheatley } from "../wheatley.js";
+import { SelfClearingMap } from "../utils/containers.js";
+import { clear_timeout, set_timeout } from "../utils/node.js";
 
 export function has_media(message: Discord.Message | Discord.PartialMessage) {
     return (
@@ -15,7 +17,11 @@ export function has_media(message: Discord.Message | Discord.PartialMessage) {
     );
 }
 
+const OK_TIMEOUT = 30 * SECOND;
+
 export default class Autoreact extends BotComponent {
+    ok_timeouts = new SelfClearingMap<string, NodeJS.Timeout>(OK_TIMEOUT);
+
     constructor(wheatley: Wheatley) {
         super(wheatley);
     }
@@ -48,6 +54,10 @@ export default class Autoreact extends BotComponent {
         ) {
             return;
         }
+        if (this.ok_timeouts.has(message.author.id)) {
+            clear_timeout(this.ok_timeouts.get(message.author.id));
+            this.ok_timeouts.remove(message.author.id);
+        }
         try {
             if (message.content.trim().match(/^wh?at(?:[!?]*\?[!?]*)?$/gi)) {
                 // Put an unmanaged non null assertion here because of the precondition requiring that guildId must be
@@ -60,7 +70,12 @@ export default class Autoreact extends BotComponent {
                 }
             }
             if (message.content.trim().match(/^ok\.?$/gi)) {
-                await message.react("🆗");
+                this.ok_timeouts.set(
+                    message.author.id,
+                    set_timeout(() => {
+                        message.react("🆗").catch(this.wheatley.critical_error);
+                    }, OK_TIMEOUT),
+                );
             }
             if (message.content.includes("geeksforgeeks.org")) {
                 const reaction = message.guild!.emojis.cache.find(emoji => emoji.name === "nog4g");
