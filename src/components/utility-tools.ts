@@ -6,6 +6,7 @@ import { Wheatley } from "../wheatley.js";
 import { EarlyReplyMode, TextBasedCommandBuilder } from "../command-abstractions/text-based-command-builder.js";
 import { TextBasedCommand } from "../command-abstractions/text-based-command.js";
 import { markdown_node, MarkdownParser } from "dismark";
+import { Synopsinator } from "../utils/synopsis.js";
 
 /**
  * Provides TCCPP-specific utilities for renaming channels etc.
@@ -110,6 +111,11 @@ export default class UtilityTools extends BotComponent {
                 };
                 const requested_markdown = get_first_code_block(ast);
                 await message.reply(requested_markdown ?? "Error");
+            } else if (message.content.startsWith("!synopsis")) {
+                const content = message.content.substring("!synopsis".length).trim();
+                await message.reply({
+                    embeds: [new Discord.EmbedBuilder().setDescription(Synopsinator.make_synopsis(content))],
+                });
             }
         }
     }

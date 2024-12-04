@@ -7,6 +7,7 @@ import { colors, DAY, HOUR, MINUTE } from "../common.js";
 import { BotComponent } from "../bot-component.js";
 import { Wheatley } from "../wheatley.js";
 import { clear_timeout, set_interval, set_timeout } from "../utils/node.js";
+import { Synopsinator } from "../utils/synopsis.js";
 
 // TODO: Take into account thread's inactivity setting
 
@@ -253,30 +254,10 @@ export default class ForumChannels extends BotComponent {
         no_extra_media_embeds: boolean,
         to: Discord.TextChannel,
     ) {
-        const lines: string[] = [];
-        let in_code = false;
-        for (const line of message.content.split("\n")) {
-            lines.push(line);
-            if ((line.match(/```/g) || []).length % 2 == 1) {
-                in_code = !in_code;
-            }
-            if (lines.length >= 7) {
-                lines.push("...");
-                if (in_code) {
-                    lines.push("```");
-                }
-                break;
-            }
-        }
-        const content = lines
-            .join("\n")
-            .replaceAll(/```\s*```/g, "")
-            .replaceAll(/\s+$/g, "")
-            .replaceAll(/\n{2,}/g, "\n\n");
         // mirror to the text channel
         const quote = await this.wheatley.make_quote_embeds([message], {
             no_extra_media_embeds,
-            custom_content: content,
+            custom_content: Synopsinator.make_synopsis(message.content),
             title,
         });
         await to.send(quote);
