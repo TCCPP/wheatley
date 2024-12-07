@@ -90,7 +90,6 @@ export default class PinArchive extends BotComponent {
         // two things to handle: new pins and pins that are now no longer pins
         // ensure current pins are marked as such
         for (const [_, message] of current_pins) {
-            M.debug("new pinned message", message.content);
             const res = await this.wheatley.database.pins.updateOne(
                 { channel: channel.id, message: message.id },
                 { $set: { current_pin: true } },
