@@ -1,8 +1,7 @@
-// arr.filter(x => x !== null) returns a (T | null)[] even though it is a T[]
-// Apparently the idiomatic solution is arr.filter((x): x is T => x !== null), but this is shorter (and the type
-
 import { zip } from "./iterables.js";
 
+// arr.filter(x => x !== null) returns a (T | null)[] even though it is a T[]
+// Apparently the idiomatic solution is arr.filter((x): x is T => x !== null), but this is shorter (and the type
 // predicate also isn't type checked so it doesn't seem safe to me)
 export function remove<U, V extends U>(arr: Readonly<U[]>, v: Readonly<V>) {
     return arr.filter(item => item !== v) as Exclude<U, V extends null | undefined ? V : never>[];
