@@ -24,13 +24,13 @@ import { wheatley_database_info } from "./schemata/wheatley.js";
 import { pin_archive_entry, pin_entry } from "./schemata/pins.js";
 
 export class WheatleyDatabase {
-    private mutex = new Mutex();
-    private collections = new Map<string, mongo.Collection>();
+    private readonly mutex = new Mutex();
+    private readonly collections = new Map<string, mongo.Collection>();
 
     private constructor(
-        private get_initial_wheatley_info: () => wheatley_database_info,
-        private client: mongo.MongoClient | null,
-        private db: mongo.Db | null,
+        private readonly get_initial_wheatley_info: () => wheatley_database_info,
+        private readonly client: mongo.MongoClient | null,
+        private readonly db: mongo.Db | null,
     ) {}
 
     async close() {
@@ -128,6 +128,3 @@ export type WheatleyDatabaseProxy = WheatleyDatabase & {
     pins: mongo.Collection<pin_entry>;
     pin_archive: mongo.Collection<pin_archive_entry>;
 };
-// & {
-//    [key: string] : Promise<mongo.Collection>
-//};
