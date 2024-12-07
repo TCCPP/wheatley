@@ -1,6 +1,6 @@
 import * as Discord from "discord.js";
 import { strict as assert } from "assert";
-import { MINUTE } from "../common.js";
+import { HOUR } from "../common.js";
 import { unwrap } from "../utils/misc.js";
 import { M } from "../utils/debugging-and-logging.js";
 import { BotComponent } from "../bot-component.js";
@@ -41,8 +41,8 @@ export default class RoleManager extends BotComponent {
         ]);
         this.pink_role = unwrap(await this.wheatley.TCCPP.roles.fetch(this.wheatley.roles.pink.id));
         this.interval = set_interval(() => {
-            this.check_users().catch(this.wheatley.critical_error.bind(this.wheatley));
-        }, 30 * MINUTE);
+            this.check_members().catch(this.wheatley.critical_error.bind(this.wheatley));
+        }, HOUR);
         this.startup_recovery().catch(this.wheatley.critical_error.bind(this.wheatley));
     }
 
@@ -86,14 +86,18 @@ export default class RoleManager extends BotComponent {
         }
     }
 
-    async check_users() {
+    async check_member_roles(member: Discord.GuildMember) {
+        await this.handle_pink(member);
+        await this.handle_skill_roles(member);
+        await this.update_user_roles(member);
+    }
+
+    async check_members() {
         M.log("Starting role checks");
         try {
             const members = await this.wheatley.TCCPP.members.fetch();
             for (const member of members.values()) {
-                await this.handle_pink(member);
-                await this.handle_skill_roles(member);
-                await this.update_user_roles(member);
+                await this.check_member_roles(member);
             }
         } catch (e) {
             this.wheatley.critical_error(e);
@@ -106,6 +110,13 @@ export default class RoleManager extends BotComponent {
         for (const entry of entries) {
             this.roles.set(entry.user_id, entry.roles);
         }
-        await this.check_users();
+        await this.check_members();
+    }
+
+    override async on_guild_member_update(
+        old_member: Discord.GuildMember | Discord.PartialGuildMember,
+        new_member: Discord.GuildMember,
+    ) {
+        await this.check_member_roles(new_member);
     }
 }
