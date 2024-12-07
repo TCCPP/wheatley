@@ -22,6 +22,7 @@ import {
 } from "./schemata/logged-messages.js";
 import { wheatley_database_info } from "./schemata/wheatley.js";
 import { pin_archive_entry, pin_entry } from "./schemata/pins.js";
+import { user_role_entry } from "./schemata/user_roles.js";
 
 export class WheatleyDatabase {
     private readonly mutex = new Mutex();
@@ -127,4 +128,5 @@ export type WheatleyDatabaseProxy = WheatleyDatabase & {
     message_database_thread_status: mongo.Collection<message_database_thread_status_entry>;
     pins: mongo.Collection<pin_entry>;
     pin_archive: mongo.Collection<pin_archive_entry>;
+    user_roles: mongo.Collection<user_role_entry>;
 };

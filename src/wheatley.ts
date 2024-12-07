@@ -195,9 +195,11 @@ const roles_map = {
     server_booster: "643013330616844333",
     historian: "890067617069551646",
     official_bot: "331886851784704001",
+    featured_bot: "995847409374605392",
     jedi_council: "1138950835208990750",
     announcements: "1231635207132807290",
     herald: "1095555811536797787",
+    linked_github: "1080596526478397471",
 };
 
 const skill_roles_map = {
