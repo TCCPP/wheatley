@@ -119,4 +119,17 @@ export default class RoleManager extends BotComponent {
     ) {
         await this.check_member_roles(new_member);
     }
+
+    override async on_guild_member_add(member: Discord.GuildMember) {
+        // apply old roles
+        const roles_entry = await this.wheatley.database.user_roles.findOne({ user_id: member.id });
+        if (roles_entry === null) {
+            return;
+        }
+        for (const role of roles_entry.roles) {
+            if (!this.blacklisted_roles.has(role)) {
+                await member.roles.add(role);
+            }
+        }
+    }
 }
