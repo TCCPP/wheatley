@@ -115,7 +115,7 @@ export default class Quote extends BotComponent {
                 );
                 const command = new TextBasedCommand(
                     "quote",
-                    this.wheatley.text_commands["quote"],
+                    this.wheatley.command_manager.text_commands["quote"],
                     message,
                     this.wheatley,
                 );
