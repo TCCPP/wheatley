@@ -4,7 +4,7 @@ import { HOUR } from "../common.js";
 import { unwrap } from "../utils/misc.js";
 import { M } from "../utils/debugging-and-logging.js";
 import { BotComponent } from "../bot-component.js";
-import { Wheatley, WHEATLEY_ID } from "../wheatley.js";
+import { Wheatley } from "../wheatley.js";
 import { set_interval } from "../utils/node.js";
 import { equal } from "../utils/arrays.js";
 
@@ -37,7 +37,7 @@ export default class RoleManager extends BotComponent {
             this.wheatley.roles.pink.id,
             this.wheatley.roles.herald.id,
             this.wheatley.roles.linked_github.id,
-            WHEATLEY_ID, // the everyone id
+            this.wheatley.TCCPP.id, // the everyone id
         ]);
         this.pink_role = unwrap(await this.wheatley.TCCPP.roles.fetch(this.wheatley.roles.pink.id));
         this.interval = set_interval(() => {
