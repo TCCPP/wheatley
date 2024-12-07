@@ -973,10 +973,6 @@ export class Wheatley {
     // Basic interaction and command stuff
     //
 
-    register_text_command(trigger: Discord.Message, command: TextBasedCommand, deletable = true) {
-        this.command_manager.text_command_map.set(trigger.id, { command, deletable, content: trigger.content });
-    }
-
     make_deletable(trigger: Discord.Message, message: Discord.Message) {
         this.command_manager.deletable_map.set(trigger.id, message);
     }
