@@ -4,8 +4,8 @@ import { parentPort } from "worker_threads";
 
 import { RequestInfo, RequestInit, Response } from "node-fetch";
 import { parseHTML } from "linkedom";
-import { man7_entry, WorkerJob, WorkerResponse } from "./types";
-import { MessageForThreadPool, MessageForWorker } from "../common/utils";
+import { man7_entry, WorkerJob, WorkerResponse } from "./types.js";
+import { MessageForThreadPool, MessageForWorker } from "../common/utils.js";
 
 const fetch = (url: RequestInfo, init?: RequestInit) =>
     import("node-fetch").then(({ default: fetch }) => fetch(url, init));

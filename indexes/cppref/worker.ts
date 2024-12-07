@@ -5,8 +5,8 @@ import * as fs from "fs";
 
 import { parseHTML } from "linkedom";
 
-import { cppref_page, WorkerJob, WorkerResponse } from "./types";
-import { MessageForThreadPool, MessageForWorker } from "../common/utils";
+import { cppref_page, WorkerJob, WorkerResponse } from "./types.js";
+import { MessageForThreadPool, MessageForWorker } from "../common/utils.js";
 
 assert(parentPort);
 

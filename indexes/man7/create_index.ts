@@ -9,9 +9,9 @@ import { parseHTML } from "linkedom";
 const fetch = (url: RequestInfo, init?: RequestInit) =>
     import("node-fetch").then(({ default: fetch }) => fetch(url, init));
 
-import { ThreadPool } from "../common/utils";
+import { ThreadPool } from "../common/utils.js";
 
-import { man7_index, WorkerJob, WorkerResponse } from "./types";
+import { man7_index, WorkerJob, WorkerResponse } from "./types.js";
 
 const seed_url = "https://man7.org/linux/man-pages/dir_all_by_section.html";
 const base_url = "https://man7.org/linux/man-pages/";

@@ -3,11 +3,11 @@ import { strict as assert } from "assert";
 import * as fs from "fs";
 import * as path from "path";
 
-import { cppref_index, CpprefSubIndex, WorkerJob, WorkerResponse } from "./types";
+import { cppref_index, CpprefSubIndex, WorkerJob, WorkerResponse } from "./types.js";
 
-import { Funnel, ThreadPool } from "../common/utils";
+import { Funnel, ThreadPool } from "../common/utils.js";
 
-import { clang_format_embed_code } from "../../src/components/format";
+import { clang_format_embed_code } from "../../src/components/format.js";
 
 async function* walk_dir(dir: string): AsyncGenerator<string> {
     for(const f of await fs.promises.readdir(dir)) {
