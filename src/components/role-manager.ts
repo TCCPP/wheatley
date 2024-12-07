@@ -1,12 +1,13 @@
 import * as Discord from "discord.js";
 import { strict as assert } from "assert";
-import { HOUR } from "../common.js";
+import { colors, HOUR } from "../common.js";
 import { unwrap } from "../utils/misc.js";
 import { M } from "../utils/debugging-and-logging.js";
 import { BotComponent } from "../bot-component.js";
 import { Wheatley } from "../wheatley.js";
 import { set_interval } from "../utils/node.js";
 import { equal } from "../utils/arrays.js";
+import { build_description } from "../utils/strings.js";
 
 // Role cleanup
 // Auto-remove pink roles when members are no longer boosting
@@ -126,6 +127,30 @@ export default class RoleManager extends BotComponent {
         if (roles_entry === null) {
             return;
         }
+        this.wheatley.llog(this.wheatley.channels.staff_member_log, {
+            embeds: [
+                new Discord.EmbedBuilder()
+                    .setTitle("Re-Adding roles for Member")
+                    .setAuthor({
+                        name: member.user.username,
+                        iconURL: member.displayAvatarURL(),
+                    })
+                    .setThumbnail(member.displayAvatarURL())
+                    .setColor(colors.default)
+                    .setDescription(
+                        build_description(
+                            `<@${member.user.id}> ${member.user.username}`,
+                            ...roles_entry.roles
+                                .filter(role_id => role_id != this.wheatley.TCCPP.id)
+                                .map(role_id => `<@&${role_id}>`),
+                        ),
+                    )
+                    .setFooter({
+                        text: `ID: ${member.user.id}`,
+                    })
+                    .setTimestamp(Date.now()),
+            ],
+        });
         for (const role of roles_entry.roles) {
             if (!this.blacklisted_roles.has(role)) {
                 await member.roles.add(role);
