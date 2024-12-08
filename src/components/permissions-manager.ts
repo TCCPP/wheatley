@@ -212,7 +212,9 @@ export default class PermissionManager extends BotComponent {
         });
         this.add_channel_overwrite(this.wheatley.channels.pin_archive, {
             ...off_topic_permissions,
-            [this.wheatley.roles.no_memes.id]: no_interaction_at_all,
+            ...read_only_channel,
+        });
+        this.add_channel_overwrite(this.wheatley.channels.skill_role_log, {
             ...read_only_channel,
         });
         this.add_channel_overwrite(this.wheatley.channels.serious_off_topic, {

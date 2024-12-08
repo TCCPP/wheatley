@@ -1,13 +1,14 @@
 import * as Discord from "discord.js";
 import { strict as assert } from "assert";
-import { colors, HOUR } from "../common.js";
+import { colors, HOUR, MINUTE } from "../common.js";
 import { unwrap } from "../utils/misc.js";
 import { M } from "../utils/debugging-and-logging.js";
 import { BotComponent } from "../bot-component.js";
-import { Wheatley } from "../wheatley.js";
+import { skill_roles_order, skill_roles_order_id, Wheatley } from "../wheatley.js";
 import { set_interval } from "../utils/node.js";
 import { equal } from "../utils/arrays.js";
 import { build_description } from "../utils/strings.js";
+import { SelfClearingSet } from "../utils/containers.js";
 
 // Role cleanup
 // Auto-remove pink roles when members are no longer boosting
@@ -19,6 +20,9 @@ export default class RoleManager extends BotComponent {
 
     // current database state
     roles = new Map<string, string[]>();
+
+    // stores user id + role id encoded as a user_id,role_id string
+    debounce_map = new SelfClearingSet(MINUTE);
 
     // roles that will not be re-applied on join
     blacklisted_roles: Set<string>;
@@ -47,16 +51,26 @@ export default class RoleManager extends BotComponent {
         this.startup_recovery().catch(this.wheatley.critical_error.bind(this.wheatley));
     }
 
+    get_highest_skill_role(roles: string[]) {
+        return skill_roles_order_id.filter(id => roles.includes(id)).at(-1) ?? null;
+    }
+
     async update_user_roles(member: Discord.GuildMember) {
         const old_roles = this.roles.get(member.id) ?? [];
         const current_roles = member.roles.cache.map(role => role.id);
         if (!equal(old_roles, current_roles)) {
+            const skill_role = this.get_highest_skill_role(current_roles);
             await this.wheatley.database.user_roles.updateOne(
                 { user_id: member.id },
                 {
-                    $set: {
-                        roles: current_roles,
-                    },
+                    $set: skill_role
+                        ? {
+                              roles: current_roles,
+                              last_known_skill_role: this.get_highest_skill_role(current_roles),
+                          }
+                        : {
+                              roles: current_roles,
+                          },
                 },
                 { upsert: true },
             );
@@ -84,6 +98,47 @@ export default class RoleManager extends BotComponent {
             for (const role of skill_roles.map(x => x).slice(1)) {
                 await member.roles.remove(role);
             }
+        }
+    }
+
+    async check_for_skill_role_bump(
+        old_member: Discord.GuildMember | Discord.PartialGuildMember,
+        new_member: Discord.GuildMember,
+    ) {
+        const roles_entry = await this.wheatley.database.user_roles.findOne({ user_id: new_member.id });
+        const last_known_skill_level =
+            roles_entry && roles_entry.last_known_skill_role
+                ? this.wheatley.get_skill_role_index(roles_entry.last_known_skill_role)
+                : -1;
+        const current_skill_role = this.get_highest_skill_role(new_member.roles.cache.map(role => role.id));
+        const current_skill_level = current_skill_role ? this.wheatley.get_skill_role_index(current_skill_role) : -1;
+        if (
+            current_skill_level > skill_roles_order.indexOf("beginner") &&
+            current_skill_level > last_known_skill_level
+        ) {
+            assert(current_skill_role);
+            const debounce_key = `${new_member.id},${current_skill_role}`;
+            // Updates are bumpy...
+            if (this.debounce_map.has(debounce_key)) {
+                return;
+            }
+            this.debounce_map.insert(debounce_key);
+            M.log("Detected skill level increase for", new_member.user.tag);
+            await this.wheatley.channels.skill_role_log.send({
+                embeds: [
+                    new Discord.EmbedBuilder()
+                        .setAuthor({
+                            name: new_member.displayName,
+                            iconURL: new_member.displayAvatarURL(),
+                        })
+                        .setColor(unwrap(await this.wheatley.TCCPP.roles.fetch(current_skill_role)).color)
+                        .setDescription(
+                            roles_entry?.last_known_skill_role
+                                ? `<@&${roles_entry.last_known_skill_role}> -> <@&${current_skill_role}>`
+                                : `<@&${current_skill_role}>`,
+                        ),
+                ],
+            });
         }
     }
 
@@ -118,6 +173,7 @@ export default class RoleManager extends BotComponent {
         old_member: Discord.GuildMember | Discord.PartialGuildMember,
         new_member: Discord.GuildMember,
     ) {
+        await this.check_for_skill_role_bump(old_member, new_member);
         await this.check_member_roles(new_member);
     }
 

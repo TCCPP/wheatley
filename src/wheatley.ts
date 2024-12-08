@@ -151,6 +151,7 @@ const channels_map = {
     lore: tuple("890067781628866620", Discord.TextChannel),
     bot_dev_internal: tuple("1166517065763536977", Discord.TextChannel),
     pin_archive: tuple("1284234644396572714", Discord.TextChannel),
+    skill_role_log: tuple("1315023714206617610", Discord.TextChannel),
     // red telephone
     red_telephone_alerts: tuple("1140096352278290512", Discord.TextChannel),
     // error log
@@ -722,6 +723,11 @@ export class Wheatley {
             .filter(([name, _]) => name !== "beginner")
             .map(([_, role]) => role.id);
         return member.roles.cache.some(role => non_beginner_skill_role_ids.includes(role.id));
+    }
+
+    // higher is better
+    get_skill_role_index(role: Discord.Role | string) {
+        return skill_roles_order_id.indexOf(role instanceof Discord.Role ? role.id : role);
     }
 
     async fetch_root_mod_list(client: Discord.Client) {

@@ -8,7 +8,7 @@ import { SelfClearingMap } from "../utils/containers.js";
 import { M } from "../utils/debugging-and-logging.js";
 import { colors, MINUTE } from "../common.js";
 import { BotComponent } from "../bot-component.js";
-import { skill_roles_order, skill_roles_order_id, Wheatley } from "../wheatley.js";
+import { skill_roles_order, Wheatley } from "../wheatley.js";
 import {
     UserContextMenuInteractionBuilder,
     MessageContextMenuInteractionBuilder,
@@ -18,7 +18,6 @@ import { build_description, capitalize } from "../utils/strings.js";
 type interaction_context = { member: Discord.GuildMember; role?: string; context?: Discord.Message };
 
 export default class SkillRoleSuggestion extends BotComponent {
-    // string -> interaction context
     readonly target_map = new SelfClearingMap<string, interaction_context>(15 * MINUTE);
 
     constructor(wheatley: Wheatley) {
@@ -70,12 +69,12 @@ export default class SkillRoleSuggestion extends BotComponent {
         const target_skill_index = Math.max(
             ...member.roles.cache
                 .filter(r => Object.values(this.wheatley.skill_roles).some(skill_role => r.id == skill_role.id))
-                .map(role => skill_roles_order_id.indexOf(role.id)),
+                .map(role => this.wheatley.get_skill_role_index(role.id)),
         );
         const suggestor_skill_index = Math.max(
             ...suggester.roles.cache
                 .filter(r => Object.values(this.wheatley.skill_roles).some(skill_role => r.id == skill_role.id))
-                .map(role => skill_roles_order_id.indexOf(role.id)),
+                .map(role => this.wheatley.get_skill_role_index(role.id)),
         );
         const skill_roles_available = skill_roles_order.slice(
             target_skill_index + 1, // can't suggest anything <= the target's skill
