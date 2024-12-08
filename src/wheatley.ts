@@ -720,6 +720,50 @@ export class Wheatley {
         }
     }
 
+    /**
+     * Search for a specific channel by name if the provided name is not found then instead search by id.
+     */
+    async get_channel(name: string, id: string, guild_to_check: NonNullable<Discord.Guild> = this.TCCPP) {
+        const channel_by_name = guild_to_check.channels.cache.find(channel => channel.name === name);
+        if (channel_by_name) {
+            return channel_by_name;
+        }
+
+        const channel_by_id = guild_to_check.channels.cache.get(id);
+        if (channel_by_id) {
+            return channel_by_id as Discord.GuildChannel;
+        }
+
+        return null;
+    }
+
+    async get_channel_or_create_channel(
+        name: string,
+        id: string,
+        guild_to_check: NonNullable<Discord.Guild> = this.TCCPP,
+        fallback_guild_type: NonNullable<Discord.GuildChannelTypes> = Discord.ChannelType.GuildText,
+    ) {
+        const result = await this.get_channel(name, id, guild_to_check);
+        if (result != null) {
+            return result;
+        }
+
+        // If no channel exists, create one with the specified name
+        try {
+            M.log(`Creating new channel: ${name}`);
+            const new_channel = await guild_to_check.channels.create({
+                name: name,
+                type: fallback_guild_type,
+            });
+
+            M.log(`New channel created: ${new_channel.name} (ID: ${new_channel.id})`);
+            return new_channel;
+        } catch (error) {
+            M.error(`Failed to create channel: ${error}`);
+            throw new Error(`Could not create channel: ${name}`);
+        }
+    }
+
     async fetch_message_reply(message: Discord.Message) {
         const ref = unwrap(message.reference);
         assert(ref.guildId === message.guildId);
