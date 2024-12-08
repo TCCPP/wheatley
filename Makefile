@@ -60,3 +60,15 @@ update:  ## Updates npm packages
 .PHONY: mongo
 mongo:  ## Port forward mongo
 	ssh -L 27017:127.0.0.1:27017 x0 -N
+
+.PHONY: build-dev-container
+build-dev-container:  ## Build dev container container
+	podman build -t wheatley-dev -f dev-container/Dockerfile .
+
+.PHONY: run-dev-container
+run-dev-container: build-dev-container  ## Runs the dev container container
+	podman run --user=wheatley --cap-drop=all -it wheatley-dev
+
+.PHONY: dev
+dev: build  ## Runs in dev mode
+	node build/src/main.js
