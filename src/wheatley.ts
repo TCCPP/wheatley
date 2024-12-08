@@ -724,9 +724,11 @@ export class Wheatley {
      * Search for a specific channel by name if the provided name is not found then instead search by id.
      */
     async get_channel(name: string, id: string, guild_to_check: Discord.Guild = this.TCCPP) {
-        const channel_by_name = guild_to_check.channels.cache.find(channel => channel.name === name);
-        if (channel_by_name) {
-            return channel_by_name;
+        if (process.env.NODE_ENV === "development") {
+            const channel_by_name = guild_to_check.channels.cache.find(channel => channel.name === name);
+            if (channel_by_name) {
+                return channel_by_name;
+            }
         }
 
         const channel_by_id = guild_to_check.channels.cache.get(id);
