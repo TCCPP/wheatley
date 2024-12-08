@@ -82,6 +82,9 @@ export default class Autoreact extends BotComponent {
                     }, REACT_TIMEOUT),
                 );
             }
+            if (message.content.trim().match(/^disagree[.!]?$/gi)) {
+                await message.react("🛑");
+            }
             if (message.content.includes("geeksforgeeks.org")) {
                 const reaction = message.guild!.emojis.cache.find(emoji => emoji.name === "nog4g");
                 if (reaction !== undefined) {
