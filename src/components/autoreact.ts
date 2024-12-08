@@ -17,10 +17,10 @@ export function has_media(message: Discord.Message | Discord.PartialMessage) {
     );
 }
 
-const OK_TIMEOUT = 30 * SECOND;
+const REACT_TIMEOUT = 90 * SECOND;
 
 export default class Autoreact extends BotComponent {
-    ok_timeouts = new SelfClearingMap<string, NodeJS.Timeout>(OK_TIMEOUT);
+    react_timeouts = new SelfClearingMap<string, NodeJS.Timeout>(REACT_TIMEOUT);
 
     constructor(wheatley: Wheatley) {
         super(wheatley);
@@ -54,27 +54,32 @@ export default class Autoreact extends BotComponent {
         ) {
             return;
         }
-        if (this.ok_timeouts.has(message.author.id)) {
-            clear_timeout(this.ok_timeouts.get(message.author.id));
-            this.ok_timeouts.remove(message.author.id);
+        if (this.react_timeouts.has(message.author.id)) {
+            clear_timeout(this.react_timeouts.get(message.author.id));
+            this.react_timeouts.remove(message.author.id);
         }
         try {
             if (message.content.trim().match(/^wh?at(?:[!?]*\?[!?]*)?$/gi)) {
-                // Put an unmanaged non null assertion here because of the precondition requiring that guildId must be
-                // TCCPP (and thus always a valid guild)
-                const reaction = message.guild!.emojis.cache.find(emoji => emoji.name === "what");
-                if (reaction !== undefined) {
-                    await message.react(reaction);
-                } else {
-                    this.wheatley.ignorable_error("Unable to find emoji what");
-                }
+                this.react_timeouts.set(
+                    message.author.id,
+                    set_timeout(() => {
+                        // Put an unmanaged non null assertion here because of the precondition requiring that guildId
+                        // must be TCCPP (and thus always a valid guild)
+                        const reaction = message.guild!.emojis.cache.find(emoji => emoji.name === "what");
+                        if (reaction !== undefined) {
+                            message.react(reaction).catch(this.wheatley.critical_error);
+                        } else {
+                            this.wheatley.ignorable_error("Unable to find emoji what");
+                        }
+                    }, REACT_TIMEOUT),
+                );
             }
             if (message.content.trim().match(/^ok\.?$/gi)) {
-                this.ok_timeouts.set(
+                this.react_timeouts.set(
                     message.author.id,
                     set_timeout(() => {
                         message.react("🆗").catch(this.wheatley.critical_error);
-                    }, OK_TIMEOUT),
+                    }, REACT_TIMEOUT),
                 );
             }
             if (message.content.includes("geeksforgeeks.org")) {
