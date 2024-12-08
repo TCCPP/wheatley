@@ -737,45 +737,6 @@ export class Wheatley {
         return null;
     }
 
-    /**
-     * Search for a specific channel by name if the provided name is not found then instead
-     * search by id. If all attempts to find a channel fails then create a new channel.
-     * @remarks This function will act the same as get_channel when we are not in production.
-     * @remarks Currently fallback_channel_type will always create a text channel. This will change at a later date.
-     */
-    async get_channel_or_create_channel(
-        name: string,
-        id: string,
-        guild_to_check: Discord.Guild = this.TCCPP,
-        fallback_channel_type: Discord.GuildChannelTypes = Discord.ChannelType.GuildText,
-    ) {
-        const result = await this.get_channel(name, id, guild_to_check);
-        if (process.env.NODE_ENV !== "development") {
-            return result;
-        }
-
-        if (result != null) {
-            return result;
-        }
-
-        // If no channel exists, create one with the specified name
-        try {
-            M.log(`Creating new channel: ${name} (passed type: ${fallback_channel_type})`);
-            // TODO: Make this able to handle other channel types when we are
-            //  actually ready to start implementing boot strapping for testing servers.
-            const new_channel = await guild_to_check.channels.create({
-                name: name,
-                type: Discord.ChannelType.GuildText,
-            });
-
-            M.log(`New channel created: ${new_channel.name} (ID: ${new_channel.id})`);
-            return new_channel;
-        } catch (error) {
-            M.error(`Failed to create channel: ${error}`);
-            throw new Error(`Could not create channel: ${name}`);
-        }
-    }
-
     async fetch_message_reply(message: Discord.Message) {
         const ref = unwrap(message.reference);
         assert(ref.guildId === message.guildId);
