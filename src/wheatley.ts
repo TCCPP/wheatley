@@ -760,7 +760,7 @@ export class Wheatley {
 
         // If no channel exists, create one with the specified name
         try {
-            M.log(`Creating new channel: ${name} (passed type: ${fallback_channel_type}`);
+            M.log(`Creating new channel: ${name} (passed type: ${fallback_channel_type})`);
             // TODO: Make this able to handle other channel types when we are
             //  actually ready to start implementing boot strapping for testing servers.
             const new_channel = await guild_to_check.channels.create({
