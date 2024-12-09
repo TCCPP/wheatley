@@ -167,11 +167,11 @@ export class TextBasedCommand {
         );
         if (this.replies[0] instanceof Discord.InteractionResponse) {
             assert(this.reply_object instanceof Discord.ChatInputCommandInteraction);
-            await this.reply_object.editReply({
+            return await this.reply_object.editReply({
                 ...message_options,
             });
         } else {
-            await this.replies[0].edit(message_options);
+            return await this.replies[0].edit(message_options);
         }
     }
 
@@ -180,30 +180,29 @@ export class TextBasedCommand {
         strict: boolean,
     ) {
         assert(this.replied || this.replies.length === 0);
+        let reply;
         if (this.reply_object instanceof Discord.ChatInputCommandInteraction) {
             if (this.replied && !strict) {
-                this.replies.push(
-                    await this.reply_object.followUp({
-                        ephemeral: !!message_options.ephemeral_if_possible,
-                        ...message_options,
-                    }),
-                );
+                reply = await this.reply_object.followUp({
+                    ephemeral: !!message_options.ephemeral_if_possible,
+                    ...message_options,
+                });
             } else {
-                this.replies.push(
-                    await this.reply_object.reply({
-                        ephemeral: !!message_options.ephemeral_if_possible,
-                        ...message_options,
-                    }),
-                );
+                reply = await this.reply_object.reply({
+                    ephemeral: !!message_options.ephemeral_if_possible,
+                    ...message_options,
+                });
             }
         } else {
             if (message_options.should_text_reply) {
-                this.replies.push(await this.reply_object.reply(message_options));
+                reply = await this.reply_object.reply(message_options);
             } else {
                 assert(!(this.reply_object.channel instanceof Discord.PartialGroupDMChannel));
-                this.replies.push(await this.reply_object.channel.send(message_options));
+                reply = await this.reply_object.channel.send(message_options);
             }
         }
+        this.replies.push(reply);
+        return reply;
     }
 
     make_message_options(
@@ -246,7 +245,7 @@ export class TextBasedCommand {
         positional_ephemeral_if_possible = false,
         positional_should_text_reply = false,
         strict = true,
-    ) {
+    ): Promise<Discord.Message | Discord.InteractionResponse> {
         const message_options = this.make_message_options(
             raw_message_options,
             positional_ephemeral_if_possible,
@@ -257,10 +256,11 @@ export class TextBasedCommand {
             assert(!this.replied || this.editing);
         }
         if (this.editing) {
-            await this.do_edit(message_options);
+            const reply = await this.do_edit(message_options);
             this.editing = false;
+            return reply;
         } else {
-            await this.do_reply(
+            const reply = await this.do_reply(
                 {
                     ...message_options,
                     content: message_options.content ?? undefined,
@@ -268,6 +268,7 @@ export class TextBasedCommand {
                 strict,
             );
             this.replied = true;
+            return reply;
         }
     }
 
