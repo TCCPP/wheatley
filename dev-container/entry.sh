@@ -19,7 +19,7 @@ while [ $SECONDS_ELAPSED -lt $TIMEOUT ]; do
 done
 
 if [ $SECONDS_ELAPSED -eq $TIMEOUT ]; then
-    echo "Timeout reached, $PORT was never listed in netstat"
+    echo "Timeout reached while waiting for mongodb, $PORT was never listed in netstat"
     exit 1
 fi
 
