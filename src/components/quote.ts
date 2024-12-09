@@ -113,23 +113,18 @@ export default class Quote extends BotComponent {
                     ...quote_descriptors.map(d => `${d.channel_id}/${d.message_id}` + (d.block ? " block" : "")),
                     message.url,
                 );
-                const command = new TextBasedCommand(
-                    "quote",
-                    this.wheatley.command_manager.text_commands["quote"],
+                const reply = await this.do_quote(message, quote_descriptors);
+                this.wheatley.make_deletable(
                     message,
-                    this.wheatley,
+                    reply instanceof Discord.InteractionResponse ? await reply.fetch() : reply,
                 );
-                await this.do_quote(command, quote_descriptors);
-                const reply = command.get_replies()[0];
-                assert(reply instanceof Discord.Message);
-                this.wheatley.make_deletable(message, reply);
                 await message.suppressEmbeds();
             }
         }
     }
 
     // TODO: In desperate need of a refactor
-    async do_quote(command: TextBasedCommand, messages: QuoteDescriptor[]) {
+    async do_quote(command: TextBasedCommand | Discord.Message, messages: QuoteDescriptor[]) {
         const embeds: (Discord.EmbedBuilder | Discord.Embed)[] = [];
         const files: (Discord.AttachmentPayload | Discord.Attachment)[] = [];
         for (const { domain, channel_id, message_id, block } of messages) {
@@ -139,7 +134,9 @@ export default class Quote extends BotComponent {
                 channel instanceof Discord.ThreadChannel ||
                 channel instanceof Discord.NewsChannel
             ) {
-                const member = await command.get_member();
+                // TODO: Handle null command.member case better...
+                const member =
+                    command instanceof TextBasedCommand ? await command.get_member() : unwrap(command.member);
                 const permissions = [
                     channel.permissionsFor(member).has(Discord.PermissionsBitField.Flags.ViewChannel),
                     channel.permissionsFor(member).has(Discord.PermissionsBitField.Flags.ReadMessageHistory),
@@ -192,7 +189,7 @@ export default class Quote extends BotComponent {
             }
         }
         if (embeds.length > 0) {
-            await command.reply({
+            return await command.reply({
                 embeds: embeds,
                 files: files.length == 0 ? undefined : files,
             });
