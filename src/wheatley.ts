@@ -1001,7 +1001,7 @@ export class Wheatley {
     //
 
     make_deletable(trigger: Discord.Message, message: Discord.Message) {
-        this.command_manager.deletable_map.set(trigger.id, message);
+        this.command_manager.make_deletable(trigger, message);
     }
 
     add_command<T extends unknown[]>(

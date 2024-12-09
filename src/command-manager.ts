@@ -24,15 +24,15 @@ type text_command_map_target = {
 
 // Manages bot commands. Handles text and slash command dispatch, edit, delete, etc.
 export class CommandManager {
-    readonly guild_command_manager: GuildCommandManager;
+    private readonly guild_command_manager: GuildCommandManager;
 
-    text_commands: Record<string, BotTextBasedCommand<unknown[]>> = {};
-    other_commands: Record<string, BaseBotInteraction<unknown[]>> = {};
+    private readonly text_commands: Record<string, BotTextBasedCommand<unknown[]>> = {};
+    private readonly other_commands: Record<string, BaseBotInteraction<unknown[]>> = {};
 
     // map of message snowflakes -> commands, used for making text commands deletable and editable
-    text_command_map = new SelfClearingMap<string, text_command_map_target>(30 * MINUTE);
+    private readonly text_command_map = new SelfClearingMap<string, text_command_map_target>(30 * MINUTE);
     // map of message snowflakes -> commands, used for making other messages deletable based on a trigger
-    deletable_map = new SelfClearingMap<string, Discord.Message>(30 * MINUTE);
+    private readonly deletable_map = new SelfClearingMap<string, Discord.Message>(30 * MINUTE);
 
     constructor(private readonly wheatley: Wheatley) {
         this.guild_command_manager = new GuildCommandManager(wheatley);
@@ -57,19 +57,23 @@ export class CommandManager {
     }
 
     // called once component setup is complete
-    async finalize(token: string) {
+    public async finalize(token: string) {
         await this.guild_command_manager.finalize(token);
     }
 
-    register_text_command(trigger: Discord.Message, command: TextBasedCommand, deletable = true) {
+    public register_text_command(trigger: Discord.Message, command: TextBasedCommand, deletable = true) {
         this.text_command_map.set(trigger.id, { command, deletable, content: trigger.content });
     }
 
-    make_deletable(trigger: Discord.Message, message: Discord.Message) {
+    public make_deletable(trigger: Discord.Message, message: Discord.Message) {
         this.deletable_map.set(trigger.id, message);
     }
 
-    add_command<T extends unknown[]>(
+    public get_command(command: string) {
+        return this.text_commands[command];
+    }
+
+    public add_command<T extends unknown[]>(
         command:
             | TextBasedCommandBuilder<T, true, true>
             | TextBasedCommandBuilder<T, true, false, true>
@@ -102,10 +106,10 @@ export class CommandManager {
     // Command dispatch
     //
 
-    static command_regex = new RegExp("^!(\\S+)");
+    private static command_regex = new RegExp("^!(\\S+)");
 
     // returns false if the message was not a wheatley command
-    async handle_text_command(message: Discord.Message, prev_command_obj?: TextBasedCommand) {
+    private async handle_text_command(message: Discord.Message, prev_command_obj?: TextBasedCommand) {
         if (this.wheatley.passive) {
             return false;
         }
@@ -170,7 +174,7 @@ export class CommandManager {
         }
     }
 
-    async handle_slash_comand(interaction: Discord.ChatInputCommandInteraction) {
+    private async handle_slash_comand(interaction: Discord.ChatInputCommandInteraction) {
         if (interaction.commandName in this.text_commands) {
             let command = this.text_commands[interaction.commandName];
             let command_log_name = interaction.commandName;
@@ -252,7 +256,7 @@ export class CommandManager {
     //
 
     // TODO: Notify about critical errors.....
-    async on_message(message: Discord.Message) {
+    private async on_message(message: Discord.Message) {
         try {
             // skip bots
             if (message.author.bot) {
@@ -267,7 +271,7 @@ export class CommandManager {
         }
     }
 
-    async on_message_update(
+    private async on_message_update(
         old_message: Discord.Message | Discord.PartialMessage,
         new_message: Discord.Message | Discord.PartialMessage,
     ) {
@@ -300,7 +304,7 @@ export class CommandManager {
         }
     }
 
-    async on_message_delete(message: Discord.Message | Discord.PartialMessage) {
+    private async on_message_delete(message: Discord.Message | Discord.PartialMessage) {
         try {
             if (this.text_command_map.has(message.id)) {
                 const { command, deletable } = this.text_command_map.get(message.id)!;
@@ -327,7 +331,7 @@ export class CommandManager {
         }
     }
 
-    async on_interaction(interaction: Discord.Interaction) {
+    private async on_interaction(interaction: Discord.Interaction) {
         try {
             if (interaction.isChatInputCommand()) {
                 await this.handle_slash_comand(interaction);

@@ -28,7 +28,7 @@ export default class Help extends BotComponent {
     }
 
     command_info(...commands: string[]) {
-        return commands.map(command => this.wheatley.command_manager.text_commands[command].get_command_info());
+        return commands.map(command => this.wheatley.command_manager.get_command(command).get_command_info());
     }
 
     async help(command: TextBasedCommand) {
@@ -106,7 +106,8 @@ export default class Help extends BotComponent {
                             ),
                             "Rolepersist aliases: `noofftopic`, `nosuggestions`, `nosuggestionsatall`, " +
                                 "`noreactions`, `nothreads`, `noseriousofftopic`, `notil`, `nomemes`. " +
-                                `Syntax: \`${this.wheatley.command_manager.text_commands["noofftopic"]
+                                `Syntax: \`${this.wheatley.command_manager
+                                    .get_command("noofftopic")
                                     .get_usage()
                                     .replace("noofftopic", "(alias)")}\``,
                             "Durations: `perm` for permanent or `number unit` (whitespace ignored)." +
