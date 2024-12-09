@@ -22,6 +22,25 @@ The bot is very modular and most components are completely independent of other 
 
 ## Local Development
 
+In order to run the bot locally you'll need to create a bot and setup some basic information for Wheatley:
+
+1. Go to https://discord.com/developers/applications and create an application
+2. Move or copy `auth.default.json` to `auth.json`
+3. Go to Application Settings > Bot
+   1. Request or reset your bot's token, copy it to `token` in `auth.json`
+   2. Under Privileged Gateway Intents, select presence intent, server members intent, and the message content intent
+4. Go to Application Settings > Installation
+   1. Select "Guild Install"
+   2. Select "Discord Provided Link"
+   3. Select scopes: `applications.commands` and `bot`
+   4. Select permissions: `Administrator`
+5. Setup a test server (ask on TCCPP for help if needed)
+6. Install your bot on a test server
+
+Once that is setup, the easiest way to get started with local bot development is to run `make run-dev-container`, builds
+a container and runs it with podman. Once the container builds, run `make dev` in the container's shell and you should
+be good to go.
+
 The bot relies on a lot of server-specific information, such as IDs for channels and roles. Components which do not rely
 on any server-specific information are marked as freestanding. When developing locally, configure the bot as
 freestanding (see below). If you are working on a component which relies on server specific information, the best
@@ -52,17 +71,18 @@ Secrets and other bot info must be configured in the `auth.json` file. An exampl
     "user": "wheatley",
     "password": "<mongo password>",
     "host": "127.0.0.1", // optional
-    "port": 27017        // optional
+    "port": 27017 // optional
   },
   "freestanding": false, // optional
-  "passive": false       // optional
+  "passive": false // optional
 }
 ```
 
 Mongo credentials can be omitted locally if you don't need to work on components that use mongo. `freestanding: true`
 can be specified to turn on only components which don't rely on channels etc. specific to Together C & C++ to exist.
-Freestanding mode also disables connecting to MongoDB.
-`passive: true` can be specified to run the bot in passive mode, where it will not advertise or react to commands, and only load components that are marked as passive (useful for testing new features in a second instance without interfering with a running primary instance).
+Freestanding mode also disables connecting to MongoDB. `passive: true` can be specified to run the bot in passive mode,
+where it will not advertise or react to commands, and only load components that are marked as passive (useful for
+testing new features in a second instance without interfering with a running primary instance).
 
 ## Bot Component Abstraction
 
@@ -171,39 +191,5 @@ is read or a regex can be specified.
 
 ## Database
 
-The bot uses MongoDB. It previously used a giant json file (the migration script is located in the scripts folder). For
-local development you likely won't need to setup a mongo database, depending on the components you're working on.
-However, if you are contributing to components that do need the database here are the installation steps for ubuntu:
-
-https://www.mongodb.com/docs/manual/tutorial/install-mongodb-on-ubuntu/
-
-```sh
-sudo apt-get install gnupg curl
-curl -fsSL https://pgp.mongodb.com/server-6.0.asc | \
-   sudo gpg -o /usr/share/keyrings/mongodb-server-6.0.gpg \
-   --dearmor
-echo "deb [ arch=amd64,arm64 signed-by=/usr/share/keyrings/mongodb-server-6.0.gpg ] https://repo.mongodb.org/apt/ubuntu focal/mongodb-org/6.0 multiverse" | sudo tee /etc/apt/sources.list.d/mongodb-org-6.0.list
-sudo apt-get update
-sudo apt-get install -y mongodb-org
-sudo systemctl start mongod
-sudo systemctl status mongod
-sudo systemctl enable mongod
-sudo ufw deny 27017
-mongosh
-# use admin
-# db.createUser({user:'mongoadmin', pwd: '<password>', roles:['userAdminAnyDatabase']})
-# db.auth('mongoadmin', '<password>') # test that authentication works
-# use wheatley
-# db.createUser({user:'wheatley', pwd: '<password>', roles:[{db:'wheatley', role:'readWrite'}]})
-# use wheatley
-sudo vim /etc/mongod.conf
-# net:
-#   port: 27017
-#   bindIp: 127.0.0.1
-# security:
-#   authorization: enabled
-sudo systemctl restart mongod
-```
-
-To connect with [compass](https://www.mongodb.com/try/download/compass) to a mongo server setup on another server:
-`ssh -L 27017:127.0.0.1:27017 <server> -N`.
+The bot uses MongoDB. It previously used a giant json file (the migration script is located in the scripts folder). The
+development docker container sets up and orchestrates a mongodb server for the bot to use.
