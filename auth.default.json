@@ -1,0 +1,13 @@
+{
+    "id": "<bot id>",
+    "guild": "<guild id>",
+    "token": "<token>",
+    "mongo": {
+      "user": "wheatley",
+      "password": "wheatley",
+      "host": "127.0.0.1",
+      "port": 27017
+    },
+    "freestanding": true,
+    "passive": false
+}
