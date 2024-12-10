@@ -7,14 +7,16 @@ import { M } from "../utils/debugging-and-logging.js";
 import { Wheatley } from "../wheatley.js";
 
 export class GuildCommandManager {
-    commands: any = [];
+    commands: (Discord.SlashCommandBuilder | Discord.ContextMenuCommandBuilder)[] = [];
     finalized = false;
     constructor(readonly wheatley: Wheatley) {}
-    register(builder: any) {
+    register(builder: Discord.SlashCommandBuilder | Discord.ContextMenuCommandBuilder | undefined) {
         if (this.finalized) {
             throw Error("Commands registered too late");
         }
-        this.commands.push(builder);
+        if (builder) {
+            this.commands.push(builder);
+        }
     }
     async finalize(token: string) {
         try {

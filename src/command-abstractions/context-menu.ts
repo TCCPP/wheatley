@@ -27,9 +27,15 @@ export class MessageContextMenuInteractionBuilder<HasHandler extends boolean = f
         return this as unknown as MessageContextMenuInteractionBuilder<true>;
     }
 
-    override to_command_descriptors(): [ConditionalOptional<HasHandler, BaseBotInteraction<any>>, unknown] {
+    override to_command_descriptors(): [
+        ConditionalOptional<HasHandler, BaseBotInteraction<any>>,
+        ConditionalOptional<HasHandler, Discord.ContextMenuCommandBuilder>,
+    ] {
         if (!this.handler) {
-            return [undefined as ConditionalOptional<HasHandler, BaseBotInteraction<any>>, undefined];
+            return [
+                undefined as ConditionalOptional<HasHandler, BaseBotInteraction<any>>,
+                undefined as ConditionalOptional<HasHandler, Discord.ContextMenuCommandBuilder>,
+            ];
         } else {
             return [
                 new BaseBotInteraction(this.name, this.handler) as ConditionalOptional<

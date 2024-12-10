@@ -20,7 +20,7 @@ export class ButtonInteractionBuilder<HasHandler extends boolean = false> extend
         this.handler = handler;
     }
 
-    override to_command_descriptors(): [ConditionalOptional<HasHandler, BaseBotInteraction<any>>, unknown] {
+    override to_command_descriptors(): [ConditionalOptional<HasHandler, BaseBotInteraction<any>>, undefined] {
         if (!this.handler) {
             return [undefined as ConditionalOptional<HasHandler, BaseBotInteraction<any>>, undefined];
         } else {
