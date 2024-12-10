@@ -106,7 +106,7 @@ export class CommandManager {
     // Command dispatch
     //
 
-    private static command_regex = new RegExp("^!(\\S+)");
+    private static readonly command_regex = /^!(\S+)/;
 
     // returns false if the message was not a wheatley command
     private async handle_text_command(message: Discord.Message, prev_command_obj?: TextBasedCommand) {
