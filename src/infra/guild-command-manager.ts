@@ -27,7 +27,11 @@ export class GuildCommandManager {
                 : Discord.Routes.applicationCommands(this.wheatley.id);
 
             this.wheatley.info(`Registering ${this.commands.length} application commands`);
-            M.log("Sending application commands");
+            M.log(
+                "Sending application commands:",
+                this.commands.length,
+                this.commands.map(builder => builder.name),
+            );
             await rest.put(route, { body: this.commands });
             M.log("Finished sending commands");
         } catch (e) {
