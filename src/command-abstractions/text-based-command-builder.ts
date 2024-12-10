@@ -213,16 +213,14 @@ export class TextBasedCommandBuilder<
         wheatley: Wheatley,
     ): BotTextBasedCommand<unknown[]>[] {
         const descriptors: BotTextBasedCommand<unknown[]>[] = [];
-        // TODO: No longer need to special-case top-level?
         if (this.type === "top-level") {
             assert(this.subcommands.length > 0);
             assert(this.names.length === 1);
-            assert(this.names.length == this.slash_config.length);
-            assert(this.names.length == this.descriptions.length);
-            const name = this.names[0];
-            const description = this.descriptions[0];
-            const slash = this.slash_config[0];
-            // Base text command entry
+        }
+        assert(this.names.length > 0);
+        assert(this.names.length == this.descriptions.length);
+        assert(this.names.length == this.slash_config.length);
+        for (const [name, description, slash] of zip(this.names, this.descriptions, this.slash_config)) {
             descriptors.push(
                 new BotTextBasedCommand(
                     name,
@@ -236,25 +234,6 @@ export class TextBasedCommandBuilder<
                     wheatley,
                 ) as BotTextBasedCommand<unknown[]>,
             );
-        } else {
-            assert(this.names.length > 0);
-            assert(this.names.length == this.descriptions.length);
-            assert(this.names.length == this.slash_config.length);
-            for (const [name, description, slash] of zip(this.names, this.descriptions, this.slash_config)) {
-                descriptors.push(
-                    new BotTextBasedCommand(
-                        name,
-                        name,
-                        description,
-                        slash,
-                        this.permissions,
-                        this.allow_trailing_junk,
-                        this.early_reply_mode,
-                        this,
-                        wheatley,
-                    ) as BotTextBasedCommand<unknown[]>,
-                );
-            }
         }
         return descriptors;
     }
