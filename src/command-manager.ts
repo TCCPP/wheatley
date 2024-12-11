@@ -18,9 +18,20 @@ import { forge_snowflake } from "./utils/discord.js";
 
 type issued_command_info = {
     command: TextBasedCommand;
-    deletable: boolean;
     content: string;
 };
+
+type bot_reply_to_user_entry =
+    | {
+          type: "command";
+          trigger_user: string;
+          reply_object: TextBasedCommand;
+      }
+    | {
+          type: "non_command";
+          trigger_user: string;
+          reply_object: Discord.Message;
+      };
 
 // Manages bot commands. Handles text and slash command dispatch, edit, delete, etc.
 export class CommandManager {
@@ -33,6 +44,8 @@ export class CommandManager {
     private readonly issued_commands_map = new SelfClearingMap<string, issued_command_info>(30 * MINUTE);
     // map of message snowflakes -> bot replies, used for making other messages deletable based on a trigger
     private readonly non_command_bot_reply_map = new SelfClearingMap<string, Discord.Message>(30 * MINUTE);
+    // map of message snowflakes -> user ids responsible for triggering the reply, used for :x:
+    private readonly bot_reply_to_user_map = new SelfClearingMap<string, bot_reply_to_user_entry>(30 * MINUTE);
 
     constructor(private readonly wheatley: Wheatley) {
         this.guild_command_manager = new GuildCommandManager(wheatley);
@@ -45,15 +58,23 @@ export class CommandManager {
                 old_message: Discord.Message | Discord.PartialMessage,
                 new_message: Discord.Message | Discord.PartialMessage,
             ) => {
-                this.on_message_update(old_message, new_message).catch(this.wheatley.critical_error.bind(this));
+                this.on_message_update(old_message, new_message).catch(
+                    this.wheatley.critical_error.bind(this.wheatley),
+                );
             },
         );
         this.wheatley.client.on("messageDelete", (message: Discord.Message | Discord.PartialMessage) => {
-            this.on_message_delete(message).catch(this.wheatley.critical_error.bind(this));
+            this.on_message_delete(message).catch(this.wheatley.critical_error.bind(this.wheatley));
         });
         this.wheatley.client.on("interactionCreate", (interaction: Discord.Interaction) => {
-            this.on_interaction(interaction).catch(this.wheatley.critical_error.bind(this));
+            this.on_interaction(interaction).catch(this.wheatley.critical_error.bind(this.wheatley));
         });
+        this.wheatley.client.on(
+            "messageReactionAdd",
+            (reaction: Discord.MessageReaction | Discord.PartialMessageReaction) => {
+                this.on_reaction_add(reaction).catch(this.wheatley.critical_error.bind(this.wheatley));
+            },
+        );
     }
 
     // called once component setup is complete
@@ -61,12 +82,17 @@ export class CommandManager {
         await this.guild_command_manager.finalize(token);
     }
 
-    private register_issued_command(trigger: Discord.Message, command: TextBasedCommand, deletable = true) {
-        this.issued_commands_map.set(trigger.id, { command, deletable, content: trigger.content });
+    private register_issued_command(trigger: Discord.Message, command: TextBasedCommand) {
+        this.issued_commands_map.set(trigger.id, { command, content: trigger.content });
     }
 
     public register_non_command_bot_reply(trigger: Discord.Message, message: Discord.Message) {
         this.non_command_bot_reply_map.set(trigger.id, message);
+        this.bot_reply_to_user_map.set(message.id, {
+            type: "non_command",
+            trigger_user: trigger.author.id,
+            reply_object: message,
+        });
     }
 
     public get_command(command: string) {
@@ -107,6 +133,21 @@ export class CommandManager {
     //
 
     private static readonly command_regex = /^!(\S+)/;
+
+    private async do_command_dispatch(
+        command: BotTextBasedCommand<unknown[]>,
+        command_obj: TextBasedCommand,
+        ...command_options: unknown[]
+    ) {
+        await command.handler(command_obj, ...command_options);
+        for (const reply of command_obj.replies) {
+            this.bot_reply_to_user_map.set(reply.id, {
+                type: "command",
+                trigger_user: command_obj.user.id,
+                reply_object: command_obj,
+            });
+        }
+    }
 
     // returns false if the message was not a wheatley command
     private async handle_text_command(message: Discord.Message, prev_command_obj?: TextBasedCommand) {
@@ -161,7 +202,7 @@ export class CommandManager {
                 }
                 const command_options = await command.parse_text_arguments(command_obj, message, command_body);
                 if (command_options !== undefined) {
-                    await command.handler(command_obj, ...command_options);
+                    await this.do_command_dispatch(command, command_obj, ...command_options);
                 }
                 return true;
             } else {
@@ -245,7 +286,7 @@ export class CommandManager {
                 }
             }
             await command_object.maybe_early_reply();
-            await command.handler(command_object, ...command_options);
+            await this.do_command_dispatch(command, command_object, ...command_options);
         } else {
             // TODO unknown command
         }
@@ -307,11 +348,9 @@ export class CommandManager {
     private async on_message_delete(message: Discord.Message | Discord.PartialMessage) {
         try {
             if (this.issued_commands_map.has(message.id)) {
-                const { command, deletable } = this.issued_commands_map.get(message.id)!;
+                const { command } = this.issued_commands_map.get(message.id)!;
                 this.issued_commands_map.remove(message.id);
-                if (deletable) {
-                    await command.delete_replies_if_replied();
-                }
+                await command.delete_replies_if_replied();
             } else if (this.non_command_bot_reply_map.has(message.id)) {
                 const target = this.non_command_bot_reply_map.get(message.id)!;
                 this.non_command_bot_reply_map.remove(message.id);
@@ -328,6 +367,27 @@ export class CommandManager {
         } catch (e) {
             // TODO....
             this.wheatley.critical_error(e);
+        }
+    }
+
+    async on_reaction_add(reaction: Discord.MessageReaction | Discord.PartialMessageReaction) {
+        const emoji_name = reaction.emoji.name?.toLowerCase();
+        assert(emoji_name != null);
+        if (emoji_name === "❌" && this.bot_reply_to_user_map.has(reaction.message.id)) {
+            const {
+                type: reply_type,
+                trigger_user,
+                reply_object,
+            } = unwrap(this.bot_reply_to_user_map.get(reaction.message.id));
+            if (reaction.users.cache.has(trigger_user)) {
+                if (reply_type === "command") {
+                    await reply_object.delete_replies_if_replied();
+                } else {
+                    await reply_object.delete();
+                }
+            } else {
+                await Promise.all(reaction.users.cache.map(user => reaction.users.remove(user)));
+            }
         }
     }
 

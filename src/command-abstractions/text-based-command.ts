@@ -34,7 +34,7 @@ export class TextBasedCommand {
     public member: Discord.GuildMember | Discord.APIInteractionGuildMember | null;
     public readonly user: Discord.User;
 
-    public replies: (Discord.Message | Discord.InteractionResponse)[] = [];
+    public replies: Discord.Message[] = [];
     public replied = false;
     // editing flag indicates a reply should overwrite a previous reply, used by the command editing system
     private editing = false;
@@ -188,10 +188,12 @@ export class TextBasedCommand {
                     ...message_options,
                 });
             } else {
-                reply = await this.reply_object.reply({
-                    ephemeral: !!message_options.ephemeral_if_possible,
-                    ...message_options,
-                });
+                reply = await (
+                    await this.reply_object.reply({
+                        ephemeral: !!message_options.ephemeral_if_possible,
+                        ...message_options,
+                    })
+                ).fetch();
             }
         } else {
             if (message_options.should_text_reply) {
