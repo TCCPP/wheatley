@@ -14,6 +14,8 @@ export type message_database_entry = {
     timestamp: number;
     edits: { content: string; embeds: Discord.APIEmbed[]; attachments: Discord.Attachment[]; timestamp: number }[];
     deleted?: number;
+    reply_to: string | null;
+    collect_version?: 0 | 1;
 };
 
 // indices: channel

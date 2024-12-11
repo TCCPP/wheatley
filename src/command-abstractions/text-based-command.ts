@@ -161,12 +161,7 @@ export class TextBasedCommand {
         } else {
             assert(this.replies.length === 1 && this.replied);
         }
-        assert(
-            this.reply_object instanceof Discord.ChatInputCommandInteraction ==
-                this.replies[0] instanceof Discord.InteractionResponse,
-        );
-        if (this.replies[0] instanceof Discord.InteractionResponse) {
-            assert(this.reply_object instanceof Discord.ChatInputCommandInteraction);
+        if (this.reply_object instanceof Discord.ChatInputCommandInteraction) {
             return await this.reply_object.editReply({
                 ...message_options,
             });
@@ -247,7 +242,7 @@ export class TextBasedCommand {
         positional_ephemeral_if_possible = false,
         positional_should_text_reply = false,
         strict = true,
-    ): Promise<Discord.Message | Discord.InteractionResponse> {
+    ): Promise<Discord.Message> {
         const message_options = this.make_message_options(
             raw_message_options,
             positional_ephemeral_if_possible,
@@ -377,8 +372,7 @@ export class TextBasedCommand {
         // note can be called while editing if edited from a command to a non-command
         if (this.replied) {
             assert(this.replies.length > 0);
-            if (this.replies[0] instanceof Discord.InteractionResponse) {
-                assert(this.reply_object instanceof Discord.ChatInputCommandInteraction);
+            if (this.reply_object instanceof Discord.ChatInputCommandInteraction) {
                 await this.reply_object.deleteReply();
             } else {
                 const res = await Promise.allSettled(this.replies.map(reply => reply.delete()));
