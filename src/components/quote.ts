@@ -114,7 +114,7 @@ export default class Quote extends BotComponent {
                     message.url,
                 );
                 const reply = await this.do_quote(message, quote_descriptors);
-                this.wheatley.make_deletable(
+                this.wheatley.register_non_command_bot_reply(
                     message,
                     reply instanceof Discord.InteractionResponse ? await reply.fetch() : reply,
                 );

@@ -1000,8 +1000,8 @@ export class Wheatley {
     // Basic interaction and command stuff
     //
 
-    make_deletable(trigger: Discord.Message, message: Discord.Message) {
-        this.command_manager.make_deletable(trigger, message);
+    register_non_command_bot_reply(trigger: Discord.Message, message: Discord.Message) {
+        this.command_manager.register_non_command_bot_reply(trigger, message);
     }
 
     add_command<T extends unknown[]>(

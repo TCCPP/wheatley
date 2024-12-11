@@ -16,7 +16,7 @@ import { unwrap } from "./utils/misc.js";
 import { M } from "./utils/debugging-and-logging.js";
 import { forge_snowflake } from "./utils/discord.js";
 
-type text_command_map_target = {
+type issued_command_info = {
     command: TextBasedCommand;
     deletable: boolean;
     content: string;
@@ -30,9 +30,9 @@ export class CommandManager {
     private readonly other_commands: Record<string, BaseBotInteraction<unknown[]>> = {};
 
     // map of message snowflakes -> commands, used for making text commands deletable and editable
-    private readonly text_command_map = new SelfClearingMap<string, text_command_map_target>(30 * MINUTE);
-    // map of message snowflakes -> commands, used for making other messages deletable based on a trigger
-    private readonly deletable_map = new SelfClearingMap<string, Discord.Message>(30 * MINUTE);
+    private readonly issued_commands_map = new SelfClearingMap<string, issued_command_info>(30 * MINUTE);
+    // map of message snowflakes -> bot replies, used for making other messages deletable based on a trigger
+    private readonly non_command_bot_reply_map = new SelfClearingMap<string, Discord.Message>(30 * MINUTE);
 
     constructor(private readonly wheatley: Wheatley) {
         this.guild_command_manager = new GuildCommandManager(wheatley);
@@ -61,12 +61,12 @@ export class CommandManager {
         await this.guild_command_manager.finalize(token);
     }
 
-    public register_text_command(trigger: Discord.Message, command: TextBasedCommand, deletable = true) {
-        this.text_command_map.set(trigger.id, { command, deletable, content: trigger.content });
+    private register_issued_command(trigger: Discord.Message, command: TextBasedCommand, deletable = true) {
+        this.issued_commands_map.set(trigger.id, { command, deletable, content: trigger.content });
     }
 
-    public make_deletable(trigger: Discord.Message, message: Discord.Message) {
-        this.deletable_map.set(trigger.id, message);
+    public register_non_command_bot_reply(trigger: Discord.Message, message: Discord.Message) {
+        this.non_command_bot_reply_map.set(trigger.id, message);
     }
 
     public get_command(command: string) {
@@ -122,7 +122,7 @@ export class CommandManager {
                 const command_obj = prev_command_obj
                     ? new TextBasedCommand(prev_command_obj, command_name, command, message)
                     : new TextBasedCommand(command_name, command, message, this.wheatley);
-                this.register_text_command(message, command_obj);
+                this.register_issued_command(message, command_obj);
                 let command_log_name = command_name;
                 if (command.subcommands) {
                     // expect a subcommand argument
@@ -276,8 +276,8 @@ export class CommandManager {
         new_message: Discord.Message | Discord.PartialMessage,
     ) {
         try {
-            if (this.text_command_map.has(new_message.id)) {
-                const { command, content } = this.text_command_map.get(new_message.id)!;
+            if (this.issued_commands_map.has(new_message.id)) {
+                const { command, content } = this.issued_commands_map.get(new_message.id)!;
                 const message = !new_message.partial ? new_message : await new_message.fetch();
                 // probably an embed update
                 if (message.content === content) {
@@ -295,7 +295,7 @@ export class CommandManager {
                 if (!(await this.handle_text_command(message, command))) {
                     // returns false if the message was not a wheatley command; delete replies and remove from map
                     await command.delete_replies_if_replied();
-                    this.text_command_map.remove(new_message.id);
+                    this.issued_commands_map.remove(new_message.id);
                 }
             }
         } catch (e) {
@@ -306,15 +306,15 @@ export class CommandManager {
 
     private async on_message_delete(message: Discord.Message | Discord.PartialMessage) {
         try {
-            if (this.text_command_map.has(message.id)) {
-                const { command, deletable } = this.text_command_map.get(message.id)!;
-                this.text_command_map.remove(message.id);
+            if (this.issued_commands_map.has(message.id)) {
+                const { command, deletable } = this.issued_commands_map.get(message.id)!;
+                this.issued_commands_map.remove(message.id);
                 if (deletable) {
                     await command.delete_replies_if_replied();
                 }
-            } else if (this.deletable_map.has(message.id)) {
-                const target = this.deletable_map.get(message.id)!;
-                this.deletable_map.remove(message.id);
+            } else if (this.non_command_bot_reply_map.has(message.id)) {
+                const target = this.non_command_bot_reply_map.get(message.id)!;
+                this.non_command_bot_reply_map.remove(message.id);
                 try {
                     await target.delete();
                 } catch (e) {

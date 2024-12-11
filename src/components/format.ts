@@ -245,7 +245,7 @@ export default class Format extends BotComponent {
 
                     if (replying_to.author.bot) {
                         const reply = await message.reply("Can't format a bot message");
-                        this.wheatley.make_deletable(message, reply);
+                        this.wheatley.register_non_command_bot_reply(message, reply);
                         return;
                     }
 
@@ -274,15 +274,15 @@ export default class Format extends BotComponent {
                         if (should_replace_original(replying_to, message.createdAt)) {
                             await replying_to.delete();
                         } else {
-                            this.wheatley.make_deletable(message, formatted_message);
+                            this.wheatley.register_non_command_bot_reply(message, formatted_message);
                         }
                     } else {
                         const reply = await message.reply("Nothing to format");
-                        this.wheatley.make_deletable(message, reply);
+                        this.wheatley.register_non_command_bot_reply(message, reply);
                     }
                 } else {
                     const reply = await message.reply("!f must be used while replying to a message");
-                    this.wheatley.make_deletable(message, reply);
+                    this.wheatley.register_non_command_bot_reply(message, reply);
                 }
             }
         } catch (e) {
