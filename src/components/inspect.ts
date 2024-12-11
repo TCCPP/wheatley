@@ -114,6 +114,7 @@ export default class Inspect extends BotComponent {
                         `Reply to message id: \`${message.reference?.messageId}\`\n`,
                     ),
                 ],
+                ephemeral: true,
                 ephemeral_if_possible: true,
             });
         }
