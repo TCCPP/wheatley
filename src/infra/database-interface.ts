@@ -12,7 +12,7 @@ import { moderation_entry } from "./schemata/moderation.js";
 import { no_distraction_entry } from "./schemata/nodistractions.js";
 import { roulette_leaderboard_entry } from "./schemata/roulette.js";
 import { suggestion_entry } from "./schemata/server-suggestion-tracker.js";
-import { skill_suggestion_entry } from "./schemata/skill-role-suggestion.js";
+import { skill_suggestion_thread_entry, skill_suggestion_entry } from "./schemata/skill-role-suggestion.js";
 import { auto_delete_entry, auto_delete_threshold_notifications, starboard_entry } from "./schemata/starboard.js";
 import { button_scoreboard_entry } from "./schemata/the-button.js";
 import {
@@ -122,6 +122,7 @@ export type WheatleyDatabaseProxy = WheatleyDatabase & {
     auto_deletes: mongo.Collection<auto_delete_entry>;
     wheatley: mongo.Collection<wheatley_database_info>;
     moderations: mongo.Collection<moderation_entry>;
+    skill_role_threads: mongo.Collection<skill_suggestion_thread_entry>;
     skill_role_suggestions: mongo.Collection<skill_suggestion_entry>;
     message_database: mongo.Collection<message_database_entry>;
     message_database_status: mongo.Collection<message_database_status_entry>;

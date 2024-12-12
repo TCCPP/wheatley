@@ -2,11 +2,11 @@ import * as Discord from "discord.js";
 
 import { strict as assert } from "assert";
 
-import { unwrap } from "../utils/misc.js";
-import { departialize } from "../utils/discord.js";
+import { descending, unwrap } from "../utils/misc.js";
+import { departialize, get_tag } from "../utils/discord.js";
 import { SelfClearingMap } from "../utils/containers.js";
 import { M } from "../utils/debugging-and-logging.js";
-import { colors, MINUTE } from "../common.js";
+import { colors, DAY, MINUTE } from "../common.js";
 import { BotComponent } from "../bot-component.js";
 import { skill_roles_order, Wheatley } from "../wheatley.js";
 import {
@@ -14,6 +14,7 @@ import {
     MessageContextMenuInteractionBuilder,
 } from "../command-abstractions/context-menu.js";
 import { build_description, capitalize } from "../utils/strings.js";
+import { skill_level, skill_suggestion_thread_entry } from "../infra/schemata/skill-role-suggestion.js";
 
 type interaction_context = { member: Discord.GuildMember; role?: string; context?: Discord.Message };
 
@@ -101,32 +102,138 @@ export default class SkillRoleSuggestion extends BotComponent {
         }
     }
 
-    async get_thread(member: Discord.GuildMember) {
-        const entry = await this.wheatley.database.skill_role_suggestions.findOne({ user_id: member.user.id });
-        if (entry) {
-            const thread = await this.wheatley.channels.skill_role_suggestions.threads.fetch(entry.channel_id);
-            if (thread) {
-                return thread;
-            }
+    async make_thread_status(
+        member: Discord.GuildMember,
+        thread_start_time: number,
+    ): Promise<{ tags: string[]; content: string }> {
+        const suggestions = await this.wheatley.database.skill_role_suggestions
+            .find({ user_id: member.id, time: { $gte: thread_start_time } })
+            .toArray();
+        const counts: Record<skill_level, number> = {
+            beginner: 0,
+            intermediate: 0,
+            proficient: 0,
+            advanced: 0,
+            expert: 0,
+        };
+        for (const suggestion of suggestions) {
+            assert(suggestion.level in counts);
+            counts[suggestion.level]++;
         }
+        const sorted_filtered_counts = (Object.entries(counts) as [skill_level, number][])
+            .toSorted((a, b) => descending(a, b, v => v[1]))
+            .filter(v => v[1] !== 0);
+        const suggested_levels = sorted_filtered_counts.map(([k, _]) => k);
+        const open_tag = get_tag(this.wheatley.channels.skill_role_suggestions, "Open").id;
+        const role_tags = suggested_levels.map(
+            role => get_tag(this.wheatley.channels.skill_role_suggestions, capitalize(role)).id,
+        );
+        return {
+            tags: [open_tag, ...role_tags],
+            content: build_description(
+                `<@${member.id}> ${member.displayName}`,
+                `Suggested roles: ${sorted_filtered_counts
+                    .map(([level, count]) => `${count}x<@&${this.wheatley.skill_roles[level].id}>`)
+                    .join(", ")}`,
+            ),
+        };
+    }
+
+    async update_or_make_thread(
+        member: Discord.GuildMember,
+        suggestion_time: number,
+    ): Promise<Discord.ForumThreadChannel> {
         await this.wheatley.database.lock();
         try {
+            const entry = await this.wheatley.database.skill_role_threads.findOne({
+                user_id: member.user.id,
+                thread_closed: null,
+            });
+            if (entry) {
+                const thread = await this.wheatley.channels.skill_role_suggestions.threads.fetch(entry.channel_id);
+                if (thread) {
+                    const start = unwrap(await thread.fetchStarterMessage());
+                    const { content, tags } = await this.make_thread_status(member, entry.thread_opened);
+                    await start.edit({ content });
+                    await thread.setAppliedTags(tags);
+                    return thread;
+                }
+            }
+            const { content, tags } = await this.make_thread_status(member, suggestion_time);
             const thread = await this.wheatley.channels.skill_role_suggestions.threads.create({
                 name: member.displayName,
                 autoArchiveDuration: Discord.ThreadAutoArchiveDuration.ThreeDays,
                 message: {
-                    content: `Skill role suggestions for ${member.displayName}`,
+                    content,
                 },
             });
-            const res = await this.wheatley.database.skill_role_suggestions.insertOne({
+            await thread.send({
+                poll: {
+                    question: {
+                        text: "Skill level?",
+                    },
+                    answers: [
+                        { text: "intermediate", emoji: "🐸" },
+                        { text: "proficient", emoji: "🩵" },
+                        { text: "advanced", emoji: "💙" },
+                        { text: "expert", emoji: "💜" },
+                    ],
+                    allowMultiselect: false,
+                    duration: 24 * 30, // 30 days
+                },
+            });
+            const thread_entry: skill_suggestion_thread_entry = {
                 user_id: member.user.id,
                 channel_id: thread.id,
-            });
+                thread_opened: suggestion_time,
+                thread_closed: null,
+            };
+            const res = await this.wheatley.database.skill_role_threads.insertOne(thread_entry);
             assert(res.acknowledged);
+            await thread.setAppliedTags(tags);
             return thread;
         } finally {
             this.wheatley.database.unlock();
         }
+    }
+
+    async handle_suggestion(
+        member: Discord.GuildMember,
+        suggester: Discord.GuildMember,
+        role: string,
+        comments: string,
+        context: Discord.Message<boolean> | undefined,
+    ) {
+        const suggestion_time = Date.now();
+        const res = await this.wheatley.database.skill_role_suggestions.insertOne({
+            user_id: member.user.id,
+            suggested_by: suggester.user.id,
+            time: suggestion_time,
+            level: role.toLowerCase() as skill_level,
+        });
+        assert(res.acknowledged);
+        const thread = await this.update_or_make_thread(member, suggestion_time);
+        await thread.send({
+            embeds: [
+                new Discord.EmbedBuilder()
+                    .setColor(this.wheatley.skill_roles[role.toLowerCase() as skill_level].color)
+                    .setAuthor({
+                        name: member.displayName,
+                        iconURL: member.avatarURL() ?? member.user.displayAvatarURL(),
+                    })
+                    .setDescription(
+                        build_description(
+                            `Skill role suggestion for <@${member.user.id}>: **${role}**`,
+                            `Suggested by: <@${suggester.user.id}>`,
+                            `Context: ${context ? `[link](${context.url})` : "None (user context menu)"}`,
+                            comments.length > 0 ? `Comments: ${comments}` : null,
+                        ),
+                    )
+                    .setFooter({
+                        text: `For: ${member.user.id}`,
+                    }),
+            ],
+        });
     }
 
     async launch_modal(interaction: Discord.StringSelectMenuInteraction) {
@@ -148,39 +255,21 @@ export default class SkillRoleSuggestion extends BotComponent {
     }
 
     async handle_modal_submit(interaction: Discord.ModalSubmitInteraction) {
+        await interaction.reply({
+            content: "Working...",
+            ephemeral: true,
+        });
         const suggester =
             interaction.member instanceof Discord.GuildMember
                 ? interaction.member
                 : await this.wheatley.TCCPP.members.fetch(interaction.user.id);
         const { member, role, context } = unwrap(this.target_map.get(interaction.user.id));
-        const suggestion_modal = new Discord.EmbedBuilder()
-            .setColor(colors.wheatley)
-            .setAuthor({
-                name: member.displayName,
-                iconURL: member.avatarURL() ?? member.user.displayAvatarURL(),
-            })
-            .setFooter({
-                text: `For: ${member.user.id}`,
-            });
         const comments = interaction.fields.getTextInputValue("skill-role-suggestion-modal-comments");
-        const description = build_description(
-            `Skill role suggestion for <@${member.user.id}>: **${role}**`,
-            `Suggested by: <@${suggester.user.id}>`,
-            `Context: ${context ? `[link](${context.url})` : "None (user context menu)"}`,
-            comments.length > 0 ? `Comments: ${comments}` : null,
-        );
-        suggestion_modal.setDescription(description);
-        const suggestion = await (
-            await this.get_thread(member)
-        ).send({
-            embeds: [suggestion_modal],
-        });
-        await interaction.reply({
+        // TODO: Why does role need to be unwrapped?
+        await this.handle_suggestion(member, suggester, unwrap(role), comments, context);
+        await interaction.editReply({
             content: "Thank you, your suggestion has been received",
-            ephemeral: true,
         });
-        await suggestion.react("👍");
-        await suggestion.react("👎");
     }
 
     override async on_interaction_create(interaction: Discord.Interaction) {
