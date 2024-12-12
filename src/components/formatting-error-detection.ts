@@ -60,28 +60,22 @@ export default class FormattingErrorDetection extends BotComponent {
         new dismark.TextRule(),
     ]);
 
-    static has_likely_format_errors(content: string, has_skill_roles_other_than_beginner: boolean) {
+    static has_likely_format_errors(content: string) {
         // early return
         if (content.search(/['"`]{2}/) === -1) {
             return false;
         }
         const ast = FormattingErrorDetection.markdown_parser.parse(content);
-        const scan_for_likely_mistakes = (node: dismark.markdown_node | failed_code_block): boolean => {
+        let has_properly_formatted_code_blocks = false;
+        let has_likely_format_mistakes = false;
+        const scan_for_likely_mistakes = (node: dismark.markdown_node | failed_code_block) => {
             switch (node.type) {
                 case "doc":
-                    for (const child of node.content) {
-                        if (scan_for_likely_mistakes(child)) {
-                            return true;
-                        }
-                    }
-                    return false;
+                    node.content.forEach(scan_for_likely_mistakes);
+                    break;
                 case "list":
-                    for (const child of node.items) {
-                        if (scan_for_likely_mistakes(child)) {
-                            return true;
-                        }
-                    }
-                    return false;
+                    node.items.forEach(scan_for_likely_mistakes);
+                    break;
                 case "italics":
                 case "bold":
                 case "underline":
@@ -91,27 +85,44 @@ export default class FormattingErrorDetection extends BotComponent {
                 case "subtext":
                 case "masked_link":
                 case "blockquote":
-                    return scan_for_likely_mistakes(node.content);
+                    scan_for_likely_mistakes(node.content);
+                    break;
                 case "inline_code":
-                    return node.content.includes("\n");
+                    if (node.content.includes("\n")) {
+                        has_likely_format_mistakes = true;
+                    }
+                    break;
                 case "code_block":
-                    return has_skill_roles_other_than_beginner && node.language === null;
+                    if (node.language !== null) {
+                        has_properly_formatted_code_blocks = true;
+                    } else if ((node.content.match(/[()[\];*+.]/g) ?? []).length / node.content.length >= 0.05) {
+                        has_likely_format_mistakes = true;
+                    }
+                    break;
                 case "failed_code_block":
-                    return (node.content.match(/[()[\];]/g) ?? []).length >= 5;
+                    if ((node.content.match(/[()[\];*+.]/g) ?? []).length / node.content.length >= 0.05) {
+                        has_likely_format_mistakes = true;
+                    }
+                    break;
                 case "plain":
-                    return false;
+                    break;
                 default:
                     throw new Error(`Unknown ast node ${(node as dismark.markdown_node).type}`);
             }
         };
-        return scan_for_likely_mistakes(ast);
+        scan_for_likely_mistakes(ast);
+        // working around a ts eslint bug
+        return (has_likely_format_mistakes as boolean) && !(has_properly_formatted_code_blocks as boolean);
     }
 
     has_likely_format_errors(message: Discord.Message) {
         const has_skill_roles_other_than_beginner = message.member
             ? this.wheatley.has_skill_roles_other_than_beginner(message.member)
             : false;
-        return FormattingErrorDetection.has_likely_format_errors(message.content, has_skill_roles_other_than_beginner);
+        if (has_skill_roles_other_than_beginner) {
+            return false;
+        }
+        return FormattingErrorDetection.has_likely_format_errors(message.content);
     }
 
     override async on_message_create(message: Discord.Message) {
