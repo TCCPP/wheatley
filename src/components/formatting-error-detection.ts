@@ -60,6 +60,11 @@ export default class FormattingErrorDetection extends BotComponent {
         new dismark.TextRule(),
     ]);
 
+    static has_enough_special_characters_to_likely_be_code(content: string) {
+        const count = (content.match(/[()[\];{}]/g) ?? []).length;
+        return count / content.length >= 0.05 && count >= 6;
+    }
+
     static has_likely_format_errors(content: string) {
         // early return
         if (content.search(/['"`]{2}/) === -1) {
@@ -95,12 +100,12 @@ export default class FormattingErrorDetection extends BotComponent {
                 case "code_block":
                     if (node.language !== null) {
                         has_properly_formatted_code_blocks = true;
-                    } else if ((node.content.match(/[()[\];*+.]/g) ?? []).length / node.content.length >= 0.05) {
+                    } else if (this.has_enough_special_characters_to_likely_be_code(node.content)) {
                         has_likely_format_mistakes = true;
                     }
                     break;
                 case "failed_code_block":
-                    if ((node.content.match(/[()[\];*+.]/g) ?? []).length / node.content.length >= 0.05) {
+                    if (this.has_enough_special_characters_to_likely_be_code(node.content)) {
                         has_likely_format_mistakes = true;
                     }
                     break;
