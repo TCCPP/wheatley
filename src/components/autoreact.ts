@@ -85,7 +85,12 @@ export default class Autoreact extends BotComponent {
             if (message.content.trim().match(/^disagree[.!]?$/gi)) {
                 await message.react("🛑");
             }
-            if (message.content.trim().match(/why.+am.+i.+named.+monke/gi)) {
+            if (
+                message.content.trim().match(/\bwhy\b/gi) &&
+                message.content.trim().match(/\bmonke\b/gi) &&
+                message.content.trim().match(/\bam\b/gi) &&
+                message.content.trim().match(/\bnamed\b/gi)
+            ) {
                 const reaction = message.guild!.emojis.cache.find(emoji => emoji.name === "monke2");
                 if (reaction !== undefined) {
                     message.react(reaction).catch(this.wheatley.critical_error);
