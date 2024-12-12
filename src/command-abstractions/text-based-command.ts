@@ -164,6 +164,7 @@ export class TextBasedCommand {
         if (this.reply_object instanceof Discord.ChatInputCommandInteraction) {
             return await this.reply_object.editReply({
                 ...message_options,
+                content: message_options.content ? message_options.content : null,
             });
         } else {
             return await this.replies[0].edit(message_options);
