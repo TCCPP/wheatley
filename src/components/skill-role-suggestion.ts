@@ -15,6 +15,8 @@ import {
 } from "../command-abstractions/context-menu.js";
 import { build_description, capitalize } from "../utils/strings.js";
 import { skill_level, skill_suggestion_thread_entry } from "../infra/schemata/skill-role-suggestion.js";
+import { EarlyReplyMode, TextBasedCommandBuilder } from "../command-abstractions/text-based-command-builder.js";
+import { TextBasedCommand } from "../command-abstractions/text-based-command.js";
 
 type interaction_context = { member: Discord.GuildMember; role?: string; context?: Discord.Message };
 
@@ -33,6 +35,13 @@ export default class SkillRoleSuggestion extends BotComponent {
             new MessageContextMenuInteractionBuilder("Suggest Skill Role Message").set_handler(
                 this.skill_suggestion.bind(this),
             ),
+        );
+
+        this.add_command(
+            new TextBasedCommandBuilder("close-skill-suggestion-thread", EarlyReplyMode.ephemeral)
+                .set_description("Closes a skill role suggestions thread")
+                .set_permissions(Discord.PermissionFlagsBits.BanMembers)
+                .set_handler(this.close_thread.bind(this)),
         );
     }
 
@@ -162,9 +171,10 @@ export default class SkillRoleSuggestion extends BotComponent {
             const { content, tags } = await this.make_thread_status(member, suggestion_time);
             const thread = await this.wheatley.channels.skill_role_suggestions.threads.create({
                 name: member.displayName,
-                autoArchiveDuration: Discord.ThreadAutoArchiveDuration.ThreeDays,
+                autoArchiveDuration: Discord.ThreadAutoArchiveDuration.OneWeek,
                 message: {
                     content,
+                    allowedMentions: { parse: [] },
                 },
             });
             await thread.send({
@@ -233,6 +243,7 @@ export default class SkillRoleSuggestion extends BotComponent {
                         text: `For: ${member.user.id}`,
                     }),
             ],
+            allowedMentions: { parse: [] },
         });
     }
 
@@ -278,5 +289,68 @@ export default class SkillRoleSuggestion extends BotComponent {
         } else if (interaction.isModalSubmit() && interaction.customId == "skill-role-suggestion-modal") {
             return this.handle_modal_submit(interaction);
         }
+    }
+
+    async close_thread(command: TextBasedCommand) {
+        const channel = await command.get_channel();
+        if (!channel.isThread() || !(channel.parent instanceof Discord.ForumChannel)) {
+            await command.reply({
+                embeds: [
+                    new Discord.EmbedBuilder()
+                        .setColor(colors.red)
+                        .setDescription("Command must be used on a skill role suggestion thread."),
+                ],
+            });
+            return;
+        }
+        const thread_entries = await this.wheatley.database.skill_role_threads
+            .aggregate([
+                {
+                    $match: {
+                        channel_id: channel.id,
+                    },
+                },
+                {
+                    $sort: {
+                        thread_opened: -1,
+                    },
+                },
+                {
+                    $limit: 1,
+                },
+            ])
+            .toArray();
+        if (thread_entries.length === 0) {
+            await command.reply({
+                embeds: [
+                    new Discord.EmbedBuilder()
+                        .setColor(colors.red)
+                        .setDescription("Thread not found in the skill role thread database."),
+                ],
+            });
+            return;
+        }
+        const thread_entry = thread_entries[0];
+        if (!thread_entry.thread_closed) {
+            const res = await this.wheatley.database.skill_role_threads.updateOne(
+                {
+                    channel_id: channel.id,
+                },
+                {
+                    $set: {
+                        thread_closed: Date.now(),
+                    },
+                },
+            );
+            assert(res.matchedCount == 1);
+        }
+        const open_tag = get_tag(channel.parent, "Open").id;
+        const closed_tag = get_tag(channel.parent, "Closed").id;
+        await channel.setAppliedTags([closed_tag].concat(channel.appliedTags.filter(tag => tag !== open_tag)));
+        await command.reply({
+            embeds: [new Discord.EmbedBuilder().setColor(colors.wheatley).setDescription("Closing now, thanks all.")],
+        });
+        await channel.setAutoArchiveDuration(Discord.ThreadAutoArchiveDuration.OneDay);
+        await channel.setArchived(true);
     }
 }
