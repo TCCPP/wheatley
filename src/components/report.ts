@@ -112,7 +112,7 @@ export default class Report extends BotComponent {
                 if (message.length > 0) {
                     report_embed.setDescription(`Message: ${message}`);
                 }
-                const quote_embeds = await this.wheatley.make_quote_embeds([target_message], {
+                const quote_embeds = await this.utilities.make_quote_embeds([target_message], {
                     message_id_footer: true,
                     user_id_footer: true,
                 });

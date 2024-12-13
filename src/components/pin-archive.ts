@@ -31,7 +31,7 @@ export default class PinArchive extends BotComponent {
         // TODO: Essentially the same as update_starboard
         try {
             const make_embeds = () =>
-                this.wheatley.make_quote_embeds([message], {
+                this.utilities.make_quote_embeds([message], {
                     template: "\n\n**[Jump to message]($$)**",
                 });
             const pin_archive_entry = await this.wheatley.database.pin_archive.findOne({ message: message.id });

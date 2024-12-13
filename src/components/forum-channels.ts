@@ -255,7 +255,7 @@ export default class ForumChannels extends BotComponent {
         to: Discord.TextChannel,
     ) {
         // mirror to the text channel
-        const quote = await this.wheatley.make_quote_embeds([message], {
+        const quote = await this.utilities.make_quote_embeds([message], {
             no_extra_media_embeds,
             custom_content: Synopsinator.make_synopsis(message.content),
             title,

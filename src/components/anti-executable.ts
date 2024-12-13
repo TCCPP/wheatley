@@ -205,7 +205,7 @@ export default class AntiExecutable extends BotComponent {
     }
 
     async handle_executables(message: Discord.Message, attachments: Discord.Attachment[]) {
-        const quote = await this.wheatley.make_quote_embeds([message]);
+        const quote = await this.utilities.make_quote_embeds([message]);
         await message.delete();
         assert(!(message.channel instanceof Discord.PartialGroupDMChannel));
         await message.channel.send(`<@${message.author.id}> Please do not send executable files`);
@@ -217,7 +217,7 @@ export default class AntiExecutable extends BotComponent {
     }
 
     async handle_archives(message: Discord.Message, attachments: Discord.Attachment[]) {
-        const quote = await this.wheatley.make_quote_embeds([message]);
+        const quote = await this.utilities.make_quote_embeds([message]);
         const flag_message = await this.wheatley.channels.staff_flag_log.send({
             content: `:warning: Archive file(s) detected`,
             ...quote,

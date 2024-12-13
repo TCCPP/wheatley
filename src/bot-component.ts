@@ -8,6 +8,7 @@ import { MessageContextMenuInteractionBuilder } from "./command-abstractions/con
 import { ModalInteractionBuilder } from "./command-abstractions/modal.js";
 import { TextBasedCommandBuilder } from "./command-abstractions/text-based-command-builder.js";
 import { ButtonInteractionBuilder } from "./command-abstractions/button.js";
+import { BotUtilities } from "./bot-utilities.js";
 
 type Arr = readonly unknown[];
 
@@ -20,7 +21,10 @@ export class BotComponent {
         return false;
     }
 
+    protected readonly utilities: BotUtilities;
+
     constructor(protected readonly wheatley: Wheatley) {
+        this.utilities = new BotUtilities(wheatley);
         wheatley.event_hub.on("wheatley_ready", this.wrap(this.on_wheatley_ready.bind(this)));
     }
 

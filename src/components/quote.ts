@@ -173,7 +173,7 @@ export default class Quote extends BotComponent {
                     messages = [quote_message];
                 }
                 assert(messages.length >= 1);
-                const quote_embeds = await this.wheatley.make_quote_embeds(messages, {
+                const quote_embeds = await this.utilities.make_quote_embeds(messages, {
                     requested_by: member,
                     safe_link: known_domains.has(domain),
                 });
