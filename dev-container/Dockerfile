@@ -30,7 +30,7 @@ RUN mkdir /opt/wheatley/ && chown wheatley:wheatley /opt/wheatley/
 RUN mkdir /opt/mongo/ && mkdir /opt/mongo/data && chown -R wheatley:wheatley /opt/mongo/
 USER wheatley
 
-COPY dev-container/entry.sh /entry.sh
+COPY --chmod=755 dev-container/entry.sh /entry.sh
 
 WORKDIR /opt/wheatley
 COPY --chown=wheatley:wheatley . .

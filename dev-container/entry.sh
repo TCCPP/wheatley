@@ -1,4 +1,4 @@
-#!/bin/bash
+#!/bin/sh
 
 /usr/bin/mongod -f /etc/mongod.conf --logpath /opt/mongo/mongod.log --dbpath /opt/mongo/data &
 
