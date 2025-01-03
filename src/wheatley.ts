@@ -196,7 +196,6 @@ const roles_map = {
     official_bot: "331886851784704001",
     featured_bot: "995847409374605392",
     jedi_council: "1138950835208990750",
-    announcements: "1231635207132807290",
     herald: "1095555811536797787",
     linked_github: "1080596526478397471",
 };

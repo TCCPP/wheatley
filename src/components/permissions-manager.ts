@@ -71,9 +71,6 @@ export default class PermissionManager extends BotComponent {
             [this.wheatley.roles.no_images.id]: {
                 deny: [Discord.PermissionsBitField.Flags.EmbedLinks, Discord.PermissionsBitField.Flags.AttachFiles],
             },
-            [this.wheatley.roles.announcements.id]: {
-                deny: [Discord.PermissionsBitField.Flags.ViewChannel],
-            },
             [this.wheatley.roles.moderators.id]: {
                 allow: [Discord.PermissionsBitField.Flags.ManageThreads, Discord.PermissionsBitField.Flags.ViewChannel],
             },
