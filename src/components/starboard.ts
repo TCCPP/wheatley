@@ -19,7 +19,7 @@ const memes_other_threshold = 14;
 
 const auto_delete_threshold = 5;
 
-const max_deletes_in_24h = 5;
+const max_deletes_in_24h = 7;
 
 const starboard_epoch = new Date("2023-04-01T00:00:00.000Z").getTime();
 
