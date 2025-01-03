@@ -33,8 +33,23 @@ export default class RoleManager extends BotComponent {
 
     override async on_ready() {
         this.blacklisted_roles = new Set([
+            // general
             this.wheatley.roles.root.id,
             this.wheatley.roles.moderators.id,
+            this.wheatley.TCCPP.id, // the everyone id
+            // moderation roles
+            this.wheatley.roles.muted.id,
+            this.wheatley.roles.monke.id,
+            this.wheatley.roles.no_off_topic.id,
+            this.wheatley.roles.no_suggestions.id,
+            this.wheatley.roles.no_suggestions_at_all.id,
+            this.wheatley.roles.no_reactions.id,
+            this.wheatley.roles.no_images.id,
+            this.wheatley.roles.no_threads.id,
+            this.wheatley.roles.no_serious_off_topic.id,
+            this.wheatley.roles.no_til.id,
+            this.wheatley.roles.no_memes.id,
+            // other misc roles
             this.wheatley.roles.featured_bot.id,
             this.wheatley.roles.official_bot.id,
             this.wheatley.roles.jedi_council.id,
@@ -42,7 +57,6 @@ export default class RoleManager extends BotComponent {
             this.wheatley.roles.pink.id,
             this.wheatley.roles.herald.id,
             this.wheatley.roles.linked_github.id,
-            this.wheatley.TCCPP.id, // the everyone id
         ]);
         this.pink_role = unwrap(await this.wheatley.TCCPP.roles.fetch(this.wheatley.roles.pink.id));
         this.interval = set_interval(() => {
