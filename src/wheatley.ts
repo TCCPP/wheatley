@@ -142,12 +142,14 @@ const channels_map = {
     suggestion_action_log: tuple("909309608512880681", Discord.ThreadChannel),
     today_i_learned: tuple("873682069325217802", Discord.TextChannel),
     goals2024: tuple("1189255286364569640", Discord.TextChannel),
+    goals2025: tuple("1323734788707848253", Discord.TextChannel),
     days_since_last_incident: tuple("1195920462958575676", Discord.TextChannel),
     literally_1984: tuple("1097993854214488154", Discord.TextChannel),
     lore: tuple("890067781628866620", Discord.TextChannel),
     bot_dev_internal: tuple("1166517065763536977", Discord.TextChannel),
     pin_archive: tuple("1284234644396572714", Discord.TextChannel),
     skill_role_log: tuple("1315023714206617610", Discord.TextChannel),
+    polls: tuple("1319336135213846568", Discord.NewsChannel),
     // red telephone
     red_telephone_alerts: tuple("1140096352278290512", Discord.TextChannel),
     // error log
