@@ -34,7 +34,7 @@ export default class PinArchive extends BotComponent {
                 this.utilities.make_quote_embeds([message], {
                     template: "\n\n**[Jump to message]($$)**",
                 });
-            const pin_archive_entry = await this.wheatley.database.pin_archive.findOne({ message: message.id });
+            const pin_archive_entry = await this.wheatley.database.pin_archive.findOne({ source_message: message.id });
             if (pin_archive_entry) {
                 // edit
                 let pin_archive_message;
