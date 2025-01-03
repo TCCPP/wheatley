@@ -31,10 +31,10 @@ export default class ThreadControl extends BotComponent {
 
     async get_owner(thread: Discord.ThreadChannel) {
         if (unwrap(thread.parent) instanceof Discord.ForumChannel) {
-            return thread.ownerId!; /*TODO*/
+            return thread.ownerId;
         } else {
             return thread.type == Discord.ChannelType.PrivateThread
-                ? thread.ownerId! /*TODO*/
+                ? thread.ownerId
                 : (await thread.fetchStarterMessage())! /*TODO*/.author.id;
         }
     }
