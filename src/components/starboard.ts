@@ -344,7 +344,7 @@ export default class Starboard extends BotComponent {
     // Check if the # of reactions is full, and there is no negative emojis reacted yet
     should_delete_reaction(reaction: Discord.MessageReaction) {
         return (
-            reaction.message.channel === this.wheatley.channels.memes &&
+            reaction.message.channel.id === this.wheatley.channels.memes.id &&
             reaction.message.reactions.cache.size === 20 &&
             reaction.message.reactions.cache.filter(
                 reaction =>
