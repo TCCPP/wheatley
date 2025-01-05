@@ -30,7 +30,7 @@ format: prereqs  ## Formats source files
 	$(NPM) run format
 
 .PHONY: test
-test: prereqs  ## Formats source files
+test: prereqs  ## Runs all tests
 	$(NPM) run test
 
 .PHONY: clean

@@ -341,12 +341,31 @@ export default class Starboard extends BotComponent {
         }
     }
 
+    // Check if the # of reactions is full, and there is no negative emojis reacted yet
+    should_delete_reaction(reaction: Discord.MessageReaction) {
+        return (
+            reaction.message.channel.id === this.wheatley.channels.memes.id &&
+            reaction.message.reactions.cache.size === 20 &&
+            reaction.message.reactions.cache.filter(
+                reaction =>
+                    reaction.emoji.name &&
+                    (this.repost_emojis.includes(reaction.emoji.name) ||
+                        this.delete_emojis.includes(reaction.emoji.name) ||
+                        this.negative_emojis.includes(reaction.emoji.name)),
+            ).size === 0
+        );
+    }
     override async on_reaction_add(reaction: Discord.MessageReaction | Discord.PartialMessageReaction) {
         if (!(await this.is_valid_channel(reaction.message.channel))) {
             return;
         }
         if (reaction.partial) {
             reaction = await reaction.fetch();
+        }
+
+        if (this.should_delete_reaction(reaction)) {
+            const last_reaction = reaction.message.reactions.cache.last();
+            await last_reaction?.remove();
         }
         // Check delete emojis
         if (
@@ -369,6 +388,8 @@ export default class Starboard extends BotComponent {
             await this.handle_auto_delete(await departialize(reaction.message), reaction, delete_trigger_type.repost);
             return;
         }
+
+        // Update/add to starboard
         if (await this.wheatley.database.starboard_entries.findOne({ message: reaction.message.id })) {
             // Update counts
             await this.update_starboard(await departialize(reaction.message));
