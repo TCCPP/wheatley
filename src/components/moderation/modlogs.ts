@@ -67,7 +67,7 @@ export default class Modlogs extends BotComponent {
                       (show_private_logs ? ` by <@${moderation.removed.moderator}>` : "") +
                       ` with reason: "${moderation.removed.reason ? truncate(moderation.removed.reason, 100) : "None"}"`
                 : null,
-            moderation.context ? `**Context:** ${moderation.context.join(", ")}` : null,
+            moderation.context && show_private_logs ? `**Context:** ${moderation.context.join(", ")}` : null,
         );
         return moderation.expunged ? `~~${description}~~` : description;
     }
@@ -75,10 +75,14 @@ export default class Modlogs extends BotComponent {
     static case_summary(moderation: moderation_entry, user: Discord.User, show_private_logs: boolean) {
         return new Discord.EmbedBuilder()
             .setTitle(`Case ${moderation.case_number}`)
-            .setAuthor({
-                name: moderation.user_name,
-                iconURL: user.avatarURL() ?? undefined,
-            })
+            .setAuthor(
+                show_private_logs
+                    ? {
+                          name: moderation.user_name,
+                          iconURL: user.avatarURL() ?? undefined,
+                      }
+                    : null,
+            )
             .setColor(colors.wheatley)
             .setDescription(Modlogs.moderation_description(moderation, false, show_private_logs))
             .setFields(
@@ -122,9 +126,13 @@ export default class Modlogs extends BotComponent {
                     null,
                 ),
             )
-            .setFooter({
-                text: `ID: ${moderation.user}`,
-            });
+            .setFooter(
+                show_private_logs
+                    ? {
+                          text: `ID: ${moderation.user}`,
+                      }
+                    : null,
+            );
     }
 
     // page is zero-indexed
