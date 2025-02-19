@@ -142,8 +142,8 @@ export default class ModerationControl extends BotComponent {
                         ),
                     ],
                 });
+                await this.notify_user(command, res.user, case_number, `**Reason:** ${reason}`);
             }
-            await this.notify_user(command, res.user, case_number, `**Reason:** ${reason}`);
         } else {
             await this.reply_with_error(command, `Case ${case_number} not found`);
         }
@@ -216,9 +216,9 @@ export default class ModerationControl extends BotComponent {
                         ),
                     ],
                 });
+                const duration_str = res.duration ? time_to_human(res.duration) : "Permanent";
+                await this.notify_user(command, res.user, case_number, `**Duration:** ${duration_str}`);
             }
-            const duration_str = res.duration ? time_to_human(res.duration) : "Permanent";
-            await this.notify_user(command, res.user, case_number, `**Duration:** ${duration_str}`);
         }
     }
 
@@ -259,8 +259,13 @@ export default class ModerationControl extends BotComponent {
                         ),
                     ],
                 });
+                await this.notify_user(
+                    command,
+                    res.user,
+                    case_number,
+                    `**Expunged:** ${reason ?? "No reason provided"}`,
+                );
             }
-            await this.notify_user(command, res.user, case_number, `**Expunged:** ${reason ?? "No reason provided"}`);
         } else {
             await this.reply_with_error(command, `Case ${case_number} not found`);
         }
