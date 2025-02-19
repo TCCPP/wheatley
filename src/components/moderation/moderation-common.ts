@@ -444,17 +444,19 @@ export abstract class ModerationComponent extends BotComponent {
                     ],
                 })
                 .catch(this.wheatley.critical_error.bind(this.wheatley));
-            this.wheatley.channels.public_action_log
-                .send({
-                    embeds: [
-                        Modlogs.case_summary(
-                            moderation,
-                            await this.wheatley.client.users.fetch(moderation.user),
-                            false,
-                        ),
-                    ],
-                })
-                .catch(this.wheatley.critical_error.bind(this.wheatley));
+            if (moderation.type !== "note") {
+                this.wheatley.channels.public_action_log
+                    .send({
+                        embeds: [
+                            Modlogs.case_summary(
+                                moderation,
+                                await this.wheatley.client.users.fetch(moderation.user),
+                                false,
+                            ),
+                        ],
+                    })
+                    .catch(this.wheatley.critical_error.bind(this.wheatley));
+            }
             this.wheatley.event_hub.emit("issue_moderation", moderation);
         } finally {
             ModerationComponent.case_id_mutex.unlock();
@@ -730,13 +732,15 @@ export abstract class ModerationComponent extends BotComponent {
                         ),
                     ],
                 });
-                await this.wheatley.channels.public_action_log.send({
-                    embeds: [
-                        Modlogs.case_summary(res, await this.wheatley.client.users.fetch(res.user), false).setTitle(
-                            `Case ${res.case_number}: Un${this.past_participle}`,
-                        ),
-                    ],
-                });
+                if (res.type !== "note") {
+                    await this.wheatley.channels.public_action_log.send({
+                        embeds: [
+                            Modlogs.case_summary(res, await this.wheatley.client.users.fetch(res.user), false).setTitle(
+                                `Case ${res.case_number}: Un${this.past_participle}`,
+                            ),
+                        ],
+                    });
+                }
             }
         } catch (e) {
             await this.reply_with_error(command, `Error undoing ${this.type}`);
