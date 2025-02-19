@@ -184,6 +184,10 @@ export default class ServerSuggestionTracker extends BotComponent {
         if (message.author.bot) {
             return;
         }
+        // TODO: Somehow this can happen
+        if (await this.wheatley.database.server_suggestions.findOne({ suggestion: message.id })) {
+            return;
+        }
         try {
             M.log("New suggestion", message.author.tag, message.author.id, message.url);
             const quote = await this.make_embeds(message);
