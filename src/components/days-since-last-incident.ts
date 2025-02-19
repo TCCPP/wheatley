@@ -24,15 +24,13 @@ export default class DaysSinceLastIncident extends BotComponent {
 
     make_embed(incident: incident_info) {
         const [count, unit] = incident.time.split(" ");
-        return new Discord.EmbedBuilder()
-            .setColor(0xefd30a)
-            .setDescription(
-                build_description(
-                    `# \`${count}\` \`${unit}\` since last incident`,
-                    `**Culprit:** <@${incident.user}> ("${incident.user_name}")`,
-                    `**Punishment:** ${capitalize(incident.type)}`,
-                ),
-            );
+        return new Discord.EmbedBuilder().setColor(0xefd30a).setDescription(
+            build_description(
+                `# \`${count}\` \`${unit}\` since last incident`,
+                // `**Culprit:** <@${incident.user}> ("${incident.user_name}")`,
+                `**Punishment:** ${capitalize(incident.type)}`,
+            ),
+        );
     }
 
     async last_incident_info(): Promise<incident_info> {
