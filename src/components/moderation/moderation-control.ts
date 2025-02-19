@@ -134,6 +134,13 @@ export default class ModerationControl extends BotComponent {
                     ),
                 ],
             });
+            await this.wheatley.channels.public_action_log.send({
+                embeds: [
+                    Modlogs.case_summary(res, await this.wheatley.client.users.fetch(res.user), false).setTitle(
+                        `Case ${res.case_number} reason updated`,
+                    ),
+                ],
+            });
             await this.notify_user(command, res.user, case_number, `**Reason:** ${reason}`);
         } else {
             await this.reply_with_error(command, `Case ${case_number} not found`);
@@ -199,6 +206,13 @@ export default class ModerationControl extends BotComponent {
                     ),
                 ],
             });
+            await this.wheatley.channels.public_action_log.send({
+                embeds: [
+                    Modlogs.case_summary(res, await this.wheatley.client.users.fetch(res.user), false).setTitle(
+                        `Case ${res.case_number} duration updated`,
+                    ),
+                ],
+            });
             const duration_str = res.duration ? time_to_human(res.duration) : "Permanent";
             await this.notify_user(command, res.user, case_number, `**Duration:** ${duration_str}`);
         }
@@ -229,6 +243,13 @@ export default class ModerationControl extends BotComponent {
             await this.wheatley.channels.staff_action_log.send({
                 embeds: [
                     Modlogs.case_summary(res, await this.wheatley.client.users.fetch(res.user), true).setTitle(
+                        `Case ${res.case_number} expunged`,
+                    ),
+                ],
+            });
+            await this.wheatley.channels.public_action_log.send({
+                embeds: [
+                    Modlogs.case_summary(res, await this.wheatley.client.users.fetch(res.user), false).setTitle(
                         `Case ${res.case_number} expunged`,
                     ),
                 ],

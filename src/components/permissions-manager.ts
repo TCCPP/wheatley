@@ -89,6 +89,17 @@ export default class PermissionManager extends BotComponent {
                 ],
             },
         };
+        const read_only_channel_no_reactions: permission_overwrites = {
+            ...default_permissions,
+            [this.wheatley.TCCPP.roles.everyone.id]: {
+                deny: [
+                    Discord.PermissionsBitField.Flags.SendMessages,
+                    Discord.PermissionsBitField.Flags.CreatePublicThreads,
+                    Discord.PermissionsBitField.Flags.CreatePrivateThreads,
+                    Discord.PermissionsBitField.Flags.AddReactions,
+                ],
+            },
+        };
         const read_only_archive_channel: permission_overwrites = {
             ...default_permissions,
             [this.wheatley.TCCPP.roles.everyone.id]: {
@@ -212,7 +223,10 @@ export default class PermissionManager extends BotComponent {
             ...read_only_channel,
         });
         this.add_channel_overwrite(this.wheatley.channels.skill_role_log, {
-            ...read_only_channel,
+            ...read_only_channel_no_reactions,
+        });
+        this.add_channel_overwrite(this.wheatley.channels.public_action_log, {
+            ...read_only_channel_no_reactions,
         });
         this.add_channel_overwrite(this.wheatley.channels.serious_off_topic, {
             ...off_topic_permissions,
