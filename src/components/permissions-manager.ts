@@ -204,6 +204,9 @@ export default class PermissionManager extends BotComponent {
         this.add_channel_overwrite(this.wheatley.channels.skill_role_suggestions, jedi_council);
 
         // community overrides
+        this.add_channel_overwrite(this.wheatley.channels.polls, {
+            ...read_only_channel_no_reactions,
+        });
         this.add_channel_overwrite(this.wheatley.channels.today_i_learned, {
             ...default_permissions,
             [this.wheatley.roles.no_til.id]: muted_permissions,
