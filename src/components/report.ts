@@ -152,6 +152,7 @@ export default class Report extends BotComponent {
     }
 
     async locked_interaction(interaction: Discord.ButtonInteraction, callback: (m: Discord.Message) => Promise<void>) {
+        await interaction.deferReply({ ephemeral: true });
         const message = interaction.message;
         if (!this.mutex.try_lock(message.id)) {
             await interaction.reply({
@@ -160,11 +161,10 @@ export default class Report extends BotComponent {
             });
             return;
         }
-        await interaction.reply({
-            content: `Received button press, updating message...`,
-            ephemeral: true,
-        });
         try {
+            await interaction.editReply({
+                content: `Received button press, updating message...`,
+            });
             await callback(message);
             await interaction.editReply({
                 content: `Done`,
