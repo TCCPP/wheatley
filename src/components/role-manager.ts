@@ -4,6 +4,8 @@ import { colors, HOUR, MINUTE } from "../common.js";
 import { unwrap } from "../utils/misc.js";
 import { M } from "../utils/debugging-and-logging.js";
 import { BotComponent } from "../bot-component.js";
+import { EarlyReplyMode, TextBasedCommandBuilder } from "../command-abstractions/text-based-command-builder.js";
+import { TextBasedCommand } from "../command-abstractions/text-based-command.js";
 import { skill_roles_order, skill_roles_order_id, Wheatley } from "../wheatley.js";
 import { set_interval } from "../utils/node.js";
 import { equal } from "../utils/arrays.js";
@@ -29,6 +31,20 @@ export default class RoleManager extends BotComponent {
 
     constructor(wheatley: Wheatley) {
         super(wheatley);
+
+        this.add_command(
+            new TextBasedCommandBuilder("gimmepink", EarlyReplyMode.ephemeral)
+                .set_description("Gives pink")
+                .set_slash(false)
+                .set_handler(this.gibpink.bind(this)),
+        );
+
+        this.add_command(
+            new TextBasedCommandBuilder("unpink", EarlyReplyMode.ephemeral)
+                .set_description("Takes pink")
+                .set_slash(false)
+                .set_handler(this.unpink.bind(this)),
+        );
     }
 
     override async on_ready() {
@@ -89,6 +105,28 @@ export default class RoleManager extends BotComponent {
                 { upsert: true },
             );
         }
+    }
+
+    async gibpink(command: TextBasedCommand) {
+        const member = await command.get_member(this.wheatley.TCCPP);
+        if (member.premiumSince == null) {
+            await command.reply("Nice try.", true, true);
+            return;
+        }
+        if (member.roles.cache.some(r => r.id == this.pink_role.id)) {
+            await command.reply("You are currently pink", true, true);
+            return;
+        }
+        await member.roles.add(this.pink_role);
+    }
+
+    async unpink(command: TextBasedCommand) {
+        const member = await command.get_member(this.wheatley.TCCPP);
+        if (!member.roles.cache.some(r => r.id == this.pink_role.id)) {
+            await command.reply("You are not currently pink", true, true);
+            return;
+        }
+        await member.roles.remove(this.pink_role);
     }
 
     async handle_pink(member: Discord.GuildMember) {
