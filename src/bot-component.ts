@@ -17,10 +17,6 @@ export class BotComponent {
         return false;
     }
 
-    static get is_passive() {
-        return false;
-    }
-
     protected readonly utilities: BotUtilities;
 
     constructor(protected readonly wheatley: Wheatley) {

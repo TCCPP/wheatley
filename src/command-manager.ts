@@ -107,9 +107,6 @@ export class CommandManager {
             | ModalInteractionBuilder<true>
             | ButtonInteractionBuilder<true>,
     ) {
-        if (this.wheatley.passive) {
-            return;
-        }
         if (command instanceof TextBasedCommandBuilder) {
             for (const descriptor of command.to_command_descriptors(this.wheatley)) {
                 assert(!(descriptor.name in this.text_commands));
@@ -151,9 +148,6 @@ export class CommandManager {
 
     // returns false if the message was not a wheatley command
     private async handle_text_command(message: Discord.Message, prev_command_obj?: TextBasedCommand) {
-        if (this.wheatley.passive) {
-            return false;
-        }
         const match = message.content.match(CommandManager.command_regex);
         if (match) {
             const command_name = match[1];
