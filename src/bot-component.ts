@@ -4,10 +4,7 @@ import * as Discord from "discord.js";
 import { M } from "./utils/debugging-and-logging.js";
 
 import { Wheatley } from "./wheatley.js";
-import { MessageContextMenuInteractionBuilder } from "./command-abstractions/context-menu.js";
-import { ModalInteractionBuilder } from "./command-abstractions/modal.js";
-import { TextBasedCommandBuilder } from "./command-abstractions/text-based-command-builder.js";
-import { ButtonInteractionBuilder } from "./command-abstractions/button.js";
+import { CommandSetBuilder } from "./command-abstractions/command-set-builder.js";
 import { BotUtilities } from "./bot-utilities.js";
 
 type Arr = readonly unknown[];
@@ -36,8 +33,8 @@ export class BotComponent {
         };
     }
 
-    // Called after all components are constructed and the bot logs in, but before bot commands are finalized
-    async setup() {}
+    // Called after all components are constructed and the bot logs in, commands can be added here
+    async setup(commands: CommandSetBuilder) {}
 
     listeners: [keyof Discord.ClientEvents, (...args: any[]) => any][] = [];
 
@@ -72,17 +69,6 @@ export class BotComponent {
                 this.setup_listener("emojiUpdate", this.on_emoji_update);
                 this.setup_listener("threadCreate", this.on_thread_create);
             });
-    }
-
-    add_command<T extends unknown[]>(
-        command:
-            | TextBasedCommandBuilder<T, true, true>
-            | TextBasedCommandBuilder<T, true, false, true>
-            | MessageContextMenuInteractionBuilder<true>
-            | ModalInteractionBuilder<true>
-            | ButtonInteractionBuilder<true>,
-    ) {
-        this.wheatley.add_command(command);
     }
 
     // events

@@ -8,6 +8,7 @@ const fetch = (url: RequestInfo, init?: RequestInit) =>
 
 import { M } from "../utils/debugging-and-logging.js";
 import { BotComponent } from "../bot-component.js";
+import { CommandSetBuilder } from "../command-abstractions/command-set-builder.js";
 import { Wheatley } from "../wheatley.js";
 import { MINUTE } from "../common.js";
 import { MessageContextMenuInteractionBuilder } from "../command-abstractions/context-menu.js";
@@ -219,12 +220,8 @@ export default class Format extends BotComponent {
         return true;
     }
 
-    constructor(wheatley: Wheatley) {
-        super(wheatley);
-
-        this.add_command(
-            new MessageContextMenuInteractionBuilder("Format").set_handler(this.format_ctxmenu.bind(this)),
-        );
+    override async setup(commands: CommandSetBuilder) {
+        commands.add(new MessageContextMenuInteractionBuilder("Format").set_handler(this.format_ctxmenu.bind(this)));
     }
 
     // TODO: More refactoring needed

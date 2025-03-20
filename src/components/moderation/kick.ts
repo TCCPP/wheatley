@@ -8,6 +8,7 @@ import { TextBasedCommand } from "../../command-abstractions/text-based-command.
 import { M } from "../../utils/debugging-and-logging.js";
 import { Wheatley } from "../../wheatley.js";
 import { ModerationComponent } from "./moderation-common.js";
+import { CommandSetBuilder } from "../../command-abstractions/command-set-builder.js";
 import { unwrap } from "../../utils/misc.js";
 import { MINUTE } from "../../common.js";
 import { moderation_entry, basic_moderation_with_user } from "../../infra/schemata/moderation.js";
@@ -25,10 +26,8 @@ export default class Kick extends ModerationComponent {
         return "kicked";
     }
 
-    constructor(wheatley: Wheatley) {
-        super(wheatley);
-
-        this.add_command(
+    override async setup(commands: CommandSetBuilder) {
+        commands.add(
             new TextBasedCommandBuilder("kick", EarlyReplyMode.visible)
                 .set_permissions(Discord.PermissionFlagsBits.BanMembers)
                 .set_description("Kick user")

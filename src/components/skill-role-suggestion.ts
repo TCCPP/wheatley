@@ -8,6 +8,7 @@ import { SelfClearingMap } from "../utils/containers.js";
 import { M } from "../utils/debugging-and-logging.js";
 import { colors, DAY, MINUTE } from "../common.js";
 import { BotComponent } from "../bot-component.js";
+import { CommandSetBuilder } from "../command-abstractions/command-set-builder.js";
 import { skill_roles_order, Wheatley } from "../wheatley.js";
 import {
     UserContextMenuInteractionBuilder,
@@ -23,21 +24,19 @@ type interaction_context = { member: Discord.GuildMember; role?: string; context
 export default class SkillRoleSuggestion extends BotComponent {
     readonly target_map = new SelfClearingMap<string, interaction_context>(15 * MINUTE);
 
-    constructor(wheatley: Wheatley) {
-        super(wheatley);
-
-        this.add_command(
+    override async setup(commands: CommandSetBuilder) {
+        commands.add(
             new UserContextMenuInteractionBuilder("Suggest Skill Role User").set_handler(
                 this.skill_suggestion.bind(this),
             ),
         );
-        this.add_command(
+        commands.add(
             new MessageContextMenuInteractionBuilder("Suggest Skill Role Message").set_handler(
                 this.skill_suggestion.bind(this),
             ),
         );
 
-        this.add_command(
+        commands.add(
             new TextBasedCommandBuilder("close-skill-suggestion-thread", EarlyReplyMode.ephemeral)
                 .set_description("Closes a skill role suggestions thread")
                 .set_permissions(Discord.PermissionFlagsBits.BanMembers)

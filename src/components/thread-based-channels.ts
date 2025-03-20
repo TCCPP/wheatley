@@ -32,10 +32,6 @@ function create_embed(title: string | undefined, color: number, msg: string) {
 }
 
 export default class ThreadBasedChannels extends BotComponent {
-    constructor(wheatley: Wheatley) {
-        super(wheatley);
-    }
-
     override async on_message_create(message: Discord.Message) {
         // Ignore bots and thread create messages
         if (message.author.bot || message.type == Discord.MessageType.ThreadCreated) {

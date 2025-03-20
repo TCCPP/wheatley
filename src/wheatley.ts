@@ -13,9 +13,6 @@ import { walk_dir } from "./utils/filesystem.js";
 import { M } from "./utils/debugging-and-logging.js";
 import { BotComponent } from "./bot-component.js";
 
-import { MessageContextMenuInteractionBuilder } from "./command-abstractions/context-menu.js";
-import { ModalInteractionBuilder } from "./command-abstractions/modal.js";
-import { TextBasedCommandBuilder } from "./command-abstractions/text-based-command-builder.js";
 import { CommandAbstractionReplyOptions } from "./command-abstractions/text-based-command.js";
 
 import { WheatleyDatabase, WheatleyDatabaseProxy } from "./infra/database-interface.js";
@@ -25,9 +22,9 @@ import { TypedEventEmitter } from "./utils/event-emitter.js";
 import { setup_metrics_server } from "./infra/prometheus.js";
 import { moderation_entry } from "./infra/schemata/moderation.js";
 import { wheatley_database_info } from "./infra/schemata/wheatley.js";
-import { ButtonInteractionBuilder } from "./command-abstractions/button.js";
 import { LoggableChannel, LogLimiter } from "./infra/log-limiter.js";
-import { CommandManager } from "./command-manager.js";
+import { CommandHandler } from "./command-handler.js";
+import { CommandSetBuilder } from "./command-abstractions/command-set-builder.js";
 
 export function create_basic_embed(title: string | undefined, color: number, content: string) {
     const embed = new Discord.EmbedBuilder().setColor(color).setDescription(content);
@@ -257,9 +254,10 @@ type EventMap = {
 export class Wheatley {
     readonly event_hub = new TypedEventEmitter<EventMap>();
     readonly components = new Map<string, BotComponent>();
-    readonly command_manager: CommandManager;
     readonly tracker: MemberTracker; // TODO: Rename
     readonly log_limiter: LogLimiter;
+
+    private command_handler: CommandHandler;
 
     parameters: Omit<wheatley_auth, "token">;
 
@@ -339,7 +337,6 @@ export class Wheatley {
 
         this.parameters = drop_token(auth);
 
-        this.command_manager = new CommandManager(this);
         this.tracker = new MemberTracker(this);
         this.log_limiter = new LogLimiter(this);
 
@@ -376,14 +373,17 @@ export class Wheatley {
 
                 await this.fetch_guild_info();
 
+                const command_set_builder = new CommandSetBuilder(this);
                 for (const component of this.components.values()) {
                     try {
-                        await component.setup();
+                        await component.setup(command_set_builder);
                     } catch (e) {
                         this.critical_error(e);
                     }
                 }
-                await this.command_manager.finalize(auth.token);
+                const { text_commands, other_commands } = await command_set_builder.finalize(auth.token);
+                this.command_handler = new CommandHandler(this, text_commands, other_commands);
+
                 this.event_hub.emit("wheatley_ready");
                 this.ready = true;
                 this.client.on("messageCreate", (message: Discord.Message) => {
@@ -772,19 +772,12 @@ export class Wheatley {
     // Basic interaction and command stuff
     //
 
-    register_non_command_bot_reply(trigger: Discord.Message, message: Discord.Message) {
-        this.command_manager.register_non_command_bot_reply(trigger, message);
+    get_command(command: string) {
+        return this.command_handler.get_command(command);
     }
 
-    add_command<T extends unknown[]>(
-        command:
-            | TextBasedCommandBuilder<T, true, true>
-            | TextBasedCommandBuilder<T, true, false, true>
-            | MessageContextMenuInteractionBuilder<true>
-            | ModalInteractionBuilder<true>
-            | ButtonInteractionBuilder<true>,
-    ) {
-        this.command_manager.add_command(command);
+    register_non_command_bot_reply(trigger: Discord.Message, message: Discord.Message) {
+        this.command_handler.register_non_command_bot_reply(trigger, message);
     }
 
     increment_message_counters(message: Discord.Message) {

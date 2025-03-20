@@ -8,10 +8,6 @@ import { unwrap } from "../utils/misc.js";
 import { M } from "../utils/debugging-and-logging.js";
 
 export default class ThreadCreatedMessage extends BotComponent {
-    constructor(wheatley: Wheatley) {
-        super(wheatley);
-    }
-
     override async on_message_create(message: Discord.Message) {
         if (message.type == Discord.MessageType.ThreadCreated) {
             //M.log(message);

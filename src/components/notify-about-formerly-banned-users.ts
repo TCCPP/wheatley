@@ -8,10 +8,6 @@ import { discord_timestamp } from "../utils/discord.js";
 import { moderation_entry } from "../infra/schemata/moderation.js";
 
 export default class NotifyAboutFormerlyBannedUsers extends BotComponent {
-    constructor(wheatley: Wheatley) {
-        super(wheatley);
-    }
-
     async alert(member: Discord.GuildMember, most_recent: moderation_entry) {
         const action = most_recent.type == "kick" ? "kicked" : "banned";
         const embed = new Discord.EmbedBuilder()

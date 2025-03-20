@@ -10,6 +10,7 @@ import { M } from "../utils/debugging-and-logging.js";
 import { cppref_index, cppref_page, CpprefSubIndex } from "../../indexes/cppref/types.js";
 import { Index } from "../algorithm/search.js";
 import { BotComponent } from "../bot-component.js";
+import { CommandSetBuilder } from "../command-abstractions/command-set-builder.js";
 import { Wheatley } from "../wheatley.js";
 import { colors } from "../common.js";
 import { EarlyReplyMode, TextBasedCommandBuilder } from "../command-abstractions/text-based-command-builder.js";
@@ -152,10 +153,8 @@ export default class Cppref extends BotComponent {
 
     readonly index = new CpprefIndex();
 
-    constructor(wheatley: Wheatley) {
-        super(wheatley);
-
-        this.add_command(
+    override async setup(commands: CommandSetBuilder) {
+        commands.add(
             new TextBasedCommandBuilder(["cref", "cppref"], EarlyReplyMode.none)
                 .set_description(["Query C reference pages", "Query C++ reference pages"])
                 .add_string_option({

@@ -22,10 +22,6 @@ const REACT_TIMEOUT = 90 * SECOND;
 export default class Autoreact extends BotComponent {
     react_timeouts = new SelfClearingMap<string, NodeJS.Timeout>(REACT_TIMEOUT);
 
-    constructor(wheatley: Wheatley) {
-        super(wheatley);
-    }
-
     override async on_ready() {
         await this.catch_up();
     }

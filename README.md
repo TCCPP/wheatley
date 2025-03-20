@@ -90,16 +90,8 @@ export class BotComponent {
   static get is_freestanding() {
     return false;
   }
-  // Add a command
-  add_command<T extends unknown[]>(
-    command:
-      | TextBasedCommandBuilder<T, true, true>
-      | TextBasedCommandBuilder<T, true, false, true>
-      | MessageContextMenuCommandBuilder<true>
-      | ModalHandler<true>,
-  );
-  // Called after all components are constructed and the bot logs in, but before bot commands are finalized
-  async setup();
+  // Called after all components are constructed and the bot logs in, commands can be added here
+  async setup(commands: CommandSetBuilder);
   // Called when Wheatley is ready
   async on_ready();
   // General discord events
@@ -140,10 +132,8 @@ export default class Echo extends BotComponent {
     return true;
   }
 
-  constructor(wheatley: Wheatley) {
-    super(wheatley);
-
-    this.add_command(
+  override async setup(commands: CommandSetBuilder) {
+    commands.add(
       new TextBasedCommandBuilder("echo")
         .set_description("echo")
         .add_string_option({

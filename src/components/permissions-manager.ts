@@ -29,10 +29,6 @@ export default class PermissionManager extends BotComponent {
     category_permissions: Record<string, category_permission_entry> = {};
     channel_overrides: Record<string, channel_permission_entry> = {};
 
-    constructor(wheatley: Wheatley) {
-        super(wheatley);
-    }
-
     setup_permissions_map() {
         // permission sets
         const write_permissions = [

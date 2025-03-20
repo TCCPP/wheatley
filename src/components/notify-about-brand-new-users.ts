@@ -9,10 +9,6 @@ import { discord_timestamp } from "../utils/discord.js";
 const NEW_USER_THRESHOLD = MINUTE * 30;
 
 export default class NotifyAboutBrandNewUsers extends BotComponent {
-    constructor(wheatley: Wheatley) {
-        super(wheatley);
-    }
-
     async notify_about_brand_new_user(member: Discord.GuildMember) {
         const embed = new Discord.EmbedBuilder()
             .setColor(colors.alert_color)

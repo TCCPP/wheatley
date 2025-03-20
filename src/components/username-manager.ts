@@ -52,10 +52,6 @@ function is_herald(name: string) {
 export default class UsernameManager extends BotComponent {
     interval: NodeJS.Timeout | null = null;
 
-    constructor(wheatley: Wheatley) {
-        super(wheatley);
-    }
-
     override async on_ready() {
         await this.cleanup();
         // Every hour give it a scan
