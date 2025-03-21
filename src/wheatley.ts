@@ -8,8 +8,7 @@ import PromClient from "prom-client";
 import { colors, MINUTE } from "./common.js";
 import { unwrap } from "./utils/misc.js";
 import { to_string, is_string } from "./utils/strings.js";
-import { directory_exists } from "./utils/filesystem.js";
-import { walk_dir } from "./utils/filesystem.js";
+import { globIterate } from "glob";
 import { M } from "./utils/debugging-and-logging.js";
 import { BotComponent } from "./bot-component.js";
 
@@ -56,6 +55,7 @@ export type wheatley_config = {
     guild?: string;
     token: string;
     freestanding?: boolean;
+    exclude?: string[];
     mongo?: wheatley_database_credentials;
     sentry?: string;
     virustotal?: string;
@@ -69,6 +69,7 @@ function drop_token({
     id,
     guild,
     freestanding,
+    exclude,
     mongo,
     sentry,
     virustotal,
@@ -78,6 +79,7 @@ function drop_token({
         id,
         guild,
         freestanding,
+        exclude,
         mongo,
         sentry,
         virustotal,
@@ -393,8 +395,11 @@ export class Wheatley {
             })().catch(this.critical_error.bind(this));
         });
 
-        for await (const file of walk_dir("src/components")) {
-            const default_export = (await import(`../${file.replace(".ts", ".js")}`)).default;
+        for await (const file of globIterate("**/components/*.js", {
+            ignore: this.parameters.exclude,
+            cwd: import.meta.dirname,
+        })) {
+            const default_export = (await import(`./${file}`)).default;
             if (default_export !== undefined) {
                 await this.add_component(default_export);
             }

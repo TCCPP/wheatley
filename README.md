@@ -73,7 +73,13 @@ Secrets and other bot info must be configured in the `config.json` file. An exam
     "host": "127.0.0.1", // optional
     "port": 27017 // optional
   },
-  "freestanding": false // optional
+  "freestanding": false, // optional,
+  "exclude": [
+    // optional
+    "components/the-button.js",
+    "modules/tccpp/components/buzzwords.js",
+    "modules/tccpp/private/**"
+  ]
 }
 ```
 

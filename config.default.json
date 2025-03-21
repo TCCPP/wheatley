@@ -8,5 +8,10 @@
         "host": "127.0.0.1",
         "port": 27017
     },
-    "freestanding": true
+    "freestanding": true,
+    "exclude": [
+        "modules/tccpp/components/anti-self-star.js",
+        "modules/tccpp/components/buzzwords.js",
+        "modules/tccpp/private/**"
+    ]
 }

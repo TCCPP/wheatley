@@ -2,10 +2,9 @@ import { strict as assert } from "assert";
 
 import * as Discord from "discord.js";
 import * as fs from "fs";
-import * as path from "path";
 
 import { unwrap } from "../utils/misc.js";
-import { walk_dir } from "../utils/filesystem.js";
+import { globIterate } from "glob";
 import { M } from "../utils/debugging-and-logging.js";
 import { colors } from "../common.js";
 import { BotComponent } from "../bot-component.js";
@@ -13,12 +12,6 @@ import { CommandSetBuilder } from "../command-abstractions/command-set-builder.j
 import { Wheatley } from "../wheatley.js";
 import { EarlyReplyMode, TextBasedCommandBuilder } from "../command-abstractions/text-based-command-builder.js";
 import { TextBasedCommand } from "../command-abstractions/text-based-command.js";
-
-export const wiki_dir = "wiki/articles";
-
-export function is_article(filename: string) {
-    return filename.endsWith(".md");
-}
 
 type WikiArticle = {
     name: string | null; // basename for the article
@@ -376,23 +369,19 @@ export default class Wiki extends BotComponent {
     }
 
     async load_wiki_pages() {
-        for await (const file_path of walk_dir(wiki_dir)) {
-            if (!is_article(file_path)) {
-                continue;
-            }
-            const name = path.basename(file_path, path.extname(file_path));
-            const content = await fs.promises.readFile(file_path, { encoding: "utf-8" });
+        for await (const file_path of globIterate("wiki/articles/**/*.md", { withFileTypes: true })) {
+            const content = await fs.promises.readFile(file_path.fullpath(), { encoding: "utf-8" });
             let parsed;
             try {
-                parsed = parse_article(name, content, this.wheatley);
+                parsed = parse_article(file_path.name, content, this.wheatley);
             } catch (e: any) {
                 M.error(`Failed to parse article ${file_path}: ${e.message}`);
                 continue;
             }
             const [article, aliases] = parsed;
-            this.articles[name] = article;
+            this.articles[file_path.name] = article;
             for (const alias of aliases) {
-                this.article_aliases.set(alias, name);
+                this.article_aliases.set(alias, file_path.name);
             }
         }
     }

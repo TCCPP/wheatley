@@ -1,18 +1,6 @@
 import { strict as assert } from "assert";
 import * as fs from "fs";
 import { execFile, ExecFileOptions } from "child_process";
-import * as path from "path";
-
-export async function* walk_dir(dir: string): AsyncGenerator<string> {
-    for (const f of await fs.promises.readdir(dir)) {
-        const file_path = path.join(dir, f).replace(/\\/g, "/");
-        if ((await fs.promises.stat(file_path)).isDirectory()) {
-            yield* walk_dir(file_path);
-        } else {
-            yield file_path;
-        }
-    }
-}
 
 export async function directory_exists(path: string) {
     try {

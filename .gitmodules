@@ -1,11 +1,3 @@
-# [submodule "src/modules/tccpp/private"]
-# 	path = src/modules/tccpp/private
-# 	url = git@github.com:TCCPP/wheatley-private.git
-
-# [submodule "dyno-import"]
-# 	path = dyno-import
-# 	url = git@github.com:TCCPP/dyno-import.git
-
 [submodule "wiki"]
 	path = wiki
 	url = git@github.com:TCCPP/wiki-articles.git
