@@ -18,10 +18,6 @@ export default class AntiEveryone extends BotComponent {
      * Replies that have been made to users who attempted to ping everyone.
      */
     replies = new SelfClearingMap<Discord.User, AntiEveryoneMessageCache[]>(10 * MINUTE);
-    constructor(wheatley: Wheatley) {
-        super(wheatley);
-    }
-
     override async on_message_create(message: Discord.Message): Promise<void> {
         if (
             // self

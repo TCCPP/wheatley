@@ -6,10 +6,6 @@ import { Wheatley } from "../wheatley.js";
 import { has_media } from "./autoreact.js";
 
 export default class AntiSelfStar extends BotComponent {
-    constructor(wheatley: Wheatley) {
-        super(wheatley);
-    }
-
     /*override async on_ready() {
         await this.catch_up();
     }

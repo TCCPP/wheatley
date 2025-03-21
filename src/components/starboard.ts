@@ -8,6 +8,7 @@ import { KeyedMutexSet } from "../utils/containers.js";
 import { M } from "../utils/debugging-and-logging.js";
 import { DAY, MINUTE } from "../common.js";
 import { BotComponent } from "../bot-component.js";
+import { CommandSetBuilder } from "../command-abstractions/command-set-builder.js";
 import { Wheatley } from "../wheatley.js";
 import { EarlyReplyMode, TextBasedCommandBuilder } from "../command-abstractions/text-based-command-builder.js";
 import { TextBasedCommand } from "../command-abstractions/text-based-command.js";
@@ -48,10 +49,8 @@ export default class Starboard extends BotComponent {
 
     excluded_channels: Set<string>;
 
-    constructor(wheatley: Wheatley) {
-        super(wheatley);
-
-        this.add_command(
+    override async setup(commands: CommandSetBuilder) {
+        commands.add(
             new TextBasedCommandBuilder("add-negative-emoji", EarlyReplyMode.visible)
                 .set_description("Register a negative emoji")
                 .add_string_option({
@@ -63,7 +62,7 @@ export default class Starboard extends BotComponent {
                 .set_handler(this.add_negative_emoji.bind(this)),
         );
 
-        this.add_command(
+        commands.add(
             new TextBasedCommandBuilder("add-delete-emoji", EarlyReplyMode.visible)
                 .set_description("Register a delete emoji")
                 .add_string_option({
@@ -75,7 +74,7 @@ export default class Starboard extends BotComponent {
                 .set_handler(this.add_delete_emoji.bind(this)),
         );
 
-        this.add_command(
+        commands.add(
             new TextBasedCommandBuilder("add-ignored-emoji", EarlyReplyMode.visible)
                 .set_description("Register an ignored emoji")
                 .add_string_option({
@@ -87,7 +86,7 @@ export default class Starboard extends BotComponent {
                 .set_handler(this.add_ignored_emoji.bind(this)),
         );
 
-        this.add_command(
+        commands.add(
             new TextBasedCommandBuilder("add-repost-emoji", EarlyReplyMode.visible)
                 .set_description("Register a repost emoji")
                 .add_string_option({
@@ -99,7 +98,7 @@ export default class Starboard extends BotComponent {
                 .set_handler(this.add_repost_emoji.bind(this)),
         );
 
-        this.add_command(
+        commands.add(
             new TextBasedCommandBuilder("list-starboard-config", EarlyReplyMode.visible)
                 .set_description("List starboard config")
                 .set_permissions(Discord.PermissionFlagsBits.Administrator)

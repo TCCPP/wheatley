@@ -5,6 +5,7 @@ import { strict as assert } from "assert";
 import { M } from "../utils/debugging-and-logging.js";
 import { DAY, HOUR, MINUTE, colors } from "../common.js";
 import { BotComponent } from "../bot-component.js";
+import { CommandSetBuilder } from "../command-abstractions/command-set-builder.js";
 import { Wheatley } from "../wheatley.js";
 import { EarlyReplyMode, TextBasedCommandBuilder } from "../command-abstractions/text-based-command-builder.js";
 import { CommandAbstractionReplyOptions, TextBasedCommand } from "../command-abstractions/text-based-command.js";
@@ -30,15 +31,13 @@ export default class Purge extends BotComponent {
     // boolean flag indicates whether to continue, serves as a stop token
     tasks = new SelfClearingMap<string, [boolean, Discord.InteractionResponse | null]>(2 * HOUR, 30 * MINUTE);
 
-    constructor(wheatley: Wheatley) {
-        super(wheatley);
-
+    override async setup(commands: CommandSetBuilder) {
         // purge count
         // purge after
         // purge range
         // purge user
 
-        this.add_command(
+        commands.add(
             new TextBasedCommandBuilder("purge", EarlyReplyMode.visible)
                 .set_permissions(Discord.PermissionFlagsBits.BanMembers)
                 .set_description("Purge messages")
@@ -111,13 +110,13 @@ export default class Purge extends BotComponent {
                 ),
         );
 
-        this.add_command(
+        commands.add(
             new MessageContextMenuInteractionBuilder("Purge message")
                 .set_permissions(Discord.PermissionFlagsBits.BanMembers)
                 .set_handler(this.purge_message.bind(this)),
         );
 
-        this.add_command(
+        commands.add(
             new TextBasedCommandBuilder("dummymessages", EarlyReplyMode.visible)
                 .set_permissions(Discord.PermissionFlagsBits.BanMembers)
                 .set_description("dummymessages")

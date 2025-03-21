@@ -26,10 +26,6 @@ export default class ServerSuggestionReactions extends BotComponent {
     stop = false;
     monitored_channels_ids: string[];
 
-    constructor(wheatley: Wheatley) {
-        super(wheatley);
-    }
-
     async handle_fetched_message(message: Discord.Message) {
         for (const [_, reaction] of message.reactions.cache) {
             const users = await reaction.users.fetch();

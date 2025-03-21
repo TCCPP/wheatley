@@ -1,6 +1,7 @@
 import * as Discord from "discord.js";
 import { strict as assert } from "assert";
 import { BotComponent } from "../bot-component.js";
+import { CommandSetBuilder } from "../command-abstractions/command-set-builder.js";
 import { Wheatley } from "../wheatley.js";
 import { colors } from "../common.js";
 import { delay } from "../utils/misc.js";
@@ -10,10 +11,8 @@ import { TextBasedCommand } from "../command-abstractions/text-based-command.js"
 import { format_list } from "../utils/strings.js";
 
 export default class Redirect extends BotComponent {
-    constructor(wheatley: Wheatley) {
-        super(wheatley);
-
-        this.add_command(
+    override async setup(commands: CommandSetBuilder) {
+        commands.add(
             new TextBasedCommandBuilder("redirect", EarlyReplyMode.visible)
                 .set_description("Redirect a conversation")
                 .add_string_option({
@@ -24,10 +23,8 @@ export default class Redirect extends BotComponent {
                 .set_permissions(Discord.PermissionFlagsBits.BanMembers)
                 .set_handler(this.redirect.bind(this)),
         );
-    }
 
-    override async setup() {
-        this.add_command(
+        commands.add(
             new TextBasedCommandBuilder("r", EarlyReplyMode.none)
                 .set_description(
                     `Redirect a conversation from <#${this.wheatley.channels.c_cpp_discussion.id}> or ` +

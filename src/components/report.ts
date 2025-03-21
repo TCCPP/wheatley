@@ -6,6 +6,7 @@ import { KeyedMutexSet, SelfClearingMap } from "../utils/containers.js";
 import { M } from "../utils/debugging-and-logging.js";
 import { colors, MINUTE } from "../common.js";
 import { BotComponent } from "../bot-component.js";
+import { CommandSetBuilder } from "../command-abstractions/command-set-builder.js";
 import { Wheatley } from "../wheatley.js";
 import { MessageContextMenuInteractionBuilder } from "../command-abstractions/context-menu.js";
 import { ModalInteractionBuilder } from "../command-abstractions/modal.js";
@@ -46,17 +47,15 @@ export default class Report extends BotComponent {
     readonly target_map = new SelfClearingMap<string, Discord.Message>(10 * MINUTE);
     readonly mutex = new KeyedMutexSet<string>();
 
-    constructor(wheatley: Wheatley) {
-        super(wheatley);
+    override async setup(commands: CommandSetBuilder) {
+        commands.add(new MessageContextMenuInteractionBuilder("Report").set_handler(this.report.bind(this)));
 
-        this.add_command(new MessageContextMenuInteractionBuilder("Report").set_handler(this.report.bind(this)));
+        commands.add(new ModalInteractionBuilder(this.report_modal, this.modal_handler.bind(this)));
 
-        this.add_command(new ModalInteractionBuilder(this.report_modal, this.modal_handler.bind(this)));
-
-        this.add_command(new ButtonInteractionBuilder(this.handling, this.handling_handler.bind(this)));
-        this.add_command(new ButtonInteractionBuilder(this.resolved, this.resolved_handler.bind(this)));
-        this.add_command(new ButtonInteractionBuilder(this.invalid, this.invalid_handler.bind(this)));
-        this.add_command(new ButtonInteractionBuilder(this.nvm, this.nvm_handler.bind(this)));
+        commands.add(new ButtonInteractionBuilder(this.handling, this.handling_handler.bind(this)));
+        commands.add(new ButtonInteractionBuilder(this.resolved, this.resolved_handler.bind(this)));
+        commands.add(new ButtonInteractionBuilder(this.invalid, this.invalid_handler.bind(this)));
+        commands.add(new ButtonInteractionBuilder(this.nvm, this.nvm_handler.bind(this)));
     }
 
     async report(interaction: Discord.MessageContextMenuCommandInteraction) {

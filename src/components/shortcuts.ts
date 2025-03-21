@@ -5,6 +5,7 @@ import { strict as assert } from "assert";
 import { M } from "../utils/debugging-and-logging.js";
 import { colors } from "../common.js";
 import { BotComponent } from "../bot-component.js";
+import { CommandSetBuilder } from "../command-abstractions/command-set-builder.js";
 import { Wheatley, create_error_reply } from "../wheatley.js";
 import { EarlyReplyMode, TextBasedCommandBuilder } from "../command-abstractions/text-based-command-builder.js";
 import { TextBasedCommand } from "../command-abstractions/text-based-command.js";
@@ -15,29 +16,27 @@ export default class Shortcuts extends BotComponent {
         return true;
     }
 
-    constructor(wheatley: Wheatley) {
-        super(wheatley);
-
-        this.add_command(
+    override async setup(commands: CommandSetBuilder) {
+        commands.add(
             new TextBasedCommandBuilder("nothingtoseehere", EarlyReplyMode.none)
                 .set_permissions(Discord.PermissionFlagsBits.BanMembers)
                 .set_description("Nothing to see here")
                 .set_handler(this.nothingtoseehere.bind(this)),
         );
 
-        this.add_command(
+        commands.add(
             new TextBasedCommandBuilder(["tryitandsee", "tias"], EarlyReplyMode.none)
                 .set_description("Try it and see")
                 .set_handler(this.tryitandsee.bind(this)),
         );
 
-        this.add_command(
+        commands.add(
             new TextBasedCommandBuilder("headbang", EarlyReplyMode.none)
                 .set_description("Headbang")
                 .set_handler(this.headbang.bind(this)),
         );
 
-        this.add_command(
+        commands.add(
             new TextBasedCommandBuilder("initgif", EarlyReplyMode.none)
                 .set_description("initgif")
                 .set_handler(this.initgif.bind(this)),

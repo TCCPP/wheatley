@@ -7,6 +7,7 @@ import { build_description } from "../utils/strings.js";
 import { M } from "../utils/debugging-and-logging.js";
 import { colors } from "../common.js";
 import { BotComponent } from "../bot-component.js";
+import { CommandSetBuilder } from "../command-abstractions/command-set-builder.js";
 import { Wheatley } from "../wheatley.js";
 import { EarlyReplyMode, TextBasedCommandBuilder } from "../command-abstractions/text-based-command-builder.js";
 import { TextBasedCommand } from "../command-abstractions/text-based-command.js";
@@ -17,10 +18,8 @@ export default class Help extends BotComponent {
         return true;
     }
 
-    constructor(wheatley: Wheatley) {
-        super(wheatley);
-
-        this.add_command(
+    override async setup(commands: CommandSetBuilder) {
+        commands.add(
             new TextBasedCommandBuilder("help", EarlyReplyMode.none)
                 .set_description("Bot help and info")
                 .set_handler(this.help.bind(this)),
@@ -28,7 +27,7 @@ export default class Help extends BotComponent {
     }
 
     command_info(...commands: string[]) {
-        return commands.map(command => this.wheatley.command_manager.get_command(command).get_command_info());
+        return commands.map(command => this.wheatley.get_command(command).get_command_info());
     }
 
     async help(command: TextBasedCommand) {
@@ -106,7 +105,7 @@ export default class Help extends BotComponent {
                             ),
                             "Rolepersist aliases: `noofftopic`, `nosuggestions`, `nosuggestionsatall`, " +
                                 "`noreactions`, `nothreads`, `noseriousofftopic`, `notil`, `nomemes`. " +
-                                `Syntax: \`${this.wheatley.command_manager
+                                `Syntax: \`${this.wheatley
                                     .get_command("noofftopic")
                                     .get_usage()
                                     .replace("noofftopic", "(alias)")}\``,

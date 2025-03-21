@@ -52,10 +52,6 @@ export default class TheButton extends BotComponent {
     last_reset: number;
     longest_time_without_reset: number;
 
-    constructor(wheatley: Wheatley) {
-        super(wheatley);
-    }
-
     make_message(time_until_doomsday: number): Discord.MessageEditOptions & Discord.MessageCreateOptions {
         const [hours, minutes, seconds] = dissectDelta(time_until_doomsday);
         const row = new Discord.ActionRowBuilder<Discord.MessageActionRowComponentBuilder>().addComponents(

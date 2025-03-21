@@ -17,7 +17,6 @@ export default class PinArchive extends BotComponent {
 
     constructor(wheatley: Wheatley) {
         super(wheatley);
-
         wheatley.client.on("channelPinsUpdate", this.on_pin_update.bind(this));
     }
 

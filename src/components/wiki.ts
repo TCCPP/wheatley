@@ -9,6 +9,7 @@ import { walk_dir } from "../utils/filesystem.js";
 import { M } from "../utils/debugging-and-logging.js";
 import { colors } from "../common.js";
 import { BotComponent } from "../bot-component.js";
+import { CommandSetBuilder } from "../command-abstractions/command-set-builder.js";
 import { Wheatley } from "../wheatley.js";
 import { EarlyReplyMode, TextBasedCommandBuilder } from "../command-abstractions/text-based-command-builder.js";
 import { TextBasedCommand } from "../command-abstractions/text-based-command.js";
@@ -321,10 +322,8 @@ export default class Wiki extends BotComponent {
     articles: Record<string, WikiArticle> = {};
     article_aliases = new Discord.Collection<string, string>();
 
-    constructor(wheatley: Wheatley) {
-        super(wheatley);
-
-        this.add_command(
+    override async setup(commands: CommandSetBuilder) {
+        commands.add(
             new TextBasedCommandBuilder(["wiki", "howto"], EarlyReplyMode.none)
                 .set_description(["Retrieve wiki articles", "Retrieve wiki articles (alternatively /wiki)"])
                 .add_string_option({
@@ -346,7 +345,7 @@ export default class Wiki extends BotComponent {
                 .set_handler(this.wiki.bind(this)),
         );
 
-        this.add_command(
+        commands.add(
             new TextBasedCommandBuilder(["wiki-preview", "wp"], EarlyReplyMode.none)
                 .set_slash(false)
                 .set_description("Preview a wiki article")
@@ -357,14 +356,12 @@ export default class Wiki extends BotComponent {
                 })
                 .set_handler(this.wiki_preview.bind(this)),
         );
-    }
 
-    override async setup() {
         await this.load_wiki_pages();
         // setup slash commands for aliases
         for (const [alias, article_name] of this.article_aliases.entries()) {
             const article = this.articles[article_name];
-            this.add_command(
+            commands.add(
                 new TextBasedCommandBuilder(alias, EarlyReplyMode.none)
                     .set_slash(false)
                     .set_description(article.title)

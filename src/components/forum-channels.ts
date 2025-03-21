@@ -48,10 +48,6 @@ export default class ForumChannels extends BotComponent {
     readonly timeout_map = new Map<string, NodeJS.Timeout>();
     interval: NodeJS.Timeout;
 
-    constructor(wheatley: Wheatley) {
-        super(wheatley);
-    }
-
     async forum_cleanup() {
         // TODO: Temporarily turned off
         M.debug("Running forum cleanup");

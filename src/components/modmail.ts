@@ -36,10 +36,6 @@ export default class Modmail extends BotComponent {
 
     readonly monke_set = new SelfClearingMap<Discord.Snowflake, number>(HOUR, HOUR);
 
-    constructor(wheatley: Wheatley) {
-        super(wheatley);
-    }
-
     override async on_ready() {
         const singleton = await this.wheatley.database.get_bot_singleton();
         this.modmail_id_counter = singleton.modmail_id_counter;

@@ -8,10 +8,6 @@ import { Wheatley } from "../wheatley.js";
 const snowflake_re = /\b\d{10,}\b/g;
 
 export default class Massban extends BotComponent {
-    constructor(wheatley: Wheatley) {
-        super(wheatley);
-    }
-
     override async on_message_create(message: Discord.Message) {
         try {
             // Ignore self, bots, and messages outside TCCPP (e.g. dm's)

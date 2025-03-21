@@ -4,6 +4,7 @@ import { SelfClearingMap, SelfClearingSet } from "../utils/containers.js";
 import { M } from "../utils/debugging-and-logging.js";
 import { colors, MINUTE } from "../common.js";
 import { BotComponent } from "../bot-component.js";
+import { CommandSetBuilder } from "../command-abstractions/command-set-builder.js";
 import { Wheatley } from "../wheatley.js";
 import { EarlyReplyMode, TextBasedCommandBuilder } from "../command-abstractions/text-based-command-builder.js";
 import { TextBasedCommand } from "../command-abstractions/text-based-command.js";
@@ -17,16 +18,14 @@ export default class Roulette extends BotComponent {
     // user id -> streak count
     readonly streaks = new SelfClearingMap<string, number>(60 * MINUTE);
 
-    constructor(wheatley: Wheatley) {
-        super(wheatley);
-
-        this.add_command(
+    override async setup(commands: CommandSetBuilder) {
+        commands.add(
             new TextBasedCommandBuilder("roulette", EarlyReplyMode.none)
                 .set_description("roulette")
                 .set_handler(this.roulette.bind(this)),
         );
 
-        this.add_command(
+        commands.add(
             new TextBasedCommandBuilder("leaderboard", EarlyReplyMode.visible)
                 .set_description("Leaderboard")
                 .set_handler(this.leaderboard.bind(this)),

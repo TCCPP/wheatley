@@ -25,10 +25,6 @@ function message_might_have_code(message: string) {
 }
 
 export default class AntiScreenshot extends BotComponent {
-    constructor(wheatley: Wheatley) {
-        super(wheatley);
-    }
-
     override async on_message_create(message: Discord.Message) {
         if (message.author.bot) {
             return;

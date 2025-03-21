@@ -9,6 +9,7 @@ import { M } from "../utils/debugging-and-logging.js";
 import { Index, IndexEntry } from "../algorithm/search.js";
 import { man7_entry, man7_index } from "../../indexes/man7/types.js";
 import { BotComponent } from "../bot-component.js";
+import { CommandSetBuilder } from "../command-abstractions/command-set-builder.js";
 import { Wheatley } from "../wheatley.js";
 import { colors } from "../common.js";
 import { EarlyReplyMode, TextBasedCommandBuilder } from "../command-abstractions/text-based-command-builder.js";
@@ -93,10 +94,8 @@ export default class Man7 extends BotComponent {
 
     index = new Man7Index();
 
-    constructor(wheatley: Wheatley) {
-        super(wheatley);
-
-        this.add_command(
+    override async setup(commands: CommandSetBuilder) {
+        commands.add(
             new TextBasedCommandBuilder("man", EarlyReplyMode.none)
                 .set_description("Query linux man pages")
                 .add_string_option({

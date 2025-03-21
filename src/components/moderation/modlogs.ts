@@ -7,6 +7,7 @@ import { build_description, truncate } from "../../utils/strings.js";
 import { pluralize, time_to_human } from "../../utils/strings.js";
 import { M } from "../../utils/debugging-and-logging.js";
 import { BotComponent } from "../../bot-component.js";
+import { CommandSetBuilder } from "../../command-abstractions/command-set-builder.js";
 import { Wheatley, WHEATLEY_ID } from "../../wheatley.js";
 import { colors } from "../../common.js";
 import { EarlyReplyMode, TextBasedCommandBuilder } from "../../command-abstractions/text-based-command-builder.js";
@@ -22,10 +23,8 @@ function is_autoremove(info: moderation_edit_info) {
 }
 
 export default class Modlogs extends BotComponent {
-    constructor(wheatley: Wheatley) {
-        super(wheatley);
-
-        this.add_command(
+    override async setup(commands: CommandSetBuilder) {
+        commands.add(
             new TextBasedCommandBuilder("modlogs", EarlyReplyMode.visible)
                 .set_description("Get user moderation logs")
                 .set_permissions(Discord.PermissionFlagsBits.BanMembers)
@@ -37,7 +36,7 @@ export default class Modlogs extends BotComponent {
                 .set_handler(this.modlogs.bind(this)),
         );
 
-        this.add_command(
+        commands.add(
             new TextBasedCommandBuilder("case", EarlyReplyMode.visible)
                 .set_description("Get case info")
                 .set_permissions(Discord.PermissionFlagsBits.BanMembers)

@@ -4,6 +4,7 @@ import { colors, HOUR, MINUTE } from "../common.js";
 import { unwrap } from "../utils/misc.js";
 import { M } from "../utils/debugging-and-logging.js";
 import { BotComponent } from "../bot-component.js";
+import { CommandSetBuilder } from "../command-abstractions/command-set-builder.js";
 import { EarlyReplyMode, TextBasedCommandBuilder } from "../command-abstractions/text-based-command-builder.js";
 import { TextBasedCommand } from "../command-abstractions/text-based-command.js";
 import { skill_roles_order, skill_roles_order_id, Wheatley } from "../wheatley.js";
@@ -29,17 +30,15 @@ export default class RoleManager extends BotComponent {
     // roles that will not be re-applied on join
     blacklisted_roles: Set<string>;
 
-    constructor(wheatley: Wheatley) {
-        super(wheatley);
-
-        this.add_command(
+    override async setup(commands: CommandSetBuilder) {
+        commands.add(
             new TextBasedCommandBuilder("gimmepink", EarlyReplyMode.ephemeral)
                 .set_description("Gives pink")
                 .set_slash(false)
                 .set_handler(this.gibpink.bind(this)),
         );
 
-        this.add_command(
+        commands.add(
             new TextBasedCommandBuilder("unpink", EarlyReplyMode.ephemeral)
                 .set_description("Takes pink")
                 .set_slash(false)

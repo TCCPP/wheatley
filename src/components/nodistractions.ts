@@ -2,6 +2,7 @@ import * as Discord from "discord.js";
 import { strict as assert } from "assert";
 import { M } from "../utils/debugging-and-logging.js";
 import { BotComponent } from "../bot-component.js";
+import { CommandSetBuilder } from "../command-abstractions/command-set-builder.js";
 import { Wheatley } from "../wheatley.js";
 import { EarlyReplyMode, TextBasedCommandBuilder } from "../command-abstractions/text-based-command-builder.js";
 import { TextBasedCommand } from "../command-abstractions/text-based-command.js";
@@ -64,10 +65,8 @@ export default class Nodistractions extends BotComponent {
     undistract_queue: no_distraction_entry[] = [];
     timer: NodeJS.Timeout | null = null;
 
-    constructor(wheatley: Wheatley) {
-        super(wheatley);
-
-        this.add_command(
+    override async setup(commands: CommandSetBuilder) {
+        commands.add(
             new TextBasedCommandBuilder("nodistractions", EarlyReplyMode.ephemeral)
                 .set_description("Turns on nodistractions")
                 .add_string_option({
@@ -78,7 +77,7 @@ export default class Nodistractions extends BotComponent {
                 .set_handler(this.nodistractions.bind(this)),
         );
 
-        this.add_command(
+        commands.add(
             new TextBasedCommandBuilder("removenodistractions", EarlyReplyMode.ephemeral)
                 .set_description("Removes nodistractions")
                 .set_handler(this.removenodistractions.bind(this)),

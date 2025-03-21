@@ -12,10 +12,6 @@ import { Wheatley } from "../wheatley.js";
 export default class TrackedMentions extends BotComponent {
     tracked_mentions: Set<string>;
 
-    constructor(wheatley: Wheatley) {
-        super(wheatley);
-    }
-
     override async on_ready() {
         this.tracked_mentions = new Set([
             "540314034894012428", // admin role on test server

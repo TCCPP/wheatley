@@ -5,6 +5,7 @@ import * as Discord from "discord.js";
 import { escape_discord } from "../utils/strings.js";
 import { M } from "../utils/debugging-and-logging.js";
 import { BotComponent } from "../bot-component.js";
+import { CommandSetBuilder } from "../command-abstractions/command-set-builder.js";
 import { Wheatley, create_basic_embed } from "../wheatley.js";
 import { url_re } from "./quote.js";
 import { colors } from "../common.js";
@@ -82,13 +83,11 @@ export default class Inspect extends BotComponent {
         return true;
     }
 
-    constructor(wheatley: Wheatley) {
-        super(wheatley);
-
-        this.add_command(new MessageContextMenuInteractionBuilder("Inspect").set_handler(this.inspect.bind(this)));
+    override async setup(commands: CommandSetBuilder) {
+        commands.add(new MessageContextMenuInteractionBuilder("Inspect").set_handler(this.inspect.bind(this)));
 
         // Permissions on this command in the interest of preventing spam (intentional or otherwise)
-        this.add_command(
+        commands.add(
             new TextBasedCommandBuilder("inspect", EarlyReplyMode.ephemeral)
                 .set_description("Inspect a message")
                 .add_string_option({

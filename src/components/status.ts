@@ -6,10 +6,6 @@ import { BotComponent } from "../bot-component.js";
 import { Wheatley } from "../wheatley.js";
 
 export default class Status extends BotComponent {
-    constructor(wheatley: Wheatley) {
-        super(wheatley);
-    }
-
     override async on_ready() {
         this.wheatley.client.user?.setActivity({
             name: "C & C++ | !help",

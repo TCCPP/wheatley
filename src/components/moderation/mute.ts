@@ -6,6 +6,7 @@ import { strict as assert } from "assert";
 import { M } from "../../utils/debugging-and-logging.js";
 import { Wheatley } from "../../wheatley.js";
 import { ModerationComponent, duration_regex } from "./moderation-common.js";
+import { CommandSetBuilder } from "../../command-abstractions/command-set-builder.js";
 import { EarlyReplyMode, TextBasedCommandBuilder } from "../../command-abstractions/text-based-command-builder.js";
 import { TextBasedCommand } from "../../command-abstractions/text-based-command.js";
 import { moderation_entry, basic_moderation_with_user } from "../../infra/schemata/moderation.js";
@@ -23,10 +24,8 @@ export default class Mute extends ModerationComponent {
         return true;
     }
 
-    constructor(wheatley: Wheatley) {
-        super(wheatley);
-
-        this.add_command(
+    override async setup(commands: CommandSetBuilder) {
+        commands.add(
             new TextBasedCommandBuilder("mute", EarlyReplyMode.visible)
                 .set_permissions(Discord.PermissionFlagsBits.BanMembers)
                 .set_description("Mute user")
@@ -52,7 +51,7 @@ export default class Mute extends ModerationComponent {
                 ),
         );
 
-        this.add_command(
+        commands.add(
             new TextBasedCommandBuilder("unmute", EarlyReplyMode.visible)
                 .set_permissions(Discord.PermissionFlagsBits.BanMembers)
                 .set_description("Unmute user")

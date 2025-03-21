@@ -7,6 +7,7 @@ import { capitalize } from "../../utils/strings.js";
 import { M } from "../../utils/debugging-and-logging.js";
 import { Wheatley } from "../../wheatley.js";
 import { ModerationComponent, duration_regex } from "./moderation-common.js";
+import { CommandSetBuilder } from "../../command-abstractions/command-set-builder.js";
 import { EarlyReplyMode, TextBasedCommandBuilder } from "../../command-abstractions/text-based-command-builder.js";
 import { TextBasedCommand } from "../../command-abstractions/text-based-command.js";
 import { moderation_entry, basic_moderation_with_user } from "../../infra/schemata/moderation.js";
@@ -24,10 +25,8 @@ export default class Rolepersist extends ModerationComponent {
         return true;
     }
 
-    constructor(wheatley: Wheatley) {
-        super(wheatley);
-
-        this.add_command(
+    override async setup(commands: CommandSetBuilder) {
+        commands.add(
             new TextBasedCommandBuilder("rolepersist", EarlyReplyMode.visible)
                 .set_permissions(Discord.PermissionFlagsBits.BanMembers)
                 .set_description("Rolepersist add/remove")
@@ -111,7 +110,7 @@ export default class Rolepersist extends ModerationComponent {
         };
 
         for (const [command, role] of Object.entries(aliases)) {
-            this.add_command(
+            commands.add(
                 new TextBasedCommandBuilder(command, EarlyReplyMode.visible)
                     .set_permissions(Discord.PermissionFlagsBits.BanMembers)
                     .set_description(`${capitalize(role).replace("_", " ")}`)

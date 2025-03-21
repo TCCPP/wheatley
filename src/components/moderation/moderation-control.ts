@@ -7,16 +7,15 @@ import { M } from "../../utils/debugging-and-logging.js";
 import { BotComponent } from "../../bot-component.js";
 import { Wheatley } from "../../wheatley.js";
 import { ModerationComponent, parse_duration } from "./moderation-common.js";
+import { CommandSetBuilder } from "../../command-abstractions/command-set-builder.js";
 import { colors } from "../../common.js";
 import Modlogs from "./modlogs.js";
 import { EarlyReplyMode, TextBasedCommandBuilder } from "../../command-abstractions/text-based-command-builder.js";
 import { TextBasedCommand } from "../../command-abstractions/text-based-command.js";
 
 export default class ModerationControl extends BotComponent {
-    constructor(wheatley: Wheatley) {
-        super(wheatley);
-
-        this.add_command(
+    override async setup(commands: CommandSetBuilder) {
+        commands.add(
             new TextBasedCommandBuilder("reason", EarlyReplyMode.visible)
                 .set_description("Update the reason for a case")
                 .set_permissions(Discord.PermissionFlagsBits.BanMembers)
@@ -33,7 +32,7 @@ export default class ModerationControl extends BotComponent {
                 .set_handler(this.reason.bind(this)),
         );
 
-        this.add_command(
+        commands.add(
             new TextBasedCommandBuilder("context", EarlyReplyMode.visible)
                 .set_permissions(Discord.PermissionFlagsBits.BanMembers)
                 .set_description("Update case context")
@@ -54,7 +53,7 @@ export default class ModerationControl extends BotComponent {
                 ),
         );
 
-        this.add_command(
+        commands.add(
             new TextBasedCommandBuilder("duration", EarlyReplyMode.visible)
                 .set_description("Update the duration for a case")
                 .set_permissions(Discord.PermissionFlagsBits.BanMembers)
@@ -71,7 +70,7 @@ export default class ModerationControl extends BotComponent {
                 .set_handler(this.duration.bind(this)),
         );
 
-        this.add_command(
+        commands.add(
             new TextBasedCommandBuilder("expunge", EarlyReplyMode.visible)
                 .set_description("Expunge a case")
                 .set_permissions(Discord.PermissionFlagsBits.BanMembers)

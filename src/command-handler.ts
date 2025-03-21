@@ -6,12 +6,8 @@ import { BotTextBasedCommand } from "./command-abstractions/text-based-command-d
 import { BaseBotInteraction } from "./command-abstractions/interaction-base.js";
 import { SelfClearingMap } from "./utils/containers.js";
 import { MINUTE } from "./common.js";
-import { TextBasedCommandBuilder } from "./command-abstractions/text-based-command-builder.js";
 import { TextBasedCommand } from "./command-abstractions/text-based-command.js";
-import { MessageContextMenuInteractionBuilder } from "./command-abstractions/context-menu.js";
-import { BotModalHandler, ModalInteractionBuilder } from "./command-abstractions/modal.js";
-import { ButtonInteractionBuilder } from "./command-abstractions/button.js";
-import { GuildCommandManager } from "./infra/guild-command-manager.js";
+import { BotModalHandler } from "./command-abstractions/modal.js";
 import { unwrap } from "./utils/misc.js";
 import { M } from "./utils/debugging-and-logging.js";
 import { forge_snowflake } from "./utils/discord.js";
@@ -34,12 +30,7 @@ type bot_reply_to_user_entry =
       };
 
 // Manages bot commands. Handles text and slash command dispatch, edit, delete, etc.
-export class CommandManager {
-    private readonly guild_command_manager: GuildCommandManager;
-
-    private readonly text_commands: Record<string, BotTextBasedCommand<unknown[]>> = {};
-    private readonly other_commands: Record<string, BaseBotInteraction<unknown[]>> = {};
-
+export class CommandHandler {
     // map of message snowflakes -> commands, used for making text commands deletable and editable
     private readonly issued_commands_map = new SelfClearingMap<string, issued_command_info>(30 * MINUTE);
     // map of message snowflakes -> bot replies, used for making other messages deletable based on a trigger
@@ -47,8 +38,11 @@ export class CommandManager {
     // map of message snowflakes -> user ids responsible for triggering the reply, used for :x:
     private readonly bot_reply_to_user_map = new SelfClearingMap<string, bot_reply_to_user_entry>(30 * MINUTE);
 
-    constructor(private readonly wheatley: Wheatley) {
-        this.guild_command_manager = new GuildCommandManager(wheatley);
+    constructor(
+        private readonly wheatley: Wheatley,
+        private readonly text_commands: Record<string, BotTextBasedCommand<unknown[]>>,
+        private readonly other_commands: Record<string, BaseBotInteraction<unknown[]>>,
+    ) {
         this.wheatley.client.on("messageCreate", (message: Discord.Message) => {
             this.on_message(message).catch(this.wheatley.critical_error.bind(this));
         });
@@ -77,11 +71,6 @@ export class CommandManager {
         );
     }
 
-    // called once component setup is complete
-    public async finalize(token: string) {
-        await this.guild_command_manager.finalize(token);
-    }
-
     private register_issued_command(trigger: Discord.Message, command: TextBasedCommand) {
         this.issued_commands_map.set(trigger.id, { command, content: trigger.content });
     }
@@ -97,32 +86,6 @@ export class CommandManager {
 
     public get_command(command: string) {
         return this.text_commands[command];
-    }
-
-    public add_command<T extends unknown[]>(
-        command:
-            | TextBasedCommandBuilder<T, true, true>
-            | TextBasedCommandBuilder<T, true, false, true>
-            | MessageContextMenuInteractionBuilder<true>
-            | ModalInteractionBuilder<true>
-            | ButtonInteractionBuilder<true>,
-    ) {
-        if (command instanceof TextBasedCommandBuilder) {
-            for (const descriptor of command.to_command_descriptors(this.wheatley)) {
-                assert(!(descriptor.name in this.text_commands));
-                this.text_commands[descriptor.name] = descriptor;
-                if (descriptor.slash) {
-                    this.guild_command_manager.register(descriptor.to_slash_command(new Discord.SlashCommandBuilder()));
-                }
-            }
-        } else {
-            assert(!(command.name in this.other_commands));
-            const [bot_command, djs_command] = command.to_command_descriptors();
-            this.other_commands[command.name] = bot_command as BaseBotInteraction<unknown[]>;
-            if (djs_command) {
-                this.guild_command_manager.register(djs_command);
-            }
-        }
     }
 
     //
@@ -148,7 +111,7 @@ export class CommandManager {
 
     // returns false if the message was not a wheatley command
     private async handle_text_command(message: Discord.Message, prev_command_obj?: TextBasedCommand) {
-        const match = message.content.match(CommandManager.command_regex);
+        const match = message.content.match(CommandHandler.command_regex);
         if (match) {
             const command_name = match[1];
             if (command_name in this.text_commands) {

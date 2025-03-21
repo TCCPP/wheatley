@@ -10,7 +10,6 @@ import { discord_timestamp } from "../utils/discord.js";
 export default class Speedrun extends BotComponent {
     constructor(wheatley: Wheatley) {
         super(wheatley);
-
         this.wheatley.tracker.add_submodule({ on_ban: this.on_ban.bind(this) });
     }
 
