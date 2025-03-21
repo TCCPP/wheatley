@@ -1,5 +1,5 @@
-[submodule "wheatley-private"]
-	path = src/wheatley-private
+[submodule "src/components/tccpp/private"]
+	path = src/components/tccpp/private
 	url = https://github.com/TCCPP/empty.git
 	# url = git@github.com:TCCPP/wheatley-private.git
 
