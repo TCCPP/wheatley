@@ -51,7 +51,7 @@ export type wheatley_database_credentials = {
     port?: number;
 };
 
-export type wheatley_auth = {
+export type wheatley_config = {
     id: string;
     guild?: string;
     token: string;
@@ -73,7 +73,7 @@ function drop_token({
     sentry,
     virustotal,
     metrics,
-}: wheatley_auth): Omit<wheatley_auth, "token"> {
+}: wheatley_config): Omit<wheatley_config, "token"> {
     return {
         id,
         guild,
@@ -259,7 +259,7 @@ export class Wheatley {
 
     private command_handler: CommandHandler;
 
-    parameters: Omit<wheatley_auth, "token">;
+    parameters: Omit<wheatley_config, "token">;
 
     database: WheatleyDatabaseProxy;
 
@@ -329,13 +329,13 @@ export class Wheatley {
 
     constructor(
         readonly client: Discord.Client,
-        auth: wheatley_auth,
+        config: wheatley_config,
     ) {
-        this.id = auth.id;
-        this.freestanding = auth.freestanding ?? false;
-        this.guildId = auth.guild ?? TCCPP_ID;
+        this.id = config.id;
+        this.freestanding = config.freestanding ?? false;
+        this.guildId = config.guild ?? TCCPP_ID;
 
-        this.parameters = drop_token(auth);
+        this.parameters = drop_token(config);
 
         this.tracker = new MemberTracker(this);
         this.log_limiter = new LogLimiter(this);
@@ -349,22 +349,22 @@ export class Wheatley {
 
         WHEATLEY_ID = this.id;
 
-        this.setup(auth).catch(this.critical_error.bind(this));
+        this.setup(config).catch(this.critical_error.bind(this));
     }
 
-    async setup(auth: wheatley_auth) {
-        assert(this.freestanding || auth.mongo, "Missing MongoDB credentials");
-        if (auth.mongo) {
-            this.database = await WheatleyDatabase.create(this.get_initial_wheatley_info.bind(this), auth.mongo);
+    async setup(config: wheatley_config) {
+        assert(this.freestanding || config.mongo, "Missing MongoDB credentials");
+        if (config.mongo) {
+            this.database = await WheatleyDatabase.create(this.get_initial_wheatley_info.bind(this), config.mongo);
         }
-        if (auth.metrics) {
-            setup_metrics_server(auth.metrics.port, auth.metrics.hostname);
+        if (config.metrics) {
+            setup_metrics_server(config.metrics.port, config.metrics.hostname);
         }
 
         this.client.on("ready", () => {
             (async () => {
                 // Fetch the log channel immediately
-                if (!auth.freestanding) {
+                if (!config.freestanding) {
                     const channel = await this.client.channels.fetch(channels_map.log[0]);
                     this.log_channel = channel && channel.isTextBased() ? channel : null;
                 }
@@ -381,7 +381,7 @@ export class Wheatley {
                         this.critical_error(e);
                     }
                 }
-                const { text_commands, other_commands } = await command_set_builder.finalize(auth.token);
+                const { text_commands, other_commands } = await command_set_builder.finalize(config.token);
                 this.command_handler = new CommandHandler(this, text_commands, other_commands);
 
                 this.event_hub.emit("wheatley_ready");
@@ -416,7 +416,7 @@ export class Wheatley {
 
         M.debug("Logging in");
 
-        await this.client.login(auth.token);
+        await this.client.login(config.token);
     }
 
     async fetch_guild_info() {
