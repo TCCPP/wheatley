@@ -4,17 +4,17 @@ import { strict as assert } from "assert";
 
 import * as fs from "fs";
 
-import { format_list } from "../utils/strings.js";
-import { M } from "../utils/debugging-and-logging.js";
+import { format_list } from "../../../utils/strings.js";
+import { M } from "../../../utils/debugging-and-logging.js";
 
-import { cppref_index, cppref_page, CpprefSubIndex } from "../../indexes/cppref/types.js";
-import { Index } from "../algorithm/search.js";
-import { BotComponent } from "../bot-component.js";
-import { CommandSetBuilder } from "../command-abstractions/command-set-builder.js";
-import { Wheatley } from "../wheatley.js";
-import { colors } from "../common.js";
-import { EarlyReplyMode, TextBasedCommandBuilder } from "../command-abstractions/text-based-command-builder.js";
-import { TextBasedCommand } from "../command-abstractions/text-based-command.js";
+import { cppref_index, cppref_page, CpprefSubIndex } from "../../../../indexes/cppref/types.js";
+import { Index } from "../../../algorithm/search.js";
+import { BotComponent } from "../../../bot-component.js";
+import { CommandSetBuilder } from "../../../command-abstractions/command-set-builder.js";
+import { Wheatley } from "../../../wheatley.js";
+import { colors } from "../../../common.js";
+import { EarlyReplyMode, TextBasedCommandBuilder } from "../../../command-abstractions/text-based-command-builder.js";
+import { TextBasedCommand } from "../../../command-abstractions/text-based-command.js";
 
 function eliminate_aliases_and_duplicates(pages: cppref_page[]) {
     // There's this annoying thing where multiple pages are really the same page

@@ -2,10 +2,10 @@ import * as Discord from "discord.js";
 
 import { strict as assert } from "assert";
 
-import { M } from "../utils/debugging-and-logging.js";
-import { DAY, HOUR } from "../common.js";
-import { BotComponent } from "../bot-component.js";
-import { SelfClearingSet } from "../utils/containers.js";
+import { M } from "../../../utils/debugging-and-logging.js";
+import { DAY, HOUR } from "../../../common.js";
+import { BotComponent } from "../../../bot-component.js";
+import { SelfClearingSet } from "../../../utils/containers.js";
 
 const LLM_REGEX = /\b(?<!!)llms?\b/gi;
 

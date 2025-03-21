@@ -1,8 +1,8 @@
 import * as Discord from "discord.js";
 import { strict as assert } from "assert";
-import { departialize } from "../utils/discord.js";
-import { BotComponent } from "../bot-component.js";
-import { Wheatley } from "../wheatley.js";
+import { departialize } from "../../../utils/discord.js";
+import { BotComponent } from "../../../bot-component.js";
+import { Wheatley } from "../../../wheatley.js";
 import { has_media } from "./autoreact.js";
 
 export default class AntiSelfStar extends BotComponent {

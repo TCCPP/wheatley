@@ -1,13 +1,13 @@
 import * as Discord from "discord.js";
 import { strict as assert } from "assert";
-import { round, unwrap } from "../utils/misc.js";
-import { SelfClearingSet } from "../utils/containers.js";
-import { M } from "../utils/debugging-and-logging.js";
-import { MINUTE, colors } from "../common.js";
-import { BotComponent } from "../bot-component.js";
-import { Wheatley } from "../wheatley.js";
-import { buzzword_scoreboard_entry } from "../infra/schemata/buzzwords.js";
-import { set_interval } from "../utils/node.js";
+import { round, unwrap } from "../../../utils/misc.js";
+import { SelfClearingSet } from "../../../utils/containers.js";
+import { M } from "../../../utils/debugging-and-logging.js";
+import { MINUTE, colors } from "../../../common.js";
+import { BotComponent } from "../../../bot-component.js";
+import { Wheatley } from "../../../wheatley.js";
+import { buzzword_scoreboard_entry } from "../../../infra/schemata/buzzwords.js";
+import { set_interval } from "../../../utils/node.js";
 
 const ENABLED = false;
 

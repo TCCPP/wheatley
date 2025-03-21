@@ -2,12 +2,12 @@ import * as Discord from "discord.js";
 
 import { strict as assert } from "assert";
 
-import { M } from "../utils/debugging-and-logging.js";
-import { colors, MINUTE } from "../common.js";
-import { BotComponent } from "../bot-component.js";
-import { build_description, parse_out } from "../utils/strings.js";
-import Code from "./code.js";
-import { SelfClearingMap, SelfClearingSet } from "../utils/containers.js";
+import { M } from "../../../utils/debugging-and-logging.js";
+import { colors, MINUTE } from "../../../common.js";
+import { BotComponent } from "../../../bot-component.js";
+import { build_description, parse_out } from "../../../utils/strings.js";
+import Code from "../../../components/code.js";
+import { SelfClearingMap, SelfClearingSet } from "../../../utils/containers.js";
 import * as dismark from "dismark";
 
 const FAILED_CODE_BLOCK_RE = /^(?:"""?|'''?)(.+?)(?:"""?|'''?|$)/s;

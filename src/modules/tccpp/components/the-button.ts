@@ -1,14 +1,14 @@
 import * as Discord from "discord.js";
 import { strict as assert } from "assert";
-import { floor, round, unwrap } from "../utils/misc.js";
-import { time_to_human } from "../utils/strings.js";
-import { M } from "../utils/debugging-and-logging.js";
-import { DAY, MINUTE, colors } from "../common.js";
-import { BotComponent } from "../bot-component.js";
-import { Wheatley } from "../wheatley.js";
-import { button_scoreboard_entry } from "../infra/schemata/the-button.js";
-import { set_interval } from "../utils/node.js";
-import { discord_timestamp } from "../utils/discord.js";
+import { floor, round, unwrap } from "../../../utils/misc.js";
+import { time_to_human } from "../../../utils/strings.js";
+import { M } from "../../../utils/debugging-and-logging.js";
+import { DAY, MINUTE, colors } from "../../../common.js";
+import { BotComponent } from "../../../bot-component.js";
+import { Wheatley } from "../../../wheatley.js";
+import { button_scoreboard_entry } from "../../../infra/schemata/the-button.js";
+import { set_interval } from "../../../utils/node.js";
+import { discord_timestamp } from "../../../utils/discord.js";
 
 function dissectDelta(delta: number) {
     let seconds = delta / 1000;

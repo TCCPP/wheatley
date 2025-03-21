@@ -1,13 +1,13 @@
 import * as Discord from "discord.js";
 import { strict as assert } from "assert";
-import { MINUTE } from "../common.js";
-import { delay } from "../utils/misc.js";
-import { file_exists } from "../utils/filesystem.js";
-import { M } from "../utils/debugging-and-logging.js";
-import { BotComponent } from "../bot-component.js";
-import { SERVER_SUGGESTION_TRACKER_START_TIME, Wheatley } from "../wheatley.js";
-import { forge_snowflake } from "../utils/discord.js";
-import { set_timeout } from "../utils/node.js";
+import { MINUTE } from "../../../common.js";
+import { delay } from "../../../utils/misc.js";
+import { file_exists } from "../../../utils/filesystem.js";
+import { M } from "../../../utils/debugging-and-logging.js";
+import { BotComponent } from "../../../bot-component.js";
+import { SERVER_SUGGESTION_TRACKER_START_TIME, Wheatley } from "../../../wheatley.js";
+import { forge_snowflake } from "../../../utils/discord.js";
+import { set_timeout } from "../../../utils/node.js";
 
 let react_blacklist = new Set<string>();
 

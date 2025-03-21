@@ -1,7 +1,7 @@
 import { assert, describe, expect, it } from "vitest";
 
 import { CpprefSubIndex } from "../indexes/cppref/types.js";
-import { CpprefIndex } from "../src/components/cppref.js";
+import { CpprefIndex } from "../src/modules/tccpp/components/cppref.js";
 
 type TestCase = {
     query: string | string[];

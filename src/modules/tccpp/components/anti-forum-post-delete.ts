@@ -2,10 +2,10 @@ import { strict as assert } from "assert";
 
 import * as Discord from "discord.js";
 
-import { get_tag } from "../utils/discord.js";
-import { M } from "../utils/debugging-and-logging.js";
-import { BotComponent } from "../bot-component.js";
-import { colors, MINUTE } from "../common.js";
+import { get_tag } from "../../../utils/discord.js";
+import { M } from "../../../utils/debugging-and-logging.js";
+import { BotComponent } from "../../../bot-component.js";
+import { colors, MINUTE } from "../../../common.js";
 
 function create_embed(title: string | undefined, color: number, msg: string) {
     const embed = new Discord.EmbedBuilder().setColor(color).setDescription(msg);
