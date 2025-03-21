@@ -263,8 +263,6 @@ export class Wheatley {
 
     database: WheatleyDatabaseProxy;
 
-    link_blacklist: any;
-
     // whether wheatley is ready (client is ready + wheatley has set up)
     ready = false;
 
@@ -399,18 +397,6 @@ export class Wheatley {
             const default_export = (await import(`../${file.replace(".ts", ".js")}`)).default;
             if (default_export !== undefined) {
                 await this.add_component(default_export);
-            }
-        }
-
-        if (await directory_exists("src/wheatley-private/components")) {
-            for await (const file of walk_dir("src/wheatley-private/components")) {
-                const default_export = (await import(`../${file.replace(".ts", ".js")}`)).default;
-                if (default_export !== undefined) {
-                    const component = await this.add_component(default_export);
-                    if (file.endsWith("link-blacklist.ts")) {
-                        this.link_blacklist = component;
-                    }
-                }
             }
         }
 
