@@ -15,8 +15,8 @@ import * as fs from "fs";
 async function main() {
     let client: MongoClient | null = null;
     try {
-        const auth = JSON.parse(await fs.promises.readFile("auth.json", "utf-8"));
-        const url = `mongodb://${auth.mongouser}:${auth.mongopassword}@localhost:27017/?authMechanism=DEFAULT`;
+        const config = JSON.parse(await fs.promises.readFile("config.json", "utf-8"));
+        const url = `mongodb://${config.mongouser}:${config.mongopassword}@localhost:27017/?authMechanism=DEFAULT`;
         client = new MongoClient(url);
 
         const botjson = JSON.parse(await fs.promises.readFile("bot.json", "utf-8"));

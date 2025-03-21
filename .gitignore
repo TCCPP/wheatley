@@ -2,7 +2,7 @@
 .idea
 node_modules
 build
-auth.json
+config.json
 *.js
 ./W*/
 _bot.json
