@@ -13,5 +13,6 @@
         "incremental": true,
         "skipLibCheck": true,
     },
-    "exclude": ["node_modules", "build", "indexes/", "dyno-logs", "indexes", "scripts"]
+    "include": ["./src/**/*"],
+    "exclude": []
 }
