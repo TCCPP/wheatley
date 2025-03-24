@@ -21,7 +21,7 @@ import * as Sentry from "@sentry/node";
 
 import { M } from "./utils/debugging-and-logging.js";
 
-import { wheatley_auth, Wheatley } from "./wheatley.js";
+import { wheatley_config, Wheatley } from "./wheatley.js";
 import fs from "fs";
 
 async function main() {
@@ -72,16 +72,16 @@ async function main() {
     M.debug("Setting up modules");
 
     // reading sync is okay here, we can't do anything in parallel anyway
-    const auth: wheatley_auth = JSON.parse(fs.readFileSync("auth.json", { encoding: "utf-8" }));
+    const config: wheatley_config = JSON.parse(fs.readFileSync("config.json", { encoding: "utf-8" }));
 
-    if (auth.sentry) {
+    if (config.sentry) {
         Sentry.init({
-            dsn: auth.sentry,
+            dsn: config.sentry,
         });
     }
 
     try {
-        new Wheatley(client, auth);
+        new Wheatley(client, config);
     } catch (e) {
         M.error(e);
     }
