@@ -22,8 +22,8 @@ export default class AntiExecutable extends BotComponent {
     constructor(wheatley: Wheatley) {
         super(wheatley);
 
-        if (wheatley.parameters.virustotal) {
-            this.virustotal = new Virustotal(wheatley.parameters.virustotal);
+        if (wheatley.config.virustotal !== undefined) {
+            this.virustotal = new Virustotal(wheatley.config.virustotal);
         }
     }
 
