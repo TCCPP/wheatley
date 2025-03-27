@@ -18,10 +18,6 @@ import { discord_timestamp } from "../../utils/discord.js";
 
 const moderations_per_page = 5;
 
-function is_autoremove(info: moderation_edit_info) {
-    return info.reason == "Auto" && info.moderator == WHEATLEY_ID;
-}
-
 export default class Modlogs extends BotComponent {
     override async setup(commands: CommandSetBuilder) {
         commands.add(
@@ -61,7 +57,7 @@ export default class Modlogs extends BotComponent {
             }`,
             moderation.duration === null ? null : `**Duration:** ${time_to_human(moderation.duration)}`,
             `**Reason:** ${moderation.reason ? truncate(moderation.reason, max_reason) : "No reason provided"}`,
-            moderation.removed && !is_autoremove(moderation.removed)
+            moderation.removed && !moderation.auto_removed
                 ? `**Removed:** ${discord_timestamp(moderation.removed.timestamp)}` +
                       (show_private_logs ? ` by <@${moderation.removed.moderator}>` : "") +
                       ` with reason: "${moderation.removed.reason ? truncate(moderation.removed.reason, 100) : "None"}"`
