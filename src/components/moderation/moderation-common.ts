@@ -313,6 +313,7 @@ export abstract class ModerationComponent extends BotComponent {
                             reason: "Auto",
                             timestamp: Date.now(),
                         },
+                        auto_removed: true,
                     },
                 },
             );
