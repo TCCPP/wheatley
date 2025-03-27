@@ -1,16 +1,16 @@
 import * as Discord from "discord.js";
 import { strict as assert } from "assert";
-import { unwrap } from "../utils/misc.js";
-import { xxh3 } from "../utils/strings.js";
-import { api_wrap, departialize, forge_snowflake } from "../utils/discord.js";
-import { KeyedMutexSet, SelfClearingSet } from "../utils/containers.js";
-import { M } from "../utils/debugging-and-logging.js";
-import { MINUTE } from "../common.js";
-import { BotComponent } from "../bot-component.js";
-import { CommandSetBuilder } from "../command-abstractions/command-set-builder.js";
-import { Wheatley } from "../wheatley.js";
-import { EarlyReplyMode, TextBasedCommandBuilder } from "../command-abstractions/text-based-command-builder.js";
-import { TextBasedCommand } from "../command-abstractions/text-based-command.js";
+import { unwrap } from "../../../utils/misc.js";
+import { xxh3 } from "../../../utils/strings.js";
+import { api_wrap, departialize, forge_snowflake } from "../../../utils/discord.js";
+import { KeyedMutexSet, SelfClearingSet } from "../../../utils/containers.js";
+import { M } from "../../../utils/debugging-and-logging.js";
+import { MINUTE } from "../../../common.js";
+import { BotComponent } from "../../../bot-component.js";
+import { CommandSetBuilder } from "../../../command-abstractions/command-set-builder.js";
+import { Wheatley } from "../../../wheatley.js";
+import { EarlyReplyMode, TextBasedCommandBuilder } from "../../../command-abstractions/text-based-command-builder.js";
+import { TextBasedCommand } from "../../../command-abstractions/text-based-command.js";
 
 const resolution_reactions = ["🟢", "🔴", "🟡", "🚫"];
 const resolution_reactions_set = new Set(resolution_reactions);

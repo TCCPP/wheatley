@@ -2,22 +2,22 @@ import * as Discord from "discord.js";
 
 import { strict as assert } from "assert";
 
-import { descending, unwrap } from "../utils/misc.js";
-import { departialize, get_tag } from "../utils/discord.js";
-import { SelfClearingMap } from "../utils/containers.js";
-import { M } from "../utils/debugging-and-logging.js";
-import { colors, DAY, MINUTE } from "../common.js";
-import { BotComponent } from "../bot-component.js";
-import { CommandSetBuilder } from "../command-abstractions/command-set-builder.js";
-import { skill_roles_order, Wheatley } from "../wheatley.js";
+import { descending, unwrap } from "../../../utils/misc.js";
+import { departialize, get_tag } from "../../../utils/discord.js";
+import { SelfClearingMap } from "../../../utils/containers.js";
+import { M } from "../../../utils/debugging-and-logging.js";
+import { colors, DAY, MINUTE } from "../../../common.js";
+import { BotComponent } from "../../../bot-component.js";
+import { CommandSetBuilder } from "../../../command-abstractions/command-set-builder.js";
+import { skill_roles_order, Wheatley } from "../../../wheatley.js";
 import {
     UserContextMenuInteractionBuilder,
     MessageContextMenuInteractionBuilder,
-} from "../command-abstractions/context-menu.js";
-import { build_description, capitalize } from "../utils/strings.js";
-import { skill_level, skill_suggestion_thread_entry } from "../infra/schemata/skill-role-suggestion.js";
-import { EarlyReplyMode, TextBasedCommandBuilder } from "../command-abstractions/text-based-command-builder.js";
-import { TextBasedCommand } from "../command-abstractions/text-based-command.js";
+} from "../../../command-abstractions/context-menu.js";
+import { build_description, capitalize } from "../../../utils/strings.js";
+import { skill_level, skill_suggestion_thread_entry } from "../../../infra/schemata/skill-role-suggestion.js";
+import { EarlyReplyMode, TextBasedCommandBuilder } from "../../../command-abstractions/text-based-command-builder.js";
+import { TextBasedCommand } from "../../../command-abstractions/text-based-command.js";
 
 type interaction_context = { member: Discord.GuildMember; role?: string; context?: Discord.Message };
 

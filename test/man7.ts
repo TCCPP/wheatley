@@ -1,6 +1,6 @@
 import { assert, describe, expect, it } from "vitest";
 
-import { Man7Index } from "../src/components/man7.js";
+import { Man7Index } from "../src/modules/tccpp/components/man7.js";
 
 type TestCase = {
     query: string | string[];

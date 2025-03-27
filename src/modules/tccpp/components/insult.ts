@@ -2,7 +2,7 @@ import * as Discord from "discord.js";
 
 import { strict as assert } from "assert";
 
-import { BotComponent } from "../bot-component.js";
+import { BotComponent } from "../../../bot-component.js";
 
 export default class Insult extends BotComponent {
     static override get is_freestanding() {

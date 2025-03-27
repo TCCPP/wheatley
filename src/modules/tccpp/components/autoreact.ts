@@ -1,13 +1,13 @@
 import * as Discord from "discord.js";
 import { strict as assert } from "assert";
-import { delay } from "../utils/misc.js";
-import { is_media_link_embed } from "../utils/discord.js";
-import { M } from "../utils/debugging-and-logging.js";
-import { MINUTE, SECOND } from "../common.js";
-import { BotComponent } from "../bot-component.js";
-import { Wheatley } from "../wheatley.js";
-import { SelfClearingMap } from "../utils/containers.js";
-import { clear_timeout, set_timeout } from "../utils/node.js";
+import { delay } from "../../../utils/misc.js";
+import { is_media_link_embed } from "../../../utils/discord.js";
+import { M } from "../../../utils/debugging-and-logging.js";
+import { MINUTE, SECOND } from "../../../common.js";
+import { BotComponent } from "../../../bot-component.js";
+import { Wheatley } from "../../../wheatley.js";
+import { SelfClearingMap } from "../../../utils/containers.js";
+import { clear_timeout, set_timeout } from "../../../utils/node.js";
 
 export function has_media(message: Discord.Message | Discord.PartialMessage) {
     return (

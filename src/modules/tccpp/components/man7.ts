@@ -4,16 +4,16 @@ import { strict as assert } from "assert";
 
 import * as fs from "fs";
 
-import { M } from "../utils/debugging-and-logging.js";
+import { M } from "../../../utils/debugging-and-logging.js";
 
-import { Index, IndexEntry } from "../algorithm/search.js";
-import { man7_entry, man7_index } from "../../indexes/man7/types.js";
-import { BotComponent } from "../bot-component.js";
-import { CommandSetBuilder } from "../command-abstractions/command-set-builder.js";
-import { Wheatley } from "../wheatley.js";
-import { colors } from "../common.js";
-import { EarlyReplyMode, TextBasedCommandBuilder } from "../command-abstractions/text-based-command-builder.js";
-import { TextBasedCommand } from "../command-abstractions/text-based-command.js";
+import { Index, IndexEntry } from "../../../algorithm/search.js";
+import { man7_entry, man7_index } from "../../../../indexes/man7/types.js";
+import { BotComponent } from "../../../bot-component.js";
+import { CommandSetBuilder } from "../../../command-abstractions/command-set-builder.js";
+import { Wheatley } from "../../../wheatley.js";
+import { colors } from "../../../common.js";
+import { EarlyReplyMode, TextBasedCommandBuilder } from "../../../command-abstractions/text-based-command-builder.js";
+import { TextBasedCommand } from "../../../command-abstractions/text-based-command.js";
 
 type augmented_man7_entry = man7_entry & IndexEntry;
 
