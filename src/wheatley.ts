@@ -149,6 +149,7 @@ const channels_map = {
     pin_archive: tuple("1284234644396572714", Discord.TextChannel),
     skill_role_log: tuple("1315023714206617610", Discord.TextChannel),
     polls: tuple("1319336135213846568", Discord.NewsChannel),
+    wiki_dev: tuple("1350899338229846127", Discord.TextChannel),
     // red telephone
     red_telephone_alerts: tuple("1140096352278290512", Discord.TextChannel),
     // error log
@@ -197,6 +198,7 @@ const roles_map = {
     jedi_council: "1138950835208990750",
     herald: "1095555811536797787",
     linked_github: "1080596526478397471",
+    wiki_core: "1354998426370314411",
 };
 
 const skill_roles_map = {

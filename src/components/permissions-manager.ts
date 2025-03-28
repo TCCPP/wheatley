@@ -203,6 +203,17 @@ export default class PermissionManager extends BotComponent {
         this.add_channel_overwrite(this.wheatley.channels.polls, {
             ...read_only_channel_no_reactions,
         });
+        this.add_channel_overwrite(this.wheatley.channels.wiki_dev, {
+            [this.wheatley.TCCPP.roles.everyone.id]: {
+                deny: [Discord.PermissionsBitField.Flags.ViewChannel],
+            },
+            [this.wheatley.roles.wiki_core.id]: {
+                allow: [Discord.PermissionsBitField.Flags.ViewChannel],
+            },
+            [this.wheatley.id]: {
+                allow: [Discord.PermissionsBitField.Flags.ViewChannel],
+            },
+        });
         this.add_channel_overwrite(this.wheatley.channels.today_i_learned, {
             ...default_permissions,
             [this.wheatley.roles.no_til.id]: muted_permissions,
@@ -222,7 +233,7 @@ export default class PermissionManager extends BotComponent {
             ...read_only_channel,
         });
         this.add_channel_overwrite(this.wheatley.channels.skill_role_log, {
-            ...read_only_channel_no_reactions,
+            ...read_only_channel,
         });
         this.add_channel_overwrite(this.wheatley.channels.public_action_log, {
             ...read_only_channel_no_reactions,
