@@ -360,7 +360,11 @@ export default class ServerSuggestionTracker extends BotComponent {
             } else if (message.channel.id == this.wheatley.channels.suggestion_dashboard.id) {
                 assert(message.author != null);
                 // race condition with await status_message.delete() checked here
-                if (message.author.id == this.wheatley.id && !this.status_lock.has(message.id)) {
+                if (
+                    message.author.id == this.wheatley.id &&
+                    message.interactionMetadata !== null &&
+                    !this.status_lock.has(message.id)
+                ) {
                     // find and delete this.wheatley.database entry
                     const suggestion_id = await this.reverse_lookup(message.id);
                     if (suggestion_id == null) {
