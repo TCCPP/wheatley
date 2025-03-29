@@ -207,6 +207,9 @@ export default class PermissionManager extends BotComponent {
             [this.wheatley.TCCPP.roles.everyone.id]: {
                 deny: [Discord.PermissionsBitField.Flags.ViewChannel],
             },
+            [this.wheatley.roles.moderators.id]: {
+                allow: [Discord.PermissionsBitField.Flags.ViewChannel],
+            },
             [this.wheatley.roles.wiki_core.id]: {
                 allow: [Discord.PermissionsBitField.Flags.ViewChannel],
             },
