@@ -397,7 +397,7 @@ export class Wheatley {
             })().catch(this.critical_error.bind(this));
         });
 
-        for await (const file of globIterate("**/components/*.js", {
+        for await (const file of globIterate("**/components/**/*.js", {
             ignore: this.parameters.exclude,
             cwd: import.meta.dirname,
         })) {
