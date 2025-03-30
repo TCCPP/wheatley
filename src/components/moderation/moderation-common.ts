@@ -363,8 +363,8 @@ export abstract class ModerationComponent extends BotComponent {
                 // Allow a short leeway period
                 if (moderation.duration && moderation.issued_at + unwrap(moderation.duration) <= Date.now()) {
                     // If end time <= now, moderation is expired
-                    this.wheatley.alert("Skipping ensure_moderations_are_in_place on moderation");
-                    M.debug("Skipping ensure_moderations_are_in_place on moderation", moderation);
+                    this.wheatley.alert("Skipping ensure_moderations_are_in_place on expired moderation");
+                    M.debug("Skipping ensure_moderations_are_in_place on expired moderation", moderation);
                     continue;
                 }
                 // Skip anything that's active but removed
