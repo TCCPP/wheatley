@@ -11,7 +11,7 @@ const STD_REGEX = /\bstd::/gi;
 const POINTER_RE = /[\w>)]\*/gi;
 const NEW_DELETE_RE = /\b(?:new|delete)\b/gi;
 
-const ENABLED = true;
+const ENABLED = false;
 
 /**
  * 2025 April Fool's
