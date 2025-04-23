@@ -1,10 +1,10 @@
 import * as Discord from "discord.js";
 import { strict as assert } from "assert";
 
-import { BotComponent } from "../../../bot-component.js";
-import { DAY, HOUR, MINUTE } from "../../../common.js";
-import { SelfClearingSet } from "../../../utils/containers.js";
-import { M } from "../../../utils/debugging-and-logging.js";
+import { BotComponent } from "../../../../bot-component.js";
+import { DAY, HOUR, MINUTE } from "../../../../common.js";
+import { SelfClearingSet } from "../../../../utils/containers.js";
+import { M } from "../../../../utils/debugging-and-logging.js";
 import { markdown_node, MarkdownParser } from "dismark";
 
 const STD_REGEX = /\bstd::/gi;
