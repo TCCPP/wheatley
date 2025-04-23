@@ -76,9 +76,8 @@ Secrets and other bot info must be configured in the `config.json` file. An exam
   "freestanding": false, // optional,
   "exclude": [
     // optional
-    "components/the-button.js",
-    "modules/tccpp/components/buzzwords.js",
-    "modules/tccpp/private/**"
+    "modules/tccpp/components/anti-self-star.js",
+    "modules/tccpp/components/april1/**"
   ]
 }
 ```

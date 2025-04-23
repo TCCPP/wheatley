@@ -11,7 +11,6 @@
     "freestanding": true,
     "exclude": [
         "modules/tccpp/components/anti-self-star.js",
-        "modules/tccpp/components/buzzwords.js",
-        "modules/tccpp/private/**"
+        "modules/tccpp/components/april1/**"
     ]
 }
