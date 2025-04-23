@@ -248,7 +248,7 @@ export class Wheatley {
     // Application ID, must be provided in auth.json
     readonly id: string;
     // Guild ID, falls back onto TCCPP if not provided in auth.json.
-    readonly guildId: string;
+    readonly guild_id: string;
     // True if freestanding mode is enabled. Defaults to false.
     readonly freestanding: boolean;
 
@@ -315,7 +315,7 @@ export class Wheatley {
         config: wheatley_config,
     ) {
         this.id = config.id;
-        this.guildId = config.guild;
+        this.guild_id = config.guild;
         this.freestanding = config.freestanding ?? false;
 
         this.mom_ping = config.mom ? ` <@${config.mom}>` : "";
@@ -417,7 +417,7 @@ export class Wheatley {
             }
         };
         // Preliminary loads
-        this.TCCPP = fudged_unwrap(await wrap(() => this.client.guilds.fetch(this.guildId)));
+        this.TCCPP = fudged_unwrap(await wrap(() => this.client.guilds.fetch(this.guild_id)));
         this.user = fudged_unwrap(await wrap(() => this.client.users.fetch(this.id)));
         // Channels
         await Promise.all(
@@ -703,7 +703,7 @@ export class Wheatley {
         options: Discord.GuildMember | Discord.UserResolvable | Discord.FetchMemberOptions,
     ): Promise<Discord.GuildMember | null> {
         if (options instanceof Discord.GuildMember) {
-            if (options.guild.id == this.guildId) {
+            if (options.guild.id == this.guild_id) {
                 return options;
             } else {
                 return await this.try_fetch_tccpp_member(options.id);
@@ -757,7 +757,7 @@ export class Wheatley {
 
     increment_message_counters(message: Discord.Message) {
         try {
-            if (message.guildId == this.guildId) {
+            if (message.guildId == this.guild_id) {
                 if (!message.author.bot) {
                     this.message_counter.labels({ type: "normal" }).inc();
                 } else {
