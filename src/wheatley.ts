@@ -90,7 +90,7 @@ const channels_map = {
     skill_role_suggestions: tuple("1211089633547526204", Discord.ForumChannel),
     skill_roles_meta: tuple("1182536717056618557", Discord.TextChannel),
     news: tuple("1269506410530738267", Discord.ForumChannel),
-    resources: tuple("1124619767542718524", Discord.ForumChannel),
+    resources: tuple("1361574878561570926", Discord.TextChannel),
     partners: tuple("904790565000986745", Discord.TextChannel),
     the_button: tuple("1069678919667687455", Discord.TextChannel),
     articles: tuple("1130174377539940475", Discord.TextChannel),
@@ -258,6 +258,7 @@ export class Wheatley {
     readonly microsoft_emote = "<:microsoft:1165512917047853127>";
     readonly tux_emote = "<:tux:1165505626894520361>";
     readonly apple_emote = "<:apple:1165508607798943754>";
+    readonly tccpp_emote = "<:tccpp:865354975629279232>";
     readonly success = "<:success:1138616548630745088>";
     readonly error = "<:error:1138616562958483496>";
     readonly wheatley = "<:wheatley:1147938076551827496>";
