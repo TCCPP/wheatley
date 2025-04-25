@@ -13,5 +13,5 @@
         "incremental": true,
         "skipLibCheck": true,
     },
-    "exclude": ["node_modules", "build", "indexes/", "dyno-logs", "indexes", "scripts", "scratch"]
+    "exclude": ["node_modules", "build", "indexes/", "dyno-logs", "indexes", "scripts", "scratch", "wiki"]
 }
