@@ -2,6 +2,6 @@
 	path = wiki
 	url = git@github.com:TCCPP/wiki.git
 
-[submodule "wheatley-private"]
-	path = src/modules/wheatley-private
-	url = git@github.com:TCCPP/wheatley-private.git
+[submodule "wiki-articles"]
+	path = wiki-articles
+	url = git@github.com:TCCPP/wiki-articles.git
