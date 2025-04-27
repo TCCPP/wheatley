@@ -1,17 +1,22 @@
 import * as Discord from "discord.js";
 import { strict as assert } from "assert";
 
-import { BotComponent } from "../bot-component.js";
-import { CommandSetBuilder } from "../command-abstractions/command-set-builder.js";
-import { EarlyReplyMode, TextBasedCommandBuilder } from "../command-abstractions/text-based-command-builder.js";
-import { TextBasedCommand } from "../command-abstractions/text-based-command.js";
+import { BotComponent } from "../../bot-component.js";
+import { CommandSetBuilder } from "../../command-abstractions/command-set-builder.js";
+import { EarlyReplyMode, TextBasedCommandBuilder } from "../../command-abstractions/text-based-command-builder.js";
+import { TextBasedCommand } from "../../command-abstractions/text-based-command.js";
 
-import { Wheatley } from "../wheatley.js";
-import { colors, DAY } from "../common.js";
-import { unwrap } from "../utils/misc.js";
-import { capitalize } from "../utils/strings.js";
+import { Wheatley } from "../../wheatley.js";
+import { moderation_entry } from "./schemata.js";
+import { colors, DAY } from "../../common.js";
+import { unwrap } from "../../utils/misc.js";
+import { capitalize } from "../../utils/strings.js";
 
 export default class ModStats extends BotComponent {
+    database = this.wheatley.database.create_proxy<{
+        moderations: moderation_entry;
+    }>();
+
     override async setup(commands: CommandSetBuilder) {
         commands.add(
             new TextBasedCommandBuilder("modstats", EarlyReplyMode.none)
@@ -27,7 +32,7 @@ export default class ModStats extends BotComponent {
     }
 
     async get_stats(moderator: Discord.User | null, cutoff = 0) {
-        const res = await this.wheatley.database.moderations
+        const res = await this.database.moderations
             .aggregate([
                 {
                     $match: moderator

@@ -5,9 +5,13 @@ import { colors, MINUTE } from "../common.js";
 import { BotComponent } from "../bot-component.js";
 import { Wheatley } from "../wheatley.js";
 import { discord_timestamp } from "../utils/discord.js";
-import { moderation_entry } from "../infra/schemata/moderation.js";
+import { moderation_entry } from "./moderation/schemata.js";
 
 export default class NotifyAboutFormerlyBannedUsers extends BotComponent {
+    database = this.wheatley.database.create_proxy<{
+        moderations: moderation_entry;
+    }>();
+
     async alert(member: Discord.GuildMember, most_recent: moderation_entry) {
         const action = most_recent.type == "kick" ? "kicked" : "banned";
         const embed = new Discord.EmbedBuilder()
@@ -30,7 +34,7 @@ export default class NotifyAboutFormerlyBannedUsers extends BotComponent {
     }
 
     async find_most_recent_kick_or_ban(member: Discord.GuildMember) {
-        return await this.wheatley.database.moderations.findOne(
+        return await this.database.moderations.findOne(
             {
                 user: member.id,
                 $or: [{ type: "ban" }, { type: "softban" }, { type: "kick" }],

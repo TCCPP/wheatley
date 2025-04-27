@@ -8,15 +8,23 @@ import { CommandSetBuilder } from "../../../command-abstractions/command-set-bui
 import { Wheatley } from "../../../wheatley.js";
 import { EarlyReplyMode, TextBasedCommandBuilder } from "../../../command-abstractions/text-based-command-builder.js";
 import { TextBasedCommand } from "../../../command-abstractions/text-based-command.js";
-import { roulette_leaderboard_entry } from "../../../infra/schemata/roulette.js";
 
 const LEADERBOARD_ENTRIES = 20;
+
+export type roulette_leaderboard_entry = {
+    user: string;
+    highscore: number;
+};
 
 export default class Roulette extends BotComponent {
     readonly warned_users = new SelfClearingSet<string>(60 * MINUTE);
     readonly disabled_users = new SelfClearingSet<string>(20 * MINUTE); // prevent mod abuse (1984)
     // user id -> streak count
     readonly streaks = new SelfClearingMap<string, number>(60 * MINUTE);
+
+    database = this.wheatley.database.create_proxy<{
+        roulette_leaderboard: roulette_leaderboard_entry;
+    }>();
 
     override async setup(commands: CommandSetBuilder) {
         commands.add(
@@ -60,7 +68,7 @@ export default class Roulette extends BotComponent {
         // todo: not efficient at all
         const score = this.streaks.get(user_id)!;
         // add / update entry
-        await this.wheatley.database.roulette_leaderboard.updateOne(
+        await this.database.roulette_leaderboard.updateOne(
             { user: user_id },
             {
                 $setOnInsert: {
@@ -142,7 +150,7 @@ export default class Roulette extends BotComponent {
         const embed = new Discord.EmbedBuilder().setColor(colors.green).setTitle("Roulette Leaderboard");
         let description = "";
         const top_scores = <roulette_leaderboard_entry[]>(
-            await this.wheatley.database.roulette_leaderboard
+            await this.database.roulette_leaderboard
                 .aggregate([{ $sort: { highscore: -1 } }, { $limit: LEADERBOARD_ENTRIES }])
                 .toArray()
         );

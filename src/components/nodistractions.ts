@@ -6,7 +6,6 @@ import { CommandSetBuilder } from "../command-abstractions/command-set-builder.j
 import { Wheatley } from "../wheatley.js";
 import { EarlyReplyMode, TextBasedCommandBuilder } from "../command-abstractions/text-based-command-builder.js";
 import { TextBasedCommand } from "../command-abstractions/text-based-command.js";
-import { no_distraction_entry } from "../infra/schemata/nodistractions.js";
 import { set_timeout, clear_timeout } from "../utils/node.js";
 
 /*
@@ -60,10 +59,20 @@ function parse_unit(u: string) {
 const nodistractions_arg_re = /^(\d*)\s*(\w*)/i;
 const INT_MAX = 0x7fffffff;
 
+type no_distraction_entry = {
+    user: string;
+    start: number;
+    duration: number;
+};
+
 export default class Nodistractions extends BotComponent {
     // Sorted by !nodistractions end time
     undistract_queue: no_distraction_entry[] = [];
     timer: NodeJS.Timeout | null = null;
+
+    database = this.wheatley.database.create_proxy<{
+        nodistractions: no_distraction_entry;
+    }>();
 
     override async setup(commands: CommandSetBuilder) {
         commands.add(
@@ -86,7 +95,7 @@ export default class Nodistractions extends BotComponent {
 
     override async on_ready() {
         // load entries
-        for await (const { user, start, duration } of this.wheatley.database.nodistractions.find()) {
+        for await (const { user, start, duration } of this.database.nodistractions.find()) {
             this.undistract_queue.push({ user, start, duration });
         }
 
@@ -126,7 +135,7 @@ export default class Nodistractions extends BotComponent {
                 }
             }
             // remove database entry
-            await this.wheatley.database.nodistractions.deleteOne({ user: entry.user });
+            await this.database.nodistractions.deleteOne({ user: entry.user });
             // reschedule, intentionally not rescheduling
             if (this.undistract_queue.length > 0) {
                 this.set_timer();
@@ -159,7 +168,7 @@ export default class Nodistractions extends BotComponent {
         M.log("Applying !nodistractions", target.user.id, target.user.tag);
         // error handling
         if (target.roles.cache.some(r => r.id == this.wheatley.roles.no_off_topic.id)) {
-            if ((await this.wheatley.database.nodistractions.findOne({ user: target.id })) !== null) {
+            if ((await this.database.nodistractions.findOne({ user: target.id })) !== null) {
                 await command.reply("You're already in !nodistractions", true, true);
             } else {
                 await command.reply("Nice try.", true, true);
@@ -194,7 +203,7 @@ export default class Nodistractions extends BotComponent {
             }
         }
         this.undistract_queue.splice(i, 0, entry);
-        await this.wheatley.database.nodistractions.insertOne({
+        await this.database.nodistractions.insertOne({
             user: target.id,
             start,
             duration,
@@ -212,7 +221,7 @@ export default class Nodistractions extends BotComponent {
 
     async early_remove_nodistractions(command: TextBasedCommand, target: Discord.GuildMember) {
         // checks
-        assert((await this.wheatley.database.nodistractions.findOne({ user: target.id })) !== null);
+        assert((await this.database.nodistractions.findOne({ user: target.id })) !== null);
         // timer
         const reschedule = this.timer != null;
         if (this.timer != null) {
@@ -222,13 +231,13 @@ export default class Nodistractions extends BotComponent {
         // remove role
         await target.roles.remove(this.wheatley.roles.no_off_topic.id);
         // check again
-        assert((await this.wheatley.database.nodistractions.findOne({ user: target.id })) !== null);
+        assert((await this.database.nodistractions.findOne({ user: target.id })) !== null);
         if (!this.undistract_queue.some(e => e.user == target.id)) {
             this.wheatley.critical_error("Not good");
         }
         // remove entry
         this.undistract_queue = this.undistract_queue.filter(e => e.user != target.id);
-        await this.wheatley.database.nodistractions.deleteOne({ user: target.id });
+        await this.database.nodistractions.deleteOne({ user: target.id });
         command.react("✅").catch(M.error);
         // reschedule if necessary
         if (reschedule && this.undistract_queue.length > 0) {
@@ -278,7 +287,7 @@ export default class Nodistractions extends BotComponent {
             await command.reply("You are not currently in !nodistractions", true, true);
             return;
         }
-        if ((await this.wheatley.database.nodistractions.findOne({ user: member.id })) === null) {
+        if ((await this.database.nodistractions.findOne({ user: member.id })) === null) {
             await command.reply("Nice try.", true, true);
             this.wheatley.alert("Exploit attempt" + (command.is_slash() ? "" : " " + command.get_or_forge_url()));
             return;

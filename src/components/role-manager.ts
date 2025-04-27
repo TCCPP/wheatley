@@ -17,6 +17,12 @@ import { SelfClearingSet } from "../utils/containers.js";
 // Auto-remove pink roles when members are no longer boosting
 // Auto-remove duplicate skill roles
 
+type user_role_entry = {
+    user_id: string;
+    roles: string[];
+    last_known_skill_role: string | null;
+};
+
 export default class RoleManager extends BotComponent {
     pink_role: Discord.Role;
     interval: NodeJS.Timeout | null = null;
@@ -29,6 +35,10 @@ export default class RoleManager extends BotComponent {
 
     // roles that will not be re-applied on join
     blacklisted_roles: Set<string>;
+
+    database = this.wheatley.database.create_proxy<{
+        user_roles: user_role_entry;
+    }>();
 
     override async setup(commands: CommandSetBuilder) {
         commands.add(
@@ -89,7 +99,7 @@ export default class RoleManager extends BotComponent {
         const current_roles = member.roles.cache.map(role => role.id);
         if (!equal(old_roles, current_roles)) {
             const skill_role = this.get_highest_skill_role(current_roles);
-            await this.wheatley.database.user_roles.updateOne(
+            await this.database.user_roles.updateOne(
                 { user_id: member.id },
                 {
                     $set: skill_role
@@ -156,7 +166,7 @@ export default class RoleManager extends BotComponent {
         old_member: Discord.GuildMember | Discord.PartialGuildMember,
         new_member: Discord.GuildMember,
     ) {
-        const roles_entry = await this.wheatley.database.user_roles.findOne({ user_id: new_member.id });
+        const roles_entry = await this.database.user_roles.findOne({ user_id: new_member.id });
         const last_known_skill_level =
             roles_entry && roles_entry.last_known_skill_role
                 ? this.wheatley.get_skill_role_index(roles_entry.last_known_skill_role)
@@ -213,7 +223,7 @@ export default class RoleManager extends BotComponent {
     }
 
     async startup_recovery() {
-        const entries = await this.wheatley.database.user_roles.find().toArray();
+        const entries = await this.database.user_roles.find().toArray();
         for (const entry of entries) {
             this.roles.set(entry.user_id, entry.roles);
         }
@@ -230,7 +240,7 @@ export default class RoleManager extends BotComponent {
 
     override async on_guild_member_add(member: Discord.GuildMember) {
         // apply old roles
-        const roles_entry = await this.wheatley.database.user_roles.findOne({ user_id: member.id });
+        const roles_entry = await this.database.user_roles.findOne({ user_id: member.id });
         if (roles_entry === null) {
             return;
         }

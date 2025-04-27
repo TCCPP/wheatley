@@ -2,16 +2,16 @@ import * as Discord from "discord.js";
 import * as mongo from "mongodb";
 
 import { strict as assert } from "assert";
-import { unwrap } from "../utils/misc.js";
-import { EMOJIREGEX, departialize } from "../utils/discord.js";
-import { KeyedMutexSet } from "../utils/containers.js";
-import { M } from "../utils/debugging-and-logging.js";
-import { DAY, MINUTE } from "../common.js";
-import { BotComponent } from "../bot-component.js";
-import { CommandSetBuilder } from "../command-abstractions/command-set-builder.js";
-import { Wheatley } from "../wheatley.js";
-import { EarlyReplyMode, TextBasedCommandBuilder } from "../command-abstractions/text-based-command-builder.js";
-import { TextBasedCommand } from "../command-abstractions/text-based-command.js";
+import { unwrap } from "../../../utils/misc.js";
+import { EMOJIREGEX, departialize } from "../../../utils/discord.js";
+import { KeyedMutexSet } from "../../../utils/containers.js";
+import { M } from "../../../utils/debugging-and-logging.js";
+import { DAY, MINUTE } from "../../../common.js";
+import { BotComponent } from "../../../bot-component.js";
+import { CommandSetBuilder } from "../../../command-abstractions/command-set-builder.js";
+import { Wheatley } from "../../../wheatley.js";
+import { EarlyReplyMode, TextBasedCommandBuilder } from "../../../command-abstractions/text-based-command-builder.js";
+import { TextBasedCommand } from "../../../command-abstractions/text-based-command.js";
 
 const star_threshold = 5;
 const other_threshold = 5;
@@ -32,6 +32,32 @@ enum delete_trigger_type {
     repost,
 }
 
+type starboard_state = {
+    id: "starboard";
+    delete_emojis?: string[];
+    ignored_emojis?: string[];
+    negative_emojis?: string[];
+    repost_emojis?: string[];
+};
+
+type starboard_entry = {
+    message: string;
+    starboard_entry: string;
+    deleted?: boolean;
+};
+
+type auto_delete_threshold_notifications = {
+    message: string;
+};
+
+type auto_delete_entry = {
+    user: string;
+    message_id: string;
+    message_timestamp: number;
+    delete_timestamp: number;
+    flag_link: string | undefined;
+};
+
 export default class Starboard extends BotComponent {
     mutex = new KeyedMutexSet<string>();
 
@@ -48,6 +74,13 @@ export default class Starboard extends BotComponent {
     repost_emojis: string[];
 
     excluded_channels: Set<string>;
+
+    database = this.wheatley.database.create_proxy<{
+        component_state: starboard_state;
+        auto_delete_threshold_notifications: auto_delete_threshold_notifications;
+        starboard_entries: starboard_entry;
+        auto_deletes: auto_delete_entry;
+    }>();
 
     override async setup(commands: CommandSetBuilder) {
         commands.add(
@@ -107,6 +140,12 @@ export default class Starboard extends BotComponent {
     }
 
     override async on_ready() {
+        const state = await this.database.component_state.findOne({ id: "starboard" });
+        this.delete_emojis = state?.delete_emojis ?? [];
+        this.ignored_emojis = state?.ignored_emojis ?? [];
+        this.negative_emojis = state?.negative_emojis ?? [];
+        this.repost_emojis = state?.repost_emojis ?? [];
+
         this.excluded_channels = new Set([
             this.wheatley.channels.rules.id,
             this.wheatley.channels.announcements.id,
@@ -120,16 +159,6 @@ export default class Starboard extends BotComponent {
             this.wheatley.channels.skill_role_log.id,
             this.wheatley.channels.polls.id,
         ]);
-
-        await this.get_emoji_config();
-    }
-
-    async get_emoji_config() {
-        const singleton = await this.wheatley.database.get_bot_singleton();
-        this.delete_emojis = singleton.starboard.delete_emojis;
-        this.ignored_emojis = singleton.starboard.ignored_emojis;
-        this.negative_emojis = singleton.starboard.negative_emojis;
-        this.repost_emojis = singleton.starboard.repost_emojis;
     }
 
     reactions_string(message: Discord.Message) {
@@ -183,7 +212,7 @@ export default class Starboard extends BotComponent {
                 this.utilities.make_quote_embeds([message], {
                     template: "\n\n**[Jump to message!]($$)**",
                 });
-            const starboard_entry = await this.wheatley.database.starboard_entries.findOne({ message: message.id });
+            const starboard_entry = await this.database.starboard_entries.findOne({ message: message.id });
             if (starboard_entry) {
                 if (starboard_entry.deleted) {
                     return;
@@ -197,7 +226,7 @@ export default class Starboard extends BotComponent {
                 } catch (e: any) {
                     // unknown message
                     if (e instanceof Discord.DiscordAPIError && e.code === 10008) {
-                        await this.wheatley.database.starboard_entries.updateOne(
+                        await this.database.starboard_entries.updateOne(
                             {
                                 message: message.id,
                             },
@@ -223,7 +252,7 @@ export default class Starboard extends BotComponent {
                         content: this.reactions_string(message),
                         ...(await make_embeds()),
                     });
-                    await this.wheatley.database.starboard_entries.insertOne({
+                    await this.database.starboard_entries.insertOne({
                         message: message.id,
                         starboard_entry: starboard_message.id,
                     });
@@ -276,7 +305,7 @@ export default class Starboard extends BotComponent {
             await this.wheatley.database.lock();
             if (
                 do_delete ||
-                !(await this.wheatley.database.auto_delete_threshold_notifications.findOne({ message: message.id }))
+                !(await this.database.auto_delete_threshold_notifications.findOne({ message: message.id }))
             ) {
                 flag_message = await this.wheatley.channels.staff_flag_log.send({
                     content:
@@ -290,7 +319,7 @@ export default class Starboard extends BotComponent {
                 });
                 // E11000 duplicate key error collection can happen here if somehow the key is inserted but the delete
                 // doesn't happen. The bot restarting might be how this happens. Silently continue.
-                await this.wheatley.database.auto_delete_threshold_notifications.insertOne({
+                await this.database.auto_delete_threshold_notifications.insertOne({
                     message: message.id,
                 });
             }
@@ -306,7 +335,7 @@ export default class Starboard extends BotComponent {
             this.wheatley.database.unlock();
         }
         if (do_delete) {
-            await this.wheatley.database.auto_deletes.insertOne({
+            await this.database.auto_deletes.insertOne({
                 user: message.author.id,
                 message_id: message.id,
                 message_timestamp: message.createdTimestamp,
@@ -389,7 +418,7 @@ export default class Starboard extends BotComponent {
         }
 
         // Update/add to starboard
-        if (await this.wheatley.database.starboard_entries.findOne({ message: reaction.message.id })) {
+        if (await this.database.starboard_entries.findOne({ message: reaction.message.id })) {
             // Update counts
             await this.update_starboard(await departialize(reaction.message));
             return;
@@ -408,7 +437,7 @@ export default class Starboard extends BotComponent {
         if (!(await this.is_valid_channel(reaction.message.channel))) {
             return;
         }
-        if (await this.wheatley.database.starboard_entries.findOne({ message: reaction.message.id })) {
+        if (await this.database.starboard_entries.findOne({ message: reaction.message.id })) {
             // Update counts
             await this.update_starboard(await departialize(reaction.message));
         }
@@ -422,19 +451,19 @@ export default class Starboard extends BotComponent {
             return;
         }
         assert(old_message.id == new_message.id);
-        if (await this.wheatley.database.starboard_entries.findOne({ message: old_message.id })) {
+        if (await this.database.starboard_entries.findOne({ message: old_message.id })) {
             // Update content
             await this.update_starboard(await departialize(new_message));
         }
     }
 
     override async on_message_delete(message: Discord.Message | Discord.PartialMessage) {
-        const entry = await this.wheatley.database.starboard_entries.findOne({ message: message.id });
+        const entry = await this.database.starboard_entries.findOne({ message: message.id });
         if (entry) {
             await this.mutex.lock(message.id);
             try {
                 await this.wheatley.channels.starboard.messages.delete(entry.starboard_entry);
-                await this.wheatley.database.starboard_entries.deleteOne({ message: message.id });
+                await this.database.starboard_entries.deleteOne({ message: message.id });
             } finally {
                 this.mutex.unlock(message.id);
             }
@@ -449,17 +478,18 @@ export default class Starboard extends BotComponent {
         const emojis = arg.match(EMOJIREGEX);
         if (emojis) {
             const names = emojis.map(emoji => (emoji.startsWith("<") ? emoji.split(":")[1] : emoji));
-            await this.wheatley.database.wheatley.updateOne(
-                { id: "main" },
+            const res = await this.database.component_state.findOneAndUpdate(
+                { id: "starboard" },
                 {
                     $push: {
-                        "starboard.negative_emojis": {
+                        negative_emojis: {
                             $each: names.filter(name => !this.negative_emojis.includes(name)),
                         },
                     },
                 },
+                { upsert: true, returnDocument: "after" },
             );
-            await this.get_emoji_config();
+            this.negative_emojis = unwrap(res).negative_emojis!;
             await command.reply(`Added ${names.join(", ")} to the negative emojis`);
         } else {
             await command.reply("No emojis found");
@@ -470,17 +500,18 @@ export default class Starboard extends BotComponent {
         const emojis = arg.match(EMOJIREGEX);
         if (emojis) {
             const names = emojis.map(emoji => (emoji.startsWith("<") ? emoji.split(":")[1] : emoji));
-            await this.wheatley.database.wheatley.updateOne(
-                { id: "main" },
+            const res = await this.database.component_state.findOneAndUpdate(
+                { id: "starboard" },
                 {
                     $push: {
-                        "starboard.delete_emojis": {
+                        delete_emojis: {
                             $each: names.filter(name => !this.delete_emojis.includes(name)),
                         },
                     },
                 },
+                { upsert: true, returnDocument: "after" },
             );
-            await this.get_emoji_config();
+            this.delete_emojis = unwrap(res).delete_emojis!;
             await command.reply(`Added ${names.join(", ")} to the delete emojis`);
         } else {
             await command.reply("No emojis found");
@@ -491,17 +522,18 @@ export default class Starboard extends BotComponent {
         const emojis = arg.match(EMOJIREGEX);
         if (emojis) {
             const names = emojis.map(emoji => (emoji.startsWith("<") ? emoji.split(":")[1] : emoji));
-            await this.wheatley.database.wheatley.updateOne(
-                { id: "main" },
+            const res = await this.database.component_state.findOneAndUpdate(
+                { id: "starboard" },
                 {
                     $push: {
-                        "starboard.ignored_emojis": {
+                        ignored_emojis: {
                             $each: names.filter(name => !this.ignored_emojis.includes(name)),
                         },
                     },
                 },
+                { upsert: true, returnDocument: "after" },
             );
-            await this.get_emoji_config();
+            this.ignored_emojis = unwrap(res).ignored_emojis!;
             await command.reply(`Added ${names.join(", ")} to the ignored emojis`);
         } else {
             await command.reply("No emojis found");
@@ -512,17 +544,18 @@ export default class Starboard extends BotComponent {
         const emojis = arg.match(EMOJIREGEX);
         if (emojis) {
             const names = emojis.map(emoji => (emoji.startsWith("<") ? emoji.split(":")[1] : emoji));
-            await this.wheatley.database.wheatley.updateOne(
-                { id: "main" },
+            const res = await this.database.component_state.findOneAndUpdate(
+                { id: "starboard" },
                 {
                     $push: {
-                        "starboard.repost_emojis": {
+                        repost_emojis: {
                             $each: names.filter(name => !this.repost_emojis.includes(name)),
                         },
                     },
                 },
+                { upsert: true, returnDocument: "after" },
             );
-            await this.get_emoji_config();
+            this.repost_emojis = unwrap(res).repost_emojis!;
             await command.reply(`Added ${names.join(", ")} to the ignored emojis`);
         } else {
             await command.reply("No emojis found");

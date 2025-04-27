@@ -7,7 +7,7 @@ import { Wheatley } from "../../../wheatley.js";
 import { unwrap } from "../../../utils/misc.js";
 import { build_description, capitalize, time_to_human } from "../../../utils/strings.js";
 import { MINUTE } from "../../../common.js";
-import { moderation_entry } from "../../../infra/schemata/moderation.js";
+import { moderation_entry } from "../../../components/moderation/schemata.js";
 import { set_interval } from "../../../utils/node.js";
 
 type incident_info = { time: string; user: string; user_name: string; type: string };
@@ -16,6 +16,10 @@ export default class DaysSinceLastIncident extends BotComponent {
     message: Discord.Message | null = null;
     last_time = "";
     timer: NodeJS.Timeout;
+
+    database = this.wheatley.database.create_proxy<{
+        moderations: moderation_entry;
+    }>();
 
     constructor(wheatley: Wheatley) {
         super(wheatley);
@@ -34,7 +38,7 @@ export default class DaysSinceLastIncident extends BotComponent {
     }
 
     async last_incident_info(): Promise<incident_info> {
-        const moderations = await this.wheatley.database.moderations
+        const moderations = await this.database.moderations
             .find({ type: { $ne: "note" } })
             .sort({ issued_at: -1 })
             .limit(1)

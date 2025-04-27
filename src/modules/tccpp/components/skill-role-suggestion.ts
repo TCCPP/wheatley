@@ -15,14 +15,34 @@ import {
     MessageContextMenuInteractionBuilder,
 } from "../../../command-abstractions/context-menu.js";
 import { build_description, capitalize } from "../../../utils/strings.js";
-import { skill_level, skill_suggestion_thread_entry } from "../../../infra/schemata/skill-role-suggestion.js";
 import { EarlyReplyMode, TextBasedCommandBuilder } from "../../../command-abstractions/text-based-command-builder.js";
 import { TextBasedCommand } from "../../../command-abstractions/text-based-command.js";
 
 type interaction_context = { member: Discord.GuildMember; role?: string; context?: Discord.Message };
 
+type skill_level = "beginner" | "intermediate" | "proficient" | "advanced" | "expert";
+
+type skill_suggestion_entry = {
+    user_id: string;
+    suggested_by: string;
+    time: number;
+    level: skill_level;
+};
+
+type skill_suggestion_thread_entry = {
+    user_id: string;
+    channel_id: string;
+    thread_opened: number;
+    thread_closed: number | null;
+};
+
 export default class SkillRoleSuggestion extends BotComponent {
     readonly target_map = new SelfClearingMap<string, interaction_context>(15 * MINUTE);
+
+    database = this.wheatley.database.create_proxy<{
+        skill_role_suggestions: skill_suggestion_entry;
+        skill_role_threads: skill_suggestion_thread_entry;
+    }>();
 
     override async setup(commands: CommandSetBuilder) {
         commands.add(
@@ -114,7 +134,7 @@ export default class SkillRoleSuggestion extends BotComponent {
         member: Discord.GuildMember,
         thread_start_time: number,
     ): Promise<{ tags: string[]; content: string }> {
-        const suggestions = await this.wheatley.database.skill_role_suggestions
+        const suggestions = await this.database.skill_role_suggestions
             .find({ user_id: member.id, time: { $gte: thread_start_time } })
             .toArray();
         const counts: Record<skill_level, number> = {
@@ -153,7 +173,7 @@ export default class SkillRoleSuggestion extends BotComponent {
     ): Promise<Discord.ForumThreadChannel> {
         await this.wheatley.database.lock();
         try {
-            const entry = await this.wheatley.database.skill_role_threads.findOne({
+            const entry = await this.database.skill_role_threads.findOne({
                 user_id: member.user.id,
                 thread_closed: null,
             });
@@ -197,7 +217,7 @@ export default class SkillRoleSuggestion extends BotComponent {
                 thread_opened: suggestion_time,
                 thread_closed: null,
             };
-            const res = await this.wheatley.database.skill_role_threads.insertOne(thread_entry);
+            const res = await this.database.skill_role_threads.insertOne(thread_entry);
             assert(res.acknowledged);
             await thread.setAppliedTags(tags);
             return thread;
@@ -214,7 +234,7 @@ export default class SkillRoleSuggestion extends BotComponent {
         context: Discord.Message<boolean> | undefined,
     ) {
         const suggestion_time = Date.now();
-        const res = await this.wheatley.database.skill_role_suggestions.insertOne({
+        const res = await this.database.skill_role_suggestions.insertOne({
             user_id: member.user.id,
             suggested_by: suggester.user.id,
             time: suggestion_time,
@@ -302,7 +322,7 @@ export default class SkillRoleSuggestion extends BotComponent {
             });
             return;
         }
-        const thread_entries = await this.wheatley.database.skill_role_threads
+        const thread_entries = await this.database.skill_role_threads
             .aggregate([
                 {
                     $match: {
@@ -331,7 +351,7 @@ export default class SkillRoleSuggestion extends BotComponent {
         }
         const thread_entry = thread_entries[0];
         if (!thread_entry.thread_closed) {
-            const res = await this.wheatley.database.skill_role_threads.updateOne(
+            const res = await this.database.skill_role_threads.updateOne(
                 {
                     channel_id: channel.id,
                 },

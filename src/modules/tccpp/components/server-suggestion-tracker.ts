@@ -18,13 +18,35 @@ const vote_reaction_set = new Set(["👍", "👎"]);
 
 const color = 0x7e78fe; //0xA931FF;
 
+// Thu Jul 01 2021 00:00:00 GMT-0400 (Eastern Daylight Time)
+export const SERVER_SUGGESTION_TRACKER_START_TIME = 1625112000000;
+
 type reaction = {
     user: Discord.User;
     emoji: Discord.Emoji;
 };
 
+type server_suggestions_state = {
+    id: "server_suggestions";
+    last_scanned_timestamp: number;
+};
+
+type server_suggestion_entry = {
+    suggestion: string;
+    status_message: string; // dashboard snowflake
+    hash: string; // to check if message is updated, currently using xxh3 (64-bit hash)
+    up: number;
+    down: number;
+    maybe: number;
+};
+
 export default class ServerSuggestionTracker extends BotComponent {
     recovering = true;
+
+    database = this.wheatley.database.create_proxy<{
+        component_state: server_suggestions_state;
+        server_suggestions: server_suggestion_entry;
+    }>();
 
     override async setup(commands: CommandSetBuilder) {
         commands.add(
@@ -37,7 +59,7 @@ export default class ServerSuggestionTracker extends BotComponent {
 
     async dashboard_count(command: TextBasedCommand) {
         await command.reply({
-            content: `${await this.wheatley.database.server_suggestions.countDocuments()} open suggestions`,
+            content: `${await this.database.server_suggestions.countDocuments()} open suggestions`,
         });
     }
 
@@ -79,7 +101,7 @@ export default class ServerSuggestionTracker extends BotComponent {
     }
 
     async reverse_lookup(status_id: string) {
-        const entry = await this.wheatley.database.server_suggestions.findOne({ status_message: status_id });
+        const entry = await this.database.server_suggestions.findOne({ status_message: status_id });
         return entry ? entry.suggestion : null;
     }
 
@@ -90,7 +112,7 @@ export default class ServerSuggestionTracker extends BotComponent {
     /*
      * New messages:
      * - Send message on the dashboard
-     * - Create this.wheatley.database entry
+     * - Create this.database entry
      * On edit:
      * - If message is tracked, update it
      * On delete:
@@ -114,7 +136,7 @@ export default class ServerSuggestionTracker extends BotComponent {
      *     Note: Not currently checked in recovery
      *     Note: Last 100 messages in the thread fetched and cached by server_suggestion_reactions
      * On status message delete in dashboard:
-     * - Delete this.wheatley.database entry. This is a manual "No longer tracking the message".
+     * - Delete this.database entry. This is a manual "No longer tracking the message".
      *
      * If a message is not tracked it is either resolved or missed.
      */
@@ -184,23 +206,23 @@ export default class ServerSuggestionTracker extends BotComponent {
             return;
         }
         // TODO: Somehow this can happen
-        if (await this.wheatley.database.server_suggestions.findOne({ suggestion: message.id })) {
+        if (await this.database.server_suggestions.findOne({ suggestion: message.id })) {
             return;
         }
         try {
             M.log("New suggestion", message.author.tag, message.author.id, message.url);
             const quote = await this.make_embeds(message);
             const status_message = await this.wheatley.channels.suggestion_dashboard.send(quote);
-            const bot_info = await this.wheatley.database.get_bot_singleton();
-            const last_scanned = bot_info.server_suggestions.last_scanned_timestamp;
-            if (message.createdTimestamp > last_scanned) {
-                await this.wheatley.database.update_bot_singleton({
-                    server_suggestions: {
+            await this.database.component_state.findOneAndUpdate(
+                { id: "server_suggestions" },
+                {
+                    $max: {
                         last_scanned_timestamp: message.createdTimestamp,
                     },
-                });
-            }
-            await this.wheatley.database.server_suggestions.insertOne({
+                },
+                { upsert: true },
+            );
+            await this.database.server_suggestions.insertOne({
                 suggestion: message.id,
                 status_message: status_message.id,
                 hash: xxh3(message.content),
@@ -225,14 +247,14 @@ export default class ServerSuggestionTracker extends BotComponent {
 
     async delete_suggestion(message_id: string) {
         try {
-            const entry = unwrap(await this.wheatley.database.server_suggestions.findOne({ suggestion: message_id }));
+            const entry = unwrap(await this.database.server_suggestions.findOne({ suggestion: message_id }));
             M.log("Suggestion deleted", message_id, entry);
             const status_message = await this.wheatley.channels.suggestion_dashboard.messages.fetch(
                 entry.status_message,
             );
             this.status_lock.insert(entry.status_message);
             await status_message.delete();
-            await this.wheatley.database.server_suggestions.deleteOne({ suggestion: message_id });
+            await this.database.server_suggestions.deleteOne({ suggestion: message_id });
         } catch (e) {
             this.wheatley.critical_error(e);
         }
@@ -240,7 +262,7 @@ export default class ServerSuggestionTracker extends BotComponent {
 
     async update_message_if_needed(message: Discord.Message) {
         try {
-            const entry = unwrap(await this.wheatley.database.server_suggestions.findOne({ suggestion: message.id }));
+            const entry = unwrap(await this.database.server_suggestions.findOne({ suggestion: message.id }));
             const hash = xxh3(message.content);
             if (hash != entry.hash) {
                 M.log("Suggestion edited", message.author.tag, message.author.id, message.url);
@@ -250,7 +272,7 @@ export default class ServerSuggestionTracker extends BotComponent {
                 const quote = await this.make_embeds(message);
                 await status_message.edit(quote);
                 entry.hash = hash;
-                await this.wheatley.database.server_suggestions.updateOne({ suggestion: message.id }, { $set: entry });
+                await this.database.server_suggestions.updateOne({ suggestion: message.id }, { $set: entry });
                 return true; // return if we updated
             } else {
                 const reactions = message.reactions.cache;
@@ -272,10 +294,7 @@ export default class ServerSuggestionTracker extends BotComponent {
                     entry.up = up;
                     entry.down = down;
                     entry.maybe = maybe;
-                    await this.wheatley.database.server_suggestions.updateOne(
-                        { suggestion: message.id },
-                        { $set: entry },
-                    );
+                    await this.database.server_suggestions.updateOne({ suggestion: message.id }, { $set: entry });
                     return true; // return if we updated
                 }
             }
@@ -287,7 +306,7 @@ export default class ServerSuggestionTracker extends BotComponent {
 
     async resolve_suggestion(message: Discord.Message, reaction: reaction) {
         try {
-            const entry = await this.wheatley.database.server_suggestions.findOne({ suggestion: message.id });
+            const entry = await this.database.server_suggestions.findOne({ suggestion: message.id });
             if (entry) {
                 M.log("Suggestion being resolved", [message.id]);
                 // remove status message
@@ -296,7 +315,7 @@ export default class ServerSuggestionTracker extends BotComponent {
                 );
                 this.status_lock.insert(entry.status_message);
                 await status_message.delete();
-                await this.wheatley.database.server_suggestions.deleteOne({ suggestion: message.id });
+                await this.database.server_suggestions.deleteOne({ suggestion: message.id });
                 if (message.thread) {
                     await message.thread.send(`Suggestion resolved as ${reaction.emoji}`);
                 }
@@ -346,7 +365,7 @@ export default class ServerSuggestionTracker extends BotComponent {
         }
         try {
             if (message.channel.id == this.wheatley.channels.server_suggestions.id) {
-                if (!(await this.wheatley.database.server_suggestions.findOne({ suggestion: message.id }))) {
+                if (!(await this.database.server_suggestions.findOne({ suggestion: message.id }))) {
                     // TODO: This can happen under normal operation, this is here as a debug check
                     M.log("Untracked suggestion deleted", message);
                     return;
@@ -365,7 +384,7 @@ export default class ServerSuggestionTracker extends BotComponent {
                     message.interactionMetadata !== null &&
                     !this.status_lock.has(message.id)
                 ) {
-                    // find and delete this.wheatley.database entry
+                    // find and delete this.database entry
                     const suggestion_id = await this.reverse_lookup(message.id);
                     if (suggestion_id == null) {
                         // untracked  - this is an internal error or a race condition
@@ -377,9 +396,9 @@ export default class ServerSuggestionTracker extends BotComponent {
                         M.info(
                             "server_suggestion tracker state recovery: Manual status delete",
                             suggestion_id,
-                            await this.wheatley.database.server_suggestions.findOne({ suggestion: suggestion_id }),
+                            await this.database.server_suggestions.findOne({ suggestion: suggestion_id }),
                         );
-                        await this.wheatley.database.server_suggestions.deleteOne({ suggestion: suggestion_id });
+                        await this.database.server_suggestions.deleteOne({ suggestion: suggestion_id });
                     }
                 }
             } else if (
@@ -422,7 +441,7 @@ export default class ServerSuggestionTracker extends BotComponent {
         const reaction = await departialize(_reaction);
         if (reaction.emoji.name! == "👍" || reaction.emoji.name! == "👎" || reaction.emoji.name! == "🤷") {
             const message = await departialize(reaction.message);
-            const entry = await this.wheatley.database.server_suggestions.findOne({ suggestion: message.id });
+            const entry = await this.database.server_suggestions.findOne({ suggestion: message.id });
             if (entry) {
                 M.debug("Suggestion vote", reaction.emoji.name, [message.id]);
                 // update message
@@ -439,7 +458,7 @@ export default class ServerSuggestionTracker extends BotComponent {
                     // 🤷
                     entry.maybe = reaction.count;
                 }
-                await this.wheatley.database.server_suggestions.updateOne({ suggestion: message.id }, { $set: entry });
+                await this.database.server_suggestions.updateOne({ suggestion: message.id }, { $set: entry });
             } else {
                 // already resolved
             }
@@ -589,7 +608,9 @@ export default class ServerSuggestionTracker extends BotComponent {
 
     async process_since_last_scanned() {
         // Note: No locking done here
-        let last_scanned = (await this.wheatley.database.get_bot_singleton()).server_suggestions.last_scanned_timestamp;
+        let last_scanned =
+            (await this.database.component_state.findOne({ id: "server_suggestions" }))?.last_scanned_timestamp ??
+            SERVER_SUGGESTION_TRACKER_START_TIME;
         while (true) {
             // TODO: Sort collection???
             const messages = await this.wheatley.channels.server_suggestions.messages.fetch({
@@ -626,20 +647,24 @@ export default class ServerSuggestionTracker extends BotComponent {
                         message.content,
                     );
                     //if(message.createdTimestamp >
-                    //      this.wheatley.database.state.suggestion_tracker.last_scanned_timestamp) {
+                    //      this.database.state.suggestion_tracker.last_scanned_timestamp) {
                     //    assert(message.createdTimestamp == decode_snowflake(message.id));
-                    //    this.wheatley.database.get<db_schema>("suggestion_tracker").last_scanned_timestamp =
+                    //    this.database.get<db_schema>("suggestion_tracker").last_scanned_timestamp =
                     //          message.createdTimestamp;
                     //}
-                    await this.open_suggestion(message); // will .update() this.wheatley.database
+                    await this.open_suggestion(message); // will .update() this.database
                 }
             }
         }
-        await this.wheatley.database.update_bot_singleton({
-            server_suggestions: {
-                last_scanned_timestamp: last_scanned,
+        await this.database.component_state.updateOne(
+            { id: "server_suggestions" },
+            {
+                $set: {
+                    last_scanned_timestamp: last_scanned,
+                },
             },
-        });
+            { upsert: true },
+        );
     }
 
     override async on_ready() {
@@ -649,10 +674,10 @@ export default class ServerSuggestionTracker extends BotComponent {
         await this.process_since_last_scanned();
         M.debug("server_suggestion tracker finished scanning");
         this.recovering = false;
-        // check this.wheatley.database entries and fetch since last_scanned_timestamp
-        M.debug("server_suggestion tracker checking this.wheatley.database entries");
+        // check this.database entries and fetch since last_scanned_timestamp
+        M.debug("server_suggestion tracker checking this.database entries");
         try {
-            for await (const entry of this.wheatley.database.server_suggestions.find()) {
+            for await (const entry of this.database.server_suggestions.find()) {
                 await this.mutex.lock(entry.suggestion);
                 try {
                     const message = await this.get_message(this.wheatley.channels.server_suggestions, entry.suggestion);
@@ -685,13 +710,13 @@ export default class ServerSuggestionTracker extends BotComponent {
                         (await this.get_message(this.wheatley.channels.suggestion_dashboard, entry.status_message)) ==
                             undefined
                     ) {
-                        // just delete from this.wheatley.database - no longer tracking
+                        // just delete from this.database - no longer tracking
                         M.info(
                             "server_suggestion tracker state recovery: Manual status delete",
                             entry.suggestion,
                             entry,
                         );
-                        await this.wheatley.database.server_suggestions.deleteOne({ suggestion: entry.suggestion });
+                        await this.database.server_suggestions.deleteOne({ suggestion: entry.suggestion });
                     }
                 } finally {
                     // not currently checking root reactions on it - TODO?
@@ -701,6 +726,6 @@ export default class ServerSuggestionTracker extends BotComponent {
         } catch (e) {
             this.wheatley.critical_error(e);
         }
-        M.debug("server_suggestion tracker finished checking this.wheatley.database entries");
+        M.debug("server_suggestion tracker finished checking this.database entries");
     }
 }

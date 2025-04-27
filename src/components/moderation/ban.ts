@@ -11,7 +11,7 @@ import { ModerationComponent, duration_regex } from "./moderation-common.js";
 import { CommandSetBuilder } from "../../command-abstractions/command-set-builder.js";
 import { MINUTE } from "../../common.js";
 import { unwrap } from "../../utils/misc.js";
-import { moderation_entry, basic_moderation_with_user } from "../../infra/schemata/moderation.js";
+import { moderation_entry, basic_moderation_with_user } from "./schemata.js";
 
 export default class Ban extends ModerationComponent {
     get type() {
@@ -126,7 +126,7 @@ export default class Ban extends ModerationComponent {
             return true;
         } catch (e) {
             // fallback to the database
-            const res = await this.wheatley.database.moderations.findOne({
+            const res = await this.database.moderations.findOne({
                 user: moderation.user,
                 type: this.type,
                 active: true,

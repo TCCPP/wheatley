@@ -7,6 +7,7 @@ import { M } from "../../utils/debugging-and-logging.js";
 import { BotComponent } from "../../bot-component.js";
 import { Wheatley } from "../../wheatley.js";
 import { ModerationComponent, parse_duration } from "./moderation-common.js";
+import { moderation_entry } from "./schemata.js";
 import { CommandSetBuilder } from "../../command-abstractions/command-set-builder.js";
 import { colors } from "../../common.js";
 import Modlogs from "./modlogs.js";
@@ -14,6 +15,10 @@ import { EarlyReplyMode, TextBasedCommandBuilder } from "../../command-abstracti
 import { TextBasedCommand } from "../../command-abstractions/text-based-command.js";
 
 export default class ModerationControl extends BotComponent {
+    database = this.wheatley.database.create_proxy<{
+        moderations: moderation_entry;
+    }>();
+
     override async setup(commands: CommandSetBuilder) {
         commands.add(
             new TextBasedCommandBuilder("reason", EarlyReplyMode.visible)
@@ -113,7 +118,7 @@ export default class ModerationControl extends BotComponent {
     }
 
     async reason(command: TextBasedCommand, case_number: number, reason: string) {
-        const res = await this.wheatley.database.moderations.findOneAndUpdate(
+        const res = await this.database.moderations.findOneAndUpdate(
             { case_number },
             {
                 $set: {
@@ -149,7 +154,7 @@ export default class ModerationControl extends BotComponent {
     }
 
     async context_add(command: TextBasedCommand, case_number: number, context: string) {
-        const res = await this.wheatley.database.moderations.findOneAndUpdate(
+        const res = await this.database.moderations.findOneAndUpdate(
             { case_number },
             {
                 $push: {
@@ -175,7 +180,7 @@ export default class ModerationControl extends BotComponent {
     }
 
     async duration(command: TextBasedCommand, case_number: number, duration: string) {
-        const item = await this.wheatley.database.moderations.findOne({ case_number });
+        const item = await this.database.moderations.findOne({ case_number });
         if (!item) {
             await this.reply_with_error(command, `Case ${case_number} not found`);
             return;
@@ -184,7 +189,7 @@ export default class ModerationControl extends BotComponent {
             await this.reply_with_error(command, `Case ${case_number} can't take a duration`);
             return;
         }
-        const res = await this.wheatley.database.moderations.findOneAndUpdate(
+        const res = await this.database.moderations.findOneAndUpdate(
             { case_number },
             {
                 $set: {
@@ -222,7 +227,7 @@ export default class ModerationControl extends BotComponent {
     }
 
     async expunge(command: TextBasedCommand, case_number: number, reason: string | null) {
-        const res = await this.wheatley.database.moderations.findOneAndUpdate(
+        const res = await this.database.moderations.findOneAndUpdate(
             { case_number },
             {
                 $set: {
