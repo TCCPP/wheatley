@@ -43,8 +43,8 @@ const image_regex = /!\[[^\]]*]\(([^)]*)\)/;
 const reference_definition_regex = /\s*\[([^\]]*)]: (.+)/;
 const reference_link_regex = /\[([^\]]*)]\[([^\]]*)]/g;
 
-export const wiki_articles_path = "wiki-articles";
 export const wiki_path = "wiki";
+export const wiki_articles_path = "wiki/articles";
 
 class ArticleParser {
     private readonly aliases = new Set<string>();
