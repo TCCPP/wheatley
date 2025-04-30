@@ -173,6 +173,10 @@ class ArticleParser {
     }
 
     private parse_regular_line(line: string): void {
+        if (this.current_state === parse_state.before_inline_field && line.trim() === "") {
+            return;
+        }
+
         const requires_line_break =
             this.in_code ||
             (line.startsWith(">") && this.last_was_blockquote) ||
@@ -205,7 +209,7 @@ class ArticleParser {
         } else if (this.current_state === parse_state.footer) {
             this.footer = append_line(this.footer ?? "");
         } else {
-            assert(false);
+            assert(false, `unexpected state: ${this.current_state}`);
         }
 
         if (!this.in_code && line.startsWith(">")) {
@@ -488,6 +492,7 @@ export default class Wiki extends BotComponent {
             article = parse_article(null, content, this.wheatley)[0];
         } catch (e) {
             await command.reply("Parse error: " + e, true, true);
+            M.debug(e);
             return;
         }
         try {
