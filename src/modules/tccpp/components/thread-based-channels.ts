@@ -32,12 +32,18 @@ function create_embed(title: string | undefined, color: number, msg: string) {
 }
 
 export default class ThreadBasedChannels extends BotComponent {
+    thread_based_channel_ids = new Set([
+        "802541516655951892", // server-suggestions
+        "594212045621035030", // showcase
+        "873682069325217802", // today-i-learned
+    ]);
+
     override async on_message_create(message: Discord.Message) {
         // Ignore bots and thread create messages
         if (message.author.bot || message.type == Discord.MessageType.ThreadCreated) {
             return;
         }
-        if (this.wheatley.thread_based_channel_ids.has(message.channel.id)) {
+        if (this.thread_based_channel_ids.has(message.channel.id)) {
             const s = message.member?.displayName.trim().endsWith("s") ? "" : "s"; // rudimentary
             const thread = await message.startThread({
                 name: `${message.member?.displayName}'${s} post`,
