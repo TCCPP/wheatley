@@ -378,7 +378,7 @@ export default class Wiki extends BotComponent {
     }
 
     async load_wiki_pages() {
-        for await (const file_path of globIterate(`${wiki_articles_path}/articles/**/*.md`, { withFileTypes: true })) {
+        for await (const file_path of globIterate(`${wiki_articles_path}/**/*.md`, { withFileTypes: true })) {
             const content = await fs.promises.readFile(file_path.fullpath(), { encoding: "utf-8" });
             let parsed;
             try {
