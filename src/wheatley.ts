@@ -476,7 +476,7 @@ export class Wheatley {
     async add_component<T extends BotComponent>(component: { new (w: Wheatley): T; get is_freestanding(): boolean }) {
         if (!this.freestanding || component.is_freestanding) {
             M.log(`Initializing ${component.name}`);
-            assert(!this.components.has(component.name), "Duplicate component name");
+            assert(!this.components.has(component.name), `Duplicate component name: ${component.name}`);
             const instance = new component(this);
             this.components.set(component.name, instance);
             return instance;
