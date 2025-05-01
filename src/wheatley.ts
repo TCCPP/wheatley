@@ -279,12 +279,6 @@ export class Wheatley {
         [k in keyof typeof categories_map]: Discord.CategoryChannel;
     } = {} as any;
 
-    thread_based_channel_ids = new Set([
-        "802541516655951892", // server-suggestions
-        "594212045621035030", // showcase
-        "873682069325217802", // today-i-learned
-    ]);
-
     roles: {
         [k in keyof typeof roles_map]: Discord.Role;
     } = {} as any;
