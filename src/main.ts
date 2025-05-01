@@ -69,7 +69,8 @@ async function main() {
         M.log(`Logged in as ${client.user!.tag}`);
     });
 
-    M.debug("Setting up modules");
+    M.info("Starting wheatley");
+    M.info(`Node version: ${process.versions.node}`);
 
     // reading sync is okay here, we can't do anything in parallel anyway
     const config: wheatley_config = JSON.parse(fs.readFileSync("config.json", { encoding: "utf-8" }));
