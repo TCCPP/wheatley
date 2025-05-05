@@ -776,7 +776,7 @@ export class Wheatley {
 
         const bot_singleton = await proxy.wheatley.findOne({ id: "main" });
         if (bot_singleton) {
-            M.log("migrating database…");
+            M.log("migrating database...");
             await proxy.component_state.insertOne({
                 id: "moderation",
                 case_number: bot_singleton.moderation_case_number - 1,
