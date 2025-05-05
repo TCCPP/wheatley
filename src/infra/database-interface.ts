@@ -30,6 +30,14 @@ export class WheatleyDatabase {
         return new WheatleyDatabase(client, db);
     }
 
+    async list_collections() {
+        const res = new Map<string, mongo.CollectionInfo>();
+        for await (const info of this.db.listCollections({}, { nameOnly: false })) {
+            res.set(info.name, info);
+        }
+        return res;
+    }
+
     get_collection(name: string) {
         if (this.collections.has(name)) {
             return unwrap(this.collections.get(name));

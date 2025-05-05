@@ -769,38 +769,36 @@ export class Wheatley {
     }
 
     async migrate_db(database: WheatleyDatabase) {
-        const proxy = database.create_proxy<{
-            wheatley: mongo.Document;
-            component_state: mongo.Document;
-        }>();
-
-        const bot_singleton = await proxy.wheatley.findOne({ id: "main" });
-        if (bot_singleton) {
-            M.log("migrating database...");
-            await proxy.component_state.insertOne({
-                id: "moderation",
-                case_number: bot_singleton.moderation_case_number - 1,
-                modmail_id: bot_singleton.modmail_id_counter - 1,
-                watch_number: bot_singleton.watch_number - 1,
-            });
-            await proxy.component_state.insertOne({
-                id: "server_suggestions",
-                last_scanned_timestamp: bot_singleton.server_suggestions.last_scanned_timestamp,
-            });
-            await proxy.component_state.insertOne({
-                id: "the_button",
-                button_presses: bot_singleton.the_button.button_presses,
-                last_reset: bot_singleton.the_button.last_reset,
-                longest_time_without_reset: bot_singleton.the_button.longest_time_without_reset,
-            });
-            await proxy.component_state.insertOne({
-                id: "starboard",
-                delete_emojis: bot_singleton.starboard.delete_emojis,
-                ignored_emojis: bot_singleton.starboard.ignored_emojis,
-                negative_emojis: bot_singleton.starboard.negative_emojis,
-                repost_emojis: bot_singleton.starboard.repost_emojis,
-            });
-            await proxy.wheatley.updateOne({ id: "main" }, { $set: { id: "main.old" } });
+        const collection_info = await database.list_collections();
+        if (!collection_info.has("component_state") && collection_info.has("wheatley")) {
+            const component_state = database.get_collection("component_state");
+            const bot_singleton = await database.get_collection("wheatley").findOne({ id: "main" });
+            if (bot_singleton) {
+                M.log("migrating database...");
+                await component_state.insertOne({
+                    id: "moderation",
+                    case_number: bot_singleton.moderation_case_number - 1,
+                    modmail_id: bot_singleton.modmail_id_counter - 1,
+                    watch_number: bot_singleton.watch_number - 1,
+                });
+                await component_state.insertOne({
+                    id: "server_suggestions",
+                    last_scanned_timestamp: bot_singleton.server_suggestions.last_scanned_timestamp,
+                });
+                await component_state.insertOne({
+                    id: "the_button",
+                    button_presses: bot_singleton.the_button.button_presses,
+                    last_reset: bot_singleton.the_button.last_reset,
+                    longest_time_without_reset: bot_singleton.the_button.longest_time_without_reset,
+                });
+                await component_state.insertOne({
+                    id: "starboard",
+                    delete_emojis: bot_singleton.starboard.delete_emojis,
+                    ignored_emojis: bot_singleton.starboard.ignored_emojis,
+                    negative_emojis: bot_singleton.starboard.negative_emojis,
+                    repost_emojis: bot_singleton.starboard.repost_emojis,
+                });
+            }
         }
     }
 }
