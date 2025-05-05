@@ -6,9 +6,10 @@ import { BotComponent } from "../bot-component.js";
 import { Wheatley } from "../wheatley.js";
 import { discord_timestamp } from "../utils/discord.js";
 import { moderation_entry } from "./moderation/schemata.js";
+import { unwrap } from "../utils/misc.js";
 
 export default class NotifyAboutFormerlyBannedUsers extends BotComponent {
-    database = this.wheatley.database.create_proxy<{
+    database = unwrap(this.wheatley.database).create_proxy<{
         moderations: moderation_entry;
     }>();
 

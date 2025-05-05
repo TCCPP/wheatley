@@ -15,11 +15,12 @@ import { CommandAbstractionReplyOptions, TextBasedCommand } from "../../command-
 import { remove } from "../../utils/arrays.js";
 import { moderation_entry } from "./schemata.js";
 import { discord_timestamp } from "../../utils/discord.js";
+import { unwrap } from "../../utils/misc.js";
 
 const moderations_per_page = 5;
 
 export default class Modlogs extends BotComponent {
-    database = this.wheatley.database.create_proxy<{
+    database = unwrap(this.wheatley.database).create_proxy<{
         moderations: moderation_entry;
     }>();
 

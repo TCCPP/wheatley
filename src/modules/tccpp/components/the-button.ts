@@ -67,7 +67,7 @@ export default class TheButton extends BotComponent {
     last_reset: number;
     longest_time_without_reset: number;
 
-    database = this.wheatley.database.create_proxy<{
+    database = unwrap(this.wheatley.database).create_proxy<{
         component_state: the_button_state;
         button_scoreboard: the_button_scoreboard_entry;
     }>();

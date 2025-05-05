@@ -13,9 +13,10 @@ import { colors } from "../../common.js";
 import Modlogs from "./modlogs.js";
 import { EarlyReplyMode, TextBasedCommandBuilder } from "../../command-abstractions/text-based-command-builder.js";
 import { TextBasedCommand } from "../../command-abstractions/text-based-command.js";
+import { unwrap } from "../../utils/misc.js";
 
 export default class ModerationControl extends BotComponent {
-    database = this.wheatley.database.create_proxy<{
+    database = unwrap(this.wheatley.database).create_proxy<{
         moderations: moderation_entry;
     }>();
 

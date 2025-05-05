@@ -8,6 +8,7 @@ import { CommandSetBuilder } from "../../../command-abstractions/command-set-bui
 import { Wheatley } from "../../../wheatley.js";
 import { EarlyReplyMode, TextBasedCommandBuilder } from "../../../command-abstractions/text-based-command-builder.js";
 import { TextBasedCommand } from "../../../command-abstractions/text-based-command.js";
+import { unwrap } from "../../../utils/misc.js";
 
 const LEADERBOARD_ENTRIES = 20;
 
@@ -22,7 +23,7 @@ export default class Roulette extends BotComponent {
     // user id -> streak count
     readonly streaks = new SelfClearingMap<string, number>(60 * MINUTE);
 
-    database = this.wheatley.database.create_proxy<{
+    database = unwrap(this.wheatley.database).create_proxy<{
         roulette_leaderboard: roulette_leaderboard_entry;
     }>();
 

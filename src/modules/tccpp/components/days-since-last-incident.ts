@@ -17,7 +17,7 @@ export default class DaysSinceLastIncident extends BotComponent {
     last_time = "";
     timer: NodeJS.Timeout;
 
-    database = this.wheatley.database.create_proxy<{
+    database = unwrap(this.wheatley.database).create_proxy<{
         moderations: moderation_entry;
     }>();
 

@@ -7,6 +7,7 @@ import { Wheatley } from "../wheatley.js";
 import { EarlyReplyMode, TextBasedCommandBuilder } from "../command-abstractions/text-based-command-builder.js";
 import { TextBasedCommand } from "../command-abstractions/text-based-command.js";
 import { set_timeout, clear_timeout } from "../utils/node.js";
+import { unwrap } from "../utils/misc.js";
 
 /*
  * !nodistractions
@@ -70,7 +71,7 @@ export default class Nodistractions extends BotComponent {
     undistract_queue: no_distraction_entry[] = [];
     timer: NodeJS.Timeout | null = null;
 
-    database = this.wheatley.database.create_proxy<{
+    database = unwrap(this.wheatley.database).create_proxy<{
         nodistractions: no_distraction_entry;
     }>();
 

@@ -177,7 +177,7 @@ export default class Buzzwords extends BotComponent {
     timeout: NodeJS.Timeout | null = null;
     interval: NodeJS.Timeout | null = null;
 
-    database = this.wheatley.database.create_proxy<{
+    database = unwrap(this.wheatley.database).create_proxy<{
         buzzword_scoreboard: buzzword_scoreboard_entry;
     }>();
 

@@ -236,7 +236,7 @@ export class Wheatley {
 
     private command_handler: CommandHandler;
 
-    database: WheatleyDatabase;
+    database: WheatleyDatabase | null;
 
     // whether wheatley is ready (client is ready + wheatley has set up)
     ready = false;

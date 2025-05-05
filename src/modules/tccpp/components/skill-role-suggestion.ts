@@ -39,7 +39,7 @@ type skill_suggestion_thread_entry = {
 export default class SkillRoleSuggestion extends BotComponent {
     readonly target_map = new SelfClearingMap<string, interaction_context>(15 * MINUTE);
 
-    database = this.wheatley.database.create_proxy<{
+    database = unwrap(this.wheatley.database).create_proxy<{
         skill_role_suggestions: skill_suggestion_entry;
         skill_role_threads: skill_suggestion_thread_entry;
     }>();
@@ -171,7 +171,7 @@ export default class SkillRoleSuggestion extends BotComponent {
         member: Discord.GuildMember,
         suggestion_time: number,
     ): Promise<Discord.ForumThreadChannel> {
-        await this.wheatley.database.lock();
+        await unwrap(this.wheatley.database).lock();
         try {
             const entry = await this.database.skill_role_threads.findOne({
                 user_id: member.user.id,
@@ -222,7 +222,7 @@ export default class SkillRoleSuggestion extends BotComponent {
             await thread.setAppliedTags(tags);
             return thread;
         } finally {
-            this.wheatley.database.unlock();
+            unwrap(this.wheatley.database).unlock();
         }
     }
 

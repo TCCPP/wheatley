@@ -36,7 +36,7 @@ export default class Modmail extends BotComponent {
 
     readonly monke_set = new SelfClearingMap<Discord.Snowflake, number>(HOUR, HOUR);
 
-    database = this.wheatley.database.create_proxy<{
+    database = unwrap(this.wheatley.database).create_proxy<{
         component_state: moderation_state;
     }>();
 

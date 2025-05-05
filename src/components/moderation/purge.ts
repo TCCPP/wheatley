@@ -41,7 +41,7 @@ export default class Purge extends BotComponent {
     // boolean flag indicates whether to continue, serves as a stop token
     tasks = new SelfClearingMap<string, [boolean, Discord.InteractionResponse | null]>(2 * HOUR, 30 * MINUTE);
 
-    database = this.wheatley.database.create_proxy<{
+    database = unwrap(this.wheatley.database).create_proxy<{
         message_database: message_database_entry;
     }>();
 

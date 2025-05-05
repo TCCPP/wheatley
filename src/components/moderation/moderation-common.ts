@@ -162,7 +162,7 @@ export abstract class ModerationComponent extends BotComponent {
         return false;
     }
 
-    database = this.wheatley.database.create_proxy<{
+    database = unwrap(this.wheatley.database).create_proxy<{
         component_state: moderation_state;
         moderations: moderation_entry;
     }>();
