@@ -43,7 +43,7 @@ type server_suggestion_entry = {
 export default class ServerSuggestionTracker extends BotComponent {
     recovering = true;
 
-    database = unwrap(this.wheatley.database).create_proxy<{
+    private database = unwrap(this.wheatley.database).create_proxy<{
         component_state: server_suggestions_state;
         server_suggestions: server_suggestion_entry;
     }>();

@@ -71,7 +71,7 @@ export default class Nodistractions extends BotComponent {
     undistract_queue: no_distraction_entry[] = [];
     timer: NodeJS.Timeout | null = null;
 
-    database = unwrap(this.wheatley.database).create_proxy<{
+    private database = unwrap(this.wheatley.database).create_proxy<{
         nodistractions: no_distraction_entry;
     }>();
 

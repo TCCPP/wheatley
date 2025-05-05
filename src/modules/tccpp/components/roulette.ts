@@ -23,7 +23,7 @@ export default class Roulette extends BotComponent {
     // user id -> streak count
     readonly streaks = new SelfClearingMap<string, number>(60 * MINUTE);
 
-    database = unwrap(this.wheatley.database).create_proxy<{
+    private database = unwrap(this.wheatley.database).create_proxy<{
         roulette_leaderboard: roulette_leaderboard_entry;
     }>();
 

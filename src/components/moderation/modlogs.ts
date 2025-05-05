@@ -20,7 +20,7 @@ import { unwrap } from "../../utils/misc.js";
 const moderations_per_page = 5;
 
 export default class Modlogs extends BotComponent {
-    database = unwrap(this.wheatley.database).create_proxy<{
+    private database = unwrap(this.wheatley.database).create_proxy<{
         moderations: moderation_entry;
     }>();
 

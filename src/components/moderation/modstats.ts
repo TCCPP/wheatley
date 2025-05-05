@@ -13,7 +13,7 @@ import { unwrap } from "../../utils/misc.js";
 import { capitalize } from "../../utils/strings.js";
 
 export default class ModStats extends BotComponent {
-    database = unwrap(this.wheatley.database).create_proxy<{
+    private database = unwrap(this.wheatley.database).create_proxy<{
         moderations: moderation_entry;
     }>();
 

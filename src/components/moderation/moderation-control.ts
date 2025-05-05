@@ -16,7 +16,7 @@ import { TextBasedCommand } from "../../command-abstractions/text-based-command.
 import { unwrap } from "../../utils/misc.js";
 
 export default class ModerationControl extends BotComponent {
-    database = unwrap(this.wheatley.database).create_proxy<{
+    private database = unwrap(this.wheatley.database).create_proxy<{
         moderations: moderation_entry;
     }>();
 

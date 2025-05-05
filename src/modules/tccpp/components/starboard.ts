@@ -75,7 +75,7 @@ export default class Starboard extends BotComponent {
 
     excluded_channels: Set<string>;
 
-    database = unwrap(this.wheatley.database).create_proxy<{
+    private database = unwrap(this.wheatley.database).create_proxy<{
         component_state: starboard_state;
         auto_delete_threshold_notifications: auto_delete_threshold_notifications;
         starboard_entries: starboard_entry;

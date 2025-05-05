@@ -39,7 +39,7 @@ type skill_suggestion_thread_entry = {
 export default class SkillRoleSuggestion extends BotComponent {
     readonly target_map = new SelfClearingMap<string, interaction_context>(15 * MINUTE);
 
-    database = unwrap(this.wheatley.database).create_proxy<{
+    private database = unwrap(this.wheatley.database).create_proxy<{
         skill_role_suggestions: skill_suggestion_entry;
         skill_role_threads: skill_suggestion_thread_entry;
     }>();
