@@ -225,13 +225,8 @@ export default class Modmail extends BotComponent {
             await this.log_action(interaction.member, "Modmail button spammed");
         } else {
             const member = await this.wheatley.TCCPP.members.fetch(interaction.user.id);
-            const non_beginner_skill_roles = member.roles.cache.filter(role =>
-                Object.values(this.wheatley.skill_roles).some(
-                    skill_role => role.id == skill_role.id && skill_role.name != "Beginner",
-                ),
-            );
-            if (non_beginner_skill_roles.size > 0) {
-                // fast-path people who can read
+            if (this.wheatley.is_established_member(member)) {
+                // fast-path established members
                 await interaction.deferReply({
                     ephemeral: true,
                 });

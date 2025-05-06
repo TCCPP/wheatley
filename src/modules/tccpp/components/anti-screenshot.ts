@@ -87,8 +87,8 @@ export default class AntiScreenshot extends BotComponent {
         await delay(1000);
         assert(starter_message);
         assert(starter_message.member);
-        // trust people with skill roles
-        if (this.wheatley.has_skill_roles_other_than_beginner(starter_message.member)) {
+        // trust established members
+        if (this.wheatley.is_established_member(starter_message.member)) {
             return;
         }
         // check if it has images and no code
