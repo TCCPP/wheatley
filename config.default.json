@@ -10,7 +10,9 @@
         "port": 27017
     },
     "freestanding": true,
-    "exclude": [
-        "modules/tccpp/components/april1/**"
-    ]
+    "components": {
+        "exclude": [
+            "modules/tccpp/components/april1/**"
+        ]
+    }
 }

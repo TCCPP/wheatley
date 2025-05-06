@@ -67,19 +67,23 @@ Secrets and other bot info must be configured in the `config.json` file. An exam
   "id": "<bot id>",
   "guild": "<guild id>",
   "token": "<discord api token>",
-  "mom": "<your user id>", // to be pinged when things go wrong
+  "mom": "<your user id>",  // to be pinged when things go wrong
   "mongo": {
     "user": "wheatley",
     "password": "<mongo password>",
-    "host": "127.0.0.1", // optional
-    "port": 27017 // optional
+    "host": "127.0.0.1",    // optional
+    "port": 27017           // optional
   },
-  "freestanding": false, // optional,
-  "exclude": [
-    // optional
-    "components/shortcuts.js",
-    "modules/tccpp/components/april1/**"
-  ]
+  "freestanding": false,    // optional,
+  "components": {           // optional
+    "exclude": [            // optional, specify patterns of components to exclude
+      "components/shortcuts.js",
+      "modules/tccpp/components/**"
+    ],
+    "include": [            // optional, explicitly specify components to load
+      "modules/tccpp/components/cppref.js"
+    ]
+  }
 }
 ```
 
