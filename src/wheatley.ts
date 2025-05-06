@@ -238,9 +238,6 @@ export class Wheatley {
 
     database: WheatleyDatabase | null;
 
-    // whether wheatley is ready (client is ready + wheatley has set up)
-    ready = false;
-
     // Application ID, must be provided in auth.json
     readonly id: string;
     // Guild ID, falls back onto TCCPP if not provided in auth.json.
@@ -311,7 +308,7 @@ export class Wheatley {
 
         this.mom_ping = config.mom ? ` <@${config.mom}>` : "";
 
-        this.tracker = new MemberTracker(this);
+        this.tracker = new MemberTracker();
         this.log_limiter = new LogLimiter(this);
 
         // temporary until fixed in djs or @types/node
@@ -361,7 +358,7 @@ export class Wheatley {
                 this.command_handler = new CommandHandler(this, text_commands, other_commands);
 
                 this.event_hub.emit("wheatley_ready");
-                this.ready = true;
+                this.tracker.connect(this);
                 this.client.on("messageCreate", (message: Discord.Message) => {
                     this.on_message(message).catch(this.critical_error.bind(this));
                 });
