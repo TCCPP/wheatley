@@ -13,12 +13,17 @@ import { colors } from "../../common.js";
 import { EarlyReplyMode, TextBasedCommandBuilder } from "../../command-abstractions/text-based-command-builder.js";
 import { CommandAbstractionReplyOptions, TextBasedCommand } from "../../command-abstractions/text-based-command.js";
 import { remove } from "../../utils/arrays.js";
-import { moderation_edit_info, moderation_entry } from "../../infra/schemata/moderation.js";
+import { moderation_entry } from "./schemata.js";
 import { discord_timestamp } from "../../utils/discord.js";
+import { unwrap } from "../../utils/misc.js";
 
 const moderations_per_page = 5;
 
 export default class Modlogs extends BotComponent {
+    private database = unwrap(this.wheatley.database).create_proxy<{
+        moderations: moderation_entry;
+    }>();
+
     override async setup(commands: CommandSetBuilder) {
         commands.add(
             new TextBasedCommandBuilder("modlogs", EarlyReplyMode.visible)
@@ -141,7 +146,7 @@ export default class Modlogs extends BotComponent {
         if (!show_private_logs) {
             query.type = { $ne: "note" };
         }
-        const moderations = await this.wheatley.database.moderations.find(query).sort({ issued_at: -1 }).toArray();
+        const moderations = await this.database.moderations.find(query).sort({ issued_at: -1 }).toArray();
         const pages = Math.ceil(moderations.length / moderations_per_page);
         const buttons: Discord.ButtonBuilder[] = [];
         if (pages <= 1) {
@@ -228,7 +233,7 @@ export default class Modlogs extends BotComponent {
     }
 
     async case_info(command: TextBasedCommand, case_number: number) {
-        const moderation = await this.wheatley.database.moderations.findOne({ case_number });
+        const moderation = await this.database.moderations.findOne({ case_number });
         if (moderation) {
             await command.reply({
                 embeds: [

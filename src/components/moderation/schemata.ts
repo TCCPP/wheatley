@@ -1,3 +1,9 @@
+export type moderation_state = {
+    id: "moderation";
+    case_number: number;
+    modmail_id: number;
+};
+
 export type moderation_type = "mute" | "warn" | "ban" | "kick" | "rolepersist" | "timeout" | "softban" | "note";
 
 export type moderation_edit_info = {

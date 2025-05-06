@@ -9,7 +9,7 @@ import { ModerationComponent, duration_regex } from "./moderation-common.js";
 import { CommandSetBuilder } from "../../command-abstractions/command-set-builder.js";
 import { EarlyReplyMode, TextBasedCommandBuilder } from "../../command-abstractions/text-based-command-builder.js";
 import { TextBasedCommand } from "../../command-abstractions/text-based-command.js";
-import { moderation_entry, basic_moderation_with_user } from "../../infra/schemata/moderation.js";
+import { moderation_entry, basic_moderation_with_user } from "./schemata.js";
 
 export default class Mute extends ModerationComponent {
     get type() {
@@ -98,7 +98,7 @@ export default class Mute extends ModerationComponent {
             return member.roles.cache.filter(role => role.id == this.wheatley.roles.muted.id).size > 0;
         } else {
             // if the member isn't in the guild then lookup
-            const res = await this.wheatley.database.moderations.findOne({
+            const res = await this.database.moderations.findOne({
                 user: moderation.user,
                 type: this.type,
                 active: true,

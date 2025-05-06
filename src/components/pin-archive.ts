@@ -12,8 +12,27 @@ import { build_description } from "../utils/strings.js";
 import { KeyedMutexSet } from "../utils/containers.js";
 import { unwrap } from "../utils/misc.js";
 
+// we store all pins for the server, with a flag indicating if currently in the pin list
+type pin_entry = {
+    channel: string;
+    message: string;
+    current_pin: boolean;
+};
+
+// stored for edit/update reasons
+type pin_archive_entry = {
+    archive_message: string;
+    source_channel: string;
+    source_message: string;
+};
+
 export default class PinArchive extends BotComponent {
     mutex = new KeyedMutexSet<string>();
+
+    private database = unwrap(this.wheatley.database).create_proxy<{
+        pins: pin_entry;
+        pin_archive: pin_archive_entry;
+    }>();
 
     constructor(wheatley: Wheatley) {
         super(wheatley);
@@ -33,7 +52,7 @@ export default class PinArchive extends BotComponent {
                 this.utilities.make_quote_embeds([message], {
                     template: "\n\n**[Jump to message]($$)**",
                 });
-            const pin_archive_entry = await this.wheatley.database.pin_archive.findOne({ source_message: message.id });
+            const pin_archive_entry = await this.database.pin_archive.findOne({ source_message: message.id });
             if (pin_archive_entry) {
                 // edit
                 let pin_archive_message;
@@ -60,7 +79,7 @@ export default class PinArchive extends BotComponent {
                         content: `<#${message.channel.id}>`,
                         ...(await make_embeds()),
                     });
-                    await this.wheatley.database.pin_archive.insertOne({
+                    await this.database.pin_archive.insertOne({
                         archive_message: archive_message.id,
                         source_channel: message.channel.id,
                         source_message: message.id,
@@ -83,13 +102,13 @@ export default class PinArchive extends BotComponent {
             return;
         }
         const current_pins = await channel.messages.fetchPinned();
-        const database_current_pins = await this.wheatley.database.pins
+        const database_current_pins = await this.database.pins
             .find({ channel: channel.id, current_pin: true })
             .toArray();
         // two things to handle: new pins and pins that are now no longer pins
         // ensure current pins are marked as such
         for (const [_, message] of current_pins) {
-            const res = await this.wheatley.database.pins.updateOne(
+            const res = await this.database.pins.updateOne(
                 { channel: channel.id, message: message.id },
                 { $set: { current_pin: true } },
                 { upsert: true },
@@ -104,7 +123,7 @@ export default class PinArchive extends BotComponent {
                 const message = await channel.messages.fetch(pin.message);
                 M.debug("unpinned message", message.content);
                 await this.post_to_pin_archive(message);
-                const res = await this.wheatley.database.pins.updateOne(
+                const res = await this.database.pins.updateOne(
                     { channel: channel.id, message: pin.message },
                     { $set: { current_pin: false } },
                 );

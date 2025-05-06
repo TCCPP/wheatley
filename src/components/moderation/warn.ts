@@ -8,7 +8,7 @@ import { ModerationComponent } from "./moderation-common.js";
 import { CommandSetBuilder } from "../../command-abstractions/command-set-builder.js";
 import { EarlyReplyMode, TextBasedCommandBuilder } from "../../command-abstractions/text-based-command-builder.js";
 import { TextBasedCommand } from "../../command-abstractions/text-based-command.js";
-import { moderation_entry, basic_moderation } from "../../infra/schemata/moderation.js";
+import { moderation_entry, basic_moderation } from "./schemata.js";
 
 export default class Warn extends ModerationComponent {
     get type() {

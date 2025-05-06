@@ -11,7 +11,7 @@ import { ModerationComponent } from "./moderation-common.js";
 import { CommandSetBuilder } from "../../command-abstractions/command-set-builder.js";
 import { unwrap } from "../../utils/misc.js";
 import { MINUTE } from "../../common.js";
-import { moderation_entry, basic_moderation_with_user } from "../../infra/schemata/moderation.js";
+import { moderation_entry, basic_moderation_with_user } from "./schemata.js";
 
 export default class Kick extends ModerationComponent {
     get type() {

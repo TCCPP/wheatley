@@ -8,19 +8,19 @@ import PromClient from "prom-client";
 import { colors, MINUTE } from "./common.js";
 import { unwrap } from "./utils/misc.js";
 import { to_string, is_string } from "./utils/strings.js";
-import { globIterate } from "glob";
+import { globIterateSync } from "glob";
+import { PathScurry } from "path-scurry";
 import { M } from "./utils/debugging-and-logging.js";
 import { BotComponent } from "./bot-component.js";
 
 import { CommandAbstractionReplyOptions } from "./command-abstractions/text-based-command.js";
 
-import { WheatleyDatabase, WheatleyDatabaseProxy } from "./infra/database-interface.js";
+import { WheatleyDatabase } from "./infra/database-interface.js";
 import { MemberTracker } from "./infra/member-tracker.js";
 import { forge_snowflake, send_long_message } from "./utils/discord.js";
 import { TypedEventEmitter } from "./utils/event-emitter.js";
 import { setup_metrics_server } from "./infra/prometheus.js";
-import { moderation_entry } from "./infra/schemata/moderation.js";
-import { wheatley_database_info } from "./infra/schemata/wheatley.js";
+import { moderation_entry } from "./components/moderation/schemata.js";
 import { LoggableChannel, LogLimiter } from "./infra/log-limiter.js";
 import { CommandHandler } from "./command-handler.js";
 import { CommandSetBuilder } from "./command-abstractions/command-set-builder.js";
@@ -40,9 +40,6 @@ export function create_error_reply(message: string): Discord.BaseMessageOptions 
     };
 }
 
-// Thu Jul 01 2021 00:00:00 GMT-0400 (Eastern Daylight Time)
-export const SERVER_SUGGESTION_TRACKER_START_TIME = 1625112000000;
-
 export type wheatley_database_credentials = {
     user: string;
     password: string;
@@ -57,7 +54,10 @@ type core_config = {
     mom?: string;
     mongo?: wheatley_database_credentials;
     freestanding?: boolean;
-    exclude?: string[];
+    components?: {
+        exclude?: string[];
+        include?: string[];
+    };
     sentry?: string;
     metrics?: {
         port: number;
@@ -156,6 +156,7 @@ const categories_map = {
 };
 
 const roles_map = {
+    established: "1368073548983308328",
     muted: "815987333094178825",
     monke: "1139378060450332752",
     no_off_topic: "879419994004422666",
@@ -179,24 +180,6 @@ const roles_map = {
     linked_github: "1080596526478397471",
     wiki_core: "1354998426370314411",
 };
-
-const skill_roles_map = {
-    beginner: "784733371275673600",
-    intermediate: "331876085820030978",
-    proficient: "849399021838925834",
-    advanced: "331719590990184450",
-    expert: "331719591405551616",
-};
-
-export const skill_roles_order = ["beginner", "intermediate", "proficient", "advanced", "expert"];
-
-export const skill_roles_order_id = [
-    "784733371275673600",
-    "331876085820030978",
-    "849399021838925834",
-    "331719590990184450",
-    "331719591405551616",
-];
 
 // General config
 // TODO: Can eliminate this stuff
@@ -240,10 +223,7 @@ export class Wheatley {
 
     private command_handler: CommandHandler;
 
-    database: WheatleyDatabaseProxy;
-
-    // whether wheatley is ready (client is ready + wheatley has set up)
-    ready = false;
+    database: WheatleyDatabase | null;
 
     // Application ID, must be provided in auth.json
     readonly id: string;
@@ -282,9 +262,6 @@ export class Wheatley {
     roles: {
         [k in keyof typeof roles_map]: Discord.Role;
     } = {} as any;
-    skill_roles: {
-        [k in keyof typeof skill_roles_map]: Discord.Role;
-    } = {} as any;
 
     // TODO: Eliminate pre-set value
     root_mod_list = "jr.0, dot42, styxs, or _64";
@@ -315,7 +292,7 @@ export class Wheatley {
 
         this.mom_ping = config.mom ? ` <@${config.mom}>` : "";
 
-        this.tracker = new MemberTracker(this);
+        this.tracker = new MemberTracker();
         this.log_limiter = new LogLimiter(this);
 
         // temporary until fixed in djs or @types/node
@@ -331,10 +308,35 @@ export class Wheatley {
         this.setup(config).catch(this.critical_error.bind(this));
     }
 
+    private *locate_components(config: core_config) {
+        const visited = config.components?.include ? new Set<string>() : undefined;
+
+        const pw = new PathScurry(import.meta.dirname);
+
+        for (const file of globIterateSync("**/components/**/*.js", {
+            ignore: config.components?.exclude,
+            scurry: pw,
+            withFileTypes: true,
+        })) {
+            yield file.relativePosix();
+            visited?.add(file.fullpath());
+        }
+
+        if (config.components?.include) {
+            for (const file of config.components.include) {
+                const path = pw.resolve(file);
+                if (!visited!.has(path)) {
+                    yield file;
+                }
+            }
+        }
+    }
+
     async setup(config: core_config) {
         assert(this.freestanding || config.mongo, "Missing MongoDB credentials");
         if (config.mongo) {
-            this.database = await WheatleyDatabase.create(this.get_initial_wheatley_info.bind(this), config.mongo);
+            this.database = await WheatleyDatabase.create(config.mongo);
+            await this.migrate_db(this.database);
         }
         if (config.metrics) {
             setup_metrics_server(config.metrics.port, config.metrics.hostname);
@@ -364,7 +366,7 @@ export class Wheatley {
                 this.command_handler = new CommandHandler(this, text_commands, other_commands);
 
                 this.event_hub.emit("wheatley_ready");
-                this.ready = true;
+                this.tracker.connect(this);
                 this.client.on("messageCreate", (message: Discord.Message) => {
                     this.on_message(message).catch(this.critical_error.bind(this));
                 });
@@ -374,10 +376,7 @@ export class Wheatley {
             })().catch(this.critical_error.bind(this));
         });
 
-        for await (const file of globIterate("**/components/**/*.js", {
-            ignore: config.exclude,
-            cwd: import.meta.dirname,
-        })) {
+        for (const file of this.locate_components(config)) {
             const default_export = (await import(`./${file}`)).default;
             if (default_export !== undefined) {
                 await this.add_component(default_export);
@@ -449,17 +448,6 @@ export class Wheatley {
                 }
                 assert(role !== null, `Role ${k} ${id} not found`);
                 this.roles[k as keyof typeof roles_map] = role;
-                M.log(`Fetched role ${k}`);
-            }),
-        );
-        await Promise.all(
-            Object.entries(skill_roles_map).map(async ([k, id]) => {
-                const role = await wrap(() => this.TCCPP.roles.fetch(id));
-                if (this.freestanding && role === null) {
-                    return;
-                }
-                assert(role !== null, `Role ${k} ${id} not found`);
-                this.skill_roles[k as keyof typeof skill_roles_map] = role;
                 M.log(`Fetched role ${k}`);
             }),
         );
@@ -658,16 +646,8 @@ export class Wheatley {
         }
     }
 
-    has_skill_roles_other_than_beginner(member: Discord.GuildMember) {
-        const non_beginner_skill_role_ids = Object.entries(this.skill_roles)
-            .filter(([name, _]) => name !== "beginner")
-            .map(([_, role]) => role.id);
-        return member.roles.cache.some(role => non_beginner_skill_role_ids.includes(role.id));
-    }
-
-    // higher is better
-    get_skill_role_index(role: Discord.Role | string) {
-        return skill_roles_order_id.indexOf(role instanceof Discord.Role ? role.id : role);
+    is_established_member(member: Discord.GuildMember) {
+        return member.roles.cache.has(this.roles.established.id) || this.is_authorized_mod(member);
     }
 
     async fetch_root_mod_list(client: Discord.Client) {
@@ -771,26 +751,37 @@ export class Wheatley {
         this.increment_message_counters(message);
     }
 
-    get_initial_wheatley_info(): wheatley_database_info {
-        return {
-            id: "main",
-            server_suggestions: {
-                last_scanned_timestamp: SERVER_SUGGESTION_TRACKER_START_TIME,
-            },
-            modmail_id_counter: 0,
-            the_button: {
-                button_presses: 0,
-                last_reset: Date.now(),
-                longest_time_without_reset: 0,
-            },
-            starboard: {
-                delete_emojis: [],
-                ignored_emojis: [],
-                negative_emojis: [],
-                repost_emojis: [],
-            },
-            moderation_case_number: 0,
-            watch_number: 0,
-        };
+    async migrate_db(database: WheatleyDatabase) {
+        const collection_info = await database.list_collections();
+        if (!collection_info.has("component_state") && collection_info.has("wheatley")) {
+            const component_state = database.get_collection("component_state");
+            const bot_singleton = await database.get_collection("wheatley").findOne({ id: "main" });
+            if (bot_singleton) {
+                M.log("migrating database...");
+                await component_state.insertOne({
+                    id: "moderation",
+                    case_number: bot_singleton.moderation_case_number - 1,
+                    modmail_id: bot_singleton.modmail_id_counter - 1,
+                    watch_number: bot_singleton.watch_number - 1,
+                });
+                await component_state.insertOne({
+                    id: "server_suggestions",
+                    last_scanned_timestamp: bot_singleton.server_suggestions.last_scanned_timestamp,
+                });
+                await component_state.insertOne({
+                    id: "the_button",
+                    button_presses: bot_singleton.the_button.button_presses,
+                    last_reset: bot_singleton.the_button.last_reset,
+                    longest_time_without_reset: bot_singleton.the_button.longest_time_without_reset,
+                });
+                await component_state.insertOne({
+                    id: "starboard",
+                    delete_emojis: bot_singleton.starboard.delete_emojis,
+                    ignored_emojis: bot_singleton.starboard.ignored_emojis,
+                    negative_emojis: bot_singleton.starboard.negative_emojis,
+                    repost_emojis: bot_singleton.starboard.repost_emojis,
+                });
+            }
+        }
     }
 }
