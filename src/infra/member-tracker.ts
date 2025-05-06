@@ -4,6 +4,7 @@ import { M } from "../utils/debugging-and-logging.js";
 import { MINUTE } from "../common.js";
 import { Wheatley } from "../wheatley.js";
 import { set_interval } from "../utils/node.js";
+import { unwrap } from "../utils/misc.js";
 
 type member_entry = {
     tag: string;
@@ -33,6 +34,7 @@ export type basic_message_info = {
 const LOG_DURATION = 30 * MINUTE;
 
 export class MemberTracker {
+    wheatley: Wheatley | null;
     entries: member_entry[] = [];
     // map from user id -> member entry
     id_map: Map<Discord.Snowflake, member_entry> = new Map();
@@ -42,11 +44,13 @@ export class MemberTracker {
     // modules that rely on on_join and on_ban
     submodules: submodule[] = [];
     interval: NodeJS.Timeout;
-    constructor(readonly wheatley: Wheatley) {
+
+    connect(wheatley: Wheatley) {
+        this.wheatley = wheatley;
         // every 10 minutes, trim extraneous entries
         this.interval = set_interval(this.trim.bind(this), 10 * MINUTE);
-        wheatley.client.on("guildMemberAdd", this.on_join.bind(this));
-        wheatley.client.on("guildBanAdd", this.on_ban.bind(this));
+        this.wheatley.client.on("guildMemberAdd", this.on_join.bind(this));
+        this.wheatley.client.on("guildBanAdd", this.on_ban.bind(this));
     }
 
     // Bookkeeping
@@ -96,18 +100,12 @@ export class MemberTracker {
             M.warn("this.id_map.has(member.id)");
         }
         this.id_map.set(member.id, this.entries[this.entries.length - 1]);
-        if (!this.wheatley.ready) {
-            // don't fire events until wheatley setup is complete
-            // could queue calls until wheatley is ready but it is not critical we catch events in the split second
-            // wheatley isn't ready
-            return;
-        }
         for (const { on_join } of this.submodules) {
             if (on_join) {
                 try {
                     on_join(member, now);
                 } catch (e) {
-                    this.wheatley.critical_error(e);
+                    unwrap(this.wheatley).critical_error(e);
                 }
             }
         }
@@ -116,18 +114,12 @@ export class MemberTracker {
         const now = Date.now();
         const user = ban.user;
         M.debug("User banned: ", [user.tag, user.id]);
-        if (!this.wheatley.ready) {
-            // don't fire events until wheatley setup is complete
-            // could queue calls until wheatley is ready but it is not critical we catch events in the split second
-            // wheatley isn't ready
-            return;
-        }
         for (const { on_ban } of this.submodules) {
             if (on_ban) {
                 try {
                     on_ban(ban, now);
                 } catch (e) {
-                    this.wheatley.critical_error(e);
+                    unwrap(this.wheatley).critical_error(e);
                 }
             }
         }
