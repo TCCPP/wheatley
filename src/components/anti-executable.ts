@@ -9,6 +9,7 @@ import { Wheatley } from "../wheatley.js";
 import { build_description, capitalize } from "../utils/strings.js";
 import { Virustotal } from "../infra/virustotal.js";
 import Mute from "./moderation/mute.js";
+import { unwrap } from "../utils/misc.js";
 
 const ACTION_THRESHOLD = 5;
 
@@ -154,7 +155,7 @@ export default class AntiExecutable extends BotComponent {
             if (original_message) {
                 original_message.delete().catch(this.wheatley.critical_error.bind(this.wheatley));
             }
-            (this.wheatley.components.get("Mute") as Mute)
+            (unwrap(this.wheatley.components.get("Mute")) as Mute)
                 .issue_moderation_internal(
                     author,
                     this.wheatley.user,
