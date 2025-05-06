@@ -1,14 +1,15 @@
 import { strict as assert } from "assert";
 import * as Discord from "discord.js";
 
-import { get_url_for } from "../utils/discord.js";
-import { M } from "../utils/debugging-and-logging.js";
-import { colors, HOUR, MINUTE } from "../common.js";
-import { BotComponent } from "../bot-component.js";
-import { Wheatley } from "../wheatley.js";
-import { SelfClearingMap } from "../utils/containers.js";
-import { unwrap } from "../utils/misc.js";
-import { set_timeout } from "../utils/node.js";
+import { get_url_for } from "../../utils/discord.js";
+import { M } from "../../utils/debugging-and-logging.js";
+import { colors, HOUR, MINUTE } from "../../common.js";
+import { BotComponent } from "../../bot-component.js";
+import { Wheatley } from "../../wheatley.js";
+import { moderation_state } from "./schemata.js";
+import { SelfClearingMap } from "../../utils/containers.js";
+import { unwrap } from "../../utils/misc.js";
+import { set_timeout } from "../../utils/node.js";
 
 /*
  * Flow:
@@ -32,13 +33,24 @@ function create_embed(title: string, msg: string) {
 export default class Modmail extends BotComponent {
     // Spam prevention, user is added to the timeout set when clicking the modmail_continue button,
     readonly timeout_set = new Set<string>();
-    modmail_id_counter = -1;
 
     readonly monke_set = new SelfClearingMap<Discord.Snowflake, number>(HOUR, HOUR);
 
-    override async on_ready() {
-        const singleton = await this.wheatley.database.get_bot_singleton();
-        this.modmail_id_counter = singleton.modmail_id_counter;
+    private database = unwrap(this.wheatley.database).create_proxy<{
+        component_state: moderation_state;
+    }>();
+
+    async increment_modmail_id() {
+        const res = await this.database.component_state.findOneAndUpdate(
+            { id: "moderation" },
+            {
+                $inc: {
+                    modmail_id: 1,
+                },
+            },
+            { upsert: true, returnDocument: "after" },
+        );
+        return unwrap(res).modmail_id;
     }
 
     async create_modmail_thread(interaction: Discord.ModalSubmitInteraction | Discord.ButtonInteraction) {
@@ -48,8 +60,7 @@ export default class Modmail extends BotComponent {
                 assert(interaction.member);
                 const member = await this.wheatley.TCCPP.members.fetch(interaction.member.user.id);
                 // make the thread
-                const id = this.modmail_id_counter++;
-                await this.wheatley.database.update_bot_singleton({ modmail_id_counter: this.modmail_id_counter });
+                const id = await this.increment_modmail_id();
                 const thread = await this.wheatley.channels.rules.threads.create({
                     type: Discord.ChannelType.PrivateThread,
                     invitable: false,

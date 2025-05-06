@@ -6,7 +6,6 @@ import { M } from "../../../../utils/debugging-and-logging.js";
 import { MINUTE, colors } from "../../../../common.js";
 import { BotComponent } from "../../../../bot-component.js";
 import { Wheatley } from "../../../../wheatley.js";
-import { buzzword_scoreboard_entry } from "../../../../infra/schemata/buzzwords.js";
 import { set_interval } from "../../../../utils/node.js";
 
 const ENABLED = false;
@@ -156,6 +155,13 @@ const intermediate = "1091601365018619936";
 const beginner = "1091601379719643207";
 const roles = [expert, advanced, proficient, intermediate, beginner];
 
+type buzzword_scoreboard_entry = {
+    user: string;
+    tag: string;
+    score: number;
+    count: number;
+};
+
 /**
  * 2023 April Fool's day event. Bases the skill roles on how many C++ buzzwords people use.
  */
@@ -170,6 +176,10 @@ export default class Buzzwords extends BotComponent {
     slowmode: SelfClearingSet<string>;
     timeout: NodeJS.Timeout | null = null;
     interval: NodeJS.Timeout | null = null;
+
+    private database = unwrap(this.wheatley.database).create_proxy<{
+        buzzword_scoreboard: buzzword_scoreboard_entry;
+    }>();
 
     constructor(wheatley: Wheatley) {
         super(wheatley);
@@ -205,7 +215,7 @@ export default class Buzzwords extends BotComponent {
     async reflowRoles() {
         M.log("Reflowing roles");
         const members = await this.wheatley.TCCPP.members.fetch();
-        const entries = await this.wheatley.database.buzzword_scoreboard.find().toArray();
+        const entries = await this.database.buzzword_scoreboard.find().toArray();
         const scores = entries.map(entry => entry.score).sort((a, b) => a - b);
         const p90 = Buzzwords.quantile(scores, 0.9);
         const p80 = Buzzwords.quantile(scores, 0.7);
@@ -213,7 +223,7 @@ export default class Buzzwords extends BotComponent {
         const p60 = Buzzwords.quantile(scores, 0.3);
         await Promise.all(
             members.map(async (member, _) => {
-                const member_entry = await this.wheatley.database.buzzword_scoreboard.findOne({ user: member.id });
+                const member_entry = await this.database.buzzword_scoreboard.findOne({ user: member.id });
                 if (member_entry) {
                     const score = member_entry.score;
                     const current_role_raw = [...member.roles.cache.filter(r => roles.includes(r.id)).keys()];
@@ -244,13 +254,13 @@ export default class Buzzwords extends BotComponent {
         if (ENABLED) {
             // TODO: If we ever do this joke again, cache the quantiles from reflowRoles to save an expensive database
             // query and computation here
-            const entries = await this.wheatley.database.buzzword_scoreboard.find().toArray();
+            const entries = await this.database.buzzword_scoreboard.find().toArray();
             const scores = entries.map(entry => entry.score).sort((a, b) => a - b);
             const p90 = Buzzwords.quantile(scores, 0.9);
             const p80 = Buzzwords.quantile(scores, 0.7);
             const p70 = Buzzwords.quantile(scores, 0.5);
             const p60 = Buzzwords.quantile(scores, 0.3);
-            const member_entry = await this.wheatley.database.buzzword_scoreboard.findOne({ user: member.id });
+            const member_entry = await this.database.buzzword_scoreboard.findOne({ user: member.id });
             if (member_entry) {
                 const score = member_entry.score;
                 const current_role_raw = [...member.roles.cache.filter(r => roles.includes(r.id)).keys()];
@@ -276,7 +286,7 @@ export default class Buzzwords extends BotComponent {
     }
 
     async give_points(id: string, tag: string, points: number) {
-        await this.wheatley.database.buzzword_scoreboard.updateOne(
+        await this.database.buzzword_scoreboard.updateOne(
             { user: id },
             {
                 $set: {
@@ -293,7 +303,7 @@ export default class Buzzwords extends BotComponent {
     }
 
     async set_points(id: string, tag: string, points: number) {
-        await this.wheatley.database.buzzword_scoreboard.updateOne(
+        await this.database.buzzword_scoreboard.updateOne(
             { user: id },
             {
                 $set: {
@@ -377,11 +387,11 @@ export default class Buzzwords extends BotComponent {
                 }
             }
             if (message.content.trim() == "!clearbuzzscores" && message.author.id == "199943082441965577") {
-                await this.wheatley.database.buzzword_scoreboard.deleteMany({});
+                await this.database.buzzword_scoreboard.deleteMany({});
                 return;
             }
             if (message.content.trim() == "!testbuzzquartile" && message.author.id == "199943082441965577") {
-                const scoreboard_entries = await this.wheatley.database.buzzword_scoreboard.find().toArray();
+                const scoreboard_entries = await this.database.buzzword_scoreboard.find().toArray();
                 const scores = scoreboard_entries.map(entry => entry.score).sort((a, b) => a - b);
                 const p90 = Buzzwords.quantile(scores, 0.9);
                 const p80 = Buzzwords.quantile(scores, 0.7);
@@ -402,7 +412,7 @@ export default class Buzzwords extends BotComponent {
             }
         }
         if (message.content.trim() == "!scoreboard") {
-            const scoreboard_entries = (await this.wheatley.database.buzzword_scoreboard
+            const scoreboard_entries = (await this.database.buzzword_scoreboard
                 .aggregate([{ $sort: { score: -1 } }, { $limit: 15 }])
                 .toArray()) as unknown as buzzword_scoreboard_entry[];
             const embed = new Discord.EmbedBuilder().setTitle("Scoreboard");
@@ -418,7 +428,7 @@ export default class Buzzwords extends BotComponent {
             return;
         }
         if (message.content.trim() == "!bottom") {
-            const scoreboard_entries = await this.wheatley.database.buzzword_scoreboard.find().toArray();
+            const scoreboard_entries = await this.database.buzzword_scoreboard.find().toArray();
             const entries = scoreboard_entries.sort((a, b) => a.score - b.score);
             const scores = entries.slice(0, 15);
             const embed = new Discord.EmbedBuilder().setTitle("Scoreboard");
@@ -434,7 +444,7 @@ export default class Buzzwords extends BotComponent {
             return;
         }
         if (message.content.trim() == "!score") {
-            const member_entry = await this.wheatley.database.buzzword_scoreboard.findOne({ user: message.author.id });
+            const member_entry = await this.database.buzzword_scoreboard.findOne({ user: message.author.id });
             await message.reply({
                 embeds: [
                     new Discord.EmbedBuilder()

@@ -14,13 +14,12 @@ import { BotComponent } from "./bot-component.js";
 
 import { CommandAbstractionReplyOptions } from "./command-abstractions/text-based-command.js";
 
-import { WheatleyDatabase, WheatleyDatabaseProxy } from "./infra/database-interface.js";
+import { WheatleyDatabase } from "./infra/database-interface.js";
 import { MemberTracker } from "./infra/member-tracker.js";
 import { forge_snowflake, send_long_message } from "./utils/discord.js";
 import { TypedEventEmitter } from "./utils/event-emitter.js";
 import { setup_metrics_server } from "./infra/prometheus.js";
-import { moderation_entry } from "./infra/schemata/moderation.js";
-import { wheatley_database_info } from "./infra/schemata/wheatley.js";
+import { moderation_entry } from "./components/moderation/schemata.js";
 import { LoggableChannel, LogLimiter } from "./infra/log-limiter.js";
 import { CommandHandler } from "./command-handler.js";
 import { CommandSetBuilder } from "./command-abstractions/command-set-builder.js";
@@ -39,9 +38,6 @@ export function create_error_reply(message: string): Discord.BaseMessageOptions 
         should_text_reply: true,
     };
 }
-
-// Thu Jul 01 2021 00:00:00 GMT-0400 (Eastern Daylight Time)
-export const SERVER_SUGGESTION_TRACKER_START_TIME = 1625112000000;
 
 export type wheatley_database_credentials = {
     user: string;
@@ -240,7 +236,7 @@ export class Wheatley {
 
     private command_handler: CommandHandler;
 
-    database: WheatleyDatabaseProxy;
+    database: WheatleyDatabase | null;
 
     // whether wheatley is ready (client is ready + wheatley has set up)
     ready = false;
@@ -334,7 +330,8 @@ export class Wheatley {
     async setup(config: core_config) {
         assert(this.freestanding || config.mongo, "Missing MongoDB credentials");
         if (config.mongo) {
-            this.database = await WheatleyDatabase.create(this.get_initial_wheatley_info.bind(this), config.mongo);
+            this.database = await WheatleyDatabase.create(config.mongo);
+            await this.migrate_db(this.database);
         }
         if (config.metrics) {
             setup_metrics_server(config.metrics.port, config.metrics.hostname);
@@ -771,26 +768,37 @@ export class Wheatley {
         this.increment_message_counters(message);
     }
 
-    get_initial_wheatley_info(): wheatley_database_info {
-        return {
-            id: "main",
-            server_suggestions: {
-                last_scanned_timestamp: SERVER_SUGGESTION_TRACKER_START_TIME,
-            },
-            modmail_id_counter: 0,
-            the_button: {
-                button_presses: 0,
-                last_reset: Date.now(),
-                longest_time_without_reset: 0,
-            },
-            starboard: {
-                delete_emojis: [],
-                ignored_emojis: [],
-                negative_emojis: [],
-                repost_emojis: [],
-            },
-            moderation_case_number: 0,
-            watch_number: 0,
-        };
+    async migrate_db(database: WheatleyDatabase) {
+        const collection_info = await database.list_collections();
+        if (!collection_info.has("component_state") && collection_info.has("wheatley")) {
+            const component_state = database.get_collection("component_state");
+            const bot_singleton = await database.get_collection("wheatley").findOne({ id: "main" });
+            if (bot_singleton) {
+                M.log("migrating database...");
+                await component_state.insertOne({
+                    id: "moderation",
+                    case_number: bot_singleton.moderation_case_number - 1,
+                    modmail_id: bot_singleton.modmail_id_counter - 1,
+                    watch_number: bot_singleton.watch_number - 1,
+                });
+                await component_state.insertOne({
+                    id: "server_suggestions",
+                    last_scanned_timestamp: bot_singleton.server_suggestions.last_scanned_timestamp,
+                });
+                await component_state.insertOne({
+                    id: "the_button",
+                    button_presses: bot_singleton.the_button.button_presses,
+                    last_reset: bot_singleton.the_button.last_reset,
+                    longest_time_without_reset: bot_singleton.the_button.longest_time_without_reset,
+                });
+                await component_state.insertOne({
+                    id: "starboard",
+                    delete_emojis: bot_singleton.starboard.delete_emojis,
+                    ignored_emojis: bot_singleton.starboard.ignored_emojis,
+                    negative_emojis: bot_singleton.starboard.negative_emojis,
+                    repost_emojis: bot_singleton.starboard.repost_emojis,
+                });
+            }
+        }
     }
 }

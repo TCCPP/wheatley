@@ -6,7 +6,6 @@ import { M } from "../../../utils/debugging-and-logging.js";
 import { DAY, MINUTE, colors } from "../../../common.js";
 import { BotComponent } from "../../../bot-component.js";
 import { Wheatley } from "../../../wheatley.js";
-import { button_scoreboard_entry } from "../../../infra/schemata/the-button.js";
 import { set_interval } from "../../../utils/node.js";
 import { discord_timestamp } from "../../../utils/discord.js";
 
@@ -38,6 +37,22 @@ const BUTTON_EPOCH = 1675142409000;
 
 const PRESS_TIMEOUT = DAY;
 
+type the_button_state = {
+    id: "the_button";
+    button_presses: number;
+    last_reset: number;
+    longest_time_without_reset: number;
+};
+
+type the_button_scoreboard_entry = {
+    user: string;
+    tag: string;
+    score: number;
+    presses: number;
+    last_press: number;
+    legacy_score: number;
+};
+
 export default class TheButton extends BotComponent {
     readonly button_message_id = "1205725580578787368";
     button_message: Discord.Message | undefined;
@@ -51,6 +66,11 @@ export default class TheButton extends BotComponent {
     button_presses: number;
     last_reset: number;
     longest_time_without_reset: number;
+
+    private database = unwrap(this.wheatley.database).create_proxy<{
+        component_state: the_button_state;
+        button_scoreboard: the_button_scoreboard_entry;
+    }>();
 
     make_message(time_until_doomsday: number): Discord.MessageEditOptions & Discord.MessageCreateOptions {
         const [hours, minutes, seconds] = dissectDelta(time_until_doomsday);
@@ -109,10 +129,10 @@ export default class TheButton extends BotComponent {
     }
 
     override async on_ready() {
-        const bot_data = await this.wheatley.database.get_bot_singleton();
-        this.button_presses = bot_data.the_button.button_presses;
-        this.last_reset = bot_data.the_button.last_reset;
-        this.longest_time_without_reset = bot_data.the_button.longest_time_without_reset;
+        const state = await this.database.component_state.findOne({ id: "the_button" });
+        this.button_presses = state?.button_presses ?? 0;
+        this.last_reset = state?.last_reset ?? Date.now();
+        this.longest_time_without_reset = state?.longest_time_without_reset ?? 0;
 
         this.button_message = await this.wheatley.channels.the_button.messages.fetch(this.button_message_id);
         let waiting = false;
@@ -153,11 +173,11 @@ export default class TheButton extends BotComponent {
             await message.delete();
         }
         if (message.content == "!wresetthebuttonscoreboard" && this.wheatley.is_authorized_mod(message.member!)) {
-            await this.wheatley.database.button_scoreboard.deleteMany({});
+            await this.database.button_scoreboard.deleteMany({});
             await message.delete();
         }
         if (message.content == "!wadjustscores" && this.wheatley.is_authorized_mod(message.member!)) {
-            await this.wheatley.database.button_scoreboard.updateMany(
+            await this.database.button_scoreboard.updateMany(
                 {},
                 {
                     $mul: {
@@ -183,7 +203,7 @@ export default class TheButton extends BotComponent {
                 ephemeral: true,
             });
             // add user to the scoreboard if needed
-            const entry = await this.wheatley.database.button_scoreboard.findOne({ user: interaction.user.id });
+            const entry = await this.database.button_scoreboard.findOne({ user: interaction.user.id });
             // check to see if the user has pressed it within the last 24 hours
             if (entry && Date.now() - entry.last_press <= PRESS_TIMEOUT) {
                 await interaction.editReply({
@@ -203,7 +223,7 @@ export default class TheButton extends BotComponent {
             );
             await this.update_message();
             const res = unwrap(
-                await this.wheatley.database.button_scoreboard.findOneAndUpdate(
+                await this.database.button_scoreboard.findOneAndUpdate(
                     {
                         user: interaction.user.id,
                     },
@@ -228,7 +248,7 @@ export default class TheButton extends BotComponent {
             );
             this.longest_time_without_reset = Math.max(this.longest_time_without_reset, time_since_last_reset);
             this.button_presses++;
-            const scoreboard_index = await this.wheatley.database.button_scoreboard.countDocuments({
+            const scoreboard_index = await this.database.button_scoreboard.countDocuments({
                 score: { $gt: res.score },
             });
             await interaction.editReply({
@@ -245,9 +265,9 @@ export default class TheButton extends BotComponent {
             await this.update_metadata();
         }
         if (interaction.isButton() && interaction.customId == "the-button-scoreboard") {
-            const scores = (await this.wheatley.database.button_scoreboard
+            const scores = (await this.database.button_scoreboard
                 .aggregate([{ $sort: { score: -1 } }, { $limit: 15 }])
-                .toArray()) as button_scoreboard_entry[];
+                .toArray()) as the_button_scoreboard_entry[];
             const embed = new Discord.EmbedBuilder().setTitle("Scoreboard").setColor(colors.wheatley);
             let description = "";
             for (const entry of scores) {
@@ -255,7 +275,7 @@ export default class TheButton extends BotComponent {
                 description += `${tag}: ${round(entry.score, 1)}\n`;
             }
             // If user exists in the scoreboard, show their score.
-            const current_user = await this.wheatley.database.button_scoreboard.findOne({ user: interaction.user.id });
+            const current_user = await this.database.button_scoreboard.findOne({ user: interaction.user.id });
             if (current_user != null) {
                 description += `\n\nYour Current score: ${round(current_user.score, 1)}`;
             }
@@ -266,9 +286,9 @@ export default class TheButton extends BotComponent {
             });
         }
         if (interaction.isButton() && interaction.customId == "the-button-stats") {
-            const count = await this.wheatley.database.button_scoreboard.countDocuments();
+            const count = await this.database.button_scoreboard.countDocuments();
             const total_points_assigned = (
-                await this.wheatley.database.button_scoreboard
+                await this.database.button_scoreboard
                     .aggregate([
                         {
                             $group: {
@@ -298,12 +318,16 @@ export default class TheButton extends BotComponent {
     }
 
     async update_metadata() {
-        await this.wheatley.database.update_bot_singleton({
-            the_button: {
-                button_presses: this.button_presses,
-                last_reset: this.last_reset,
-                longest_time_without_reset: this.longest_time_without_reset,
+        await this.database.component_state.updateOne(
+            { id: "the_button" },
+            {
+                $set: {
+                    button_presses: this.button_presses,
+                    last_reset: this.last_reset,
+                    longest_time_without_reset: this.longest_time_without_reset,
+                },
             },
-        });
+            { upsert: true },
+        );
     }
 }

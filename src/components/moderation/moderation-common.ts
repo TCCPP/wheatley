@@ -20,11 +20,12 @@ import { colors, DAY, HOUR, MINUTE, MONTH, SECOND, WEEK, YEAR } from "../../comm
 import Modlogs from "./modlogs.js";
 import { TextBasedCommand } from "../../command-abstractions/text-based-command.js";
 import {
+    moderation_state,
     moderation_type,
     moderation_entry,
     basic_moderation_with_user,
     basic_moderation,
-} from "../../infra/schemata/moderation.js";
+} from "./schemata.js";
 import { set_interval } from "../../utils/node.js";
 
 import { get_random_array_element } from "../../utils/arrays.js";
@@ -161,6 +162,11 @@ export abstract class ModerationComponent extends BotComponent {
         return false;
     }
 
+    protected database = unwrap(this.wheatley.database).create_proxy<{
+        component_state: moderation_state;
+        moderations: moderation_entry;
+    }>();
+
     // Sorted by moderation end time
     sleep_list: SleepList<mongo.WithId<moderation_entry>, mongo.BSON.ObjectId>;
     timer: NodeJS.Timer | null = null;
@@ -196,11 +202,11 @@ export abstract class ModerationComponent extends BotComponent {
         (async () => {
             ModerationComponent.moderations_count
                 .labels({ type: this.type })
-                .set(await this.wheatley.database.moderations.countDocuments({ type: this.type }));
+                .set(await this.database.moderations.countDocuments({ type: this.type }));
             if (!this.is_once_off) {
                 ModerationComponent.active_moderations_count
                     .labels({ type: this.type })
-                    .set(await this.wheatley.database.moderations.countDocuments({ type: this.type, active: true }));
+                    .set(await this.database.moderations.countDocuments({ type: this.type, active: true }));
             }
         })().catch(this.wheatley.critical_error.bind(this.wheatley));
     }
@@ -209,7 +215,7 @@ export abstract class ModerationComponent extends BotComponent {
         this.update_counters();
         // Handle re-applications and sleep lists
         // If once-off active is false so the rest is all fine
-        const moderations = await this.wheatley.database.moderations.find({ type: this.type, active: true }).toArray();
+        const moderations = await this.database.moderations.find({ type: this.type, active: true }).toArray();
         const moderations_to_sleep = moderations.filter(
             entry => entry.duration !== null || entry.removed || entry.expunged,
         );
@@ -260,10 +266,10 @@ export abstract class ModerationComponent extends BotComponent {
         assert(!this.is_once_off);
         // It's possible the moderation could have been removed or been updated by the time this runs, so fetch the
         // current state
-        const entry = unwrap(await this.wheatley.database.moderations.findOne({ _id: entry_from_sleep._id }));
+        const entry = unwrap(await this.database.moderations.findOne({ _id: entry_from_sleep._id }));
         // Check for active but removed (can happen from data import)
         if (entry.active && (entry.removed || entry.expunged)) {
-            await this.wheatley.database.moderations.updateOne(
+            await this.database.moderations.updateOne(
                 { _id: entry._id },
                 {
                     $set: {
@@ -302,7 +308,7 @@ export abstract class ModerationComponent extends BotComponent {
         }
         // Check if moderation is still marked active, if so resolve it
         if (entry.active) {
-            await this.wheatley.database.moderations.updateOne(
+            await this.database.moderations.updateOne(
                 { _id: entry._id },
                 {
                     $set: {
@@ -389,7 +395,7 @@ export abstract class ModerationComponent extends BotComponent {
         if (this.is_once_off) {
             return;
         }
-        const moderations = await this.wheatley.database.moderations
+        const moderations = await this.database.moderations
             .find({ user: member.user.id, type: this.type, active: true })
             .toArray();
         for (const moderation of moderations) {
@@ -403,20 +409,17 @@ export abstract class ModerationComponent extends BotComponent {
     // Moderation entry handling
     //
 
-    async get_case_id() {
-        return (await this.wheatley.database.get_bot_singleton()).moderation_case_number;
-    }
-
     async increment_case_id() {
-        const res = await this.wheatley.database.wheatley.updateOne(
-            { id: "main" },
+        const res = await this.database.component_state.findOneAndUpdate(
+            { id: "moderation" },
             {
                 $inc: {
-                    moderation_case_number: 1,
+                    case_number: 1,
                 },
             },
+            { upsert: true, returnDocument: "after" },
         );
-        assert(res.acknowledged);
+        return unwrap(res).case_number;
     }
 
     static case_id_mutex = new Mutex();
@@ -426,9 +429,8 @@ export abstract class ModerationComponent extends BotComponent {
         try {
             await ModerationComponent.case_id_mutex.lock();
             await this.apply_moderation(moderation);
-            moderation.case_number = await this.get_case_id();
-            const res = await this.wheatley.database.moderations.insertOne(moderation);
-            await this.increment_case_id();
+            moderation.case_number = await this.increment_case_id();
+            const res = await this.database.moderations.insertOne(moderation);
             if (moderation.duration) {
                 this.sleep_list.insert([
                     moderation.issued_at + moderation.duration,
@@ -689,7 +691,7 @@ export abstract class ModerationComponent extends BotComponent {
     ) {
         assert(!this.is_once_off);
         try {
-            const res = await this.wheatley.database.moderations.findOneAndUpdate(
+            const res = await this.database.moderations.findOneAndUpdate(
                 { user: user.id, type: this.type, active: true, ...additional_moderation_properties },
                 {
                     $set: {

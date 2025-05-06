@@ -2,26 +2,36 @@ import * as Discord from "discord.js";
 
 import { strict as assert } from "assert";
 
-import { M } from "../utils/debugging-and-logging.js";
-import { DAY, HOUR, MINUTE, colors } from "../common.js";
-import { BotComponent } from "../bot-component.js";
-import { CommandSetBuilder } from "../command-abstractions/command-set-builder.js";
-import { Wheatley } from "../wheatley.js";
-import { EarlyReplyMode, TextBasedCommandBuilder } from "../command-abstractions/text-based-command-builder.js";
-import { CommandAbstractionReplyOptions, TextBasedCommand } from "../command-abstractions/text-based-command.js";
-import { duration_regex, parse_duration } from "./moderation/moderation-common.js";
-import { pluralize } from "../utils/strings.js";
-import { SelfClearingMap } from "../utils/containers.js";
-import { url_re } from "./quote.js";
-import { ascending, unwrap } from "../utils/misc.js";
-import { MessageContextMenuInteractionBuilder } from "../command-abstractions/context-menu.js";
-import { decode_snowflake, discord_timestamp, forge_snowflake } from "../utils/discord.js";
-import { message_database_entry } from "../infra/schemata/logged-messages.js";
-import { chunks } from "../utils/arrays.js";
+import { M } from "../../utils/debugging-and-logging.js";
+import { DAY, HOUR, MINUTE, colors } from "../../common.js";
+import { BotComponent } from "../../bot-component.js";
+import { CommandSetBuilder } from "../../command-abstractions/command-set-builder.js";
+import { Wheatley } from "../../wheatley.js";
+import { EarlyReplyMode, TextBasedCommandBuilder } from "../../command-abstractions/text-based-command-builder.js";
+import { CommandAbstractionReplyOptions, TextBasedCommand } from "../../command-abstractions/text-based-command.js";
+import { duration_regex, parse_duration } from "../moderation/moderation-common.js";
+import { pluralize } from "../../utils/strings.js";
+import { SelfClearingMap } from "../../utils/containers.js";
+import { url_re } from "../quote.js";
+import { ascending, unwrap } from "../../utils/misc.js";
+import { MessageContextMenuInteractionBuilder } from "../../command-abstractions/context-menu.js";
+import { decode_snowflake, discord_timestamp, forge_snowflake } from "../../utils/discord.js";
+import { chunks } from "../../utils/arrays.js";
 
 type PurgableChannel = Exclude<Discord.TextBasedChannel, Discord.DMChannel | Discord.PartialDMChannel>;
 type PurgableMessages = Discord.Collection<string, Discord.Message> | string[];
 type PurgeWork = [PurgableChannel, Iterable<PurgableMessages> | AsyncGenerator<PurgableMessages>];
+
+export type message_database_entry = {
+    author: {
+        id: string;
+    };
+    guild: string;
+    channel: string;
+    id: string;
+    timestamp: number;
+    deleted?: number;
+};
 
 export default class Purge extends BotComponent {
     static override get is_freestanding() {
@@ -30,6 +40,10 @@ export default class Purge extends BotComponent {
 
     // boolean flag indicates whether to continue, serves as a stop token
     tasks = new SelfClearingMap<string, [boolean, Discord.InteractionResponse | null]>(2 * HOUR, 30 * MINUTE);
+
+    private database = unwrap(this.wheatley.database).create_proxy<{
+        message_database: message_database_entry;
+    }>();
 
     override async setup(commands: CommandSetBuilder) {
         // purge count
@@ -334,7 +348,7 @@ export default class Purge extends BotComponent {
             return;
         }
         M.debug("Querying messages");
-        const all_messages = await this.wheatley.database.message_database
+        const all_messages = await this.database.message_database
             .find({
                 "author.id": user.id,
                 guild: this.wheatley.TCCPP.id,
