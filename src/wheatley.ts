@@ -265,15 +265,15 @@ export class Wheatley {
     readonly freestanding: boolean;
 
     // Some emojis
-    readonly pepereally = "<:pepereally:643881257624666112>";
-    readonly stackoverflow_emote = "<:stackoverflow:1074747016644661258>";
-    readonly microsoft_emote = "<:microsoft:1165512917047853127>";
-    readonly tux_emote = "<:tux:1165505626894520361>";
-    readonly apple_emote = "<:apple:1165508607798943754>";
-    readonly tccpp_emote = "<:tccpp:865354975629279232>";
-    readonly success = "<:success:1138616548630745088>";
-    readonly error = "<:error:1138616562958483496>";
-    readonly wheatley = "<:wheatley:1147938076551827496>";
+    private emoji_map = {
+        success: "✅",
+        error: "❌",
+        access_denied: "🙅",
+        me: "🤖",
+    };
+    get emoji() {
+        return this.emoji_map;
+    }
 
     private log_channel: Discord.TextBasedChannel | null = null;
 
@@ -381,6 +381,7 @@ export class Wheatley {
 
                 this.discord_user = await this.client.users.fetch(config.id);
                 this.discord_guild = await this.client.guilds.fetch(config.guild);
+                await this.fetch_emoji();
                 await this.fetch_guild_info();
 
                 const command_set_builder = new CommandSetBuilder(this);
@@ -415,6 +416,15 @@ export class Wheatley {
         M.debug("Logging in");
 
         await this.client.login(config.token);
+    }
+
+    async fetch_emoji() {
+        if (this.client.application) {
+            await this.client.application.emojis.fetch();
+            for (const [key, value] of this.client.application.emojis.cache) {
+                this.emoji_map[value.name as keyof typeof this.emoji_map] = `<:${value.identifier}>`;
+            }
+        }
     }
 
     async fetch_guild_info() {
