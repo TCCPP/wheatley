@@ -10,12 +10,7 @@ describe("parse wiki articles", () => {
     for (const file_path of globSync(`${wiki_articles_path}/articles/**/*.md`, { withFileTypes: true })) {
         test(`${file_path.name} article should parse`, async () => {
             const content = await fs.promises.readFile(file_path.fullpath(), { encoding: "utf-8" });
-            parse_article(null, content, {
-                channels: {
-                    resources: { id: null },
-                    rules: { id: null },
-                },
-            } as any);
+            parse_article(null, content, str => str);
         });
     }
     for (const file_path of globSync(`${wiki_path}/src/**/*.md`, { withFileTypes: true })) {
@@ -23,12 +18,7 @@ describe("parse wiki articles", () => {
             const file_content = await fs.promises.readFile(file_path.fullpath(), { encoding: "utf-8" });
             const { data } = matter(file_content);
             if (data.preview) {
-                parse_article(null, data.preview, {
-                    channels: {
-                        resources: { id: null },
-                        rules: { id: null },
-                    },
-                } as any);
+                parse_article(null, data.preview, str => str);
             }
         });
     }

@@ -23,7 +23,7 @@ export default class Massban extends BotComponent {
                 if (this.wheatley.is_authorized_mod(message.member)) {
                     await this.do_mass_ban(message);
                 } else {
-                    await message.reply(`Unauthorized ${this.wheatley.pepereally}`);
+                    await message.reply(`Unauthorized ${this.wheatley.emoji.access_denied}`);
                 }
             }
         } catch (e) {
