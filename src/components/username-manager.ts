@@ -121,7 +121,7 @@ export default class UsernameManager extends BotComponent {
     }
 
     async cleanup() {
-        const members = await this.wheatley.TCCPP.members.fetch();
+        const members = await this.wheatley.guild.members.fetch();
         for (const [_, member] of members) {
             // undo my first go
             //if(member.displayName.startsWith("Monke ")) {

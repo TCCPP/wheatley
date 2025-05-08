@@ -77,7 +77,7 @@ export default class PermissionManager extends BotComponent {
         };
         const read_only_channel: permission_overwrites = {
             ...default_permissions,
-            [this.wheatley.TCCPP.roles.everyone.id]: {
+            [this.wheatley.guild.roles.everyone.id]: {
                 deny: [
                     Discord.PermissionsBitField.Flags.SendMessages,
                     Discord.PermissionsBitField.Flags.CreatePublicThreads,
@@ -87,7 +87,7 @@ export default class PermissionManager extends BotComponent {
         };
         const read_only_channel_no_reactions: permission_overwrites = {
             ...default_permissions,
-            [this.wheatley.TCCPP.roles.everyone.id]: {
+            [this.wheatley.guild.roles.everyone.id]: {
                 deny: [
                     Discord.PermissionsBitField.Flags.SendMessages,
                     Discord.PermissionsBitField.Flags.CreatePublicThreads,
@@ -98,7 +98,7 @@ export default class PermissionManager extends BotComponent {
         };
         const read_only_archive_channel: permission_overwrites = {
             ...default_permissions,
-            [this.wheatley.TCCPP.roles.everyone.id]: {
+            [this.wheatley.guild.roles.everyone.id]: {
                 deny: [
                     Discord.PermissionsBitField.Flags.SendMessages,
                     Discord.PermissionsBitField.Flags.CreatePublicThreads,
@@ -110,13 +110,13 @@ export default class PermissionManager extends BotComponent {
             },
         };
         const mod_only_channel: permission_overwrites = {
-            [this.wheatley.TCCPP.roles.everyone.id]: {
+            [this.wheatley.guild.roles.everyone.id]: {
                 deny: [Discord.PermissionsBitField.Flags.ViewChannel],
             },
             [this.wheatley.roles.moderators.id]: {
                 allow: [Discord.PermissionsBitField.Flags.ViewChannel],
             },
-            [this.wheatley.id]: {
+            [this.wheatley.user.id]: {
                 allow: [Discord.PermissionsBitField.Flags.ViewChannel],
             },
         };
@@ -139,7 +139,7 @@ export default class PermissionManager extends BotComponent {
 
         // meta overrides
         this.add_channel_overwrite(this.wheatley.channels.rules, {
-            [this.wheatley.TCCPP.roles.everyone.id]: {
+            [this.wheatley.guild.roles.everyone.id]: {
                 deny: [
                     Discord.PermissionsBitField.Flags.SendMessages,
                     Discord.PermissionsBitField.Flags.CreatePublicThreads,
@@ -160,7 +160,7 @@ export default class PermissionManager extends BotComponent {
         this.add_channel_overwrite(this.wheatley.channels.articles, read_only_channel);
         this.add_channel_overwrite(this.wheatley.channels.server_suggestions, {
             ...default_permissions,
-            [this.wheatley.TCCPP.roles.everyone.id]: {
+            [this.wheatley.guild.roles.everyone.id]: {
                 deny: [
                     Discord.PermissionsBitField.Flags.CreatePublicThreads,
                     Discord.PermissionsBitField.Flags.CreatePrivateThreads,
@@ -181,7 +181,7 @@ export default class PermissionManager extends BotComponent {
         });
         this.add_channel_overwrite(this.wheatley.channels.the_button, {
             ...default_permissions,
-            [this.wheatley.TCCPP.roles.everyone.id]: {
+            [this.wheatley.guild.roles.everyone.id]: {
                 deny: [
                     Discord.PermissionsBitField.Flags.SendMessages,
                     Discord.PermissionsBitField.Flags.CreatePublicThreads,
@@ -243,7 +243,7 @@ export default class PermissionManager extends BotComponent {
         });
         this.add_channel_overwrite(this.wheatley.channels.boosters_only, {
             ...default_permissions,
-            [this.wheatley.TCCPP.roles.everyone.id]: {
+            [this.wheatley.guild.roles.everyone.id]: {
                 deny: [Discord.PermissionsBitField.Flags.ViewChannel],
             },
             [this.wheatley.roles.server_booster.id]: {
@@ -261,7 +261,7 @@ export default class PermissionManager extends BotComponent {
         });
         this.add_channel_overwrite(this.wheatley.channels.lore, {
             ...default_permissions,
-            [this.wheatley.TCCPP.roles.everyone.id]: {
+            [this.wheatley.guild.roles.everyone.id]: {
                 deny: [Discord.PermissionsBitField.Flags.ViewChannel],
             },
             [this.wheatley.roles.historian.id]: {

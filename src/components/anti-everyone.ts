@@ -27,14 +27,14 @@ export default class AntiEveryone extends BotComponent {
             // mod
             this.wheatley.is_authorized_mod(message.author) ||
             // outside of TCCPP (like DMs)
-            message.guildId != this.wheatley.TCCPP.id
+            message.guildId != this.wheatley.guild.id
         ) {
             return;
         }
         if (message.content.match(failed_everyone_re) != null) {
             M.log("AntiEveryone: Someone tried to mention here or everyone");
             // NOTE: .toLocaleString("en-US") formats this number with commas.
-            const member_count = this.wheatley.TCCPP.members.cache.size.toLocaleString("en-US");
+            const member_count = this.wheatley.guild.members.cache.size.toLocaleString("en-US");
 
             // Store the reply for later deletion, if necessary
             if (!this.replies.has(message.author)) {

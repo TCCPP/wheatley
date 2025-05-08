@@ -14,7 +14,7 @@ export default class Massban extends BotComponent {
             if (
                 message.author.id == this.wheatley.client.user!.id ||
                 message.author.bot ||
-                message.guildId != this.wheatley.TCCPP.id
+                message.guildId != this.wheatley.guild.id
             ) {
                 return;
             }

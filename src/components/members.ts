@@ -29,7 +29,7 @@ export default class Members extends BotComponent {
                 new Discord.EmbedBuilder()
                     .setColor(colors.wheatley)
                     .setTitle("Members")
-                    .setDescription(`Total: ${this.wheatley.TCCPP.members.cache.size} members`),
+                    .setDescription(`Total: ${this.wheatley.guild.members.cache.size} members`),
             ],
         });
     }

@@ -105,7 +105,7 @@ export default class ThreadControl extends BotComponent {
                 limit: 2, // thread starter message, then wheatley's message
             });
             for (const [_, message] of messages) {
-                if (message.type == Discord.MessageType.Default && message.author.id == this.wheatley.id) {
+                if (message.type == Discord.MessageType.Default && message.author.id == this.wheatley.user.id) {
                     await message.delete();
                 }
             }

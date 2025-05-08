@@ -96,7 +96,7 @@ export default class PinArchive extends BotComponent {
     async update_for_channel(channel: Discord.TextBasedChannel) {
         if (
             channel.isDMBased() ||
-            channel.guildId != this.wheatley.TCCPP.id ||
+            channel.guildId != this.wheatley.guild.id ||
             !(await this.wheatley.is_public_channel(channel))
         ) {
             return;
@@ -118,7 +118,7 @@ export default class PinArchive extends BotComponent {
         // look for returned pins that are no longer pins
         for (const pin of database_current_pins) {
             if (!current_pins.has(pin.message)) {
-                const channel = await this.wheatley.TCCPP.channels.fetch(pin.channel);
+                const channel = await this.wheatley.guild.channels.fetch(pin.channel);
                 assert(channel && channel.isTextBased());
                 const message = await channel.messages.fetch(pin.message);
                 M.debug("unpinned message", message.content);
@@ -134,7 +134,7 @@ export default class PinArchive extends BotComponent {
 
     async recover() {
         this.wheatley.info("Pin archive: Scanning channels");
-        const channels = await this.wheatley.TCCPP.channels.fetch();
+        const channels = await this.wheatley.guild.channels.fetch();
         for (const channel of channels.values()) {
             if (channel && channel.isTextBased()) {
                 await this.update_for_channel(channel);

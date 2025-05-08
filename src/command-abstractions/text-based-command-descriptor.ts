@@ -256,7 +256,7 @@ export class BotTextBasedCommand<Args extends unknown[] = []> extends BaseBotInt
                 // eslint-disable-next-line @typescript-eslint/no-unnecessary-condition
             } else if (option.type == "role") {
                 const re = new RegExp(
-                    this.wheatley.TCCPP.roles.cache
+                    this.wheatley.guild.roles.cache
                         .map(role => escape_regex(role.name))
                         .filter(name => name !== "@everyone")
                         .join("|"),
@@ -266,7 +266,7 @@ export class BotTextBasedCommand<Args extends unknown[] = []> extends BaseBotInt
                 if (match) {
                     command_options.push(
                         unwrap(
-                            this.wheatley.TCCPP.roles.cache.find(
+                            this.wheatley.guild.roles.cache.find(
                                 role => role.name.toLowerCase() === match[0].toLowerCase(),
                             ),
                         ),

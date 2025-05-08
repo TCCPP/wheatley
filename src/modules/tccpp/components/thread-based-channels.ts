@@ -60,7 +60,7 @@ export default class ThreadBasedChannels extends BotComponent {
     }
 
     override async on_thread_create(thread: Discord.ThreadChannel) {
-        if (thread.ownerId == this.wheatley.id) {
+        if (thread.ownerId == this.wheatley.user.id) {
             // wheatley threads are either modlogs or thread help threads
             return;
         }

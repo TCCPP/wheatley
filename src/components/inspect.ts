@@ -176,8 +176,8 @@ export default class Inspect extends BotComponent {
         const match = url.trim().match(url_re);
         if (match) {
             const [_, guild_id, channel_id, message_id] = match.slice(1);
-            assert(guild_id == this.wheatley.TCCPP.id);
-            const channel = await this.wheatley.TCCPP.channels.fetch(channel_id);
+            assert(guild_id == this.wheatley.guild.id);
+            const channel = await this.wheatley.guild.channels.fetch(channel_id);
             assert(channel?.isTextBased());
             const message = await channel.messages.fetch(message_id);
             await this.send_inspected_data(message, command);

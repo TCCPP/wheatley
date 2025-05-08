@@ -46,7 +46,7 @@ export default class Autoreact extends BotComponent {
         if (
             message.author.id == this.wheatley.client.user!.id || // Ignore self
             message.author.bot || // Ignore bots
-            message.guildId != this.wheatley.TCCPP.id // Ignore messages outside TCCPP (e.g. dm's)
+            message.guildId != this.wheatley.guild.id // Ignore messages outside TCCPP (e.g. dm's)
         ) {
             return;
         }
@@ -149,17 +149,17 @@ export default class Autoreact extends BotComponent {
         if (
             new_message.author?.id == this.wheatley.client.user!.id || // Ignore self
             new_message.author?.bot || // Ignore bots
-            new_message.guildId != this.wheatley.TCCPP.id // Ignore messages outside TCCPP (e.g. dm's)
+            new_message.guildId != this.wheatley.guild.id // Ignore messages outside TCCPP (e.g. dm's)
         ) {
             return;
         }
         if (new_message.channel.id == this.wheatley.channels.memes.id) {
-            const bot_starred = new_message.reactions.cache.get("⭐")?.users.cache.has(this.wheatley.id);
+            const bot_starred = new_message.reactions.cache.get("⭐")?.users.cache.has(this.wheatley.user.id);
             // If we haven't stared (or don't know if we've starred) and the new message has media, star
             if (!bot_starred && has_media(new_message)) {
                 M.log(
                     "Adding star reaction on message update",
-                    new_message.reactions.cache.has(this.wheatley.id),
+                    new_message.reactions.cache.has(this.wheatley.user.id),
                     new_message.author?.tag,
                     new_message.author?.id,
                     new_message.url,
@@ -169,18 +169,18 @@ export default class Autoreact extends BotComponent {
                 // if we starred and there's no longer media, remove
                 M.log(
                     "Removing star reaction on message update",
-                    new_message.reactions.cache.has(this.wheatley.id),
+                    new_message.reactions.cache.has(this.wheatley.user.id),
                     new_message.author?.tag,
                     new_message.author?.id,
                     new_message.url,
                 );
-                await new_message.reactions.cache.get("⭐")?.users.remove(this.wheatley.id);
+                await new_message.reactions.cache.get("⭐")?.users.remove(this.wheatley.user.id);
             }
         }
     }
 
     async catch_up() {
-        const TCCPP = await this.wheatley.client.guilds.fetch(this.wheatley.TCCPP.id);
+        const TCCPP = await this.wheatley.client.guilds.fetch(this.wheatley.guild.id);
         const introductions_channel = await TCCPP.channels.fetch(this.wheatley.channels.introductions.id);
         assert(introductions_channel);
         assert(introductions_channel.type == Discord.ChannelType.GuildText);

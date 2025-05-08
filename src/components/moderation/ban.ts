@@ -103,7 +103,7 @@ export default class Ban extends ModerationComponent {
         if (this.dummy_rounds) {
             return;
         }
-        await this.wheatley.TCCPP.members.ban(entry.user, {
+        await this.wheatley.guild.members.ban(entry.user, {
             reason: entry.reason ?? undefined,
         });
     }
@@ -113,7 +113,7 @@ export default class Ban extends ModerationComponent {
         if (this.dummy_rounds) {
             return;
         }
-        await this.wheatley.TCCPP.members.unban(
+        await this.wheatley.guild.members.unban(
             entry.user,
             entry.removed?.reason ?? entry.expunged?.reason ?? undefined,
         );
@@ -122,7 +122,7 @@ export default class Ban extends ModerationComponent {
     async is_moderation_applied(moderation: basic_moderation_with_user) {
         assert(moderation.type == this.type);
         try {
-            await this.wheatley.TCCPP.bans.fetch(moderation.user);
+            await this.wheatley.guild.bans.fetch(moderation.user);
             return true;
         } catch (e) {
             // fallback to the database
@@ -143,7 +143,7 @@ export default class Ban extends ModerationComponent {
         const entry = logs.entries
             .filter(entry => entry.createdAt > new Date(Date.now() - 10 * MINUTE))
             .find(entry => unwrap(entry.target).id == member.user.id);
-        if (entry && entry.executorId != this.wheatley.id) {
+        if (entry && entry.executorId != this.wheatley.user.id) {
             const moderation: moderation_entry = {
                 case_number: -1,
                 user: unwrap(entry.target).id,

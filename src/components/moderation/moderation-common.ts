@@ -314,7 +314,7 @@ export abstract class ModerationComponent extends BotComponent {
                     $set: {
                         active: false,
                         removed: {
-                            moderator: this.wheatley.id,
+                            moderator: this.wheatley.user.id,
                             moderator_name: "Wheatley",
                             reason: "Auto",
                             timestamp: Date.now(),
@@ -531,7 +531,7 @@ export abstract class ModerationComponent extends BotComponent {
             user: user.id,
             user_name: user.displayName,
             moderator: moderator.id,
-            moderator_name: (await this.wheatley.TCCPP.members.fetch(moderator.id)).displayName,
+            moderator_name: (await this.wheatley.guild.members.fetch(moderator.id)).displayName,
             reason,
             issued_at: Date.now(),
             duration,

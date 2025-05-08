@@ -214,7 +214,7 @@ export default class Buzzwords extends BotComponent {
 
     async reflowRoles() {
         M.log("Reflowing roles");
-        const members = await this.wheatley.TCCPP.members.fetch();
+        const members = await this.wheatley.guild.members.fetch();
         const entries = await this.database.buzzword_scoreboard.find().toArray();
         const scores = entries.map(entry => entry.score).sort((a, b) => a - b);
         const p90 = Buzzwords.quantile(scores, 0.9);
@@ -321,7 +321,7 @@ export default class Buzzwords extends BotComponent {
 
     override async on_message_create(message: Discord.Message) {
         // Ignore bots and DMs
-        if (message.author.bot || message.guildId != this.wheatley.TCCPP.id) {
+        if (message.author.bot || message.guildId != this.wheatley.guild.id) {
             return;
         }
         //if(message.channel.id != "1091502908241084436") return; // for now, for testing
@@ -348,7 +348,7 @@ export default class Buzzwords extends BotComponent {
                                 .setDescription(`You've earned ${derail_points} points!`),
                         ],
                     });
-                    const member = await this.wheatley.TCCPP.members.fetch(id);
+                    const member = await this.wheatley.guild.members.fetch(id);
                     const tag = member.user.tag;
                     await this.give_points(id, tag, derail_points);
                     await this.updateRolesSingle(member);
@@ -361,7 +361,7 @@ export default class Buzzwords extends BotComponent {
                     const [id, amount] = match[0].split(" ");
                     const member = await (async () => {
                         try {
-                            return await this.wheatley.TCCPP.members.fetch(id);
+                            return await this.wheatley.guild.members.fetch(id);
                         } catch {
                             return { user: { tag: "" } };
                         }
@@ -401,7 +401,7 @@ export default class Buzzwords extends BotComponent {
                 return;
             }
             if (message.content.trim() == "!initbuzzscoresystem" && message.author.id == "199943082441965577") {
-                const members = await this.wheatley.TCCPP.members.fetch();
+                const members = await this.wheatley.guild.members.fetch();
                 M.log(members.size, "members");
                 await Promise.all(
                     members

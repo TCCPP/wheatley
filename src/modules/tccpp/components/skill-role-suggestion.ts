@@ -67,7 +67,7 @@ export default class SkillRoleSuggestion extends BotComponent {
     async skill_suggestion(
         interaction: Discord.UserContextMenuCommandInteraction | Discord.MessageContextMenuCommandInteraction,
     ) {
-        if (interaction.guildId != this.wheatley.TCCPP.id) {
+        if (interaction.guildId != this.wheatley.guild.id) {
             await interaction.reply({
                 ephemeral: true,
                 content: "Report can only be used in TCCPP",
@@ -85,11 +85,11 @@ export default class SkillRoleSuggestion extends BotComponent {
         const member =
             target_member instanceof Discord.GuildMember
                 ? target_member
-                : await this.wheatley.TCCPP.members.fetch(interaction.targetId);
+                : await this.wheatley.guild.members.fetch(interaction.targetId);
         const suggester =
             interaction.member instanceof Discord.GuildMember
                 ? interaction.member
-                : await this.wheatley.TCCPP.members.fetch(interaction.user.id);
+                : await this.wheatley.guild.members.fetch(interaction.user.id);
         assert(member);
         M.log("Received skill suggest interaction", interaction.user.tag, interaction.user.id, interaction.targetId);
         const context =
@@ -292,7 +292,7 @@ export default class SkillRoleSuggestion extends BotComponent {
         const suggester =
             interaction.member instanceof Discord.GuildMember
                 ? interaction.member
-                : await this.wheatley.TCCPP.members.fetch(interaction.user.id);
+                : await this.wheatley.guild.members.fetch(interaction.user.id);
         const { member, role, context } = unwrap(this.target_map.get(interaction.user.id));
         const comments = interaction.fields.getTextInputValue("skill-role-suggestion-modal-comments");
         // TODO: Why does role need to be unwrapped?

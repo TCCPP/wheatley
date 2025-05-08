@@ -61,7 +61,7 @@ export default class RoleManager extends BotComponent {
             // general
             this.wheatley.roles.root.id,
             this.wheatley.roles.moderators.id,
-            this.wheatley.TCCPP.id, // the everyone id
+            this.wheatley.guild.id, // the everyone id
             // moderation roles
             this.wheatley.roles.muted.id,
             this.wheatley.roles.monke.id,
@@ -83,7 +83,7 @@ export default class RoleManager extends BotComponent {
             this.wheatley.roles.herald.id,
             this.wheatley.roles.linked_github.id,
         ]);
-        this.pink_role = unwrap(await this.wheatley.TCCPP.roles.fetch(this.wheatley.roles.pink.id));
+        this.pink_role = unwrap(await this.wheatley.guild.roles.fetch(this.wheatley.roles.pink.id));
         this.interval = set_interval(() => {
             this.check_members().catch(this.wheatley.critical_error.bind(this.wheatley));
         }, HOUR);
@@ -117,7 +117,7 @@ export default class RoleManager extends BotComponent {
     }
 
     async gibpink(command: TextBasedCommand) {
-        const member = await command.get_member(this.wheatley.TCCPP);
+        const member = await command.get_member(this.wheatley.guild);
         if (member.premiumSince == null) {
             await command.reply("Nice try.", true, true);
             return;
@@ -130,7 +130,7 @@ export default class RoleManager extends BotComponent {
     }
 
     async unpink(command: TextBasedCommand) {
-        const member = await command.get_member(this.wheatley.TCCPP);
+        const member = await command.get_member(this.wheatley.guild);
         if (!member.roles.cache.some(r => r.id == this.pink_role.id)) {
             await command.reply("You are not currently pink", true, true);
             return;
@@ -192,7 +192,7 @@ export default class RoleManager extends BotComponent {
                             name: new_member.displayName,
                             iconURL: new_member.displayAvatarURL(),
                         })
-                        .setColor(unwrap(await this.wheatley.TCCPP.roles.fetch(current_skill_role)).color)
+                        .setColor(unwrap(await this.wheatley.guild.roles.fetch(current_skill_role)).color)
                         .setDescription(
                             roles_entry?.last_known_skill_role
                                 ? `<@&${roles_entry.last_known_skill_role}> -> <@&${current_skill_role}>`
@@ -212,7 +212,7 @@ export default class RoleManager extends BotComponent {
     async check_members() {
         M.log("Starting role checks");
         try {
-            const members = await this.wheatley.TCCPP.members.fetch();
+            const members = await this.wheatley.guild.members.fetch();
             for (const member of members.values()) {
                 await this.check_member_roles(member);
             }
@@ -258,7 +258,7 @@ export default class RoleManager extends BotComponent {
                         build_description(
                             `<@${member.user.id}> ${member.user.username}`,
                             ...roles_entry.roles
-                                .filter(role_id => role_id != this.wheatley.TCCPP.id)
+                                .filter(role_id => role_id != this.wheatley.guild.id)
                                 .map(role_id => `<@&${role_id}>`),
                         ),
                     )

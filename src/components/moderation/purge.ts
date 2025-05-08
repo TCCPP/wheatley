@@ -182,7 +182,7 @@ export default class Purge extends BotComponent {
         let match = url.trim().match(url_re);
         if (match) {
             const [_, guild_id, channel_id, message_id] = match.slice(1);
-            assert(guild_id == this.wheatley.TCCPP.id);
+            assert(guild_id == this.wheatley.guild.id);
             return [channel_id, message_id];
         }
         match = url.trim().match(/^\d+$/);
@@ -351,7 +351,7 @@ export default class Purge extends BotComponent {
         const all_messages = await this.database.message_database
             .find({
                 "author.id": user.id,
-                guild: this.wheatley.TCCPP.id,
+                guild: this.wheatley.guild.id,
                 channel: {
                     $nin: [this.wheatley.channels.staff_flag_log.id, this.wheatley.channels.welcome.id],
                 },
@@ -375,7 +375,7 @@ export default class Purge extends BotComponent {
                 }
                 const [channel_id, messages] = res.value;
                 try {
-                    const channel = await wheatley.TCCPP.channels.fetch(channel_id);
+                    const channel = await wheatley.guild.channels.fetch(channel_id);
                     yield [
                         unwrap(channel),
                         chunks(
