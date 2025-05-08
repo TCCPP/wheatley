@@ -62,6 +62,7 @@ solution currently is the following:
 
 Secrets and other bot info must be configured in the `config.json` file. An example looks like:
 
+<!-- prettier-ignore -->
 ```json
 {
   "id": "<bot id>",
