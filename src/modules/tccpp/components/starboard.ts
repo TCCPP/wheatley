@@ -75,7 +75,7 @@ export default class Starboard extends BotComponent {
 
     excluded_channels: Set<string>;
 
-    private database = unwrap(this.wheatley.database).create_proxy<{
+    private database = this.wheatley.database.create_proxy<{
         component_state: starboard_state;
         auto_delete_threshold_notifications: auto_delete_threshold_notifications;
         starboard_entries: starboard_entry;
@@ -302,7 +302,7 @@ export default class Starboard extends BotComponent {
         M.log(`${action} ${message.url} for ${trigger_reaction.count} ${trigger_reaction.emoji.name} reactions`);
         let flag_message: Discord.Message | null = null;
         try {
-            await unwrap(this.wheatley.database).lock();
+            await this.wheatley.database.lock();
             if (
                 do_delete ||
                 !(await this.database.auto_delete_threshold_notifications.findOne({ message: message.id }))
@@ -332,7 +332,7 @@ export default class Starboard extends BotComponent {
                 this.wheatley.critical_error(e);
             }
         } finally {
-            unwrap(this.wheatley.database).unlock();
+            this.wheatley.database.unlock();
         }
         if (do_delete) {
             await this.database.auto_deletes.insertOne({

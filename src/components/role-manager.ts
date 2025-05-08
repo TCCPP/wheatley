@@ -36,7 +36,7 @@ export default class RoleManager extends BotComponent {
     // roles that will not be re-applied on join
     blacklisted_roles: Set<string>;
 
-    private database = unwrap(this.wheatley.database).create_proxy<{
+    private database = this.wheatley.database.create_proxy<{
         user_roles: user_role_entry;
     }>();
 

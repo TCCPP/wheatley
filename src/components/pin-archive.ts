@@ -29,7 +29,7 @@ type pin_archive_entry = {
 export default class PinArchive extends BotComponent {
     mutex = new KeyedMutexSet<string>();
 
-    private database = unwrap(this.wheatley.database).create_proxy<{
+    private database = this.wheatley.database.create_proxy<{
         pins: pin_entry;
         pin_archive: pin_archive_entry;
     }>();

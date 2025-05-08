@@ -236,7 +236,10 @@ export class Wheatley {
 
     private command_handler: CommandHandler;
 
-    database: WheatleyDatabase | null;
+    private db: WheatleyDatabase | null;
+    get database() {
+        return unwrap(this.db);
+    }
 
     // whether wheatley is ready (client is ready + wheatley has set up)
     ready = false;
@@ -263,22 +266,22 @@ export class Wheatley {
     TCCPP: Discord.Guild;
     user: Discord.User;
 
-    log_channel: Discord.TextBasedChannel | null = null;
+    private log_channel: Discord.TextBasedChannel | null = null;
 
-    channels: {
+    readonly channels: {
         // ["prototype"] gets the instance type, eliminating the `typeof`. InstanceType<T> doesn't work for a protected
         // constructor, weirdly.
         [k in keyof typeof channels_map]: (typeof channels_map)[k][1]["prototype"];
     } = {} as any;
 
-    categories: {
+    readonly categories: {
         [k in keyof typeof categories_map]: Discord.CategoryChannel;
     } = {} as any;
 
-    roles: {
+    readonly roles: {
         [k in keyof typeof roles_map]: Discord.Role;
     } = {} as any;
-    skill_roles: {
+    readonly skill_roles: {
         [k in keyof typeof skill_roles_map]: Discord.Role;
     } = {} as any;
 
@@ -293,7 +296,7 @@ export class Wheatley {
 
     private mom_ping: string;
 
-    config: {
+    readonly config: {
         [key: string]: any;
     };
 
@@ -330,7 +333,7 @@ export class Wheatley {
     async setup(config: core_config) {
         assert(this.freestanding || config.mongo, "Missing MongoDB credentials");
         if (config.mongo) {
-            this.database = await WheatleyDatabase.create(config.mongo);
+            this.db = await WheatleyDatabase.create(config.mongo);
             await this.migrate_db(this.database);
         }
         if (config.metrics) {
