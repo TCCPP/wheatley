@@ -349,8 +349,7 @@ export class Wheatley {
             visited?.add(file.fullpath());
         }
 
-        if (config.components?.include) {
-            for (const file of config.components.include) {
+        for (const file of config.components.include ?? []) {
                 const path = pw.resolve(file);
                 if (!visited!.has(path)) {
                     yield file;
