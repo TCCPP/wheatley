@@ -8,7 +8,8 @@ import PromClient from "prom-client";
 import { colors, MINUTE } from "./common.js";
 import { unwrap } from "./utils/misc.js";
 import { to_string, is_string } from "./utils/strings.js";
-import { globIterate } from "glob";
+import { globIterateSync } from "glob";
+import { PathScurry } from "path-scurry";
 import { M } from "./utils/debugging-and-logging.js";
 import { BotComponent } from "./bot-component.js";
 
@@ -53,7 +54,10 @@ type core_config = {
     mom?: string;
     mongo?: wheatley_database_credentials;
     freestanding?: boolean;
-    exclude?: string[];
+    components?: {
+        exclude?: string[];
+        include?: string[];
+    };
     sentry?: string;
     metrics?: {
         port: number;
@@ -327,6 +331,28 @@ export class Wheatley {
         this.setup(config).catch(this.critical_error.bind(this));
     }
 
+    private *locate_components(config: core_config) {
+        const visited = new Set<string>();
+
+        const path_walker = new PathScurry(import.meta.dirname);
+
+        for (const file of globIterateSync("**/components/**/*.js", {
+            ignore: config.components?.exclude,
+            scurry: path_walker,
+            withFileTypes: true,
+        })) {
+            yield file.relativePosix();
+            visited.add(file.fullpath());
+        }
+
+        for (const file of config.components?.include ?? []) {
+            const path = path_walker.resolve(file);
+            if (!visited.has(path)) {
+                yield path_walker.relativePosix(file);
+            }
+        }
+    }
+
     async setup(config: core_config) {
         assert(this.freestanding || config.mongo, "Missing MongoDB credentials");
         if (config.mongo) {
@@ -371,10 +397,7 @@ export class Wheatley {
             })().catch(this.critical_error.bind(this));
         });
 
-        for await (const file of globIterate("**/components/**/*.js", {
-            ignore: config.exclude,
-            cwd: import.meta.dirname,
-        })) {
+        for (const file of this.locate_components(config)) {
             const default_export = (await import(`./${file}`)).default;
             if (default_export !== undefined) {
                 await this.add_component(default_export);
