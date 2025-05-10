@@ -96,7 +96,7 @@ export default class Timeout extends ModerationComponent {
         if (this.dummy_rounds) {
             return;
         }
-        const member = await this.wheatley.TCCPP.members.fetch(entry.user);
+        const member = await this.wheatley.guild.members.fetch(entry.user);
         await member.timeout(unwrap(entry.duration), entry.reason ?? "No reason provided");
     }
 
@@ -106,7 +106,7 @@ export default class Timeout extends ModerationComponent {
             return;
         }
         try {
-            const member = await this.wheatley.TCCPP.members.fetch(entry.user);
+            const member = await this.wheatley.guild.members.fetch(entry.user);
             await member.timeout(null);
         } catch (e) {
             if (e instanceof Discord.DiscordAPIError && e.code === 10007) {
@@ -121,7 +121,7 @@ export default class Timeout extends ModerationComponent {
     async is_moderation_applied(moderation: basic_moderation_with_user) {
         assert(moderation.type == this.type);
         try {
-            const member = await this.wheatley.TCCPP.members.fetch(moderation.user);
+            const member = await this.wheatley.guild.members.fetch(moderation.user);
             return member.communicationDisabledUntil !== null;
         } catch (e) {
             if (e instanceof Discord.DiscordAPIError && e.code === 10007) {

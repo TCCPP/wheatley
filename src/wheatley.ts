@@ -233,6 +233,15 @@ type EventMap = {
 };
 
 export class Wheatley {
+    private discord_user: Discord.User | null;
+    private discord_guild: Discord.Guild | null;
+    get user() {
+        return unwrap(this.discord_user);
+    }
+    get guild() {
+        return unwrap(this.discord_guild);
+    }
+
     readonly event_hub = new TypedEventEmitter<EventMap>();
     readonly components = new Map<string, BotComponent>();
     readonly tracker: MemberTracker; // TODO: Rename
@@ -245,10 +254,6 @@ export class Wheatley {
         return unwrap(this.db);
     }
 
-    // Application ID, must be provided in auth.json
-    readonly id: string;
-    // Guild ID, falls back onto TCCPP if not provided in auth.json.
-    readonly guild_id: string;
     // True if freestanding mode is enabled. Defaults to false.
     readonly freestanding: boolean;
 
@@ -262,10 +267,6 @@ export class Wheatley {
     readonly success = "<:success:1138616548630745088>";
     readonly error = "<:error:1138616562958483496>";
     readonly wheatley = "<:wheatley:1147938076551827496>";
-
-    // TCCPP stuff
-    TCCPP: Discord.Guild;
-    user: Discord.User;
 
     private log_channel: Discord.TextBasedChannel | null = null;
 
@@ -309,8 +310,6 @@ export class Wheatley {
         readonly client: Discord.Client,
         config: wheatley_config,
     ) {
-        this.id = config.id;
-        this.guild_id = config.guild;
         this.freestanding = config.freestanding ?? false;
 
         this.mom_ping = config.mom ? ` <@${config.mom}>` : "";
@@ -373,6 +372,8 @@ export class Wheatley {
 
                 this.info("Bot started");
 
+                this.discord_user = await this.client.users.fetch(config.id);
+                this.discord_guild = await this.client.guilds.fetch(config.guild);
                 await this.fetch_guild_info();
 
                 const command_set_builder = new CommandSetBuilder(this);
@@ -431,9 +432,6 @@ export class Wheatley {
                 return value as T;
             }
         };
-        // Preliminary loads
-        this.TCCPP = fudged_unwrap(await wrap(() => this.client.guilds.fetch(this.guild_id)));
-        this.user = fudged_unwrap(await wrap(() => this.client.users.fetch(this.id)));
         // Channels
         await Promise.all(
             Object.entries(channels_map).map(async ([k, [id, type]]) => {
@@ -463,7 +461,7 @@ export class Wheatley {
         // Roles
         await Promise.all(
             Object.entries(roles_map).map(async ([k, id]) => {
-                const role = await wrap(() => this.TCCPP.roles.fetch(id));
+                const role = await wrap(() => this.guild.roles.fetch(id));
                 if (this.freestanding && role === null) {
                     return;
                 }
@@ -474,7 +472,7 @@ export class Wheatley {
         );
         await Promise.all(
             Object.entries(skill_roles_map).map(async ([k, id]) => {
-                const role = await wrap(() => this.TCCPP.roles.fetch(id));
+                const role = await wrap(() => this.guild.roles.fetch(id));
                 if (this.freestanding && role === null) {
                     return;
                 }
@@ -502,7 +500,7 @@ export class Wheatley {
     async populate_caches() {
         // Load a couple hundred messages for every channel we're in
         const channels: Record<string, { channel: Discord.TextBasedChannel; last_seen: number; done: boolean }> = {};
-        for (const [_, channel] of await this.TCCPP.channels.fetch()) {
+        for (const [_, channel] of await this.guild.channels.fetch()) {
             if (channel?.isTextBased() && !channel.name.includes("archived-")) {
                 M.debug(`Loading recent messages from ${channel.name}`);
                 //await channel.messages.fetch({
@@ -639,7 +637,7 @@ export class Wheatley {
     /**
      * Search for a specific channel by name if the provided name is not found then instead search by id.
      */
-    async get_channel(name: string, id: string, guild_to_check: Discord.Guild = this.TCCPP) {
+    async get_channel(name: string, id: string, guild_to_check: Discord.Guild = this.guild) {
         if (process.env.NODE_ENV === "development") {
             const channel_by_name = guild_to_check.channels.cache.find(channel => channel.name === name);
             if (channel_by_name) {
@@ -705,27 +703,27 @@ export class Wheatley {
             !(channel instanceof Discord.ForumChannel) &&
             !channel.isDMBased() &&
             !(channel.isThread() && channel.type == Discord.ChannelType.PrivateThread) &&
-            channel.permissionsFor(this.TCCPP.roles.everyone).has("ViewChannel")
+            channel.permissionsFor(this.guild.roles.everyone).has("ViewChannel")
         );
     }
 
     // case-insensitive
     get_role_by_name(name: string) {
-        return unwrap(this.TCCPP.roles.cache.find(role => role.name.toLowerCase() === name.toLowerCase()));
+        return unwrap(this.guild.roles.cache.find(role => role.name.toLowerCase() === name.toLowerCase()));
     }
 
     async try_fetch_tccpp_member(
         options: Discord.GuildMember | Discord.UserResolvable | Discord.FetchMemberOptions,
     ): Promise<Discord.GuildMember | null> {
         if (options instanceof Discord.GuildMember) {
-            if (options.guild.id == this.guild_id) {
+            if (options.guild.id == this.guild.id) {
                 return options;
             } else {
                 return await this.try_fetch_tccpp_member(options.id);
             }
         } else {
             try {
-                return await this.TCCPP.members.fetch(options);
+                return await this.guild.members.fetch(options);
             } catch (e) {
                 // unknown member/user
                 if (e instanceof Discord.DiscordAPIError && (e.code === 10007 || e.code == 10013)) {
@@ -741,7 +739,7 @@ export class Wheatley {
         if (thing instanceof Discord.User) {
             const user = thing;
             try {
-                return (await this.TCCPP.members.fetch(user.id)).displayName;
+                return (await this.guild.members.fetch(user.id)).displayName;
             } catch {
                 // user could potentially not be in the server
                 return user.displayName;
@@ -772,7 +770,7 @@ export class Wheatley {
 
     increment_message_counters(message: Discord.Message) {
         try {
-            if (message.guildId == this.guild_id) {
+            if (message.guildId == this.guild.id) {
                 if (!message.author.bot) {
                     this.message_counter.labels({ type: "normal" }).inc();
                 } else {

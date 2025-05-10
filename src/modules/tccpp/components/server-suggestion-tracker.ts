@@ -320,7 +320,7 @@ export default class ServerSuggestionTracker extends BotComponent {
                     await message.thread.send(`Suggestion resolved as ${reaction.emoji}`);
                 }
                 // if wheatley then this is logged when the reaction is done on the dashboard
-                if (reaction.user.id != this.wheatley.id) {
+                if (reaction.user.id != this.wheatley.user.id) {
                     await this.log_resolution(message, reaction);
                 }
             } else {
@@ -380,7 +380,7 @@ export default class ServerSuggestionTracker extends BotComponent {
                 assert(message.author != null);
                 // race condition with await status_message.delete() checked here
                 if (
-                    message.author.id == this.wheatley.id &&
+                    message.author.id == this.wheatley.user.id &&
                     message.interactionMetadata !== null &&
                     !this.status_lock.has(message.id)
                 ) {
@@ -403,7 +403,7 @@ export default class ServerSuggestionTracker extends BotComponent {
                 }
             } else if (
                 message.channel.id == this.wheatley.channels.suggestion_action_log.id &&
-                message.author!.id == this.wheatley.id
+                message.author!.id == this.wheatley.user.id
             ) {
                 M.log("Wheatley message deleted", message);
             }
@@ -523,8 +523,8 @@ export default class ServerSuggestionTracker extends BotComponent {
             } else if (reaction.message.channel.id == this.wheatley.channels.suggestion_dashboard.id) {
                 const message = await departialize(reaction.message);
                 if (
-                    message.author.id == this.wheatley.id &&
-                    user.id != this.wheatley.id && // ignore self - this is important for autoreacts
+                    message.author.id == this.wheatley.user.id &&
+                    user.id != this.wheatley.user.id && // ignore self - this is important for autoreacts
                     resolution_reactions_set.has(reaction.emoji.name!) &&
                     this.wheatley.is_root(user)
                 ) {
@@ -566,7 +566,7 @@ export default class ServerSuggestionTracker extends BotComponent {
             try {
                 if (this.wheatley.is_root(user)) {
                     // only send diagnostics to root
-                    const member = await this.wheatley.TCCPP.members.fetch(user.id);
+                    const member = await this.wheatley.guild.members.fetch(user.id);
                     await member.send("Error while resolving suggestion");
                 }
             } catch (e) {

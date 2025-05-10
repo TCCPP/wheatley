@@ -58,7 +58,7 @@ export default class Modmail extends BotComponent {
             try {
                 // fetch full member
                 assert(interaction.member);
-                const member = await this.wheatley.TCCPP.members.fetch(interaction.member.user.id);
+                const member = await this.wheatley.guild.members.fetch(interaction.member.user.id);
                 // make the thread
                 const id = await this.increment_modmail_id();
                 const thread = await this.wheatley.channels.rules.threads.create({
@@ -175,7 +175,7 @@ export default class Modmail extends BotComponent {
         try {
             // can't apply roles to root
             if (!this.wheatley.is_root(interaction.user)) {
-                const member = await this.wheatley.TCCPP.members.fetch(interaction.user.id);
+                const member = await this.wheatley.guild.members.fetch(interaction.user.id);
                 await member.roles.add(this.wheatley.roles.monke);
                 this.monke_set.set(interaction.user.id, Date.now());
             }
@@ -186,7 +186,7 @@ export default class Modmail extends BotComponent {
 
     async not_monkey_button_press(interaction: Discord.ButtonInteraction) {
         await this.log_action(interaction.member, "Monkey pressed the not monkey button");
-        const member = await this.wheatley.TCCPP.members.fetch(interaction.user.id);
+        const member = await this.wheatley.guild.members.fetch(interaction.user.id);
         if (member.roles.cache.has(this.wheatley.roles.monke.id)) {
             if (!this.monke_set.has(member.id) || Date.now() - unwrap(this.monke_set.get(member.id)) >= HOUR) {
                 await interaction.reply({
@@ -224,7 +224,7 @@ export default class Modmail extends BotComponent {
             });
             await this.log_action(interaction.member, "Modmail button spammed");
         } else {
-            const member = await this.wheatley.TCCPP.members.fetch(interaction.user.id);
+            const member = await this.wheatley.guild.members.fetch(interaction.user.id);
             const non_beginner_skill_roles = member.roles.cache.filter(role =>
                 Object.values(this.wheatley.skill_roles).some(
                     skill_role => role.id == skill_role.id && skill_role.name != "Beginner",
@@ -343,7 +343,7 @@ export default class Modmail extends BotComponent {
     ) {
         const [tag, avatar] = await (async () => {
             if (interaction_member) {
-                const member = await this.wheatley.TCCPP.members.fetch(interaction_member.user.id);
+                const member = await this.wheatley.guild.members.fetch(interaction_member.user.id);
                 return [member.user.tag, member.displayAvatarURL()];
             } else {
                 return ["NULL", ""];

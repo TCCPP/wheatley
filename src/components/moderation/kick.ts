@@ -52,7 +52,7 @@ export default class Kick extends ModerationComponent {
         if (this.dummy_rounds) {
             return;
         }
-        await this.wheatley.TCCPP.members.kick(entry.user, entry.reason ?? undefined);
+        await this.wheatley.guild.members.kick(entry.user, entry.reason ?? undefined);
     }
 
     async remove_moderation(entry: mongo.WithId<moderation_entry>) {
@@ -73,7 +73,7 @@ export default class Kick extends ModerationComponent {
         const entry = logs.entries
             .filter(entry => entry.createdAt > new Date(Date.now() - 10 * MINUTE))
             .find(entry => unwrap(entry.target).id == member.user.id);
-        if (entry && entry.executorId != this.wheatley.id) {
+        if (entry && entry.executorId != this.wheatley.user.id) {
             const moderation: moderation_entry = {
                 case_number: -1,
                 user: unwrap(entry.target).id,

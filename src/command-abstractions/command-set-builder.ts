@@ -57,8 +57,8 @@ export class CommandSetBuilder {
         try {
             const rest = new REST({ version: "10" }).setToken(token);
             const route = this.wheatley.freestanding
-                ? Discord.Routes.applicationGuildCommands(this.wheatley.id, this.wheatley.guild_id)
-                : Discord.Routes.applicationCommands(this.wheatley.id);
+                ? Discord.Routes.applicationGuildCommands(this.wheatley.user.id, this.wheatley.guild.id)
+                : Discord.Routes.applicationCommands(this.wheatley.user.id);
 
             this.wheatley.info(`Registering ${this.commands.length} application commands`);
             M.log(

@@ -59,7 +59,7 @@ export default class Report extends BotComponent {
     }
 
     async report(interaction: Discord.MessageContextMenuCommandInteraction) {
-        if (interaction.guildId != this.wheatley.TCCPP.id) {
+        if (interaction.guildId != this.wheatley.guild.id) {
             await interaction.reply({
                 ephemeral: true,
                 content: "Report can only be used in TCCPP",
@@ -94,7 +94,7 @@ export default class Report extends BotComponent {
             const reporter =
                 interaction.member instanceof Discord.GuildMember
                     ? interaction.member
-                    : await this.wheatley.TCCPP.members.fetch(interaction.user.id);
+                    : await this.wheatley.guild.members.fetch(interaction.user.id);
             if (this.target_map.has(id)) {
                 message = message.trim();
                 const target_message = this.target_map.get(id)!;

@@ -37,7 +37,7 @@ export default class UtilityTools extends BotComponent {
                 M.log("got !channel-rename");
                 assert(!(message.channel instanceof Discord.PartialGroupDMChannel));
                 const m = await message.channel.send("working...");
-                const channels = await this.wheatley.TCCPP.channels.fetch();
+                const channels = await this.wheatley.guild.channels.fetch();
                 for (const [_, channel] of channels) {
                     assert(channel);
                     const r = channel.name.replace(/_/g, "-");
@@ -48,7 +48,7 @@ export default class UtilityTools extends BotComponent {
                 await m.edit(":+1:");
             } else if (message.content == "!sync-archive-permissions") {
                 M.log("got !sync-archive-permissions");
-                const archive = await this.wheatley.TCCPP.channels.fetch("910306041969913938");
+                const archive = await this.wheatley.guild.channels.fetch("910306041969913938");
                 assert(archive instanceof Discord.CategoryChannel);
                 for (const [_, channel] of archive.children.cache) {
                     await channel.lockPermissions();
@@ -62,7 +62,7 @@ export default class UtilityTools extends BotComponent {
                     "429594248099135488",
                     "910308747929321492",
                 ]) {
-                    const archive = await this.wheatley.TCCPP.channels.fetch(id);
+                    const archive = await this.wheatley.guild.channels.fetch(id);
                     assert(archive instanceof Discord.CategoryChannel);
                     for (const [_, channel] of archive.children.cache) {
                         if (!channel.name.startsWith("archived-")) {
@@ -72,7 +72,7 @@ export default class UtilityTools extends BotComponent {
                 }
                 await message.reply("Done");
             } else if (message.content == "!xxx") {
-                const logs = await this.wheatley.TCCPP.fetchAuditLogs({
+                const logs = await this.wheatley.guild.fetchAuditLogs({
                     limit: 10,
                     type: Discord.AuditLogEvent.MessageDelete,
                 });

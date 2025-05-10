@@ -51,7 +51,7 @@ export default class Quote extends BotComponent {
         if (match != null) {
             assert(match.length == 5);
             const [domain, guild_id, channel_id, message_id] = match.slice(1);
-            if (guild_id != this.wheatley.TCCPP.id) {
+            if (guild_id != this.wheatley.guild.id) {
                 await command.reply({
                     embeds: [
                         new Discord.EmbedBuilder()
@@ -89,14 +89,14 @@ export default class Quote extends BotComponent {
         if (
             message.author.id == this.wheatley.client.user!.id ||
             message.author.bot ||
-            message.guildId != this.wheatley.TCCPP.id
+            message.guildId != this.wheatley.guild.id
         ) {
             return;
         }
         if (message.content.includes("[https://")) {
             // if the message might contain a link, look at it
             const quote_descriptors = [...message.content.matchAll(implicit_quote_re)]
-                .filter(([_full, _domain, guild_id]) => guild_id == this.wheatley.TCCPP.id)
+                .filter(([_full, _domain, guild_id]) => guild_id == this.wheatley.guild.id)
                 .map(arr => arr.slice(1))
                 .map(([domain, _, channel_id, message_id, block_flag]) => ({
                     domain,
@@ -127,7 +127,7 @@ export default class Quote extends BotComponent {
         const embeds: (Discord.EmbedBuilder | Discord.Embed)[] = [];
         const files: (Discord.AttachmentPayload | Discord.Attachment)[] = [];
         for (const { domain, channel_id, message_id, block } of messages) {
-            const channel = await this.wheatley.TCCPP.channels.fetch(channel_id);
+            const channel = await this.wheatley.guild.channels.fetch(channel_id);
             if (
                 channel instanceof Discord.TextChannel ||
                 channel instanceof Discord.ThreadChannel ||

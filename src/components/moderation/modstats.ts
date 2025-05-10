@@ -58,7 +58,7 @@ export default class ModStats extends BotComponent {
     }
 
     async modstats(command: TextBasedCommand, moderator: Discord.User | null) {
-        if (moderator && !(this.wheatley.is_authorized_mod(moderator) || moderator.id == this.wheatley.id)) {
+        if (moderator && !(this.wheatley.is_authorized_mod(moderator) || moderator.id == this.wheatley.user.id)) {
             await command.reply(`<@${moderator.id}> is not a moderator`);
             return;
         }

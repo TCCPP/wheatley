@@ -63,7 +63,7 @@ export default class Steal extends BotComponent {
 
     async steal(command: TextBasedCommand, text: string) {
         const emoji_names = remove(
-            this.wheatley.TCCPP.emojis.cache.map(emoji => emoji.name),
+            this.wheatley.guild.emojis.cache.map(emoji => emoji.name),
             null,
         );
         const matches = [...text.matchAll(CUSTOM_EMOJIREGEX)];
@@ -81,7 +81,7 @@ export default class Steal extends BotComponent {
                 name = `${original_name}_${i}`;
                 i++;
             }
-            await this.wheatley.TCCPP.emojis.create({
+            await this.wheatley.guild.emojis.create({
                 attachment:
                     animated == "a"
                         ? `https://cdn.discordapp.com/emojis/${id}.gif`
@@ -98,8 +98,8 @@ export default class Steal extends BotComponent {
         const match = url.trim().match(url_re);
         if (match) {
             const [_, guild_id, channel_id, message_id] = match.slice(1);
-            assert(guild_id == this.wheatley.TCCPP.id);
-            const channel = await this.wheatley.TCCPP.channels.fetch(channel_id);
+            assert(guild_id == this.wheatley.guild.id);
+            const channel = await this.wheatley.guild.channels.fetch(channel_id);
             assert(channel?.isTextBased());
             const message = await channel.messages.fetch(message_id);
             await this.steal(command, message.content);
@@ -117,7 +117,7 @@ export default class Steal extends BotComponent {
 
     async add_url(command: TextBasedCommand, name: string, url: string) {
         assert(url.startsWith("https://") || url.startsWith("http://"));
-        await this.wheatley.TCCPP.emojis.create({
+        await this.wheatley.guild.emojis.create({
             attachment: url,
             name,
         });

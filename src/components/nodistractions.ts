@@ -120,7 +120,7 @@ export default class Nodistractions extends BotComponent {
             // pop entry and remove role
             const entry = this.undistract_queue.shift()!;
             try {
-                const member = await this.wheatley.TCCPP.members.fetch(entry.user);
+                const member = await this.wheatley.guild.members.fetch(entry.user);
                 M.log("removing !nodistractions", member.id, member.user.tag);
                 if (member.roles.cache.some(r => r.id == this.wheatley.roles.no_off_topic.id)) {
                     // might have been removed externally
@@ -277,13 +277,13 @@ export default class Nodistractions extends BotComponent {
                 return;
             }
             M.debug("Timeframe: ", n, u, factor);
-            const member = await command.get_member(this.wheatley.TCCPP);
+            const member = await command.get_member(this.wheatley.guild);
             await this.apply_no_distractions(command, member, Date.now(), n * factor);
         }
     }
 
     async removenodistractions(command: TextBasedCommand) {
-        const member = await command.get_member(this.wheatley.TCCPP);
+        const member = await command.get_member(this.wheatley.guild);
         if (!member.roles.cache.some(r => r.id == this.wheatley.roles.no_off_topic.id)) {
             await command.reply("You are not currently in !nodistractions", true, true);
             return;

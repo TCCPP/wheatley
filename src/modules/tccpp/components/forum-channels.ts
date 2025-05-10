@@ -269,7 +269,7 @@ export default class ForumChannels extends BotComponent {
             // forum start message
             assert(channel instanceof Discord.ThreadChannel);
             const thread = channel;
-            if (thread.ownerId == this.wheatley.id) {
+            if (thread.ownerId == this.wheatley.user.id) {
                 // wheatley threads are either modlogs or thread help threads
                 return;
             }

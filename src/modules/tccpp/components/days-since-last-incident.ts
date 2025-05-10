@@ -62,7 +62,7 @@ export default class DaysSinceLastIncident extends BotComponent {
 
     override async on_ready() {
         const messages = (await this.wheatley.channels.days_since_last_incident.messages.fetch()).filter(
-            message => message.author.id == this.wheatley.id,
+            message => message.author.id == this.wheatley.user.id,
         );
         assert(messages.size <= 1);
         if (messages.size == 1) {
