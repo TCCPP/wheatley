@@ -592,14 +592,14 @@ export abstract class ModerationComponent extends BotComponent {
             await command.reply({
                 content:
                     basic_moderation_info.type === "ban"
-                        ? `"This is the part where I kill you" - ${this.wheatley.wheatley}`
+                        ? `"This is the part where I kill you" — ${this.wheatley.emoji.me}`
                         : undefined,
                 embeds: [
                     new Discord.EmbedBuilder()
                         .setColor(colors.wheatley)
                         .setDescription(
                             build_description(
-                                `${this.wheatley.success} ***${user.displayName} was ${this.past_participle}***`,
+                                `${this.wheatley.emoji.success} ***${user.displayName} was ${this.past_participle}***`,
                                 command.is_slash() && reason ? `**Reason:** ${reason}` : null,
                                 (!this.is_once_off && duration_string === null) || reason === null
                                     ? `Remember to provide a ${[
@@ -670,7 +670,9 @@ export abstract class ModerationComponent extends BotComponent {
                 embeds: [
                     new Discord.EmbedBuilder()
                         .setColor(colors.wheatley)
-                        .setDescription(`${this.wheatley.success} ***${capitalize(this.past_participle)} all users***`),
+                        .setDescription(
+                            `${this.wheatley.emoji.success} ***${capitalize(this.past_participle)} all users***`,
+                        ),
                 ],
             });
         } catch (e) {
@@ -719,7 +721,8 @@ export abstract class ModerationComponent extends BotComponent {
                             .setColor(colors.wheatley)
                             .setDescription(
                                 build_description(
-                                    `${this.wheatley.success} ***${user.displayName} was un${this.past_participle}***`,
+                                    `${this.wheatley.emoji.success} ` +
+                                        `***${user.displayName} was un${this.past_participle}***`,
                                     command.is_slash() && reason ? `**Reason:** ${reason}` : null,
                                 ),
                             )
@@ -760,7 +763,7 @@ export abstract class ModerationComponent extends BotComponent {
             embeds: [
                 new Discord.EmbedBuilder()
                     .setColor(colors.alert_color)
-                    .setDescription(`${this.wheatley.error} ***${message}***`),
+                    .setDescription(`${this.wheatley.emoji.error} ***${message}***`),
             ],
         });
     }
