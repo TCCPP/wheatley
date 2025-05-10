@@ -9,7 +9,7 @@ import { moderation_entry } from "./moderation/schemata.js";
 import { unwrap } from "../utils/misc.js";
 
 export default class NotifyAboutFormerlyBannedUsers extends BotComponent {
-    private database = unwrap(this.wheatley.database).create_proxy<{
+    private database = this.wheatley.database.create_proxy<{
         moderations: moderation_entry;
     }>();
 
