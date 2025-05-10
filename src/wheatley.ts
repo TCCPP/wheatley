@@ -336,24 +336,23 @@ export class Wheatley {
     }
 
     private *locate_components(config: core_config) {
-        const visited = config.components?.include ? new Set<string>() : undefined;
+        const visited = new Set<string>();
 
-        const pw = new PathScurry(import.meta.dirname);
+        const path_walker = new PathScurry(import.meta.dirname);
 
         for (const file of globIterateSync("**/components/**/*.js", {
             ignore: config.components?.exclude,
-            scurry: pw,
+            scurry: path_walker,
             withFileTypes: true,
         })) {
             yield file.relativePosix();
-            visited?.add(file.fullpath());
+            visited.add(file.fullpath());
         }
 
-        for (const file of config.components.include ?? []) {
-                const path = pw.resolve(file);
-                if (!visited!.has(path)) {
-                    yield file;
-                }
+        for (const file of config.components?.include ?? []) {
+            const path = path_walker.resolve(file);
+            if (!visited.has(path)) {
+                yield path_walker.relativePosix(file);
             }
         }
     }
