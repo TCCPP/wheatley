@@ -712,14 +712,14 @@ export class Wheatley {
         return unwrap(this.guild.roles.cache.find(role => role.name.toLowerCase() === name.toLowerCase()));
     }
 
-    async try_fetch_tccpp_member(
+    async try_fetch_guild_member(
         options: Discord.GuildMember | Discord.UserResolvable | Discord.FetchMemberOptions,
     ): Promise<Discord.GuildMember | null> {
         if (options instanceof Discord.GuildMember) {
             if (options.guild.id == this.guild.id) {
                 return options;
             } else {
-                return await this.try_fetch_tccpp_member(options.id);
+                return await this.try_fetch_guild_member(options.id);
             }
         } else {
             try {
@@ -776,7 +776,7 @@ export class Wheatley {
                 } else {
                     this.message_counter.labels({ type: "bot" }).inc();
                 }
-                if (message.author.id == unwrap(this.client.user).id) {
+                if (message.author.id == this.user.id) {
                     this.message_counter.labels({ type: "wheatley" }).inc();
                 }
             }
