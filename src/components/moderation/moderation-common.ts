@@ -556,9 +556,12 @@ export abstract class ModerationComponent extends BotComponent {
         basic_moderation_info: basic_moderation,
     ) {
         try {
-            if (this.wheatley.is_authorized_mod(user)) {
-                // Check if the mod is trying to ban themselves
-                if (basic_moderation_info.type == "ban" && command.user.id == user.id) {
+            if (await this.wheatley.fetch_member_if_permitted(user, Discord.PermissionFlagsBits.ModerateMembers)) {
+                // Check if the mod is trying to ban themselves or another mod
+                if (
+                    command.user.id == user.id &&
+                    (basic_moderation_info.type == "ban" || basic_moderation_info.type == "kick")
+                ) {
                     // If the mod is trying to ban themselves then troll them ;)
                     await this.reply_with_error(command, unwrap(get_random_array_element(joke_responses)));
                 } else {
@@ -639,7 +642,7 @@ export abstract class ModerationComponent extends BotComponent {
     ) {
         try {
             for (const user of users) {
-                if (this.wheatley.is_authorized_mod(user)) {
+                if (await this.wheatley.fetch_member_if_permitted(user, Discord.PermissionFlagsBits.ModerateMembers)) {
                     await this.reply_with_error(command, moderation_on_team_member_message);
                     continue;
                 }
