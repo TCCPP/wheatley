@@ -649,12 +649,12 @@ export class Wheatley {
         return reply_message;
     }
 
-    is_root(user: Discord.User | Discord.PartialUser | Discord.GuildMember): boolean {
-        return this.roles.root.members.has(user.id) || user.id == this.user.id;
-    }
-
-    is_authorized_mod(user: Discord.User | Discord.PartialUser | Discord.GuildMember): boolean {
-        return this.roles.moderators.members.has(user.id) || this.is_root(user);
+    async fetch_member_if_permitted(
+        options: Discord.GuildMember | Discord.User | Discord.UserResolvable | Discord.FetchMemberOptions,
+        permissions: Discord.PermissionResolvable,
+    ) {
+        const member = await this.try_fetch_guild_member(options);
+        return member?.permissions.has(permissions) ? member : null;
     }
 
     staff_contacts() {
@@ -689,7 +689,7 @@ export class Wheatley {
     }
 
     async try_fetch_guild_member(
-        options: Discord.GuildMember | Discord.UserResolvable | Discord.FetchMemberOptions,
+        options: Discord.GuildMember | Discord.User | Discord.UserResolvable | Discord.FetchMemberOptions,
     ): Promise<Discord.GuildMember | null> {
         if (options instanceof Discord.GuildMember) {
             if (options.guild.id == this.guild.id) {
