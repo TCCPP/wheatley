@@ -44,7 +44,7 @@ export default class Autoreact extends BotComponent {
 
     override async on_message_create(message: Discord.Message) {
         if (
-            message.author.id == this.wheatley.client.user!.id || // Ignore self
+            message.author.id == this.wheatley.user.id || // Ignore self
             message.author.bot || // Ignore bots
             message.guildId != this.wheatley.guild.id // Ignore messages outside TCCPP (e.g. dm's)
         ) {
@@ -147,7 +147,7 @@ export default class Autoreact extends BotComponent {
         new_message: Discord.Message | Discord.PartialMessage,
     ): Promise<void> {
         if (
-            new_message.author?.id == this.wheatley.client.user!.id || // Ignore self
+            new_message.author?.id == this.wheatley.user.id || // Ignore self
             new_message.author?.bot || // Ignore bots
             new_message.guildId != this.wheatley.guild.id // Ignore messages outside TCCPP (e.g. dm's)
         ) {

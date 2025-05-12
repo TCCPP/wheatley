@@ -10,6 +10,10 @@ import { moderation_state } from "./schemata.js";
 import { SelfClearingMap } from "../../utils/containers.js";
 import { unwrap } from "../../utils/misc.js";
 import { set_timeout } from "../../utils/node.js";
+import { CommandSetBuilder } from "../../command-abstractions/command-set-builder.js";
+import { EarlyReplyMode, TextBasedCommandBuilder } from "../../command-abstractions/text-based-command-builder.js";
+import { TextBasedCommand } from "../../command-abstractions/text-based-command.js";
+import { MessageContextMenuInteractionBuilder } from "../../command-abstractions/context-menu.js";
 
 /*
  * Flow:
@@ -39,6 +43,29 @@ export default class Modmail extends BotComponent {
     private database = this.wheatley.database.create_proxy<{
         component_state: moderation_state;
     }>();
+
+    override async setup(commands: CommandSetBuilder) {
+        commands.add(
+            new TextBasedCommandBuilder("wsetupmodmailsystem", EarlyReplyMode.none)
+                .set_permissions(Discord.PermissionFlagsBits.Administrator)
+                .set_description("Create modmail message here")
+                .set_handler(this.modmail_setup.bind(this)),
+        );
+        commands.add(
+            new MessageContextMenuInteractionBuilder("Update modmail message")
+                .set_permissions(Discord.PermissionFlagsBits.Administrator)
+                .set_handler(this.modmail_update.bind(this)),
+        );
+    }
+
+    private async modmail_setup(command: TextBasedCommand) {
+        assert(command.channel && !(command.channel instanceof Discord.PartialGroupDMChannel));
+        await command.channel.send(this.create_modmail_system_embed_and_components());
+    }
+
+    private async modmail_update(interaction: Discord.MessageContextMenuCommandInteraction) {
+        await interaction.targetMessage.edit(this.create_modmail_system_embed_and_components());
+    }
 
     async increment_modmail_id() {
         const res = await this.database.component_state.findOneAndUpdate(
@@ -146,24 +173,6 @@ export default class Modmail extends BotComponent {
         };
     }
 
-    override async on_message_create(message: Discord.Message) {
-        // Ignore bots
-        if (message.author.bot) {
-            return;
-        }
-        if (message.content == "!wsetupmodmailsystem" && this.wheatley.is_root(message.author)) {
-            assert(!(message.channel instanceof Discord.PartialGroupDMChannel));
-            await message.channel.send(this.create_modmail_system_embed_and_components());
-        }
-        if (message.content.startsWith("!wupdatemodmailsystem") && this.wheatley.is_root(message.author)) {
-            // get argument
-            const id = message.content.slice("!wupdatemodmailsystem".length).trim();
-            await message.delete();
-            const target = await message.channel.messages.fetch(id);
-            await target.edit(this.create_modmail_system_embed_and_components());
-        }
-    }
-
     async monkey_button_press(interaction: Discord.ButtonInteraction) {
         await interaction.reply({
             content:
@@ -173,8 +182,7 @@ export default class Modmail extends BotComponent {
         });
         await this.log_action(interaction.member, "Monkey pressed the button");
         try {
-            // can't apply roles to root
-            if (!this.wheatley.is_root(interaction.user)) {
+            if ((await this.wheatley.try_fetch_guild_member(interaction.user))?.manageable) {
                 const member = await this.wheatley.guild.members.fetch(interaction.user.id);
                 await member.roles.add(this.wheatley.roles.monke);
                 this.monke_set.set(interaction.user.id, Date.now());
@@ -194,8 +202,7 @@ export default class Modmail extends BotComponent {
                     ephemeral: true,
                 });
                 try {
-                    // can't apply roles to root
-                    if (!this.wheatley.is_root(interaction.user)) {
+                    if ((await this.wheatley.try_fetch_guild_member(interaction.user))?.manageable) {
                         await member.roles.remove(this.wheatley.roles.monke);
                         this.monke_set.remove(member.id);
                     }

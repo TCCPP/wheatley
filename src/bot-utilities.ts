@@ -132,7 +132,7 @@ export class BotUtilities {
         const template_string = template.replaceAll("##", "#" + head.channel).replaceAll("$$", url);
         const safe_link = options?.safe_link === undefined ? true : options.safe_link;
         const author = head.author;
-        const member = await this.wheatley.try_fetch_tccpp_member(author.id);
+        const member = await this.wheatley.try_fetch_guild_member(author.id);
         const embed = new Discord.EmbedBuilder()
             .setColor(colors.default)
             .setAuthor({

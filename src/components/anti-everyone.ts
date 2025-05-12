@@ -21,11 +21,14 @@ export default class AntiEveryone extends BotComponent {
     override async on_message_create(message: Discord.Message): Promise<void> {
         if (
             // self
-            message.author.id == this.wheatley.client.user!.id ||
+            message.author.id == this.wheatley.user.id ||
             // bot
             message.author.bot ||
             // mod
-            this.wheatley.is_authorized_mod(message.author) ||
+            (await this.wheatley.fetch_member_if_permitted(
+                message.author,
+                Discord.PermissionFlagsBits.MentionEveryone,
+            )) ||
             // outside of TCCPP (like DMs)
             message.guildId != this.wheatley.guild.id
         ) {

@@ -58,19 +58,17 @@ export default class ModStats extends BotComponent {
     }
 
     async modstats(command: TextBasedCommand, moderator: Discord.User | null) {
-        if (moderator && !(this.wheatley.is_authorized_mod(moderator) || moderator.id == this.wheatley.user.id)) {
-            await command.reply(`<@${moderator.id}> is not a moderator`);
+        if (!moderator || moderator.id == this.wheatley.user.id) {
             return;
         }
         if (
-            !this.wheatley.is_authorized_mod(command.user) &&
-            command.channel_id != this.wheatley.channels.bot_spam.id
+            !(await this.wheatley.fetch_member_if_permitted(command.user, Discord.PermissionFlagsBits.ModerateMembers))
         ) {
-            await command.reply(`Please use in <#${this.wheatley.channels.bot_spam.id}>`, true);
+            await command.reply("not authorized", true);
             return;
         }
         await command.do_early_reply_if_slash(false);
-        const moderator_member = moderator ? await this.wheatley.try_fetch_tccpp_member(moderator) : null;
+        const moderator_member = moderator ? await this.wheatley.try_fetch_guild_member(moderator) : null;
         const stats_7d = await this.get_stats(moderator, Date.now() - 7 * DAY);
         const stats_30d = await this.get_stats(moderator, Date.now() - 30 * DAY);
         const stats_all = await this.get_stats(moderator);
