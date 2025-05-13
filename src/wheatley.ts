@@ -129,6 +129,11 @@ const channels_map = {
     skill_role_log: tuple("1315023714206617610", Discord.TextChannel),
     polls: tuple("1319336135213846568", Discord.NewsChannel),
     wiki_dev: tuple("1350899338229846127", Discord.TextChannel),
+    // voice
+    chill: tuple("1358502332941467879", Discord.VoiceChannel),
+    work_3: tuple("1358502770575147230", Discord.VoiceChannel),
+    work_4: tuple("1367735453112864838", Discord.VoiceChannel),
+    afk: tuple("331732845523369985", Discord.VoiceChannel),
     // red telephone
     red_telephone_alerts: tuple("1140096352278290512", Discord.TextChannel),
     // error log
@@ -167,6 +172,8 @@ const roles_map = {
     no_serious_off_topic: "921116034948272260",
     no_til: "883474632370454588",
     no_memes: "982307359370141756",
+    no_voice: "1371771250363465892",
+    voice_deputy: "1371706420730531870",
     moderators: "847915341954154536",
     root: "331719468440879105",
     pink: "888158339878490132",

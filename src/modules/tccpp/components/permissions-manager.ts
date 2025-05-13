@@ -2,11 +2,11 @@ import * as Discord from "discord.js";
 
 import { strict as assert } from "assert";
 
-import { M } from "../utils/debugging-and-logging.js";
-import { HOUR } from "../common.js";
-import { BotComponent } from "../bot-component.js";
-import { Wheatley } from "../wheatley.js";
-import { unwrap } from "../utils/misc.js";
+import { M } from "../../../utils/debugging-and-logging.js";
+import { HOUR } from "../../../common.js";
+import { BotComponent } from "../../../bot-component.js";
+import { Wheatley } from "../../../wheatley.js";
+import { unwrap } from "../../../utils/misc.js";
 
 type permissions_entry = {
     allow?: bigint[];
@@ -109,6 +109,23 @@ export default class PermissionManager extends BotComponent {
                 ],
             },
         };
+        const voice_permissions: permission_overwrites = {
+            ...default_permissions,
+            [this.wheatley.roles.no_voice.id]: no_interaction_at_all,
+            [this.wheatley.roles.no_off_topic.id]: no_interaction_at_all,
+        };
+        const member_voice_channel: permission_overwrites = {
+            ...voice_permissions,
+            [this.wheatley.guild.roles.everyone.id]: {
+                deny: [Discord.PermissionsBitField.Flags.ViewChannel],
+            },
+            [this.wheatley.roles.voice_deputy.id]: { allow: [Discord.PermissionsBitField.Flags.ViewChannel] },
+            ["331876085820030978"]: { allow: [Discord.PermissionsBitField.Flags.ViewChannel] }, // Intermediate
+            ["849399021838925834"]: { allow: [Discord.PermissionsBitField.Flags.ViewChannel] }, // Proficient
+            ["331719590990184450"]: { allow: [Discord.PermissionsBitField.Flags.ViewChannel] }, // Advanced
+            ["331719591405551616"]: { allow: [Discord.PermissionsBitField.Flags.ViewChannel] }, // Expert
+            [this.wheatley.roles.server_booster.id]: { allow: [Discord.PermissionsBitField.Flags.ViewChannel] },
+        };
         const mod_only_channel: permission_overwrites = {
             [this.wheatley.guild.roles.everyone.id]: {
                 deny: [Discord.PermissionsBitField.Flags.ViewChannel],
@@ -131,7 +148,7 @@ export default class PermissionManager extends BotComponent {
         this.add_entry(this.wheatley.categories.off_topic, off_topic_permissions);
         this.add_entry(this.wheatley.categories.misc, default_permissions);
         this.add_entry(this.wheatley.categories.bot_dev, default_permissions);
-        this.add_entry(this.wheatley.categories.voice, off_topic_permissions);
+        this.add_entry(this.wheatley.categories.voice, voice_permissions);
         this.add_entry(this.wheatley.categories.archive, read_only_archive_channel);
         this.add_entry(this.wheatley.categories.private_archive, mod_only_channel);
         this.add_entry(this.wheatley.categories.challenges_archive, mod_only_channel);
@@ -270,6 +287,25 @@ export default class PermissionManager extends BotComponent {
         });
         // bot dev overrides
         this.add_channel_overwrite(this.wheatley.channels.bot_dev_internal, mod_only_channel);
+        // voice overrides
+        this.add_channel_overwrite(this.wheatley.channels.chill, member_voice_channel);
+        this.add_channel_overwrite(this.wheatley.channels.work_3, member_voice_channel);
+        this.add_channel_overwrite(this.wheatley.channels.work_4, member_voice_channel);
+        this.add_channel_overwrite(this.wheatley.channels.afk, {
+            [this.wheatley.guild.roles.everyone.id]: {
+                deny: [
+                    Discord.PermissionsBitField.Flags.Speak,
+                    Discord.PermissionsBitField.Flags.Stream,
+                    Discord.PermissionsBitField.Flags.UseSoundboard,
+                    Discord.PermissionsBitField.Flags.SendMessages,
+                    Discord.PermissionsBitField.Flags.CreatePublicThreads,
+                    Discord.PermissionsBitField.Flags.CreatePrivateThreads,
+                    Discord.PermissionsBitField.Flags.SendMessagesInThreads,
+                    Discord.PermissionsBitField.Flags.AddReactions,
+                    Discord.PermissionsBitField.Flags.UseApplicationCommands,
+                ],
+            },
+        });
     }
 
     add_entry(category: Discord.CategoryChannel, permissions: permission_overwrites) {
