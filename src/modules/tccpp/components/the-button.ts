@@ -77,25 +77,25 @@ export default class TheButton extends BotComponent {
 
     override async setup(commands: CommandSetBuilder) {
         commands.add(
-            new TextBasedCommandBuilder("wololosetupthebutton", EarlyReplyMode.none)
+            new TextBasedCommandBuilder("wsetupthebutton", EarlyReplyMode.none)
                 .set_permissions(Discord.PermissionFlagsBits.Administrator)
                 .set_description("Setup The Button here")
                 .set_handler(this.button_setup.bind(this)),
         );
         commands.add(
-            new TextBasedCommandBuilder("wololoresetthebutton", EarlyReplyMode.none)
+            new TextBasedCommandBuilder("wresetthebutton", EarlyReplyMode.none)
                 .set_permissions(Discord.PermissionFlagsBits.Administrator)
                 .set_description("Reset The Button")
                 .set_handler(this.button_reset.bind(this)),
         );
         commands.add(
-            new TextBasedCommandBuilder("wololoresetthebuttonscoreboard", EarlyReplyMode.none)
+            new TextBasedCommandBuilder("wresetthebuttonscoreboard", EarlyReplyMode.none)
                 .set_permissions(Discord.PermissionFlagsBits.Administrator)
                 .set_description("Reset The Button scoreboard")
                 .set_handler(this.button_reset_scoreboard.bind(this)),
         );
         commands.add(
-            new TextBasedCommandBuilder("wololoadjustscores", EarlyReplyMode.none)
+            new TextBasedCommandBuilder("wadjustscores", EarlyReplyMode.none)
                 .set_permissions(Discord.PermissionFlagsBits.Administrator)
                 .set_description("Adjust The Button scores")
                 .set_handler(this.button_adjust_scores.bind(this)),
