@@ -52,8 +52,14 @@ export default class Modmail extends BotComponent {
                 .set_handler(this.modmail_setup.bind(this)),
         );
         commands.add(
-            new MessageContextMenuInteractionBuilder("Update modmail message")
+            new TextBasedCommandBuilder("wupdatemodmailsystem", EarlyReplyMode.none)
                 .set_permissions(Discord.PermissionFlagsBits.Administrator)
+                .set_description("Update modmail message")
+                .add_string_option({
+                    title: "message_id",
+                    description: "Message ID",
+                    required: true,
+                })
                 .set_handler(this.modmail_update.bind(this)),
         );
     }
@@ -63,8 +69,10 @@ export default class Modmail extends BotComponent {
         await command.channel.send(this.create_modmail_system_embed_and_components());
     }
 
-    private async modmail_update(interaction: Discord.MessageContextMenuCommandInteraction) {
-        await interaction.targetMessage.edit(this.create_modmail_system_embed_and_components());
+    private async modmail_update(command: TextBasedCommand, message_id: string) {
+        assert(command.channel && !(command.channel instanceof Discord.PartialGroupDMChannel));
+        const target = await command.channel.messages.fetch(message_id);
+        await target.edit(this.create_modmail_system_embed_and_components());
     }
 
     async increment_modmail_id() {
