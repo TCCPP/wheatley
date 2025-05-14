@@ -107,6 +107,7 @@ export default class Rolepersist extends ModerationComponent {
             noseriousofftopic: "no_serious_off_topic",
             notil: "no_til",
             nomemes: "no_memes",
+            novoice: "no_voice",
         };
 
         for (const [command, role] of Object.entries(aliases)) {
