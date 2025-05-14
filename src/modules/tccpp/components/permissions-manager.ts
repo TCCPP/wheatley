@@ -120,10 +120,10 @@ export default class PermissionManager extends BotComponent {
                 deny: [Discord.PermissionsBitField.Flags.ViewChannel],
             },
             [this.wheatley.roles.voice_deputy.id]: { allow: [Discord.PermissionsBitField.Flags.ViewChannel] },
-            ["331876085820030978"]: { allow: [Discord.PermissionsBitField.Flags.ViewChannel] }, // Intermediate
-            ["849399021838925834"]: { allow: [Discord.PermissionsBitField.Flags.ViewChannel] }, // Proficient
-            ["331719590990184450"]: { allow: [Discord.PermissionsBitField.Flags.ViewChannel] }, // Advanced
-            ["331719591405551616"]: { allow: [Discord.PermissionsBitField.Flags.ViewChannel] }, // Expert
+            [this.wheatley.skill_roles.intermediate.id]: { allow: [Discord.PermissionsBitField.Flags.ViewChannel] },
+            [this.wheatley.skill_roles.proficient.id]: { allow: [Discord.PermissionsBitField.Flags.ViewChannel] },
+            [this.wheatley.skill_roles.advanced.id]: { allow: [Discord.PermissionsBitField.Flags.ViewChannel] },
+            [this.wheatley.skill_roles.expert.id]: { allow: [Discord.PermissionsBitField.Flags.ViewChannel] },
             [this.wheatley.roles.server_booster.id]: { allow: [Discord.PermissionsBitField.Flags.ViewChannel] },
         };
         const mod_only_channel: permission_overwrites = {
