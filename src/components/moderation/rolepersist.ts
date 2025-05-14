@@ -158,7 +158,7 @@ export default class Rolepersist extends ModerationComponent {
         if (entry.role === "") {
             return;
         }
-        const member = await this.wheatley.try_fetch_tccpp_member(entry.user);
+        const member = await this.wheatley.try_fetch_guild_member(entry.user);
         if (member) {
             try {
                 await member.roles.add(entry.role);
@@ -182,7 +182,7 @@ export default class Rolepersist extends ModerationComponent {
         if (entry.role === "") {
             return;
         }
-        const member = await this.wheatley.try_fetch_tccpp_member(entry.user);
+        const member = await this.wheatley.try_fetch_guild_member(entry.user);
         if (member) {
             try {
                 await member.roles.remove(entry.role);
@@ -198,7 +198,7 @@ export default class Rolepersist extends ModerationComponent {
 
     async is_moderation_applied(moderation: basic_moderation_with_user) {
         assert(moderation.type == this.type);
-        const member = await this.wheatley.try_fetch_tccpp_member(moderation.user);
+        const member = await this.wheatley.try_fetch_guild_member(moderation.user);
         // for a role that no longer exists
         if (moderation.role === "") {
             return false;

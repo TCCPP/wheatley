@@ -70,7 +70,7 @@ export default class ModStats extends BotComponent {
             return;
         }
         await command.do_early_reply_if_slash(false);
-        const moderator_member = moderator ? await this.wheatley.try_fetch_tccpp_member(moderator) : null;
+        const moderator_member = moderator ? await this.wheatley.try_fetch_guild_member(moderator) : null;
         const stats_7d = await this.get_stats(moderator, Date.now() - 7 * DAY);
         const stats_30d = await this.get_stats(moderator, Date.now() - 30 * DAY);
         const stats_all = await this.get_stats(moderator);
