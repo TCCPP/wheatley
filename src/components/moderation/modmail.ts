@@ -49,12 +49,14 @@ export default class Modmail extends BotComponent {
             new TextBasedCommandBuilder("wsetupmodmailsystem", EarlyReplyMode.none)
                 .set_permissions(Discord.PermissionFlagsBits.Administrator)
                 .set_description("Create modmail message here")
+                .set_slash(false)
                 .set_handler(this.modmail_setup.bind(this)),
         );
         commands.add(
             new TextBasedCommandBuilder("wupdatemodmailsystem", EarlyReplyMode.none)
                 .set_permissions(Discord.PermissionFlagsBits.Administrator)
                 .set_description("Update modmail message")
+                .set_slash(false)
                 .add_string_option({
                     title: "message_id",
                     description: "Message ID",
