@@ -8,6 +8,9 @@ import { BotComponent } from "../../../bot-component.js";
 import { Wheatley } from "../../../wheatley.js";
 import { set_interval } from "../../../utils/node.js";
 import { discord_timestamp } from "../../../utils/discord.js";
+import { CommandSetBuilder } from "../../../command-abstractions/command-set-builder.js";
+import { EarlyReplyMode, TextBasedCommandBuilder } from "../../../command-abstractions/text-based-command-builder.js";
+import { TextBasedCommand } from "../../../command-abstractions/text-based-command.js";
 
 function dissectDelta(delta: number) {
     let seconds = delta / 1000;
@@ -71,6 +74,65 @@ export default class TheButton extends BotComponent {
         component_state: the_button_state;
         button_scoreboard: the_button_scoreboard_entry;
     }>();
+
+    override async setup(commands: CommandSetBuilder) {
+        commands.add(
+            new TextBasedCommandBuilder("wsetupthebutton", EarlyReplyMode.none)
+                .set_permissions(Discord.PermissionFlagsBits.Administrator)
+                .set_description("Setup The Button here")
+                .set_slash(false)
+                .set_handler(this.button_setup.bind(this)),
+        );
+        commands.add(
+            new TextBasedCommandBuilder("wresetthebutton", EarlyReplyMode.none)
+                .set_permissions(Discord.PermissionFlagsBits.Administrator)
+                .set_description("Reset The Button")
+                .set_slash(false)
+                .set_handler(this.button_reset.bind(this)),
+        );
+        commands.add(
+            new TextBasedCommandBuilder("wresetthebuttonscoreboard", EarlyReplyMode.none)
+                .set_permissions(Discord.PermissionFlagsBits.Administrator)
+                .set_description("Reset The Button scoreboard")
+                .set_slash(false)
+                .set_handler(this.button_reset_scoreboard.bind(this)),
+        );
+        commands.add(
+            new TextBasedCommandBuilder("wadjustscores", EarlyReplyMode.none)
+                .set_permissions(Discord.PermissionFlagsBits.Administrator)
+                .set_description("Adjust The Button scores")
+                .set_slash(false)
+                .set_handler(this.button_adjust_scores.bind(this)),
+        );
+    }
+
+    private async button_setup(command: TextBasedCommand) {
+        const time_since_last_reset = Date.now() - this.last_reset;
+        const time_until_doomsday = Math.max(0, DAY - time_since_last_reset);
+        assert(command.channel && !(command.channel instanceof Discord.PartialGroupDMChannel));
+        this.button_message = await command.channel.send(this.make_message(time_until_doomsday));
+    }
+
+    private async button_reset(command: TextBasedCommand) {
+        this.last_reset = Date.now();
+        await this.update_message();
+        await this.update_metadata();
+    }
+
+    private async button_reset_scoreboard(command: TextBasedCommand) {
+        await this.database.button_scoreboard.deleteMany({});
+    }
+
+    private async button_adjust_scores(command: TextBasedCommand) {
+        await this.database.button_scoreboard.updateMany(
+            {},
+            {
+                $mul: {
+                    score: 2 / 3,
+                },
+            },
+        );
+    }
 
     make_message(time_until_doomsday: number): Discord.MessageEditOptions & Discord.MessageCreateOptions {
         const [hours, minutes, seconds] = dissectDelta(time_until_doomsday);
@@ -152,41 +214,6 @@ export default class TheButton extends BotComponent {
         }, 1000);
         // do an update right away
         await this.update_message();
-    }
-
-    override async on_message_create(message: Discord.Message) {
-        // Ignore bots
-        if (message.author.bot) {
-            return;
-        }
-        if (message.content == "!wsetupthebutton" && this.wheatley.is_authorized_mod(message.member!)) {
-            const time_since_last_reset = Date.now() - this.last_reset;
-            const time_until_doomsday = Math.max(0, DAY - time_since_last_reset);
-            assert(!(message.channel instanceof Discord.PartialGroupDMChannel));
-            await message.channel.send(this.make_message(time_until_doomsday));
-            await message.delete();
-        }
-        if (message.content == "!wresetthebutton" && this.wheatley.is_authorized_mod(message.member!)) {
-            this.last_reset = Date.now();
-            await this.update_message();
-            await this.update_metadata();
-            await message.delete();
-        }
-        if (message.content == "!wresetthebuttonscoreboard" && this.wheatley.is_authorized_mod(message.member!)) {
-            await this.database.button_scoreboard.deleteMany({});
-            await message.delete();
-        }
-        if (message.content == "!wadjustscores" && this.wheatley.is_authorized_mod(message.member!)) {
-            await this.database.button_scoreboard.updateMany(
-                {},
-                {
-                    $mul: {
-                        score: 2 / 3,
-                    },
-                },
-            );
-            await message.delete();
-        }
     }
 
     override async on_interaction_create(interaction: Discord.Interaction) {
