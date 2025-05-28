@@ -80,24 +80,28 @@ export default class TheButton extends BotComponent {
             new TextBasedCommandBuilder("wsetupthebutton", EarlyReplyMode.none)
                 .set_permissions(Discord.PermissionFlagsBits.Administrator)
                 .set_description("Setup The Button here")
+                .set_slash(false)
                 .set_handler(this.button_setup.bind(this)),
         );
         commands.add(
             new TextBasedCommandBuilder("wresetthebutton", EarlyReplyMode.none)
                 .set_permissions(Discord.PermissionFlagsBits.Administrator)
                 .set_description("Reset The Button")
+                .set_slash(false)
                 .set_handler(this.button_reset.bind(this)),
         );
         commands.add(
             new TextBasedCommandBuilder("wresetthebuttonscoreboard", EarlyReplyMode.none)
                 .set_permissions(Discord.PermissionFlagsBits.Administrator)
                 .set_description("Reset The Button scoreboard")
+                .set_slash(false)
                 .set_handler(this.button_reset_scoreboard.bind(this)),
         );
         commands.add(
             new TextBasedCommandBuilder("wadjustscores", EarlyReplyMode.none)
                 .set_permissions(Discord.PermissionFlagsBits.Administrator)
                 .set_description("Adjust The Button scores")
+                .set_slash(false)
                 .set_handler(this.button_adjust_scores.bind(this)),
         );
     }
