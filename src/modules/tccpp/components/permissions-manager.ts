@@ -25,6 +25,8 @@ type channel_permission_entry = {
     permissions: permission_overwrites;
 };
 
+const SET_VOICE_STATUS_PERMISSION_BIT = 1n << 48n; // TODO: Replace once discord.js supports this in PermissionsBitField
+
 export default class PermissionManager extends BotComponent {
     category_permissions: Record<string, category_permission_entry> = {};
     channel_overrides: Record<string, channel_permission_entry> = {};
@@ -111,13 +113,16 @@ export default class PermissionManager extends BotComponent {
         };
         const voice_permissions: permission_overwrites = {
             ...default_permissions,
+            [this.wheatley.guild.roles.everyone.id]: {
+                deny: [SET_VOICE_STATUS_PERMISSION_BIT],
+            },
             [this.wheatley.roles.no_voice.id]: no_interaction_at_all,
             [this.wheatley.roles.no_off_topic.id]: no_interaction_at_all,
         };
         const member_voice_channel: permission_overwrites = {
             ...voice_permissions,
             [this.wheatley.guild.roles.everyone.id]: {
-                deny: [Discord.PermissionsBitField.Flags.ViewChannel],
+                deny: [Discord.PermissionsBitField.Flags.ViewChannel, SET_VOICE_STATUS_PERMISSION_BIT],
             },
             [this.wheatley.roles.voice_deputy.id]: { allow: [Discord.PermissionsBitField.Flags.ViewChannel] },
             [this.wheatley.skill_roles.intermediate.id]: { allow: [Discord.PermissionsBitField.Flags.ViewChannel] },
