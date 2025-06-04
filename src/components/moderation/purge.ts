@@ -316,8 +316,14 @@ export default class Purge extends BotComponent {
         const end_channel = end_channel_id
             ? unwrap(await this.wheatley.client.channels.fetch(end_channel_id))
             : await command.get_channel();
-        assert(start_channel.id == end_channel.id);
-        assert(start_channel.isTextBased() && !start_channel.isDMBased());
+        if (start_channel.id !== end_channel.id) {
+            await command.reply("Error: Start and end refer to different channels", true);
+            return;
+        }
+        if (!(start_channel.isTextBased() && !start_channel.isDMBased())) {
+            await command.reply("Error: Can't purge in non-text or DM channels", true);
+            return;
+        }
         const channel = start_channel; // binding must happen after assert so it's typed correctly in the generator
         if (expect_this_channel) {
             assert(channel.id == (await command.get_channel()).id);
