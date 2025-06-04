@@ -104,6 +104,12 @@ export default class Purge extends BotComponent {
                             regex: duration_regex,
                             required: true,
                         })
+                        .add_boolean_option({
+                            title: "bypass-limit",
+                            description:
+                                "Bypass the one day time limit (dangerous: Only use if you know what you're doing)",
+                            required: false,
+                        })
                         .set_handler(this.purge_user.bind(this)),
                 )
                 .add_subcommand(
@@ -341,10 +347,15 @@ export default class Purge extends BotComponent {
         await this.purge_core(command, `Purging range`, [[channel, generator()]]);
     }
 
-    async purge_user(command: TextBasedCommand, user: Discord.User, raw_timeframe: string) {
+    async purge_user(
+        command: TextBasedCommand,
+        user: Discord.User,
+        raw_timeframe: string,
+        bypass_limit: boolean | null,
+    ) {
         const timeframe = unwrap(parse_duration(raw_timeframe)); // ms
-        if (timeframe > DAY) {
-            await command.reply("Max timeframe for user purge is 1 day");
+        if (timeframe > DAY && bypass_limit !== true) {
+            await command.reply("Max timeframe for user purge is 1 day", true);
             return;
         }
         M.debug("Querying messages");
