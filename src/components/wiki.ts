@@ -46,6 +46,8 @@ const reference_link_regex = /\[([^\]]*)]\[([^\]]*)]/g;
 export const wiki_path = "wiki";
 export const wiki_articles_path = "wiki/articles";
 
+type substitution_fun = (str: string) => string;
+
 class ArticleParser {
     private readonly aliases = new Set<string>();
 
@@ -63,7 +65,7 @@ class ArticleParser {
     private in_code = false;
     private last_was_blockquote = false;
 
-    constructor(private readonly wheatley: Wheatley) {}
+    constructor(private readonly substitute_refs: substitution_fun) {}
 
     parse(name: string | null, content: string) {
         this.name = name;
@@ -130,7 +132,7 @@ class ArticleParser {
             this.title = line.substring(1).trim();
             this.current_state = parse_state.body;
         } else if (level === 2) {
-            const name = this.substitute_emojis(line.substring(2).trim());
+            const name = this.substitute_refs(line.substring(2).trim());
             const inline = this.current_state === parse_state.before_inline_field;
             const field = { name, value: "", inline };
             this.fields.push(field);
@@ -248,33 +250,19 @@ class ArticleParser {
         return result + (in_inline_code ? piece : this.substitute_placeholders_no_code(piece));
     }
 
-    private substitute_emojis(str: string) {
-        return str
-            .replaceAll(/(?<!<):stackoverflow:/g, this.wheatley.stackoverflow_emote)
-            .replaceAll(/(?<!<):microsoft:/g, this.wheatley.microsoft_emote)
-            .replaceAll(/(?<!<):tux:/g, this.wheatley.tux_emote)
-            .replaceAll(/(?<!<):apple:/g, this.wheatley.apple_emote)
-            .replaceAll(/(?<!<):tccpp:/g, this.wheatley.tccpp_emote);
-    }
-
     /**
      * Substitutes placeholders in a string with no backticks, i.e. no
      * possibility of having inline code.
      * @param str the string to substitute in
      */
     private substitute_placeholders_no_code(str: string): string {
-        const freestanding_result = this.substitute_emojis(str)
+        return this.substitute_refs(str)
             .replace(/<br>\n|<br\/>\n/, "\n")
             .replaceAll(/<br>|<br\/>/g, "\n")
             .replaceAll(reference_link_regex, (_, text: string, ref: string) => {
                 assert(this.reference_definitions.has(ref), "Unknown reference in reference-style link");
                 return `[${text}](${this.reference_definitions.get(ref)})`;
             });
-        return this.wheatley.freestanding
-            ? freestanding_result
-            : freestanding_result
-                  .replaceAll(/#resources(?![a-zA-Z0-9_])/g, `<#${this.wheatley.channels.resources.id}>`)
-                  .replaceAll(/#rules(?![a-zA-Z0-9_])/g, `<#${this.wheatley.channels.rules.id}>`);
     }
 
     private collect_references(lines: string[]) {
@@ -310,8 +298,12 @@ class ArticleParser {
     }
 }
 
-export function parse_article(name: string | null, content: string, wheatley: Wheatley): [WikiArticle, Set<string>] {
-    const parser = new ArticleParser(wheatley);
+export function parse_article(
+    name: string | null,
+    content: string,
+    substitute_refs: substitution_fun,
+): [WikiArticle, Set<string>] {
+    const parser = new ArticleParser(substitute_refs);
     parser.parse(name, content);
     return [parser.article, parser.article_aliases];
 }
@@ -323,8 +315,31 @@ export default class Wiki extends BotComponent {
 
     articles: Record<string, WikiArticle> = {};
     article_aliases = new Discord.Collection<string, string>();
+    substitute_refs: substitution_fun = str => str;
 
     override async setup(commands: CommandSetBuilder) {
+        const emoji_map = new Map<string, string>();
+        for (const [id, emoji] of this.wheatley.guild.emojis.cache) {
+            if (emoji.name) {
+                emoji_map.set(`:${emoji.name}:`, `<:${emoji.identifier}>`);
+            }
+        }
+        const match_emoji = new RegExp(`(?<!<)(?:${[...emoji_map.keys()].join("|")})`, "g");
+
+        const channel_map = new Map<string, string>();
+        for (const [id, channel] of this.wheatley.guild.channels.cache) {
+            if (channel.name.match(/^[a-zA-Z0-9-]+$/g)) {
+                channel_map.set(`#${channel.name}`, `<#${id}>`);
+            }
+        }
+        const match_channel = new RegExp(`(?:${[...channel_map.keys()].join("|")})(?![a-zA-Z0-9_])`, "g");
+
+        this.substitute_refs = (str: string) => {
+            return str
+                .replaceAll(match_emoji, match => emoji_map.get(match)!)
+                .replaceAll(match_channel, match => channel_map.get(match)!);
+        };
+
         commands.add(
             new TextBasedCommandBuilder(["wiki", "howto"], EarlyReplyMode.none)
                 .set_description(["Retrieve wiki articles", "Retrieve wiki articles (alternatively /wiki)"])
@@ -382,7 +397,7 @@ export default class Wiki extends BotComponent {
             const content = await fs.promises.readFile(file_path.fullpath(), { encoding: "utf-8" });
             let parsed;
             try {
-                parsed = parse_article(file_path.name, content, this.wheatley);
+                parsed = parse_article(file_path.name, content, this.substitute_refs);
             } catch (e: any) {
                 M.error(`Failed to parse article ${file_path}: ${e.message}`);
                 continue;
@@ -399,7 +414,7 @@ export default class Wiki extends BotComponent {
             if (data.preview) {
                 let parsed;
                 try {
-                    parsed = parse_article(file_path.name, data.preview, this.wheatley);
+                    parsed = parse_article(file_path.name, data.preview, this.substitute_refs);
                 } catch (e: any) {
                     M.error(`Failed to parse article ${file_path}: ${e.message}`);
                     continue;
@@ -489,7 +504,7 @@ export default class Wiki extends BotComponent {
         }
         let article: WikiArticle;
         try {
-            article = parse_article(null, content, this.wheatley)[0];
+            article = parse_article(null, content, this.substitute_refs)[0];
         } catch (e) {
             await command.reply("Parse error: " + e, true, true);
             M.debug(e);

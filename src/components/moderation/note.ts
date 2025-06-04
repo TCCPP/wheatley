@@ -76,7 +76,7 @@ export default class Note extends ModerationComponent {
                         .setColor(colors.wheatley)
                         .setDescription(
                             build_description(
-                                `${this.wheatley.success} ***Note added for ${user.displayName}***`,
+                                `${this.wheatley.emoji.success} ***Note added for ${user.displayName}***`,
                                 command.is_slash() && reason ? `**Reason:** ${reason}` : null,
                             ),
                         )

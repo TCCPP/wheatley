@@ -255,7 +255,7 @@ export default class Modlogs extends BotComponent {
             embeds: [
                 new Discord.EmbedBuilder()
                     .setColor(colors.alert_color)
-                    .setDescription(`${this.wheatley.error} ***${message}***`),
+                    .setDescription(`${this.wheatley.emoji.error} ***${message}***`),
             ],
         });
     }
