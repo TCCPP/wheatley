@@ -83,6 +83,7 @@ const channels_map = {
     staff_message_log: tuple("467729928956411914", Discord.TextChannel),
     staff_only: tuple("342153262260289537", Discord.TextChannel),
     mods: tuple("847993258600038460", Discord.TextChannel),
+    voice_hotline: tuple("1379456835634987098", Discord.TextChannel),
     // meta
     rules: tuple("659868782877212723", Discord.TextChannel),
     announcements: tuple("331881381477089282", Discord.NewsChannel),
