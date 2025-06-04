@@ -11,7 +11,7 @@ import { Wheatley } from "../wheatley.js";
 import { zip } from "../utils/iterables.js";
 import { intersection } from "../utils/arrays.js";
 
-export type TextBasedCommandOptionType = "string" | "number" | "user" | "users" | "role";
+export type TextBasedCommandOptionType = "string" | "number" | "boolean" | "user" | "users" | "role";
 
 export type TextBasedCommandParameterOptions = {
     title: string;
@@ -100,6 +100,27 @@ export class TextBasedCommandBuilder<
         });
         return this as unknown as TextBasedCommandBuilder<
             Append<Args, ConditionalNull<O["required"], number>>,
+            HasDescriptions,
+            HasHandler,
+            HasSubcommands
+        >;
+    }
+
+    add_boolean_option<O extends TextBasedCommandParameterOptions>(
+        option: O,
+    ): TextBasedCommandBuilder<
+        Append<Args, ConditionalNull<O["required"], boolean>>,
+        HasDescriptions,
+        HasHandler,
+        HasSubcommands
+    > {
+        assert(!this.options.has(option.title));
+        this.options.set(option.title, {
+            ...option,
+            type: "boolean",
+        });
+        return this as unknown as TextBasedCommandBuilder<
+            Append<Args, ConditionalNull<O["required"], boolean>>,
             HasDescriptions,
             HasHandler,
             HasSubcommands

@@ -199,6 +199,8 @@ export class CommandHandler {
                             return interaction.options.getRole(opt.title)?.name;
                         } else if (opt.type == "number") {
                             return interaction.options.getNumber(opt.title)?.toString();
+                        } else if (opt.type == "boolean") {
+                            return interaction.options.getBoolean(opt.title)?.toString();
                         } else {
                             return "<unknown>";
                         }
@@ -238,6 +240,8 @@ export class CommandHandler {
                     command_options.push(interaction.options.getRole(option.title));
                 } else if (option.type == "number") {
                     command_options.push(interaction.options.getNumber(option.title));
+                } else if (option.type == "boolean") {
+                    command_options.push(interaction.options.getBoolean(option.title));
                 } else {
                     assert(false, "unhandled option type");
                 }

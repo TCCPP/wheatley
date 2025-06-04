@@ -80,35 +80,23 @@ export class BotTextBasedCommand<Args extends unknown[] = []> extends BaseBotInt
             const djs_command = djs_builder.setName(this.name).setDescription(this.description);
             for (const option of this.options.values()) {
                 // NOTE: Temp for now
+                const apply_options = <T extends Discord.ApplicationCommandOptionBase>(slash_option: T) =>
+                    slash_option
+                        .setName(option.title)
+                        .setDescription(option.description)
+                        .setRequired(!!option.required);
                 if (option.type == "string") {
                     djs_command.addStringOption(slash_option =>
-                        slash_option
-                            .setName(option.title)
-                            .setDescription(option.description)
-                            .setAutocomplete(!!option.autocomplete)
-                            .setRequired(!!option.required),
+                        apply_options(slash_option).setAutocomplete(!!option.autocomplete),
                     );
                 } else if (option.type == "number") {
-                    djs_command.addNumberOption(slash_option =>
-                        slash_option
-                            .setName(option.title)
-                            .setDescription(option.description)
-                            .setRequired(!!option.required),
-                    );
+                    djs_command.addNumberOption(slash_option => apply_options(slash_option));
+                } else if (option.type == "boolean") {
+                    djs_command.addBooleanOption(slash_option => apply_options(slash_option));
                 } else if (option.type == "user") {
-                    djs_command.addUserOption(slash_option =>
-                        slash_option
-                            .setName(option.title)
-                            .setDescription(option.description)
-                            .setRequired(!!option.required),
-                    );
+                    djs_command.addUserOption(slash_option => apply_options(slash_option));
                 } else if (option.type == "role") {
-                    djs_command.addRoleOption(slash_option =>
-                        slash_option
-                            .setName(option.title)
-                            .setDescription(option.description)
-                            .setRequired(!!option.required),
-                    );
+                    djs_command.addRoleOption(slash_option => apply_options(slash_option));
                 } else {
                     assert(false, "unhandled option type");
                 }
@@ -185,6 +173,18 @@ export class BotTextBasedCommand<Args extends unknown[] = []> extends BaseBotInt
                 const match = command_body.match(re);
                 if (match) {
                     command_options.push(parseInt(match[0]));
+                    command_body = command_body.slice(match[0].length).trim();
+                } else if (!option.required) {
+                    command_options.push(null);
+                } else {
+                    await required_arg_error();
+                    return;
+                }
+            } else if (option.type == "boolean") {
+                const re = /^(?:true|false)/i;
+                const match = command_body.match(re);
+                if (match) {
+                    command_options.push(match[0].toLowerCase() === "true");
                     command_body = command_body.slice(match[0].length).trim();
                 } else if (!option.required) {
                     command_options.push(null);
