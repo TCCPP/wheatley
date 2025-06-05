@@ -344,6 +344,11 @@ export class TextBasedCommand {
         return this.reply_object;
     }
 
+    get_interaction() {
+        assert(this.reply_object instanceof Discord.ChatInputCommandInteraction);
+        return this.reply_object;
+    }
+
     async react(emoji: string, ephemeral_if_possible = false) {
         if (this.reply_object instanceof Discord.ChatInputCommandInteraction) {
             await this.reply_object.reply({
