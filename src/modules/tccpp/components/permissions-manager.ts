@@ -311,6 +311,19 @@ export default class PermissionManager extends BotComponent {
                 ],
             },
         });
+        this.add_channel_overwrite(this.wheatley.channels.deans_office, {
+            ...voice_permissions,
+            [this.wheatley.guild.roles.everyone.id]: {
+                deny: [
+                    Discord.PermissionsBitField.Flags.ViewChannel,
+                    Discord.PermissionsBitField.Flags.Connect,
+                    SET_VOICE_STATUS_PERMISSION_BIT,
+                ],
+            },
+            [this.wheatley.roles.voice_deputy.id]: {
+                allow: [Discord.PermissionsBitField.Flags.ViewChannel, Discord.PermissionsBitField.Flags.Connect],
+            },
+        });
     }
 
     add_entry(category: Discord.CategoryChannel, permissions: permission_overwrites) {
