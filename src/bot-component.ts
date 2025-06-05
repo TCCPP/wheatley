@@ -68,6 +68,8 @@ export class BotComponent {
                 this.setup_listener("emojiDelete", this.on_emoji_delete);
                 this.setup_listener("emojiUpdate", this.on_emoji_update);
                 this.setup_listener("threadCreate", this.on_thread_create);
+                this.setup_listener("voiceStateUpdate", this.on_voice_state_update);
+                this.setup_listener("guildAuditLogEntryCreate", this.on_audit_log_entry_create);
             });
     }
 
@@ -102,4 +104,6 @@ export class BotComponent {
         user: Discord.User | Discord.PartialUser,
     ): Promise<void>;
     async on_thread_create?(thread: Discord.ThreadChannel): Promise<void>;
+    async on_voice_state_update?(old_state: Discord.VoiceState, new_state: Discord.VoiceState): Promise<void>;
+    async on_audit_log_entry_create?(entry: Discord.GuildAuditLogsEntry): Promise<void>;
 }
