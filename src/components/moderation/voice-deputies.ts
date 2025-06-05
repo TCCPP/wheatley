@@ -10,6 +10,7 @@ import { EarlyReplyMode, TextBasedCommandBuilder } from "../../command-abstracti
 import { TextBasedCommand } from "../../command-abstractions/text-based-command.js";
 import { SelfClearingSet } from "../../utils/containers.js";
 import { build_description } from "../../utils/strings.js";
+import { unwrap } from "../../utils/misc.js";
 
 export default class VoiceDeputies extends BotComponent {
     private recently_in_voice = new SelfClearingSet<string>(5 * MINUTE);
@@ -44,34 +45,44 @@ export default class VoiceDeputies extends BotComponent {
     }
 
     private async on_quarantine(command: TextBasedCommand, user: Discord.User, reason: string | null) {
-        const member = await this.wheatley.try_fetch_guild_member(user);
-        if (member && (member.voice.channel || this.recently_in_voice.has(member.id))) {
-            await member.timeout(3 * HOUR);
-            await this.wheatley.channels.voice_hotline.send({
-                content: `<@&${this.wheatley.roles.moderators.id}>`,
-                embeds: [
-                    new Discord.EmbedBuilder()
-                        .setColor(colors.alert_color)
-                        .setAuthor({
-                            name: command.user.displayName,
-                            iconURL: command.user.avatarURL() ?? command.user.displayAvatarURL(),
-                        })
-                        // .setTitle(`Moderator Alert!`)
-                        .setDescription(
-                            build_description(
-                                `<@${user.id}> was quarantined`,
-                                `**Issuer:** <@${command.user.id}>`,
-                                reason ? `**Reason:** ${reason}` : null,
-                            ),
-                        )
-                        .setFooter({
-                            text: `ID: ${user.id}`,
-                        }),
-                ],
-            });
-        } else {
-            await this.reply_with_error(command, "specified user was not recently seen in voice");
+        const target = await this.wheatley.try_fetch_guild_member(user);
+        if (!target) {
+            await this.reply_with_error(command, "target is not a guild member");
+            return;
         }
+        if (!target.voice.channel && !this.recently_in_voice.has(target.id)) {
+            await this.reply_with_error(command, "specified user was not recently seen in voice");
+            return;
+        }
+        const issuer = unwrap(await this.wheatley.try_fetch_guild_member(command.user));
+        if (target.roles.highest.position >= issuer.roles.highest.position) {
+            await this.reply_with_error(command, "you have no power over this user");
+            return;
+        }
+
+        await target.timeout(3 * HOUR);
+        await this.wheatley.channels.voice_hotline.send({
+            content: `<@&${this.wheatley.roles.moderators.id}>`,
+            embeds: [
+                new Discord.EmbedBuilder()
+                    .setColor(colors.alert_color)
+                    .setAuthor({
+                        name: command.user.displayName,
+                        iconURL: command.user.avatarURL() ?? command.user.displayAvatarURL(),
+                    })
+                    // .setTitle(`Moderator Alert!`)
+                    .setDescription(
+                        build_description(
+                            `<@${user.id}> was quarantined`,
+                            `**Issuer:** <@${command.user.id}>`,
+                            reason ? `**Reason:** ${reason}` : null,
+                        ),
+                    )
+                    .setFooter({
+                        text: `ID: ${user.id}`,
+                    }),
+            ],
+        });
     }
 
     override async on_voice_state_update(old_state: Discord.VoiceState, new_state: Discord.VoiceState) {
@@ -81,6 +92,10 @@ export default class VoiceDeputies extends BotComponent {
     }
 
     override async on_audit_log_entry_create(entry: Discord.GuildAuditLogsEntry): Promise<void> {
+        if (entry.executorId == this.wheatley.user.id) {
+            return;
+        }
+
         if (entry.action == Discord.AuditLogEvent.MemberUpdate) {
             for (const change of entry.changes) {
                 if (change.key == "mute") {
