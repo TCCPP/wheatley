@@ -134,6 +134,7 @@ const channels_map = {
     work_3: tuple("1358502770575147230", Discord.VoiceChannel),
     work_4: tuple("1367735453112864838", Discord.VoiceChannel),
     afk: tuple("331732845523369985", Discord.VoiceChannel),
+    deans_office: tuple("1379612678649155755", Discord.VoiceChannel),
     // red telephone
     red_telephone_alerts: tuple("1140096352278290512", Discord.TextChannel),
     // error log
