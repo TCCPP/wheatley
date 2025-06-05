@@ -9,6 +9,7 @@ import { CommandSetBuilder } from "../../command-abstractions/command-set-builde
 import { EarlyReplyMode, TextBasedCommandBuilder } from "../../command-abstractions/text-based-command-builder.js";
 import { TextBasedCommand } from "../../command-abstractions/text-based-command.js";
 import { SelfClearingSet } from "../../utils/containers.js";
+import { build_description } from "../../utils/strings.js";
 
 export default class VoiceDeputies extends BotComponent {
     private recently_in_voice = new SelfClearingSet<string>(5 * MINUTE);
@@ -22,6 +23,11 @@ export default class VoiceDeputies extends BotComponent {
                     description: "User to quarantine",
                     title: "user",
                     required: true,
+                })
+                .add_string_option({
+                    title: "reason",
+                    description: "Reason",
+                    required: false,
                 })
                 .set_handler(this.on_quarantine.bind(this)),
         );
@@ -37,7 +43,7 @@ export default class VoiceDeputies extends BotComponent {
         });
     }
 
-    private async on_quarantine(command: TextBasedCommand, user: Discord.User) {
+    private async on_quarantine(command: TextBasedCommand, user: Discord.User, reason: string | null) {
         const member = await this.wheatley.try_fetch_guild_member(user);
         if (member && (member.voice.channel || this.recently_in_voice.has(member.id))) {
             await member.timeout(3 * HOUR);
@@ -51,7 +57,13 @@ export default class VoiceDeputies extends BotComponent {
                             iconURL: command.user.avatarURL() ?? command.user.displayAvatarURL(),
                         })
                         // .setTitle(`Moderator Alert!`)
-                        .setDescription(`<@${user.id}> was quarantined by <@${command.user.id}>`)
+                        .setDescription(
+                            build_description(
+                                `<@${user.id}> was quarantined`,
+                                `**Issuer:** <@${command.user.id}>`,
+                                reason ? `**Reason:** ${reason}` : null,
+                            ),
+                        )
                         .setFooter({
                             text: `ID: ${user.id}`,
                         }),
