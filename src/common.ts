@@ -13,8 +13,8 @@ export const YEAR = 365 * DAY;
 export enum colors {
     wheatley = 0x337fd5, // blue
     default = 0x7e78fe, // purple TODO: Re-evaluate
-    alert_color = 0xf5a53e,
-    speedrun_color = 0x0fc644,
-    red = 0xed2d2d,
-    green = 0x31ea6c,
+    alert_color = 0xf5a53e, // orange
+    speedrun_color = 0x0fc644, // red
+    red = 0xed2d2d, // red
+    green = 0x31ea6c, // green
 }
