@@ -12,10 +12,9 @@ import { CommandAbstractionReplyOptions, TextBasedCommand } from "../../command-
 import { duration_regex, parse_duration } from "../moderation/moderation-common.js";
 import { pluralize } from "../../utils/strings.js";
 import { SelfClearingMap } from "../../utils/containers.js";
-import { url_re } from "../quote.js";
 import { ascending, unwrap } from "../../utils/misc.js";
 import { MessageContextMenuInteractionBuilder } from "../../command-abstractions/context-menu.js";
-import { decode_snowflake, discord_timestamp, forge_snowflake } from "../../utils/discord.js";
+import { decode_snowflake, discord_timestamp, forge_snowflake, parse_url_or_snowflake } from "../../utils/discord.js";
 import { chunks } from "../../utils/arrays.js";
 
 type PurgableChannel = Exclude<Discord.TextBasedChannel, Discord.DMChannel | Discord.PartialDMChannel>;
@@ -184,20 +183,6 @@ export default class Purge extends BotComponent {
         }
     }
 
-    parse_url_or_snowflake(url: string): [string | null, string] {
-        let match = url.trim().match(url_re);
-        if (match) {
-            const [_, guild_id, channel_id, message_id] = match.slice(1);
-            assert(guild_id == this.wheatley.guild.id);
-            return [channel_id, message_id];
-        }
-        match = url.trim().match(/^\d+$/);
-        if (match) {
-            return [null, match[0]];
-        }
-        assert(false);
-    }
-
     async purge_core(
         command: TextBasedCommand,
         reply_title: string,
@@ -307,8 +292,15 @@ export default class Purge extends BotComponent {
         expect_this_channel = false,
         filter = (message: Discord.Message) => true,
     ) {
-        const [start_channel_id, start_message_id] = this.parse_url_or_snowflake(start);
-        const [end_channel_id, end_message_id] = this.parse_url_or_snowflake(end);
+        const [start_guild, start_channel_id, start_message_id] = parse_url_or_snowflake(start);
+        const [end_guild, end_channel_id, end_message_id] = parse_url_or_snowflake(end);
+        if (
+            (start_guild !== null && end_guild !== null && start_guild !== end_guild) ||
+            (start_guild !== null && start_guild !== this.wheatley.guild.id) ||
+            (end_guild !== null && end_guild !== this.wheatley.guild.id)
+        ) {
+            await command.reply("Error: Guild needs to be tccpp", true);
+        }
         // sort out channel
         const start_channel = start_channel_id
             ? unwrap(await this.wheatley.client.channels.fetch(start_channel_id))

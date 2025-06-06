@@ -9,8 +9,7 @@ import { CommandSetBuilder } from "../command-abstractions/command-set-builder.j
 import { Wheatley } from "../wheatley.js";
 import { EarlyReplyMode, TextBasedCommandBuilder } from "../command-abstractions/text-based-command-builder.js";
 import { TextBasedCommand } from "../command-abstractions/text-based-command.js";
-import { url_re } from "./quote.js";
-import { CUSTOM_EMOJIREGEX } from "../utils/discord.js";
+import { CUSTOM_EMOJIREGEX, discord_url_re } from "../utils/discord.js";
 import { remove } from "../utils/arrays.js";
 
 export default class Steal extends BotComponent {
@@ -95,7 +94,7 @@ export default class Steal extends BotComponent {
     }
 
     async steal_url(command: TextBasedCommand, url: string) {
-        const match = url.trim().match(url_re);
+        const match = url.trim().match(discord_url_re);
         if (match) {
             const [_, guild_id, channel_id, message_id] = match.slice(1);
             assert(guild_id == this.wheatley.guild.id);

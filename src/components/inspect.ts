@@ -7,12 +7,11 @@ import { M } from "../utils/debugging-and-logging.js";
 import { BotComponent } from "../bot-component.js";
 import { CommandSetBuilder } from "../command-abstractions/command-set-builder.js";
 import { Wheatley, create_basic_embed } from "../wheatley.js";
-import { url_re } from "./quote.js";
 import { colors } from "../common.js";
 import { MessageContextMenuInteractionBuilder } from "../command-abstractions/context-menu.js";
 import { EarlyReplyMode, TextBasedCommandBuilder } from "../command-abstractions/text-based-command-builder.js";
 import { TextBasedCommand } from "../command-abstractions/text-based-command.js";
-import { send_long_response } from "../utils/discord.js";
+import { discord_url_re, send_long_response } from "../utils/discord.js";
 
 // These looks silly, but it is the best way I can think of to call all the getters and re-package
 function repackage_attachment({
@@ -173,7 +172,7 @@ export default class Inspect extends BotComponent {
     }
 
     async inspect_text(command: TextBasedCommand, url: string) {
-        const match = url.trim().match(url_re);
+        const match = url.trim().match(discord_url_re);
         if (match) {
             const [_, guild_id, channel_id, message_id] = match.slice(1);
             assert(guild_id == this.wheatley.guild.id);

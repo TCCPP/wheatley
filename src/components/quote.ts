@@ -2,7 +2,14 @@ import * as Discord from "discord.js";
 import { strict as assert } from "assert";
 import { unwrap } from "../utils/misc.js";
 import { index_of_first_not_satisfying } from "../utils/iterables.js";
-import { decode_snowflake, forge_snowflake, is_media_link_embed } from "../utils/discord.js";
+import {
+    decode_snowflake,
+    discord_url_re,
+    forge_snowflake,
+    is_media_link_embed,
+    known_discord_domains,
+    raw_discord_url_re,
+} from "../utils/discord.js";
 import { M } from "../utils/debugging-and-logging.js";
 import { colors, MINUTE } from "../common.js";
 import { BotComponent } from "../bot-component.js";
@@ -20,10 +27,7 @@ import { TextBasedCommand } from "../command-abstractions/text-based-command.js"
 // - discordapp.com
 // - and maybe more and I'm sure they'll use others in the future
 // We'll just match anything containing `discord` followed by /channels/id/id/id
-const raw_url_re = /https:\/\/(.*discord.*)\/channels\/(\d+)\/(\d+)\/(\d+)/;
-const known_domains = new Set(["discord.com", "ptb.discord.com", "canary.discord.com", "discordapp.com"]);
-export const url_re = new RegExp(`^${raw_url_re.source}$`, "i");
-const implicit_quote_re = new RegExp(`\\[${raw_url_re.source}(b?)\\]`, "gi");
+const implicit_quote_re = new RegExp(`\\[${raw_discord_url_re.source}(b?)\\]`, "gi");
 
 type QuoteDescriptor = {
     domain: string;
@@ -47,7 +51,7 @@ export default class Quote extends BotComponent {
     }
 
     async quote(command: TextBasedCommand, url: string) {
-        const match = url.trim().match(url_re);
+        const match = url.trim().match(discord_url_re);
         if (match != null) {
             assert(match.length == 5);
             const [domain, guild_id, channel_id, message_id] = match.slice(1);
@@ -174,7 +178,7 @@ export default class Quote extends BotComponent {
                 assert(messages.length >= 1);
                 const quote_embeds = await this.utilities.make_quote_embeds(messages, {
                     requested_by: member,
-                    safe_link: known_domains.has(domain),
+                    safe_link: known_discord_domains.has(domain),
                 });
                 embeds.push(...quote_embeds.embeds);
                 if (quote_embeds.files) {

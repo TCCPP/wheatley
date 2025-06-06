@@ -214,3 +214,24 @@ export function forge_snowflake(timestamp: number) {
 export function discord_timestamp(timestamp: number, suffix = "f") {
     return `<t:${Math.round(timestamp / 1000)}:${suffix}>`;
 }
+
+export const raw_discord_url_re = /https:\/\/(.*discord.*)\/channels\/(\d+)\/(\d+)\/(\d+)/;
+export const known_discord_domains = new Set([
+    "discord.com",
+    "ptb.discord.com",
+    "canary.discord.com",
+    "discordapp.com",
+]);
+export const discord_url_re = new RegExp(`^${raw_discord_url_re.source}$`, "i");
+export function parse_url_or_snowflake(url: string): [string | null, string | null, string] {
+    let match = url.trim().match(discord_url_re);
+    if (match) {
+        const [_, guild_id, channel_id, message_id] = match.slice(1);
+        return [guild_id, channel_id, message_id];
+    }
+    match = url.trim().match(/^\d+$/);
+    if (match) {
+        return [null, null, match[0]];
+    }
+    assert(false);
+}
