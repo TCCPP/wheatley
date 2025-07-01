@@ -9,7 +9,27 @@ import { Wheatley } from "../../../wheatley.js";
 import { SelfClearingMap } from "../../../utils/containers.js";
 import { clear_timeout, set_timeout } from "../../../utils/node.js";
 
+/* Here's a little of an explanation as to why we do this messageSnapshot stuff
+ * A forwarded message is empty, however it contains a property messageSnapshot
+ * This contains a `Collection` of snapshots, however currently it only has one
+ * From there, we use the same method as before to check for media, embeds, etc
+ */
 export function has_media(message: Discord.Message | Discord.PartialMessage) {
+    return message.reference?.type == Discord.MessageReferenceType.Forward
+        ? forward_has_media(message)
+        : regular_has_media(message);
+}
+
+function forward_has_media(message: Discord.Message | Discord.PartialMessage): boolean {
+    const snapshot = message.messageSnapshots.first();
+    return (
+        snapshot?.attachments.some(a => a.contentType?.startsWith("image/") || a.contentType?.startsWith("video/")) ||
+        snapshot?.embeds.some(is_media_link_embed) ||
+        false
+    );
+}
+
+function regular_has_media(message: Discord.Message | Discord.PartialMessage): boolean {
     return (
         message.attachments.some(
             a => a.contentType?.startsWith("image/") || a.contentType?.startsWith("video/") || false,

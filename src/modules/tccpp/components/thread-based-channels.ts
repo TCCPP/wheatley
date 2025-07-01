@@ -33,9 +33,9 @@ function create_embed(title: string | undefined, color: number, msg: string) {
 
 export default class ThreadBasedChannels extends BotComponent {
     thread_based_channel_ids = new Set([
-        "802541516655951892", // server-suggestions
-        "594212045621035030", // showcase
-        "873682069325217802", // today-i-learned
+        this.wheatley.channels.server_suggestions.id,
+        this.wheatley.channels.showcase.id,
+        this.wheatley.channels.today_i_learned.id,
     ]);
 
     override async on_message_create(message: Discord.Message) {
