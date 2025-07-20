@@ -32,11 +32,15 @@ function create_embed(title: string | undefined, color: number, msg: string) {
 }
 
 export default class ThreadBasedChannels extends BotComponent {
-    thread_based_channel_ids = new Set([
-        this.wheatley.channels.server_suggestions.id,
-        this.wheatley.channels.showcase.id,
-        this.wheatley.channels.today_i_learned.id,
-    ]);
+    thread_based_channel_ids: Set<string>;
+
+    override async on_ready() {
+        this.thread_based_channel_ids = new Set([
+            this.wheatley.channels.server_suggestions.id,
+            this.wheatley.channels.showcase.id,
+            this.wheatley.channels.today_i_learned.id,
+        ]);
+    }
 
     override async on_message_create(message: Discord.Message) {
         // Ignore bots and thread create messages
