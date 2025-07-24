@@ -73,6 +73,37 @@ export default class UsernameManager extends BotComponent {
         }
     }
 
+    async check_unicode(member: Discord.GuildMember) {
+        if (!is_valid_name(member.displayName.trim())) {
+            // Invalid nickname, valid username: Just remove nickname
+            const candidate_1 = anyAscii(member.displayName).trim().substring(0, 32);
+            const candidate_2 = anyAscii(member.user.username).trim().substring(0, 32);
+            const new_name = candidate_1 || candidate_2 || "Monke";
+            M.log(
+                "Username management: Changing display name",
+                member.id,
+                [member.user.tag, member.displayName],
+                "to:",
+                new_name,
+            );
+            await member.setNickname(new_name);
+        }
+    }
+
+    async check_caps(member: Discord.GuildMember) {
+        const shouting = /[A-Z]{4,}/;
+        if (shouting.test(member.displayName)) {
+            M.log(
+                "Username management: Changing display name",
+                member.id,
+                [member.user.tag, member.displayName],
+                "to:",
+                member.displayName.toLowerCase(),
+            );
+            await member.setNickname(member.displayName.toLowerCase());
+        }
+    }
+
     has_herald(member: Discord.GuildMember) {
         return member.roles.cache.filter(role => role.id == this.wheatley.roles.herald.id).size > 0;
     }
@@ -103,20 +134,8 @@ export default class UsernameManager extends BotComponent {
         //    member.user.tag, // user display name, possibly with #disc
         //    member.user.discriminator,
         //);
-        if (!is_valid_name(member.displayName.trim())) {
-            // Invalid nickname, valid username: Just remove nickname
-            const candidate_1 = anyAscii(member.displayName).trim().substring(0, 32);
-            const candidate_2 = anyAscii(member.user.username).trim().substring(0, 32);
-            const new_name = candidate_1 || candidate_2 || "Monke";
-            M.log(
-                "Username management: Changing display name",
-                member.id,
-                [member.user.tag, member.displayName],
-                "to:",
-                new_name,
-            );
-            await member.setNickname(new_name);
-        }
+        await this.check_unicode(member);
+        await this.check_caps(member);
         await this.check_herald(member);
     }
 
