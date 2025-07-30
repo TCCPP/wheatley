@@ -44,7 +44,8 @@ export default class Redirect extends BotComponent {
         assert(command.channel);
         assert(command.channel instanceof Discord.GuildChannel);
         const initial_permissions = command.channel.permissionOverwrites.cache.clone();
-        await command.channel.permissionOverwrites.edit(this.wheatley.guild.id, { SendMessages: false });
+        await command.channel.permissionOverwrites.edit(this.wheatley.guild.roles.everyone.id, { SendMessages: false });
+        await command.channel.permissionOverwrites.edit(this.wheatley.roles.moderators.id, { SendMessages: true });
         await command.reply({
             embeds: [
                 new Discord.EmbedBuilder()
