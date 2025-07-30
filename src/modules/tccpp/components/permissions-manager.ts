@@ -185,6 +185,7 @@ export default class PermissionManager extends BotComponent {
         });
         this.add_channel_overwrite(this.wheatley.channels.announcements, read_only_channel);
         this.add_channel_overwrite(this.wheatley.channels.resources, read_only_channel);
+        this.add_channel_overwrite(this.wheatley.channels.old_resources, read_only_channel);
         this.add_channel_overwrite(this.wheatley.channels.partners, read_only_channel);
         this.add_channel_overwrite(this.wheatley.channels.articles, read_only_channel);
         this.add_channel_overwrite(this.wheatley.channels.server_suggestions, {
@@ -231,6 +232,13 @@ export default class PermissionManager extends BotComponent {
         // community overrides
         this.add_channel_overwrite(this.wheatley.channels.polls, {
             ...read_only_channel_no_reactions,
+            [this.wheatley.roles.moderators.id]: {
+                allow: [
+                    Discord.PermissionsBitField.Flags.ManageThreads,
+                    Discord.PermissionsBitField.Flags.ViewChannel,
+                    Discord.PermissionsBitField.Flags.SendMessages,
+                ],
+            },
         });
         this.add_channel_overwrite(this.wheatley.channels.today_i_learned, {
             ...default_permissions,

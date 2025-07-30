@@ -91,6 +91,7 @@ const channels_map = {
     skill_role_suggestions: tuple("1211089633547526204", Discord.ForumChannel),
     skill_roles_meta: tuple("1182536717056618557", Discord.TextChannel),
     news: tuple("1269506410530738267", Discord.ForumChannel),
+    old_resources: tuple("1124619767542718524", Discord.ForumChannel),
     resources: tuple("1361574878561570926", Discord.TextChannel),
     partners: tuple("904790565000986745", Discord.TextChannel),
     the_button: tuple("1069678919667687455", Discord.TextChannel),
