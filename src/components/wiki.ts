@@ -43,7 +43,6 @@ const image_regex = /!\[[^\]]*]\(([^)]*)\)/;
 const reference_definition_regex = /\s*\[([^\]]*)]: (.+)/;
 const reference_link_regex = /\[([^\]]*)]\[([^\]]*)]/g;
 
-export const wiki_path = "wiki/wiki";
 export const wiki_articles_path = "wiki/bot-articles";
 
 type substitution_fun = (str: string) => string;
@@ -406,24 +405,6 @@ export default class Wiki extends BotComponent {
             this.articles[file_path.name] = article;
             for (const alias of aliases) {
                 this.article_aliases.set(alias, file_path.name);
-            }
-        }
-        for await (const file_path of globIterate(`${wiki_path}/**/*.md`, { withFileTypes: true })) {
-            const file_content = await fs.promises.readFile(file_path.fullpath(), { encoding: "utf-8" });
-            const { data } = matter(file_content);
-            if (data.preview) {
-                let parsed;
-                try {
-                    parsed = parse_article(file_path.name, data.preview, this.substitute_refs);
-                } catch (e: any) {
-                    M.error(`Failed to parse article ${file_path}: ${e.message}`);
-                    continue;
-                }
-                const [article, aliases] = parsed;
-                this.articles[file_path.name] = article;
-                for (const alias of [...aliases, ...(data.alias ? [data.alias as string] : [])]) {
-                    this.article_aliases.set(alias, file_path.name);
-                }
             }
         }
     }
