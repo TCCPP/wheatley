@@ -23,6 +23,7 @@ type WikiArticle = {
     image?: string;
     set_author: boolean;
     no_embed: boolean;
+    wikilink: string | undefined;
 };
 
 type WikiField = {
@@ -58,6 +59,7 @@ class ArticleParser {
     private image?: string;
     private set_author = false;
     private no_embed = false;
+    private wikilink?: string;
     private readonly reference_definitions = new Map<string, string>();
 
     private current_state = parse_state.body;
@@ -168,6 +170,8 @@ class ArticleParser {
                 assert(!this.aliases.has(alias));
                 this.aliases.add(alias);
             }
+        } else if (directive.startsWith("wikilink ")) {
+            this.wikilink = directive.substring("wikilink ".length).trim();
         } else {
             M.warn(`Unknown directive encountered while parsing article: ${directive}`);
         }
@@ -288,6 +292,7 @@ class ArticleParser {
             image: this.image,
             set_author: this.set_author,
             no_embed: this.no_embed,
+            wikilink: this.wikilink,
         };
     }
 
@@ -440,9 +445,20 @@ export default class Wiki extends BotComponent {
                     text: article.footer,
                 });
             }
+            let components: Discord.ActionRowBuilder<Discord.MessageActionRowComponentBuilder>[] | undefined;
+            if (article.wikilink) {
+                const row = new Discord.ActionRowBuilder<Discord.MessageActionRowComponentBuilder>().addComponents(
+                    new Discord.ButtonBuilder()
+                        .setLabel("More information on the wiki")
+                        .setURL(article.wikilink)
+                        .setStyle(Discord.ButtonStyle.Link),
+                );
+                components = [row];
+            }
             await command.reply({
                 content: mention ?? undefined,
                 embeds: [embed],
+                components,
                 should_text_reply: true,
             });
         }
