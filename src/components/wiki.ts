@@ -43,8 +43,8 @@ const image_regex = /!\[[^\]]*]\(([^)]*)\)/;
 const reference_definition_regex = /\s*\[([^\]]*)]: (.+)/;
 const reference_link_regex = /\[([^\]]*)]\[([^\]]*)]/g;
 
-export const wiki_path = "wiki";
-export const wiki_articles_path = "wiki/articles";
+export const wiki_path = "wiki/wiki";
+export const wiki_articles_path = "wiki/bot-articles";
 
 type substitution_fun = (str: string) => string;
 
@@ -408,7 +408,7 @@ export default class Wiki extends BotComponent {
                 this.article_aliases.set(alias, file_path.name);
             }
         }
-        for await (const file_path of globIterate(`${wiki_path}/src/**/*.md`, { withFileTypes: true })) {
+        for await (const file_path of globIterate(`${wiki_path}/**/*.md`, { withFileTypes: true })) {
             const file_content = await fs.promises.readFile(file_path.fullpath(), { encoding: "utf-8" });
             const { data } = matter(file_content);
             if (data.preview) {
