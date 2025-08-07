@@ -110,7 +110,11 @@ export function is_media_link_embed(embed: Discord.APIEmbed | Discord.Embed) {
     return embed.image || embed.video || embed.thumbnail;
 }
 
-export async function send_long_message(channel: Discord.TextBasedChannel, msg: string) {
+export async function send_long_message(
+    channel: Discord.TextBasedChannel,
+    msg: string,
+    extra_options: Discord.MessageCreateOptions = {},
+) {
     assert(!(channel instanceof Discord.PartialGroupDMChannel));
     if (msg.length > 2000) {
         const lines = msg.split("\n");
@@ -131,10 +135,16 @@ export async function send_long_message(channel: Discord.TextBasedChannel, msg: 
             queue.push(partial);
         }
         while (queue.length > 0) {
-            await channel.send(queue.shift()!);
+            await channel.send({
+                content: queue.shift()!,
+                ...extra_options,
+            });
         }
     } else {
-        await channel.send(msg);
+        await channel.send({
+            content: msg,
+            ...extra_options,
+        });
     }
 }
 
