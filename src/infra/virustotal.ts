@@ -21,7 +21,7 @@ export class Virustotal {
 
     async upload_file(file_buffer: Buffer, endpoint: string) {
         const form = new FormData();
-        form.append("file", new Blob([file_buffer]));
+        form.append("file", new Blob([file_buffer as any /* FIXME */]));
         const upload_res = await axios.post(endpoint, form, {
             headers: {
                 accept: "application/json",
