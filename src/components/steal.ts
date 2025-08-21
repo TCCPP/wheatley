@@ -61,10 +61,7 @@ export default class Steal extends BotComponent {
     }
 
     async steal(command: TextBasedCommand, text: string) {
-        const emoji_names = remove(
-            this.wheatley.guild.emojis.cache.map(emoji => emoji.name),
-            null,
-        );
+        const emoji_names = this.wheatley.guild.emojis.cache.map(emoji => emoji.name);
         const matches = [...text.matchAll(CUSTOM_EMOJIREGEX)];
         if (matches.length == 0) {
             await command.reply({
