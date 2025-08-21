@@ -35,6 +35,7 @@
         "test": "vitest run",
         "format": "prettier src test --write",
         "format-check": "prettier src test --check",
+        "format-check-files": "prettier --check",
         "format-files": "prettier src test --write --ignore-unknown",
         "ts-check": "tsc --noEmit",
         "build": "tsc"
@@ -64,6 +65,7 @@
     },
     "lint-staged": {
         "*.[jt]s": [
+            "npm run format-check-files --",
             "npm run lint-files --"
         ]
     }

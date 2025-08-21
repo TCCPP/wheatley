@@ -1,3 +1,4 @@
 #tsc --noEmit
+npm run ts-check
 npx lint-staged --verbose
 #npm test
