@@ -4,7 +4,7 @@ import * as Discord from "discord.js";
 import { M } from "./utils/debugging-and-logging.js";
 
 import { Wheatley } from "./wheatley.js";
-import { decode_snowflake, is_media_link_embed } from "./utils/discord.js";
+import { decode_snowflake, is_media_link_embed, make_url } from "./utils/discord.js";
 import { unwrap } from "./utils/misc.js";
 import { colors } from "./common.js";
 
@@ -128,7 +128,7 @@ export class BotUtilities {
         const head = messages[0];
         const contents = options?.custom_content ?? messages.map(m => m.content).join("\n");
         const template = options?.template ?? "\n\nFrom <##> [[Jump to message]]($$)";
-        const url = `https://discord.com/channels/${head.guild}/${head.channel}/${head.id}`;
+        const url = make_url(head);
         const template_string = template.replaceAll("##", "#" + head.channel).replaceAll("$$", url);
         const safe_link = options?.safe_link === undefined ? true : options.safe_link;
         const author = head.author;

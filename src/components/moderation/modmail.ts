@@ -1,7 +1,7 @@
 import { strict as assert } from "assert";
 import * as Discord from "discord.js";
 
-import { get_url_for } from "../../utils/discord.js";
+import { make_url } from "../../utils/discord.js";
 import { M } from "../../utils/debugging-and-logging.js";
 import { colors, HOUR, MINUTE } from "../../common.js";
 import { BotComponent } from "../../bot-component.js";
@@ -122,7 +122,7 @@ export default class Modmail extends BotComponent {
                     iconURL: member.displayAvatarURL(),
                 });
                 await this.wheatley.channels.mods.send({
-                    content: get_url_for(thread),
+                    content: make_url(thread),
                     embeds: [notification_embed],
                 });
                 // add everyone

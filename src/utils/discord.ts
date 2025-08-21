@@ -28,8 +28,50 @@ export async function departialize<T extends PotentiallyPartial, R extends Retur
     }
 }
 
-export function get_url_for(channel: Discord.GuildChannel | Discord.TextChannel | Discord.ThreadChannel) {
-    return `https://discord.com/channels/${channel.guildId}/${channel.id}`;
+export type MessageLocation = {
+    guild: string;
+    channel: string;
+    id: string;
+};
+
+export function make_url(
+    thing: Discord.GuildChannel | Discord.TextChannel | Discord.ThreadChannel | Discord.ChatInputCommandInteraction,
+    message_snowflake?: string,
+): string;
+export function make_url(thing: MessageLocation | Discord.Message): string;
+export function make_url(
+    thing:
+        | Discord.GuildChannel
+        | Discord.TextChannel
+        | Discord.ThreadChannel
+        | Discord.ChatInputCommandInteraction
+        | MessageLocation
+        | Discord.Message,
+    message_snowflake?: string,
+) {
+    if (
+        thing instanceof Discord.GuildChannel ||
+        thing instanceof Discord.TextChannel ||
+        thing instanceof Discord.ThreadChannel
+    ) {
+        if (message_snowflake) {
+            return `https://discord.com/channels/${thing.guildId}/${thing.id}`;
+        } else {
+            return `https://discord.com/channels/${thing.guildId}/${thing.id}/${message_snowflake}`;
+        }
+    }
+    if (thing instanceof Discord.ChatInputCommandInteraction) {
+        if (message_snowflake) {
+            return `https://discord.com/channels/${thing.guildId}/${thing.channelId}`;
+        } else {
+            return `https://discord.com/channels/${thing.guildId}/${thing.channelId}/${message_snowflake}`;
+        }
+    }
+    assert(!message_snowflake);
+    if (thing instanceof Discord.Message) {
+        return `https://discord.com/channels/${thing.guildId}/${thing.channelId}/${thing.id}`;
+    }
+    return `https://discord.com/channels/${thing.guild}/${thing.channel}/${thing.id}`;
 }
 
 export function textchannelify(x: Discord.Channel): Discord.TextBasedChannel {

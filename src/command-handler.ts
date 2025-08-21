@@ -10,7 +10,7 @@ import { TextBasedCommand } from "./command-abstractions/text-based-command.js";
 import { BotModalHandler } from "./command-abstractions/modal.js";
 import { unwrap } from "./utils/misc.js";
 import { M } from "./utils/debugging-and-logging.js";
-import { forge_snowflake } from "./utils/discord.js";
+import { forge_snowflake, make_url } from "./utils/discord.js";
 
 type issued_command_info = {
     command: TextBasedCommand;
@@ -186,8 +186,7 @@ export class CommandHandler {
                 interaction.user.tag,
                 interaction.user.id,
                 "At:",
-                // eslint-disable-next-line max-len
-                `https://discord.com/channels/${interaction.guildId}/${interaction.channelId}/${forge_snowflake(Date.now())}`,
+                make_url(interaction, forge_snowflake(Date.now())),
                 "Args:",
                 [
                     ...[...command.options.values()].map(opt => {
