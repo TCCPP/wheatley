@@ -127,6 +127,7 @@ export default class RoleManager extends BotComponent {
             return;
         }
         await member.roles.add(this.pink_role);
+        await command.reply("You are now pink", true, true);
     }
 
     async unpink(command: TextBasedCommand) {
