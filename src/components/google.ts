@@ -36,9 +36,6 @@ export default class Google extends BotComponent {
                     .setTitle(query)
                     .setURL(`https://www.google.com/search?${params.toString()}`)
                     .setColor(0x4285f4)
-                    // .setThumbnail(
-                    //     "https://cdn.discordapp.com/emojis/1253878497126912113.webp?size=22&quality=lossless",
-                    // ),
                     .setAuthor({
                         name: "Google",
                         iconURL: "https://cdn.discordapp.com/emojis/1253878497126912113.webp?size=128&quality=lossless",
