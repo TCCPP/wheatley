@@ -15,6 +15,7 @@ jobs:
           npm i
       - name: build bot
         run: |
+          npx tsc --version
           npm run build
       - name: build cppref scraper
         run: |
