@@ -58,15 +58,13 @@ export default class ModStats extends BotComponent {
     }
 
     async modstats(command: TextBasedCommand, moderator: Discord.User | null) {
-        if (moderator && !(this.wheatley.is_authorized_mod(moderator) || moderator.id == this.wheatley.user.id)) {
-            await command.reply(`<@${moderator.id}> is not a moderator`);
+        if (!moderator || moderator.id == this.wheatley.user.id) {
             return;
         }
         if (
-            !this.wheatley.is_authorized_mod(command.user) &&
-            command.channel_id != this.wheatley.channels.bot_spam.id
+            !(await this.wheatley.fetch_member_if_permitted(command.user, Discord.PermissionFlagsBits.ModerateMembers))
         ) {
-            await command.reply(`Please use in <#${this.wheatley.channels.bot_spam.id}>`, true);
+            await command.reply("not authorized", true);
             return;
         }
         await command.do_early_reply_if_slash(false);
