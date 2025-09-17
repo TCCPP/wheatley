@@ -188,6 +188,7 @@ const roles_map = {
     herald: "1095555811536797787",
     linked_github: "1080596526478397471",
     wiki_core: "1354998426370314411",
+    voice: "1368073548983308328",
 };
 
 const skill_roles_map = {
