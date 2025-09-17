@@ -17,24 +17,76 @@ export default class VoiceDeputies extends BotComponent {
 
     override async setup(commands: CommandSetBuilder) {
         commands.add(
-            new TextBasedCommandBuilder("quarantine", EarlyReplyMode.ephemeral)
+            new TextBasedCommandBuilder("voice", EarlyReplyMode.ephemeral)
                 .set_permissions(Discord.PermissionFlagsBits.MoveMembers | Discord.PermissionFlagsBits.MuteMembers)
-                .set_description("Quarantine member")
-                .add_user_option({
-                    description: "User to quarantine",
-                    title: "user",
-                    required: true,
-                })
-                .add_string_option({
-                    title: "reason",
-                    description: "Reason",
-                    required: false,
-                })
-                .set_handler(this.on_quarantine.bind(this)),
+                .set_description("Voice moderation")
+                .add_subcommand(
+                    new TextBasedCommandBuilder("give", EarlyReplyMode.ephemeral)
+                        .set_description("Give voice")
+                        .add_user_option({
+                            description: "User to receive voice",
+                            title: "user",
+                            required: true,
+                        })
+                        .set_handler(this.wrap_command_handler(this.on_give_voice.bind(this))),
+                )
+                .add_subcommand(
+                    new TextBasedCommandBuilder("take", EarlyReplyMode.ephemeral)
+                        .set_description("Take voice")
+                        .add_user_option({
+                            description: "User to lose voice",
+                            title: "user",
+                            required: true,
+                        })
+                        .set_handler(this.wrap_command_handler(this.on_take_voice.bind(this))),
+                )
+                .add_subcommand(
+                    new TextBasedCommandBuilder("quarantine", EarlyReplyMode.ephemeral)
+                        .set_description("Quarantine member")
+                        .add_user_option({
+                            description: "User to quarantine",
+                            title: "user",
+                            required: true,
+                        })
+                        .add_string_option({
+                            title: "reason",
+                            description: "Reason",
+                            required: false,
+                        })
+                        .set_handler(this.wrap_command_handler(this.on_quarantine.bind(this))),
+                ),
         );
     }
 
-    private async reply_with_error(command: TextBasedCommand, message: string) {
+    private wrap_command_handler<Args extends unknown[] = []>(
+        handler: (command: TextBasedCommand, target: Discord.GuildMember, ...args: Args) => Promise<void>,
+    ) {
+        return async (command: TextBasedCommand, user: Discord.User, ...args: Args) => {
+            const target = await this.wheatley.try_fetch_guild_member(user);
+            if (!target) {
+                await this.reply_error(command, "target is not a guild member");
+                return;
+            }
+            const issuer = unwrap(await this.wheatley.try_fetch_guild_member(command.user));
+            if (target.roles.highest.position >= issuer.roles.highest.position) {
+                await this.reply_error(command, "you have no power over this user");
+                return;
+            }
+            await handler(command, target, ...args);
+        };
+    }
+
+    private async reply_success(command: TextBasedCommand, message: string) {
+        await command.replyOrFollowUp({
+            embeds: [
+                new Discord.EmbedBuilder()
+                    .setColor(colors.wheatley)
+                    .setDescription(`${this.wheatley.emoji.success} ***${message}***`),
+            ],
+        });
+    }
+
+    private async reply_error(command: TextBasedCommand, message: string) {
         await command.replyOrFollowUp({
             embeds: [
                 new Discord.EmbedBuilder()
@@ -44,19 +96,27 @@ export default class VoiceDeputies extends BotComponent {
         });
     }
 
-    private async on_quarantine(command: TextBasedCommand, user: Discord.User, reason: string | null) {
-        const target = await this.wheatley.try_fetch_guild_member(user);
-        if (!target) {
-            await this.reply_with_error(command, "target is not a guild member");
+    private async on_give_voice(command: TextBasedCommand, target: Discord.GuildMember) {
+        if (target.roles.cache.some(r => r.id == this.wheatley.roles.voice.id)) {
+            await this.reply_error(command, "user already has voice");
             return;
         }
+        await target.roles.add(this.wheatley.roles.voice);
+        await this.reply_success(command, `<@${target.id}> now has voice`);
+    }
+
+    private async on_take_voice(command: TextBasedCommand, target: Discord.GuildMember) {
+        if (!target.roles.cache.some(r => r.id == this.wheatley.roles.voice.id)) {
+            await this.reply_error(command, "user doesn't have voice");
+            return;
+        }
+        await target.roles.remove(this.wheatley.roles.voice);
+        await this.reply_success(command, `<@${target.id}> doesn't have voice anymore`);
+    }
+
+    private async on_quarantine(command: TextBasedCommand, target: Discord.GuildMember, reason: string | null) {
         if (!target.voice.channel && !this.recently_in_voice.has(target.id)) {
-            await this.reply_with_error(command, "specified user was not recently seen in voice");
-            return;
-        }
-        const issuer = unwrap(await this.wheatley.try_fetch_guild_member(command.user));
-        if (target.roles.highest.position >= issuer.roles.highest.position) {
-            await this.reply_with_error(command, "you have no power over this user");
+            await this.reply_error(command, "user was not recently seen in voice");
             return;
         }
 
@@ -73,16 +133,17 @@ export default class VoiceDeputies extends BotComponent {
                     // .setTitle(`Moderator Alert!`)
                     .setDescription(
                         build_description(
-                            `<@${user.id}> was quarantined`,
+                            `<@${target.id}> was quarantined`,
                             `**Issuer:** <@${command.user.id}>`,
                             reason ? `**Reason:** ${reason}` : null,
                         ),
                     )
                     .setFooter({
-                        text: `ID: ${user.id}`,
+                        text: `ID: ${target.id}`,
                     }),
             ],
         });
+        await this.reply_success(command, `<@${target.id}> was quarantined`);
     }
 
     override async on_voice_state_update(old_state: Discord.VoiceState, new_state: Discord.VoiceState) {
