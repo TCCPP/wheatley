@@ -171,4 +171,14 @@ export default class VoiceDeputies extends BotComponent {
             await this.wheatley.channels.voice_hotline.send(`user was disconnected by <@${entry.executorId}>`);
         }
     }
+
+    override async on_message_create(message: Discord.Message) {
+        if (
+            message.channel.isVoiceBased() &&
+            message.mentions.roles.has(this.wheatley.roles.moderators.id) &&
+            !message.mentions.roles.has(this.wheatley.roles.voice_deputy.id)
+        ) {
+            await message.channel.send(`<@&${this.wheatley.roles.voice_deputy.id}>`);
+        }
+    }
 }
