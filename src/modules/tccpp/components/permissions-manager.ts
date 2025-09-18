@@ -70,14 +70,7 @@ export default class PermissionManager extends BotComponent {
                 deny: [Discord.PermissionsBitField.Flags.EmbedLinks, Discord.PermissionsBitField.Flags.AttachFiles],
             },
             [this.wheatley.roles.moderators.id]: {
-                allow: [
-                    Discord.PermissionsBitField.Flags.ViewChannel,
-                    Discord.PermissionsBitField.Flags.ManageThreads,
-                    Discord.PermissionsBitField.Flags.Connect,
-                    Discord.PermissionsBitField.Flags.Speak,
-                    Discord.PermissionsBitField.Flags.Stream,
-                    SET_VOICE_STATUS_PERMISSION_BIT,
-                ],
+                allow: [Discord.PermissionsBitField.Flags.ManageThreads, Discord.PermissionsBitField.Flags.ViewChannel],
             },
         };
         const off_topic_permissions: permission_overwrites = {
@@ -118,26 +111,32 @@ export default class PermissionManager extends BotComponent {
                 ],
             },
         };
-        const acive_voice_permissions = [
-            Discord.PermissionsBitField.Flags.Speak,
-            Discord.PermissionsBitField.Flags.Stream,
-        ];
         const voice_permissions: permission_overwrites = {
             ...default_permissions,
             [this.wheatley.guild.roles.everyone.id]: {
-                deny: [...acive_voice_permissions, SET_VOICE_STATUS_PERMISSION_BIT],
+                deny: [SET_VOICE_STATUS_PERMISSION_BIT],
             },
-            [this.wheatley.roles.voice.id]: { allow: acive_voice_permissions },
-            [this.wheatley.skill_roles.intermediate.id]: { allow: acive_voice_permissions },
-            [this.wheatley.skill_roles.proficient.id]: { allow: acive_voice_permissions },
-            [this.wheatley.skill_roles.advanced.id]: { allow: acive_voice_permissions },
-            [this.wheatley.skill_roles.expert.id]: { allow: acive_voice_permissions },
-            [this.wheatley.roles.server_booster.id]: { allow: acive_voice_permissions },
             [this.wheatley.roles.no_voice.id]: no_interaction_at_all,
             [this.wheatley.roles.no_off_topic.id]: no_interaction_at_all,
-            [this.wheatley.roles.voice_deputy.id]: {
-                allow: [...acive_voice_permissions, SET_VOICE_STATUS_PERMISSION_BIT],
+            [this.wheatley.roles.moderators.id]: {
+                allow: [
+                    Discord.PermissionsBitField.Flags.ViewChannel,
+                    Discord.PermissionsBitField.Flags.Connect,
+                    SET_VOICE_STATUS_PERMISSION_BIT,
+                ],
             },
+        };
+        const member_voice_channel: permission_overwrites = {
+            ...voice_permissions,
+            [this.wheatley.guild.roles.everyone.id]: {
+                deny: [Discord.PermissionsBitField.Flags.ViewChannel, SET_VOICE_STATUS_PERMISSION_BIT],
+            },
+            [this.wheatley.roles.voice_deputy.id]: { allow: [Discord.PermissionsBitField.Flags.ViewChannel] },
+            [this.wheatley.skill_roles.intermediate.id]: { allow: [Discord.PermissionsBitField.Flags.ViewChannel] },
+            [this.wheatley.skill_roles.proficient.id]: { allow: [Discord.PermissionsBitField.Flags.ViewChannel] },
+            [this.wheatley.skill_roles.advanced.id]: { allow: [Discord.PermissionsBitField.Flags.ViewChannel] },
+            [this.wheatley.skill_roles.expert.id]: { allow: [Discord.PermissionsBitField.Flags.ViewChannel] },
+            [this.wheatley.roles.server_booster.id]: { allow: [Discord.PermissionsBitField.Flags.ViewChannel] },
         };
         const mod_only_channel: permission_overwrites = {
             [this.wheatley.guild.roles.everyone.id]: {
@@ -309,6 +308,9 @@ export default class PermissionManager extends BotComponent {
         // bot dev overrides
         this.add_channel_overwrite(this.wheatley.channels.bot_dev_internal, mod_only_channel);
         // voice overrides
+        this.add_channel_overwrite(this.wheatley.channels.chill, member_voice_channel);
+        this.add_channel_overwrite(this.wheatley.channels.work_3, member_voice_channel);
+        this.add_channel_overwrite(this.wheatley.channels.work_4, member_voice_channel);
         this.add_channel_overwrite(this.wheatley.channels.afk, {
             [this.wheatley.guild.roles.everyone.id]: {
                 deny: [
