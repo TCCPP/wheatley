@@ -86,7 +86,9 @@ export default class ServerSuggestionTracker extends BotComponent {
             if (resolution_reactions_set.has(reaction.emoji.name!)) {
                 const users = await reaction.users.fetch();
                 for (const [_, user] of users) {
-                    if (this.wheatley.is_root(user)) {
+                    if (
+                        await this.wheatley.fetch_member_if_permitted(user, Discord.PermissionFlagsBits.Administrator)
+                    ) {
                         roots.push({ user, emoji: reaction.emoji });
                     }
                 }
@@ -473,7 +475,7 @@ export default class ServerSuggestionTracker extends BotComponent {
     ) {
         const reaction = await departialize(_reaction);
         if (resolution_reactions_set.has(reaction.emoji.name!)) {
-            if (this.wheatley.is_root(user)) {
+            if (await this.wheatley.fetch_member_if_permitted(user.id, Discord.PermissionFlagsBits.Administrator)) {
                 await this.resolve_suggestion(await departialize(reaction.message), {
                     user: await departialize(user),
                     emoji: reaction.emoji,
@@ -486,7 +488,10 @@ export default class ServerSuggestionTracker extends BotComponent {
         reaction: Discord.MessageReaction | Discord.PartialMessageReaction,
         user: Discord.User | Discord.PartialUser,
     ) {
-        if (resolution_reactions_set.has(reaction.emoji.name!) && this.wheatley.is_root(user)) {
+        if (
+            resolution_reactions_set.has(reaction.emoji.name!) &&
+            (await this.wheatley.fetch_member_if_permitted(user.id, Discord.PermissionFlagsBits.Administrator))
+        ) {
             const message = await departialize(reaction.message);
             if (!(await this.message_has_resolution_from_root(message))) {
                 // reopen
@@ -526,7 +531,7 @@ export default class ServerSuggestionTracker extends BotComponent {
                     message.author.id == this.wheatley.user.id &&
                     user.id != this.wheatley.user.id && // ignore self - this is important for autoreacts
                     resolution_reactions_set.has(reaction.emoji.name!) &&
-                    this.wheatley.is_root(user)
+                    (await this.wheatley.fetch_member_if_permitted(user.id, Discord.PermissionFlagsBits.Administrator))
                 ) {
                     // expensive-ish but this will be rare
                     const suggestion_id = await this.reverse_lookup(message.id);
@@ -564,9 +569,12 @@ export default class ServerSuggestionTracker extends BotComponent {
         } catch (e) {
             this.wheatley.critical_error(e);
             try {
-                if (this.wheatley.is_root(user)) {
+                const member = await this.wheatley.fetch_member_if_permitted(
+                    user.id,
+                    Discord.PermissionFlagsBits.Administrator,
+                );
+                if (member) {
                     // only send diagnostics to root
-                    const member = await this.wheatley.guild.members.fetch(user.id);
                     await member.send("Error while resolving suggestion");
                 }
             } catch (e) {
