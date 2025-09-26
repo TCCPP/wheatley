@@ -53,12 +53,12 @@ export default class ServerSuggestionTracker extends BotComponent {
     private server_suggestions: Discord.TextChannel;
 
     override async setup(commands: CommandSetBuilder) {
-        this.suggestion_action_log = (await this.wheatley.client.channels.fetch(
+        this.suggestion_action_log = await this.utilities.get_thread_channel(
             this.wheatley.channels.suggestion_action_log,
-        )) as Discord.ThreadChannel;
-        this.suggestion_dashboard = (await this.wheatley.client.channels.fetch(
+        );
+        this.suggestion_dashboard = await this.utilities.get_thread_channel(
             this.wheatley.channels.suggestion_dashboard,
-        )) as Discord.ThreadChannel;
+        );
         this.server_suggestions = await this.utilities.get_channel(this.wheatley.channels.server_suggestions);
         commands.add(
             new TextBasedCommandBuilder("suggestions-dashboard-count", EarlyReplyMode.visible)

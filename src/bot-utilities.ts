@@ -236,4 +236,10 @@ export class BotUtilities {
         assert(channel instanceof Discord.ForumChannel, `Channel ${channel} (${id}) not of the expected type`);
         return channel;
     }
+
+    async get_thread_channel(id: string) {
+        const channel = await this.wheatley.client.channels.fetch(id);
+        assert(channel instanceof Discord.ThreadChannel, `Channel ${channel} (${id}) not of the expected type`);
+        return channel;
+    }
 }

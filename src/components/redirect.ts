@@ -13,9 +13,9 @@ import { format_list } from "../utils/strings.js";
 export default class Redirect extends BotComponent {
     private c_cpp_discussion: Discord.TextChannel;
     private general_discussion: Discord.TextChannel;
-    private cpp_help: Discord.TextChannel;
+    private cpp_help: Discord.ForumChannel;
     private cpp_help_text: Discord.TextChannel;
-    private c_help: Discord.TextChannel;
+    private c_help: Discord.ForumChannel;
     private c_help_text: Discord.TextChannel;
     private tooling: Discord.TextChannel;
     private algorithms_and_compsci: Discord.TextChannel;
@@ -23,9 +23,9 @@ export default class Redirect extends BotComponent {
     override async setup(commands: CommandSetBuilder) {
         this.c_cpp_discussion = await this.utilities.get_channel(this.wheatley.channels.c_cpp_discussion);
         this.general_discussion = await this.utilities.get_channel(this.wheatley.channels.general_discussion);
-        this.cpp_help = await this.utilities.get_channel(this.wheatley.channels.cpp_help);
+        this.cpp_help = await this.utilities.get_forum_channel(this.wheatley.channels.cpp_help);
         this.cpp_help_text = await this.utilities.get_channel(this.wheatley.channels.cpp_help_text);
-        this.c_help = await this.utilities.get_channel(this.wheatley.channels.c_help);
+        this.c_help = await this.utilities.get_forum_channel(this.wheatley.channels.c_help);
         this.c_help_text = await this.utilities.get_channel(this.wheatley.channels.c_help_text);
         this.tooling = await this.utilities.get_channel(this.wheatley.channels.tooling);
         this.algorithms_and_compsci = await this.utilities.get_channel(this.wheatley.channels.algorithms_and_compsci);
