@@ -11,6 +11,7 @@ import { TextBasedCommand } from "../command-abstractions/text-based-command.js"
 import { build_description } from "../utils/strings.js";
 import { KeyedMutexSet } from "../utils/containers.js";
 import { unwrap } from "../utils/misc.js";
+import { CommandSetBuilder } from "../command-abstractions/command-set-builder.js";
 
 // we store all pins for the server, with a flag indicating if currently in the pin list
 type pin_entry = {
@@ -27,6 +28,7 @@ type pin_archive_entry = {
 };
 
 export default class PinArchive extends BotComponent {
+    private pin_archive: Discord.TextChannel;
     mutex = new KeyedMutexSet<string>();
 
     private database = this.wheatley.database.create_proxy<{
@@ -37,6 +39,10 @@ export default class PinArchive extends BotComponent {
     constructor(wheatley: Wheatley) {
         super(wheatley);
         wheatley.client.on("channelPinsUpdate", this.on_pin_update.bind(this));
+    }
+
+    override async setup(commands: CommandSetBuilder) {
+        this.pin_archive = await this.utilities.get_channel(this.wheatley.channels.pin_archive);
     }
 
     on_pin_update(channel: Discord.TextBasedChannel, time: Date) {
@@ -57,9 +63,7 @@ export default class PinArchive extends BotComponent {
                 // edit
                 let pin_archive_message;
                 try {
-                    pin_archive_message = await this.wheatley.channels.pin_archive.messages.fetch(
-                        pin_archive_entry.archive_message,
-                    );
+                    pin_archive_message = await this.pin_archive.messages.fetch(pin_archive_entry.archive_message);
                 } catch (e: any) {
                     // unknown message
                     if (e instanceof Discord.DiscordAPIError && e.code === 10008) {
@@ -75,7 +79,7 @@ export default class PinArchive extends BotComponent {
             } else {
                 // send
                 try {
-                    const archive_message = await this.wheatley.channels.pin_archive.send({
+                    const archive_message = await this.pin_archive.send({
                         content: `<#${message.channel.id}>`,
                         ...(await make_embeds()),
                     });

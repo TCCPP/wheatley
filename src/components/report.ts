@@ -13,6 +13,7 @@ import { ModalInteractionBuilder } from "../command-abstractions/modal.js";
 import { ButtonInteractionBuilder } from "../command-abstractions/button.js";
 
 export default class Report extends BotComponent {
+    private staff_flag_log: Discord.TextChannel;
     private readonly report_modal = new Discord.ModalBuilder()
         .setCustomId("report-modal")
         .setTitle("Report Message")
@@ -48,6 +49,8 @@ export default class Report extends BotComponent {
     readonly mutex = new KeyedMutexSet<string>();
 
     override async setup(commands: CommandSetBuilder) {
+        this.staff_flag_log = await this.utilities.get_channel(this.wheatley.channels.staff_flag_log);
+
         commands.add(new MessageContextMenuInteractionBuilder("Report").set_handler(this.report.bind(this)));
 
         commands.add(new ModalInteractionBuilder(this.report_modal, this.modal_handler.bind(this)));
@@ -120,7 +123,7 @@ export default class Report extends BotComponent {
                     this.resolved,
                     this.invalid,
                 );
-                await this.wheatley.channels.staff_flag_log.send({
+                await this.staff_flag_log.send({
                     content: `<@&${this.wheatley.roles.moderators.id}>`,
                     embeds: [report_embed, ...quote_embeds.embeds],
                     components: [row],

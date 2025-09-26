@@ -21,7 +21,6 @@ type category_permission_entry = {
 };
 
 type channel_permission_entry = {
-    channel: Discord.GuildChannel;
     permissions: permission_overwrites;
 };
 
@@ -348,9 +347,8 @@ export default class PermissionManager extends BotComponent {
         };
     }
 
-    add_channel_overwrite(channel: Discord.GuildChannel, permissions: permission_overwrites) {
-        this.channel_overrides[channel.id] = {
-            channel,
+    add_channel_overwrite(channel_id: string, permissions: permission_overwrites) {
+        this.channel_overrides[channel_id] = {
             permissions,
         };
     }

@@ -224,4 +224,22 @@ export class BotUtilities {
                 attachments.length + other_attachments.length == 0 ? undefined : [...attachments, ...other_attachments],
         };
     }
+
+    async get_channel(id: string) {
+        const channel = await this.wheatley.client.channels.fetch(id);
+        assert(channel instanceof Discord.TextChannel, `Channel ${channel} (${id}) not of the expected type`);
+        return channel;
+    }
+
+    async get_forum_channel(id: string) {
+        const channel = await this.wheatley.client.channels.fetch(id);
+        assert(channel instanceof Discord.ForumChannel, `Channel ${channel} (${id}) not of the expected type`);
+        return channel;
+    }
+
+    async get_thread_channel(id: string) {
+        const channel = await this.wheatley.client.channels.fetch(id);
+        assert(channel instanceof Discord.ThreadChannel, `Channel ${channel} (${id}) not of the expected type`);
+        return channel;
+    }
 }

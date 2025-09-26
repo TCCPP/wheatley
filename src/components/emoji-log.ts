@@ -5,10 +5,17 @@ import { strict as assert } from "assert";
 import { M } from "../utils/debugging-and-logging.js";
 import { colors } from "../common.js";
 import { BotComponent } from "../bot-component.js";
+import { CommandSetBuilder } from "../command-abstractions/command-set-builder.js";
 
 export default class EmojiLog extends BotComponent {
+    private staff_action_log: Discord.TextChannel;
+
+    override async setup(commands: CommandSetBuilder) {
+        this.staff_action_log = await this.utilities.get_channel(this.wheatley.channels.staff_action_log);
+    }
+
     override async on_emoji_create(emoji: Discord.GuildEmoji) {
-        await this.wheatley.channels.staff_action_log.send({
+        await this.staff_action_log.send({
             embeds: [
                 new Discord.EmbedBuilder()
                     .setTitle("Emoji Created")
@@ -24,7 +31,7 @@ export default class EmojiLog extends BotComponent {
     }
 
     override async on_emoji_delete(emoji: Discord.GuildEmoji) {
-        await this.wheatley.channels.staff_action_log.send({
+        await this.staff_action_log.send({
             embeds: [
                 new Discord.EmbedBuilder()
                     .setTitle("Emoji Removed")
@@ -40,7 +47,7 @@ export default class EmojiLog extends BotComponent {
     }
 
     override async on_emoji_update(old_emoji: Discord.GuildEmoji, new_emoji: Discord.GuildEmoji) {
-        await this.wheatley.channels.staff_action_log.send({
+        await this.staff_action_log.send({
             embeds: [
                 new Discord.EmbedBuilder()
                     .setTitle("Emoji Updated")

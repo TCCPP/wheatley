@@ -5,10 +5,17 @@ import { colors, MINUTE } from "../common.js";
 import { BotComponent } from "../bot-component.js";
 import { Wheatley } from "../wheatley.js";
 import { discord_timestamp } from "../utils/discord.js";
+import { CommandSetBuilder } from "../command-abstractions/command-set-builder.js";
 
 const NEW_USER_THRESHOLD = MINUTE * 30;
 
 export default class NotifyAboutBrandNewUsers extends BotComponent {
+    private welcome: Discord.TextChannel;
+
+    override async setup(commands: CommandSetBuilder) {
+        this.welcome = await this.utilities.get_channel(this.wheatley.channels.welcome);
+    }
+
     async notify_about_brand_new_user(member: Discord.GuildMember) {
         const embed = new Discord.EmbedBuilder()
             .setColor(colors.alert_color)
@@ -25,7 +32,7 @@ export default class NotifyAboutBrandNewUsers extends BotComponent {
                 text: `ID: ${member.id}`,
             })
             .setTimestamp();
-        await this.wheatley.channels.welcome.send({ embeds: [embed] });
+        await this.welcome.send({ embeds: [embed] });
     }
 
     override async on_guild_member_add(member: Discord.GuildMember) {

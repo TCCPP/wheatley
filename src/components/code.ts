@@ -26,7 +26,7 @@ export default class Code extends BotComponent {
     }
 
     static make_code_formatting_embeds(wheatley: Wheatley, channel: Discord.TextBasedChannel): Discord.APIEmbedField[] {
-        const is_c = [wheatley.channels.c_help.id, wheatley.channels.c_help_text.id].includes(
+        const is_c = [wheatley.channels.c_help, wheatley.channels.c_help_text].includes(
             wheatley.top_level_channel(channel),
         );
         return [

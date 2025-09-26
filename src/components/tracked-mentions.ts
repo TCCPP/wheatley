@@ -5,12 +5,18 @@ import { M } from "../utils/debugging-and-logging.js";
 import { colors } from "../common.js";
 import { BotComponent } from "../bot-component.js";
 import { Wheatley } from "../wheatley.js";
+import { CommandSetBuilder } from "../command-abstractions/command-set-builder.js";
 
 /**
  * Tracks certain mentions, such as mentions of root, moderators, Wheatley, etc.
  */
 export default class TrackedMentions extends BotComponent {
+    private staff_action_log: Discord.TextChannel;
     tracked_mentions: Set<string>;
+
+    override async setup(commands: CommandSetBuilder) {
+        this.staff_action_log = await this.utilities.get_channel(this.wheatley.channels.staff_action_log);
+    }
 
     override async on_ready() {
         this.tracked_mentions = new Set([
@@ -44,7 +50,7 @@ export default class TrackedMentions extends BotComponent {
                     text: `ID: ${message.author.id}`,
                 })
                 .setTimestamp();
-            await this.wheatley.channels.staff_action_log.send({ embeds: [embed] });
+            await this.staff_action_log.send({ embeds: [embed] });
         }
     }
 

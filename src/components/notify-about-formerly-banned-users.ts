@@ -7,11 +7,17 @@ import { Wheatley } from "../wheatley.js";
 import { discord_timestamp } from "../utils/discord.js";
 import { moderation_entry } from "./moderation/schemata.js";
 import { unwrap } from "../utils/misc.js";
+import { CommandSetBuilder } from "../command-abstractions/command-set-builder.js";
 
 export default class NotifyAboutFormerlyBannedUsers extends BotComponent {
+    private staff_action_log: Discord.TextChannel;
     private database = this.wheatley.database.create_proxy<{
         moderations: moderation_entry;
     }>();
+
+    override async setup(commands: CommandSetBuilder) {
+        this.staff_action_log = await this.utilities.get_channel(this.wheatley.channels.staff_action_log);
+    }
 
     async alert(member: Discord.GuildMember, most_recent: moderation_entry) {
         const action = most_recent.type == "kick" ? "kicked" : "banned";
@@ -31,7 +37,7 @@ export default class NotifyAboutFormerlyBannedUsers extends BotComponent {
                 text: `ID: ${member.id}`,
             })
             .setTimestamp();
-        await this.wheatley.channels.staff_action_log.send({ embeds: [embed] });
+        await this.staff_action_log.send({ embeds: [embed] });
     }
 
     async find_most_recent_kick_or_ban(member: Discord.GuildMember) {

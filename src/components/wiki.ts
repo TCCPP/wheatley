@@ -313,6 +313,8 @@ export function parse_article(
 }
 
 export default class Wiki extends BotComponent {
+    private bot_spam: Discord.TextChannel;
+
     static override get is_freestanding() {
         return true;
     }
@@ -322,6 +324,8 @@ export default class Wiki extends BotComponent {
     substitute_refs: substitution_fun = str => str;
 
     override async setup(commands: CommandSetBuilder) {
+        this.bot_spam = await this.utilities.get_channel(this.wheatley.channels.bot_spam);
+
         const emoji_map = new Map<string, string>();
         for (const [id, emoji] of this.wheatley.guild.emojis.cache) {
             if (emoji.name) {
@@ -487,13 +491,13 @@ export default class Wiki extends BotComponent {
         if (
             !(
                 this.wheatley.freestanding ||
-                channel.id === this.wheatley.channels.bot_spam.id ||
-                (channel.isThread() && channel.parentId === this.wheatley.channels.bot_spam.id) ||
+                channel.id === this.bot_spam.id ||
+                (channel.isThread() && channel.parentId === this.bot_spam.id) ||
                 channel.isDMBased()
             )
         ) {
             await command.reply(
-                `!wiki-preview must be used in <#${this.wheatley.channels.bot_spam.id}>, a bot-spam thread, or a DM`,
+                `!wiki-preview must be used in <#${this.bot_spam.id}>, a bot-spam thread, or a DM`,
                 true,
                 true,
             );

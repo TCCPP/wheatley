@@ -7,6 +7,7 @@ import { M } from "../../../utils/debugging-and-logging.js";
 import { colors } from "../../../common.js";
 import { BotComponent } from "../../../bot-component.js";
 import { Wheatley } from "../../../wheatley.js";
+import { CommandSetBuilder } from "../../../command-abstractions/command-set-builder.js";
 
 const DISMISS_TIME = 30 * 1000;
 
@@ -25,6 +26,12 @@ function message_might_have_code(message: string) {
 }
 
 export default class AntiScreenshot extends BotComponent {
+    private staff_message_log: Discord.TextChannel;
+
+    override async setup(commands: CommandSetBuilder) {
+        this.staff_message_log = await this.utilities.get_channel(this.wheatley.channels.staff_message_log);
+    }
+
     override async on_message_create(message: Discord.Message) {
         if (message.author.bot) {
             return;
@@ -74,7 +81,7 @@ export default class AntiScreenshot extends BotComponent {
                             name: interaction.user.tag,
                             iconURL: interaction.user.avatarURL()!,
                         });
-                    await this.wheatley.channels.staff_message_log.send({
+                    await this.staff_message_log.send({
                         content: "Anti-screenshot message dismissed",
                         embeds: [log_embed],
                     });
@@ -127,7 +134,7 @@ export default class AntiScreenshot extends BotComponent {
                     iconURL: starter_message.author.avatarURL()!,
                 })
                 .setDescription(starter_message.content || "<empty>");
-            await this.wheatley.channels.staff_message_log.send({
+            await this.staff_message_log.send({
                 content: "Anti-screenshot message sent",
                 embeds: [log_embed],
                 files: starter_message.attachments.map(a => a),

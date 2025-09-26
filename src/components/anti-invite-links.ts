@@ -4,6 +4,7 @@ import * as Discord from "discord.js";
 
 import { BotComponent } from "../bot-component.js";
 import { departialize } from "../utils/discord.js";
+import { CommandSetBuilder } from "../command-abstractions/command-set-builder.js";
 
 const INVITE_RE =
     /(?:(?:discord(?:app)?|disboard)\.(?:gg|(?:com|org|me)\/(?:invite|server\/join))|(?<!\w)\.gg)\/(\S+)/i;
@@ -24,6 +25,12 @@ export function match_invite(content: string): string | null {
 export default class AntiInviteLinks extends BotComponent {
     static override get is_freestanding() {
         return true;
+    }
+
+    private staff_flag_log: Discord.TextChannel;
+
+    override async setup(commands: CommandSetBuilder) {
+        this.staff_flag_log = await this.utilities.get_channel(this.wheatley.channels.staff_flag_log);
     }
 
     async member_is_proficient_or_higher(member: Discord.GuildMember | null) {
@@ -52,7 +59,7 @@ export default class AntiInviteLinks extends BotComponent {
             await message.delete();
             assert(!(message.channel instanceof Discord.PartialGroupDMChannel));
             await message.channel.send(`<@${message.author.id}> Please do not send invite links`);
-            await this.wheatley.channels.staff_flag_log.send({
+            await this.staff_flag_log.send({
                 content: `:warning: Invite link deleted`,
                 ...quote,
             });

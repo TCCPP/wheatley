@@ -4,10 +4,16 @@ import { M } from "../../utils/debugging-and-logging.js";
 import { colors } from "../../common.js";
 import { BotComponent } from "../../bot-component.js";
 import { Wheatley } from "../../wheatley.js";
+import { CommandSetBuilder } from "../../command-abstractions/command-set-builder.js";
 
 const snowflake_re = /\b\d{10,}\b/g;
 
 export default class Massban extends BotComponent {
+    private staff_action_log: Discord.TextChannel;
+
+    override async setup(commands: CommandSetBuilder) {
+        this.staff_action_log = await this.utilities.get_channel(this.wheatley.channels.staff_action_log);
+    }
     override async on_message_create(message: Discord.Message) {
         try {
             // Ignore self, bots, and messages outside TCCPP (e.g. dm's)
@@ -50,7 +56,7 @@ export default class Massban extends BotComponent {
                 .setTitle(`<@!${msg.author.id}> banned ${ids.length} users`)
                 .setDescription(`\`\`\`\n${ids.join("\n")}\n\`\`\``)
                 .setTimestamp();
-            await this.wheatley.channels.staff_action_log.send({ embeds: [embed] });
+            await this.staff_action_log.send({ embeds: [embed] });
         }
     }
 }

@@ -11,7 +11,24 @@ import { TextBasedCommand } from "../command-abstractions/text-based-command.js"
 import { format_list } from "../utils/strings.js";
 
 export default class Redirect extends BotComponent {
+    private c_cpp_discussion: Discord.TextChannel;
+    private general_discussion: Discord.TextChannel;
+    private cpp_help: Discord.ForumChannel;
+    private cpp_help_text: Discord.TextChannel;
+    private c_help: Discord.ForumChannel;
+    private c_help_text: Discord.TextChannel;
+    private tooling: Discord.TextChannel;
+    private algorithms_and_compsci: Discord.TextChannel;
+
     override async setup(commands: CommandSetBuilder) {
+        this.c_cpp_discussion = await this.utilities.get_channel(this.wheatley.channels.c_cpp_discussion);
+        this.general_discussion = await this.utilities.get_channel(this.wheatley.channels.general_discussion);
+        this.cpp_help = await this.utilities.get_forum_channel(this.wheatley.channels.cpp_help);
+        this.cpp_help_text = await this.utilities.get_channel(this.wheatley.channels.cpp_help_text);
+        this.c_help = await this.utilities.get_forum_channel(this.wheatley.channels.c_help);
+        this.c_help_text = await this.utilities.get_channel(this.wheatley.channels.c_help_text);
+        this.tooling = await this.utilities.get_channel(this.wheatley.channels.tooling);
+        this.algorithms_and_compsci = await this.utilities.get_channel(this.wheatley.channels.algorithms_and_compsci);
         commands.add(
             new TextBasedCommandBuilder("redirect", EarlyReplyMode.visible)
                 .set_description("Redirect a conversation")
@@ -27,8 +44,8 @@ export default class Redirect extends BotComponent {
         commands.add(
             new TextBasedCommandBuilder("r", EarlyReplyMode.none)
                 .set_description(
-                    `Redirect a conversation from <#${this.wheatley.channels.c_cpp_discussion.id}> or ` +
-                        `<#${this.wheatley.channels.general_discussion.id}> to a help channel`,
+                    `Redirect a conversation from <#${this.c_cpp_discussion.id}> or ` +
+                        `<#${this.general_discussion.id}> to a help channel`,
                 )
                 .add_user_option({
                     title: "user",
@@ -64,18 +81,14 @@ export default class Redirect extends BotComponent {
 
     async r(command: TextBasedCommand, user: Discord.User) {
         if (
-            (
-                [
-                    "cpp_help",
-                    "cpp_help_text",
-                    "c_help",
-                    "c_help_text",
-                    "tooling",
-                    "algorithms_and_compsci",
-                ] as (keyof Wheatley["channels"])[]
-            )
-                .map(name => this.wheatley.channels[name].id)
-                .includes(command.channel_id)
+            [
+                this.cpp_help.id,
+                this.cpp_help_text.id,
+                this.c_help.id,
+                this.c_help_text.id,
+                this.tooling.id,
+                this.algorithms_and_compsci.id,
+            ].includes(command.channel_id)
         ) {
             await command.reply("Can't be used in a help channel", true);
             return;
@@ -84,13 +97,14 @@ export default class Redirect extends BotComponent {
         await command.reply({
             content:
                 `Hello <@${user.id}>, welcome to Together C & C++! This is not a help channel, please ask your ` +
-                `question in one of the help channels above (${format_list(
-                    (<(keyof Wheatley["channels"])[]>[])
-                        .concat("cpp_help", "cpp_help_text", "c_help", "c_help_text")
-                        .map(name => `<#${this.wheatley.channels[name].id}>`),
-                )}), ` +
-                `or <#${this.wheatley.channels.tooling.id}> if your question is about tooling, ` +
-                `or <#${this.wheatley.channels.algorithms_and_compsci.id}> if your question pertains more to theory, ` +
+                `question in one of the help channels above (${format_list([
+                    `<#${this.cpp_help.id}>`,
+                    `<#${this.cpp_help_text.id}>`,
+                    `<#${this.c_help.id}>`,
+                    `<#${this.c_help_text.id}>`,
+                ])}), ` +
+                `or <#${this.tooling.id}> if your question is about tooling, ` +
+                `or <#${this.algorithms_and_compsci.id}> if your question pertains more to theory, ` +
                 `or any other help channel more suited for your question.`,
             should_text_reply: false,
         });

@@ -16,8 +16,10 @@ export default class ModStats extends BotComponent {
     private database = this.wheatley.database.create_proxy<{
         moderations: moderation_entry;
     }>();
+    private bot_spam: Discord.TextChannel;
 
     override async setup(commands: CommandSetBuilder) {
+        this.bot_spam = await this.utilities.get_channel(this.wheatley.channels.bot_spam);
         commands.add(
             new TextBasedCommandBuilder("modstats", EarlyReplyMode.none)
                 .set_description("Moderator stats")
@@ -62,11 +64,8 @@ export default class ModStats extends BotComponent {
             await command.reply(`<@${moderator.id}> is not a moderator`);
             return;
         }
-        if (
-            !this.wheatley.is_authorized_mod(command.user) &&
-            command.channel_id != this.wheatley.channels.bot_spam.id
-        ) {
-            await command.reply(`Please use in <#${this.wheatley.channels.bot_spam.id}>`, true);
+        if (!this.wheatley.is_authorized_mod(command.user) && command.channel_id != this.bot_spam.id) {
+            await command.reply(`Please use in <#${this.bot_spam.id}>`, true);
             return;
         }
         await command.do_early_reply_if_slash(false);
