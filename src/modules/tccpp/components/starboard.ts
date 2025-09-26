@@ -77,8 +77,6 @@ export default class Starboard extends BotComponent {
 
     private starboard: Discord.TextChannel;
     private staff_flag_log: Discord.TextChannel;
-    private memes: Discord.TextChannel;
-    private cursed_code: Discord.TextChannel;
 
     private database = this.wheatley.database.create_proxy<{
         component_state: starboard_state;
@@ -90,8 +88,6 @@ export default class Starboard extends BotComponent {
     override async setup(commands: CommandSetBuilder) {
         this.starboard = await this.utilities.get_channel(this.wheatley.channels.starboard);
         this.staff_flag_log = await this.utilities.get_channel(this.wheatley.channels.staff_flag_log);
-        this.memes = await this.utilities.get_channel(this.wheatley.channels.memes);
-        this.cursed_code = await this.utilities.get_channel(this.wheatley.channels.cursed_code);
 
         commands.add(
             new TextBasedCommandBuilder("add-negative-emoji", EarlyReplyMode.visible)
