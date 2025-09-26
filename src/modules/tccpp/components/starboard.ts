@@ -354,31 +354,24 @@ export default class Starboard extends BotComponent {
             assert(!(message.channel instanceof Discord.PartialGroupDMChannel));
             if (trigger_type == delete_trigger_type.delete_this) {
                 if (message.channel.id == this.wheatley.channels.memes) {
-                    await this.memes.send(
+                    await message.channel.send(
                         `<@${message.author.id}> A message of yours was automatically deleted because a threshold for` +
                             " <:delet_this:669598943117836312> reactions (or similar) was reached.\n\n" +
                             "FAQ: How can I avoid this in the future?\n" +
                             "Answer: Post less cringe",
                     );
                 } else {
-                    await this.cursed_code.send(
+                    await message.channel.send(
                         `<@${message.author.id}> A message of yours was automatically deleted because a threshold for` +
                             " <:delet_this:669598943117836312> reactions (or similar) was reached.\n" +
                             "This was likely due to your post not actually being cursed code.",
                     );
                 }
             } else {
-                if (message.channel.id == this.wheatley.channels.memes) {
-                    await this.memes.send(
-                        `<@${message.author.id}> A message of yours was automatically deleted because a threshold for` +
-                            " :recycle: reactions (or similar) was reached.",
-                    );
-                } else {
-                    await this.cursed_code.send(
-                        `<@${message.author.id}> A message of yours was automatically deleted because a threshold for` +
-                            " :recycle: reactions (or similar) was reached.",
-                    );
-                }
+                await message.channel.send(
+                    `<@${message.author.id}> A message of yours was automatically deleted because a threshold for` +
+                        " :recycle: reactions (or similar) was reached.",
+                );
             }
             this.deletes.push(Date.now());
         }
