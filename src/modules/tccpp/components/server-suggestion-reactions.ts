@@ -25,7 +25,7 @@ const root_only_reacts = new Set([
 export default class ServerSuggestionReactions extends BotComponent {
     readonly monitored_channels = new Map<string, Discord.TextChannel | Discord.AnyThreadChannel>();
     stop = false;
-    monitored_channels_ids: string[];
+    monitored_channels_ids!: string[];
 
     async handle_fetched_message(message: Discord.Message) {
         for (const [_, reaction] of message.reactions.cache) {

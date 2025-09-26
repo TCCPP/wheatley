@@ -14,7 +14,7 @@ import { unwrap } from "../../utils/misc.js";
 
 export default class VoiceDeputies extends BotComponent {
     private recently_in_voice = new SelfClearingSet<string>(5 * MINUTE);
-    private voice_hotline: Discord.TextChannel;
+    private voice_hotline!: Discord.TextChannel;
 
     override async setup(commands: CommandSetBuilder) {
         this.voice_hotline = await this.utilities.get_channel(this.wheatley.channels.voice_hotline);

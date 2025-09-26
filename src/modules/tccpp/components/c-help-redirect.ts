@@ -66,8 +66,8 @@ export default class CHelpRedirect extends BotComponent {
     // use the same set for both channels, shouldn't be an issue in practice
     readonly auto_triggered_users = new SelfClearingSet<string>(1 * HOUR);
 
-    private c_help_text: Discord.TextChannel;
-    private cpp_help_text: Discord.TextChannel;
+    private c_help_text!: Discord.TextChannel;
+    private cpp_help_text!: Discord.TextChannel;
 
     override async setup(commands: CommandSetBuilder) {
         this.c_help_text = await this.utilities.get_channel(this.wheatley.channels.c_help_text);

@@ -27,7 +27,7 @@ export default class AntiInviteLinks extends BotComponent {
         return true;
     }
 
-    private staff_flag_log: Discord.TextChannel;
+    private staff_flag_log!: Discord.TextChannel;
 
     override async setup(commands: CommandSetBuilder) {
         this.staff_flag_log = await this.utilities.get_channel(this.wheatley.channels.staff_flag_log);

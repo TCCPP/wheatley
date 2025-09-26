@@ -48,9 +48,9 @@ export default class ServerSuggestionTracker extends BotComponent {
         server_suggestions: server_suggestion_entry;
     }>();
 
-    private suggestion_action_log: Discord.ThreadChannel;
-    private suggestion_dashboard: Discord.ThreadChannel;
-    private server_suggestions: Discord.TextChannel;
+    private suggestion_action_log!: Discord.ThreadChannel;
+    private suggestion_dashboard!: Discord.ThreadChannel;
+    private server_suggestions!: Discord.TextChannel;
 
     override async setup(commands: CommandSetBuilder) {
         this.suggestion_action_log = await this.utilities.get_thread_channel(

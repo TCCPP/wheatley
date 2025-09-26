@@ -26,7 +26,7 @@ function message_might_have_code(message: string) {
 }
 
 export default class AntiScreenshot extends BotComponent {
-    private staff_message_log: Discord.TextChannel;
+    private staff_message_log!: Discord.TextChannel;
 
     override async setup(commands: CommandSetBuilder) {
         this.staff_message_log = await this.utilities.get_channel(this.wheatley.channels.staff_message_log);

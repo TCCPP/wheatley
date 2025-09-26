@@ -10,7 +10,7 @@ import { unwrap } from "../utils/misc.js";
 import { CommandSetBuilder } from "../command-abstractions/command-set-builder.js";
 
 export default class NotifyAboutFormerlyBannedUsers extends BotComponent {
-    private staff_action_log: Discord.TextChannel;
+    private staff_action_log!: Discord.TextChannel;
     private database = this.wheatley.database.create_proxy<{
         moderations: moderation_entry;
     }>();

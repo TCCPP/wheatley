@@ -51,7 +51,7 @@ type substitution_fun = (str: string) => string;
 class ArticleParser {
     private readonly aliases = new Set<string>();
 
-    private name: string | null;
+    private name!: string | null;
     private title: string | undefined;
     private body?: string;
     private fields: WikiField[] = [];
@@ -313,7 +313,7 @@ export function parse_article(
 }
 
 export default class Wiki extends BotComponent {
-    private bot_spam: Discord.TextChannel;
+    private bot_spam!: Discord.TextChannel;
 
     static override get is_freestanding() {
         return true;

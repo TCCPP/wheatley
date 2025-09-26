@@ -6,7 +6,7 @@
         "strict": true,
         "resolveJsonModule": true,
         "allowJs": true,
-        "strictPropertyInitialization": false,
+        "strictPropertyInitialization": true,
         "noImplicitOverride": true,
         "outDir": "build",
         "esModuleInterop": true,

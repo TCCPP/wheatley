@@ -66,11 +66,11 @@ export default class TheButton extends BotComponent {
     };
     interval: NodeJS.Timeout | null = null;
 
-    button_presses: number;
-    last_reset: number;
-    longest_time_without_reset: number;
+    button_presses!: number;
+    last_reset!: number;
+    longest_time_without_reset!: number;
 
-    private the_button_channel: Discord.TextChannel;
+    private the_button_channel!: Discord.TextChannel;
 
     private database = this.wheatley.database.create_proxy<{
         component_state: the_button_state;

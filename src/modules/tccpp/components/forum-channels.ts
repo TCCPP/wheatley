@@ -47,13 +47,13 @@ export default class ForumChannels extends BotComponent {
     // don't prompt twice within 2 hours - that's just annoying
     readonly possibly_resolved = new SelfClearingSet<string>(2 * 60 * MINUTE);
     readonly timeout_map = new Map<string, NodeJS.Timeout>();
-    interval: NodeJS.Timeout;
+    interval!: NodeJS.Timeout;
 
-    private general_discussion: Discord.TextChannel;
-    private cpp_help: Discord.ForumChannel;
-    private c_help: Discord.ForumChannel;
-    private cpp_help_text: Discord.TextChannel;
-    private c_help_text: Discord.TextChannel;
+    private general_discussion!: Discord.TextChannel;
+    private cpp_help!: Discord.ForumChannel;
+    private c_help!: Discord.ForumChannel;
+    private cpp_help_text!: Discord.TextChannel;
+    private c_help_text!: Discord.TextChannel;
 
     override async setup(commands: CommandSetBuilder) {
         this.general_discussion = await this.utilities.get_channel(this.wheatley.channels.general_discussion);

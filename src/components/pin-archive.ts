@@ -28,7 +28,7 @@ type pin_archive_entry = {
 };
 
 export default class PinArchive extends BotComponent {
-    private pin_archive: Discord.TextChannel;
+    private pin_archive!: Discord.TextChannel;
     mutex = new KeyedMutexSet<string>();
 
     private database = this.wheatley.database.create_proxy<{

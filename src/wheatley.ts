@@ -242,8 +242,8 @@ type EventMap = {
 };
 
 export class Wheatley {
-    private discord_user: Discord.User | null;
-    private discord_guild: Discord.Guild | null;
+    private discord_user!: Discord.User | null;
+    private discord_guild!: Discord.Guild | null;
     get user() {
         return unwrap(this.discord_user);
     }
@@ -256,9 +256,9 @@ export class Wheatley {
     readonly tracker: MemberTracker; // TODO: Rename
     readonly log_limiter: LogLimiter;
 
-    private command_handler: CommandHandler;
+    private command_handler!: CommandHandler;
 
-    private db: WheatleyDatabase | null;
+    private db!: WheatleyDatabase | null;
     get database() {
         return unwrap(this.db);
     }

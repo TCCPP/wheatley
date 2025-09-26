@@ -32,7 +32,7 @@ function create_embed(title: string | undefined, color: number, msg: string) {
 }
 
 export default class ThreadBasedChannels extends BotComponent {
-    thread_based_channel_ids: Set<string>;
+    thread_based_channel_ids!: Set<string>;
 
     override async on_ready() {
         this.thread_based_channel_ids = new Set([

@@ -16,7 +16,7 @@ import { TextBasedCommand } from "../../../command-abstractions/text-based-comma
 type augmented_core_guidelines_entry = core_guidelines_entry & IndexEntry;
 
 export class CoreGuidelinesIndex {
-    index: Index<augmented_core_guidelines_entry>;
+    index!: Index<augmented_core_guidelines_entry>;
 
     setup_index(index_data: core_guidelines_index) {
         this.index = new Index(index_data, (title: string) => [title.toLowerCase()]);

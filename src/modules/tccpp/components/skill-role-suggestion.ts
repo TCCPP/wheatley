@@ -44,7 +44,7 @@ export default class SkillRoleSuggestion extends BotComponent {
         skill_role_threads: skill_suggestion_thread_entry;
     }>();
 
-    private skill_role_suggestions: Discord.ForumChannel;
+    private skill_role_suggestions!: Discord.ForumChannel;
 
     override async setup(commands: CommandSetBuilder) {
         this.skill_role_suggestions = await this.utilities.get_forum_channel(

@@ -9,7 +9,7 @@ import { discord_timestamp } from "../utils/discord.js";
 import { CommandSetBuilder } from "../command-abstractions/command-set-builder.js";
 
 export default class Speedrun extends BotComponent {
-    private staff_action_log: Discord.TextChannel;
+    private staff_action_log!: Discord.TextChannel;
 
     constructor(wheatley: Wheatley) {
         super(wheatley);

@@ -16,7 +16,7 @@ export default class ModStats extends BotComponent {
     private database = this.wheatley.database.create_proxy<{
         moderations: moderation_entry;
     }>();
-    private bot_spam: Discord.TextChannel;
+    private bot_spam!: Discord.TextChannel;
 
     override async setup(commands: CommandSetBuilder) {
         this.bot_spam = await this.utilities.get_channel(this.wheatley.channels.bot_spam);

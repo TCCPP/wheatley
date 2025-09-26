@@ -456,9 +456,9 @@ class NgramIndex<T extends IndexEntry> extends BaseIndex<T> {
 
 class IDFNgramIndex<T extends IndexEntry> extends NgramIndex<T> {
     ngram_idf: Record<string, number> = {};
-    default_idf: number; // idf for something we haven't seen, important for weighting the cosine
-    keyword_count: number;
-    posix_count: number;
+    default_idf!: number; // idf for something we haven't seen, important for weighting the cosine
+    keyword_count!: number;
+    posix_count!: number;
     constructor(entries: T[], normalizer = normalize_and_split_cppref_title) {
         super(entries, normalizer);
         // artificially lower the count of "keyword" so this only turns up keyword results when that's really the best

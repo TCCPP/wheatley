@@ -167,8 +167,8 @@ export abstract class ModerationComponent extends BotComponent {
         component_state: moderation_state;
         moderations: moderation_entry;
     }>();
-    protected staff_action_log: Discord.TextChannel;
-    protected public_action_log: Discord.TextChannel;
+    protected staff_action_log!: Discord.TextChannel;
+    protected public_action_log!: Discord.TextChannel;
 
     // Sorted by moderation end time
     sleep_list: SleepList<mongo.WithId<moderation_entry>, mongo.BSON.ObjectId>;

@@ -15,9 +15,9 @@ type incident_info = { time: string; user: string; user_name: string; type: stri
 export default class DaysSinceLastIncident extends BotComponent {
     message: Discord.Message | null = null;
     last_time = "";
-    timer: NodeJS.Timeout;
+    timer!: NodeJS.Timeout;
 
-    private days_since_last_incident: Discord.TextChannel;
+    private days_since_last_incident!: Discord.TextChannel;
 
     private database = this.wheatley.database.create_proxy<{
         moderations: moderation_entry;

@@ -11,8 +11,8 @@ import { CommandSetBuilder } from "../command-abstractions/command-set-builder.j
  * Tracks certain mentions, such as mentions of root, moderators, Wheatley, etc.
  */
 export default class TrackedMentions extends BotComponent {
-    private staff_action_log: Discord.TextChannel;
-    tracked_mentions: Set<string>;
+    private staff_action_log!: Discord.TextChannel;
+    tracked_mentions!: Set<string>;
 
     override async setup(commands: CommandSetBuilder) {
         this.staff_action_log = await this.utilities.get_channel(this.wheatley.channels.staff_action_log);

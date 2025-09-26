@@ -9,7 +9,7 @@ export default class AntiAutoreact extends BotComponent {
         "841482328693669900", // "eisie"
     ]);
     obnoxious_autoreact_names = ["eisie"];
-    obnoxious_autoreact_immunity: Set<string>;
+    obnoxious_autoreact_immunity!: Set<string>;
 
     override async on_ready() {
         this.obnoxious_autoreact_immunity = new Set([

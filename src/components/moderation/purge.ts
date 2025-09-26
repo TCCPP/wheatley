@@ -43,8 +43,8 @@ export default class Purge extends BotComponent {
     private database = this.wheatley.database.create_proxy<{
         message_database: message_database_entry;
     }>();
-    private staff_flag_log: Discord.TextChannel;
-    private welcome: Discord.TextChannel;
+    private staff_flag_log!: Discord.TextChannel;
+    private welcome!: Discord.TextChannel;
 
     override async setup(commands: CommandSetBuilder) {
         this.staff_flag_log = await this.utilities.get_channel(this.wheatley.channels.staff_flag_log);

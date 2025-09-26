@@ -43,9 +43,9 @@ export default class Modmail extends BotComponent {
     private database = this.wheatley.database.create_proxy<{
         component_state: moderation_state;
     }>();
-    private rules: Discord.TextChannel;
-    private mods: Discord.TextChannel;
-    private staff_member_log: Discord.TextChannel;
+    private rules!: Discord.TextChannel;
+    private mods!: Discord.TextChannel;
+    private staff_member_log!: Discord.TextChannel;
 
     override async setup(commands: CommandSetBuilder) {
         this.rules = await this.utilities.get_channel(this.wheatley.channels.rules);

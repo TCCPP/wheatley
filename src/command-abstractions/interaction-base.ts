@@ -7,7 +7,7 @@ export const ApplicationCommandTypeUser = 2;
 export const ApplicationCommandTypeMessage = 3;
 
 export abstract class BaseBuilder<HasHandler extends boolean = false, HandlerArgs extends unknown[] = []> {
-    handler: ConditionalOptional<HasHandler, (...args: HandlerArgs) => Promise<void>>;
+    handler!: ConditionalOptional<HasHandler, (...args: HandlerArgs) => Promise<void>>;
 }
 
 export abstract class BaseInteractionBuilder<

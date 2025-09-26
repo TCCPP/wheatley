@@ -108,8 +108,8 @@ function eliminate_aliases_and_duplicates(pages: cppref_page[]) {
 }
 
 export class CpprefIndex {
-    c_index: Index<cppref_page>;
-    cpp_index: Index<cppref_page>;
+    c_index!: Index<cppref_page>;
+    cpp_index!: Index<cppref_page>;
 
     setup_indexes(index_data: cppref_index) {
         this.c_index = new Index(eliminate_aliases_and_duplicates(index_data.c));

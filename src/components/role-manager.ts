@@ -24,9 +24,9 @@ type user_role_entry = {
 };
 
 export default class RoleManager extends BotComponent {
-    private skill_role_log: Discord.TextChannel;
-    private staff_member_log: Discord.TextChannel;
-    pink_role: Discord.Role;
+    private skill_role_log!: Discord.TextChannel;
+    private staff_member_log!: Discord.TextChannel;
+    pink_role!: Discord.Role;
     interval: NodeJS.Timeout | null = null;
 
     // current database state
@@ -36,7 +36,7 @@ export default class RoleManager extends BotComponent {
     debounce_map = new SelfClearingSet(MINUTE);
 
     // roles that will not be re-applied on join
-    blacklisted_roles: Set<string>;
+    blacklisted_roles!: Set<string>;
 
     private database = this.wheatley.database.create_proxy<{
         user_roles: user_role_entry;

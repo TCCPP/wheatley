@@ -35,7 +35,7 @@ export class TextBasedCommandBuilder<
 > extends BaseBuilder<HasHandler, [TextBasedCommand, ...Args]> {
     readonly names: string[];
     early_reply_mode: EarlyReplyMode;
-    descriptions: ConditionalOptional<HasDescriptions, string[]>;
+    descriptions!: ConditionalOptional<HasDescriptions, string[]>;
     options = new Discord.Collection<string, TextBasedCommandParameterOptions & { type: TextBasedCommandOptionType }>();
     slash_config: boolean[];
     permissions: undefined | bigint = undefined;

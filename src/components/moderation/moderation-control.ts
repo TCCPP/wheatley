@@ -19,8 +19,8 @@ export default class ModerationControl extends BotComponent {
     private database = this.wheatley.database.create_proxy<{
         moderations: moderation_entry;
     }>();
-    private staff_action_log: Discord.TextChannel;
-    private public_action_log: Discord.TextChannel;
+    private staff_action_log!: Discord.TextChannel;
+    private public_action_log!: Discord.TextChannel;
 
     override async setup(commands: CommandSetBuilder) {
         this.staff_action_log = await this.utilities.get_channel(this.wheatley.channels.staff_action_log);

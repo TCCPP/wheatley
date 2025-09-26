@@ -9,7 +9,7 @@ import { EarlyReplyMode, TextBasedCommandBuilder } from "../command-abstractions
 import { TextBasedCommand } from "../command-abstractions/text-based-command.js";
 
 export default class ThreadControl extends BotComponent {
-    private rules: Discord.TextChannel;
+    private rules!: Discord.TextChannel;
 
     override async setup(commands: CommandSetBuilder) {
         this.rules = await this.utilities.get_channel(this.wheatley.channels.rules);

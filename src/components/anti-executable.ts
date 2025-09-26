@@ -15,9 +15,9 @@ import { CommandSetBuilder } from "../command-abstractions/command-set-builder.j
 const ACTION_THRESHOLD = 5;
 
 export default class AntiExecutable extends BotComponent {
-    private staff_flag_log: Discord.TextChannel;
-    private staff_action_log: Discord.TextChannel;
-    virustotal: Virustotal | null;
+    private staff_flag_log!: Discord.TextChannel;
+    private staff_action_log!: Discord.TextChannel;
+    virustotal!: Virustotal | null;
 
     static override get is_freestanding() {
         return true;

@@ -13,7 +13,7 @@ import { ModalInteractionBuilder } from "../command-abstractions/modal.js";
 import { ButtonInteractionBuilder } from "../command-abstractions/button.js";
 
 export default class Report extends BotComponent {
-    private staff_flag_log: Discord.TextChannel;
+    private staff_flag_log!: Discord.TextChannel;
     private readonly report_modal = new Discord.ModalBuilder()
         .setCustomId("report-modal")
         .setTitle("Report Message")

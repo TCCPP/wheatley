@@ -48,7 +48,7 @@ function eliminate_aliases_and_duplicates_and_set_title(index_data: man7_index) 
 }
 
 export class Man7Index {
-    index: Index<augmented_man7_entry>;
+    index!: Index<augmented_man7_entry>;
 
     setup_index(index_data: man7_index) {
         // TODO: Prioritize (3), then (2), then (1), then other?

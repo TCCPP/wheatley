@@ -8,7 +8,7 @@ import { BotComponent } from "../bot-component.js";
 import { CommandSetBuilder } from "../command-abstractions/command-set-builder.js";
 
 export default class EmojiLog extends BotComponent {
-    private staff_action_log: Discord.TextChannel;
+    private staff_action_log!: Discord.TextChannel;
 
     override async setup(commands: CommandSetBuilder) {
         this.staff_action_log = await this.utilities.get_channel(this.wheatley.channels.staff_action_log);

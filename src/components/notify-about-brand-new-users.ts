@@ -10,7 +10,7 @@ import { CommandSetBuilder } from "../command-abstractions/command-set-builder.j
 const NEW_USER_THRESHOLD = MINUTE * 30;
 
 export default class NotifyAboutBrandNewUsers extends BotComponent {
-    private welcome: Discord.TextChannel;
+    private welcome!: Discord.TextChannel;
 
     override async setup(commands: CommandSetBuilder) {
         this.welcome = await this.utilities.get_channel(this.wheatley.channels.welcome);

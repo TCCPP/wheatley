@@ -34,7 +34,7 @@ export type basic_message_info = {
 const LOG_DURATION = 30 * MINUTE;
 
 export class MemberTracker {
-    wheatley: Wheatley | null;
+    wheatley!: Wheatley | null;
     entries: member_entry[] = [];
     // map from user id -> member entry
     id_map: Map<Discord.Snowflake, member_entry> = new Map();
@@ -43,7 +43,7 @@ export class MemberTracker {
     currently_banning: Map<string, number> = new Map();
     // modules that rely on on_join and on_ban
     submodules: submodule[] = [];
-    interval: NodeJS.Timeout;
+    interval!: NodeJS.Timeout;
 
     connect(wheatley: Wheatley) {
         this.wheatley = wheatley;

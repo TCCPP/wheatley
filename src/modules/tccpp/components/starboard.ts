@@ -68,15 +68,15 @@ export default class Starboard extends BotComponent {
     // negative emojis: these don't count against deleted emojis and also don't go to the starboard
     // repost emojis: will trigger deletion if a threshold is reached relative to non-negative emojis
 
-    delete_emojis: string[];
-    ignored_emojis: string[];
-    negative_emojis: string[];
-    repost_emojis: string[];
+    delete_emojis!: string[];
+    ignored_emojis!: string[];
+    negative_emojis!: string[];
+    repost_emojis!: string[];
 
-    excluded_channels: Set<string>;
+    excluded_channels!: Set<string>;
 
-    private starboard: Discord.TextChannel;
-    private staff_flag_log: Discord.TextChannel;
+    private starboard!: Discord.TextChannel;
+    private staff_flag_log!: Discord.TextChannel;
 
     private database = this.wheatley.database.create_proxy<{
         component_state: starboard_state;
