@@ -8,6 +8,7 @@ import { BotComponent } from "../../../bot-component.js";
 import { Wheatley } from "../../../wheatley.js";
 import { clear_timeout, set_interval, set_timeout } from "../../../utils/node.js";
 import { Synopsinator } from "../../../utils/synopsis.js";
+import { CommandSetBuilder } from "../../../command-abstractions/command-set-builder.js";
 
 // TODO: Take into account thread's inactivity setting
 
@@ -51,11 +52,24 @@ export default class ForumChannels extends BotComponent {
     private general_discussion: Discord.TextChannel;
     private cpp_help: Discord.ForumChannel;
     private c_help: Discord.ForumChannel;
+    private cpp_help_text: Discord.TextChannel;
+    private c_help_text: Discord.TextChannel;
 
-    override async setup(commands: any) {
+    override async setup(commands: CommandSetBuilder) {
         this.general_discussion = await this.utilities.get_channel(this.wheatley.channels.general_discussion);
         this.cpp_help = await this.utilities.get_forum_channel(this.wheatley.channels.cpp_help);
         this.c_help = await this.utilities.get_forum_channel(this.wheatley.channels.c_help);
+        this.cpp_help_text = await this.utilities.get_channel(this.wheatley.channels.cpp_help_text);
+        this.c_help_text = await this.utilities.get_channel(this.wheatley.channels.c_help_text);
+    }
+
+    private get_corresponding_text_help_channel(thread: Discord.ThreadChannel): Discord.TextChannel {
+        if (thread.parentId === this.cpp_help.id) {
+            return this.cpp_help_text;
+        } else if (thread.parentId === this.c_help.id) {
+            return this.c_help_text;
+        }
+        throw new Error(`Thread ${thread.id} is not in a recognized help forum`);
     }
 
     async forum_cleanup() {
@@ -306,7 +320,7 @@ export default class ForumChannels extends BotComponent {
                     message,
                     `New question: ${thread.name}`,
                     true,
-                    await this.wheatley.get_corresponding_text_help_channel(thread),
+                    this.get_corresponding_text_help_channel(thread),
                 );
             } else if (
                 thread.parentId != null &&

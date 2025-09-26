@@ -7,6 +7,7 @@ import { Wheatley } from "../wheatley.js";
 import { discord_timestamp } from "../utils/discord.js";
 import { moderation_entry } from "./moderation/schemata.js";
 import { unwrap } from "../utils/misc.js";
+import { CommandSetBuilder } from "../command-abstractions/command-set-builder.js";
 
 export default class NotifyAboutFormerlyBannedUsers extends BotComponent {
     private staff_action_log: Discord.TextChannel;
@@ -14,7 +15,7 @@ export default class NotifyAboutFormerlyBannedUsers extends BotComponent {
         moderations: moderation_entry;
     }>();
 
-    override async setup(commands: any) {
+    override async setup(commands: CommandSetBuilder) {
         this.staff_action_log = await this.utilities.get_channel(this.wheatley.channels.staff_action_log);
     }
 

@@ -4,6 +4,7 @@ import * as Discord from "discord.js";
 
 import { BotComponent } from "../bot-component.js";
 import { departialize } from "../utils/discord.js";
+import { CommandSetBuilder } from "../command-abstractions/command-set-builder.js";
 
 const INVITE_RE =
     /(?:(?:discord(?:app)?|disboard)\.(?:gg|(?:com|org|me)\/(?:invite|server\/join))|(?<!\w)\.gg)\/(\S+)/i;
@@ -28,7 +29,7 @@ export default class AntiInviteLinks extends BotComponent {
 
     private staff_flag_log: Discord.TextChannel;
 
-    override async setup(commands: any) {
+    override async setup(commands: CommandSetBuilder) {
         this.staff_flag_log = await this.utilities.get_channel(this.wheatley.channels.staff_flag_log);
     }
 

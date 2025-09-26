@@ -11,6 +11,7 @@ import { TextBasedCommand } from "../command-abstractions/text-based-command.js"
 import { build_description } from "../utils/strings.js";
 import { KeyedMutexSet } from "../utils/containers.js";
 import { unwrap } from "../utils/misc.js";
+import { CommandSetBuilder } from "../command-abstractions/command-set-builder.js";
 
 // we store all pins for the server, with a flag indicating if currently in the pin list
 type pin_entry = {
@@ -40,7 +41,7 @@ export default class PinArchive extends BotComponent {
         wheatley.client.on("channelPinsUpdate", this.on_pin_update.bind(this));
     }
 
-    override async setup(commands: any) {
+    override async setup(commands: CommandSetBuilder) {
         this.pin_archive = await this.utilities.get_channel(this.wheatley.channels.pin_archive);
     }
 

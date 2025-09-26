@@ -618,15 +618,6 @@ export class Wheatley {
         return thread.parentId != null && this.is_forum_help_channel(thread.parentId);
     }
 
-    async get_corresponding_text_help_channel(thread: Discord.ThreadChannel) {
-        if (thread.parentId == this.channels.cpp_help) {
-            return (await this.client.channels.fetch(this.channels.cpp_help_text)) as Discord.TextChannel;
-        } else if (thread.parentId == this.channels.c_help) {
-            return (await this.client.channels.fetch(this.channels.c_help_text)) as Discord.TextChannel;
-        }
-        assert(false);
-    }
-
     // utility: returns the channel for regular channels or the thread / forum post parent
     top_level_channel(channel: Discord.TextBasedChannel) {
         if (channel instanceof Discord.ThreadChannel && channel.parentId != null) {

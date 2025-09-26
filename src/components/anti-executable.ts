@@ -10,6 +10,7 @@ import { build_description, capitalize } from "../utils/strings.js";
 import { Virustotal } from "../infra/virustotal.js";
 import Mute from "./moderation/mute.js";
 import { unwrap } from "../utils/misc.js";
+import { CommandSetBuilder } from "../command-abstractions/command-set-builder.js";
 
 const ACTION_THRESHOLD = 5;
 
@@ -30,7 +31,7 @@ export default class AntiExecutable extends BotComponent {
         }
     }
 
-    override async setup(commands: any) {
+    override async setup(commands: CommandSetBuilder) {
         this.staff_flag_log = await this.utilities.get_channel(this.wheatley.channels.staff_flag_log);
         this.staff_action_log = await this.utilities.get_channel(this.wheatley.channels.staff_action_log);
     }

@@ -5,6 +5,7 @@ import { M } from "../utils/debugging-and-logging.js";
 import { colors } from "../common.js";
 import { BotComponent } from "../bot-component.js";
 import { Wheatley } from "../wheatley.js";
+import { CommandSetBuilder } from "../command-abstractions/command-set-builder.js";
 
 /**
  * Tracks certain mentions, such as mentions of root, moderators, Wheatley, etc.
@@ -13,7 +14,7 @@ export default class TrackedMentions extends BotComponent {
     private staff_action_log: Discord.TextChannel;
     tracked_mentions: Set<string>;
 
-    override async setup(commands: any) {
+    override async setup(commands: CommandSetBuilder) {
         this.staff_action_log = await this.utilities.get_channel(this.wheatley.channels.staff_action_log);
     }
 

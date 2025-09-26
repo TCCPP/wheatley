@@ -29,6 +29,7 @@ import {
 import { set_interval } from "../../utils/node.js";
 
 import { get_random_array_element } from "../../utils/arrays.js";
+import { CommandSetBuilder } from "../../command-abstractions/command-set-builder.js";
 
 /*
  * !mute !unmute
@@ -173,7 +174,7 @@ export abstract class ModerationComponent extends BotComponent {
     sleep_list: SleepList<mongo.WithId<moderation_entry>, mongo.BSON.ObjectId>;
     timer: NodeJS.Timer | null = null;
 
-    override async setup(commands: any) {
+    override async setup(commands: CommandSetBuilder) {
         this.staff_action_log = await this.utilities.get_channel(this.wheatley.channels.staff_action_log);
         this.public_action_log = await this.utilities.get_channel(this.wheatley.channels.public_action_log);
     }

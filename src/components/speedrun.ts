@@ -6,6 +6,7 @@ import { colors } from "../common.js";
 import { BotComponent } from "../bot-component.js";
 import { Wheatley } from "../wheatley.js";
 import { discord_timestamp } from "../utils/discord.js";
+import { CommandSetBuilder } from "../command-abstractions/command-set-builder.js";
 
 export default class Speedrun extends BotComponent {
     private staff_action_log: Discord.TextChannel;
@@ -15,7 +16,7 @@ export default class Speedrun extends BotComponent {
         this.wheatley.tracker.add_submodule({ on_ban: this.on_ban.bind(this) });
     }
 
-    override async setup(commands: any) {
+    override async setup(commands: CommandSetBuilder) {
         this.staff_action_log = await this.utilities.get_channel(this.wheatley.channels.staff_action_log);
     }
 
