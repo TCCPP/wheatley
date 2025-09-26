@@ -122,7 +122,7 @@ export default class Autoreact extends BotComponent {
                     this.wheatley.ignorable_error("Unable to find emoji nog4g");
                 }
             }
-            if (message.channel.id == this.wheatley.channels.introductions.id) {
+            if (message.channel.id == this.wheatley.channels.introductions) {
                 if (message.member == null) {
                     // TODO: Ping zelis?
                     M.warn("Why??", message);
@@ -132,15 +132,15 @@ export default class Autoreact extends BotComponent {
                     M.log("Waving to new user", message.author.tag, message.author.id, message.url);
                     await message.react("👋");
                 }
-            } else if (message.channel.id == this.wheatley.channels.memes.id && has_media(message)) {
+            } else if (message.channel.id == this.wheatley.channels.memes && has_media(message)) {
                 M.log("Adding star reaction", message.author.tag, message.author.id, message.url);
                 await message.react("⭐");
-            } else if (message.channel.id == this.wheatley.channels.server_suggestions.id) {
+            } else if (message.channel.id == this.wheatley.channels.server_suggestions) {
                 M.log("Adding server suggestion reactions", message.author.tag, message.author.id, message.url);
                 await message.react("👍");
                 await message.react("👎");
                 await message.react("🤷");
-            } else if (message.channel.id == this.wheatley.channels.food.id && has_media(message)) {
+            } else if (message.channel.id == this.wheatley.channels.food && has_media(message)) {
                 const reaction = message.guild!.emojis.cache.find(emoji => emoji.name === "chefskiss");
                 if (reaction !== undefined) {
                     await message.react(reaction);
@@ -152,7 +152,7 @@ export default class Autoreact extends BotComponent {
             // reaction blocked
             if (e instanceof Discord.DiscordAPIError && e.code === 90001) {
                 await message.member?.timeout(1 * MINUTE, "Thou shall not block the bot");
-                if (message.channel.id == this.wheatley.channels.server_suggestions.id) {
+                if (message.channel.id == this.wheatley.channels.server_suggestions) {
                     await message.delete();
                 }
             } else {
@@ -173,7 +173,7 @@ export default class Autoreact extends BotComponent {
         ) {
             return;
         }
-        if (new_message.channel.id == this.wheatley.channels.memes.id) {
+        if (new_message.channel.id == this.wheatley.channels.memes) {
             const bot_starred = new_message.reactions.cache.get("⭐")?.users.cache.has(this.wheatley.user.id);
             // If we haven't stared (or don't know if we've starred) and the new message has media, star
             if (!bot_starred && has_media(new_message)) {
@@ -201,7 +201,7 @@ export default class Autoreact extends BotComponent {
 
     async catch_up() {
         const TCCPP = await this.wheatley.client.guilds.fetch(this.wheatley.guild.id);
-        const introductions_channel = await TCCPP.channels.fetch(this.wheatley.channels.introductions.id);
+        const introductions_channel = await TCCPP.channels.fetch(this.wheatley.channels.introductions);
         assert(introductions_channel);
         assert(introductions_channel.type == Discord.ChannelType.GuildText);
         const messages = await introductions_channel.messages.fetch({ limit: 100, cache: false });

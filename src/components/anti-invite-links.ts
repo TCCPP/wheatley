@@ -26,6 +26,12 @@ export default class AntiInviteLinks extends BotComponent {
         return true;
     }
 
+    private staff_flag_log: Discord.TextChannel;
+
+    override async setup(commands: any) {
+        this.staff_flag_log = await this.utilities.get_channel(this.wheatley.channels.staff_flag_log);
+    }
+
     async member_is_proficient_or_higher(member: Discord.GuildMember | null) {
         if (!member) {
             return false;
@@ -52,7 +58,7 @@ export default class AntiInviteLinks extends BotComponent {
             await message.delete();
             assert(!(message.channel instanceof Discord.PartialGroupDMChannel));
             await message.channel.send(`<@${message.author.id}> Please do not send invite links`);
-            await this.wheatley.channels.staff_flag_log.send({
+            await this.staff_flag_log.send({
                 content: `:warning: Invite link deleted`,
                 ...quote,
             });

@@ -25,6 +25,7 @@ export default class Mute extends ModerationComponent {
     }
 
     override async setup(commands: CommandSetBuilder) {
+        await super.setup(commands);
         commands.add(
             new TextBasedCommandBuilder("mute", EarlyReplyMode.visible)
                 .set_permissions(Discord.PermissionFlagsBits.BanMembers)

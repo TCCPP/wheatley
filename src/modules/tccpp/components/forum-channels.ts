@@ -48,12 +48,22 @@ export default class ForumChannels extends BotComponent {
     readonly timeout_map = new Map<string, NodeJS.Timeout>();
     interval: NodeJS.Timeout;
 
+    private general_discussion: Discord.TextChannel;
+    private cpp_help: Discord.ForumChannel;
+    private c_help: Discord.ForumChannel;
+
+    override async setup(commands: any) {
+        this.general_discussion = await this.utilities.get_channel(this.wheatley.channels.general_discussion);
+        this.cpp_help = await this.utilities.get_forum_channel(this.wheatley.channels.cpp_help);
+        this.c_help = await this.utilities.get_forum_channel(this.wheatley.channels.c_help);
+    }
+
     async forum_cleanup() {
         // TODO: Temporarily turned off
         M.debug("Running forum cleanup");
         // Routinely archive threads
         // Ensure no thread has both the solved and open tag?
-        for (const forum of [this.wheatley.channels.cpp_help, this.wheatley.channels.c_help]) {
+        for (const forum of [this.cpp_help, this.c_help]) {
             const open_tag = get_tag(forum, "Open").id;
             const solved_tag = get_tag(forum, "Solved").id;
             const stale_tag = get_tag(forum, "Stale").id;
@@ -188,6 +198,7 @@ export default class ForumChannels extends BotComponent {
     }
 
     override async on_ready() {
+        // Channel already initialized in setup
         //await get_initial_active();
         await this.forum_cleanup();
         // every hour try to cleanup
@@ -295,19 +306,19 @@ export default class ForumChannels extends BotComponent {
                     message,
                     `New question: ${thread.name}`,
                     true,
-                    this.wheatley.get_corresponding_text_help_channel(thread),
+                    await this.wheatley.get_corresponding_text_help_channel(thread),
                 );
             } else if (
                 thread.parentId != null &&
-                [this.wheatley.channels.code_review.id, this.wheatley.channels.showcase.id].includes(thread.parentId)
+                [this.wheatley.channels.code_review, this.wheatley.channels.showcase].includes(thread.parentId)
             ) {
                 await this.mirror_forum_post(
                     message,
                     `New ${
-                        thread.parentId == this.wheatley.channels.code_review.id ? "code review" : "showcase"
+                        thread.parentId == this.wheatley.channels.code_review ? "code review" : "showcase"
                     } post: ${thread.name}`,
                     true,
-                    this.wheatley.channels.general_discussion,
+                    this.general_discussion,
                 );
             }
         } else {

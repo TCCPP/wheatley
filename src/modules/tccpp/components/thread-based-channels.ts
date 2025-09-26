@@ -36,9 +36,9 @@ export default class ThreadBasedChannels extends BotComponent {
 
     override async on_ready() {
         this.thread_based_channel_ids = new Set([
-            this.wheatley.channels.server_suggestions.id,
-            this.wheatley.channels.showcase.id,
-            this.wheatley.channels.today_i_learned.id,
+            this.wheatley.channels.server_suggestions,
+            this.wheatley.channels.showcase,
+            this.wheatley.channels.today_i_learned,
         ]);
     }
 
@@ -84,7 +84,7 @@ export default class ThreadBasedChannels extends BotComponent {
     }
 
     override async on_message_delete(message: Discord.Message | Discord.PartialMessage) {
-        if (message.channelId === this.wheatley.channels.today_i_learned.id) {
+        if (message.channelId === this.wheatley.channels.today_i_learned) {
             if (message.hasThread) {
                 await unwrap(message.thread).send(
                     "This today I learned post was removed. If it was removed by a moderator it was likely due to it " +

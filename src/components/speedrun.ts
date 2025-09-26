@@ -8,9 +8,15 @@ import { Wheatley } from "../wheatley.js";
 import { discord_timestamp } from "../utils/discord.js";
 
 export default class Speedrun extends BotComponent {
+    private staff_action_log: Discord.TextChannel;
+
     constructor(wheatley: Wheatley) {
         super(wheatley);
         this.wheatley.tracker.add_submodule({ on_ban: this.on_ban.bind(this) });
+    }
+
+    override async setup(commands: any) {
+        this.staff_action_log = await this.utilities.get_channel(this.wheatley.channels.staff_action_log);
     }
 
     on_ban(ban: Discord.GuildBan, now: number) {
@@ -51,7 +57,7 @@ export default class Speedrun extends BotComponent {
                 text: `ID: ${user.id}`,
             })
             .setTimestamp();
-        this.wheatley.channels.staff_action_log
+        this.staff_action_log
             .send({ embeds: [embed] })
             .catch(this.wheatley.critical_error.bind(this.wheatley));
     }

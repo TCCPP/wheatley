@@ -24,6 +24,8 @@ type user_role_entry = {
 };
 
 export default class RoleManager extends BotComponent {
+    private skill_role_log: Discord.TextChannel;
+    private staff_member_log: Discord.TextChannel;
     pink_role: Discord.Role;
     interval: NodeJS.Timeout | null = null;
 
@@ -41,6 +43,9 @@ export default class RoleManager extends BotComponent {
     }>();
 
     override async setup(commands: CommandSetBuilder) {
+        this.skill_role_log = await this.utilities.get_channel(this.wheatley.channels.skill_role_log);
+        this.staff_member_log = await this.utilities.get_channel(this.wheatley.channels.staff_member_log);
+
         commands.add(
             new TextBasedCommandBuilder("gimmepink", EarlyReplyMode.ephemeral)
                 .set_description("Gives pink")
@@ -186,7 +191,7 @@ export default class RoleManager extends BotComponent {
             }
             this.debounce_map.insert(debounce_key);
             M.log("Detected skill level increase for", new_member.user.tag);
-            await this.wheatley.channels.skill_role_log.send({
+            await this.skill_role_log.send({
                 embeds: [
                     new Discord.EmbedBuilder()
                         .setAuthor({
@@ -245,7 +250,7 @@ export default class RoleManager extends BotComponent {
         if (roles_entry === null) {
             return;
         }
-        this.wheatley.llog(this.wheatley.channels.staff_member_log, {
+        this.wheatley.llog(this.staff_member_log, {
             embeds: [
                 new Discord.EmbedBuilder()
                     .setTitle("Re-Adding roles for Member")

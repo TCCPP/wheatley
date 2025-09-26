@@ -44,7 +44,10 @@ export default class SkillRoleSuggestion extends BotComponent {
         skill_role_threads: skill_suggestion_thread_entry;
     }>();
 
+    private skill_role_suggestions: Discord.ForumChannel;
+
     override async setup(commands: CommandSetBuilder) {
+        this.skill_role_suggestions = await this.utilities.get_forum_channel(this.wheatley.channels.skill_role_suggestions);
         commands.add(
             new UserContextMenuInteractionBuilder("Suggest Skill Role User").set_handler(
                 this.skill_suggestion.bind(this),
@@ -152,9 +155,9 @@ export default class SkillRoleSuggestion extends BotComponent {
             .toSorted((a, b) => descending(a, b, v => v[1]))
             .filter(v => v[1] !== 0);
         const suggested_levels = sorted_filtered_counts.map(([k, _]) => k);
-        const open_tag = get_tag(this.wheatley.channels.skill_role_suggestions, "Open").id;
+        const open_tag = get_tag(this.skill_role_suggestions, "Open").id;
         const role_tags = suggested_levels.map(
-            role => get_tag(this.wheatley.channels.skill_role_suggestions, capitalize(role)).id,
+            role => get_tag(this.skill_role_suggestions, capitalize(role)).id,
         );
         return {
             tags: [open_tag, ...role_tags],
@@ -178,7 +181,7 @@ export default class SkillRoleSuggestion extends BotComponent {
                 thread_closed: null,
             });
             if (entry) {
-                const thread = await this.wheatley.channels.skill_role_suggestions.threads.fetch(entry.channel_id);
+                const thread = await this.skill_role_suggestions.threads.fetch(entry.channel_id);
                 if (thread) {
                     const start = unwrap(await thread.fetchStarterMessage());
                     const { content, tags } = await this.make_thread_status(member, entry.thread_opened);
@@ -188,7 +191,7 @@ export default class SkillRoleSuggestion extends BotComponent {
                 }
             }
             const { content, tags } = await this.make_thread_status(member, suggestion_time);
-            const thread = await this.wheatley.channels.skill_role_suggestions.threads.create({
+            const thread = await this.skill_role_suggestions.threads.create({
                 name: member.displayName,
                 autoArchiveDuration: Discord.ThreadAutoArchiveDuration.OneWeek,
                 message: {

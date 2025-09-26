@@ -70,6 +70,8 @@ export default class TheButton extends BotComponent {
     last_reset: number;
     longest_time_without_reset: number;
 
+    private the_button_channel!: Discord.TextChannel;
+
     private database = this.wheatley.database.create_proxy<{
         component_state: the_button_state;
         button_scoreboard: the_button_scoreboard_entry;
@@ -191,12 +193,14 @@ export default class TheButton extends BotComponent {
     }
 
     override async on_ready() {
+        this.the_button_channel = await this.utilities.get_channel(this.wheatley.channels.the_button);
+
         const state = await this.database.component_state.findOne({ id: "the_button" });
         this.button_presses = state?.button_presses ?? 0;
         this.last_reset = state?.last_reset ?? Date.now();
         this.longest_time_without_reset = state?.longest_time_without_reset ?? 0;
 
-        this.button_message = await this.wheatley.channels.the_button.messages.fetch(this.button_message_id);
+        this.button_message = await this.the_button_channel.messages.fetch(this.button_message_id);
         let waiting = false;
         this.interval = set_interval(() => {
             if (

@@ -69,78 +69,77 @@ export type wheatley_config = core_config & {
     [key: string]: any;
 };
 
-const tuple = <T extends any[]>(...args: T): T => args;
 
-const channels_map = {
+const channels = {
     // staff
-    staff_flag_log: tuple("1026972603019169842", Discord.TextChannel),
-    staff_experimental_log: tuple("1207899185790197760", Discord.TextChannel),
-    staff_action_log: tuple("845290775692443699", Discord.TextChannel),
-    public_action_log: tuple("1341611685223596103", Discord.TextChannel),
-    staff_clock_log: tuple("1220882759862452284", Discord.ForumChannel),
-    welcome: tuple("778017793567490078", Discord.TextChannel),
-    staff_member_log: tuple("875681819662622730", Discord.TextChannel),
-    staff_message_log: tuple("467729928956411914", Discord.TextChannel),
-    staff_only: tuple("342153262260289537", Discord.TextChannel),
-    mods: tuple("847993258600038460", Discord.TextChannel),
-    voice_hotline: tuple("1379456835634987098", Discord.TextChannel),
+    staff_flag_log: "1026972603019169842",
+    staff_experimental_log: "1207899185790197760",
+    staff_action_log: "845290775692443699",
+    public_action_log: "1341611685223596103",
+    staff_clock_log: "1220882759862452284",
+    welcome: "778017793567490078",
+    staff_member_log: "875681819662622730",
+    staff_message_log: "467729928956411914",
+    staff_only: "342153262260289537",
+    mods: "847993258600038460",
+    voice_hotline: "1379456835634987098",
     // meta
-    rules: tuple("659868782877212723", Discord.TextChannel),
-    announcements: tuple("331881381477089282", Discord.NewsChannel),
-    server_suggestions: tuple("802541516655951892", Discord.TextChannel),
-    skill_role_suggestions: tuple("1211089633547526204", Discord.ForumChannel),
-    skill_roles_meta: tuple("1182536717056618557", Discord.TextChannel),
-    news: tuple("1269506410530738267", Discord.ForumChannel),
-    old_resources: tuple("1124619767542718524", Discord.ForumChannel),
-    resources: tuple("1361574878561570926", Discord.TextChannel),
-    partners: tuple("904790565000986745", Discord.TextChannel),
-    the_button: tuple("1069678919667687455", Discord.TextChannel),
-    articles: tuple("1130174377539940475", Discord.TextChannel),
+    rules: "659868782877212723",
+    announcements: "331881381477089282",
+    server_suggestions: "802541516655951892",
+    skill_role_suggestions: "1211089633547526204",
+    skill_roles_meta: "1182536717056618557",
+    news: "1269506410530738267",
+    old_resources: "1124619767542718524",
+    resources: "1361574878561570926",
+    partners: "904790565000986745",
+    the_button: "1069678919667687455",
+    articles: "1130174377539940475",
     // language channels
-    cpp_help: tuple("1013107104678162544", Discord.ForumChannel),
-    c_help: tuple("1013104018739974194", Discord.ForumChannel),
-    cpp_help_text: tuple("331718580070645760", Discord.TextChannel),
-    c_help_text: tuple("331718539738087426", Discord.TextChannel),
-    c_cpp_discussion: tuple("851121440425639956", Discord.TextChannel),
-    general_discussion: tuple("855220264149057556", Discord.TextChannel),
-    code_review: tuple("1078717238678409369", Discord.ForumChannel),
-    showcase: tuple("1014328785685979136", Discord.ForumChannel),
-    tooling: tuple("331913460080181258", Discord.TextChannel),
-    algorithms_and_compsci: tuple("857668280012242944", Discord.TextChannel),
+    cpp_help: "1013107104678162544",
+    c_help: "1013104018739974194",
+    cpp_help_text: "331718580070645760",
+    c_help_text: "331718539738087426",
+    c_cpp_discussion: "851121440425639956",
+    general_discussion: "855220264149057556",
+    code_review: "1078717238678409369",
+    showcase: "1014328785685979136",
+    tooling: "331913460080181258",
+    algorithms_and_compsci: "857668280012242944",
     // off-topic
-    starboard: tuple("800509841424252968", Discord.TextChannel),
-    memes: tuple("526518219549442071", Discord.TextChannel),
-    food: tuple("1288515484513468436", Discord.TextChannel),
-    serious_off_topic: tuple("921113903574958080", Discord.TextChannel),
-    room_of_requirement: tuple("1082800064113672192", Discord.TextChannel),
-    boosters_only: tuple("792183875241639977", Discord.TextChannel),
+    starboard: "800509841424252968",
+    memes: "526518219549442071",
+    food: "1288515484513468436",
+    serious_off_topic: "921113903574958080",
+    room_of_requirement: "1082800064113672192",
+    boosters_only: "792183875241639977",
     // other
-    bot_spam: tuple("506274405500977153", Discord.TextChannel),
-    introductions: tuple("933113495304679494", Discord.TextChannel),
-    cursed_code: tuple("855220292736516128", Discord.TextChannel),
-    suggestion_dashboard: tuple("908928083879415839", Discord.ThreadChannel),
-    suggestion_action_log: tuple("909309608512880681", Discord.ThreadChannel),
-    today_i_learned: tuple("873682069325217802", Discord.TextChannel),
-    goals2024: tuple("1189255286364569640", Discord.TextChannel),
-    goals2025: tuple("1323734788707848253", Discord.TextChannel),
-    days_since_last_incident: tuple("1195920462958575676", Discord.TextChannel),
-    literally_1984: tuple("1097993854214488154", Discord.TextChannel),
-    lore: tuple("890067781628866620", Discord.TextChannel),
-    bot_dev_internal: tuple("1166517065763536977", Discord.TextChannel),
-    pin_archive: tuple("1284234644396572714", Discord.TextChannel),
-    skill_role_log: tuple("1315023714206617610", Discord.TextChannel),
-    polls: tuple("1319336135213846568", Discord.NewsChannel),
-    wiki_dev: tuple("1350899338229846127", Discord.TextChannel),
+    bot_spam: "506274405500977153",
+    introductions: "933113495304679494",
+    cursed_code: "855220292736516128",
+    suggestion_dashboard: "908928083879415839",
+    suggestion_action_log: "909309608512880681",
+    today_i_learned: "873682069325217802",
+    goals2024: "1189255286364569640",
+    goals2025: "1323734788707848253",
+    days_since_last_incident: "1195920462958575676",
+    literally_1984: "1097993854214488154",
+    lore: "890067781628866620",
+    bot_dev_internal: "1166517065763536977",
+    pin_archive: "1284234644396572714",
+    skill_role_log: "1315023714206617610",
+    polls: "1319336135213846568",
+    wiki_dev: "1350899338229846127",
     // voice
-    chill: tuple("1358502332941467879", Discord.VoiceChannel),
-    work_3: tuple("1358502770575147230", Discord.VoiceChannel),
-    work_4: tuple("1367735453112864838", Discord.VoiceChannel),
-    afk: tuple("331732845523369985", Discord.VoiceChannel),
-    deans_office: tuple("1379612678649155755", Discord.VoiceChannel),
+    chill: "1358502332941467879",
+    work_3: "1358502770575147230",
+    work_4: "1367735453112864838",
+    afk: "331732845523369985",
+    deans_office: "1379612678649155755",
     // red telephone
-    red_telephone_alerts: tuple("1140096352278290512", Discord.TextChannel),
+    red_telephone_alerts: "1140096352278290512",
     // error log
-    log: tuple("1260777903700971581", Discord.TextChannel),
+    log: "1260777903700971581",
 };
 
 const categories_map = {
@@ -281,11 +280,7 @@ export class Wheatley {
 
     private log_channel: Discord.TextBasedChannel | null = null;
 
-    readonly channels: {
-        // ["prototype"] gets the instance type, eliminating the `typeof`. InstanceType<T> doesn't work for a protected
-        // constructor, weirdly.
-        [k in keyof typeof channels_map]: (typeof channels_map)[k][1]["prototype"];
-    } = {} as any;
+    readonly channels = channels;
 
     readonly categories: {
         [k in keyof typeof categories_map]: Discord.CategoryChannel;
@@ -377,7 +372,7 @@ export class Wheatley {
             (async () => {
                 // Fetch the log channel immediately
                 if (!config.freestanding) {
-                    const channel = await this.client.channels.fetch(channels_map.log[0]);
+                    const channel = await this.client.channels.fetch(channels.log);
                     this.log_channel = channel && channel.isTextBased() ? channel : null;
                 }
 
@@ -453,19 +448,6 @@ export class Wheatley {
                 return value as T;
             }
         };
-        // Channels
-        await Promise.all(
-            Object.entries(channels_map).map(async ([k, [id, type]]) => {
-                const channel = await wrap(() => this.client.channels.fetch(id));
-                if (this.freestanding && channel === null) {
-                    return;
-                }
-                assert(channel !== null, `Channel ${k} ${id} not found`);
-                assert(channel instanceof type, `Channel ${k} ${id} not of the expected type`);
-                this.channels[k as keyof typeof channels_map] = channel as any;
-                M.log(`Fetched channel ${k}`);
-            }),
-        );
         // Categories
         await Promise.all(
             Object.entries(categories_map).map(async ([k, id]) => {
@@ -630,18 +612,18 @@ export class Wheatley {
     }
 
     is_forum_help_channel(id: string) {
-        return [this.channels.cpp_help.id, this.channels.c_help.id].includes(id);
+        return [this.channels.cpp_help, this.channels.c_help].includes(id);
     }
 
     is_forum_help_thread(thread: Discord.ThreadChannel) {
         return thread.parentId != null && this.is_forum_help_channel(thread.parentId);
     }
 
-    get_corresponding_text_help_channel(thread: Discord.ThreadChannel) {
-        if (thread.parentId == this.channels.cpp_help.id) {
-            return this.channels.cpp_help_text;
-        } else if (thread.parentId == this.channels.c_help.id) {
-            return this.channels.c_help_text;
+    async get_corresponding_text_help_channel(thread: Discord.ThreadChannel) {
+        if (thread.parentId == this.channels.cpp_help) {
+            return await this.client.channels.fetch(this.channels.cpp_help_text) as Discord.TextChannel;
+        } else if (thread.parentId == this.channels.c_help) {
+            return await this.client.channels.fetch(this.channels.c_help_text) as Discord.TextChannel;
         }
         assert(false);
     }

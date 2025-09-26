@@ -10,7 +10,12 @@ import { Wheatley } from "../wheatley.js";
  * Tracks certain mentions, such as mentions of root, moderators, Wheatley, etc.
  */
 export default class TrackedMentions extends BotComponent {
+    private staff_action_log: Discord.TextChannel;
     tracked_mentions: Set<string>;
+
+    override async setup(commands: any) {
+        this.staff_action_log = await this.utilities.get_channel(this.wheatley.channels.staff_action_log);
+    }
 
     override async on_ready() {
         this.tracked_mentions = new Set([
@@ -44,7 +49,7 @@ export default class TrackedMentions extends BotComponent {
                     text: `ID: ${message.author.id}`,
                 })
                 .setTimestamp();
-            await this.wheatley.channels.staff_action_log.send({ embeds: [embed] });
+            await this.staff_action_log.send({ embeds: [embed] });
         }
     }
 

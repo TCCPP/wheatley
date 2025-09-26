@@ -43,8 +43,14 @@ export default class Modmail extends BotComponent {
     private database = this.wheatley.database.create_proxy<{
         component_state: moderation_state;
     }>();
+    private rules: Discord.TextChannel;
+    private mods: Discord.TextChannel;
+    private staff_member_log: Discord.TextChannel;
 
     override async setup(commands: CommandSetBuilder) {
+        this.rules = await this.utilities.get_channel(this.wheatley.channels.rules);
+        this.mods = await this.utilities.get_channel(this.wheatley.channels.mods);
+        this.staff_member_log = await this.utilities.get_channel(this.wheatley.channels.staff_member_log);
         commands.add(
             new TextBasedCommandBuilder("wsetupmodmailsystem", EarlyReplyMode.none)
                 .set_permissions(Discord.PermissionFlagsBits.Administrator)
@@ -98,7 +104,7 @@ export default class Modmail extends BotComponent {
                 const member = await this.wheatley.guild.members.fetch(interaction.member.user.id);
                 // make the thread
                 const id = await this.increment_modmail_id();
-                const thread = await this.wheatley.channels.rules.threads.create({
+                const thread = await this.rules.threads.create({
                     type: Discord.ChannelType.PrivateThread,
                     invitable: false,
                     name: `Modmail #${id}`,
@@ -121,7 +127,7 @@ export default class Modmail extends BotComponent {
                     name: member.user.tag,
                     iconURL: member.displayAvatarURL(),
                 });
-                await this.wheatley.channels.mods.send({
+                await this.mods.send({
                     content: make_url(thread),
                     embeds: [notification_embed],
                 });
@@ -380,7 +386,7 @@ export default class Modmail extends BotComponent {
         if (body) {
             embed.setDescription(body);
         }
-        await this.wheatley.channels.staff_member_log.send({
+        await this.staff_member_log.send({
             embeds: [embed],
         });
     }

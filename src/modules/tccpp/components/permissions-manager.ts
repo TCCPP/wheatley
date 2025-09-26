@@ -31,7 +31,7 @@ export default class PermissionManager extends BotComponent {
     category_permissions: Record<string, category_permission_entry> = {};
     channel_overrides: Record<string, channel_permission_entry> = {};
 
-    setup_permissions_map() {
+    async setup_permissions_map() {
         // permission sets
         const write_permissions = [
             Discord.PermissionsBitField.Flags.SendMessages,
@@ -167,7 +167,7 @@ export default class PermissionManager extends BotComponent {
         this.add_entry(this.wheatley.categories.meta_archive, mod_only_channel);
 
         // meta overrides
-        this.add_channel_overwrite(this.wheatley.channels.rules, {
+        await this.add_channel_overwrite(this.wheatley.channels.rules, {
             [this.wheatley.guild.roles.everyone.id]: {
                 deny: [
                     Discord.PermissionsBitField.Flags.SendMessages,
@@ -183,12 +183,12 @@ export default class PermissionManager extends BotComponent {
                 ],
             },
         });
-        this.add_channel_overwrite(this.wheatley.channels.announcements, read_only_channel);
-        this.add_channel_overwrite(this.wheatley.channels.resources, read_only_channel);
-        this.add_channel_overwrite(this.wheatley.channels.old_resources, read_only_channel);
-        this.add_channel_overwrite(this.wheatley.channels.partners, read_only_channel);
-        this.add_channel_overwrite(this.wheatley.channels.articles, read_only_channel);
-        this.add_channel_overwrite(this.wheatley.channels.server_suggestions, {
+        await this.add_channel_overwrite(this.wheatley.channels.announcements, read_only_channel);
+        await this.add_channel_overwrite(this.wheatley.channels.resources, read_only_channel);
+        await this.add_channel_overwrite(this.wheatley.channels.old_resources, read_only_channel);
+        await this.add_channel_overwrite(this.wheatley.channels.partners, read_only_channel);
+        await this.add_channel_overwrite(this.wheatley.channels.articles, read_only_channel);
+        await this.add_channel_overwrite(this.wheatley.channels.server_suggestions, {
             ...default_permissions,
             [this.wheatley.guild.roles.everyone.id]: {
                 deny: [
@@ -209,7 +209,7 @@ export default class PermissionManager extends BotComponent {
                 deny: [Discord.PermissionsBitField.Flags.ViewChannel],
             },
         });
-        this.add_channel_overwrite(this.wheatley.channels.the_button, {
+        await this.add_channel_overwrite(this.wheatley.channels.the_button, {
             ...default_permissions,
             [this.wheatley.guild.roles.everyone.id]: {
                 deny: [
@@ -226,11 +226,11 @@ export default class PermissionManager extends BotComponent {
                 allow: [Discord.PermissionsBitField.Flags.ViewChannel],
             },
         };
-        this.add_channel_overwrite(this.wheatley.channels.skill_roles_meta, jedi_council);
-        this.add_channel_overwrite(this.wheatley.channels.skill_role_suggestions, jedi_council);
+        await this.add_channel_overwrite(this.wheatley.channels.skill_roles_meta, jedi_council);
+        await this.add_channel_overwrite(this.wheatley.channels.skill_role_suggestions, jedi_council);
 
         // community overrides
-        this.add_channel_overwrite(this.wheatley.channels.polls, {
+        await this.add_channel_overwrite(this.wheatley.channels.polls, {
             ...read_only_channel_no_reactions,
             [this.wheatley.roles.moderators.id]: {
                 allow: [
@@ -240,35 +240,35 @@ export default class PermissionManager extends BotComponent {
                 ],
             },
         });
-        this.add_channel_overwrite(this.wheatley.channels.today_i_learned, {
+        await this.add_channel_overwrite(this.wheatley.channels.today_i_learned, {
             ...default_permissions,
             [this.wheatley.roles.no_til.id]: muted_permissions,
         });
         // off topic overrides
-        this.add_channel_overwrite(this.wheatley.channels.memes, {
+        await this.add_channel_overwrite(this.wheatley.channels.memes, {
             ...off_topic_permissions,
             [this.wheatley.roles.no_memes.id]: no_interaction_at_all,
         });
-        this.add_channel_overwrite(this.wheatley.channels.starboard, {
+        await this.add_channel_overwrite(this.wheatley.channels.starboard, {
             ...off_topic_permissions,
             [this.wheatley.roles.no_memes.id]: no_interaction_at_all,
             ...read_only_channel,
         });
-        this.add_channel_overwrite(this.wheatley.channels.pin_archive, {
+        await this.add_channel_overwrite(this.wheatley.channels.pin_archive, {
             ...off_topic_permissions,
             ...read_only_channel,
         });
-        this.add_channel_overwrite(this.wheatley.channels.skill_role_log, {
+        await this.add_channel_overwrite(this.wheatley.channels.skill_role_log, {
             ...read_only_channel,
         });
-        this.add_channel_overwrite(this.wheatley.channels.public_action_log, {
+        await this.add_channel_overwrite(this.wheatley.channels.public_action_log, {
             ...read_only_channel_no_reactions,
         });
-        this.add_channel_overwrite(this.wheatley.channels.serious_off_topic, {
+        await this.add_channel_overwrite(this.wheatley.channels.serious_off_topic, {
             ...off_topic_permissions,
             [this.wheatley.roles.no_serious_off_topic.id]: no_interaction_at_all,
         });
-        this.add_channel_overwrite(this.wheatley.channels.room_of_requirement, {
+        await this.add_channel_overwrite(this.wheatley.channels.room_of_requirement, {
             ...off_topic_permissions,
             [this.wheatley.roles.moderators.id]: {
                 allow: [
@@ -278,7 +278,7 @@ export default class PermissionManager extends BotComponent {
                 ],
             },
         });
-        this.add_channel_overwrite(this.wheatley.channels.boosters_only, {
+        await this.add_channel_overwrite(this.wheatley.channels.boosters_only, {
             ...default_permissions,
             [this.wheatley.guild.roles.everyone.id]: {
                 deny: [Discord.PermissionsBitField.Flags.ViewChannel],
@@ -288,15 +288,15 @@ export default class PermissionManager extends BotComponent {
             },
         });
         // misc overrides
-        this.add_channel_overwrite(this.wheatley.channels.days_since_last_incident, {
+        await this.add_channel_overwrite(this.wheatley.channels.days_since_last_incident, {
             ...default_permissions,
             ...read_only_channel,
         });
-        this.add_channel_overwrite(this.wheatley.channels.literally_1984, {
+        await this.add_channel_overwrite(this.wheatley.channels.literally_1984, {
             ...default_permissions,
             ...read_only_channel,
         });
-        this.add_channel_overwrite(this.wheatley.channels.lore, {
+        await this.add_channel_overwrite(this.wheatley.channels.lore, {
             ...default_permissions,
             [this.wheatley.guild.roles.everyone.id]: {
                 deny: [Discord.PermissionsBitField.Flags.ViewChannel],
@@ -306,12 +306,12 @@ export default class PermissionManager extends BotComponent {
             },
         });
         // bot dev overrides
-        this.add_channel_overwrite(this.wheatley.channels.bot_dev_internal, mod_only_channel);
+        await this.add_channel_overwrite(this.wheatley.channels.bot_dev_internal, mod_only_channel);
         // voice overrides
-        this.add_channel_overwrite(this.wheatley.channels.chill, member_voice_channel);
-        this.add_channel_overwrite(this.wheatley.channels.work_3, member_voice_channel);
-        this.add_channel_overwrite(this.wheatley.channels.work_4, member_voice_channel);
-        this.add_channel_overwrite(this.wheatley.channels.afk, {
+        await this.add_channel_overwrite(this.wheatley.channels.chill, member_voice_channel);
+        await this.add_channel_overwrite(this.wheatley.channels.work_3, member_voice_channel);
+        await this.add_channel_overwrite(this.wheatley.channels.work_4, member_voice_channel);
+        await this.add_channel_overwrite(this.wheatley.channels.afk, {
             [this.wheatley.guild.roles.everyone.id]: {
                 deny: [
                     Discord.PermissionsBitField.Flags.Speak,
@@ -326,7 +326,7 @@ export default class PermissionManager extends BotComponent {
                 ],
             },
         });
-        this.add_channel_overwrite(this.wheatley.channels.deans_office, {
+        await this.add_channel_overwrite(this.wheatley.channels.deans_office, {
             ...voice_permissions,
             [this.wheatley.guild.roles.everyone.id]: {
                 deny: [
@@ -348,9 +348,15 @@ export default class PermissionManager extends BotComponent {
         };
     }
 
-    add_channel_overwrite(channel: Discord.GuildChannel, permissions: permission_overwrites) {
-        this.channel_overrides[channel.id] = {
-            channel,
+    async add_channel_overwrite(channel: Discord.GuildChannel | string, permissions: permission_overwrites) {
+        let channelObj: Discord.GuildChannel;
+        if (typeof channel === 'string') {
+            channelObj = await this.wheatley.client.channels.fetch(channel) as Discord.GuildChannel;
+        } else {
+            channelObj = channel;
+        }
+        this.channel_overrides[channelObj.id] = {
+            channel: channelObj,
             permissions,
         };
     }
@@ -391,7 +397,7 @@ export default class PermissionManager extends BotComponent {
     }
 
     override async on_ready() {
-        this.setup_permissions_map();
+        await this.setup_permissions_map();
         this.set_permissions().catch(this.wheatley.critical_error.bind(this.wheatley));
         setTimeout(() => {
             this.set_permissions().catch(this.wheatley.critical_error.bind(this.wheatley));

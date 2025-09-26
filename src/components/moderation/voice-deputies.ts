@@ -14,8 +14,10 @@ import { unwrap } from "../../utils/misc.js";
 
 export default class VoiceDeputies extends BotComponent {
     private recently_in_voice = new SelfClearingSet<string>(5 * MINUTE);
+    private voice_hotline: Discord.TextChannel;
 
     override async setup(commands: CommandSetBuilder) {
+        this.voice_hotline = await this.utilities.get_channel(this.wheatley.channels.voice_hotline);
         commands.add(
             new TextBasedCommandBuilder("voice", EarlyReplyMode.ephemeral)
                 .set_permissions(Discord.PermissionFlagsBits.MoveMembers | Discord.PermissionFlagsBits.MuteMembers)
@@ -121,7 +123,7 @@ export default class VoiceDeputies extends BotComponent {
         }
 
         await target.timeout(3 * HOUR);
-        await this.wheatley.channels.voice_hotline.send({
+        await this.voice_hotline.send({
             content: `<@&${this.wheatley.roles.moderators.id}>`,
             embeds: [
                 new Discord.EmbedBuilder()
@@ -160,15 +162,15 @@ export default class VoiceDeputies extends BotComponent {
         if (entry.action == Discord.AuditLogEvent.MemberUpdate) {
             for (const change of entry.changes) {
                 if (change.key == "mute") {
-                    await this.wheatley.channels.voice_hotline.send(
+                    await this.voice_hotline.send(
                         `<@${entry.targetId}> was ${change.old ? "unmuted" : "muted"} by <@${entry.executorId}>`,
                     );
                 }
             }
         } else if (entry.action == Discord.AuditLogEvent.MemberMove) {
-            await this.wheatley.channels.voice_hotline.send(`user was moved by <@${entry.executorId}>`);
+            await this.voice_hotline.send(`user was moved by <@${entry.executorId}>`);
         } else if (entry.action == Discord.AuditLogEvent.MemberDisconnect) {
-            await this.wheatley.channels.voice_hotline.send(`user was disconnected by <@${entry.executorId}>`);
+            await this.voice_hotline.send(`user was disconnected by <@${entry.executorId}>`);
         }
     }
 

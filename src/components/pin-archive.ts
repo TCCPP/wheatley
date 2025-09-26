@@ -27,7 +27,8 @@ type pin_archive_entry = {
 };
 
 export default class PinArchive extends BotComponent {
-    mutex = new KeyedMutexSet<string>();
+    private pin_archive: Discord.TextChannel;
+    mutex = new KeyedMutexSet<string>;
 
     private database = this.wheatley.database.create_proxy<{
         pins: pin_entry;
@@ -37,6 +38,10 @@ export default class PinArchive extends BotComponent {
     constructor(wheatley: Wheatley) {
         super(wheatley);
         wheatley.client.on("channelPinsUpdate", this.on_pin_update.bind(this));
+    }
+
+    override async setup(commands: any) {
+        this.pin_archive = await this.utilities.get_channel(this.wheatley.channels.pin_archive);
     }
 
     on_pin_update(channel: Discord.TextBasedChannel, time: Date) {
@@ -57,7 +62,7 @@ export default class PinArchive extends BotComponent {
                 // edit
                 let pin_archive_message;
                 try {
-                    pin_archive_message = await this.wheatley.channels.pin_archive.messages.fetch(
+                    pin_archive_message = await this.pin_archive.messages.fetch(
                         pin_archive_entry.archive_message,
                     );
                 } catch (e: any) {
@@ -75,7 +80,7 @@ export default class PinArchive extends BotComponent {
             } else {
                 // send
                 try {
-                    const archive_message = await this.wheatley.channels.pin_archive.send({
+                    const archive_message = await this.pin_archive.send({
                         content: `<#${message.channel.id}>`,
                         ...(await make_embeds()),
                     });

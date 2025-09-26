@@ -19,8 +19,12 @@ export default class ModerationControl extends BotComponent {
     private database = this.wheatley.database.create_proxy<{
         moderations: moderation_entry;
     }>();
+    private staff_action_log: Discord.TextChannel;
+    private public_action_log: Discord.TextChannel;
 
     override async setup(commands: CommandSetBuilder) {
+        this.staff_action_log = await this.utilities.get_channel(this.wheatley.channels.staff_action_log);
+        this.public_action_log = await this.utilities.get_channel(this.wheatley.channels.public_action_log);
         commands.add(
             new TextBasedCommandBuilder("reason", EarlyReplyMode.visible)
                 .set_description("Update the reason for a case")
@@ -132,7 +136,7 @@ export default class ModerationControl extends BotComponent {
         );
         if (res) {
             await this.reply_with_success(command, "Reason updated");
-            await this.wheatley.channels.staff_action_log.send({
+            await this.staff_action_log.send({
                 embeds: [
                     Modlogs.case_summary(res, await this.wheatley.client.users.fetch(res.user), true).setTitle(
                         `Case ${res.case_number} reason updated`,
@@ -140,7 +144,7 @@ export default class ModerationControl extends BotComponent {
                 ],
             });
             if (res.type !== "note") {
-                await this.wheatley.channels.public_action_log.send({
+                await this.public_action_log.send({
                     embeds: [
                         Modlogs.case_summary(res, await this.wheatley.client.users.fetch(res.user), false).setTitle(
                             `Case ${res.case_number} reason updated`,
@@ -168,7 +172,7 @@ export default class ModerationControl extends BotComponent {
         );
         if (res) {
             await this.reply_with_success(command, "Context updated");
-            await this.wheatley.channels.staff_action_log.send({
+            await this.staff_action_log.send({
                 embeds: [
                     Modlogs.case_summary(res, await this.wheatley.client.users.fetch(res.user), true).setTitle(
                         `Case ${res.case_number} context updated`,
@@ -206,7 +210,7 @@ export default class ModerationControl extends BotComponent {
             await this.reply_with_success(command, "Duration updated");
             // Update sleep lists and remove moderation if needed
             this.wheatley.event_hub.emit("update_moderation", res);
-            await this.wheatley.channels.staff_action_log.send({
+            await this.staff_action_log.send({
                 embeds: [
                     Modlogs.case_summary(res, await this.wheatley.client.users.fetch(res.user), true).setTitle(
                         `Case ${res.case_number} duration updated`,
@@ -214,7 +218,7 @@ export default class ModerationControl extends BotComponent {
                 ],
             });
             if (res.type !== "note") {
-                await this.wheatley.channels.public_action_log.send({
+                await this.public_action_log.send({
                     embeds: [
                         Modlogs.case_summary(res, await this.wheatley.client.users.fetch(res.user), false).setTitle(
                             `Case ${res.case_number} duration updated`,
@@ -249,7 +253,7 @@ export default class ModerationControl extends BotComponent {
             await this.reply_with_success(command, "Case expunged");
             // Update sleep lists and remove moderation if needed
             this.wheatley.event_hub.emit("update_moderation", res);
-            await this.wheatley.channels.staff_action_log.send({
+            await this.staff_action_log.send({
                 embeds: [
                     Modlogs.case_summary(res, await this.wheatley.client.users.fetch(res.user), true).setTitle(
                         `Case ${res.case_number} expunged`,
@@ -257,7 +261,7 @@ export default class ModerationControl extends BotComponent {
                 ],
             });
             if (res.type !== "note") {
-                await this.wheatley.channels.public_action_log.send({
+                await this.public_action_log.send({
                     embeds: [
                         Modlogs.case_summary(res, await this.wheatley.client.users.fetch(res.user), false).setTitle(
                             `Case ${res.case_number} expunged`,

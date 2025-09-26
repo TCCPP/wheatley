@@ -66,7 +66,13 @@ export default class CHelpRedirect extends BotComponent {
     // use the same set for both channels, shouldn't be an issue in practice
     readonly auto_triggered_users = new SelfClearingSet<string>(1 * HOUR);
 
+    private c_help_text!: Discord.TextChannel;
+    private cpp_help_text!: Discord.TextChannel;
+
     override async setup(commands: CommandSetBuilder) {
+        this.c_help_text = await this.utilities.get_channel(this.wheatley.channels.c_help_text);
+        this.cpp_help_text = await this.utilities.get_channel(this.wheatley.channels.cpp_help_text);
+
         commands.add(
             new TextBasedCommandBuilder("not-c", EarlyReplyMode.none)
                 .set_description("Mark C++ code in the C help channel")
@@ -182,22 +188,22 @@ export default class CHelpRedirect extends BotComponent {
         assert(command.channel instanceof Discord.GuildChannel);
 
         // Only allowed in #c-help-text
-        if (command.channel.id != this.wheatley.channels.c_help_text.id) {
-            await command.reply(`Can only be used in <#${this.wheatley.channels.c_help_text.id}>`, true);
+        if (command.channel.id != this.wheatley.channels.c_help_text) {
+            await command.reply(`Can only be used in <#${this.wheatley.channels.c_help_text}>`, true);
             return;
         }
 
         // For manual triggers, trust the caller and don't check the message
         // Supposedly the automatic check didn't trigger, so checking the message again would fail again
         if (user) {
-            await command.channel.send(
+            await this.c_help_text.send(
                 `<@${user.id}> Your code looks like C++ code, but this is a C channel. ` +
-                    `Did you mean to post in <#${this.wheatley.channels.cpp_help_text.id}>?`,
+                    `Did you mean to post in <#${this.wheatley.channels.cpp_help_text}>?`,
             );
         } else {
-            await command.channel.send(
+            await this.c_help_text.send(
                 `This code looks like C++ code, but this is a C channel. ` +
-                    `Did you mean to post in <#${this.wheatley.channels.cpp_help_text.id}>?`,
+                    `Did you mean to post in <#${this.wheatley.channels.cpp_help_text}>?`,
             );
         }
     }
@@ -207,22 +213,22 @@ export default class CHelpRedirect extends BotComponent {
         assert(command.channel instanceof Discord.GuildChannel);
 
         // Only allowed in #cpp-help-text
-        if (command.channel.id != this.wheatley.channels.cpp_help_text.id) {
-            await command.reply(`Can only be used in <#${this.wheatley.channels.cpp_help_text.id}>`, true);
+        if (command.channel.id != this.wheatley.channels.cpp_help_text) {
+            await command.reply(`Can only be used in <#${this.wheatley.channels.cpp_help_text}>`, true);
             return;
         }
 
         // For manual triggers, trust the caller and don't check the message
         // Supposedly the automatic check didn't trigger, so checking the message again would fail again
         if (user) {
-            await command.channel.send(
+            await this.cpp_help_text.send(
                 `<@${user.id}> Your code looks like C code, but this is a C++ channel. ` +
-                    `Did you mean to post in <#${this.wheatley.channels.c_help_text.id}>?`,
+                    `Did you mean to post in <#${this.wheatley.channels.c_help_text}>?`,
             );
         } else {
-            await command.channel.send(
+            await this.cpp_help_text.send(
                 `This code looks like C code, but this is a C++ channel. ` +
-                    `Did you mean to post in <#${this.wheatley.channels.c_help_text.id}>?`,
+                    `Did you mean to post in <#${this.wheatley.channels.c_help_text}>?`,
             );
         }
     }
@@ -248,20 +254,20 @@ export default class CHelpRedirect extends BotComponent {
         }
 
         // Only check messages in help-text channels
-        if (message.channel.id == this.wheatley.channels.c_help_text.id) {
+        if (message.channel.id == this.wheatley.channels.c_help_text) {
             if (this.check_message_for_cpp_code(message)) {
                 this.auto_triggered_users.insert(message.author.id);
                 await message.reply(
                     `<@${message.author.id}> Your code looks like C++ code, but this is a C channel. ` +
-                        `Did you mean to post in <#${this.wheatley.channels.cpp_help_text.id}>?`,
+                        `Did you mean to post in <#${this.wheatley.channels.cpp_help_text}>?`,
                 );
             }
-        } else if (message.channel.id == this.wheatley.channels.cpp_help_text.id) {
+        } else if (message.channel.id == this.wheatley.channels.cpp_help_text) {
             if (this.check_message_for_c_code(message)) {
                 this.auto_triggered_users.insert(message.author.id);
                 await message.reply(
                     `<@${message.author.id}> Your code looks like C code, but this is a C++ channel. ` +
-                        `Did you mean to post in <#${this.wheatley.channels.c_help_text.id}>?`,
+                        `Did you mean to post in <#${this.wheatley.channels.c_help_text}>?`,
                 );
             }
         }

@@ -24,7 +24,7 @@ export default class AntiSelfStar extends BotComponent {
             return;
         }
         if (
-            message.channelId == this.wheatley.channels.memes.id &&
+            message.channelId == this.wheatley.channels.memes &&
             user.id == message.author.id &&
             has_media(message)
         ) {

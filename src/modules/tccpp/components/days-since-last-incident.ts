@@ -17,6 +17,8 @@ export default class DaysSinceLastIncident extends BotComponent {
     last_time = "";
     timer: NodeJS.Timeout;
 
+    private days_since_last_incident!: Discord.TextChannel;
+
     private database = this.wheatley.database.create_proxy<{
         moderations: moderation_entry;
     }>();
@@ -61,7 +63,9 @@ export default class DaysSinceLastIncident extends BotComponent {
     }
 
     override async on_ready() {
-        const messages = (await this.wheatley.channels.days_since_last_incident.messages.fetch()).filter(
+        this.days_since_last_incident = await this.utilities.get_channel(this.wheatley.channels.days_since_last_incident);
+
+        const messages = (await this.days_since_last_incident.messages.fetch()).filter(
             message => message.author.id == this.wheatley.user.id,
         );
         assert(messages.size <= 1);
@@ -71,7 +75,7 @@ export default class DaysSinceLastIncident extends BotComponent {
         } else {
             const info = await this.last_incident_info();
             this.last_time = info.time;
-            await this.wheatley.channels.days_since_last_incident.send({
+            await this.days_since_last_incident.send({
                 embeds: [this.make_embed(info)],
             });
         }

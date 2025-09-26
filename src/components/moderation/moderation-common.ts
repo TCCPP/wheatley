@@ -166,10 +166,17 @@ export abstract class ModerationComponent extends BotComponent {
         component_state: moderation_state;
         moderations: moderation_entry;
     }>();
+    protected staff_action_log: Discord.TextChannel;
+    protected public_action_log: Discord.TextChannel;
 
     // Sorted by moderation end time
     sleep_list: SleepList<mongo.WithId<moderation_entry>, mongo.BSON.ObjectId>;
     timer: NodeJS.Timer | null = null;
+
+    override async setup(commands: any) {
+        this.staff_action_log = await this.utilities.get_channel(this.wheatley.channels.staff_action_log);
+        this.public_action_log = await this.utilities.get_channel(this.wheatley.channels.public_action_log);
+    }
 
     static non_duration_moderation_set = new Set(["warn", "kick", "softban", "note"]);
 
@@ -296,7 +303,7 @@ export abstract class ModerationComponent extends BotComponent {
             M.debug("Handling moderation expire", entry);
             await this.remove_moderation(entry);
             this.sleep_list.remove(entry._id);
-            await this.wheatley.channels.staff_action_log.send({
+            await this.staff_action_log.send({
                 embeds: [
                     Modlogs.case_summary(entry, await this.wheatley.client.users.fetch(entry.user), true).setTitle(
                         `${capitalize(this.type)} is being lifted (case ${entry.case_number})`,
@@ -440,7 +447,7 @@ export abstract class ModerationComponent extends BotComponent {
                     },
                 ]);
             }
-            this.wheatley.channels.staff_action_log
+            this.staff_action_log
                 .send({
                     embeds: [
                         Modlogs.case_summary(moderation, await this.wheatley.client.users.fetch(moderation.user), true),
@@ -448,7 +455,7 @@ export abstract class ModerationComponent extends BotComponent {
                 })
                 .catch(this.wheatley.critical_error.bind(this.wheatley));
             if (moderation.type !== "note") {
-                this.wheatley.channels.public_action_log
+                this.public_action_log
                     .send({
                         embeds: [
                             Modlogs.case_summary(
@@ -731,7 +738,7 @@ export abstract class ModerationComponent extends BotComponent {
                             }),
                     ],
                 });
-                await this.wheatley.channels.staff_action_log.send({
+                await this.staff_action_log.send({
                     embeds: [
                         Modlogs.case_summary(res, await this.wheatley.client.users.fetch(res.user), true).setTitle(
                             `Case ${res.case_number}: Un${this.past_participle}`,
@@ -739,7 +746,7 @@ export abstract class ModerationComponent extends BotComponent {
                     ],
                 });
                 if (res.type !== "note") {
-                    await this.wheatley.channels.public_action_log.send({
+                    await this.public_action_log.send({
                         embeds: [
                             Modlogs.case_summary(res, await this.wheatley.client.users.fetch(res.user), false).setTitle(
                                 `Case ${res.case_number}: Un${this.past_participle}`,
