@@ -72,10 +72,7 @@ export default class ThreadControl extends BotComponent {
         if (await this.try_to_control_thread(command, "archive")) {
             const channel = await command.get_channel();
             assert(channel.isThread());
-            if (
-                channel.parentId == this.rules.id &&
-                channel.type == Discord.ChannelType.PrivateThread
-            ) {
+            if (channel.parentId == this.rules.id && channel.type == Discord.ChannelType.PrivateThread) {
                 await command.reply("Archiving", true);
                 await channel.setArchived();
             } else {

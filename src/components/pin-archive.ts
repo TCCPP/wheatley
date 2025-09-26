@@ -28,7 +28,7 @@ type pin_archive_entry = {
 
 export default class PinArchive extends BotComponent {
     private pin_archive: Discord.TextChannel;
-    mutex = new KeyedMutexSet<string>;
+    mutex = new KeyedMutexSet<string>();
 
     private database = this.wheatley.database.create_proxy<{
         pins: pin_entry;
@@ -62,9 +62,7 @@ export default class PinArchive extends BotComponent {
                 // edit
                 let pin_archive_message;
                 try {
-                    pin_archive_message = await this.pin_archive.messages.fetch(
-                        pin_archive_entry.archive_message,
-                    );
+                    pin_archive_message = await this.pin_archive.messages.fetch(pin_archive_entry.archive_message);
                 } catch (e: any) {
                     // unknown message
                     if (e instanceof Discord.DiscordAPIError && e.code === 10008) {

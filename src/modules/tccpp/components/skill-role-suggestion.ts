@@ -47,7 +47,9 @@ export default class SkillRoleSuggestion extends BotComponent {
     private skill_role_suggestions: Discord.ForumChannel;
 
     override async setup(commands: CommandSetBuilder) {
-        this.skill_role_suggestions = await this.utilities.get_forum_channel(this.wheatley.channels.skill_role_suggestions);
+        this.skill_role_suggestions = await this.utilities.get_forum_channel(
+            this.wheatley.channels.skill_role_suggestions,
+        );
         commands.add(
             new UserContextMenuInteractionBuilder("Suggest Skill Role User").set_handler(
                 this.skill_suggestion.bind(this),
@@ -156,9 +158,7 @@ export default class SkillRoleSuggestion extends BotComponent {
             .filter(v => v[1] !== 0);
         const suggested_levels = sorted_filtered_counts.map(([k, _]) => k);
         const open_tag = get_tag(this.skill_role_suggestions, "Open").id;
-        const role_tags = suggested_levels.map(
-            role => get_tag(this.skill_role_suggestions, capitalize(role)).id,
-        );
+        const role_tags = suggested_levels.map(role => get_tag(this.skill_role_suggestions, capitalize(role)).id);
         return {
             tags: [open_tag, ...role_tags],
             content: build_description(

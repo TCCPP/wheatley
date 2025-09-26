@@ -70,7 +70,7 @@ export default class TheButton extends BotComponent {
     last_reset: number;
     longest_time_without_reset: number;
 
-    private the_button_channel!: Discord.TextChannel;
+    private the_button_channel: Discord.TextChannel;
 
     private database = this.wheatley.database.create_proxy<{
         component_state: the_button_state;
@@ -78,6 +78,8 @@ export default class TheButton extends BotComponent {
     }>();
 
     override async setup(commands: CommandSetBuilder) {
+        this.the_button_channel = await this.utilities.get_channel(this.wheatley.channels.the_button);
+
         commands.add(
             new TextBasedCommandBuilder("wsetupthebutton", EarlyReplyMode.none)
                 .set_permissions(Discord.PermissionFlagsBits.Administrator)
@@ -193,8 +195,6 @@ export default class TheButton extends BotComponent {
     }
 
     override async on_ready() {
-        this.the_button_channel = await this.utilities.get_channel(this.wheatley.channels.the_button);
-
         const state = await this.database.component_state.findOne({ id: "the_button" });
         this.button_presses = state?.button_presses ?? 0;
         this.last_reset = state?.last_reset ?? Date.now();

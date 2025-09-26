@@ -349,14 +349,14 @@ export default class PermissionManager extends BotComponent {
     }
 
     async add_channel_overwrite(channel: Discord.GuildChannel | string, permissions: permission_overwrites) {
-        let channelObj: Discord.GuildChannel;
-        if (typeof channel === 'string') {
-            channelObj = await this.wheatley.client.channels.fetch(channel) as Discord.GuildChannel;
+        let channel_obj: Discord.GuildChannel;
+        if (typeof channel === "string") {
+            channel_obj = (await this.wheatley.client.channels.fetch(channel)) as Discord.GuildChannel;
         } else {
-            channelObj = channel;
+            channel_obj = channel;
         }
-        this.channel_overrides[channelObj.id] = {
-            channel: channelObj,
+        this.channel_overrides[channel_obj.id] = {
+            channel: channel_obj,
             permissions,
         };
     }

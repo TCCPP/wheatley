@@ -75,10 +75,10 @@ export default class Starboard extends BotComponent {
 
     excluded_channels: Set<string>;
 
-    private starboard!: Discord.TextChannel;
-    private staff_flag_log!: Discord.TextChannel;
-    private memes!: Discord.TextChannel;
-    private cursed_code!: Discord.TextChannel;
+    private starboard: Discord.TextChannel;
+    private staff_flag_log: Discord.TextChannel;
+    private memes: Discord.TextChannel;
+    private cursed_code: Discord.TextChannel;
 
     private database = this.wheatley.database.create_proxy<{
         component_state: starboard_state;
@@ -88,6 +88,11 @@ export default class Starboard extends BotComponent {
     }>();
 
     override async setup(commands: CommandSetBuilder) {
+        this.starboard = await this.utilities.get_channel(this.wheatley.channels.starboard);
+        this.staff_flag_log = await this.utilities.get_channel(this.wheatley.channels.staff_flag_log);
+        this.memes = await this.utilities.get_channel(this.wheatley.channels.memes);
+        this.cursed_code = await this.utilities.get_channel(this.wheatley.channels.cursed_code);
+
         commands.add(
             new TextBasedCommandBuilder("add-negative-emoji", EarlyReplyMode.visible)
                 .set_description("Register a negative emoji")
@@ -145,11 +150,6 @@ export default class Starboard extends BotComponent {
     }
 
     override async on_ready() {
-        this.starboard = await this.utilities.get_channel(this.wheatley.channels.starboard);
-        this.staff_flag_log = await this.utilities.get_channel(this.wheatley.channels.staff_flag_log);
-        this.memes = await this.utilities.get_channel(this.wheatley.channels.memes);
-        this.cursed_code = await this.utilities.get_channel(this.wheatley.channels.cursed_code);
-
         const state = await this.database.component_state.findOne({ id: "starboard" });
         this.delete_emojis = state?.delete_emojis ?? [];
         this.ignored_emojis = state?.ignored_emojis ?? [];
@@ -230,9 +230,7 @@ export default class Starboard extends BotComponent {
                 // edit
                 let starboard_message;
                 try {
-                    starboard_message = await this.starboard.messages.fetch(
-                        starboard_entry.starboard_entry,
-                    );
+                    starboard_message = await this.starboard.messages.fetch(starboard_entry.starboard_entry);
                 } catch (e: any) {
                     // unknown message
                     if (e instanceof Discord.DiscordAPIError && e.code === 10008) {

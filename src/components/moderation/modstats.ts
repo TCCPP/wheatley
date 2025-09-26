@@ -64,10 +64,7 @@ export default class ModStats extends BotComponent {
             await command.reply(`<@${moderator.id}> is not a moderator`);
             return;
         }
-        if (
-            !this.wheatley.is_authorized_mod(command.user) &&
-            command.channel_id != this.bot_spam.id
-        ) {
+        if (!this.wheatley.is_authorized_mod(command.user) && command.channel_id != this.bot_spam.id) {
             await command.reply(`Please use in <#${this.bot_spam.id}>`, true);
             return;
         }

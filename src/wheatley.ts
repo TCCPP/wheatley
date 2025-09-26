@@ -69,7 +69,6 @@ export type wheatley_config = core_config & {
     [key: string]: any;
 };
 
-
 const channels = {
     // staff
     staff_flag_log: "1026972603019169842",
@@ -621,9 +620,9 @@ export class Wheatley {
 
     async get_corresponding_text_help_channel(thread: Discord.ThreadChannel) {
         if (thread.parentId == this.channels.cpp_help) {
-            return await this.client.channels.fetch(this.channels.cpp_help_text) as Discord.TextChannel;
+            return (await this.client.channels.fetch(this.channels.cpp_help_text)) as Discord.TextChannel;
         } else if (thread.parentId == this.channels.c_help) {
-            return await this.client.channels.fetch(this.channels.c_help_text) as Discord.TextChannel;
+            return (await this.client.channels.fetch(this.channels.c_help_text)) as Discord.TextChannel;
         }
         assert(false);
     }

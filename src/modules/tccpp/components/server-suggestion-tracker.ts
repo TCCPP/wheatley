@@ -53,8 +53,12 @@ export default class ServerSuggestionTracker extends BotComponent {
     private server_suggestions: Discord.TextChannel;
 
     override async setup(commands: CommandSetBuilder) {
-        this.suggestion_action_log = await this.wheatley.client.channels.fetch(this.wheatley.channels.suggestion_action_log) as Discord.ThreadChannel;
-        this.suggestion_dashboard = await this.wheatley.client.channels.fetch(this.wheatley.channels.suggestion_dashboard) as Discord.ThreadChannel;
+        this.suggestion_action_log = (await this.wheatley.client.channels.fetch(
+            this.wheatley.channels.suggestion_action_log,
+        )) as Discord.ThreadChannel;
+        this.suggestion_dashboard = (await this.wheatley.client.channels.fetch(
+            this.wheatley.channels.suggestion_dashboard,
+        )) as Discord.ThreadChannel;
         this.server_suggestions = await this.utilities.get_channel(this.wheatley.channels.server_suggestions);
         commands.add(
             new TextBasedCommandBuilder("suggestions-dashboard-count", EarlyReplyMode.visible)
@@ -256,9 +260,7 @@ export default class ServerSuggestionTracker extends BotComponent {
         try {
             const entry = unwrap(await this.database.server_suggestions.findOne({ suggestion: message_id }));
             M.log("Suggestion deleted", message_id, entry);
-            const status_message = await this.suggestion_dashboard.messages.fetch(
-                entry.status_message,
-            );
+            const status_message = await this.suggestion_dashboard.messages.fetch(entry.status_message);
             this.status_lock.insert(entry.status_message);
             await status_message.delete();
             await this.database.server_suggestions.deleteOne({ suggestion: message_id });
@@ -273,9 +275,7 @@ export default class ServerSuggestionTracker extends BotComponent {
             const hash = xxh3(message.content);
             if (hash != entry.hash) {
                 M.log("Suggestion edited", message.author.tag, message.author.id, message.url);
-                const status_message = await this.suggestion_dashboard.messages.fetch(
-                    entry.status_message,
-                );
+                const status_message = await this.suggestion_dashboard.messages.fetch(entry.status_message);
                 const quote = await this.make_embeds(message);
                 await status_message.edit(quote);
                 entry.hash = hash;
@@ -293,9 +293,7 @@ export default class ServerSuggestionTracker extends BotComponent {
                         message.author.id,
                         message.url,
                     );
-                    const status_message = await this.suggestion_dashboard.messages.fetch(
-                        entry.status_message,
-                    );
+                    const status_message = await this.suggestion_dashboard.messages.fetch(entry.status_message);
                     const quote = await this.make_embeds(message);
                     await status_message.edit(quote);
                     entry.up = up;
@@ -317,9 +315,7 @@ export default class ServerSuggestionTracker extends BotComponent {
             if (entry) {
                 M.log("Suggestion being resolved", [message.id]);
                 // remove status message
-                const status_message = await this.suggestion_dashboard.messages.fetch(
-                    entry.status_message,
-                );
+                const status_message = await this.suggestion_dashboard.messages.fetch(entry.status_message);
                 this.status_lock.insert(entry.status_message);
                 await status_message.delete();
                 await this.database.server_suggestions.deleteOne({ suggestion: message.id });
@@ -452,9 +448,7 @@ export default class ServerSuggestionTracker extends BotComponent {
             if (entry) {
                 M.debug("Suggestion vote", reaction.emoji.name, [message.id]);
                 // update message
-                const status_message = await this.suggestion_dashboard.messages.fetch(
-                    entry.status_message,
-                );
+                const status_message = await this.suggestion_dashboard.messages.fetch(entry.status_message);
                 const quote = await this.make_embeds(message);
                 await status_message.edit(quote);
                 if (reaction.emoji.name == "👍") {
@@ -714,8 +708,7 @@ export default class ServerSuggestionTracker extends BotComponent {
                     // check if the status message was deleted (if we didn't just delete it with resolve_suggestion)
                     if (
                         !suggestion_was_resolved &&
-                        (await this.get_message(this.suggestion_dashboard, entry.status_message)) ==
-                            undefined
+                        (await this.get_message(this.suggestion_dashboard, entry.status_message)) == undefined
                     ) {
                         // just delete from this.database - no longer tracking
                         M.info(
