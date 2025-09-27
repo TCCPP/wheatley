@@ -651,8 +651,35 @@ export abstract class ModerationComponent extends BotComponent {
         basic_moderation_info: basic_moderation,
     ) {
         try {
+            const issuer = unwrap(await this.wheatley.try_fetch_guild_member(command.user));
             for (const user of users) {
-                await this.moderation_issue_handler(command, user, duration_string, reason, basic_moderation_info);
+                const target = await this.wheatley.try_fetch_guild_member(user);
+                if (target && target.roles.highest.position >= issuer.roles.highest.position) {
+                    await this.reply_with_error(command, unwrap(get_random_array_element(joke_responses_other)));
+                    return;
+                }
+                const base_moderation: basic_moderation_with_user = { ...basic_moderation_info, user: user.id };
+                if (!this.is_once_off && (await this.is_moderation_applied(base_moderation))) {
+                    await this.reply_with_error(command, `${user.displayName} is already ${this.past_participle}`);
+                    continue;
+                }
+                const moderation: moderation_entry = {
+                    ...basic_moderation_info,
+                    case_number: -1,
+                    user: user.id,
+                    user_name: user.displayName,
+                    moderator: command.user.id,
+                    moderator_name: (await command.get_member()).displayName,
+                    reason,
+                    issued_at: Date.now(),
+                    duration: parse_nullable_duration(duration_string),
+                    active: !this.is_once_off,
+                    removed: null,
+                    expunged: null,
+                    link: command.get_or_forge_url(),
+                };
+                await this.notify_user(user, this.past_participle, moderation);
+                await this.issue_moderation(moderation);
             }
             await command.replyOrFollowUp({
                 embeds: [
