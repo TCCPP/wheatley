@@ -623,12 +623,12 @@ export class Wheatley {
         return reply_message;
     }
 
-    async fetch_member_if_permitted(
+    async check_permissions(
         options: Discord.GuildMember | Discord.User | Discord.UserResolvable | Discord.FetchMemberOptions,
         permissions: Discord.PermissionResolvable,
     ) {
         const member = await this.try_fetch_guild_member(options);
-        return member?.permissions.has(permissions) ? member : null;
+        return member?.permissions.has(permissions) ? true : false;
     }
 
     staff_contacts() {

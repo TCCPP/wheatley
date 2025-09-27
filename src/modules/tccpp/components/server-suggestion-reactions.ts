@@ -41,12 +41,7 @@ export default class ServerSuggestionReactions extends BotComponent {
                     });
                     await reaction.users.remove(id);
                 } else if (root_only_reacts.has(reaction.emoji.name!)) {
-                    if (
-                        !(await this.wheatley.fetch_member_if_permitted(
-                            user.id,
-                            Discord.PermissionFlagsBits.Administrator,
-                        ))
-                    ) {
+                    if (!(await this.wheatley.check_permissions(user.id, Discord.PermissionFlagsBits.Administrator))) {
                         M.log("removing non-root reaction", {
                             content: reaction.message.content,
                             reaction: reaction.emoji.name,
@@ -141,9 +136,7 @@ export default class ServerSuggestionReactions extends BotComponent {
                     reaction.users.remove(user.id).catch(this.wheatley.critical_error.bind(this.wheatley));
                 }, 5 * MINUTE);
             } else if (root_only_reacts.has(reaction.emoji.name!)) {
-                if (
-                    !(await this.wheatley.fetch_member_if_permitted(user.id, Discord.PermissionFlagsBits.Administrator))
-                ) {
+                if (!(await this.wheatley.check_permissions(user.id, Discord.PermissionFlagsBits.Administrator))) {
                     M.log("removing non-root reaction", {
                         content: reaction.message.content,
                         reaction: reaction.emoji.name,

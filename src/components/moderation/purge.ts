@@ -164,7 +164,7 @@ export default class Purge extends BotComponent {
         if (interaction.isButton()) {
             if (interaction.customId.startsWith("abort_purge_")) {
                 if (
-                    !(await this.wheatley.fetch_member_if_permitted(
+                    !(await this.wheatley.check_permissions(
                         interaction.user,
                         Discord.PermissionFlagsBits.ManageMessages,
                     ))

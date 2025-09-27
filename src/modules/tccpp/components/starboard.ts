@@ -296,10 +296,7 @@ export default class Starboard extends BotComponent {
             do_delete = false;
         }
         if (
-            (await this.wheatley.fetch_member_if_permitted(
-                message.author,
-                Discord.PermissionFlagsBits.Administrator,
-            )) ||
+            (await this.wheatley.check_permissions(message.author, Discord.PermissionFlagsBits.Administrator)) ||
             message.author.bot
         ) {
             do_delete = false;

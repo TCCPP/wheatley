@@ -58,7 +58,7 @@ export default class ForumControl extends BotComponent {
             const owner_id = await this.get_owner(thread);
             if (
                 owner_id == request.user.id ||
-                (await this.wheatley.fetch_member_if_permitted(request.user, Discord.PermissionFlagsBits.ManageThreads))
+                (await this.wheatley.check_permissions(request.user, Discord.PermissionFlagsBits.ManageThreads))
             ) {
                 return true;
             } else {

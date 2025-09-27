@@ -217,10 +217,7 @@ export default class Modlogs extends BotComponent {
         if (interaction.isButton()) {
             if (interaction.customId.startsWith("modlogs_page_")) {
                 if (
-                    !(await this.wheatley.fetch_member_if_permitted(
-                        interaction.user,
-                        Discord.PermissionFlagsBits.BanMembers,
-                    ))
+                    !(await this.wheatley.check_permissions(interaction.user, Discord.PermissionFlagsBits.BanMembers))
                 ) {
                     await interaction.reply({
                         content: "Error: You are not authorized",

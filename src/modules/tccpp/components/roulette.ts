@@ -111,10 +111,7 @@ export default class Roulette extends BotComponent {
                 await this.update_score(command.user.id); // TODO: I forget why this is here
                 try {
                     if (
-                        await this.wheatley.fetch_member_if_permitted(
-                            command.user,
-                            Discord.PermissionFlagsBits.ModerateMembers,
-                        )
+                        await this.wheatley.check_permissions(command.user, Discord.PermissionFlagsBits.ModerateMembers)
                     ) {
                         this.disabled_users.insert(command.user.id);
                     } else {
