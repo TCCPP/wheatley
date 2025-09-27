@@ -57,11 +57,11 @@ import { CommandSetBuilder } from "../../command-abstractions/command-set-builde
 
 export const duration_regex = /perm\b|(\d+)\s*([a-zA-Z]+)/;
 
-export const moderation_on_team_member_message: string = "Can't apply this moderation on team members";
-export const joke_responses = [
+export const joke_responses_other = ["You have no power over this user :(", "lol, nice try!", "One day, maybe ;)"];
+export const joke_responses_self = [
     "You won't get off that easy! ;)",
     "Try again next time lmao",
-    "Didn't work. Maybe a skill issue?",
+    "Didn't work. skill issue?",
 ];
 
 function millis_of_time_unit(u: string) {
@@ -564,14 +564,19 @@ export abstract class ModerationComponent extends BotComponent {
         basic_moderation_info: basic_moderation,
     ) {
         try {
-            if (this.wheatley.is_authorized_mod(user)) {
-                // Check if the mod is trying to ban themselves
-                if (basic_moderation_info.type == "ban" && command.user.id == user.id) {
-                    // If the mod is trying to ban themselves then troll them ;)
-                    await this.reply_with_error(command, unwrap(get_random_array_element(joke_responses)));
-                } else {
-                    await this.reply_with_error(command, moderation_on_team_member_message);
+            const target = await this.wheatley.try_fetch_guild_member(user);
+            const issuer = unwrap(await this.wheatley.try_fetch_guild_member(command.user));
+            if (target && target.roles.highest.position >= issuer.roles.highest.position) {
+                if (
+                    command.user.id == user.id &&
+                    (basic_moderation_info.type == "ban" || basic_moderation_info.type == "kick")
+                ) {
+                    // Mod is trying to ban/kick themselves => troll them ;)
+                    await this.reply_with_error(command, unwrap(get_random_array_element(joke_responses_self)));
+                    return;
                 }
+                // Mod is trying to ban/kick above their paygrade => troll them :D
+                await this.reply_with_error(command, unwrap(get_random_array_element(joke_responses_other)));
                 return;
             }
             const base_moderation: basic_moderation_with_user = { ...basic_moderation_info, user: user.id };
@@ -647,32 +652,7 @@ export abstract class ModerationComponent extends BotComponent {
     ) {
         try {
             for (const user of users) {
-                if (this.wheatley.is_authorized_mod(user)) {
-                    await this.reply_with_error(command, moderation_on_team_member_message);
-                    continue;
-                }
-                const base_moderation: basic_moderation_with_user = { ...basic_moderation_info, user: user.id };
-                if (!this.is_once_off && (await this.is_moderation_applied(base_moderation))) {
-                    await this.reply_with_error(command, `${user.displayName} is already ${this.past_participle}`);
-                    continue;
-                }
-                const moderation: moderation_entry = {
-                    ...basic_moderation_info,
-                    case_number: -1,
-                    user: user.id,
-                    user_name: user.displayName,
-                    moderator: command.user.id,
-                    moderator_name: (await command.get_member()).displayName,
-                    reason,
-                    issued_at: Date.now(),
-                    duration: parse_nullable_duration(duration_string),
-                    active: !this.is_once_off,
-                    removed: null,
-                    expunged: null,
-                    link: command.get_or_forge_url(),
-                };
-                await this.notify_user(user, this.past_participle, moderation);
-                await this.issue_moderation(moderation);
+                await this.moderation_issue_handler(command, user, duration_string, reason, basic_moderation_info);
             }
             await command.replyOrFollowUp({
                 embeds: [

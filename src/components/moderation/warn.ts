@@ -27,7 +27,7 @@ export default class Warn extends ModerationComponent {
         await super.setup(commands);
         commands.add(
             new TextBasedCommandBuilder("warn", EarlyReplyMode.visible)
-                .set_permissions(Discord.PermissionFlagsBits.BanMembers)
+                .set_permissions(Discord.PermissionFlagsBits.ModerateMembers)
                 .set_description("Warn user")
                 .add_user_option({
                     title: "user",

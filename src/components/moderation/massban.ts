@@ -26,7 +26,12 @@ export default class Massban extends BotComponent {
             }
             if (message.content.startsWith("!wban")) {
                 assert(message.member != null);
-                if (this.wheatley.is_authorized_mod(message.member)) {
+                if (
+                    await this.wheatley.fetch_member_if_permitted(
+                        message.member,
+                        Discord.PermissionFlagsBits.BanMembers,
+                    )
+                ) {
                     await this.do_mass_ban(message);
                 } else {
                     await message.reply(`Unauthorized ${this.wheatley.emoji.access_denied}`);

@@ -295,7 +295,13 @@ export default class Starboard extends BotComponent {
         if (trigger_reaction.count <= max_non_negative) {
             do_delete = false;
         }
-        if (this.wheatley.is_root(message.author) || message.author.bot) {
+        if (
+            (await this.wheatley.fetch_member_if_permitted(
+                message.author,
+                Discord.PermissionFlagsBits.Administrator,
+            )) ||
+            message.author.bot
+        ) {
             do_delete = false;
         }
         if (this.deletes_in_last_24h() >= max_deletes_in_24h) {

@@ -198,8 +198,7 @@ export default class Modmail extends BotComponent {
         });
         await this.log_action(interaction.member, "Monkey pressed the button");
         try {
-            // can't apply roles to root
-            if (!this.wheatley.is_root(interaction.user)) {
+            if ((await this.wheatley.try_fetch_guild_member(interaction.user))?.manageable) {
                 const member = await this.wheatley.guild.members.fetch(interaction.user.id);
                 await member.roles.add(this.wheatley.roles.monke);
                 this.monke_set.set(interaction.user.id, Date.now());
@@ -219,8 +218,7 @@ export default class Modmail extends BotComponent {
                     ephemeral: true,
                 });
                 try {
-                    // can't apply roles to root
-                    if (!this.wheatley.is_root(interaction.user)) {
+                    if ((await this.wheatley.try_fetch_guild_member(interaction.user))?.manageable) {
                         await member.roles.remove(this.wheatley.roles.monke);
                         this.monke_set.remove(member.id);
                     }

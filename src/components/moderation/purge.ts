@@ -163,7 +163,12 @@ export default class Purge extends BotComponent {
     override async on_interaction_create(interaction: Discord.Interaction) {
         if (interaction.isButton()) {
             if (interaction.customId.startsWith("abort_purge_")) {
-                if (!this.wheatley.is_authorized_mod(interaction.user)) {
+                if (
+                    !(await this.wheatley.fetch_member_if_permitted(
+                        interaction.user,
+                        Discord.PermissionFlagsBits.ManageMessages,
+                    ))
+                ) {
                     await interaction.reply({
                         content: "Error: You are not authorized",
                         ephemeral: true,
