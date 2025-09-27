@@ -628,7 +628,7 @@ export class Wheatley {
         permissions: Discord.PermissionResolvable,
     ) {
         const member = await this.try_fetch_guild_member(options);
-        return member?.permissions.has(permissions) ? true : false;
+        return !!member?.permissions.has(permissions);
     }
 
     staff_contacts() {
