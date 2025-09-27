@@ -209,7 +209,7 @@ export class CommandHandler {
             const command_options: unknown[] = [];
             const command_object = new TextBasedCommand(interaction.commandName, command, interaction, this.wheatley);
             if (command.permissions !== undefined) {
-                if (await this.wheatley.fetch_member_if_permitted(interaction.user, command.permissions)) {
+                if (!(await this.wheatley.fetch_member_if_permitted(interaction.user, command.permissions))) {
                     await interaction.reply({
                         files: ["https://miro.medium.com/v2/resize:fit:750/1*lMV_u6tnu9WmFuJRyhTsFQ.jpeg"],
                     });
