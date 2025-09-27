@@ -656,7 +656,7 @@ export abstract class ModerationComponent extends BotComponent {
                 const target = await this.wheatley.try_fetch_guild_member(user);
                 if (target && target.roles.highest.position >= issuer.roles.highest.position) {
                     await this.reply_with_error(command, unwrap(get_random_array_element(joke_responses_other)));
-                    return;
+                    continue;
                 }
                 const base_moderation: basic_moderation_with_user = { ...basic_moderation_info, user: user.id };
                 if (!this.is_once_off && (await this.is_moderation_applied(base_moderation))) {
