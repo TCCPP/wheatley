@@ -148,8 +148,7 @@ export class CommandHandler {
                     JSON.stringify(command_body),
                 );
                 if (command.permissions !== undefined) {
-                    const member = await command_obj.get_member();
-                    if (!member.permissions.has(command.permissions)) {
+                    if (!(await this.wheatley.fetch_member_if_permitted(command_obj.user, command.permissions))) {
                         await command_obj.reply({
                             files: ["https://miro.medium.com/v2/resize:fit:750/1*lMV_u6tnu9WmFuJRyhTsFQ.jpeg"],
                             should_text_reply: true,
