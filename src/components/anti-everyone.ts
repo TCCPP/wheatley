@@ -25,7 +25,7 @@ export default class AntiEveryone extends BotComponent {
             // bot
             message.author.bot ||
             // mod
-            this.wheatley.is_authorized_mod(message.author) ||
+            (await this.wheatley.check_permissions(message.author, Discord.PermissionFlagsBits.MentionEveryone)) ||
             // outside of TCCPP (like DMs)
             message.guildId != this.wheatley.guild.id
         ) {

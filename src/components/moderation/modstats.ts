@@ -23,7 +23,7 @@ export default class ModStats extends BotComponent {
         commands.add(
             new TextBasedCommandBuilder("modstats", EarlyReplyMode.none)
                 .set_description("Moderator stats")
-                .set_permissions(Discord.PermissionFlagsBits.BanMembers)
+                .set_permissions(Discord.PermissionFlagsBits.ModerateMembers)
                 .add_user_option({
                     title: "moderator",
                     description: "Moderator",
@@ -60,11 +60,7 @@ export default class ModStats extends BotComponent {
     }
 
     async modstats(command: TextBasedCommand, moderator: Discord.User | null) {
-        if (moderator && !(this.wheatley.is_authorized_mod(moderator) || moderator.id == this.wheatley.user.id)) {
-            await command.reply(`<@${moderator.id}> is not a moderator`);
-            return;
-        }
-        if (!this.wheatley.is_authorized_mod(command.user) && command.channel_id != this.bot_spam.id) {
+        if (command.channel_id != this.bot_spam.id) {
             await command.reply(`Please use in <#${this.bot_spam.id}>`, true);
             return;
         }

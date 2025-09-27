@@ -50,7 +50,7 @@ export default class AntiInviteLinks extends BotComponent {
     }
 
     async handle_message(message: Discord.Message) {
-        if (this.wheatley.is_authorized_mod(message.author)) {
+        if (await this.wheatley.check_permissions(message.author, Discord.PermissionFlagsBits.ModerateMembers)) {
             return;
         }
         const match = match_invite(message.content);

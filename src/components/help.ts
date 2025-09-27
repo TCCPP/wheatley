@@ -82,7 +82,7 @@ export default class Help extends BotComponent {
                     },
                 ),
         ];
-        if (this.wheatley.is_authorized_mod(command.user)) {
+        if (await this.wheatley.check_permissions(command.user, Discord.PermissionFlagsBits.ModerateMembers)) {
             embeds.push(
                 new Discord.EmbedBuilder().setColor(colors.wheatley).addFields(
                     {

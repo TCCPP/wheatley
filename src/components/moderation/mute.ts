@@ -28,7 +28,7 @@ export default class Mute extends ModerationComponent {
         await super.setup(commands);
         commands.add(
             new TextBasedCommandBuilder("mute", EarlyReplyMode.visible)
-                .set_permissions(Discord.PermissionFlagsBits.BanMembers)
+                .set_permissions(Discord.PermissionFlagsBits.ModerateMembers)
                 .set_description("Mute user")
                 .add_user_option({
                     title: "user",

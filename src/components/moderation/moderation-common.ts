@@ -57,11 +57,11 @@ import { CommandSetBuilder } from "../../command-abstractions/command-set-builde
 
 export const duration_regex = /perm\b|(\d+)\s*([a-zA-Z]+)/;
 
-export const moderation_on_team_member_message: string = "Can't apply this moderation on team members";
-export const joke_responses = [
+export const joke_responses_other = ["You have no power over this user :(", "lol, nice try!", "One day, maybe ;)"];
+export const joke_responses_self = [
     "You won't get off that easy! ;)",
     "Try again next time lmao",
-    "Didn't work. Maybe a skill issue?",
+    "Didn't work. skill issue?",
 ];
 
 function millis_of_time_unit(u: string) {
@@ -564,14 +564,19 @@ export abstract class ModerationComponent extends BotComponent {
         basic_moderation_info: basic_moderation,
     ) {
         try {
-            if (this.wheatley.is_authorized_mod(user)) {
-                // Check if the mod is trying to ban themselves
-                if (basic_moderation_info.type == "ban" && command.user.id == user.id) {
-                    // If the mod is trying to ban themselves then troll them ;)
-                    await this.reply_with_error(command, unwrap(get_random_array_element(joke_responses)));
-                } else {
-                    await this.reply_with_error(command, moderation_on_team_member_message);
+            const target = await this.wheatley.try_fetch_guild_member(user);
+            const issuer = unwrap(await this.wheatley.try_fetch_guild_member(command.user));
+            if (target && target.roles.highest.position >= issuer.roles.highest.position) {
+                if (
+                    command.user.id == user.id &&
+                    (basic_moderation_info.type == "ban" || basic_moderation_info.type == "kick")
+                ) {
+                    // Mod is trying to ban/kick themselves => troll them ;)
+                    await this.reply_with_error(command, unwrap(get_random_array_element(joke_responses_self)));
+                    return;
                 }
+                // Mod is trying to ban/kick above their paygrade => troll them :D
+                await this.reply_with_error(command, unwrap(get_random_array_element(joke_responses_other)));
                 return;
             }
             const base_moderation: basic_moderation_with_user = { ...basic_moderation_info, user: user.id };
@@ -646,9 +651,11 @@ export abstract class ModerationComponent extends BotComponent {
         basic_moderation_info: basic_moderation,
     ) {
         try {
+            const issuer = unwrap(await this.wheatley.try_fetch_guild_member(command.user));
             for (const user of users) {
-                if (this.wheatley.is_authorized_mod(user)) {
-                    await this.reply_with_error(command, moderation_on_team_member_message);
+                const target = await this.wheatley.try_fetch_guild_member(user);
+                if (target && target.roles.highest.position >= issuer.roles.highest.position) {
+                    await this.reply_with_error(command, unwrap(get_random_array_element(joke_responses_other)));
                     continue;
                 }
                 const base_moderation: basic_moderation_with_user = { ...basic_moderation_info, user: user.id };

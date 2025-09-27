@@ -110,7 +110,9 @@ export default class Roulette extends BotComponent {
                 this.streaks.set(command.user.id, 0);
                 await this.update_score(command.user.id); // TODO: I forget why this is here
                 try {
-                    if (this.wheatley.is_authorized_mod(command.user)) {
+                    if (
+                        await this.wheatley.check_permissions(command.user, Discord.PermissionFlagsBits.ModerateMembers)
+                    ) {
                         this.disabled_users.insert(command.user.id);
                     } else {
                         await (await command.get_member()).timeout(30 * MINUTE, "Bang");

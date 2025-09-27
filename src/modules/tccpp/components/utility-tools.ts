@@ -32,7 +32,7 @@ export default class UtilityTools extends BotComponent {
         if (message.author.bot) {
             return;
         }
-        if (this.wheatley.is_authorized_mod(message.author)) {
+        if (await this.wheatley.check_permissions(message.author, Discord.PermissionFlagsBits.ManageChannels)) {
             if (message.content == "!channel-rename") {
                 M.log("got !channel-rename");
                 assert(!(message.channel instanceof Discord.PartialGroupDMChannel));

@@ -207,34 +207,6 @@ export const skill_roles_order_id = [
     "331719591405551616",
 ];
 
-// General config
-// TODO: Can eliminate this stuff
-export const root_ids = new Set([
-    "199943082441965577", // zelis
-    "110756651694297088", // vincent
-    "89441674844995584", // styx
-    "313597351262683138", // dot
-    // prevent Wheatley reactions being removed in server suggestions and also allow some elegant handling
-    "597216680271282192", // wheatley
-]);
-
-export const root_mod_ids = [
-    "199943082441965577", // zelis
-    "230282234085638155", // cas
-    "719255892813545502", // sampersand
-    "89441674844995584", // styx
-    "110756651694297088", // vincent
-    "138014214093668353", // dxpower
-    "313597351262683138", // dot
-    "413463039145410560", // karnage
-    "512649489300062228", // quicknir
-    "446584068746772480", // yinsei
-    "213759964789866496", // levi
-    "162964325823283200", // eisen
-];
-
-export const root_mod_ids_set = new Set(root_mod_ids);
-
 type EventMap = {
     wheatley_ready: () => void;
     issue_moderation: (moderation: moderation_entry) => void;
@@ -291,9 +263,6 @@ export class Wheatley {
     readonly skill_roles: {
         [k in keyof typeof skill_roles_map]: Discord.Role;
     } = {} as any;
-
-    // TODO: Eliminate pre-set value
-    root_mod_list = "jr.0, dot42, styxs, or _64";
 
     message_counter = new PromClient.Counter({
         name: "tccpp_message_count",
@@ -483,8 +452,6 @@ export class Wheatley {
                 M.log(`Fetched role ${k}`);
             }),
         );
-        // fetch list of roots and mods, replace hard-coded list
-        await wrap(() => this.fetch_root_mod_list(this.client));
     }
 
     async add_component<T extends BotComponent>(component: { new (w: Wheatley): T; get is_freestanding(): boolean }) {
@@ -656,17 +623,17 @@ export class Wheatley {
         return reply_message;
     }
 
-    is_root(user: Discord.User | Discord.PartialUser | Discord.APIUser): boolean {
-        //return member.roles.cache.some(r => r.id == root_role_id);
-        return root_ids.has(user.id);
+    async check_permissions(
+        options: Discord.GuildMember | Discord.User | Discord.UserResolvable | Discord.FetchMemberOptions,
+        permissions: Discord.PermissionResolvable,
+    ) {
+        const member = await this.try_fetch_guild_member(options);
+        return !!member?.permissions.has(permissions);
     }
 
-    is_authorized_mod(member: Discord.GuildMember | Discord.User | string): boolean {
-        if (is_string(member)) {
-            return root_mod_ids_set.has(member);
-        } else {
-            return root_mod_ids_set.has(member.id);
-        }
+    staff_contacts() {
+        const roots = this.roles.root.members.map(member => `<@${member.id}>`);
+        return roots.length > 1 ? roots.slice(0, -1).join(", ") + `, or ${roots[roots.length - 1]}` : roots[0];
     }
 
     has_skill_roles_other_than_beginner(member: Discord.GuildMember) {
@@ -679,16 +646,6 @@ export class Wheatley {
     // higher is better
     get_skill_role_index(role: Discord.Role | string) {
         return skill_roles_order_id.indexOf(role instanceof Discord.Role ? role.id : role);
-    }
-
-    async fetch_root_mod_list(client: Discord.Client) {
-        const tags = [];
-        for (const id of root_mod_ids) {
-            tags.push((await client.users.fetch(id)).tag);
-        }
-        assert(tags.length > 3);
-        this.root_mod_list = tags.slice(0, tags.length - 1).join(", ") + ", or " + tags[tags.length - 1];
-        M.debug("root_mod_list", [this.root_mod_list]);
     }
 
     async is_public_channel(channel: Discord.GuildTextBasedChannel | Discord.TextBasedChannel) {
@@ -706,7 +663,7 @@ export class Wheatley {
     }
 
     async try_fetch_guild_member(
-        options: Discord.GuildMember | Discord.UserResolvable | Discord.FetchMemberOptions,
+        options: Discord.GuildMember | Discord.User | Discord.UserResolvable | Discord.FetchMemberOptions,
     ): Promise<Discord.GuildMember | null> {
         if (options instanceof Discord.GuildMember) {
             if (options.guild.id == this.guild.id) {

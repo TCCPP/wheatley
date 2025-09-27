@@ -148,8 +148,7 @@ export class CommandHandler {
                     JSON.stringify(command_body),
                 );
                 if (command.permissions !== undefined) {
-                    const member = await this.wheatley.try_fetch_guild_member(await command_obj.get_member());
-                    if (!member || !member.permissions.has(command.permissions)) {
+                    if (!(await this.wheatley.check_permissions(command_obj.user, command.permissions))) {
                         await command_obj.reply({
                             files: ["https://miro.medium.com/v2/resize:fit:750/1*lMV_u6tnu9WmFuJRyhTsFQ.jpeg"],
                             should_text_reply: true,
@@ -209,8 +208,7 @@ export class CommandHandler {
             const command_options: unknown[] = [];
             const command_object = new TextBasedCommand(interaction.commandName, command, interaction, this.wheatley);
             if (command.permissions !== undefined) {
-                const member = await this.wheatley.try_fetch_guild_member(interaction.user.id);
-                if (!member || !member.permissions.has(command.permissions)) {
+                if (!(await this.wheatley.check_permissions(interaction.user, command.permissions))) {
                     await interaction.reply({
                         files: ["https://miro.medium.com/v2/resize:fit:750/1*lMV_u6tnu9WmFuJRyhTsFQ.jpeg"],
                     });

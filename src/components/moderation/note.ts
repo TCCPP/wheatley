@@ -29,7 +29,7 @@ export default class Note extends ModerationComponent {
         await super.setup(commands);
         commands.add(
             new TextBasedCommandBuilder("note", EarlyReplyMode.ephemeral)
-                .set_permissions(Discord.PermissionFlagsBits.BanMembers)
+                .set_permissions(Discord.PermissionFlagsBits.ModerateMembers)
                 .set_description("Enter note in modlogs")
                 .add_user_option({
                     title: "user",
