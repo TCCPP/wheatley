@@ -217,7 +217,15 @@ export default class Modlogs extends BotComponent {
         if (channel.isDMBased() || !channel.parent) {
             return false;
         }
-        return [this.wheatley.categories.staff.id, this.wheatley.categories.staff_logs.id].includes(channel.parent.id);
+        const min_viewable_permissions = this.wheatley.guild.roles.cache
+            .mapValues(role => channel.permissionsFor(role).bitfield)
+            .reduce((accumulator, value) => {
+                if (value & Discord.PermissionFlagsBits.ViewChannel) {
+                    return accumulator & value;
+                }
+                return accumulator;
+            }, Discord.PermissionsBitField.All);
+        return (min_viewable_permissions & Discord.PermissionFlagsBits.ModerateMembers) != 0n;
     }
 
     async modlogs(command: TextBasedCommand, user: Discord.User) {
