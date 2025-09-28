@@ -8,6 +8,7 @@ import { pluralize, time_to_human } from "../../utils/strings.js";
 import { M } from "../../utils/debugging-and-logging.js";
 import { BotComponent } from "../../bot-component.js";
 import { CommandSetBuilder } from "../../command-abstractions/command-set-builder.js";
+import { BotButton, ButtonInteractionBuilder } from "../../command-abstractions/button-handler.js";
 import { Wheatley } from "../../wheatley.js";
 import { colors } from "../../common.js";
 import { EarlyReplyMode, TextBasedCommandBuilder } from "../../command-abstractions/text-based-command-builder.js";
@@ -23,6 +24,8 @@ export default class Modlogs extends BotComponent {
     private database = this.wheatley.database.create_proxy<{
         moderations: moderation_entry;
     }>();
+
+    private modlogs_page_button!: BotButton<[string, number]>;
 
     override async setup(commands: CommandSetBuilder) {
         commands.add(
@@ -47,6 +50,15 @@ export default class Modlogs extends BotComponent {
                     required: true,
                 })
                 .set_handler(this.case_info.bind(this)),
+        );
+
+        // Register button handler for modlogs pagination
+        this.modlogs_page_button = commands.add(
+            new ButtonInteractionBuilder("modlogs_page")
+                .add_user_id_parameter() // user_id: string
+                .add_number_parameter() // page: number
+                .set_permissions(Discord.PermissionFlagsBits.BanMembers)
+                .set_handler(this.handle_modlogs_page.bind(this)),
         );
     }
 
@@ -153,20 +165,19 @@ export default class Modlogs extends BotComponent {
             // pass
         } else if (pages == 2) {
             buttons.push(
-                new Discord.ButtonBuilder()
-                    .setCustomId(`modlogs_page_${user.id}_${(page + 1) % pages}`)
+                this.modlogs_page_button
+                    .create_button(user.id, (page + 1) % pages)
                     .setLabel(page == 0 ? "🡆" : "🡄")
                     .setStyle(Discord.ButtonStyle.Primary),
             );
         } else {
             buttons.push(
-                new Discord.ButtonBuilder()
-                    // a custom id can be up to 100 characters long
-                    .setCustomId(`modlogs_page_${user.id}_${page === 0 ? pages - 1 : page - 1}`)
+                this.modlogs_page_button
+                    .create_button(user.id, page === 0 ? pages - 1 : page - 1)
                     .setLabel("🡄")
                     .setStyle(Discord.ButtonStyle.Primary),
-                new Discord.ButtonBuilder()
-                    .setCustomId(`modlogs_page_${user.id}_${(page + 1) % pages}`)
+                this.modlogs_page_button
+                    .create_button(user.id, (page + 1) % pages)
                     .setLabel("🡆")
                     .setStyle(Discord.ButtonStyle.Primary),
             );
@@ -213,25 +224,12 @@ export default class Modlogs extends BotComponent {
         await command.reply(await this.modlogs_message(user, 0, this.is_mod_only(await command.get_channel())));
     }
 
-    override async on_interaction_create(interaction: Discord.Interaction<Discord.CacheType>) {
-        if (interaction.isButton()) {
-            if (interaction.customId.startsWith("modlogs_page_")) {
-                if (
-                    !(await this.wheatley.check_permissions(interaction.user, Discord.PermissionFlagsBits.BanMembers))
-                ) {
-                    await interaction.reply({
-                        content: "Error: You are not authorized",
-                        ephemeral: true,
-                    });
-                    return;
-                }
-                const [user, page] = interaction.customId.substring("modlogs_page_".length).split("_");
-                await interaction.message.edit(
-                    await this.modlogs_message(await this.wheatley.client.users.fetch(user), parseInt(page)),
-                );
-                await interaction.deferUpdate();
-            }
-        }
+    // Handle modlogs page button interactions
+    async handle_modlogs_page(interaction: Discord.ButtonInteraction, user_id: string, page: number) {
+        const user = await this.wheatley.client.users.fetch(user_id);
+        const is_mod_only = this.is_mod_only(interaction.channel as Discord.GuildTextBasedChannel);
+        await interaction.message.edit(await this.modlogs_message(user, page, is_mod_only));
+        await interaction.deferUpdate();
     }
 
     async case_info(command: TextBasedCommand, case_number: number) {

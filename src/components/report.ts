@@ -10,7 +10,7 @@ import { CommandSetBuilder } from "../command-abstractions/command-set-builder.j
 import { Wheatley } from "../wheatley.js";
 import { MessageContextMenuInteractionBuilder } from "../command-abstractions/context-menu.js";
 import { ModalInteractionBuilder } from "../command-abstractions/modal.js";
-import { ButtonInteractionBuilder } from "../command-abstractions/button.js";
+import { BotButton, ButtonInteractionBuilder } from "../command-abstractions/button-handler.js";
 
 export default class Report extends BotComponent {
     private staff_flag_log!: Discord.TextChannel;
@@ -27,22 +27,10 @@ export default class Report extends BotComponent {
                     .setRequired(false),
             ),
         );
-    private readonly handling = new Discord.ButtonBuilder()
-        .setCustomId("report-handling")
-        .setLabel("I'm looking into this")
-        .setStyle(Discord.ButtonStyle.Secondary);
-    private readonly resolved = new Discord.ButtonBuilder()
-        .setCustomId("report-resolved")
-        .setLabel("Resolved")
-        .setStyle(Discord.ButtonStyle.Success);
-    private readonly invalid = new Discord.ButtonBuilder()
-        .setCustomId("report-invalid")
-        .setLabel("Invalid")
-        .setStyle(Discord.ButtonStyle.Danger);
-    private readonly nvm = new Discord.ButtonBuilder()
-        .setCustomId("report-nvm")
-        .setLabel("I'm no longer looking into this")
-        .setStyle(Discord.ButtonStyle.Secondary);
+    private handling_button!: BotButton<[]>;
+    private resolved_button!: BotButton<[]>;
+    private invalid_button!: BotButton<[]>;
+    private nvm_button!: BotButton<[]>;
 
     // string -> initial target message from context menu interaction
     readonly target_map = new SelfClearingMap<string, Discord.Message>(10 * MINUTE);
@@ -55,10 +43,18 @@ export default class Report extends BotComponent {
 
         commands.add(new ModalInteractionBuilder(this.report_modal, this.modal_handler.bind(this)));
 
-        commands.add(new ButtonInteractionBuilder(this.handling, this.handling_handler.bind(this)));
-        commands.add(new ButtonInteractionBuilder(this.resolved, this.resolved_handler.bind(this)));
-        commands.add(new ButtonInteractionBuilder(this.invalid, this.invalid_handler.bind(this)));
-        commands.add(new ButtonInteractionBuilder(this.nvm, this.nvm_handler.bind(this)));
+        this.handling_button = commands.add(
+            new ButtonInteractionBuilder("report-handling").set_handler(this.handling_handler.bind(this)),
+        );
+        this.resolved_button = commands.add(
+            new ButtonInteractionBuilder("report-resolved").set_handler(this.resolved_handler.bind(this)),
+        );
+        this.invalid_button = commands.add(
+            new ButtonInteractionBuilder("report-invalid").set_handler(this.invalid_handler.bind(this)),
+        );
+        this.nvm_button = commands.add(
+            new ButtonInteractionBuilder("report-nvm").set_handler(this.nvm_handler.bind(this)),
+        );
     }
 
     async report(interaction: Discord.MessageContextMenuCommandInteraction) {
@@ -118,11 +114,7 @@ export default class Report extends BotComponent {
                     message_id_footer: true,
                     user_id_footer: true,
                 });
-                const row = new Discord.ActionRowBuilder<Discord.MessageActionRowComponentBuilder>().addComponents(
-                    this.handling,
-                    this.resolved,
-                    this.invalid,
-                );
+                const row = this.create_standard_action_row();
                 await this.staff_flag_log.send({
                     content: `<@&${this.wheatley.roles.moderators.id}>`,
                     embeds: [report_embed, ...quote_embeds.embeds],
@@ -176,15 +168,52 @@ export default class Report extends BotComponent {
         }
     }
 
-    async nvm_logic(interaction: Discord.ButtonInteraction, message: Discord.Message) {
-        const row = new Discord.ActionRowBuilder<Discord.MessageActionRowComponentBuilder>().addComponents(
-            this.handling,
-            this.resolved,
-            this.invalid,
+    // Helper methods for creating buttons
+    private create_handling_button(label?: string) {
+        return this.handling_button
+            .create_button()
+            .setLabel(label ?? "I'm looking into this")
+            .setStyle(Discord.ButtonStyle.Secondary);
+    }
+
+    private create_resolved_button() {
+        return this.resolved_button.create_button().setLabel("Resolved").setStyle(Discord.ButtonStyle.Success);
+    }
+
+    private create_invalid_button() {
+        return this.invalid_button.create_button().setLabel("Invalid").setStyle(Discord.ButtonStyle.Danger);
+    }
+
+    private create_nvm_button() {
+        return this.nvm_button
+            .create_button()
+            .setLabel("I'm no longer looking into this")
+            .setStyle(Discord.ButtonStyle.Secondary);
+    }
+
+    // Helper method for creating the standard action row
+    private create_standard_action_row() {
+        return new Discord.ActionRowBuilder<Discord.MessageActionRowComponentBuilder>().addComponents(
+            this.create_handling_button(),
+            this.create_resolved_button(),
+            this.create_invalid_button(),
         );
+    }
+
+    // Helper method for creating the handling action row with custom label and nvm button
+    private create_handling_action_row(handler_name: string) {
+        return new Discord.ActionRowBuilder<Discord.MessageActionRowComponentBuilder>().addComponents(
+            this.create_handling_button(`Being handled by ${handler_name}`),
+            this.create_nvm_button(),
+            this.create_resolved_button(),
+            this.create_invalid_button(),
+        );
+    }
+
+    async nvm_logic(interaction: Discord.ButtonInteraction, message: Discord.Message) {
         await message.edit({
             content: `<@&${this.wheatley.roles.moderators.id}>`,
-            components: [row],
+            components: [this.create_standard_action_row()],
         });
     }
 
@@ -194,14 +223,7 @@ export default class Report extends BotComponent {
                 await this.nvm_logic(interaction, message);
                 return;
             }
-            const row = new Discord.ActionRowBuilder<Discord.MessageActionRowComponentBuilder>().addComponents(
-                new Discord.ButtonBuilder(this.handling.data).setLabel(
-                    `Being handled by ${await this.wheatley.get_display_name(interaction.user)}`,
-                ),
-                this.nvm,
-                this.resolved,
-                this.invalid,
-            );
+            const row = this.create_handling_action_row(await this.wheatley.get_display_name(interaction.user));
             await message.edit({
                 content:
                     `<@&${this.wheatley.roles.moderators.id}> -- ` +

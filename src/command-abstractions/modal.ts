@@ -6,8 +6,8 @@ import { unwrap } from "../utils/misc.js";
 import { ConditionalOptional } from "../utils/typing.js";
 import { BaseInteractionBuilder, BaseBotInteraction } from "./interaction-base.js";
 
-export class ModalInteractionBuilder<HasHandler extends boolean = false> extends BaseInteractionBuilder<
-    HasHandler,
+export class ModalInteractionBuilder extends BaseInteractionBuilder<
+    true,
     [Discord.ModalSubmitInteraction, ...string[]]
 > {
     readonly name: string;
@@ -26,25 +26,15 @@ export class ModalInteractionBuilder<HasHandler extends boolean = false> extends
         this.handler = handler;
     }
 
-    override to_command_descriptors(): [ConditionalOptional<HasHandler, BotModalHandler>, undefined] {
-        if (!this.handler) {
-            return [undefined as ConditionalOptional<HasHandler, BotModalHandler>, undefined];
-        } else {
-            return [
-                new BotModalHandler(this.name, this as ModalInteractionBuilder<true>) as ConditionalOptional<
-                    HasHandler,
-                    BotModalHandler
-                >,
-                undefined,
-            ];
-        }
+    override to_command_descriptors(): [BotModalHandler, undefined] {
+        return [new BotModalHandler(this.name, this as ModalInteractionBuilder), undefined];
     }
 }
 
 export class BotModalHandler extends BaseBotInteraction<[Discord.ModalSubmitInteraction, ...string[]]> {
     fields: string[];
 
-    constructor(name: string, modal: ModalInteractionBuilder<true>) {
+    constructor(name: string, modal: ModalInteractionBuilder) {
         super(name, modal.handler);
         this.fields = modal.fields;
     }

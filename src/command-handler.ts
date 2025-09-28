@@ -4,6 +4,7 @@ import * as Discord from "discord.js";
 import { create_error_reply, Wheatley } from "./wheatley.js";
 import { BotTextBasedCommand } from "./command-abstractions/text-based-command-descriptor.js";
 import { BaseBotInteraction } from "./command-abstractions/interaction-base.js";
+import { BotButtonHandler } from "./command-abstractions/button-handler.js";
 import { SelfClearingMap } from "./utils/containers.js";
 import { MINUTE } from "./common.js";
 import { TextBasedCommand } from "./command-abstractions/text-based-command.js";
@@ -41,6 +42,7 @@ export class CommandHandler {
     constructor(
         private readonly wheatley: Wheatley,
         private readonly text_commands: Record<string, BotTextBasedCommand<unknown[]>>,
+        private readonly button_handlers: Record<string, BotButtonHandler<unknown[]>>,
         private readonly other_commands: Record<string, BaseBotInteraction<unknown[]>>,
     ) {
         this.wheatley.client.on("messageCreate", (message: Discord.Message) => {
@@ -93,6 +95,14 @@ export class CommandHandler {
     //
 
     private static readonly command_regex = /^!(\S+)/;
+
+    // Parse button custom_id into base_id and arguments
+    private parse_button_custom_id(custom_id: string): [string, string[]] {
+        const parts = custom_id.split(":");
+        const base_id = parts[0];
+        const args = parts.slice(1);
+        return [base_id, args];
+    }
 
     private async do_command_dispatch(
         command: BotTextBasedCommand<unknown[]>,
@@ -399,16 +409,23 @@ export class CommandHandler {
                     await command.handler(interaction, ...(id ? [id, ...fields] : fields));
                 }
             } else if (interaction.isButton()) {
-                M.log(
-                    `Received button interaction ${interaction.customId}`,
-                    "From:",
-                    interaction.user.tag,
-                    interaction.user.id,
-                );
-                // TODO: permissions
-                if (interaction.customId in this.other_commands) {
-                    await this.other_commands[interaction.customId].handler(interaction);
+                const [base_id, raw_args] = this.parse_button_custom_id(interaction.customId);
+
+                if (base_id in this.button_handlers) {
+                    const handler = this.button_handlers[base_id];
+                    if (handler.permissions !== undefined) {
+                        if (!(await this.wheatley.check_permissions(interaction.user, handler.permissions))) {
+                            await interaction.reply({
+                                content: "You don't have permission to use this button",
+                                ephemeral: true,
+                            });
+                            return;
+                        }
+                    }
+                    await handler.handle(interaction, raw_args);
                 }
+                // Note: Legacy buttons (the-button, anti_screenshot_acknowledge, etc.) are handled
+                // directly by individual components via their on_interaction_create methods
             }
             // TODO: Notify if errors occur in the handler....
         } catch (e) {

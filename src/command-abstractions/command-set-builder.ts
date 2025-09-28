@@ -7,7 +7,7 @@ import { BaseBotInteraction } from "./interaction-base.js";
 import { TextBasedCommandBuilder } from "./text-based-command-builder.js";
 import { MessageContextMenuInteractionBuilder } from "./context-menu.js";
 import { ModalInteractionBuilder } from "./modal.js";
-import { ButtonInteractionBuilder } from "./button.js";
+import { BotButton, BotButtonHandler, ButtonInteractionBuilder } from "./button-handler.js";
 
 import * as util from "util";
 
@@ -18,6 +18,7 @@ export class CommandSetBuilder {
     commands: (Discord.SlashCommandBuilder | Discord.ContextMenuCommandBuilder)[] = [];
     text_commands: Record<string, BotTextBasedCommand<unknown[]>> = {};
     other_commands: Record<string, BaseBotInteraction<unknown[]>> = {};
+    button_handlers: Record<string, BotButtonHandler<any[]>> = {};
 
     constructor(readonly wheatley: Wheatley) {}
 
@@ -27,13 +28,18 @@ export class CommandSetBuilder {
         }
     }
 
+    public add<T extends unknown[]>(command: TextBasedCommandBuilder<T, true, true>): void;
+    public add<T extends unknown[]>(command: TextBasedCommandBuilder<T, true, false, true>): void;
+    public add<T extends unknown[]>(command: MessageContextMenuInteractionBuilder<true>): void;
+    public add<T extends unknown[]>(command: ModalInteractionBuilder): void;
+    public add<T extends unknown[]>(command: ButtonInteractionBuilder<T, true>): BotButton<T>;
     public add<T extends unknown[]>(
         command:
             | TextBasedCommandBuilder<T, true, true>
             | TextBasedCommandBuilder<T, true, false, true>
             | MessageContextMenuInteractionBuilder<true>
-            | ModalInteractionBuilder<true>
-            | ButtonInteractionBuilder<true>,
+            | ModalInteractionBuilder
+            | ButtonInteractionBuilder<T, true>,
     ) {
         if (command instanceof TextBasedCommandBuilder) {
             for (const descriptor of command.to_command_descriptors(this.wheatley)) {
@@ -43,6 +49,17 @@ export class CommandSetBuilder {
                     this.register(descriptor.to_slash_command(new Discord.SlashCommandBuilder()));
                 }
             }
+        } else if (command instanceof ButtonInteractionBuilder) {
+            const button_handler = command.build_handler();
+            assert(button_handler, "Button handler builder must have handler set");
+            assert(
+                !(command.base_custom_id in this.button_handlers),
+                `Button handler ${command.base_custom_id} already registered`,
+            );
+
+            this.button_handlers[command.base_custom_id] = button_handler;
+            M.log(`Registered button handler: ${command.base_custom_id}`);
+            return command.build_button();
         } else {
             assert(!(command.name in this.other_commands));
             const [bot_command, djs_command] = command.to_command_descriptors();
@@ -68,7 +85,11 @@ export class CommandSetBuilder {
             );
             await rest.put(route, { body: this.commands });
             M.log("Finished sending commands");
-            return { text_commands: this.text_commands, other_commands: this.other_commands };
+            return {
+                text_commands: this.text_commands,
+                button_handlers: this.button_handlers,
+                other_commands: this.other_commands,
+            };
         } catch (e) {
             M.log(util.inspect({ body: this.commands }, { showHidden: false, depth: null, colors: true }));
             this.wheatley.critical_error(e);
