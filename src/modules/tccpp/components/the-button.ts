@@ -11,6 +11,7 @@ import { discord_timestamp } from "../../../utils/discord.js";
 import { CommandSetBuilder } from "../../../command-abstractions/command-set-builder.js";
 import { EarlyReplyMode, TextBasedCommandBuilder } from "../../../command-abstractions/text-based-command-builder.js";
 import { TextBasedCommand } from "../../../command-abstractions/text-based-command.js";
+import { ButtonInteractionBuilder, BotButton } from "../../../command-abstractions/button.js";
 
 function dissectDelta(delta: number) {
     let seconds = delta / 1000;
@@ -72,6 +73,10 @@ export default class TheButton extends BotComponent {
 
     private the_button_channel!: Discord.TextChannel;
 
+    private the_button_button!: BotButton<[]>;
+    private the_button_scoreboard_button!: BotButton<[]>;
+    private the_button_stats_button!: BotButton<[]>;
+
     private database = this.wheatley.database.create_proxy<{
         component_state: the_button_state;
         button_scoreboard: the_button_scoreboard_entry;
@@ -108,6 +113,18 @@ export default class TheButton extends BotComponent {
                 .set_slash(false)
                 .set_handler(this.button_adjust_scores.bind(this)),
         );
+
+        this.the_button_button = commands.add(
+            new ButtonInteractionBuilder("the-button").set_handler(this.the_button_press.bind(this)),
+        );
+        this.the_button_scoreboard_button = commands.add(
+            new ButtonInteractionBuilder("the-button-scoreboard").set_handler(
+                this.the_button_scoreboard_press.bind(this),
+            ),
+        );
+        this.the_button_stats_button = commands.add(
+            new ButtonInteractionBuilder("the-button-stats").set_handler(this.the_button_stats_press.bind(this)),
+        );
     }
 
     private async button_setup(command: TextBasedCommand) {
@@ -141,18 +158,12 @@ export default class TheButton extends BotComponent {
     make_message(time_until_doomsday: number): Discord.MessageEditOptions & Discord.MessageCreateOptions {
         const [hours, minutes, seconds] = dissectDelta(time_until_doomsday);
         const row = new Discord.ActionRowBuilder<Discord.MessageActionRowComponentBuilder>().addComponents(
-            new Discord.ButtonBuilder()
-                .setCustomId("the-button")
-                .setLabel("The Button")
-                .setStyle(Discord.ButtonStyle.Danger),
-            new Discord.ButtonBuilder()
-                .setCustomId("the-button-scoreboard")
+            this.the_button_button.create_button().setLabel("The Button").setStyle(Discord.ButtonStyle.Danger),
+            this.the_button_scoreboard_button
+                .create_button()
                 .setLabel("Scoreboard")
                 .setStyle(Discord.ButtonStyle.Secondary),
-            new Discord.ButtonBuilder()
-                .setCustomId("the-button-stats")
-                .setLabel("Stats")
-                .setStyle(Discord.ButtonStyle.Secondary),
+            this.the_button_stats_button.create_button().setLabel("Stats").setStyle(Discord.ButtonStyle.Secondary),
         );
         const points = round(F(DAY - time_until_doomsday), 1);
         const points_next = round(F(DAY - time_until_doomsday + MINUTE), 1);
@@ -220,132 +231,130 @@ export default class TheButton extends BotComponent {
         await this.update_message();
     }
 
-    override async on_interaction_create(interaction: Discord.Interaction) {
-        if (interaction.isButton() && interaction.customId == "the-button") {
-            if (interaction.createdTimestamp < this.last_reset) {
-                await interaction.reply({
-                    content: "Your press was received but another button press reached the server first",
-                    ephemeral: true,
-                });
-                return;
-            }
-            // it might take a moment to go through everything
-            await interaction.deferReply({
+    async the_button_press(interaction: Discord.ButtonInteraction) {
+        if (interaction.createdTimestamp < this.last_reset) {
+            await interaction.reply({
+                content: "Your press was received but another button press reached the server first",
                 ephemeral: true,
             });
-            // add user to the scoreboard if needed
-            const entry = await this.database.button_scoreboard.findOne({ user: interaction.user.id });
-            // check to see if the user has pressed it within the last 24 hours
-            if (entry && Date.now() - entry.last_press <= PRESS_TIMEOUT) {
-                await interaction.editReply({
-                    content:
-                        "You can press the button again " + discord_timestamp(entry.last_press + PRESS_TIMEOUT, "R"),
-                });
-                return;
-            }
-            const time_since_last_reset = Date.now() - this.last_reset;
-            const time_until_doomsday = Math.max(0, DAY - time_since_last_reset);
-            this.last_reset = Date.now() - 1;
-            const points = F(time_since_last_reset);
-            M.debug(
-                `The Button was reset with ${Math.round(time_until_doomsday)} ms until doomsday ` +
-                    `for ${points} points`,
-                [interaction.user.id, interaction.user.tag],
-            );
-            await this.update_message();
-            const res = unwrap(
-                await this.database.button_scoreboard.findOneAndUpdate(
-                    {
+            return;
+        }
+        // it might take a moment to go through everything
+        await interaction.deferReply({
+            ephemeral: true,
+        });
+        // add user to the scoreboard if needed
+        const entry = await this.database.button_scoreboard.findOne({ user: interaction.user.id });
+        // check to see if the user has pressed it within the last 24 hours
+        if (entry && Date.now() - entry.last_press <= PRESS_TIMEOUT) {
+            await interaction.editReply({
+                content: "You can press the button again " + discord_timestamp(entry.last_press + PRESS_TIMEOUT, "R"),
+            });
+            return;
+        }
+        const time_since_last_reset = Date.now() - this.last_reset;
+        const time_until_doomsday = Math.max(0, DAY - time_since_last_reset);
+        this.last_reset = Date.now() - 1;
+        const points = F(time_since_last_reset);
+        M.debug(
+            `The Button was reset with ${Math.round(time_until_doomsday)} ms until doomsday ` + `for ${points} points`,
+            [interaction.user.id, interaction.user.tag],
+        );
+        await this.update_message();
+        const res = unwrap(
+            await this.database.button_scoreboard.findOneAndUpdate(
+                {
+                    user: interaction.user.id,
+                },
+                {
+                    $setOnInsert: {
                         user: interaction.user.id,
                     },
-                    {
-                        $setOnInsert: {
-                            user: interaction.user.id,
-                        },
-                        $set: {
-                            tag: interaction.user.tag,
-                            last_press: Date.now(),
-                        },
-                        $inc: {
-                            score: points,
-                            presses: 1,
-                        },
+                    $set: {
+                        tag: interaction.user.tag,
+                        last_press: Date.now(),
                     },
-                    {
-                        upsert: true,
-                        returnDocument: "after",
+                    $inc: {
+                        score: points,
+                        presses: 1,
                     },
-                ),
-            );
-            this.longest_time_without_reset = Math.max(this.longest_time_without_reset, time_since_last_reset);
-            this.button_presses++;
-            const scoreboard_index = await this.database.button_scoreboard.countDocuments({
-                score: { $gt: res.score },
-            });
-            await interaction.editReply({
-                embeds: [
-                    new Discord.EmbedBuilder()
-                        .setDescription(
-                            `Points: ${round(points, 1)}\n` +
-                                `Your total score: ${round(res.score, 1)}\n` +
-                                `Position on the scoreboard: ${scoreboard_index + 1}`,
-                        )
-                        .setColor(colors.wheatley),
-                ],
-            });
-            await this.update_metadata();
+                },
+                {
+                    upsert: true,
+                    returnDocument: "after",
+                },
+            ),
+        );
+        this.longest_time_without_reset = Math.max(this.longest_time_without_reset, time_since_last_reset);
+        this.button_presses++;
+        const scoreboard_index = await this.database.button_scoreboard.countDocuments({
+            score: { $gt: res.score },
+        });
+        await interaction.editReply({
+            embeds: [
+                new Discord.EmbedBuilder()
+                    .setDescription(
+                        `Points: ${round(points, 1)}\n` +
+                            `Your total score: ${round(res.score, 1)}\n` +
+                            `Position on the scoreboard: ${scoreboard_index + 1}`,
+                    )
+                    .setColor(colors.wheatley),
+            ],
+        });
+        await this.update_metadata();
+    }
+
+    async the_button_scoreboard_press(interaction: Discord.ButtonInteraction) {
+        const scores = (await this.database.button_scoreboard
+            .aggregate([{ $sort: { score: -1 } }, { $limit: 15 }])
+            .toArray()) as the_button_scoreboard_entry[];
+        const embed = new Discord.EmbedBuilder().setTitle("Scoreboard").setColor(colors.wheatley);
+        let description = "";
+        for (const entry of scores) {
+            const tag = entry.tag == "" ? `<@${entry.user}>` : entry.tag;
+            description += `${tag}: ${round(entry.score, 1)}\n`;
         }
-        if (interaction.isButton() && interaction.customId == "the-button-scoreboard") {
-            const scores = (await this.database.button_scoreboard
-                .aggregate([{ $sort: { score: -1 } }, { $limit: 15 }])
-                .toArray()) as the_button_scoreboard_entry[];
-            const embed = new Discord.EmbedBuilder().setTitle("Scoreboard").setColor(colors.wheatley);
-            let description = "";
-            for (const entry of scores) {
-                const tag = entry.tag == "" ? `<@${entry.user}>` : entry.tag;
-                description += `${tag}: ${round(entry.score, 1)}\n`;
-            }
-            // If user exists in the scoreboard, show their score.
-            const current_user = await this.database.button_scoreboard.findOne({ user: interaction.user.id });
-            if (current_user != null) {
-                description += `\n\nYour Current score: ${round(current_user.score, 1)}`;
-            }
-            embed.setDescription(description);
-            await interaction.reply({
-                embeds: [embed],
-                ephemeral: true,
-            });
+        // If user exists in the scoreboard, show their score.
+        const current_user = await this.database.button_scoreboard.findOne({ user: interaction.user.id });
+        if (current_user != null) {
+            description += `\n\nYour Current score: ${round(current_user.score, 1)}`;
         }
-        if (interaction.isButton() && interaction.customId == "the-button-stats") {
-            const count = await this.database.button_scoreboard.countDocuments();
-            const total_points_assigned = (
-                await this.database.button_scoreboard
-                    .aggregate([
-                        {
-                            $group: {
-                                _id: null,
-                                total: {
-                                    $sum: "$score",
-                                },
+        embed.setDescription(description);
+        await interaction.reply({
+            embeds: [embed],
+            ephemeral: true,
+        });
+    }
+
+    async the_button_stats_press(interaction: Discord.ButtonInteraction) {
+        const count = await this.database.button_scoreboard.countDocuments();
+        const total_points_assigned = (
+            await this.database.button_scoreboard
+                .aggregate([
+                    {
+                        $group: {
+                            _id: null,
+                            total: {
+                                $sum: "$score",
                             },
                         },
-                    ])
-                    .toArray()
-            )[0].total as number;
-            const days = (Date.now() - BUTTON_EPOCH) / DAY;
-            const embed = new Discord.EmbedBuilder().setTitle("Stats").setColor(colors.wheatley);
-            embed.setDescription(
-                `The Button has been up for \`${fmt(days, "day")}\`\n` +
-                    `Total presses of The Button: \`${this.button_presses}\`\n` +
-                    `Total points collected: \`${round(total_points_assigned, 1)}\`\n` +
-                    `Players: \`${count}\`\n` +
-                    `Longest time since reset: \`${time_to_human(this.longest_time_without_reset)}\``,
-            );
-            await interaction.reply({
-                embeds: [embed],
-                ephemeral: true,
-            });
-        }
+                    },
+                ])
+                .toArray()
+        )[0].total as number;
+        const days = (Date.now() - BUTTON_EPOCH) / DAY;
+        const embed = new Discord.EmbedBuilder().setTitle("Stats").setColor(colors.wheatley);
+        embed.setDescription(
+            `The Button has been up for \`${fmt(days, "day")}\`\n` +
+                `Total presses of The Button: \`${this.button_presses}\`\n` +
+                `Total points collected: \`${round(total_points_assigned, 1)}\`\n` +
+                `Players: \`${count}\`\n` +
+                `Longest time since reset: \`${time_to_human(this.longest_time_without_reset)}\``,
+        );
+        await interaction.reply({
+            embeds: [embed],
+            ephemeral: true,
+        });
     }
 
     async update_metadata() {

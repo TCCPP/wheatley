@@ -8,6 +8,7 @@ import { colors } from "../../../common.js";
 import { BotComponent } from "../../../bot-component.js";
 import { Wheatley } from "../../../wheatley.js";
 import { CommandSetBuilder } from "../../../command-abstractions/command-set-builder.js";
+import { ButtonInteractionBuilder, BotButton } from "../../../command-abstractions/button.js";
 
 const DISMISS_TIME = 30 * 1000;
 
@@ -28,8 +29,16 @@ function message_might_have_code(message: string) {
 export default class AntiScreenshot extends BotComponent {
     private staff_message_log!: Discord.TextChannel;
 
+    private acknowledge_button!: BotButton<[]>;
+
     override async setup(commands: CommandSetBuilder) {
         this.staff_message_log = await this.utilities.get_channel(this.wheatley.channels.staff_message_log);
+
+        this.acknowledge_button = commands.add(
+            new ButtonInteractionBuilder("anti_screenshot_acknowledge").set_handler(
+                this.acknowledge_handler.bind(this),
+            ),
+        );
     }
 
     override async on_message_create(message: Discord.Message) {
@@ -46,47 +55,48 @@ export default class AntiScreenshot extends BotComponent {
         }
     }
 
-    override async on_interaction_create(interaction: Discord.Interaction) {
-        if (interaction.isButton()) {
-            if (
-                interaction.customId == "anti_screenshot_acknowledge" &&
-                interaction.user.id == (interaction.channel as Discord.ThreadChannel).ownerId
-            ) {
-                const time = interaction.createdTimestamp - interaction.message.createdTimestamp;
-                if (time < DISMISS_TIME) {
-                    M.debug(
-                        "anti_screenshot_acknowledge received too quick",
-                        interaction.channel?.url,
-                        interaction.user.id,
-                        interaction.user.tag,
-                    );
-                    await interaction.reply({
-                        ephemeral: true,
-                        content: "Please read before dismissing. You will be allowed to dismiss in a few seconds.",
-                    });
-                } else {
-                    M.debug(
-                        "anti_screenshot_acknowledge received",
-                        interaction.channel?.url,
-                        interaction.user.id,
-                        interaction.user.tag,
-                    );
-                    await interaction.message.delete();
-                    // Log to the message log
-                    const log_embed = new Discord.EmbedBuilder()
-                        .setColor(colors.wheatley)
-                        .setTitle((interaction.channel as Discord.ThreadChannel).name)
-                        .setURL(interaction.channel!.url)
-                        .setAuthor({
-                            name: interaction.user.tag,
-                            iconURL: interaction.user.avatarURL()!,
-                        });
-                    await this.staff_message_log.send({
-                        content: "Anti-screenshot message dismissed",
-                        embeds: [log_embed],
-                    });
-                }
-            }
+    async acknowledge_handler(interaction: Discord.ButtonInteraction) {
+        if (interaction.user.id !== (interaction.channel as Discord.ThreadChannel).ownerId) {
+            await interaction.reply({
+                ephemeral: true,
+                content: "Only the thread owner can acknowledge this message.",
+            });
+            return;
+        }
+
+        const time = interaction.createdTimestamp - interaction.message.createdTimestamp;
+        if (time < DISMISS_TIME) {
+            M.debug(
+                "anti_screenshot_acknowledge received too quick",
+                interaction.channel?.url,
+                interaction.user.id,
+                interaction.user.tag,
+            );
+            await interaction.reply({
+                ephemeral: true,
+                content: "Please read before dismissing. You will be allowed to dismiss in a few seconds.",
+            });
+        } else {
+            M.debug(
+                "anti_screenshot_acknowledge received",
+                interaction.channel?.url,
+                interaction.user.id,
+                interaction.user.tag,
+            );
+            await interaction.message.delete();
+            // Log to the message log
+            const log_embed = new Discord.EmbedBuilder()
+                .setColor(colors.wheatley)
+                .setTitle((interaction.channel as Discord.ThreadChannel).name)
+                .setURL(interaction.channel!.url)
+                .setAuthor({
+                    name: interaction.user.tag,
+                    iconURL: interaction.user.avatarURL()!,
+                });
+            await this.staff_message_log.send({
+                content: "Anti-screenshot message dismissed",
+                embeds: [log_embed],
+            });
         }
     }
 
@@ -106,8 +116,8 @@ export default class AntiScreenshot extends BotComponent {
         ) {
             M.log("anti-screenshot firing", thread.url);
             const row = new Discord.ActionRowBuilder<Discord.MessageActionRowComponentBuilder>().addComponents(
-                new Discord.ButtonBuilder()
-                    .setCustomId("anti_screenshot_acknowledge")
+                this.acknowledge_button
+                    .create_button()
                     .setLabel("Acknowledge/Dismiss")
                     .setStyle(Discord.ButtonStyle.Danger),
             );

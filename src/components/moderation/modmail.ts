@@ -14,6 +14,7 @@ import { CommandSetBuilder } from "../../command-abstractions/command-set-builde
 import { EarlyReplyMode, TextBasedCommandBuilder } from "../../command-abstractions/text-based-command-builder.js";
 import { TextBasedCommand } from "../../command-abstractions/text-based-command.js";
 import { MessageContextMenuInteractionBuilder } from "../../command-abstractions/context-menu.js";
+import { ButtonInteractionBuilder, BotButton } from "../../command-abstractions/button.js";
 
 /*
  * Flow:
@@ -39,6 +40,12 @@ export default class Modmail extends BotComponent {
     readonly timeout_set = new Set<string>();
 
     readonly monke_set = new SelfClearingMap<Discord.Snowflake, number>(HOUR, HOUR);
+
+    private monkey_button!: BotButton<[]>;
+    private not_monkey_button!: BotButton<[]>;
+    private create_button!: BotButton<[]>;
+    private abort_button!: BotButton<[]>;
+    private continue_button!: BotButton<[]>;
 
     private database = this.wheatley.database.create_proxy<{
         component_state: moderation_state;
@@ -69,6 +76,26 @@ export default class Modmail extends BotComponent {
                     required: true,
                 })
                 .set_handler(this.modmail_update.bind(this)),
+        );
+
+        this.monkey_button = commands.add(
+            new ButtonInteractionBuilder("modmail_monkey").set_handler(this.monkey_button_press.bind(this)),
+        );
+        this.not_monkey_button = commands.add(
+            new ButtonInteractionBuilder("modmail_not_monkey").set_handler(this.not_monkey_button_press.bind(this)),
+        );
+        this.create_button = commands.add(
+            new ButtonInteractionBuilder("modmail_create").set_handler(this.modmail_create_button_press.bind(this)),
+        );
+        this.abort_button = commands.add(
+            new ButtonInteractionBuilder("modmail_create_abort").set_handler(
+                this.modmail_abort_button_press.bind(this),
+            ),
+        );
+        this.continue_button = commands.add(
+            new ButtonInteractionBuilder("modmail_create_continue").set_handler(
+                this.modmail_continue_button_press.bind(this),
+            ),
         );
     }
 
@@ -161,18 +188,9 @@ export default class Modmail extends BotComponent {
 
     create_modmail_system_embed_and_components() {
         const row = new Discord.ActionRowBuilder<Discord.MessageActionRowComponentBuilder>().addComponents(
-            new Discord.ButtonBuilder()
-                .setCustomId("modmail_monkey")
-                .setLabel("I'm a monkey")
-                .setStyle(Discord.ButtonStyle.Primary),
-            new Discord.ButtonBuilder()
-                .setCustomId("modmail_create")
-                .setLabel("Start a modmail thread")
-                .setStyle(Discord.ButtonStyle.Danger),
-            new Discord.ButtonBuilder()
-                .setCustomId("modmail_not_monkey")
-                .setLabel("I'm not a monkey")
-                .setStyle(Discord.ButtonStyle.Secondary),
+            this.monkey_button.create_button().setLabel("I'm a monkey").setStyle(Discord.ButtonStyle.Primary),
+            this.create_button.create_button().setLabel("Start a modmail thread").setStyle(Discord.ButtonStyle.Danger),
+            this.not_monkey_button.create_button().setLabel("I'm not a monkey").setStyle(Discord.ButtonStyle.Secondary),
         );
         return {
             content: "",
@@ -269,14 +287,8 @@ export default class Modmail extends BotComponent {
             } else {
                 // make sure they can read
                 const row = new Discord.ActionRowBuilder<Discord.MessageActionRowComponentBuilder>().addComponents(
-                    new Discord.ButtonBuilder()
-                        .setCustomId("modmail_create_abort")
-                        .setLabel("Cancel")
-                        .setStyle(Discord.ButtonStyle.Primary),
-                    new Discord.ButtonBuilder()
-                        .setCustomId("modmail_create_continue")
-                        .setLabel("Continue")
-                        .setStyle(Discord.ButtonStyle.Danger),
+                    this.abort_button.create_button().setLabel("Cancel").setStyle(Discord.ButtonStyle.Primary),
+                    this.continue_button.create_button().setLabel("Continue").setStyle(Discord.ButtonStyle.Danger),
                 );
                 await interaction.reply({
                     ephemeral: true,
@@ -340,19 +352,7 @@ export default class Modmail extends BotComponent {
     }
 
     override async on_interaction_create(interaction: Discord.Interaction) {
-        if (interaction.isButton()) {
-            if (interaction.customId == "modmail_monkey") {
-                return this.monkey_button_press(interaction);
-            } else if (interaction.customId == "modmail_not_monkey") {
-                return this.not_monkey_button_press(interaction);
-            } else if (interaction.customId == "modmail_create") {
-                return this.modmail_create_button_press(interaction);
-            } else if (interaction.customId == "modmail_create_abort") {
-                return this.modmail_abort_button_press(interaction);
-            } else if (interaction.customId == "modmail_create_continue") {
-                return this.modmail_continue_button_press(interaction);
-            }
-        } else if (interaction.isModalSubmit()) {
+        if (interaction.isModalSubmit()) {
             if (interaction.customId == "modmail_create_confirm") {
                 return this.modmail_modal_submit(interaction);
             }

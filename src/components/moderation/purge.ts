@@ -16,6 +16,7 @@ import { ascending, unwrap } from "../../utils/misc.js";
 import { MessageContextMenuInteractionBuilder } from "../../command-abstractions/context-menu.js";
 import { decode_snowflake, discord_timestamp, forge_snowflake, parse_url_or_snowflake } from "../../utils/discord.js";
 import { chunks } from "../../utils/arrays.js";
+import { ButtonInteractionBuilder, BotButton } from "../../command-abstractions/button.js";
 
 type PurgableChannel = Exclude<Discord.TextBasedChannel, Discord.DMChannel | Discord.PartialDMChannel>;
 type PurgableMessages = Discord.Collection<string, Discord.Message> | string[];
@@ -39,6 +40,8 @@ export default class Purge extends BotComponent {
 
     // boolean flag indicates whether to continue, serves as a stop token
     tasks = new SelfClearingMap<string, [boolean, Discord.InteractionResponse | null]>(2 * HOUR, 30 * MINUTE);
+
+    private abort_purge_button!: BotButton<[string]>;
 
     private database = this.wheatley.database.create_proxy<{
         message_database: message_database_entry;
@@ -139,6 +142,13 @@ export default class Purge extends BotComponent {
                 .set_handler(this.purge_message.bind(this)),
         );
 
+        this.abort_purge_button = commands.add(
+            new ButtonInteractionBuilder("abort_purge")
+                .add_string_parameter()
+                .set_permissions(Discord.PermissionFlagsBits.ManageMessages)
+                .set_handler(this.abort_purge_handler.bind(this)),
+        );
+
         commands.add(
             new TextBasedCommandBuilder("dummymessages", EarlyReplyMode.visible)
                 .set_permissions(Discord.PermissionFlagsBits.BanMembers)
@@ -160,35 +170,18 @@ export default class Purge extends BotComponent {
         );
     }
 
-    override async on_interaction_create(interaction: Discord.Interaction) {
-        if (interaction.isButton()) {
-            if (interaction.customId.startsWith("abort_purge_")) {
-                if (
-                    !(await this.wheatley.check_permissions(
-                        interaction.user,
-                        Discord.PermissionFlagsBits.ManageMessages,
-                    ))
-                ) {
-                    await interaction.reply({
-                        content: "Error: You are not authorized",
-                        ephemeral: true,
-                    });
-                    return;
-                }
-                const id = interaction.customId.substring("abort_purge_".length);
-                if (this.tasks.has(id)) {
-                    this.tasks.set(id, [false, null]);
-                }
-                //await interaction.message.edit({ embeds: interaction.message.embeds });
-                //await interaction.deferUpdate();
-                const m = await interaction.reply("Aborting...");
-                if (this.tasks.has(id)) {
-                    // if stuff hasn't been resolved while waiting for that promise
-                    this.tasks.set(id, [false, m]);
-                } else {
-                    await m.delete();
-                }
-            }
+    async abort_purge_handler(interaction: Discord.ButtonInteraction, id: string) {
+        if (this.tasks.has(id)) {
+            this.tasks.set(id, [false, null]);
+        }
+        //await interaction.message.edit({ embeds: interaction.message.embeds });
+        //await interaction.deferUpdate();
+        const m = await interaction.reply("Aborting...");
+        if (this.tasks.has(id)) {
+            // if stuff hasn't been resolved while waiting for that promise
+            this.tasks.set(id, [false, m]);
+        } else {
+            await m.delete();
         }
     }
 
@@ -220,9 +213,8 @@ export default class Purge extends BotComponent {
                 ? []
                 : [
                       new Discord.ActionRowBuilder<Discord.MessageActionRowComponentBuilder>().addComponents(
-                          new Discord.ButtonBuilder()
-                              // a custom id can be up to 100 characters long
-                              .setCustomId(`abort_purge_${id}`)
+                          this.abort_purge_button
+                              .create_button(id)
                               .setLabel("Abort")
                               .setStyle(Discord.ButtonStyle.Danger),
                       ),
