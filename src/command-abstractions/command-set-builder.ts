@@ -7,7 +7,7 @@ import { BaseBotInteraction } from "./interaction-base.js";
 import { TextBasedCommandBuilder } from "./text-based-command-builder.js";
 import { MessageContextMenuInteractionBuilder } from "./context-menu.js";
 import { ModalInteractionBuilder } from "./modal.js";
-import { BotButton, BotButtonHandler, ButtonInteractionBuilder } from "./button-handler.js";
+import { BotButton, BotButtonHandler, ButtonInteractionBuilder } from "./button.js";
 
 import * as util from "util";
 

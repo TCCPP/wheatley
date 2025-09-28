@@ -10,7 +10,7 @@ import { CommandSetBuilder } from "../command-abstractions/command-set-builder.j
 import { Wheatley } from "../wheatley.js";
 import { MessageContextMenuInteractionBuilder } from "../command-abstractions/context-menu.js";
 import { ModalInteractionBuilder } from "../command-abstractions/modal.js";
-import { BotButton, ButtonInteractionBuilder } from "../command-abstractions/button-handler.js";
+import { BotButton, ButtonInteractionBuilder } from "../command-abstractions/button.js";
 
 export default class Report extends BotComponent {
     private staff_flag_log!: Discord.TextChannel;

@@ -8,7 +8,7 @@ import { pluralize, time_to_human } from "../../utils/strings.js";
 import { M } from "../../utils/debugging-and-logging.js";
 import { BotComponent } from "../../bot-component.js";
 import { CommandSetBuilder } from "../../command-abstractions/command-set-builder.js";
-import { BotButton, ButtonInteractionBuilder } from "../../command-abstractions/button-handler.js";
+import { BotButton, ButtonInteractionBuilder } from "../../command-abstractions/button.js";
 import { Wheatley } from "../../wheatley.js";
 import { colors } from "../../common.js";
 import { EarlyReplyMode, TextBasedCommandBuilder } from "../../command-abstractions/text-based-command-builder.js";

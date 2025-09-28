@@ -4,7 +4,7 @@ import * as Discord from "discord.js";
 import { create_error_reply, Wheatley } from "./wheatley.js";
 import { BotTextBasedCommand } from "./command-abstractions/text-based-command-descriptor.js";
 import { BaseBotInteraction } from "./command-abstractions/interaction-base.js";
-import { BotButtonHandler } from "./command-abstractions/button-handler.js";
+import { BotButtonHandler } from "./command-abstractions/button.js";
 import { SelfClearingMap } from "./utils/containers.js";
 import { MINUTE } from "./common.js";
 import { TextBasedCommand } from "./command-abstractions/text-based-command.js";
