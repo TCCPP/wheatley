@@ -98,7 +98,7 @@ export class CommandHandler {
     private static readonly command_regex = /^!(\S+)/;
 
     // Parse button custom_id into base_id and arguments
-    private parse_button_custom_id(custom_id: string): [string, string[]] {
+    private parse_custom_id(custom_id: string): [string, string[]] {
         const parts = custom_id.split(":");
         const base_id = parts[0];
         const args = parts.slice(1);
@@ -402,7 +402,7 @@ export class CommandHandler {
                 );
                 await this.other_commands[interaction.commandName].handler(interaction);
             } else if (interaction.isModalSubmit()) {
-                const [base_id, raw_args] = this.parse_button_custom_id(interaction.customId);
+                const [base_id, raw_args] = this.parse_custom_id(interaction.customId);
                 if (base_id in this.modal_handlers) {
                     const handler = this.modal_handlers[base_id];
                     if (handler.permissions !== undefined) {
@@ -417,7 +417,7 @@ export class CommandHandler {
                     await handler.handle(interaction, raw_args);
                 }
             } else if (interaction.isButton()) {
-                const [base_id, raw_args] = this.parse_button_custom_id(interaction.customId);
+                const [base_id, raw_args] = this.parse_custom_id(interaction.customId);
 
                 if (base_id in this.button_handlers) {
                     const handler = this.button_handlers[base_id];
