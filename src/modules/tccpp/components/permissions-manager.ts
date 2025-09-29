@@ -391,13 +391,7 @@ export default class PermissionManager extends BotComponent {
     async sync_permissions() {
         await Promise.all(
             Object.entries(this.category_permissions).map(async ([id, permissions]) => {
-                const category = await this.wheatley.client.channels.fetch(id);
-                if (!category) {
-                    throw Error(`Category ${id} not found`);
-                }
-                if (!(category instanceof Discord.CategoryChannel)) {
-                    throw Error(`Category ${id} not of the expected type`);
-                }
+                const category = await this.utilities.get_category(id);
                 await this.sync_category_permissions(category, permissions);
             }),
         );

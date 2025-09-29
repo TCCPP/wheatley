@@ -242,4 +242,13 @@ export class BotUtilities {
         assert(channel instanceof Discord.ThreadChannel, `Channel ${channel} (${id}) not of the expected type`);
         return channel;
     }
+
+    async get_category(id: string) {
+        const category = await this.wheatley.client.channels.fetch(id);
+        if (!category) {
+            throw Error(`Category ${id} not found`);
+        }
+        assert(category instanceof Discord.CategoryChannel, `Category ${category} (${id}) not of the expected type`);
+        return category;
+    }
 }
