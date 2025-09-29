@@ -141,26 +141,6 @@ const channels = {
     log: "1260777903700971581",
 };
 
-const categories_map = {
-    staff_logs: "1135927261472755712",
-    staff: "873125551064363028",
-    meta: "360691699288113163",
-    tutoring: "923430684041818153",
-    cpp_help: "897465499535949874",
-    c_help: "931970218442493992",
-    discussion: "855220194887335977",
-    specialized: "360691955031867392",
-    community: "1131921460034801747",
-    off_topic: "360691500985745409",
-    misc: "506274316623544320",
-    bot_dev: "1166516815472640050",
-    voice: "360692425242705921",
-    archive: "910306041969913938",
-    private_archive: "455278783352537099",
-    challenges_archive: "429594248099135488",
-    meta_archive: "910308747929321492",
-};
-
 const roles_map = {
     muted: "815987333094178825",
     monke: "1139378060450332752",
@@ -252,10 +232,6 @@ export class Wheatley {
     private log_channel: Discord.TextBasedChannel | null = null;
 
     readonly channels = channels;
-
-    readonly categories: {
-        [k in keyof typeof categories_map]: Discord.CategoryChannel;
-    } = {} as any;
 
     readonly roles: {
         [k in keyof typeof roles_map]: Discord.Role;
@@ -423,19 +399,6 @@ export class Wheatley {
                 return value as T;
             }
         };
-        // Categories
-        await Promise.all(
-            Object.entries(categories_map).map(async ([k, id]) => {
-                const category = await wrap(() => this.client.channels.fetch(id));
-                if (this.freestanding && category === null) {
-                    return;
-                }
-                assert(category !== null, `Category ${k} ${id} not found`);
-                assert(category instanceof Discord.CategoryChannel, `Category ${k} ${id} not of the expected type`);
-                this.categories[k as keyof typeof categories_map] = category;
-                M.log(`Fetched category ${k}`);
-            }),
-        );
         // Roles
         await Promise.all(
             Object.entries(roles_map).map(async ([k, id]) => {
