@@ -178,7 +178,10 @@ export default class VoiceDeputies extends BotComponent {
         if (
             message.channel.isVoiceBased() &&
             message.mentions.roles.has(this.wheatley.roles.moderators.id) &&
-            !message.mentions.roles.has(this.wheatley.roles.voice_deputy.id)
+            !message.mentions.roles.has(this.wheatley.roles.voice_deputy.id) &&
+            !(await this.wheatley.try_fetch_guild_member(message.author))?.roles.cache.has(
+                this.wheatley.roles.voice_deputy.id,
+            )
         ) {
             await message.channel.send(`<@&${this.wheatley.roles.voice_deputy.id}>`);
         }
