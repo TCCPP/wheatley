@@ -8,6 +8,26 @@ import { BotComponent } from "../../../bot-component.js";
 import { Wheatley } from "../../../wheatley.js";
 import { unwrap } from "../../../utils/misc.js";
 
+const categories_map = {
+    staff_logs: "1135927261472755712",
+    staff: "873125551064363028",
+    meta: "360691699288113163",
+    tutoring: "923430684041818153",
+    cpp_help: "897465499535949874",
+    c_help: "931970218442493992",
+    discussion: "855220194887335977",
+    specialized: "360691955031867392",
+    community: "1131921460034801747",
+    off_topic: "360691500985745409",
+    misc: "506274316623544320",
+    bot_dev: "1166516815472640050",
+    voice: "360692425242705921",
+    archive: "910306041969913938",
+    private_archive: "455278783352537099",
+    challenges_archive: "429594248099135488",
+    meta_archive: "910308747929321492",
+};
+
 type permissions_entry = {
     allow?: bigint[];
     deny?: bigint[];
@@ -15,20 +35,11 @@ type permissions_entry = {
 
 type permission_overwrites = Record<string, permissions_entry>;
 
-type category_permission_entry = {
-    category: Discord.CategoryChannel;
-    permissions: permission_overwrites;
-};
-
-type channel_permission_entry = {
-    permissions: permission_overwrites;
-};
-
 const SET_VOICE_STATUS_PERMISSION_BIT = 1n << 48n; // TODO: Replace once discord.js supports this in PermissionsBitField
 
 export default class PermissionManager extends BotComponent {
-    category_permissions: Record<string, category_permission_entry> = {};
-    channel_overrides: Record<string, channel_permission_entry> = {};
+    category_permissions: Record<string, permission_overwrites> = {};
+    channel_overrides: Record<string, permission_overwrites> = {};
 
     setup_permissions_map() {
         // permission sets
@@ -149,21 +160,21 @@ export default class PermissionManager extends BotComponent {
             },
         };
 
-        this.add_entry(this.wheatley.categories.staff_logs, mod_only_channel);
-        this.add_entry(this.wheatley.categories.meta, default_permissions);
-        this.add_entry(this.wheatley.categories.cpp_help, default_permissions);
-        this.add_entry(this.wheatley.categories.c_help, default_permissions);
-        this.add_entry(this.wheatley.categories.discussion, default_permissions);
-        this.add_entry(this.wheatley.categories.specialized, default_permissions);
-        this.add_entry(this.wheatley.categories.community, default_permissions);
-        this.add_entry(this.wheatley.categories.off_topic, off_topic_permissions);
-        this.add_entry(this.wheatley.categories.misc, default_permissions);
-        this.add_entry(this.wheatley.categories.bot_dev, default_permissions);
-        this.add_entry(this.wheatley.categories.voice, voice_permissions);
-        this.add_entry(this.wheatley.categories.archive, read_only_archive_channel);
-        this.add_entry(this.wheatley.categories.private_archive, mod_only_channel);
-        this.add_entry(this.wheatley.categories.challenges_archive, mod_only_channel);
-        this.add_entry(this.wheatley.categories.meta_archive, mod_only_channel);
+        this.add_category_permissions(categories_map.staff_logs, mod_only_channel);
+        this.add_category_permissions(categories_map.meta, default_permissions);
+        this.add_category_permissions(categories_map.cpp_help, default_permissions);
+        this.add_category_permissions(categories_map.c_help, default_permissions);
+        this.add_category_permissions(categories_map.discussion, default_permissions);
+        this.add_category_permissions(categories_map.specialized, default_permissions);
+        this.add_category_permissions(categories_map.community, default_permissions);
+        this.add_category_permissions(categories_map.off_topic, off_topic_permissions);
+        this.add_category_permissions(categories_map.misc, default_permissions);
+        this.add_category_permissions(categories_map.bot_dev, default_permissions);
+        this.add_category_permissions(categories_map.voice, voice_permissions);
+        this.add_category_permissions(categories_map.archive, read_only_archive_channel);
+        this.add_category_permissions(categories_map.private_archive, mod_only_channel);
+        this.add_category_permissions(categories_map.challenges_archive, mod_only_channel);
+        this.add_category_permissions(categories_map.meta_archive, mod_only_channel);
 
         // meta overrides
         this.add_channel_overwrite(this.wheatley.channels.rules, {
@@ -340,20 +351,15 @@ export default class PermissionManager extends BotComponent {
         });
     }
 
-    add_entry(category: Discord.CategoryChannel, permissions: permission_overwrites) {
-        this.category_permissions[category.id] = {
-            category,
-            permissions,
-        };
+    add_category_permissions(category_id: string, permissions: permission_overwrites) {
+        this.category_permissions[category_id] = permissions;
     }
 
     add_channel_overwrite(channel_id: string, permissions: permission_overwrites) {
-        this.channel_overrides[channel_id] = {
-            permissions,
-        };
+        this.channel_overrides[channel_id] = permissions;
     }
 
-    async set_channel_permissions(channel: Discord.CategoryChildChannel, { category }: category_permission_entry) {
+    async sync_channel_permissions(channel: Discord.CategoryChildChannel, category: Discord.CategoryChannel) {
         if (channel.id in this.channel_overrides) {
             M.log(
                 `Setting permissions for channel ${channel.id} ${channel.name} ` +
@@ -371,28 +377,37 @@ export default class PermissionManager extends BotComponent {
         }
     }
 
-    async set_category_permissions({ category, permissions }: category_permission_entry) {
+    async sync_category_permissions(category: Discord.CategoryChannel, permissions: permission_overwrites) {
         M.log(`Setting permissions for category ${category.id} ${category.name}`);
         await category.permissionOverwrites.set(
             Object.entries(permissions).map(([id, permissions]) => ({ id, ...permissions })),
         );
         const channels = category.children.cache.map(channel => channel);
         for (const channel of channels) {
-            await this.set_channel_permissions(channel, { category, permissions });
+            await this.sync_channel_permissions(channel, category);
         }
     }
 
-    async set_permissions() {
-        for (const entry of Object.values(this.category_permissions)) {
-            await this.set_category_permissions(entry);
-        }
+    async sync_permissions() {
+        await Promise.all(
+            Object.entries(this.category_permissions).map(async ([id, permissions]) => {
+                const category = await this.wheatley.client.channels.fetch(id);
+                if (!category) {
+                    throw Error(`Category ${id} not found`);
+                }
+                if (!(category instanceof Discord.CategoryChannel)) {
+                    throw Error(`Category ${id} not of the expected type`);
+                }
+                await this.sync_category_permissions(category, permissions);
+            }),
+        );
     }
 
     override async on_ready() {
         this.setup_permissions_map();
-        this.set_permissions().catch(this.wheatley.critical_error.bind(this.wheatley));
+        this.sync_permissions().catch(this.wheatley.critical_error.bind(this.wheatley));
         setTimeout(() => {
-            this.set_permissions().catch(this.wheatley.critical_error.bind(this.wheatley));
+            this.sync_permissions().catch(this.wheatley.critical_error.bind(this.wheatley));
         }, HOUR);
     }
 }
