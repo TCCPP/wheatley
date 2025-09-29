@@ -14,6 +14,7 @@ import {
     UserContextMenuInteractionBuilder,
     MessageContextMenuInteractionBuilder,
 } from "../../../command-abstractions/context-menu.js";
+import { ModalInteractionBuilder, BotModal } from "../../../command-abstractions/modal.js";
 import { build_description, capitalize } from "../../../utils/strings.js";
 import { EarlyReplyMode, TextBasedCommandBuilder } from "../../../command-abstractions/text-based-command-builder.js";
 import { TextBasedCommand } from "../../../command-abstractions/text-based-command.js";
@@ -45,6 +46,7 @@ export default class SkillRoleSuggestion extends BotComponent {
     }>();
 
     private skill_role_suggestions!: Discord.ForumChannel;
+    private suggestion_modal!: BotModal<[]>;
 
     override async setup(commands: CommandSetBuilder) {
         this.skill_role_suggestions = await this.utilities.get_forum_channel(
@@ -66,6 +68,16 @@ export default class SkillRoleSuggestion extends BotComponent {
                 .set_description("Closes a skill role suggestions thread")
                 .set_permissions(Discord.PermissionFlagsBits.BanMembers)
                 .set_handler(this.close_thread.bind(this)),
+        );
+
+        this.suggestion_modal = commands.add(
+            new ModalInteractionBuilder("skill-role-suggestion-modal")
+                .set_title("Skill Role Suggestion")
+                .add_paragraph_field("skill-role-suggestion-modal-comments", "Comments [optional]", {
+                    placeholder: "Why are you suggesting this role?",
+                    required: false,
+                })
+                .set_handler(this.handle_modal_submit.bind(this)),
         );
     }
 
@@ -270,20 +282,8 @@ export default class SkillRoleSuggestion extends BotComponent {
     }
 
     async launch_modal(interaction: Discord.StringSelectMenuInteraction) {
-        const modal = new Discord.ModalBuilder()
-            .setCustomId("skill-role-suggestion-modal")
-            .setTitle("Skill Role Suggestion");
-        const { member } = unwrap(this.target_map.get(interaction.user.id));
         this.target_map.get(interaction.user.id)!.role = interaction.values[0];
-        const row = new Discord.ActionRowBuilder<Discord.TextInputBuilder>().addComponents(
-            new Discord.TextInputBuilder()
-                .setCustomId("skill-role-suggestion-modal-comments")
-                .setLabel("Comments [optional]")
-                .setPlaceholder(`Why are you suggesting ${interaction.values[0]} for ${member.displayName}?`)
-                .setRequired(false)
-                .setStyle(Discord.TextInputStyle.Paragraph),
-        );
-        modal.addComponents(row);
+        const modal = this.suggestion_modal.create_modal();
         await interaction.showModal(modal);
     }
 
@@ -297,7 +297,7 @@ export default class SkillRoleSuggestion extends BotComponent {
                 ? interaction.member
                 : await this.wheatley.guild.members.fetch(interaction.user.id);
         const { member, role, context } = unwrap(this.target_map.get(interaction.user.id));
-        const comments = interaction.fields.getTextInputValue("skill-role-suggestion-modal-comments");
+        const comments = this.suggestion_modal.get_field_value(interaction, "skill-role-suggestion-modal-comments");
         // TODO: Why does role need to be unwrapped?
         await this.handle_suggestion(member, suggester, unwrap(role), comments, context);
         await interaction.editReply({
@@ -308,8 +308,6 @@ export default class SkillRoleSuggestion extends BotComponent {
     override async on_interaction_create(interaction: Discord.Interaction) {
         if (interaction.isStringSelectMenu() && interaction.customId == "skill-role-suggestion-picker") {
             return this.launch_modal(interaction);
-        } else if (interaction.isModalSubmit() && interaction.customId == "skill-role-suggestion-modal") {
-            return this.handle_modal_submit(interaction);
         }
     }
 

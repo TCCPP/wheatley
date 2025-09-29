@@ -10,11 +10,14 @@ import { Wheatley } from "../wheatley.js";
 import { EarlyReplyMode, TextBasedCommandBuilder } from "../command-abstractions/text-based-command-builder.js";
 import { TextBasedCommand } from "../command-abstractions/text-based-command.js";
 import { unwrap } from "../utils/misc.js";
+import { ModalInteractionBuilder, BotModal } from "../command-abstractions/modal.js";
 
 export default class Echo extends BotComponent {
     static override get is_freestanding() {
         return true;
     }
+
+    private say_modal!: BotModal<[]>;
 
     override async setup(commands: CommandSetBuilder) {
         commands.add(
@@ -33,6 +36,17 @@ export default class Echo extends BotComponent {
                 .set_description("Say as wheatley")
                 .set_handler(this.say.bind(this)),
         );
+
+        this.say_modal = commands.add(
+            new ModalInteractionBuilder("say_modal")
+                .set_title("Say as Wheatley")
+                .add_paragraph_field("say_modal_message", "Message", {
+                    placeholder: "Hello, World!",
+                    required: true,
+                })
+                .set_permissions(Discord.PermissionFlagsBits.BanMembers)
+                .set_handler(this.say_modal_submit.bind(this)),
+        );
     }
 
     async echo(command: TextBasedCommand, input: string) {
@@ -46,22 +60,13 @@ export default class Echo extends BotComponent {
             await command.reply("Must be slash");
             return;
         }
-        const modal = new Discord.ModalBuilder().setCustomId("say_modal").setTitle("Say as Wheatley");
-        const row = new Discord.ActionRowBuilder<Discord.TextInputBuilder>().addComponents(
-            new Discord.TextInputBuilder()
-                .setCustomId("say_modal_message")
-                .setLabel("Message")
-                .setPlaceholder("Hello, World!")
-                .setStyle(Discord.TextInputStyle.Paragraph),
-        );
-        modal.addComponents(row);
+
+        const modal = this.say_modal.create_modal();
         await command.get_interaction().showModal(modal);
     }
 
     async say_modal_submit(interaction: Discord.ModalSubmitInteraction) {
-        const member = await this.wheatley.guild.members.fetch(interaction.user.id);
-        assert(member.permissions.has(Discord.PermissionFlagsBits.BanMembers));
-        const message = interaction.fields.getTextInputValue("say_modal_message");
+        const message = this.say_modal.get_field_value(interaction, "say_modal_message");
         await interaction.deferReply({ ephemeral: true });
         const channel = unwrap(interaction.channel);
         assert(channel.isTextBased() && !(channel instanceof Discord.PartialGroupDMChannel));
@@ -70,13 +75,5 @@ export default class Echo extends BotComponent {
             content: "Done",
             components: [],
         });
-    }
-
-    override async on_interaction_create(interaction: Discord.Interaction) {
-        if (interaction.isModalSubmit()) {
-            if (interaction.customId == "say_modal") {
-                return this.say_modal_submit(interaction);
-            }
-        }
     }
 }

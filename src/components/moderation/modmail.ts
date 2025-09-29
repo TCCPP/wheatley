@@ -15,6 +15,7 @@ import { EarlyReplyMode, TextBasedCommandBuilder } from "../../command-abstracti
 import { TextBasedCommand } from "../../command-abstractions/text-based-command.js";
 import { MessageContextMenuInteractionBuilder } from "../../command-abstractions/context-menu.js";
 import { ButtonInteractionBuilder, BotButton } from "../../command-abstractions/button.js";
+import { ModalInteractionBuilder, BotModal } from "../../command-abstractions/modal.js";
 
 /*
  * Flow:
@@ -46,6 +47,8 @@ export default class Modmail extends BotComponent {
     private create_button!: BotButton<[]>;
     private abort_button!: BotButton<[]>;
     private continue_button!: BotButton<[]>;
+
+    private confirm_modal!: BotModal<[]>;
 
     private database = this.wheatley.database.create_proxy<{
         component_state: moderation_state;
@@ -96,6 +99,16 @@ export default class Modmail extends BotComponent {
             new ButtonInteractionBuilder("modmail_create_continue").set_handler(
                 this.modmail_continue_button_press.bind(this),
             ),
+        );
+
+        this.confirm_modal = commands.add(
+            new ModalInteractionBuilder("modmail_create_confirm")
+                .set_title("Confirm Modmail")
+                .add_short_text_field("modmail_create_confirm_codeword", "Codeword", {
+                    placeholder: "You'll know if you read the last message",
+                    required: true,
+                })
+                .set_handler(this.modmail_modal_submit.bind(this)),
         );
     }
 
@@ -316,21 +329,14 @@ export default class Modmail extends BotComponent {
         set_timeout(() => {
             this.timeout_set.delete(interaction.user.id);
         }, RATELIMIT_TIME);
-        const modal = new Discord.ModalBuilder().setCustomId("modmail_create_confirm").setTitle("Confirm Modmail");
-        const row = new Discord.ActionRowBuilder<Discord.TextInputBuilder>().addComponents(
-            new Discord.TextInputBuilder()
-                .setCustomId("modmail_create_confirm_codeword")
-                .setLabel("Codeword")
-                .setPlaceholder("You'll know if you read the last message")
-                .setStyle(Discord.TextInputStyle.Short),
-        );
-        modal.addComponents(row);
+
+        const modal = this.confirm_modal.create_modal();
         await interaction.showModal(modal);
         await this.log_action(interaction.member, "Modmail continue");
     }
 
     async modmail_modal_submit(interaction: Discord.ModalSubmitInteraction) {
-        const codeword = interaction.fields.getTextInputValue("modmail_create_confirm_codeword");
+        const codeword = this.confirm_modal.get_field_value(interaction, "modmail_create_confirm_codeword");
         if (codeword.toLowerCase().replace(/\s/g, "").includes("raboof")) {
             await interaction.deferUpdate();
             await this.create_modmail_thread(interaction);
@@ -348,14 +354,6 @@ export default class Modmail extends BotComponent {
                 components: [],
             });
             await this.log_action(interaction.member, "Modmail incorrect codeword");
-        }
-    }
-
-    override async on_interaction_create(interaction: Discord.Interaction) {
-        if (interaction.isModalSubmit()) {
-            if (interaction.customId == "modmail_create_confirm") {
-                return this.modmail_modal_submit(interaction);
-            }
         }
     }
 

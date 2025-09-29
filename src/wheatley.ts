@@ -359,10 +359,15 @@ export class Wheatley {
                         this.critical_error(e);
                     }
                 }
-                const { text_commands, button_handlers, other_commands } = await command_set_builder.finalize(
-                    config.token,
+                const { text_commands, button_handlers, modal_handlers, other_commands } =
+                    await command_set_builder.finalize(config.token);
+                this.command_handler = new CommandHandler(
+                    this,
+                    text_commands,
+                    button_handlers,
+                    modal_handlers,
+                    other_commands,
                 );
-                this.command_handler = new CommandHandler(this, text_commands, button_handlers, other_commands);
 
                 this.event_hub.emit("wheatley_ready");
                 this.tracker.connect(this);

@@ -43,6 +43,7 @@ export class CommandHandler {
         private readonly wheatley: Wheatley,
         private readonly text_commands: Record<string, BotTextBasedCommand<unknown[]>>,
         private readonly button_handlers: Record<string, BotButtonHandler<unknown[]>>,
+        private readonly modal_handlers: Record<string, BotModalHandler<unknown[]>>,
         private readonly other_commands: Record<string, BaseBotInteraction<unknown[]>>,
     ) {
         this.wheatley.client.on("messageCreate", (message: Discord.Message) => {
@@ -401,12 +402,19 @@ export class CommandHandler {
                 );
                 await this.other_commands[interaction.commandName].handler(interaction);
             } else if (interaction.isModalSubmit()) {
-                const [command_name, id] = interaction.customId.split("--") as [string, string | undefined];
-                // TODO: Can't assert atm
-                if (command_name in this.other_commands) {
-                    const command = this.other_commands[command_name] as BotModalHandler;
-                    const fields = command.fields.map(id => interaction.fields.getTextInputValue(id));
-                    await command.handler(interaction, ...(id ? [id, ...fields] : fields));
+                const [base_id, raw_args] = this.parse_button_custom_id(interaction.customId);
+                if (base_id in this.modal_handlers) {
+                    const handler = this.modal_handlers[base_id];
+                    if (handler.permissions !== undefined) {
+                        if (!(await this.wheatley.check_permissions(interaction.user, handler.permissions))) {
+                            await interaction.reply({
+                                content: "Error: You are not authorized",
+                                ephemeral: true,
+                            });
+                            return;
+                        }
+                    }
+                    await handler.handle(interaction, raw_args);
                 }
             } else if (interaction.isButton()) {
                 const [base_id, raw_args] = this.parse_button_custom_id(interaction.customId);

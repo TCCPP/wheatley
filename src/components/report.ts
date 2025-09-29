@@ -9,24 +9,12 @@ import { BotComponent } from "../bot-component.js";
 import { CommandSetBuilder } from "../command-abstractions/command-set-builder.js";
 import { Wheatley } from "../wheatley.js";
 import { MessageContextMenuInteractionBuilder } from "../command-abstractions/context-menu.js";
-import { ModalInteractionBuilder } from "../command-abstractions/modal.js";
+import { ModalInteractionBuilder, BotModal } from "../command-abstractions/modal.js";
 import { BotButton, ButtonInteractionBuilder } from "../command-abstractions/button.js";
 
 export default class Report extends BotComponent {
     private staff_flag_log!: Discord.TextChannel;
-    private readonly report_modal = new Discord.ModalBuilder()
-        .setCustomId("report-modal")
-        .setTitle("Report Message")
-        .addComponents(
-            new Discord.ActionRowBuilder<Discord.TextInputBuilder>().addComponents(
-                new Discord.TextInputBuilder()
-                    .setCustomId("report-modal-message")
-                    .setLabel("Message")
-                    .setPlaceholder("Optional message / additional info")
-                    .setStyle(Discord.TextInputStyle.Paragraph)
-                    .setRequired(false),
-            ),
-        );
+    private report_modal!: BotModal<[string]>;
     private handling_button!: BotButton<[]>;
     private resolved_button!: BotButton<[]>;
     private invalid_button!: BotButton<[]>;
@@ -41,7 +29,16 @@ export default class Report extends BotComponent {
 
         commands.add(new MessageContextMenuInteractionBuilder("Report").set_handler(this.report.bind(this)));
 
-        commands.add(new ModalInteractionBuilder(this.report_modal, this.modal_handler.bind(this)));
+        this.report_modal = commands.add(
+            new ModalInteractionBuilder("report-modal")
+                .set_title("Report Message")
+                .add_string_parameter()
+                .add_paragraph_field("report-modal-message", "Message", {
+                    placeholder: "Optional message / additional info",
+                    required: false,
+                })
+                .set_handler(this.modal_handler.bind(this)),
+        );
 
         this.handling_button = commands.add(
             new ButtonInteractionBuilder("report-handling").set_handler(this.handling_handler.bind(this)),
@@ -67,35 +64,24 @@ export default class Report extends BotComponent {
         }
         M.log("Received report command", interaction.user.tag, interaction.user.id, interaction.targetId);
         this.target_map.set(interaction.targetMessage.id, interaction.targetMessage);
-        const modal = new Discord.ModalBuilder()
-            .setCustomId(`report-modal--${interaction.targetMessage.id}`)
-            .setTitle("Report Message");
-        modal.addComponents(
-            new Discord.ActionRowBuilder<Discord.TextInputBuilder>().addComponents(
-                new Discord.TextInputBuilder()
-                    .setCustomId("report-modal-message")
-                    .setLabel("Message")
-                    .setPlaceholder("Optional message / additional info")
-                    .setStyle(Discord.TextInputStyle.Paragraph)
-                    .setRequired(false),
-            ),
-        );
+
+        const modal = this.report_modal.create_modal(interaction.targetMessage.id);
         await interaction.showModal(modal);
     }
 
-    async modal_handler(interaction: Discord.ModalSubmitInteraction, id: string, message: string) {
+    async modal_handler(interaction: Discord.ModalSubmitInteraction, id: string) {
         M.log("Received report modal submit", id);
         await interaction.reply({
             ephemeral: true,
             content: "Processing...",
         });
         try {
+            const message = this.report_modal.get_field_value(interaction, "report-modal-message").trim();
             const reporter =
                 interaction.member instanceof Discord.GuildMember
                     ? interaction.member
                     : await this.wheatley.guild.members.fetch(interaction.user.id);
             if (this.target_map.has(id)) {
-                message = message.trim();
                 const target_message = this.target_map.get(id)!;
                 const report_embed = new Discord.EmbedBuilder()
                     .setColor(colors.alert_color)

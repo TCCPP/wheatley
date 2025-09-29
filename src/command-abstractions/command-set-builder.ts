@@ -6,7 +6,7 @@ import { BotTextBasedCommand } from "./text-based-command-descriptor.js";
 import { BaseBotInteraction } from "./interaction-base.js";
 import { TextBasedCommandBuilder } from "./text-based-command-builder.js";
 import { MessageContextMenuInteractionBuilder } from "./context-menu.js";
-import { ModalInteractionBuilder } from "./modal.js";
+import { ModalInteractionBuilder, BotModal, BotModalHandler } from "./modal.js";
 import { BotButton, BotButtonHandler, ButtonInteractionBuilder } from "./button.js";
 
 import * as util from "util";
@@ -19,6 +19,7 @@ export class CommandSetBuilder {
     text_commands: Record<string, BotTextBasedCommand<unknown[]>> = {};
     other_commands: Record<string, BaseBotInteraction<unknown[]>> = {};
     button_handlers: Record<string, BotButtonHandler<any[]>> = {};
+    modal_handlers: Record<string, BotModalHandler<any[]>> = {};
 
     constructor(readonly wheatley: Wheatley) {}
 
@@ -31,14 +32,14 @@ export class CommandSetBuilder {
     public add<T extends unknown[]>(command: TextBasedCommandBuilder<T, true, true>): void;
     public add<T extends unknown[]>(command: TextBasedCommandBuilder<T, true, false, true>): void;
     public add<T extends unknown[]>(command: MessageContextMenuInteractionBuilder<true>): void;
-    public add<T extends unknown[]>(command: ModalInteractionBuilder): void;
+    public add<T extends unknown[]>(command: ModalInteractionBuilder<T, true>): BotModal<T>;
     public add<T extends unknown[]>(command: ButtonInteractionBuilder<T, true>): BotButton<T>;
     public add<T extends unknown[]>(
         command:
             | TextBasedCommandBuilder<T, true, true>
             | TextBasedCommandBuilder<T, true, false, true>
             | MessageContextMenuInteractionBuilder<true>
-            | ModalInteractionBuilder
+            | ModalInteractionBuilder<T, true>
             | ButtonInteractionBuilder<T, true>,
     ) {
         if (command instanceof TextBasedCommandBuilder) {
@@ -60,13 +61,22 @@ export class CommandSetBuilder {
             this.button_handlers[command.base_custom_id] = button_handler;
             M.log(`Registered button handler: ${command.base_custom_id}`);
             return command.build_button();
+        } else if (command instanceof ModalInteractionBuilder) {
+            const modal_handler = command.build_handler();
+            assert(modal_handler, "Modal handler builder must have handler set");
+            assert(
+                !(command.base_custom_id in this.modal_handlers),
+                `Modal handler ${command.base_custom_id} already registered`,
+            );
+
+            this.modal_handlers[command.base_custom_id] = modal_handler;
+            M.log(`Registered modal handler: ${command.base_custom_id}`);
+            return command.build_modal();
         } else {
             assert(!(command.name in this.other_commands));
             const [bot_command, djs_command] = command.to_command_descriptors();
             this.other_commands[command.name] = bot_command as BaseBotInteraction<unknown[]>;
-            if (djs_command) {
-                this.register(djs_command);
-            }
+            this.register(djs_command);
         }
     }
 
@@ -88,6 +98,7 @@ export class CommandSetBuilder {
             return {
                 text_commands: this.text_commands,
                 button_handlers: this.button_handlers,
+                modal_handlers: this.modal_handlers,
                 other_commands: this.other_commands,
             };
         } catch (e) {
