@@ -14,7 +14,7 @@ import {
     UserContextMenuInteractionBuilder,
     MessageContextMenuInteractionBuilder,
 } from "../../../command-abstractions/context-menu.js";
-import { ModalInteractionBuilder, BotModal } from "../../../command-abstractions/modal.js";
+import { ModalInteractionBuilder, BotModal, BotModalSubmitInteraction } from "../../../command-abstractions/modal.js";
 import { build_description, capitalize } from "../../../utils/strings.js";
 import { EarlyReplyMode, TextBasedCommandBuilder } from "../../../command-abstractions/text-based-command-builder.js";
 import { TextBasedCommand } from "../../../command-abstractions/text-based-command.js";
@@ -287,7 +287,7 @@ export default class SkillRoleSuggestion extends BotComponent {
         await interaction.showModal(modal);
     }
 
-    async handle_modal_submit(interaction: Discord.ModalSubmitInteraction) {
+    async handle_modal_submit(interaction: BotModalSubmitInteraction) {
         await interaction.reply({
             content: "Working...",
             ephemeral: true,
@@ -297,7 +297,7 @@ export default class SkillRoleSuggestion extends BotComponent {
                 ? interaction.member
                 : await this.wheatley.guild.members.fetch(interaction.user.id);
         const { member, role, context } = unwrap(this.target_map.get(interaction.user.id));
-        const comments = this.suggestion_modal.get_field_value(interaction, "skill-role-suggestion-modal-comments");
+        const comments = interaction.get_field_value("skill-role-suggestion-modal-comments");
         // TODO: Why does role need to be unwrapped?
         await this.handle_suggestion(member, suggester, unwrap(role), comments, context);
         await interaction.editReply({

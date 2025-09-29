@@ -21,13 +21,87 @@ export type ModalField = {
     value?: string;
 };
 
+export class BotModalSubmitInteraction {
+    public readonly guild: Discord.Guild | null;
+    public readonly guild_id: string | null;
+    public readonly channel: Discord.TextBasedChannel | null;
+    public readonly channel_id: string | null;
+    public readonly member: Discord.GuildMember | Discord.APIInteractionGuildMember | null;
+    public readonly user: Discord.User;
+    public readonly customId: string;
+    public readonly replied: boolean;
+    public readonly deferred: boolean;
+
+    constructor(
+        private readonly interaction: Discord.ModalSubmitInteraction,
+        private readonly field_configs: ModalField[],
+    ) {
+        this.guild = interaction.guild;
+        this.guild_id = interaction.guildId;
+        this.channel = interaction.channel;
+        this.channel_id = interaction.channelId;
+        this.member = interaction.member;
+        this.user = interaction.user;
+        this.customId = interaction.customId;
+        this.replied = interaction.replied;
+        this.deferred = interaction.deferred;
+    }
+
+    get_field_value(field_custom_id: string): string {
+        return this.interaction.fields.getTextInputValue(field_custom_id);
+    }
+
+    get_all_field_values(): Record<string, string> {
+        const values: Record<string, string> = {};
+        for (const field of this.field_configs) {
+            values[field.custom_id] = this.get_field_value(field.custom_id);
+        }
+        return values;
+    }
+
+    async reply(options: Discord.InteractionReplyOptions): Promise<Discord.InteractionResponse> {
+        return await this.interaction.reply(options);
+    }
+
+    async deferReply(options?: Discord.InteractionDeferReplyOptions): Promise<Discord.InteractionResponse> {
+        return await this.interaction.deferReply(options);
+    }
+
+    async editReply(options: Discord.InteractionEditReplyOptions): Promise<Discord.Message> {
+        return await this.interaction.editReply(options);
+    }
+
+    async followUp(options: Discord.InteractionReplyOptions): Promise<Discord.Message> {
+        return await this.interaction.followUp(options);
+    }
+
+    async deferUpdate(options?: Discord.InteractionDeferUpdateOptions): Promise<Discord.InteractionResponse> {
+        return await this.interaction.deferUpdate(options);
+    }
+
+    async update(options: Discord.InteractionUpdateOptions): Promise<Discord.InteractionResponse> {
+        if (!this.interaction.isFromMessage()) {
+            throw new Error("update() can only be called on modal interactions from messages");
+        }
+        return await this.interaction.update(options);
+    }
+
+    isFromMessage(): this is BotModalSubmitInteraction & { message: Discord.Message } {
+        return this.interaction.isFromMessage();
+    }
+
+    get raw_interaction(): Discord.ModalSubmitInteraction {
+        return this.interaction;
+    }
+}
+
 export class BotModalHandler<Args extends unknown[] = []> {
     private readonly metadata_fields: ModalParameterType[] = [];
     private readonly field_configs: ModalField[] = [];
 
     constructor(
         public readonly base_custom_id: string,
-        public readonly handler: (interaction: Discord.ModalSubmitInteraction, ...args: Args) => Promise<void>,
+        public readonly handler: (interaction: BotModalSubmitInteraction, ...args: Args) => Promise<void>,
         public readonly permissions?: bigint,
         metadata_fields: ModalParameterType[] = [],
         field_configs: ModalField[] = [],
@@ -79,7 +153,8 @@ export class BotModalHandler<Args extends unknown[] = []> {
 
         try {
             const parsed_args = this.parse_arguments(raw_args);
-            await this.handler(interaction, ...parsed_args);
+            const bot_interaction = new BotModalSubmitInteraction(interaction, this.field_configs);
+            await this.handler(bot_interaction, ...parsed_args);
         } catch (error) {
             M.error(`Error handling modal ${this.base_custom_id}:`, error);
 
@@ -209,7 +284,7 @@ export class BotModal<Args extends unknown[] = []> {
 export class ModalInteractionBuilder<
     Args extends unknown[] = [],
     HasHandler extends boolean = false,
-> extends BaseBuilder<HasHandler, [Discord.ModalSubmitInteraction, ...Args]> {
+> extends BaseBuilder<HasHandler, [BotModalSubmitInteraction, ...Args]> {
     private readonly metadata_fields: ModalParameterType[] = [];
     private permissions?: bigint;
     private title = "Modal";
@@ -276,7 +351,7 @@ export class ModalInteractionBuilder<
     }
 
     set_handler(
-        handler: (interaction: Discord.ModalSubmitInteraction, ...args: Args) => Promise<void>,
+        handler: (interaction: BotModalSubmitInteraction, ...args: Args) => Promise<void>,
     ): ModalInteractionBuilder<Args, true> {
         this.handler = handler;
         return this as unknown as ModalInteractionBuilder<Args, true>;

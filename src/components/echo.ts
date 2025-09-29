@@ -10,7 +10,7 @@ import { Wheatley } from "../wheatley.js";
 import { EarlyReplyMode, TextBasedCommandBuilder } from "../command-abstractions/text-based-command-builder.js";
 import { TextBasedCommand } from "../command-abstractions/text-based-command.js";
 import { unwrap } from "../utils/misc.js";
-import { ModalInteractionBuilder, BotModal } from "../command-abstractions/modal.js";
+import { ModalInteractionBuilder, BotModal, BotModalSubmitInteraction } from "../command-abstractions/modal.js";
 
 export default class Echo extends BotComponent {
     static override get is_freestanding() {
@@ -65,8 +65,8 @@ export default class Echo extends BotComponent {
         await command.get_interaction().showModal(modal);
     }
 
-    async say_modal_submit(interaction: Discord.ModalSubmitInteraction) {
-        const message = this.say_modal.get_field_value(interaction, "say_modal_message");
+    async say_modal_submit(interaction: BotModalSubmitInteraction) {
+        const message = interaction.get_field_value("say_modal_message");
         await interaction.deferReply({ ephemeral: true });
         const channel = unwrap(interaction.channel);
         assert(channel.isTextBased() && !(channel instanceof Discord.PartialGroupDMChannel));

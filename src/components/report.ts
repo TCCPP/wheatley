@@ -9,7 +9,7 @@ import { BotComponent } from "../bot-component.js";
 import { CommandSetBuilder } from "../command-abstractions/command-set-builder.js";
 import { Wheatley } from "../wheatley.js";
 import { MessageContextMenuInteractionBuilder } from "../command-abstractions/context-menu.js";
-import { ModalInteractionBuilder, BotModal } from "../command-abstractions/modal.js";
+import { ModalInteractionBuilder, BotModal, BotModalSubmitInteraction } from "../command-abstractions/modal.js";
 import { BotButton, ButtonInteractionBuilder } from "../command-abstractions/button.js";
 
 export default class Report extends BotComponent {
@@ -69,14 +69,14 @@ export default class Report extends BotComponent {
         await interaction.showModal(modal);
     }
 
-    async modal_handler(interaction: Discord.ModalSubmitInteraction, id: string) {
+    async modal_handler(interaction: BotModalSubmitInteraction, id: string) {
         M.log("Received report modal submit", id);
         await interaction.reply({
             ephemeral: true,
             content: "Processing...",
         });
         try {
-            const message = this.report_modal.get_field_value(interaction, "report-modal-message").trim();
+            const message = interaction.get_field_value("report-modal-message").trim();
             const reporter =
                 interaction.member instanceof Discord.GuildMember
                     ? interaction.member

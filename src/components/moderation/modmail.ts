@@ -15,7 +15,7 @@ import { EarlyReplyMode, TextBasedCommandBuilder } from "../../command-abstracti
 import { TextBasedCommand } from "../../command-abstractions/text-based-command.js";
 import { MessageContextMenuInteractionBuilder } from "../../command-abstractions/context-menu.js";
 import { ButtonInteractionBuilder, BotButton } from "../../command-abstractions/button.js";
-import { ModalInteractionBuilder, BotModal } from "../../command-abstractions/modal.js";
+import { ModalInteractionBuilder, BotModal, BotModalSubmitInteraction } from "../../command-abstractions/modal.js";
 
 /*
  * Flow:
@@ -335,11 +335,11 @@ export default class Modmail extends BotComponent {
         await this.log_action(interaction.member, "Modmail continue");
     }
 
-    async modmail_modal_submit(interaction: Discord.ModalSubmitInteraction) {
-        const codeword = this.confirm_modal.get_field_value(interaction, "modmail_create_confirm_codeword");
+    async modmail_modal_submit(interaction: BotModalSubmitInteraction) {
+        const codeword = interaction.get_field_value("modmail_create_confirm_codeword");
         if (codeword.toLowerCase().replace(/\s/g, "").includes("raboof")) {
             await interaction.deferUpdate();
-            await this.create_modmail_thread(interaction);
+            await this.create_modmail_thread(interaction.raw_interaction);
             await interaction.editReply({
                 content:
                     "Your modmail request has been processed. A thread has been created and the staff " +
