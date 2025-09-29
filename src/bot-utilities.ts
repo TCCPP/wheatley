@@ -227,18 +227,27 @@ export class BotUtilities {
 
     async get_channel(id: string) {
         const channel = await this.wheatley.client.channels.fetch(id);
+        if (!channel) {
+            throw Error(`Channel ${id} not found`);
+        }
         assert(channel instanceof Discord.TextChannel, `Channel ${channel} (${id}) not of the expected type`);
         return channel;
     }
 
     async get_forum_channel(id: string) {
         const channel = await this.wheatley.client.channels.fetch(id);
+        if (!channel) {
+            throw Error(`Forum channel ${id} not found`);
+        }
         assert(channel instanceof Discord.ForumChannel, `Channel ${channel} (${id}) not of the expected type`);
         return channel;
     }
 
     async get_thread_channel(id: string) {
         const channel = await this.wheatley.client.channels.fetch(id);
+        if (!channel) {
+            throw Error(`Thread channel ${id} not found`);
+        }
         assert(channel instanceof Discord.ThreadChannel, `Channel ${channel} (${id}) not of the expected type`);
         return channel;
     }
