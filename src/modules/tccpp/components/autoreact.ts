@@ -173,6 +173,10 @@ export default class Autoreact extends BotComponent {
         ) {
             return;
         }
+        // Only consider messages under 5 minutes old to prevent reactions on very old messages
+        if (new_message.createdTimestamp && Date.now() - new_message.createdTimestamp > 5 * MINUTE) {
+            return;
+        }
         if (new_message.channel.id == this.wheatley.channels.memes) {
             const bot_starred = new_message.reactions.cache.get("⭐")?.users.cache.has(this.wheatley.user.id);
             // If we haven't stared (or don't know if we've starred) and the new message has media, star
