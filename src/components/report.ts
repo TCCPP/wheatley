@@ -32,7 +32,7 @@ export default class Report extends BotComponent {
         this.report_modal = commands.add(
             new ModalInteractionBuilder("report-modal")
                 .set_title("Report Message")
-                .add_string_parameter()
+                .add_string_metadata()
                 .add_paragraph_field("report-modal-message", "Message", {
                     placeholder: "Optional message / additional info",
                     required: false,

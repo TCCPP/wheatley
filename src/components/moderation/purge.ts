@@ -144,7 +144,7 @@ export default class Purge extends BotComponent {
 
         this.abort_purge_button = commands.add(
             new ButtonInteractionBuilder("abort_purge")
-                .add_string_parameter()
+                .add_string_metadata()
                 .set_permissions(Discord.PermissionFlagsBits.ManageMessages)
                 .set_handler(this.abort_purge_handler.bind(this)),
         );

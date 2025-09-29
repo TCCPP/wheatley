@@ -22,17 +22,17 @@ export type ModalField = {
 };
 
 export class BotModalHandler<Args extends unknown[] = []> {
-    private readonly parameter_types: ModalParameterType[] = [];
+    private readonly metadata_fields: ModalParameterType[] = [];
     private readonly field_configs: ModalField[] = [];
 
     constructor(
         public readonly base_custom_id: string,
         public readonly handler: (interaction: Discord.ModalSubmitInteraction, ...args: Args) => Promise<void>,
         public readonly permissions?: bigint,
-        parameter_types: ModalParameterType[] = [],
+        metadata_fields: ModalParameterType[] = [],
         field_configs: ModalField[] = [],
     ) {
-        this.parameter_types = parameter_types;
+        this.metadata_fields = metadata_fields;
         this.field_configs = field_configs;
     }
 
@@ -42,13 +42,13 @@ export class BotModalHandler<Args extends unknown[] = []> {
 
     parse_arguments(raw_args: string[]): Args {
         assert(
-            raw_args.length === this.parameter_types.length,
-            `Expected ${this.parameter_types.length} arguments, got ${raw_args.length} ` +
+            raw_args.length === this.metadata_fields.length,
+            `Expected ${this.metadata_fields.length} arguments, got ${raw_args.length} ` +
                 `for modal ${this.base_custom_id}`,
         );
 
         return raw_args.map((arg, index) => {
-            const type = this.parameter_types[index];
+            const type = this.metadata_fields[index];
             try {
                 if (type === "string" || type === "user_id") {
                     return arg;
@@ -99,18 +99,18 @@ export class BotModal<Args extends unknown[] = []> {
     constructor(
         public readonly base_custom_id: string,
         private readonly title: string,
-        private readonly parameter_types: ModalParameterType[] = [],
+        private readonly metadata_fields: ModalParameterType[] = [],
         private readonly field_configs: ModalField[] = [],
     ) {}
 
     generate_custom_id(...args: Args): string {
         assert(
-            args.length === this.parameter_types.length,
-            `Expected ${this.parameter_types.length} arguments, got ${args.length} for modal ${this.base_custom_id}`,
+            args.length === this.metadata_fields.length,
+            `Expected ${this.metadata_fields.length} arguments, got ${args.length} for modal ${this.base_custom_id}`,
         );
 
         const serialized_args = args.map((arg, index) => {
-            const type = this.parameter_types[index];
+            const type = this.metadata_fields[index];
             try {
                 if (type === "string" || type === "user_id") {
                     return String(arg);
@@ -210,7 +210,7 @@ export class ModalInteractionBuilder<
     Args extends unknown[] = [],
     HasHandler extends boolean = false,
 > extends BaseBuilder<HasHandler, [Discord.ModalSubmitInteraction, ...Args]> {
-    private readonly parameter_types: ModalParameterType[] = [];
+    private readonly metadata_fields: ModalParameterType[] = [];
     private permissions?: bigint;
     private title = "Modal";
     private readonly field_configs: ModalField[] = [];
@@ -224,23 +224,23 @@ export class ModalInteractionBuilder<
         return this;
     }
 
-    add_string_parameter(): ModalInteractionBuilder<[...Args, string], HasHandler> {
-        this.parameter_types.push("string");
+    add_string_metadata(): ModalInteractionBuilder<[...Args, string], HasHandler> {
+        this.metadata_fields.push("string");
         return this as unknown as ModalInteractionBuilder<[...Args, string], HasHandler>;
     }
 
-    add_number_parameter(): ModalInteractionBuilder<[...Args, number], HasHandler> {
-        this.parameter_types.push("number");
+    add_number_metadata(): ModalInteractionBuilder<[...Args, number], HasHandler> {
+        this.metadata_fields.push("number");
         return this as unknown as ModalInteractionBuilder<[...Args, number], HasHandler>;
     }
 
-    add_boolean_parameter(): ModalInteractionBuilder<[...Args, boolean], HasHandler> {
-        this.parameter_types.push("boolean");
+    add_boolean_metadata(): ModalInteractionBuilder<[...Args, boolean], HasHandler> {
+        this.metadata_fields.push("boolean");
         return this as unknown as ModalInteractionBuilder<[...Args, boolean], HasHandler>;
     }
 
-    add_user_id_parameter(): ModalInteractionBuilder<[...Args, string], HasHandler> {
-        this.parameter_types.push("user_id");
+    add_user_id_metadata(): ModalInteractionBuilder<[...Args, string], HasHandler> {
+        this.metadata_fields.push("user_id");
         return this as unknown as ModalInteractionBuilder<[...Args, string], HasHandler>;
     }
 
@@ -296,12 +296,12 @@ export class ModalInteractionBuilder<
             this.base_custom_id,
             this.handler,
             this.permissions,
-            this.parameter_types,
+            this.metadata_fields,
             this.field_configs,
         ) as ConditionalOptional<HasHandler, BotModalHandler<Args>>;
     }
 
     build_modal(): BotModal<Args> {
-        return new BotModal(this.base_custom_id, this.title, this.parameter_types, this.field_configs);
+        return new BotModal(this.base_custom_id, this.title, this.metadata_fields, this.field_configs);
     }
 }

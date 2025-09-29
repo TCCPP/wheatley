@@ -55,8 +55,8 @@ export default class Modlogs extends BotComponent {
         // Register button handler for modlogs pagination
         this.modlogs_page_button = commands.add(
             new ButtonInteractionBuilder("modlogs_page")
-                .add_user_id_parameter() // user_id: string
-                .add_number_parameter() // page: number
+                .add_user_id_metadata() // user_id: string
+                .add_number_metadata() // page: number
                 .set_permissions(Discord.PermissionFlagsBits.BanMembers)
                 .set_handler(this.handle_modlogs_page.bind(this)),
         );

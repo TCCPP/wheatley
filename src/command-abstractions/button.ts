@@ -8,26 +8,26 @@ import { BaseBuilder } from "./interaction-base.js";
 export type ButtonParameterType = "string" | "number" | "boolean" | "user_id";
 
 export class BotButtonHandler<Args extends unknown[] = []> {
-    private readonly parameter_types: ButtonParameterType[] = [];
+    private readonly metadata_fields: ButtonParameterType[] = [];
 
     constructor(
         public readonly base_custom_id: string,
         public readonly handler: (interaction: Discord.ButtonInteraction, ...args: Args) => Promise<void>,
         public readonly permissions?: bigint,
-        parameter_types: ButtonParameterType[] = [],
+        metadata_fields: ButtonParameterType[] = [],
     ) {
-        this.parameter_types = parameter_types;
+        this.metadata_fields = metadata_fields;
     }
 
     parse_arguments(raw_args: string[]): Args {
         assert(
-            raw_args.length === this.parameter_types.length,
-            `Expected ${this.parameter_types.length} arguments, got ${raw_args.length} ` +
+            raw_args.length === this.metadata_fields.length,
+            `Expected ${this.metadata_fields.length} arguments, got ${raw_args.length} ` +
                 `for button ${this.base_custom_id}`,
         );
 
         return raw_args.map((arg, index) => {
-            const type = this.parameter_types[index];
+            const type = this.metadata_fields[index];
             try {
                 if (type === "string" || type === "user_id") {
                     return arg;
@@ -77,17 +77,17 @@ export class BotButtonHandler<Args extends unknown[] = []> {
 export class BotButton<Args extends unknown[] = []> {
     constructor(
         public readonly base_custom_id: string,
-        private readonly parameter_types: ButtonParameterType[] = [],
+        private readonly metadata_fields: ButtonParameterType[] = [],
     ) {}
 
     generate_custom_id(...args: Args): string {
         assert(
-            args.length === this.parameter_types.length,
-            `Expected ${this.parameter_types.length} arguments, got ${args.length} for button ${this.base_custom_id}`,
+            args.length === this.metadata_fields.length,
+            `Expected ${this.metadata_fields.length} arguments, got ${args.length} for button ${this.base_custom_id}`,
         );
 
         const serialized_args = args.map((arg, index) => {
-            const type = this.parameter_types[index];
+            const type = this.metadata_fields[index];
             try {
                 if (type === "string" || type === "user_id") {
                     return String(arg);
@@ -131,30 +131,30 @@ export class ButtonInteractionBuilder<
     Args extends unknown[] = [],
     HasHandler extends boolean = false,
 > extends BaseBuilder<HasHandler, [Discord.ButtonInteraction, ...Args]> {
-    private readonly parameter_types: ButtonParameterType[] = [];
+    private readonly metadata_fields: ButtonParameterType[] = [];
     private permissions?: bigint;
 
     constructor(public readonly base_custom_id: string) {
         super();
     }
 
-    add_string_parameter(): ButtonInteractionBuilder<[...Args, string], HasHandler> {
-        this.parameter_types.push("string");
+    add_string_metadata(): ButtonInteractionBuilder<[...Args, string], HasHandler> {
+        this.metadata_fields.push("string");
         return this as unknown as ButtonInteractionBuilder<[...Args, string], HasHandler>;
     }
 
-    add_number_parameter(): ButtonInteractionBuilder<[...Args, number], HasHandler> {
-        this.parameter_types.push("number");
+    add_number_metadata(): ButtonInteractionBuilder<[...Args, number], HasHandler> {
+        this.metadata_fields.push("number");
         return this as unknown as ButtonInteractionBuilder<[...Args, number], HasHandler>;
     }
 
-    add_boolean_parameter(): ButtonInteractionBuilder<[...Args, boolean], HasHandler> {
-        this.parameter_types.push("boolean");
+    add_boolean_metadata(): ButtonInteractionBuilder<[...Args, boolean], HasHandler> {
+        this.metadata_fields.push("boolean");
         return this as unknown as ButtonInteractionBuilder<[...Args, boolean], HasHandler>;
     }
 
-    add_user_id_parameter(): ButtonInteractionBuilder<[...Args, string], HasHandler> {
-        this.parameter_types.push("user_id");
+    add_user_id_metadata(): ButtonInteractionBuilder<[...Args, string], HasHandler> {
+        this.metadata_fields.push("user_id");
         return this as unknown as ButtonInteractionBuilder<[...Args, string], HasHandler>;
     }
 
@@ -179,11 +179,11 @@ export class ButtonInteractionBuilder<
             this.base_custom_id,
             this.handler,
             this.permissions,
-            this.parameter_types,
+            this.metadata_fields,
         ) as ConditionalOptional<HasHandler, BotButtonHandler<Args>>;
     }
 
     build_button(): BotButton<Args> {
-        return new BotButton(this.base_custom_id, this.parameter_types);
+        return new BotButton(this.base_custom_id, this.metadata_fields);
     }
 }
