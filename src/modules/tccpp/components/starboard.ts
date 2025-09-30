@@ -15,8 +15,8 @@ import { TextBasedCommand } from "../../../command-abstractions/text-based-comma
 
 const star_threshold = 5;
 const other_threshold = 5;
-const memes_star_threshold = 14;
-const memes_other_threshold = 14;
+const memes_star_threshold = 16;
+const memes_other_threshold = 16;
 
 const auto_delete_threshold = 5;
 
