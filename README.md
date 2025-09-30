@@ -25,9 +25,9 @@ The bot is very modular and most components are completely independent of other 
 In order to run the bot locally you'll need to create a bot and setup some basic information for Wheatley:
 
 1. Go to https://discord.com/developers/applications and create an application
-2. Move or copy `config.default.json` to `config.json`
+2. Move or copy `config.default.jsonc` to `config.jsonc`
 3. Go to Application Settings > Bot
-   1. Request or reset your bot's token, copy it to `token` in `config.json`
+   1. Request or reset your bot's token, copy it to `token` in `config.jsonc`
    2. Under Privileged Gateway Intents, select presence intent, server members intent, and the message content intent
 4. Go to Application Settings > Installation
    1. Select "Guild Install"
@@ -60,10 +60,10 @@ solution currently is the following:
 
 ## config.json
 
-Secrets and other bot info must be configured in the `config.json` file. An example looks like:
+Secrets and other bot info must be configured in the `config.jsonc` file. An example looks like:
 
 <!-- prettier-ignore -->
-```json
+```jsonc
 {
   "id": "<bot id>",
   "guild": "<guild id>",

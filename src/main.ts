@@ -22,6 +22,7 @@ import * as Sentry from "@sentry/node";
 import { M } from "./utils/debugging-and-logging.js";
 
 import { wheatley_config, Wheatley } from "./wheatley.js";
+import JSONC from "jsonc-parser";
 import fs from "fs";
 
 async function main() {
@@ -73,7 +74,7 @@ async function main() {
     M.info(`Node version: ${process.versions.node}`);
 
     // reading sync is okay here, we can't do anything in parallel anyway
-    const config: wheatley_config = JSON.parse(fs.readFileSync("config.json", { encoding: "utf-8" }));
+    const config: wheatley_config = JSONC.parse(fs.readFileSync("config.jsonc", { encoding: "utf-8" }));
 
     if (config.sentry) {
         Sentry.init({
