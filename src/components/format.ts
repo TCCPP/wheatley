@@ -114,13 +114,20 @@ const default_clang_format_language = "cpp";
 
 const ignore_prefixes = [";compile", ";asm"];
 
-async function clang_format(text: string, args: string[]) {
-    const { stdout, stderr } = await async_exec_file(clang_format_path, args, {}, text);
-    if (stderr.toString("utf8").trim().length != 0) {
-        M.debug("Clang format stderr", stderr.toString("utf8"));
-        // TODO: Ping zelis?
+const clang_format_mutex = new Mutex();
+
+async function clang_format(text: string, args: string[]): Promise<string> {
+    try {
+        await clang_format_mutex.lock(); // This is a ratelimiting mechanism
+        const { stdout, stderr } = await async_exec_file(clang_format_path, args, {}, text);
+        if (stderr.toString("utf8").trim().length != 0) {
+            M.debug("Clang format stderr", stderr.toString("utf8"));
+            // TODO: Ping zelis?
+        }
+        return stdout.toString("utf8");
+    } finally {
+        clang_format_mutex.unlock();
     }
-    return stdout.toString("utf8");
 }
 
 const clang_format_style = [
