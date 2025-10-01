@@ -47,7 +47,6 @@ export function time_to_human(diff: number, levels?: number): string {
 }
 
 // removes code blocks from a message
-// not perfect, but good enough
 export function parse_out(message: string) {
     const ast = new MarkdownParser().parse(message);
     const text_content = (node: markdown_node): string => {
