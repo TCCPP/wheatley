@@ -373,7 +373,7 @@ export default class Wiki extends BotComponent {
         commands.add(
             new TextBasedCommandBuilder(["wiki-preview", "wp"], "Wiki Articles", EarlyReplyMode.none)
                 .set_slash(false)
-                .set_description("Preview a wiki article")
+                .set_description("Preview wiki article markdown")
                 .add_string_option({
                     title: "content",
                     description: "Content",

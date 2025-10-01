@@ -62,7 +62,7 @@ export default class CoreGuidelines extends BotComponent {
 
     override async setup(commands: CommandSetBuilder) {
         commands.add(
-            new TextBasedCommandBuilder("guide", "Misc", EarlyReplyMode.none)
+            new TextBasedCommandBuilder("guide", "References", EarlyReplyMode.none)
                 .set_description("Query C++ Core Guidelines")
                 .add_string_option({
                     title: "query",

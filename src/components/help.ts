@@ -23,13 +23,14 @@ export default class Help extends BotComponent {
     }
 
     private static readonly category_order: CommandCategory[] = [
-        "Wiki Articles",
         "References",
+        "Wiki Articles",
         "Thread Control",
         "Utility",
         "Misc",
         "Moderation",
         "Moderation Utilities",
+        "Admin utilities",
     ];
 
     override async setup(commands: CommandSetBuilder) {

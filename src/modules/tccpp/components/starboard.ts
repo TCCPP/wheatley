@@ -90,7 +90,7 @@ export default class Starboard extends BotComponent {
         this.staff_flag_log = await this.utilities.get_channel(this.wheatley.channels.staff_flag_log);
 
         commands.add(
-            new TextBasedCommandBuilder("add-negative-emoji", "Misc", EarlyReplyMode.visible)
+            new TextBasedCommandBuilder("add-negative-emoji", "Admin utilities", EarlyReplyMode.visible)
                 .set_description("Register a negative emoji")
                 .add_string_option({
                     title: "emojis",
@@ -102,7 +102,7 @@ export default class Starboard extends BotComponent {
         );
 
         commands.add(
-            new TextBasedCommandBuilder("add-delete-emoji", "Misc", EarlyReplyMode.visible)
+            new TextBasedCommandBuilder("add-delete-emoji", "Admin utilities", EarlyReplyMode.visible)
                 .set_description("Register a delete emoji")
                 .add_string_option({
                     title: "emojis",
@@ -114,7 +114,7 @@ export default class Starboard extends BotComponent {
         );
 
         commands.add(
-            new TextBasedCommandBuilder("add-ignored-emoji", "Misc", EarlyReplyMode.visible)
+            new TextBasedCommandBuilder("add-ignored-emoji", "Admin utilities", EarlyReplyMode.visible)
                 .set_description("Register an ignored emoji")
                 .add_string_option({
                     title: "emojis",
@@ -126,7 +126,7 @@ export default class Starboard extends BotComponent {
         );
 
         commands.add(
-            new TextBasedCommandBuilder("add-repost-emoji", "Misc", EarlyReplyMode.visible)
+            new TextBasedCommandBuilder("add-repost-emoji", "Admin utilities", EarlyReplyMode.visible)
                 .set_description("Register a repost emoji")
                 .add_string_option({
                     title: "emojis",
@@ -138,7 +138,7 @@ export default class Starboard extends BotComponent {
         );
 
         commands.add(
-            new TextBasedCommandBuilder("list-starboard-config", "Misc", EarlyReplyMode.visible)
+            new TextBasedCommandBuilder("list-starboard-config", "Admin utilities", EarlyReplyMode.visible)
                 .set_description("List starboard config")
                 .set_permissions(Discord.PermissionFlagsBits.Administrator)
                 .set_handler(this.list_config.bind(this)),

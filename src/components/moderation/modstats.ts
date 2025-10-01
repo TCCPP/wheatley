@@ -21,7 +21,7 @@ export default class ModStats extends BotComponent {
     override async setup(commands: CommandSetBuilder) {
         this.bot_spam = await this.utilities.get_channel(this.wheatley.channels.bot_spam);
         commands.add(
-            new TextBasedCommandBuilder("modstats", "Misc", EarlyReplyMode.none)
+            new TextBasedCommandBuilder("modstats", "Moderation", EarlyReplyMode.none)
                 .set_description("Moderator stats")
                 .set_permissions(Discord.PermissionFlagsBits.ModerateMembers)
                 .add_user_option({

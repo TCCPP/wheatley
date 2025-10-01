@@ -28,7 +28,8 @@ export type CommandCategory =
     | "Utility"
     | "Misc"
     | "Moderation"
-    | "Moderation Utilities";
+    | "Moderation Utilities"
+    | "Admin utilities";
 
 export enum EarlyReplyMode {
     ephemeral,

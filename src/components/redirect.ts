@@ -25,7 +25,7 @@ export default class Redirect extends BotComponent {
         );
 
         commands.add(
-            new TextBasedCommandBuilder("r", "Misc", EarlyReplyMode.none)
+            new TextBasedCommandBuilder("r", "Moderation Utilities", EarlyReplyMode.none)
                 .set_description(
                     `Redirect a conversation from <#${this.wheatley.channels.c_cpp_discussion}> or ` +
                         `<#${this.wheatley.channels.general_discussion}> to a help channel`,
