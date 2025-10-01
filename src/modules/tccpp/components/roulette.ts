@@ -33,13 +33,13 @@ export default class Roulette extends BotComponent {
         this.staff_member_log = await this.utilities.get_channel(this.wheatley.channels.staff_member_log);
 
         commands.add(
-            new TextBasedCommandBuilder("roulette", EarlyReplyMode.none)
+            new TextBasedCommandBuilder("roulette", "Misc", EarlyReplyMode.none)
                 .set_description("roulette")
                 .set_handler(this.roulette.bind(this)),
         );
 
         commands.add(
-            new TextBasedCommandBuilder("leaderboard", EarlyReplyMode.visible)
+            new TextBasedCommandBuilder("leaderboard", "Misc", EarlyReplyMode.visible)
                 .set_description("Leaderboard")
                 .set_handler(this.leaderboard.bind(this)),
         );

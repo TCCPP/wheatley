@@ -17,7 +17,7 @@ export default class Restart extends BotComponent {
 
     override async setup(commands: CommandSetBuilder) {
         commands.add(
-            new TextBasedCommandBuilder("restart", EarlyReplyMode.none)
+            new TextBasedCommandBuilder("restart", "Misc", EarlyReplyMode.none)
                 .set_permissions(Discord.PermissionFlagsBits.BanMembers)
                 .set_description("Restart")
                 .set_handler(this.restart.bind(this)),

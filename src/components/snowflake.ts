@@ -16,7 +16,7 @@ export default class Snowflake extends BotComponent {
 
     override async setup(commands: CommandSetBuilder) {
         commands.add(
-            new TextBasedCommandBuilder("snowflake", EarlyReplyMode.none)
+            new TextBasedCommandBuilder("snowflake", "Utility", EarlyReplyMode.none)
                 .set_description("Snowflake")
                 .add_string_option({
                     title: "input",

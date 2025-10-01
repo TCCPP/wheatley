@@ -21,6 +21,15 @@ export type TextBasedCommandParameterOptions = {
     autocomplete?: (partial: string, command_name: string) => { name: string; value: string }[];
 };
 
+export type CommandCategory =
+    | "Wiki Articles"
+    | "References"
+    | "Thread Control"
+    | "Utility"
+    | "Misc"
+    | "Moderation"
+    | "Moderation Utilities";
+
 export enum EarlyReplyMode {
     ephemeral,
     visible,
@@ -39,13 +48,15 @@ export class TextBasedCommandBuilder<
     options = new Discord.Collection<string, TextBasedCommandParameterOptions & { type: TextBasedCommandOptionType }>();
     slash_config: boolean[];
     permissions: undefined | bigint = undefined;
+    category: CommandCategory;
     subcommands: TextBasedCommandBuilder<any, true, true>[] = [];
     type: HasSubcommands extends true ? "top-level" : "default";
     allow_trailing_junk: boolean = false;
 
-    constructor(names: string | MoreThanOne<string>, early_reply_mode: EarlyReplyMode) {
+    constructor(names: string | MoreThanOne<string>, category: CommandCategory, early_reply_mode: EarlyReplyMode) {
         super();
         this.names = Array.isArray(names) ? names : [names];
+        this.category = category;
         this.early_reply_mode = early_reply_mode;
         this.slash_config = new Array(this.names.length).fill(true);
         this.type = "default" as any;
@@ -249,6 +260,7 @@ export class TextBasedCommandBuilder<
                     description,
                     slash,
                     this.permissions,
+                    this.category,
                     this.allow_trailing_junk,
                     this.early_reply_mode,
                     this,

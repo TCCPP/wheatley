@@ -18,7 +18,7 @@ export default class Topic extends BotComponent {
 
     override async setup(commands: CommandSetBuilder) {
         commands.add(
-            new TextBasedCommandBuilder("topic", EarlyReplyMode.none)
+            new TextBasedCommandBuilder("topic", "Misc", EarlyReplyMode.none)
                 .set_description("Posts the channel topic")
                 .set_handler(this.topic.bind(this)),
         );

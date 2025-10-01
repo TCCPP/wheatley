@@ -91,6 +91,10 @@ export class CommandHandler {
         return this.text_commands[command];
     }
 
+    public get_all_commands() {
+        return this.text_commands;
+    }
+
     //
     // Command dispatch
     //

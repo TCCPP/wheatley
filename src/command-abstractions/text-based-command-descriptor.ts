@@ -11,6 +11,7 @@ import {
     TextBasedCommandOptionType,
     TextBasedCommandBuilder,
     EarlyReplyMode,
+    CommandCategory,
 } from "./text-based-command-builder.js";
 import { TextBasedCommand } from "./text-based-command.js";
 import { BaseBotInteraction } from "./interaction-base.js";
@@ -30,6 +31,7 @@ export class BotTextBasedCommand<Args extends unknown[] = []> extends BaseBotInt
         public readonly description: string,
         public readonly slash: boolean,
         public readonly permissions: undefined | bigint,
+        public readonly category: CommandCategory,
         public readonly allow_trailing_junk: boolean,
         public readonly early_reply_mode: EarlyReplyMode,
         builder: TextBasedCommandBuilder<Args, true, true> | TextBasedCommandBuilder<Args, true, false, true>,
@@ -54,6 +56,7 @@ export class BotTextBasedCommand<Args extends unknown[] = []> extends BaseBotInt
                             sub_description,
                             sub_slash,
                             permissions,
+                            category,
                             allow_trailing_junk,
                             subcommand.early_reply_mode,
                             subcommand,

@@ -15,7 +15,7 @@ import { Synopsinator } from "../../../utils/synopsis.js";
 export default class UtilityTools extends BotComponent {
     override async setup(commands: CommandSetBuilder) {
         commands.add(
-            new TextBasedCommandBuilder("count", EarlyReplyMode.none)
+            new TextBasedCommandBuilder("count", "Misc", EarlyReplyMode.none)
                 .set_permissions(Discord.PermissionFlagsBits.BanMembers)
                 .set_description("Count")
                 .add_number_option({

@@ -18,26 +18,26 @@ export default class Shortcuts extends BotComponent {
 
     override async setup(commands: CommandSetBuilder) {
         commands.add(
-            new TextBasedCommandBuilder("nothingtoseehere", EarlyReplyMode.none)
+            new TextBasedCommandBuilder("nothingtoseehere", "Misc", EarlyReplyMode.none)
                 .set_permissions(Discord.PermissionFlagsBits.BanMembers)
                 .set_description("Nothing to see here")
                 .set_handler(this.nothingtoseehere.bind(this)),
         );
 
         commands.add(
-            new TextBasedCommandBuilder(["tryitandsee", "tias"], EarlyReplyMode.none)
+            new TextBasedCommandBuilder(["tryitandsee", "tias"], "Misc", EarlyReplyMode.none)
                 .set_description("Try it and see")
                 .set_handler(this.tryitandsee.bind(this)),
         );
 
         commands.add(
-            new TextBasedCommandBuilder("headbang", EarlyReplyMode.none)
+            new TextBasedCommandBuilder("headbang", "Misc", EarlyReplyMode.none)
                 .set_description("Headbang")
                 .set_handler(this.headbang.bind(this)),
         );
 
         commands.add(
-            new TextBasedCommandBuilder("initgif", EarlyReplyMode.none)
+            new TextBasedCommandBuilder("initgif", "Misc", EarlyReplyMode.none)
                 .set_description("initgif")
                 .set_handler(this.initgif.bind(this)),
         );

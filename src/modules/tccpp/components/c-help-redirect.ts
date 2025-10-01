@@ -74,7 +74,7 @@ export default class CHelpRedirect extends BotComponent {
         this.cpp_help_text = await this.utilities.get_channel(this.wheatley.channels.cpp_help_text);
 
         commands.add(
-            new TextBasedCommandBuilder("not-c", EarlyReplyMode.none)
+            new TextBasedCommandBuilder("not-c", "Misc", EarlyReplyMode.none)
                 .set_description("Mark C++ code in the C help channel")
                 .add_user_option({
                     title: "user",
@@ -85,7 +85,7 @@ export default class CHelpRedirect extends BotComponent {
         );
 
         commands.add(
-            new TextBasedCommandBuilder("not-cpp", EarlyReplyMode.none)
+            new TextBasedCommandBuilder("not-cpp", "Misc", EarlyReplyMode.none)
                 .set_description("Mark C code in the C++ help channel")
                 .add_user_option({
                     title: "user",

@@ -25,11 +25,11 @@ export default class Timeout extends ModerationComponent {
     override async setup(commands: CommandSetBuilder) {
         await super.setup(commands);
         commands.add(
-            new TextBasedCommandBuilder("timeout", EarlyReplyMode.visible)
+            new TextBasedCommandBuilder("timeout", "Moderation", EarlyReplyMode.visible)
                 .set_permissions(Discord.PermissionFlagsBits.ModerateMembers)
                 .set_description("Timeout add / remove")
                 .add_subcommand(
-                    new TextBasedCommandBuilder("add", EarlyReplyMode.visible)
+                    new TextBasedCommandBuilder("add", "Misc", EarlyReplyMode.visible)
                         .set_description("Timeout user")
                         .add_user_option({
                             title: "user",
@@ -75,7 +75,7 @@ export default class Timeout extends ModerationComponent {
                         ),
                 )
                 .add_subcommand(
-                    new TextBasedCommandBuilder("remove", EarlyReplyMode.visible)
+                    new TextBasedCommandBuilder("remove", "Misc", EarlyReplyMode.visible)
                         .set_description("Timeout remove user")
                         .add_user_option({
                             title: "user",

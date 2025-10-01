@@ -28,7 +28,7 @@ export default class Note extends ModerationComponent {
     override async setup(commands: CommandSetBuilder) {
         await super.setup(commands);
         commands.add(
-            new TextBasedCommandBuilder("note", EarlyReplyMode.ephemeral)
+            new TextBasedCommandBuilder("note", "Misc", EarlyReplyMode.ephemeral)
                 .set_permissions(Discord.PermissionFlagsBits.ModerateMembers)
                 .set_description("Enter note in modlogs")
                 .add_user_option({

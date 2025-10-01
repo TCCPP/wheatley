@@ -58,11 +58,11 @@ export default class Purge extends BotComponent {
         // purge user
 
         commands.add(
-            new TextBasedCommandBuilder("purge", EarlyReplyMode.visible)
+            new TextBasedCommandBuilder("purge", "Moderation Utilities", EarlyReplyMode.visible)
                 .set_permissions(Discord.PermissionFlagsBits.BanMembers)
                 .set_description("Purge messages")
                 .add_subcommand(
-                    new TextBasedCommandBuilder("count", EarlyReplyMode.visible)
+                    new TextBasedCommandBuilder("count", "Misc", EarlyReplyMode.visible)
                         .set_description("Purge the most recent N messages")
                         .add_number_option({
                             title: "count",
@@ -72,7 +72,7 @@ export default class Purge extends BotComponent {
                         .set_handler(this.purge_count.bind(this)),
                 )
                 .add_subcommand(
-                    new TextBasedCommandBuilder("after", EarlyReplyMode.visible)
+                    new TextBasedCommandBuilder("after", "Misc", EarlyReplyMode.visible)
                         .set_description("Purge all messages after snowflake")
                         .add_string_option({
                             title: "url",
@@ -82,7 +82,7 @@ export default class Purge extends BotComponent {
                         .set_handler(this.purge_after.bind(this)),
                 )
                 .add_subcommand(
-                    new TextBasedCommandBuilder("range", EarlyReplyMode.visible)
+                    new TextBasedCommandBuilder("range", "Misc", EarlyReplyMode.visible)
                         .set_description("Purge all messages between start and end")
                         .add_string_option({
                             title: "start",
@@ -97,7 +97,7 @@ export default class Purge extends BotComponent {
                         .set_handler(this.purge_range.bind(this)),
                 )
                 .add_subcommand(
-                    new TextBasedCommandBuilder("user", EarlyReplyMode.visible)
+                    new TextBasedCommandBuilder("user", "Misc", EarlyReplyMode.visible)
                         .set_description("Purge the all messages from a user over a specific timeframe")
                         .add_user_option({
                             title: "user",
@@ -119,7 +119,7 @@ export default class Purge extends BotComponent {
                         .set_handler(this.purge_user.bind(this)),
                 )
                 .add_subcommand(
-                    new TextBasedCommandBuilder("user-in-channel", EarlyReplyMode.visible)
+                    new TextBasedCommandBuilder("user-in-channel", "Misc", EarlyReplyMode.visible)
                         .set_description("Purge the all messages from a user over a specific timeframe in one channel")
                         .add_user_option({
                             title: "user",
@@ -150,7 +150,7 @@ export default class Purge extends BotComponent {
         );
 
         commands.add(
-            new TextBasedCommandBuilder("dummymessages", EarlyReplyMode.visible)
+            new TextBasedCommandBuilder("dummymessages", "Misc", EarlyReplyMode.visible)
                 .set_permissions(Discord.PermissionFlagsBits.BanMembers)
                 .set_description("dummymessages")
                 .add_number_option({

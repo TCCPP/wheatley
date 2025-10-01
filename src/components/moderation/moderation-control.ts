@@ -26,7 +26,7 @@ export default class ModerationControl extends BotComponent {
         this.staff_action_log = await this.utilities.get_channel(this.wheatley.channels.staff_action_log);
         this.public_action_log = await this.utilities.get_channel(this.wheatley.channels.public_action_log);
         commands.add(
-            new TextBasedCommandBuilder("reason", EarlyReplyMode.visible)
+            new TextBasedCommandBuilder("reason", "Moderation", EarlyReplyMode.visible)
                 .set_description("Update the reason for a case")
                 .set_permissions(Discord.PermissionFlagsBits.BanMembers)
                 .add_number_option({
@@ -43,11 +43,11 @@ export default class ModerationControl extends BotComponent {
         );
 
         commands.add(
-            new TextBasedCommandBuilder("context", EarlyReplyMode.visible)
+            new TextBasedCommandBuilder("context", "Moderation", EarlyReplyMode.visible)
                 .set_permissions(Discord.PermissionFlagsBits.BanMembers)
                 .set_description("Update case context")
                 .add_subcommand(
-                    new TextBasedCommandBuilder("add", EarlyReplyMode.visible)
+                    new TextBasedCommandBuilder("add", "Misc", EarlyReplyMode.visible)
                         .set_description("Add context")
                         .add_number_option({
                             title: "case",
@@ -64,7 +64,7 @@ export default class ModerationControl extends BotComponent {
         );
 
         commands.add(
-            new TextBasedCommandBuilder("duration", EarlyReplyMode.visible)
+            new TextBasedCommandBuilder("duration", "Moderation", EarlyReplyMode.visible)
                 .set_description("Update the duration for a case")
                 .set_permissions(Discord.PermissionFlagsBits.BanMembers)
                 .add_number_option({
@@ -81,7 +81,7 @@ export default class ModerationControl extends BotComponent {
         );
 
         commands.add(
-            new TextBasedCommandBuilder("expunge", EarlyReplyMode.visible)
+            new TextBasedCommandBuilder("expunge", "Moderation", EarlyReplyMode.visible)
                 .set_description("Expunge a case")
                 .set_permissions(Discord.PermissionFlagsBits.BanMembers)
                 .add_number_option({

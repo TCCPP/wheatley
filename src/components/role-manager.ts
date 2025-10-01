@@ -47,14 +47,14 @@ export default class RoleManager extends BotComponent {
         this.staff_member_log = await this.utilities.get_channel(this.wheatley.channels.staff_member_log);
 
         commands.add(
-            new TextBasedCommandBuilder("gimmepink", EarlyReplyMode.ephemeral)
+            new TextBasedCommandBuilder("gimmepink", "Misc", EarlyReplyMode.ephemeral)
                 .set_description("Gives pink")
                 .set_slash(false)
                 .set_handler(this.gibpink.bind(this)),
         );
 
         commands.add(
-            new TextBasedCommandBuilder("unpink", EarlyReplyMode.ephemeral)
+            new TextBasedCommandBuilder("unpink", "Misc", EarlyReplyMode.ephemeral)
                 .set_description("Takes pink")
                 .set_slash(false)
                 .set_handler(this.unpink.bind(this)),

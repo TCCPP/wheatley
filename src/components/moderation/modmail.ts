@@ -62,14 +62,14 @@ export default class Modmail extends BotComponent {
         this.mods = await this.utilities.get_channel(this.wheatley.channels.mods);
         this.staff_member_log = await this.utilities.get_channel(this.wheatley.channels.staff_member_log);
         commands.add(
-            new TextBasedCommandBuilder("wsetupmodmailsystem", EarlyReplyMode.none)
+            new TextBasedCommandBuilder("wsetupmodmailsystem", "Misc", EarlyReplyMode.none)
                 .set_permissions(Discord.PermissionFlagsBits.Administrator)
                 .set_description("Create modmail message here")
                 .set_slash(false)
                 .set_handler(this.modmail_setup.bind(this)),
         );
         commands.add(
-            new TextBasedCommandBuilder("wupdatemodmailsystem", EarlyReplyMode.none)
+            new TextBasedCommandBuilder("wupdatemodmailsystem", "Misc", EarlyReplyMode.none)
                 .set_permissions(Discord.PermissionFlagsBits.Administrator)
                 .set_description("Update modmail message")
                 .set_slash(false)

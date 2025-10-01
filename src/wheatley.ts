@@ -684,6 +684,10 @@ export class Wheatley {
         return this.command_handler.get_command(command);
     }
 
+    get_all_commands() {
+        return this.command_handler.get_all_commands();
+    }
+
     register_non_command_bot_reply(trigger: Discord.Message, message: Discord.Message) {
         this.command_handler.register_non_command_bot_reply(trigger, message);
     }

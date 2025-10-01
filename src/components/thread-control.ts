@@ -14,13 +14,13 @@ export default class ThreadControl extends BotComponent {
     override async setup(commands: CommandSetBuilder) {
         this.rules = await this.utilities.get_channel(this.wheatley.channels.rules);
         commands.add(
-            new TextBasedCommandBuilder("archive", EarlyReplyMode.ephemeral)
+            new TextBasedCommandBuilder("archive", "Thread Control", EarlyReplyMode.ephemeral)
                 .set_description("Archives the thread")
                 .set_handler(this.archive.bind(this)),
         );
 
         commands.add(
-            new TextBasedCommandBuilder("rename", EarlyReplyMode.ephemeral)
+            new TextBasedCommandBuilder("rename", "Thread Control", EarlyReplyMode.ephemeral)
                 .set_description("Rename the thread")
                 .add_string_option({
                     title: "name",

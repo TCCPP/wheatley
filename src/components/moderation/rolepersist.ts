@@ -27,11 +27,11 @@ export default class Rolepersist extends ModerationComponent {
 
     override async setup(commands: CommandSetBuilder) {
         commands.add(
-            new TextBasedCommandBuilder("rolepersist", EarlyReplyMode.visible)
+            new TextBasedCommandBuilder("rolepersist", "Moderation", EarlyReplyMode.visible)
                 .set_permissions(Discord.PermissionFlagsBits.ModerateMembers)
                 .set_description("Rolepersist add/remove")
                 .add_subcommand(
-                    new TextBasedCommandBuilder("add", EarlyReplyMode.visible)
+                    new TextBasedCommandBuilder("add", "Misc", EarlyReplyMode.visible)
                         .set_description("Rolepersist user")
                         .add_user_option({
                             title: "user",
@@ -70,7 +70,7 @@ export default class Rolepersist extends ModerationComponent {
                         ),
                 )
                 .add_subcommand(
-                    new TextBasedCommandBuilder("remove", EarlyReplyMode.visible)
+                    new TextBasedCommandBuilder("remove", "Misc", EarlyReplyMode.visible)
                         .set_description("Rolepersist remove user")
                         .add_user_option({
                             title: "user",
@@ -112,7 +112,7 @@ export default class Rolepersist extends ModerationComponent {
 
         for (const [command, role] of Object.entries(aliases)) {
             commands.add(
-                new TextBasedCommandBuilder(command, EarlyReplyMode.visible)
+                new TextBasedCommandBuilder(command, "Moderation", EarlyReplyMode.visible)
                     .set_permissions(Discord.PermissionFlagsBits.ModerateMembers)
                     .set_description(`${capitalize(role).replace("_", " ")}`)
                     .add_user_option({

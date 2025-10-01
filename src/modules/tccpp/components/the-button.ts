@@ -86,28 +86,28 @@ export default class TheButton extends BotComponent {
         this.the_button_channel = await this.utilities.get_channel(this.wheatley.channels.the_button);
 
         commands.add(
-            new TextBasedCommandBuilder("wsetupthebutton", EarlyReplyMode.none)
+            new TextBasedCommandBuilder("wsetupthebutton", "Misc", EarlyReplyMode.none)
                 .set_permissions(Discord.PermissionFlagsBits.Administrator)
                 .set_description("Setup The Button here")
                 .set_slash(false)
                 .set_handler(this.button_setup.bind(this)),
         );
         commands.add(
-            new TextBasedCommandBuilder("wresetthebutton", EarlyReplyMode.none)
+            new TextBasedCommandBuilder("wresetthebutton", "Misc", EarlyReplyMode.none)
                 .set_permissions(Discord.PermissionFlagsBits.Administrator)
                 .set_description("Reset The Button")
                 .set_slash(false)
                 .set_handler(this.button_reset.bind(this)),
         );
         commands.add(
-            new TextBasedCommandBuilder("wresetthebuttonscoreboard", EarlyReplyMode.none)
+            new TextBasedCommandBuilder("wresetthebuttonscoreboard", "Misc", EarlyReplyMode.none)
                 .set_permissions(Discord.PermissionFlagsBits.Administrator)
                 .set_description("Reset The Button scoreboard")
                 .set_slash(false)
                 .set_handler(this.button_reset_scoreboard.bind(this)),
         );
         commands.add(
-            new TextBasedCommandBuilder("wadjustscores", EarlyReplyMode.none)
+            new TextBasedCommandBuilder("wadjustscores", "Misc", EarlyReplyMode.none)
                 .set_permissions(Discord.PermissionFlagsBits.Administrator)
                 .set_description("Adjust The Button scores")
                 .set_slash(false)
