@@ -5,14 +5,9 @@ import { unwrap } from "../utils/misc.js";
 import { M } from "../utils/debugging-and-logging.js";
 import { BotComponent } from "../bot-component.js";
 import { CommandSetBuilder } from "../command-abstractions/command-set-builder.js";
-import { EarlyReplyMode, TextBasedCommandBuilder } from "../command-abstractions/text-based-command-builder.js";
-import { TextBasedCommand } from "../command-abstractions/text-based-command.js";
 import { skill_roles_order, skill_roles_order_id, Wheatley } from "../wheatley.js";
 import { set_interval } from "../utils/node.js";
 import { build_description } from "../utils/strings.js";
-
-// Role cleanup
-// Auto-remove duplicate skill roles
 
 type user_role_entry = {
     user_id: string;
