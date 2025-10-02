@@ -58,7 +58,7 @@ solution currently is the following:
     }
 ```
 
-## config.json
+## config.jsonc
 
 Secrets and other bot info must be configured in the `config.jsonc` file. An example looks like:
 
