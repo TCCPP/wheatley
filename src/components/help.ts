@@ -29,6 +29,7 @@ export default class Help extends BotComponent {
         "Utility",
         "Misc",
         "Moderation",
+        "Rolepersist Shortcuts",
         "Moderation Utilities",
         "Admin utilities",
     ];
@@ -44,6 +45,7 @@ export default class Help extends BotComponent {
     private build_commands_map(user_permissions: Discord.PermissionsBitField): Map<CommandCategory, string[]> {
         const all_commands = this.wheatley.get_all_commands();
         const categories_map = new Map<CommandCategory, string[]>();
+        const seen_command_groups = new Set<string>();
 
         for (const command_descriptor of Object.values(all_commands)) {
             if (command_descriptor.subcommands) {
@@ -59,6 +61,16 @@ export default class Help extends BotComponent {
             }
 
             const category = command_descriptor.category;
+            if (category === "Hidden") {
+                continue;
+            }
+
+            const group_key = command_descriptor.all_names.join(",");
+            if (seen_command_groups.has(group_key)) {
+                continue;
+            }
+            seen_command_groups.add(group_key);
+
             if (!categories_map.has(category)) {
                 categories_map.set(category, []);
             }
@@ -72,26 +84,20 @@ export default class Help extends BotComponent {
         if (category === "Wiki Articles") {
             const wiki_component = this.wheatley.components.get("Wiki");
             if (wiki_component) {
+                const aliases = Array.from((wiki_component as Wiki).article_aliases.keys())
+                    .map(alias => `\`!${alias}\``)
+                    .join(", ");
                 value_parts.push(
-                    "Article shortcuts: " +
-                        (wiki_component as Wiki).article_aliases.map((_, alias) => `\`${alias}\``).join(", "),
+                    `Article shortcuts: ${aliases}`,
                     "Article contributions are welcome [here](https://github.com/TCCPP/wiki)!",
                 );
             }
         } else if (category === "Utility") {
             value_parts.unshift("`!f <reply>` Format the message being replied to");
         } else if (category === "Moderation") {
-            const noofftopic_command = this.wheatley.get_command("noofftopic");
-            // eslint-disable-next-line @typescript-eslint/no-unnecessary-condition
-            if (noofftopic_command) {
-                value_parts.push(
-                    "Rolepersist aliases: `noofftopic`, `nosuggestions`, `nosuggestionsatall`, " +
-                        "`noreactions`, `nothreads`, `noseriousofftopic`, `notil`, `nomemes`. " +
-                        `Syntax: \`${noofftopic_command.get_usage().replace("noofftopic", "(alias)")}\``,
-                    "Durations: `perm` for permanent or `number unit` (whitespace ignored)." +
-                        " Units are y, M, w, d, h, m, s.",
-                );
-            }
+            value_parts.push(
+                "Durations: `perm` for permanent or `number unit` (whitespace ignored). Units are y, M, w, d, h, m, s.",
+            );
         }
     }
 
@@ -153,8 +159,7 @@ export default class Help extends BotComponent {
     }
 
     private build_help_embeds(fields: Discord.APIEmbedField[]): Discord.EmbedBuilder[] {
-        const embeds: Discord.EmbedBuilder[] = [];
-        const main_embed = new Discord.EmbedBuilder()
+        const embed = new Discord.EmbedBuilder()
             .setColor(colors.wheatley)
             .setTitle("Wheatley")
             .setDescription(
@@ -163,19 +168,10 @@ export default class Help extends BotComponent {
                         "are welcome at https://github.com/TCCPP/wheatley.",
                 ),
             )
-            .setThumbnail("https://avatars.githubusercontent.com/u/142943210");
+            .setThumbnail("https://avatars.githubusercontent.com/u/142943210")
+            .addFields(...fields);
 
-        const non_mod_fields = fields.filter(field => !field.name.toLowerCase().includes("moderation"));
-        const mod_fields = fields.filter(field => field.name.toLowerCase().includes("moderation"));
-
-        main_embed.addFields(...non_mod_fields);
-        embeds.push(main_embed);
-
-        if (mod_fields.length > 0) {
-            embeds.push(new Discord.EmbedBuilder().setColor(colors.wheatley).addFields(...mod_fields));
-        }
-
-        return embeds;
+        return [embed];
     }
 
     async help(command: TextBasedCommand) {

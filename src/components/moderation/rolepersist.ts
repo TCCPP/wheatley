@@ -112,7 +112,7 @@ export default class Rolepersist extends ModerationComponent {
 
         for (const [command, role] of Object.entries(aliases)) {
             commands.add(
-                new TextBasedCommandBuilder(command, "Moderation", EarlyReplyMode.visible)
+                new TextBasedCommandBuilder(command, "Rolepersist Shortcuts", EarlyReplyMode.visible)
                     .set_permissions(Discord.PermissionFlagsBits.ModerateMembers)
                     .set_description(`${capitalize(role).replace("_", " ")}`)
                     .add_user_option({

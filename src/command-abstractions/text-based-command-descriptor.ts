@@ -24,6 +24,7 @@ export class BotTextBasedCommand<Args extends unknown[] = []> extends BaseBotInt
         TextBasedCommandParameterOptions & { type: TextBasedCommandOptionType }
     >();
     public readonly subcommands: Discord.Collection<string, BotTextBasedCommand<any>> | null = null;
+    public readonly all_names: string[];
 
     constructor(
         name: string,
@@ -39,6 +40,7 @@ export class BotTextBasedCommand<Args extends unknown[] = []> extends BaseBotInt
     ) {
         super(name, builder.handler ?? (async () => wheatley.critical_error("This shouldn't happen")));
         this.options = builder.options;
+        this.all_names = builder.names;
         if (builder.type === "top-level") {
             this.subcommands = new Discord.Collection();
             for (const subcommand of builder.subcommands) {
@@ -296,9 +298,10 @@ export class BotTextBasedCommand<Args extends unknown[] = []> extends BaseBotInt
         if (this.subcommands) {
             return this.subcommands.map(command => command.get_usage()).join("\n");
         } else {
+            const command_part = `!${this.all_names.join("/")}`;
             return wrap(
                 [
-                    "!" + this.display_name,
+                    command_part,
                     ...this.options.map(option => (option.required ? `<${option.title}>` : `[${option.title}]`)),
                 ].join(" "),
                 "`",
