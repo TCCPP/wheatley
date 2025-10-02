@@ -15,7 +15,11 @@ import {
     CommandCategory,
 } from "../command-abstractions/text-based-command-builder.js";
 import { TextBasedCommand } from "../command-abstractions/text-based-command.js";
-import Wiki from "./wiki.js";
+
+type CommandInfoWithAliases = {
+    info: string;
+    aliases: string[];
+};
 
 export default class Help extends BotComponent {
     static override get is_freestanding() {
@@ -29,7 +33,6 @@ export default class Help extends BotComponent {
         "Utility",
         "Misc",
         "Moderation",
-        "Rolepersist Shortcuts",
         "Moderation Utilities",
         "Admin utilities",
     ];
@@ -43,13 +46,68 @@ export default class Help extends BotComponent {
         );
     }
 
-    private build_commands_map(user_permissions: Discord.PermissionsBitField): Map<CommandCategory, string[]> {
+    private build_commands_map(
+        user_permissions: Discord.PermissionsBitField,
+    ): Map<CommandCategory, CommandInfoWithAliases[]> {
         const all_commands = this.wheatley.get_all_commands();
-        const categories_map = new Map<CommandCategory, string[]>();
+        const categories_map = new Map<CommandCategory, CommandInfoWithAliases[]>();
         const seen_command_groups = new Set<string>();
+        const command_name_to_aliases = new Map<string, string[]>();
 
+        // First pass: collect all aliases
         for (const command_descriptor of Object.values(all_commands)) {
+            if (command_descriptor.alias_of) {
+                if (!command_name_to_aliases.has(command_descriptor.alias_of)) {
+                    command_name_to_aliases.set(command_descriptor.alias_of, []);
+                }
+                unwrap(command_name_to_aliases.get(command_descriptor.alias_of)).push(
+                    `\`!${command_descriptor.display_name}\``,
+                );
+            }
+        }
+
+        // Second pass: build command map with aliases
+        for (const command_descriptor of Object.values(all_commands)) {
+            // If this command has subcommands, process them instead of the parent
             if (command_descriptor.subcommands) {
+                for (const subcommand of command_descriptor.subcommands.values()) {
+                    if (subcommand.alias_of) {
+                        continue;
+                    }
+
+                    if (
+                        subcommand.permissions !== undefined &&
+                        subcommand.permissions !== 0n &&
+                        !user_permissions.has(subcommand.permissions)
+                    ) {
+                        continue;
+                    }
+
+                    const category = subcommand.category ?? "Misc";
+                    if (category === "Hidden") {
+                        continue;
+                    }
+
+                    const group_key = subcommand.all_display_names.join(",");
+                    if (seen_command_groups.has(group_key)) {
+                        continue;
+                    }
+                    seen_command_groups.add(group_key);
+
+                    if (!categories_map.has(category)) {
+                        categories_map.set(category, []);
+                    }
+
+                    const aliases = command_name_to_aliases.get(subcommand.display_name) ?? [];
+                    unwrap(categories_map.get(category)).push({
+                        info: subcommand.get_command_info(),
+                        aliases,
+                    });
+                }
+                continue;
+            }
+
+            if (command_descriptor.alias_of) {
                 continue;
             }
 
@@ -66,7 +124,7 @@ export default class Help extends BotComponent {
                 continue;
             }
 
-            const group_key = command_descriptor.all_names.join(",");
+            const group_key = command_descriptor.all_display_names.join(",");
             if (seen_command_groups.has(group_key)) {
                 continue;
             }
@@ -75,7 +133,12 @@ export default class Help extends BotComponent {
             if (!categories_map.has(category)) {
                 categories_map.set(category, []);
             }
-            unwrap(categories_map.get(category)).push(command_descriptor.get_command_info());
+
+            const aliases = command_name_to_aliases.get(command_descriptor.display_name) ?? [];
+            unwrap(categories_map.get(category)).push({
+                info: command_descriptor.get_command_info(),
+                aliases,
+            });
         }
 
         return categories_map;
@@ -83,16 +146,7 @@ export default class Help extends BotComponent {
 
     private add_category_specific_content(category: CommandCategory, value_parts: string[]): void {
         if (category === "Wiki Articles") {
-            const wiki_component = this.wheatley.components.get("Wiki");
-            if (wiki_component) {
-                const aliases = Array.from((wiki_component as Wiki).article_aliases.keys())
-                    .map(alias => `\`!${alias}\``)
-                    .join(", ");
-                value_parts.push(
-                    `Article shortcuts: ${aliases}`,
-                    "Article contributions are welcome [here](https://github.com/TCCPP/wiki)!",
-                );
-            }
+            value_parts.push("Article contributions are welcome [here](https://github.com/TCCPP/wiki)!");
         } else if (category === "Utility") {
             value_parts.unshift("`!f <reply>` Format the message being replied to");
         } else if (category === "Moderation") {
@@ -135,13 +189,22 @@ export default class Help extends BotComponent {
         return fields;
     }
 
-    private build_category_fields(categories_map: Map<CommandCategory, string[]>): Discord.APIEmbedField[] {
+    private build_category_fields(
+        categories_map: Map<CommandCategory, CommandInfoWithAliases[]>,
+    ): Discord.APIEmbedField[] {
         const fields: Discord.APIEmbedField[] = [];
 
         for (const category of Help.category_order) {
             if (categories_map.has(category)) {
                 const commands = unwrap(categories_map.get(category));
-                const value_parts = [...commands];
+                const value_parts: string[] = [];
+
+                for (const command of commands) {
+                    value_parts.push(command.info);
+                    if (command.aliases.length > 0) {
+                        value_parts.push(`- Shortcuts: ${command.aliases.join(", ")}`);
+                    }
+                }
 
                 this.add_category_specific_content(category, value_parts);
 
@@ -152,7 +215,14 @@ export default class Help extends BotComponent {
         // TODO: Assert this doesn't happen...
         for (const [category, commands] of categories_map.entries()) {
             if (!Help.category_order.includes(category)) {
-                fields.push(...this.split_into_fields(category, commands));
+                const value_parts: string[] = [];
+                for (const command of commands) {
+                    value_parts.push(command.info);
+                    if (command.aliases.length > 0) {
+                        value_parts.push(`- Shortcuts: ${command.aliases.join(", ")}`);
+                    }
+                }
+                fields.push(...this.split_into_fields(category, value_parts));
             }
         }
 

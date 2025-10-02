@@ -390,7 +390,8 @@ export default class Wiki extends BotComponent {
             const article = this.articles[article_name];
             commands.add(
                 new TextBasedCommandBuilder(alias, EarlyReplyMode.none)
-                    .set_category("Hidden")
+                    .set_category("Wiki Articles")
+                    .set_alias_of("wiki")
                     .set_slash(false)
                     .set_description(article.title)
                     .add_user_option({
