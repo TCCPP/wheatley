@@ -4,13 +4,14 @@ import * as Discord from "discord.js";
 
 import { SECOND } from "../common.js";
 import { BotComponent } from "../bot-component.js";
+import { clear_timeout, set_timeout } from "../utils/node.js";
 
 export default class AntiAFK extends BotComponent {
     private countdown = new Map<string, NodeJS.Timeout>();
 
     override async on_voice_state_update(old_state: Discord.VoiceState, new_state: Discord.VoiceState) {
         if ((!new_state.selfDeaf || new_state.channel != old_state.channel) && this.countdown.has(new_state.id)) {
-            clearTimeout(this.countdown.get(new_state.id));
+            clear_timeout(this.countdown.get(new_state.id));
             this.countdown.delete(new_state.id);
         }
         if (
@@ -20,7 +21,7 @@ export default class AntiAFK extends BotComponent {
         ) {
             assert(new_state.member);
             const member = new_state.member;
-            const timeout = setTimeout(
+            const timeout = set_timeout(
                 () => {
                     member.voice
                         .setChannel(this.wheatley.guild.afkChannel)
