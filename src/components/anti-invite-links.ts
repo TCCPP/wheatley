@@ -20,9 +20,10 @@ export function match_invite(content: string): string | null {
 
 type allowed_invite_entry = {
     code: string;
+    url: string;
     guild_id: string;
     guild_name: string;
-    guild_icon: string;
+    icon_url?: string;
 };
 
 export default class AntiInviteLinks extends BotComponent {
@@ -79,47 +80,49 @@ export default class AntiInviteLinks extends BotComponent {
         return new Discord.EmbedBuilder()
             .setAuthor({
                 name: entry.guild_name,
-                url: `https://discord.gg/${entry.code}`,
-                iconURL: `https://cdn.discordapp.com/icons/${entry.guild_id}/${entry.guild_icon}.png`,
+                url: entry.url,
+                iconURL: entry.icon_url,
             })
             .setFooter({ text: entry.code });
     }
 
     private async handle_add(command: TextBasedCommand, code: string) {
-        if (this.allowed_invites.has(code)) {
-            await command.react("🤷", true);
-            return;
-        }
-        M.log("Adding ", code, " to allowed invites");
-        const server_info = await (await fetch(`https://discord.com/api/v10/invites/${code}`)).json();
-        if (server_info.code != code) {
-            await command.replyOrFollowUp(`${this.wheatley.emoji.error} not a valid invite`, true);
-            return;
-        }
-        if (server_info.expires != null) {
-            await command.replyOrFollowUp(`${this.wheatley.emoji.error} not a permanent invite`, true);
-            return;
-        }
-        const res = await this.database.allowed_invites.findOneAndUpdate(
-            { code: code },
-            {
-                $set: {
-                    code: code,
-                    guild_id: server_info.guild_id,
-                    guild_name: server_info.guild.name,
-                    guild_icon: server_info.guild.icon,
+        try {
+            if (this.allowed_invites.has(code)) {
+                await command.react("🤷", true);
+                return;
+            }
+            M.log("Adding ", code, " to allowed invites");
+            const invite = await this.wheatley.client.fetchInvite(code);
+            if (invite.guild == null) {
+                throw Error("not a Guild invite");
+            }
+            if (invite.expiresAt != null) {
+                throw Error("not a permanent invite");
+            }
+            const res = await this.database.allowed_invites.findOneAndUpdate(
+                { code: code },
+                {
+                    $set: {
+                        code: code,
+                        url: invite.url,
+                        guild_id: invite.guild.id,
+                        guild_name: invite.guild.name,
+                        icon_url: invite.guild.iconURL() ?? undefined,
+                    },
                 },
-            },
-            { upsert: true, returnDocument: "after" },
-        );
-        if (res == null) {
-            await command.replyOrFollowUp(`${this.wheatley.emoji.error} database update failed`, true);
-            return;
+                { upsert: true, returnDocument: "after" },
+            );
+            if (res == null) {
+                throw Error("database update failed");
+            }
+            this.allowed_invites.add(code);
+            await command.replyOrFollowUp({
+                embeds: [AntiInviteLinks.build_guild_embed(res)],
+            });
+        } catch (e) {
+            await command.replyOrFollowUp(`${this.wheatley.emoji.error} ${e}`, true);
         }
-        this.allowed_invites.add(code);
-        await command.replyOrFollowUp({
-            embeds: [AntiInviteLinks.build_guild_embed(res)],
-        });
     }
 
     private async handle_remove(command: TextBasedCommand, code: string) {
