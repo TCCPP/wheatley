@@ -24,6 +24,7 @@ import { moderation_entry } from "./components/moderation/schemata.js";
 import { LoggableChannel, LogLimiter } from "./infra/log-limiter.js";
 import { CommandHandler } from "./command-handler.js";
 import { CommandSetBuilder } from "./command-abstractions/command-set-builder.js";
+import { message_database_entry } from "./components/moderation/purge.js";
 
 export function create_basic_embed(title: string | undefined, color: number, content: string) {
     const embed = new Discord.EmbedBuilder().setColor(color).setDescription(content);
@@ -191,6 +192,7 @@ type EventMap = {
     wheatley_ready: () => void;
     issue_moderation: (moderation: moderation_entry) => void;
     update_moderation: (moderation: mongo.WithId<moderation_entry>) => void;
+    message_db_update: (message: message_database_entry) => void;
 };
 
 export class Wheatley {
