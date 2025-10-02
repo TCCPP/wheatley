@@ -103,9 +103,8 @@ export default class AntiScreenshot extends BotComponent {
     async anti_screenshot(starter_message: Discord.Message, thread: Discord.ThreadChannel) {
         await delay(1000);
         assert(starter_message);
-        assert(starter_message.member);
-        // trust people with skill roles
-        if (this.wheatley.has_skill_roles_other_than_beginner(starter_message.member)) {
+        // trust established members
+        if (await this.wheatley.is_established_member(starter_message.author)) {
             return;
         }
         // check if it has images and no code

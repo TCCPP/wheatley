@@ -7,6 +7,7 @@ import { HOUR } from "../../../common.js";
 import { BotComponent } from "../../../bot-component.js";
 import { Wheatley } from "../../../wheatley.js";
 import { unwrap } from "../../../utils/misc.js";
+import { skill_role_ids } from "./skill-roles.js";
 
 const categories_map = {
     staff_logs: "1135927261472755712",
@@ -138,10 +139,10 @@ export default class PermissionManager extends BotComponent {
                 deny: [...acive_voice_permissions, SET_VOICE_STATUS_PERMISSION_BIT],
             },
             [this.wheatley.roles.voice.id]: { allow: acive_voice_permissions },
-            [this.wheatley.skill_roles.intermediate.id]: { allow: acive_voice_permissions },
-            [this.wheatley.skill_roles.proficient.id]: { allow: acive_voice_permissions },
-            [this.wheatley.skill_roles.advanced.id]: { allow: acive_voice_permissions },
-            [this.wheatley.skill_roles.expert.id]: { allow: acive_voice_permissions },
+            [skill_role_ids[1]]: { allow: acive_voice_permissions },
+            [skill_role_ids[2]]: { allow: acive_voice_permissions },
+            [skill_role_ids[3]]: { allow: acive_voice_permissions },
+            [skill_role_ids[4]]: { allow: acive_voice_permissions },
             [this.wheatley.roles.server_booster.id]: { allow: acive_voice_permissions },
             [this.wheatley.roles.no_voice.id]: no_interaction_at_all,
             [this.wheatley.roles.no_off_topic.id]: no_interaction_at_all,

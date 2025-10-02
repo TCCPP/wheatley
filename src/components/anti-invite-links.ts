@@ -203,28 +203,12 @@ export default class AntiInviteLinks extends BotComponent {
         }
     }
 
-    async member_is_proficient_or_higher(member: Discord.GuildMember | null) {
-        if (!member) {
-            return false;
-        }
-        const skill_roles = member.roles.cache.filter(role =>
-            Object.values(this.wheatley.skill_roles).some(skill_role => role.id == skill_role.id),
-        );
-        if (skill_roles.size > 1) {
-            const skill_role_ranks = Object.values(this.wheatley.skill_roles).map(role => role.id);
-            const proficient_index = skill_role_ranks.indexOf(this.wheatley.skill_roles.proficient.id);
-            assert(proficient_index !== -1);
-            return skill_roles.some(role => skill_role_ranks.indexOf(role.id) >= proficient_index);
-        }
-        return false;
-    }
-
     async handle_message(message: Discord.Message) {
         if (await this.wheatley.check_permissions(message.author, Discord.PermissionFlagsBits.ModerateMembers)) {
             return;
         }
         const match = match_invite(message.content);
-        if (match && !(await this.is_allowed(match)) && !(await this.member_is_proficient_or_higher(message.member))) {
+        if (match && !(await this.is_allowed(match)) && !(await this.wheatley.is_established_member(message.author))) {
             const quote = await this.utilities.make_quote_embeds(message);
             await message.delete();
             assert(!(message.channel instanceof Discord.PartialGroupDMChannel));

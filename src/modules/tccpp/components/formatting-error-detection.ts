@@ -5,6 +5,7 @@ import { strict as assert } from "assert";
 import { M } from "../../../utils/debugging-and-logging.js";
 import { colors, MINUTE } from "../../../common.js";
 import { BotComponent } from "../../../bot-component.js";
+import SkillRoles from "./skill-roles.js";
 import { build_description, parse_out } from "../../../utils/strings.js";
 import Code from "../../../components/code.js";
 import { SelfClearingMap, SelfClearingSet } from "../../../utils/containers.js";
@@ -121,10 +122,8 @@ export default class FormattingErrorDetection extends BotComponent {
     }
 
     has_likely_format_errors(message: Discord.Message) {
-        const has_skill_roles_other_than_beginner = message.member
-            ? this.wheatley.has_skill_roles_other_than_beginner(message.member)
-            : false;
-        if (has_skill_roles_other_than_beginner) {
+        // trust Proficient+ members
+        if (message.member && SkillRoles.find_highest_skill_role_index(message.member.roles.cache) >= 2) {
             return false;
         }
         return FormattingErrorDetection.has_likely_format_errors(message.content);
