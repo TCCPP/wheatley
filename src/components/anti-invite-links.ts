@@ -40,6 +40,7 @@ export default class AntiInviteLinks extends BotComponent {
 
         commands.add(
             new TextBasedCommandBuilder("allowed-invites", EarlyReplyMode.ephemeral)
+                .set_category("Admin utilities")
                 .set_permissions(Discord.PermissionFlagsBits.ModerateMembers)
                 .set_description("manage allowed server invites")
                 .add_subcommand(
