@@ -3,6 +3,7 @@ import * as Discord from "discord.js";
 import { unwrap } from "./misc.js";
 import { TextBasedCommand } from "../command-abstractions/text-based-command.js";
 import { is_string } from "./strings.js";
+import { markdown_node, MarkdownParser } from "dismark";
 
 // https://stackoverflow.com/questions/64053658/get-emojis-from-message-discord-js-v12
 // https://www.reddit.com/r/Discord_Bots/comments/gteo6t/discordjs_is_there_a_way_to_detect_emojis_in_a/
@@ -286,4 +287,208 @@ export function parse_url_or_snowflake(url: string): [string | null, string | nu
         return [null, null, match[0]];
     }
     assert(false);
+}
+
+export function split_message_markdown_aware(content: string, limit = 2000): string[] {
+    if (content.length <= limit) {
+        return [content];
+    }
+
+    const parser = new MarkdownParser();
+    const ast = parser.parse(content);
+    const chunks: string[] = [];
+    let current_chunk = "";
+    let open_code_block: { language: string } | null = null;
+
+    const add_to_chunk = (text: string) => {
+        if (current_chunk.length + text.length <= limit) {
+            current_chunk += text;
+        } else {
+            const remaining_space = limit - current_chunk.length;
+            if (remaining_space > 0) {
+                current_chunk += text.substring(0, remaining_space);
+                chunks.push(current_chunk);
+                current_chunk = "";
+                add_to_chunk(text.substring(remaining_space));
+            } else {
+                chunks.push(current_chunk);
+                current_chunk = "";
+                add_to_chunk(text);
+            }
+        }
+    };
+
+    const close_code_block_if_needed = () => {
+        if (open_code_block !== null) {
+            add_to_chunk("\n```");
+            chunks.push(current_chunk);
+            current_chunk = `\`\`\`${open_code_block.language}\n`;
+        }
+    };
+
+    const process_node = (node: markdown_node): void => {
+        switch (node.type) {
+            case "doc":
+                node.content.forEach(process_node);
+                break;
+            case "code_block": {
+                close_code_block_if_needed();
+                const language = node.language ?? "";
+                const lines = node.content.split("\n");
+                open_code_block = { language };
+                add_to_chunk(`\`\`\`${language}\n`);
+
+                for (let i = 0; i < lines.length; i++) {
+                    const line = lines[i];
+                    const line_with_newline = i < lines.length - 1 ? line + "\n" : line;
+
+                    if (current_chunk.length + line_with_newline.length + 4 > limit) {
+                        add_to_chunk("\n```");
+                        chunks.push(current_chunk);
+                        current_chunk = `\`\`\`${language}\n${line_with_newline}`;
+                    } else {
+                        add_to_chunk(line_with_newline);
+                    }
+                }
+
+                add_to_chunk("\n```");
+                open_code_block = null;
+                break;
+            }
+            case "inline_code":
+                close_code_block_if_needed();
+                add_to_chunk(`\`${node.content}\``);
+                break;
+            case "plain":
+                close_code_block_if_needed();
+                add_to_chunk(node.content);
+                break;
+            case "italics":
+                close_code_block_if_needed();
+                add_to_chunk("*");
+                process_node(node.content);
+                add_to_chunk("*");
+                break;
+            case "bold":
+                close_code_block_if_needed();
+                add_to_chunk("**");
+                process_node(node.content);
+                add_to_chunk("**");
+                break;
+            case "underline":
+                close_code_block_if_needed();
+                add_to_chunk("__");
+                process_node(node.content);
+                add_to_chunk("__");
+                break;
+            case "strikethrough":
+                close_code_block_if_needed();
+                add_to_chunk("~~");
+                process_node(node.content);
+                add_to_chunk("~~");
+                break;
+            case "spoiler":
+                close_code_block_if_needed();
+                add_to_chunk("||");
+                process_node(node.content);
+                add_to_chunk("||");
+                break;
+            case "masked_link":
+                close_code_block_if_needed();
+                add_to_chunk("[");
+                process_node(node.content);
+                add_to_chunk(`](${node.target})`);
+                break;
+            case "header":
+                close_code_block_if_needed();
+                add_to_chunk("#".repeat(node.level) + " ");
+                process_node(node.content);
+                add_to_chunk("\n");
+                break;
+            case "blockquote":
+                close_code_block_if_needed();
+                add_to_chunk("> ");
+                process_node(node.content);
+                add_to_chunk("\n");
+                break;
+            case "subtext":
+                close_code_block_if_needed();
+                add_to_chunk("-# ");
+                process_node(node.content);
+                add_to_chunk("\n");
+                break;
+            case "list":
+                close_code_block_if_needed();
+                for (let i = 0; i < node.items.length; i++) {
+                    if (node.start_number) {
+                        add_to_chunk(`${node.start_number + i}. `);
+                    } else {
+                        add_to_chunk("- ");
+                    }
+                    process_node(node.items[i]);
+                    add_to_chunk("\n");
+                }
+                break;
+            default:
+                throw new Error(`Unhandled markdown node type: ${(node as markdown_node).type}`);
+        }
+    };
+
+    process_node(ast);
+
+    if (current_chunk.length > 0) {
+        chunks.push(current_chunk);
+    }
+
+    return chunks;
+}
+
+export async function send_long_message_markdown_aware(
+    channel: Discord.TextBasedChannel,
+    msg: string,
+    extra_options: Discord.MessageCreateOptions = {},
+): Promise<Discord.Message | undefined> {
+    assert(!(channel instanceof Discord.PartialGroupDMChannel));
+
+    const chunks = split_message_markdown_aware(msg);
+    let first_message: Discord.Message | undefined;
+
+    for (let i = 0; i < chunks.length; i++) {
+        const is_last = i === chunks.length - 1;
+
+        const sent_message = await channel.send({
+            content: chunks[i],
+            ...(is_last ? extra_options : { allowedMentions: extra_options.allowedMentions }),
+        });
+
+        if (i === 0) {
+            first_message = sent_message;
+        }
+    }
+
+    return first_message;
+}
+
+export async function send_long_response_markdown_aware(
+    command_object: Discord.MessageContextMenuCommandInteraction | TextBasedCommand,
+    msg: string,
+    extra_options: Omit<Discord.InteractionReplyOptions, "content"> = {},
+): Promise<void> {
+    const chunks = split_message_markdown_aware(msg);
+
+    for (let i = 0; i < chunks.length; i++) {
+        const is_last = i === chunks.length - 1;
+
+        if (i === 0) {
+            await command_object.reply({
+                content: chunks[i],
+                ...(is_last ? extra_options : { allowedMentions: extra_options.allowedMentions }),
+            });
+        } else {
+            await command_object.followUp({
+                content: chunks[i],
+                ...(is_last ? extra_options : { allowedMentions: extra_options.allowedMentions }),
+            });
+        }
+    }
 }

@@ -15,6 +15,7 @@ import { MessageContextMenuInteractionBuilder } from "../command-abstractions/co
 import { async_exec_file } from "../utils/filesystem.js";
 import { markdown_node, MarkdownParser, CodeBlockRule, InlineCodeRule, TextRule } from "dismark";
 import { Mutex } from "../utils/containers.js";
+import { send_long_message_markdown_aware, send_long_response_markdown_aware } from "../utils/discord.js";
 import Help from "./help.js";
 
 const color = 0x7e78fe; //0xA931FF;
@@ -240,17 +241,18 @@ export default class Format extends BotComponent {
                             });
                         }
                         assert(!(message.channel instanceof Discord.PartialGroupDMChannel));
-                        const formatted_message = await message.channel.send({
+
+                        const formatted_message = await send_long_message_markdown_aware(message.channel, content, {
                             embeds: [embed],
-                            content,
                             files: attachments.filter(x => x != null),
                             allowedMentions: {
                                 parse: ["users"],
                             },
                         });
+
                         if (should_replace_original(replying_to, message.createdAt)) {
                             await replying_to.delete();
-                        } else {
+                        } else if (formatted_message) {
                             this.wheatley.register_non_command_bot_reply(message, formatted_message);
                         }
                     } else {
@@ -311,14 +313,15 @@ export default class Format extends BotComponent {
                     }),
                 ];
             }
-            await interaction.reply({
+
+            await send_long_response_markdown_aware(interaction, content, {
                 embeds,
-                content,
                 files: attachments.filter(x => x != null),
                 allowedMentions: {
                     parse: ["users"],
                 },
             });
+
             if (should_replace_original(replying_to, interaction.createdAt)) {
                 await replying_to.delete();
             }
