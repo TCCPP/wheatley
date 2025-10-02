@@ -14,6 +14,7 @@ import Modlogs from "./modlogs.js";
 import { EarlyReplyMode, TextBasedCommandBuilder } from "../../command-abstractions/text-based-command-builder.js";
 import { TextBasedCommand } from "../../command-abstractions/text-based-command.js";
 import { unwrap } from "../../utils/misc.js";
+import Help from "../help.js";
 
 export default class ModerationControl extends BotComponent {
     private database = this.wheatley.database.create_proxy<{
@@ -25,6 +26,12 @@ export default class ModerationControl extends BotComponent {
     override async setup(commands: CommandSetBuilder) {
         this.staff_action_log = await this.utilities.get_channel(this.wheatley.channels.staff_action_log);
         this.public_action_log = await this.utilities.get_channel(this.wheatley.channels.public_action_log);
+
+        (this.wheatley.components.get("Help") as Help | undefined)?.add_category_content(
+            "Moderation",
+            "Durations: `perm` for permanent or `number unit` (whitespace ignored). Units are y, M, w, d, h, m, s.",
+        );
+
         commands.add(
             new TextBasedCommandBuilder("reason", EarlyReplyMode.visible)
                 .set_category("Moderation")

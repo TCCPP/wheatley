@@ -38,6 +38,15 @@ export default class Help extends BotComponent {
         "Admin utilities",
     ];
 
+    private category_content_map = new Map<CommandCategory, string[]>();
+
+    add_category_content(category: CommandCategory, content: string) {
+        if (!this.category_content_map.has(category)) {
+            this.category_content_map.set(category, []);
+        }
+        unwrap(this.category_content_map.get(category)).push(content);
+    }
+
     override async setup(commands: CommandSetBuilder) {
         commands.add(
             new TextBasedCommandBuilder("help", EarlyReplyMode.none)
@@ -142,14 +151,9 @@ export default class Help extends BotComponent {
     }
 
     private add_category_specific_content(category: CommandCategory, value_parts: string[]): void {
-        if (category === "Wiki Articles") {
-            value_parts.push("Article contributions are welcome [here](https://github.com/TCCPP/wiki)!");
-        } else if (category === "Utility") {
-            value_parts.unshift("`!f <reply>` Format the message being replied to");
-        } else if (category === "Moderation") {
-            value_parts.push(
-                "Durations: `perm` for permanent or `number unit` (whitespace ignored). Units are y, M, w, d, h, m, s.",
-            );
+        const content = this.category_content_map.get(category);
+        if (content) {
+            value_parts.push(...content);
         }
     }
 

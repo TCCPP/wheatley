@@ -13,6 +13,7 @@ import { CommandSetBuilder } from "../command-abstractions/command-set-builder.j
 import { Wheatley } from "../wheatley.js";
 import { EarlyReplyMode, TextBasedCommandBuilder } from "../command-abstractions/text-based-command-builder.js";
 import { TextBasedCommand } from "../command-abstractions/text-based-command.js";
+import Help from "./help.js";
 
 type WikiArticle = {
     name: string | null; // basename for the article
@@ -325,6 +326,11 @@ export default class Wiki extends BotComponent {
 
     override async setup(commands: CommandSetBuilder) {
         this.bot_spam = await this.utilities.get_channel(this.wheatley.channels.bot_spam);
+
+        (this.wheatley.components.get("Help") as Help | undefined)?.add_category_content(
+            "Wiki Articles",
+            "Article contributions are welcome [here](https://github.com/TCCPP/wiki)!",
+        );
 
         const emoji_map = new Map<string, string>();
         for (const [id, emoji] of this.wheatley.guild.emojis.cache) {

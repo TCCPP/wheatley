@@ -15,6 +15,7 @@ import { MessageContextMenuInteractionBuilder } from "../command-abstractions/co
 import { async_exec_file } from "../utils/filesystem.js";
 import { markdown_node, MarkdownParser, CodeBlockRule, InlineCodeRule, TextRule } from "dismark";
 import { Mutex } from "../utils/containers.js";
+import Help from "./help.js";
 
 const color = 0x7e78fe; //0xA931FF;
 
@@ -198,6 +199,9 @@ export default class Format extends BotComponent {
 
     override async setup(commands: CommandSetBuilder) {
         commands.add(new MessageContextMenuInteractionBuilder("Format").set_handler(this.format_ctxmenu.bind(this)));
+
+        const help = this.wheatley.components.get("Help") as Help | undefined;
+        help?.add_category_content("Utility", "`!f <reply>` Format the message being replied to");
     }
 
     // TODO: More refactoring needed
