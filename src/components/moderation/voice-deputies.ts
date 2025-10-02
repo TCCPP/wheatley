@@ -163,15 +163,23 @@ export default class VoiceDeputies extends BotComponent {
         if (entry.action == Discord.AuditLogEvent.MemberUpdate) {
             for (const change of entry.changes) {
                 if (change.key == "mute") {
-                    await this.voice_hotline.send(
-                        `<@${entry.targetId}> was ${change.old ? "unmuted" : "muted"} by <@${entry.executorId}>`,
-                    );
+                    const action = change.old ? "unmuted" : "muted";
+                    await this.voice_hotline.send({
+                        content: `<@${entry.targetId}> was ${action} by <@${entry.executorId}>`,
+                        allowedMentions: { parse: [] },
+                    });
                 }
             }
         } else if (entry.action == Discord.AuditLogEvent.MemberMove) {
-            await this.voice_hotline.send(`user was moved by <@${entry.executorId}>`);
+            await this.voice_hotline.send({
+                content: `user was moved by <@${entry.executorId}>`,
+                allowedMentions: { parse: [] },
+            });
         } else if (entry.action == Discord.AuditLogEvent.MemberDisconnect) {
-            await this.voice_hotline.send(`user was disconnected by <@${entry.executorId}>`);
+            await this.voice_hotline.send({
+                content: `user was disconnected by <@${entry.executorId}>`,
+                allowedMentions: { parse: [] },
+            });
         }
     }
 
