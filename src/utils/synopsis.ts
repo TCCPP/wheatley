@@ -31,19 +31,19 @@ export class Synopsinator {
             this.current_line_length += token.length;
             // now actually do the token append, so long as we don't go over
             if (!this.reached_max()) {
-                this.synopsis += token;
+                this.add_to_output(token);
             } else if (!this.did_elipses) {
                 if (code_mode && !this.synopsis.endsWith("\n")) {
-                    this.synopsis += "\n";
+                    this.add_to_output("\n");
                 }
-                this.synopsis += "...";
+                this.add_to_output("...");
                 this.did_elipses = true;
             }
             // line end logic
             if (ends_line && !this.did_elipses) {
                 this.finish_line(false);
                 if (!this.reached_max()) {
-                    this.synopsis += "\n";
+                    this.add_to_output("\n");
                 }
             }
         }
@@ -52,7 +52,7 @@ export class Synopsinator {
     private finish_line(do_write_line = true) {
         if (!this.synopsis.endsWith("\n") && this.synopsis != "") {
             if (do_write_line) {
-                this.synopsis += "\n";
+                this.add_to_output("\n");
             }
             this.current_line_count++;
             this.current_line_length = 0;
@@ -63,74 +63,78 @@ export class Synopsinator {
         return this.current_line_count > synopsis_lines;
     }
 
-    private build_synopsis(node: markdown_node) {
+    private add_to_output(text: string) {
+        this.synopsis += text;
+    }
+
+    private build_synopsis(node: markdown_node): void {
         if (this.reached_max()) {
             return;
         }
         switch (node.type) {
             case "doc":
-                node.content.forEach(this.build_synopsis.bind(this));
+                node.content.forEach(n => this.build_synopsis(n));
                 break;
             case "plain":
                 this.write_text(node.content);
                 break;
             case "inline_code":
-                this.synopsis += `\``;
+                this.add_to_output(`\``);
                 this.write_text(node.content);
-                this.synopsis += `\``;
+                this.add_to_output(`\``);
                 break;
             case "code_block":
                 this.finish_line(false);
-                this.synopsis += `\`\`\`${node.language ?? ""}\n`;
+                this.add_to_output(`\`\`\`${node.language ?? ""}\n`);
                 this.write_text(node.content, true);
-                this.synopsis += `\n\`\`\``;
+                this.add_to_output(`\n\`\`\``);
                 break;
             case "italics":
-                this.synopsis += `*`;
+                this.add_to_output(`*`);
                 this.build_synopsis(node.content);
-                this.synopsis += `*`;
+                this.add_to_output(`*`);
                 break;
             case "bold":
-                this.synopsis += `**`;
+                this.add_to_output(`**`);
                 this.build_synopsis(node.content);
-                this.synopsis += `**`;
+                this.add_to_output(`**`);
                 break;
             case "underline":
-                this.synopsis += `__`;
+                this.add_to_output(`__`);
                 this.build_synopsis(node.content);
-                this.synopsis += `__`;
+                this.add_to_output(`__`);
                 break;
             case "strikethrough":
-                this.synopsis += `~~`;
+                this.add_to_output(`~~`);
                 this.build_synopsis(node.content);
-                this.synopsis += `~~`;
+                this.add_to_output(`~~`);
                 break;
             case "spoiler":
-                this.synopsis += `||`;
+                this.add_to_output(`||`);
                 this.build_synopsis(node.content);
-                this.synopsis += `||`;
+                this.add_to_output(`||`);
                 break;
             case "masked_link":
-                this.synopsis += `[`;
+                this.add_to_output(`[`);
                 this.build_synopsis(node.content);
-                this.synopsis += `](${node.target})`;
+                this.add_to_output(`](${node.target})`);
                 break;
             case "header":
                 // always using level 3 to reduce size
                 this.finish_line();
-                this.synopsis += `### `;
+                this.add_to_output(`### `);
                 this.build_synopsis(node.content);
                 this.finish_line();
                 break;
             case "blockquote":
                 this.finish_line();
-                this.synopsis += `> `;
+                this.add_to_output(`> `);
                 this.build_synopsis(node.content);
                 this.finish_line();
                 break;
             case "subtext":
                 this.finish_line();
-                this.synopsis += `-# `;
+                this.add_to_output(`-# `);
                 this.build_synopsis(node.content);
                 this.finish_line();
                 break;
@@ -138,8 +142,8 @@ export class Synopsinator {
                 this.list_depth++;
                 for (const item of node.items) {
                     this.finish_line();
-                    this.synopsis += "  ".repeat(this.list_depth - 1);
-                    this.synopsis += `${node.start_number ? `${node.start_number}.` : "-"} `;
+                    this.add_to_output("  ".repeat(this.list_depth - 1));
+                    this.add_to_output(`${node.start_number ? `${node.start_number}.` : "-"} `);
                     this.build_synopsis(item);
                     this.finish_line();
                 }
