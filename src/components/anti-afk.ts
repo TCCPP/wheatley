@@ -24,7 +24,12 @@ export default class AntiAFK extends BotComponent {
             const timeout = set_timeout(
                 () => {
                     member.voice
-                        .setChannel(this.wheatley.guild.afkChannel)
+                        .fetch()
+                        .then(async current_state => {
+                            if (current_state.selfDeaf) {
+                                await member.voice.setChannel(this.wheatley.guild.afkChannel);
+                            }
+                        })
                         .catch(this.wheatley.critical_error.bind(this.wheatley));
                     this.countdown.delete(new_state.id);
                 },
