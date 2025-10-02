@@ -16,6 +16,7 @@ export default class UtilityTools extends BotComponent {
     override async setup(commands: CommandSetBuilder) {
         commands.add(
             new TextBasedCommandBuilder("count", EarlyReplyMode.none)
+                .set_category("Misc")
                 .set_permissions(Discord.PermissionFlagsBits.BanMembers)
                 .set_description("Count")
                 .add_number_option({

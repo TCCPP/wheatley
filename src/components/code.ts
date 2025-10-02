@@ -19,6 +19,7 @@ export default class Code extends BotComponent {
     override async setup(commands: CommandSetBuilder) {
         commands.add(
             new TextBasedCommandBuilder("code", EarlyReplyMode.visible)
+                .set_category("Misc")
                 .set_description("code formatting help")
                 .set_allow_trailing_junk(true)
                 .set_handler(this.code.bind(this)),

@@ -97,6 +97,7 @@ export default class Man7 extends BotComponent {
     override async setup(commands: CommandSetBuilder) {
         commands.add(
             new TextBasedCommandBuilder("man", EarlyReplyMode.none)
+                .set_category("References")
                 .set_description("Query linux man pages")
                 .add_string_option({
                     title: "query",

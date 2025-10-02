@@ -20,6 +20,7 @@ export default class Steal extends BotComponent {
     override async setup(commands: CommandSetBuilder) {
         commands.add(
             new TextBasedCommandBuilder("steal-emojis-message-url", EarlyReplyMode.visible)
+                .set_category("Admin utilities")
                 .set_description("Steal emojis from a message")
                 .add_string_option({
                     title: "url",
@@ -32,6 +33,7 @@ export default class Steal extends BotComponent {
 
         commands.add(
             new TextBasedCommandBuilder("add-emojis-url", EarlyReplyMode.visible)
+                .set_category("Admin utilities")
                 .set_description("Add emojis from a message")
                 .add_string_option({
                     title: "name",
@@ -49,6 +51,7 @@ export default class Steal extends BotComponent {
 
         commands.add(
             new TextBasedCommandBuilder("steal-emojis", EarlyReplyMode.visible)
+                .set_category("Admin utilities")
                 .set_description("Steal emojis from a message")
                 .add_string_option({
                     title: "text",

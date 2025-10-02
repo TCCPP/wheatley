@@ -88,6 +88,7 @@ export default class Inspect extends BotComponent {
         // Permissions on this command in the interest of preventing spam (intentional or otherwise)
         commands.add(
             new TextBasedCommandBuilder("inspect", EarlyReplyMode.ephemeral)
+                .set_category("Utility")
                 .set_description("Inspect a message")
                 .add_string_option({
                     title: "url",

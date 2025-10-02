@@ -26,6 +26,7 @@ export default class Ban extends ModerationComponent {
         await super.setup(commands);
         commands.add(
             new TextBasedCommandBuilder("ban", EarlyReplyMode.visible)
+                .set_category("Moderation")
                 .set_permissions(Discord.PermissionFlagsBits.BanMembers)
                 .set_description("Ban user")
                 .add_user_option({
@@ -52,6 +53,7 @@ export default class Ban extends ModerationComponent {
 
         commands.add(
             new TextBasedCommandBuilder("massban", EarlyReplyMode.visible)
+                .set_category("Moderation")
                 .set_permissions(Discord.PermissionFlagsBits.BanMembers)
                 .set_description("Ban users")
                 .set_slash(false)
@@ -83,6 +85,7 @@ export default class Ban extends ModerationComponent {
 
         commands.add(
             new TextBasedCommandBuilder("unban", EarlyReplyMode.visible)
+                .set_category("Moderation")
                 .set_permissions(Discord.PermissionFlagsBits.BanMembers)
                 .set_description("Unban user")
                 .add_user_option({

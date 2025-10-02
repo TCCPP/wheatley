@@ -22,6 +22,7 @@ export default class ModStats extends BotComponent {
         this.bot_spam = await this.utilities.get_channel(this.wheatley.channels.bot_spam);
         commands.add(
             new TextBasedCommandBuilder("modstats", EarlyReplyMode.none)
+                .set_category("Moderation")
                 .set_description("Moderator stats")
                 .set_permissions(Discord.PermissionFlagsBits.ModerateMembers)
                 .add_user_option({

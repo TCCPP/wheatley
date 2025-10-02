@@ -59,6 +59,7 @@ export default class Purge extends BotComponent {
 
         commands.add(
             new TextBasedCommandBuilder("purge", EarlyReplyMode.visible)
+                .set_category("Moderation Utilities")
                 .set_permissions(Discord.PermissionFlagsBits.BanMembers)
                 .set_description("Purge messages")
                 .add_subcommand(
@@ -151,6 +152,7 @@ export default class Purge extends BotComponent {
 
         commands.add(
             new TextBasedCommandBuilder("dummymessages", EarlyReplyMode.visible)
+                .set_category("Misc")
                 .set_permissions(Discord.PermissionFlagsBits.BanMembers)
                 .set_description("dummymessages")
                 .add_number_option({

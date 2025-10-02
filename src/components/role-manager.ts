@@ -48,6 +48,7 @@ export default class RoleManager extends BotComponent {
 
         commands.add(
             new TextBasedCommandBuilder("gimmepink", EarlyReplyMode.ephemeral)
+                .set_category("Misc")
                 .set_description("Gives pink")
                 .set_slash(false)
                 .set_handler(this.gibpink.bind(this)),
@@ -55,6 +56,7 @@ export default class RoleManager extends BotComponent {
 
         commands.add(
             new TextBasedCommandBuilder("unpink", EarlyReplyMode.ephemeral)
+                .set_category("Misc")
                 .set_description("Takes pink")
                 .set_slash(false)
                 .set_handler(this.unpink.bind(this)),

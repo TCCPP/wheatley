@@ -18,6 +18,7 @@ export default class Ping extends BotComponent {
     override async setup(commands: CommandSetBuilder) {
         commands.add(
             new TextBasedCommandBuilder(["ping", "wstatus"], EarlyReplyMode.none)
+                .set_category("Misc")
                 .set_description("Ping")
                 .set_handler(this.ping.bind(this)),
         );

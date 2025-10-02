@@ -18,6 +18,7 @@ export default class Members extends BotComponent {
     override async setup(commands: CommandSetBuilder) {
         commands.add(
             new TextBasedCommandBuilder("members", EarlyReplyMode.none)
+                .set_category("Misc")
                 .set_description("Members")
                 .set_handler(this.members.bind(this)),
         );

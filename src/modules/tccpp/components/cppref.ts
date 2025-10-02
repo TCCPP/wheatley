@@ -156,6 +156,7 @@ export default class Cppref extends BotComponent {
     override async setup(commands: CommandSetBuilder) {
         commands.add(
             new TextBasedCommandBuilder(["cref", "cppref"], EarlyReplyMode.none)
+                .set_category("References")
                 .set_description(["Query C reference pages", "Query C++ reference pages"])
                 .add_string_option({
                     title: "query",

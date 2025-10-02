@@ -22,6 +22,7 @@ export default class Echo extends BotComponent {
     override async setup(commands: CommandSetBuilder) {
         commands.add(
             new TextBasedCommandBuilder("echo", EarlyReplyMode.none)
+                .set_category("Misc")
                 .set_description("Echo")
                 .add_string_option({
                     title: "input",
@@ -32,6 +33,7 @@ export default class Echo extends BotComponent {
         );
         commands.add(
             new TextBasedCommandBuilder("say", EarlyReplyMode.none)
+                .set_category("Misc")
                 .set_permissions(Discord.PermissionFlagsBits.BanMembers)
                 .set_description("Say as wheatley")
                 .set_handler(this.say.bind(this)),

@@ -28,12 +28,14 @@ export default class ForumControl extends BotComponent {
     override async setup(commands: CommandSetBuilder) {
         commands.add(
             new TextBasedCommandBuilder(["solve", "solved", "close"], EarlyReplyMode.visible)
+                .set_category("Thread Control")
                 .set_description("Close forum post and mark it as solved")
                 .set_handler(this.solve.bind(this)),
         );
 
         commands.add(
             new TextBasedCommandBuilder(["unsolve", "unsolved", "open"], EarlyReplyMode.visible)
+                .set_category("Thread Control")
                 .set_description("Re-open forum post")
                 .set_handler(this.unsolve.bind(this)),
         );

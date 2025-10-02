@@ -11,6 +11,7 @@ import {
     TextBasedCommandOptionType,
     TextBasedCommandBuilder,
     EarlyReplyMode,
+    CommandCategory,
 } from "./text-based-command-builder.js";
 import { TextBasedCommand } from "./text-based-command.js";
 import { BaseBotInteraction } from "./interaction-base.js";
@@ -23,13 +24,18 @@ export class BotTextBasedCommand<Args extends unknown[] = []> extends BaseBotInt
         TextBasedCommandParameterOptions & { type: TextBasedCommandOptionType }
     >();
     public readonly subcommands: Discord.Collection<string, BotTextBasedCommand<any>> | null = null;
+    public readonly display_name: string;
+    public readonly all_names: string[];
+    public readonly all_display_names: string[];
 
     constructor(
         name: string,
-        public readonly display_name: string,
+        public readonly display_prefix: string,
         public readonly description: string,
         public readonly slash: boolean,
         public readonly permissions: undefined | bigint,
+        public readonly category: CommandCategory | undefined,
+        public readonly alias_of: string | undefined,
         public readonly allow_trailing_junk: boolean,
         public readonly early_reply_mode: EarlyReplyMode,
         builder: TextBasedCommandBuilder<Args, true, true> | TextBasedCommandBuilder<Args, true, false, true>,
@@ -37,6 +43,9 @@ export class BotTextBasedCommand<Args extends unknown[] = []> extends BaseBotInt
     ) {
         super(name, builder.handler ?? (async () => wheatley.critical_error("This shouldn't happen")));
         this.options = builder.options;
+        this.display_name = `${display_prefix}${name}`;
+        this.all_names = builder.names;
+        this.all_display_names = builder.names.map(name => `${display_prefix}${name}`);
         if (builder.type === "top-level") {
             this.subcommands = new Discord.Collection();
             for (const subcommand of builder.subcommands) {
@@ -50,10 +59,12 @@ export class BotTextBasedCommand<Args extends unknown[] = []> extends BaseBotInt
                         sub_name,
                         new BotTextBasedCommand(
                             sub_name,
-                            `${display_name} ${sub_name}`,
+                            `${display_prefix}${name} `,
                             sub_description,
                             sub_slash,
                             permissions,
+                            category,
+                            subcommand.alias_of ?? alias_of,
                             allow_trailing_junk,
                             subcommand.early_reply_mode,
                             subcommand,
@@ -293,9 +304,10 @@ export class BotTextBasedCommand<Args extends unknown[] = []> extends BaseBotInt
         if (this.subcommands) {
             return this.subcommands.map(command => command.get_usage()).join("\n");
         } else {
+            const command_part = `!${this.display_prefix}${this.all_names.join("/")}`;
             return wrap(
                 [
-                    "!" + this.display_name,
+                    command_part,
                     ...this.options.map(option => (option.required ? `<${option.title}>` : `[${option.title}]`)),
                 ].join(" "),
                 "`",

@@ -20,6 +20,7 @@ export default class VoiceDeputies extends BotComponent {
         this.voice_hotline = await this.utilities.get_channel(this.wheatley.channels.voice_hotline);
         commands.add(
             new TextBasedCommandBuilder("voice", EarlyReplyMode.ephemeral)
+                .set_category("Misc")
                 .set_permissions(Discord.PermissionFlagsBits.MoveMembers | Discord.PermissionFlagsBits.MuteMembers)
                 .set_description("Voice moderation")
                 .add_subcommand(

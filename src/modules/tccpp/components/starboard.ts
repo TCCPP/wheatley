@@ -91,6 +91,7 @@ export default class Starboard extends BotComponent {
 
         commands.add(
             new TextBasedCommandBuilder("add-negative-emoji", EarlyReplyMode.visible)
+                .set_category("Admin utilities")
                 .set_description("Register a negative emoji")
                 .add_string_option({
                     title: "emojis",
@@ -103,6 +104,7 @@ export default class Starboard extends BotComponent {
 
         commands.add(
             new TextBasedCommandBuilder("add-delete-emoji", EarlyReplyMode.visible)
+                .set_category("Admin utilities")
                 .set_description("Register a delete emoji")
                 .add_string_option({
                     title: "emojis",
@@ -115,6 +117,7 @@ export default class Starboard extends BotComponent {
 
         commands.add(
             new TextBasedCommandBuilder("add-ignored-emoji", EarlyReplyMode.visible)
+                .set_category("Admin utilities")
                 .set_description("Register an ignored emoji")
                 .add_string_option({
                     title: "emojis",
@@ -127,6 +130,7 @@ export default class Starboard extends BotComponent {
 
         commands.add(
             new TextBasedCommandBuilder("add-repost-emoji", EarlyReplyMode.visible)
+                .set_category("Admin utilities")
                 .set_description("Register a repost emoji")
                 .add_string_option({
                     title: "emojis",
@@ -139,6 +143,7 @@ export default class Starboard extends BotComponent {
 
         commands.add(
             new TextBasedCommandBuilder("list-starboard-config", EarlyReplyMode.visible)
+                .set_category("Admin utilities")
                 .set_description("List starboard config")
                 .set_permissions(Discord.PermissionFlagsBits.Administrator)
                 .set_handler(this.list_config.bind(this)),

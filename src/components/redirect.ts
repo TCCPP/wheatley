@@ -14,6 +14,7 @@ export default class Redirect extends BotComponent {
     override async setup(commands: CommandSetBuilder) {
         commands.add(
             new TextBasedCommandBuilder("redirect", EarlyReplyMode.visible)
+                .set_category("Moderation Utilities")
                 .set_description("Redirect a conversation")
                 .add_string_option({
                     title: "channel",
@@ -26,6 +27,7 @@ export default class Redirect extends BotComponent {
 
         commands.add(
             new TextBasedCommandBuilder("r", EarlyReplyMode.none)
+                .set_category("Moderation Utilities")
                 .set_description(
                     `Redirect a conversation from <#${this.wheatley.channels.c_cpp_discussion}> or ` +
                         `<#${this.wheatley.channels.general_discussion}> to a help channel`,

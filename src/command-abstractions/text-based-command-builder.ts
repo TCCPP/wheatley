@@ -21,6 +21,17 @@ export type TextBasedCommandParameterOptions = {
     autocomplete?: (partial: string, command_name: string) => { name: string; value: string }[];
 };
 
+export type CommandCategory =
+    | "Wiki Articles"
+    | "References"
+    | "Thread Control"
+    | "Utility"
+    | "Misc"
+    | "Moderation"
+    | "Moderation Utilities"
+    | "Admin utilities"
+    | "Hidden";
+
 export enum EarlyReplyMode {
     ephemeral,
     visible,
@@ -38,7 +49,9 @@ export class TextBasedCommandBuilder<
     descriptions!: ConditionalOptional<HasDescriptions, string[]>;
     options = new Discord.Collection<string, TextBasedCommandParameterOptions & { type: TextBasedCommandOptionType }>();
     slash_config: boolean[];
-    permissions: undefined | bigint = undefined;
+    permissions: bigint | undefined = undefined;
+    category: CommandCategory | undefined = undefined;
+    alias_of: string | undefined = undefined;
     subcommands: TextBasedCommandBuilder<any, true, true>[] = [];
     type: HasSubcommands extends true ? "top-level" : "default";
     allow_trailing_junk: boolean = false;
@@ -212,6 +225,16 @@ export class TextBasedCommandBuilder<
         return this;
     }
 
+    set_category(category: CommandCategory) {
+        this.category = category;
+        return this;
+    }
+
+    set_alias_of(command_name: string) {
+        this.alias_of = command_name;
+        return this;
+    }
+
     set_allow_trailing_junk(allow_trailing_junk: boolean) {
         this.allow_trailing_junk = allow_trailing_junk;
         return this;
@@ -245,10 +268,12 @@ export class TextBasedCommandBuilder<
             descriptors.push(
                 new BotTextBasedCommand(
                     name,
-                    name,
+                    "",
                     description,
                     slash,
                     this.permissions,
+                    this.category,
+                    this.alias_of,
                     this.allow_trailing_junk,
                     this.early_reply_mode,
                     this,

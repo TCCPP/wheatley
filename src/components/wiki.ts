@@ -350,6 +350,7 @@ export default class Wiki extends BotComponent {
 
         commands.add(
             new TextBasedCommandBuilder(["wiki", "howto"], EarlyReplyMode.none)
+                .set_category("Wiki Articles")
                 .set_description(["Retrieve wiki articles", "Retrieve wiki articles (alternatively /wiki)"])
                 .add_string_option({
                     title: "query",
@@ -372,8 +373,9 @@ export default class Wiki extends BotComponent {
 
         commands.add(
             new TextBasedCommandBuilder(["wiki-preview", "wp"], EarlyReplyMode.none)
+                .set_category("Wiki Articles")
                 .set_slash(false)
-                .set_description("Preview a wiki article")
+                .set_description("Preview wiki article markdown")
                 .add_string_option({
                     title: "content",
                     description: "Content",
@@ -388,6 +390,8 @@ export default class Wiki extends BotComponent {
             const article = this.articles[article_name];
             commands.add(
                 new TextBasedCommandBuilder(alias, EarlyReplyMode.none)
+                    .set_category("Wiki Articles")
+                    .set_alias_of("wiki")
                     .set_slash(false)
                     .set_description(article.title)
                     .add_user_option({

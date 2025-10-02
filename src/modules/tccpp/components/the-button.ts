@@ -87,6 +87,7 @@ export default class TheButton extends BotComponent {
 
         commands.add(
             new TextBasedCommandBuilder("wsetupthebutton", EarlyReplyMode.none)
+                .set_category("Admin utilities")
                 .set_permissions(Discord.PermissionFlagsBits.Administrator)
                 .set_description("Setup The Button here")
                 .set_slash(false)
@@ -94,6 +95,7 @@ export default class TheButton extends BotComponent {
         );
         commands.add(
             new TextBasedCommandBuilder("wresetthebutton", EarlyReplyMode.none)
+                .set_category("Admin utilities")
                 .set_permissions(Discord.PermissionFlagsBits.Administrator)
                 .set_description("Reset The Button")
                 .set_slash(false)
@@ -101,6 +103,7 @@ export default class TheButton extends BotComponent {
         );
         commands.add(
             new TextBasedCommandBuilder("wresetthebuttonscoreboard", EarlyReplyMode.none)
+                .set_category("Admin utilities")
                 .set_permissions(Discord.PermissionFlagsBits.Administrator)
                 .set_description("Reset The Button scoreboard")
                 .set_slash(false)
@@ -108,6 +111,7 @@ export default class TheButton extends BotComponent {
         );
         commands.add(
             new TextBasedCommandBuilder("wadjustscores", EarlyReplyMode.none)
+                .set_category("Admin utilities")
                 .set_permissions(Discord.PermissionFlagsBits.Administrator)
                 .set_description("Adjust The Button scores")
                 .set_slash(false)

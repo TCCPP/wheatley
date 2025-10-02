@@ -9,117 +9,239 @@ import { colors } from "../common.js";
 import { BotComponent } from "../bot-component.js";
 import { CommandSetBuilder } from "../command-abstractions/command-set-builder.js";
 import { Wheatley } from "../wheatley.js";
-import { EarlyReplyMode, TextBasedCommandBuilder } from "../command-abstractions/text-based-command-builder.js";
+import {
+    EarlyReplyMode,
+    TextBasedCommandBuilder,
+    CommandCategory,
+} from "../command-abstractions/text-based-command-builder.js";
 import { TextBasedCommand } from "../command-abstractions/text-based-command.js";
-import Wiki from "./wiki.js";
+import { BotTextBasedCommand } from "../command-abstractions/text-based-command-descriptor.js";
+
+type CommandInfoWithAliases = {
+    info: string;
+    aliases: string[];
+};
 
 export default class Help extends BotComponent {
     static override get is_freestanding() {
         return true;
     }
 
+    private static readonly category_order: CommandCategory[] = [
+        "References",
+        "Wiki Articles",
+        "Thread Control",
+        "Utility",
+        "Misc",
+        "Moderation",
+        "Moderation Utilities",
+        "Admin utilities",
+    ];
+
     override async setup(commands: CommandSetBuilder) {
         commands.add(
             new TextBasedCommandBuilder("help", EarlyReplyMode.none)
+                .set_category("Misc")
                 .set_description("Bot help and info")
                 .set_handler(this.help.bind(this)),
         );
     }
 
-    command_info(...commands: string[]) {
-        return commands.map(command => this.wheatley.get_command(command).get_command_info());
+    private process_command_for_help(
+        command: BotTextBasedCommand<unknown[]>,
+        categories_map: Map<CommandCategory, CommandInfoWithAliases[]>,
+        seen_command_groups: Set<string>,
+        command_name_to_aliases: Map<string, string[]>,
+        user_permissions: Discord.PermissionsBitField,
+    ): void {
+        if (command.alias_of) {
+            return;
+        }
+
+        if (
+            command.permissions !== undefined &&
+            command.permissions !== 0n &&
+            !user_permissions.has(command.permissions)
+        ) {
+            return;
+        }
+
+        const category = command.category ?? "Misc";
+        if (category === "Hidden") {
+            return;
+        }
+
+        const group_key = command.all_display_names.join(",");
+        if (seen_command_groups.has(group_key)) {
+            return;
+        }
+        seen_command_groups.add(group_key);
+
+        if (!categories_map.has(category)) {
+            categories_map.set(category, []);
+        }
+
+        const aliases = command_name_to_aliases.get(command.display_name) ?? [];
+        unwrap(categories_map.get(category)).push({
+            info: command.get_command_info(),
+            aliases,
+        });
+    }
+
+    private build_commands_map(
+        user_permissions: Discord.PermissionsBitField,
+    ): Map<CommandCategory, CommandInfoWithAliases[]> {
+        const all_commands = this.wheatley.get_all_commands();
+        const categories_map = new Map<CommandCategory, CommandInfoWithAliases[]>();
+        const seen_command_groups = new Set<string>();
+        const command_name_to_aliases = new Map<string, string[]>();
+
+        // First pass: collect all aliases
+        for (const command_descriptor of Object.values(all_commands)) {
+            if (command_descriptor.alias_of) {
+                if (!command_name_to_aliases.has(command_descriptor.alias_of)) {
+                    command_name_to_aliases.set(command_descriptor.alias_of, []);
+                }
+                unwrap(command_name_to_aliases.get(command_descriptor.alias_of)).push(
+                    `\`!${command_descriptor.display_name}\``,
+                );
+            }
+        }
+
+        // Sort aliases alphabetically
+        for (const aliases of command_name_to_aliases.values()) {
+            aliases.sort((a, b) => a.localeCompare(b));
+        }
+
+        // Second pass: build command map with aliases
+        for (const command_descriptor of Object.values(all_commands)) {
+            // If this command has subcommands, process them instead of the parent
+            if (command_descriptor.subcommands) {
+                for (const subcommand of command_descriptor.subcommands.values()) {
+                    this.process_command_for_help(
+                        subcommand,
+                        categories_map,
+                        seen_command_groups,
+                        command_name_to_aliases,
+                        user_permissions,
+                    );
+                }
+                continue;
+            }
+
+            this.process_command_for_help(
+                command_descriptor,
+                categories_map,
+                seen_command_groups,
+                command_name_to_aliases,
+                user_permissions,
+            );
+        }
+
+        return categories_map;
+    }
+
+    private add_category_specific_content(category: CommandCategory, value_parts: string[]): void {
+        if (category === "Wiki Articles") {
+            value_parts.push("Article contributions are welcome [here](https://github.com/TCCPP/wiki)!");
+        } else if (category === "Utility") {
+            value_parts.unshift("`!f <reply>` Format the message being replied to");
+        } else if (category === "Moderation") {
+            value_parts.push(
+                "Durations: `perm` for permanent or `number unit` (whitespace ignored). Units are y, M, w, d, h, m, s.",
+            );
+        }
+    }
+
+    private split_into_fields(
+        category: CommandCategory,
+        value_parts: string[],
+        max_length: number = 1024,
+    ): Discord.APIEmbedField[] {
+        const fields: Discord.APIEmbedField[] = [];
+        let current_parts: string[] = [];
+        let current_length = 0;
+
+        for (const part of value_parts) {
+            const part_length = part.length + 1;
+            if (current_length + part_length > max_length && current_parts.length > 0) {
+                fields.push({
+                    name: fields.length === 0 ? category : `${category} (cont.)`,
+                    value: build_description(...current_parts),
+                });
+                current_parts = [];
+                current_length = 0;
+            }
+            current_parts.push(part);
+            current_length += part_length;
+        }
+
+        if (current_parts.length > 0) {
+            fields.push({
+                name: fields.length === 0 ? category : `${category} (cont.)`,
+                value: build_description(...current_parts),
+            });
+        }
+
+        return fields;
+    }
+
+    private build_category_fields(
+        categories_map: Map<CommandCategory, CommandInfoWithAliases[]>,
+    ): Discord.APIEmbedField[] {
+        const fields: Discord.APIEmbedField[] = [];
+
+        const all_categories = [
+            ...Help.category_order,
+            ...Array.from(categories_map.keys()).filter(cat => !Help.category_order.includes(cat)),
+        ];
+
+        for (const category of all_categories) {
+            if (categories_map.has(category)) {
+                const commands = unwrap(categories_map.get(category));
+                commands.sort((a, b) => a.info.localeCompare(b.info));
+                const value_parts: string[] = [];
+
+                for (const command of commands) {
+                    value_parts.push(command.info);
+                    if (command.aliases.length > 0) {
+                        value_parts.push(`- Shortcuts: ${command.aliases.join(", ")}`);
+                    }
+                }
+
+                this.add_category_specific_content(category, value_parts);
+
+                fields.push(...this.split_into_fields(category, value_parts));
+            }
+        }
+
+        return fields;
+    }
+
+    private build_help_embeds(fields: Discord.APIEmbedField[]): Discord.EmbedBuilder[] {
+        const embed = new Discord.EmbedBuilder()
+            .setColor(colors.wheatley)
+            .setTitle("Wheatley")
+            .setDescription(
+                build_description(
+                    "Wheatley discord bot for the Together C & C++ server. The bot is open source, contributions " +
+                        "are welcome at https://github.com/TCCPP/wheatley.",
+                ),
+            )
+            .setThumbnail("https://avatars.githubusercontent.com/u/142943210")
+            .addFields(...fields);
+
+        return [embed];
     }
 
     async help(command: TextBasedCommand) {
-        const embeds = [
-            new Discord.EmbedBuilder()
-                .setColor(colors.wheatley)
-                .setTitle("Wheatley")
-                .setDescription(
-                    build_description(
-                        "Wheatley discord bot for the Together C & C++ server. The bot is open source, contributions " +
-                            "are welcome at https://github.com/TCCPP/wheatley.",
-                    ),
-                )
-                .setThumbnail("https://avatars.githubusercontent.com/u/142943210")
-                .addFields(
-                    {
-                        name: "Wiki Articles",
-                        value: build_description(
-                            ...this.command_info("wiki", "wiki-preview"),
-                            "Article shortcuts: " +
-                                (unwrap(this.wheatley.components.get("Wiki")) as Wiki).article_aliases
-                                    .map((_, alias) => `\`${alias}\``)
-                                    .join(", "),
-                            "Article contributions are welcome [here](https://github.com/TCCPP/wiki)!",
-                        ),
-                    },
-                    {
-                        name: "References",
-                        value: build_description(...this.command_info("cppref", "cref", "man")),
-                    },
-                    {
-                        name: "Thread Control",
-                        value: build_description(...this.command_info("solved", "unsolved", "archive", "rename")),
-                    },
-                    {
-                        name: "Utility",
-                        value: build_description(
-                            "`!f <reply>` Format the message being replied to",
-                            ...this.command_info(
-                                "quote",
-                                "quoteb",
-                                "snowflake",
-                                "inspect",
-                                "nodistractions",
-                                "removenodistractions",
-                            ),
-                        ),
-                    },
-                    {
-                        name: "Misc",
-                        value: build_description(...this.command_info("ping", "echo", "r")),
-                    },
-                ),
-        ];
-        if (await this.wheatley.check_permissions(command.user, Discord.PermissionFlagsBits.ModerateMembers)) {
-            embeds.push(
-                new Discord.EmbedBuilder().setColor(colors.wheatley).addFields(
-                    {
-                        name: "Moderation",
-                        value: build_description(
-                            ...this.command_info(
-                                "ban",
-                                "unban",
-                                "kick",
-                                "mute",
-                                "unmute",
-                                "rolepersist",
-                                "timeout",
-                                "warn",
-                                "reason",
-                                "duration",
-                                "expunge",
-                                "modlogs",
-                                "case",
-                            ),
-                            "Rolepersist aliases: `noofftopic`, `nosuggestions`, `nosuggestionsatall`, " +
-                                "`noreactions`, `nothreads`, `noseriousofftopic`, `notil`, `nomemes`. " +
-                                `Syntax: \`${this.wheatley
-                                    .get_command("noofftopic")
-                                    .get_usage()
-                                    .replace("noofftopic", "(alias)")}\``,
-                            "Durations: `perm` for permanent or `number unit` (whitespace ignored)." +
-                                " Units are y, M, w, d, h, m, s.",
-                        ),
-                    },
-                    {
-                        name: "Moderation utilities",
-                        value: build_description(...this.command_info("redirect", "purge")),
-                    },
-                ),
-            );
-        }
+        const member = await this.wheatley.guild.members.fetch(command.user.id);
+        const user_permissions = member.permissions;
+
+        const categories_map = this.build_commands_map(user_permissions);
+        const fields = this.build_category_fields(categories_map);
+        const embeds = this.build_help_embeds(fields);
+
         await command.reply({
             embeds,
             ephemeral_if_possible: true,

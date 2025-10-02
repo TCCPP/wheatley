@@ -19,6 +19,7 @@ export default class Shortcuts extends BotComponent {
     override async setup(commands: CommandSetBuilder) {
         commands.add(
             new TextBasedCommandBuilder("nothingtoseehere", EarlyReplyMode.none)
+                .set_category("Misc")
                 .set_permissions(Discord.PermissionFlagsBits.BanMembers)
                 .set_description("Nothing to see here")
                 .set_handler(this.nothingtoseehere.bind(this)),
@@ -26,18 +27,21 @@ export default class Shortcuts extends BotComponent {
 
         commands.add(
             new TextBasedCommandBuilder(["tryitandsee", "tias"], EarlyReplyMode.none)
+                .set_category("Misc")
                 .set_description("Try it and see")
                 .set_handler(this.tryitandsee.bind(this)),
         );
 
         commands.add(
             new TextBasedCommandBuilder("headbang", EarlyReplyMode.none)
+                .set_category("Misc")
                 .set_description("Headbang")
                 .set_handler(this.headbang.bind(this)),
         );
 
         commands.add(
             new TextBasedCommandBuilder("initgif", EarlyReplyMode.none)
+                .set_category("Misc")
                 .set_description("initgif")
                 .set_handler(this.initgif.bind(this)),
         );

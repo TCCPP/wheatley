@@ -75,6 +75,7 @@ export default class CHelpRedirect extends BotComponent {
 
         commands.add(
             new TextBasedCommandBuilder("not-c", EarlyReplyMode.none)
+                .set_category("Misc")
                 .set_description("Mark C++ code in the C help channel")
                 .add_user_option({
                     title: "user",
@@ -86,6 +87,7 @@ export default class CHelpRedirect extends BotComponent {
 
         commands.add(
             new TextBasedCommandBuilder("not-cpp", EarlyReplyMode.none)
+                .set_category("Misc")
                 .set_description("Mark C code in the C++ help channel")
                 .add_user_option({
                     title: "user",

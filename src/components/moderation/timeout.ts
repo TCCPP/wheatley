@@ -26,6 +26,7 @@ export default class Timeout extends ModerationComponent {
         await super.setup(commands);
         commands.add(
             new TextBasedCommandBuilder("timeout", EarlyReplyMode.visible)
+                .set_category("Moderation")
                 .set_permissions(Discord.PermissionFlagsBits.ModerateMembers)
                 .set_description("Timeout add / remove")
                 .add_subcommand(
