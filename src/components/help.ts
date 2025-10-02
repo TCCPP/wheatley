@@ -15,6 +15,7 @@ import {
     CommandCategory,
 } from "../command-abstractions/text-based-command-builder.js";
 import { TextBasedCommand } from "../command-abstractions/text-based-command.js";
+import { BotTextBasedCommand } from "../command-abstractions/text-based-command-descriptor.js";
 
 type CommandInfoWithAliases = {
     info: string;
@@ -46,6 +47,47 @@ export default class Help extends BotComponent {
         );
     }
 
+    private process_command_for_help(
+        command: BotTextBasedCommand<unknown[]>,
+        categories_map: Map<CommandCategory, CommandInfoWithAliases[]>,
+        seen_command_groups: Set<string>,
+        command_name_to_aliases: Map<string, string[]>,
+        user_permissions: Discord.PermissionsBitField,
+    ): void {
+        if (command.alias_of) {
+            return;
+        }
+
+        if (
+            command.permissions !== undefined &&
+            command.permissions !== 0n &&
+            !user_permissions.has(command.permissions)
+        ) {
+            return;
+        }
+
+        const category = command.category ?? "Misc";
+        if (category === "Hidden") {
+            return;
+        }
+
+        const group_key = command.all_display_names.join(",");
+        if (seen_command_groups.has(group_key)) {
+            return;
+        }
+        seen_command_groups.add(group_key);
+
+        if (!categories_map.has(category)) {
+            categories_map.set(category, []);
+        }
+
+        const aliases = command_name_to_aliases.get(command.display_name) ?? [];
+        unwrap(categories_map.get(category)).push({
+            info: command.get_command_info(),
+            aliases,
+        });
+    }
+
     private build_commands_map(
         user_permissions: Discord.PermissionsBitField,
     ): Map<CommandCategory, CommandInfoWithAliases[]> {
@@ -71,74 +113,24 @@ export default class Help extends BotComponent {
             // If this command has subcommands, process them instead of the parent
             if (command_descriptor.subcommands) {
                 for (const subcommand of command_descriptor.subcommands.values()) {
-                    if (subcommand.alias_of) {
-                        continue;
-                    }
-
-                    if (
-                        subcommand.permissions !== undefined &&
-                        subcommand.permissions !== 0n &&
-                        !user_permissions.has(subcommand.permissions)
-                    ) {
-                        continue;
-                    }
-
-                    const category = subcommand.category ?? "Misc";
-                    if (category === "Hidden") {
-                        continue;
-                    }
-
-                    const group_key = subcommand.all_display_names.join(",");
-                    if (seen_command_groups.has(group_key)) {
-                        continue;
-                    }
-                    seen_command_groups.add(group_key);
-
-                    if (!categories_map.has(category)) {
-                        categories_map.set(category, []);
-                    }
-
-                    const aliases = command_name_to_aliases.get(subcommand.display_name) ?? [];
-                    unwrap(categories_map.get(category)).push({
-                        info: subcommand.get_command_info(),
-                        aliases,
-                    });
+                    this.process_command_for_help(
+                        subcommand,
+                        categories_map,
+                        seen_command_groups,
+                        command_name_to_aliases,
+                        user_permissions,
+                    );
                 }
                 continue;
             }
 
-            if (command_descriptor.alias_of) {
-                continue;
-            }
-
-            if (
-                command_descriptor.permissions !== undefined &&
-                command_descriptor.permissions !== 0n &&
-                !user_permissions.has(command_descriptor.permissions)
-            ) {
-                continue;
-            }
-
-            const category = command_descriptor.category ?? "Misc";
-            if (category === "Hidden") {
-                continue;
-            }
-
-            const group_key = command_descriptor.all_display_names.join(",");
-            if (seen_command_groups.has(group_key)) {
-                continue;
-            }
-            seen_command_groups.add(group_key);
-
-            if (!categories_map.has(category)) {
-                categories_map.set(category, []);
-            }
-
-            const aliases = command_name_to_aliases.get(command_descriptor.display_name) ?? [];
-            unwrap(categories_map.get(category)).push({
-                info: command_descriptor.get_command_info(),
-                aliases,
-            });
+            this.process_command_for_help(
+                command_descriptor,
+                categories_map,
+                seen_command_groups,
+                command_name_to_aliases,
+                user_permissions,
+            );
         }
 
         return categories_map;
