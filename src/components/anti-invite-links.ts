@@ -142,9 +142,15 @@ export default class AntiInviteLinks extends BotComponent {
 
     private async handle_list(command: TextBasedCommand) {
         const codes = await this.database.allowed_invites.find().toArray();
-        await command.reply({
-            embeds: codes.map(AntiInviteLinks.build_guild_embed),
-        });
+        await command.replyOrFollowUp(
+            codes.length > 0
+                ? {
+                      embeds: codes.map(AntiInviteLinks.build_guild_embed),
+                  }
+                : {
+                      content: "📂 currently no allowed invites",
+                  },
+        );
     }
 
     async member_is_proficient_or_higher(member: Discord.GuildMember | null) {
