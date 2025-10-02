@@ -191,7 +191,12 @@ export default class Help extends BotComponent {
     ): Discord.APIEmbedField[] {
         const fields: Discord.APIEmbedField[] = [];
 
-        for (const category of Help.category_order) {
+        const all_categories = [
+            ...Help.category_order,
+            ...Array.from(categories_map.keys()).filter(cat => !Help.category_order.includes(cat)),
+        ];
+
+        for (const category of all_categories) {
             if (categories_map.has(category)) {
                 const commands = unwrap(categories_map.get(category));
                 commands.sort((a, b) => a.info.localeCompare(b.info));
@@ -206,21 +211,6 @@ export default class Help extends BotComponent {
 
                 this.add_category_specific_content(category, value_parts);
 
-                fields.push(...this.split_into_fields(category, value_parts));
-            }
-        }
-
-        // TODO: Assert this doesn't happen...
-        for (const [category, commands] of categories_map.entries()) {
-            if (!Help.category_order.includes(category)) {
-                commands.sort((a, b) => a.info.localeCompare(b.info));
-                const value_parts: string[] = [];
-                for (const command of commands) {
-                    value_parts.push(command.info);
-                    if (command.aliases.length > 0) {
-                        value_parts.push(`- Shortcuts: ${command.aliases.join(", ")}`);
-                    }
-                }
                 fields.push(...this.split_into_fields(category, value_parts));
             }
         }

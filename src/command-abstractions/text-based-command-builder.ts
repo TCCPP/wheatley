@@ -23,13 +23,11 @@ export type TextBasedCommandParameterOptions = {
 
 export type CommandCategory =
     | "Wiki Articles"
-    | "Wiki Shortcuts"
     | "References"
     | "Thread Control"
     | "Utility"
     | "Misc"
     | "Moderation"
-    | "Rolepersist Shortcuts"
     | "Moderation Utilities"
     | "Admin utilities"
     | "Hidden";
