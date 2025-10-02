@@ -137,7 +137,7 @@ export default class RoleManager extends BotComponent {
             const skill_role = this.get_highest_skill_role(member.roles.cache.map(role => role.id));
             await this.database.user_roles.findOneAndUpdate(
                 { user_id: member.id },
-                { $set: skill_role ? { roles: role_ids } : { roles: role_ids, last_known_skill_role: skill_role } },
+                { $set: skill_role ? { roles: role_ids, last_known_skill_role: skill_role } : { roles: role_ids }},
                 { upsert: true },
             );
             const new_roles = new Set(role_ids);
