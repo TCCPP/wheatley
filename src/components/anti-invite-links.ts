@@ -50,7 +50,7 @@ export default class AntiInviteLinks extends BotComponent {
                             description: "code to add",
                             required: true,
                         })
-                        .set_handler(this.handle_add_remove.bind(this, true)),
+                        .set_handler(this.handle_add.bind(this)),
                 )
                 .add_subcommand(
                     new TextBasedCommandBuilder("remove", EarlyReplyMode.ephemeral)
@@ -61,7 +61,7 @@ export default class AntiInviteLinks extends BotComponent {
                             description: "code to remove",
                             required: true,
                         })
-                        .set_handler(this.handle_add_remove.bind(this, false)),
+                        .set_handler(this.handle_remove.bind(this)),
                 )
                 .add_subcommand(
                     new TextBasedCommandBuilder("list", EarlyReplyMode.ephemeral)
@@ -85,56 +85,56 @@ export default class AntiInviteLinks extends BotComponent {
             .setFooter({ text: entry.code });
     }
 
-    private async handle_add_remove(add: boolean, command: TextBasedCommand, code: string) {
-        if (add) {
-            if (this.allowed_invites.has(code)) {
-                await command.react("🤷", true);
-                return;
-            }
-            M.log("Adding ", code, " to allowed invites");
-            const server_info = await (await fetch(`https://discord.com/api/v10/invites/${code}`)).json();
-            if (server_info.code != code) {
-                await command.replyOrFollowUp(`${this.wheatley.emoji.error} not a valid invite`, true);
-                return;
-            }
-            if (server_info.expires != null) {
-                await command.replyOrFollowUp(`${this.wheatley.emoji.error} not a permanent invite`, true);
-                return;
-            }
-            const res = await this.database.allowed_invites.findOneAndUpdate(
-                { code: code },
-                {
-                    $set: {
-                        code: code,
-                        guild_id: server_info.guild_id,
-                        guild_name: server_info.guild.name,
-                        guild_icon: server_info.guild.icon,
-                    },
-                },
-                { upsert: true, returnDocument: "after" },
-            );
-            if (res == null) {
-                await command.replyOrFollowUp(`${this.wheatley.emoji.error} database update failed`, true);
-                return;
-            }
-            this.allowed_invites.add(code);
-            await command.replyOrFollowUp({
-                embeds: [AntiInviteLinks.build_guild_embed(res)],
-            });
-        } else {
-            if (!this.allowed_invites.has(code)) {
-                await command.react("🤷", true);
-                return;
-            }
-            M.log("Removing ", code, " from allowed invites");
-            const res = await this.database.allowed_invites.findOneAndDelete({ code: code });
-            if (res == null) {
-                await command.replyOrFollowUp(`${this.wheatley.emoji.error} database update failed`, true);
-                return;
-            }
-            this.allowed_invites.delete(code);
-            await command.react(this.wheatley.emoji.success, true);
+    private async handle_add(command: TextBasedCommand, code: string) {
+        if (this.allowed_invites.has(code)) {
+            await command.react("🤷", true);
+            return;
         }
+        M.log("Adding ", code, " to allowed invites");
+        const server_info = await (await fetch(`https://discord.com/api/v10/invites/${code}`)).json();
+        if (server_info.code != code) {
+            await command.replyOrFollowUp(`${this.wheatley.emoji.error} not a valid invite`, true);
+            return;
+        }
+        if (server_info.expires != null) {
+            await command.replyOrFollowUp(`${this.wheatley.emoji.error} not a permanent invite`, true);
+            return;
+        }
+        const res = await this.database.allowed_invites.findOneAndUpdate(
+            { code: code },
+            {
+                $set: {
+                    code: code,
+                    guild_id: server_info.guild_id,
+                    guild_name: server_info.guild.name,
+                    guild_icon: server_info.guild.icon,
+                },
+            },
+            { upsert: true, returnDocument: "after" },
+        );
+        if (res == null) {
+            await command.replyOrFollowUp(`${this.wheatley.emoji.error} database update failed`, true);
+            return;
+        }
+        this.allowed_invites.add(code);
+        await command.replyOrFollowUp({
+            embeds: [AntiInviteLinks.build_guild_embed(res)],
+        });
+    }
+
+    private async handle_remove(command: TextBasedCommand, code: string) {
+        if (!this.allowed_invites.has(code)) {
+            await command.react("🤷", true);
+            return;
+        }
+        M.log("Removing ", code, " from allowed invites");
+        const res = await this.database.allowed_invites.findOneAndDelete({ code: code });
+        if (res == null) {
+            await command.replyOrFollowUp(`${this.wheatley.emoji.error} database update failed`, true);
+            return;
+        }
+        this.allowed_invites.delete(code);
+        await command.react(this.wheatley.emoji.success, true);
     }
 
     private async handle_list(command: TextBasedCommand) {
