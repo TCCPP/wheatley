@@ -64,7 +64,8 @@ export default class SkillRoleSuggestion extends BotComponent {
         );
 
         commands.add(
-            new TextBasedCommandBuilder("close-skill-suggestion-thread", "Admin utilities", EarlyReplyMode.ephemeral)
+            new TextBasedCommandBuilder("close-skill-suggestion-thread", EarlyReplyMode.ephemeral)
+                .set_category("Admin utilities")
                 .set_description("Closes a skill role suggestions thread")
                 .set_permissions(Discord.PermissionFlagsBits.BanMembers)
                 .set_handler(this.close_thread.bind(this)),

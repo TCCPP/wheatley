@@ -51,16 +51,15 @@ export class TextBasedCommandBuilder<
     descriptions!: ConditionalOptional<HasDescriptions, string[]>;
     options = new Discord.Collection<string, TextBasedCommandParameterOptions & { type: TextBasedCommandOptionType }>();
     slash_config: boolean[];
-    permissions: undefined | bigint = undefined;
-    category: CommandCategory;
+    permissions: bigint | undefined = undefined;
+    category: CommandCategory | undefined = undefined;
     subcommands: TextBasedCommandBuilder<any, true, true>[] = [];
     type: HasSubcommands extends true ? "top-level" : "default";
     allow_trailing_junk: boolean = false;
 
-    constructor(names: string | MoreThanOne<string>, category: CommandCategory, early_reply_mode: EarlyReplyMode) {
+    constructor(names: string | MoreThanOne<string>, early_reply_mode: EarlyReplyMode) {
         super();
         this.names = Array.isArray(names) ? names : [names];
-        this.category = category;
         this.early_reply_mode = early_reply_mode;
         this.slash_config = new Array(this.names.length).fill(true);
         this.type = "default" as any;
@@ -224,6 +223,11 @@ export class TextBasedCommandBuilder<
 
     set_permissions(permissions: bigint) {
         this.permissions = permissions;
+        return this;
+    }
+
+    set_category(category: CommandCategory) {
+        this.category = category;
         return this;
     }
 

@@ -29,7 +29,8 @@ export default class Modlogs extends BotComponent {
 
     override async setup(commands: CommandSetBuilder) {
         commands.add(
-            new TextBasedCommandBuilder("modlogs", "Moderation", EarlyReplyMode.visible)
+            new TextBasedCommandBuilder("modlogs", EarlyReplyMode.visible)
+                .set_category("Moderation")
                 .set_description("Get user moderation logs")
                 .set_permissions(Discord.PermissionFlagsBits.BanMembers)
                 .add_user_option({
@@ -41,7 +42,8 @@ export default class Modlogs extends BotComponent {
         );
 
         commands.add(
-            new TextBasedCommandBuilder("case", "Moderation", EarlyReplyMode.visible)
+            new TextBasedCommandBuilder("case", EarlyReplyMode.visible)
+                .set_category("Moderation")
                 .set_description("Get case info")
                 .set_permissions(Discord.PermissionFlagsBits.BanMembers)
                 .add_number_option({

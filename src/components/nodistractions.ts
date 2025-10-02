@@ -77,7 +77,8 @@ export default class Nodistractions extends BotComponent {
 
     override async setup(commands: CommandSetBuilder) {
         commands.add(
-            new TextBasedCommandBuilder("nodistractions", "Utility", EarlyReplyMode.ephemeral)
+            new TextBasedCommandBuilder("nodistractions", EarlyReplyMode.ephemeral)
+                .set_category("Utility")
                 .set_description("Turns on nodistractions")
                 .add_string_option({
                     title: "time",
@@ -88,7 +89,8 @@ export default class Nodistractions extends BotComponent {
         );
 
         commands.add(
-            new TextBasedCommandBuilder("removenodistractions", "Utility", EarlyReplyMode.ephemeral)
+            new TextBasedCommandBuilder("removenodistractions", EarlyReplyMode.ephemeral)
+                .set_category("Utility")
                 .set_description("Removes nodistractions")
                 .set_handler(this.removenodistractions.bind(this)),
         );

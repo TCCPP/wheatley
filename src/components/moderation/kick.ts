@@ -29,7 +29,8 @@ export default class Kick extends ModerationComponent {
     override async setup(commands: CommandSetBuilder) {
         await super.setup(commands);
         commands.add(
-            new TextBasedCommandBuilder("kick", "Moderation", EarlyReplyMode.visible)
+            new TextBasedCommandBuilder("kick", EarlyReplyMode.visible)
+                .set_category("Moderation")
                 .set_permissions(Discord.PermissionFlagsBits.KickMembers)
                 .set_description("Kick user")
                 .add_user_option({

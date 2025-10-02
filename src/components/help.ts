@@ -36,7 +36,8 @@ export default class Help extends BotComponent {
 
     override async setup(commands: CommandSetBuilder) {
         commands.add(
-            new TextBasedCommandBuilder("help", "Misc", EarlyReplyMode.none)
+            new TextBasedCommandBuilder("help", EarlyReplyMode.none)
+                .set_category("Misc")
                 .set_description("Bot help and info")
                 .set_handler(this.help.bind(this)),
         );
@@ -60,7 +61,7 @@ export default class Help extends BotComponent {
                 continue;
             }
 
-            const category = command_descriptor.category;
+            const category = command_descriptor.category ?? "Misc";
             if (category === "Hidden") {
                 continue;
             }

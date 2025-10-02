@@ -19,11 +19,12 @@ export default class VoiceDeputies extends BotComponent {
     override async setup(commands: CommandSetBuilder) {
         this.voice_hotline = await this.utilities.get_channel(this.wheatley.channels.voice_hotline);
         commands.add(
-            new TextBasedCommandBuilder("voice", "Misc", EarlyReplyMode.ephemeral)
+            new TextBasedCommandBuilder("voice", EarlyReplyMode.ephemeral)
+                .set_category("Misc")
                 .set_permissions(Discord.PermissionFlagsBits.MoveMembers | Discord.PermissionFlagsBits.MuteMembers)
                 .set_description("Voice moderation")
                 .add_subcommand(
-                    new TextBasedCommandBuilder("give", "Misc", EarlyReplyMode.ephemeral)
+                    new TextBasedCommandBuilder("give", EarlyReplyMode.ephemeral)
                         .set_description("Give voice")
                         .add_user_option({
                             description: "User to receive voice",
@@ -33,7 +34,7 @@ export default class VoiceDeputies extends BotComponent {
                         .set_handler(this.wrap_command_handler(this.on_give_voice.bind(this))),
                 )
                 .add_subcommand(
-                    new TextBasedCommandBuilder("take", "Misc", EarlyReplyMode.ephemeral)
+                    new TextBasedCommandBuilder("take", EarlyReplyMode.ephemeral)
                         .set_description("Take voice")
                         .add_user_option({
                             description: "User to lose voice",
@@ -43,7 +44,7 @@ export default class VoiceDeputies extends BotComponent {
                         .set_handler(this.wrap_command_handler(this.on_take_voice.bind(this))),
                 )
                 .add_subcommand(
-                    new TextBasedCommandBuilder("quarantine", "Misc", EarlyReplyMode.ephemeral)
+                    new TextBasedCommandBuilder("quarantine", EarlyReplyMode.ephemeral)
                         .set_description("Quarantine member")
                         .add_user_option({
                             description: "User to quarantine",

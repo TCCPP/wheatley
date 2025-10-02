@@ -27,7 +27,8 @@ export default class Mute extends ModerationComponent {
     override async setup(commands: CommandSetBuilder) {
         await super.setup(commands);
         commands.add(
-            new TextBasedCommandBuilder("mute", "Moderation", EarlyReplyMode.visible)
+            new TextBasedCommandBuilder("mute", EarlyReplyMode.visible)
+                .set_category("Moderation")
                 .set_permissions(Discord.PermissionFlagsBits.ModerateMembers)
                 .set_description("Mute user")
                 .add_user_option({
@@ -53,7 +54,8 @@ export default class Mute extends ModerationComponent {
         );
 
         commands.add(
-            new TextBasedCommandBuilder("unmute", "Moderation", EarlyReplyMode.visible)
+            new TextBasedCommandBuilder("unmute", EarlyReplyMode.visible)
+                .set_category("Moderation")
                 .set_permissions(Discord.PermissionFlagsBits.BanMembers)
                 .set_description("Unmute user")
                 .add_user_option({

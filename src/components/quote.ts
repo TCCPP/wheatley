@@ -39,7 +39,8 @@ type QuoteDescriptor = {
 export default class Quote extends BotComponent {
     override async setup(commands: CommandSetBuilder) {
         commands.add(
-            new TextBasedCommandBuilder(["quote", "quoteb"], "Utility", EarlyReplyMode.none)
+            new TextBasedCommandBuilder(["quote", "quoteb"], EarlyReplyMode.none)
+                .set_category("Utility")
                 .set_description(["Quote a message", "Quote a block of messages"])
                 .add_string_option({
                     title: "url",
