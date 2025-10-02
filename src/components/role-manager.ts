@@ -9,9 +9,7 @@ import { EarlyReplyMode, TextBasedCommandBuilder } from "../command-abstractions
 import { TextBasedCommand } from "../command-abstractions/text-based-command.js";
 import { skill_roles_order, skill_roles_order_id, Wheatley } from "../wheatley.js";
 import { set_interval } from "../utils/node.js";
-import { equal } from "../utils/arrays.js";
 import { build_description } from "../utils/strings.js";
-import { SelfClearingSet } from "../utils/containers.js";
 
 // Role cleanup
 // Auto-remove pink roles when members are no longer boosting
@@ -23,6 +21,9 @@ type user_role_entry = {
     last_known_skill_role: string | null;
 };
 
+type role_check = (member: Discord.GuildMember) => Promise<void>;
+type role_change_listener = (role_id: string, member: Discord.GuildMember) => Promise<void>;
+
 export default class RoleManager extends BotComponent {
     private skill_role_log!: Discord.TextChannel;
     private staff_member_log!: Discord.TextChannel;
@@ -30,10 +31,7 @@ export default class RoleManager extends BotComponent {
     interval: NodeJS.Timeout | null = null;
 
     // current database state
-    roles = new Map<string, string[]>();
-
-    // stores user id + role id encoded as a user_id,role_id string
-    debounce_map = new SelfClearingSet(MINUTE);
+    private roles = new Map<string, Set<string>>();
 
     // roles that will not be re-applied on join
     blacklisted_roles!: Set<string>;
@@ -41,6 +39,20 @@ export default class RoleManager extends BotComponent {
     private database = this.wheatley.database.create_proxy<{
         user_roles: user_role_entry;
     }>();
+
+    private role_checks: role_check[] = [];
+    private on_role_changed = new Map<string, role_change_listener[]>();
+
+    register_role_check(check: role_check) {
+        this.role_checks.push(check);
+    }
+
+    register_role_update_listener(role_id: string, listener: role_change_listener) {
+        if (!this.on_role_changed.has(role_id)) {
+            this.on_role_changed.set(role_id, []);
+        }
+        unwrap(this.on_role_changed.get(role_id)).push(listener);
+    }
 
     override async setup(commands: CommandSetBuilder) {
         this.skill_role_log = await this.utilities.get_channel(this.wheatley.channels.skill_role_log);
@@ -64,6 +76,10 @@ export default class RoleManager extends BotComponent {
     }
 
     override async on_ready() {
+        for await (const entry of this.database.user_roles.find()) {
+            this.roles.set(entry.user_id, new Set(entry.roles));
+        }
+
         this.blacklisted_roles = new Set([
             // general
             this.wheatley.roles.root.id,
@@ -91,35 +107,50 @@ export default class RoleManager extends BotComponent {
             this.wheatley.roles.linked_github.id,
         ]);
         this.pink_role = unwrap(await this.wheatley.guild.roles.fetch(this.wheatley.roles.pink.id));
-        this.interval = set_interval(() => {
+
+        this.register_role_check(this.check_pink.bind(this));
+        this.register_role_check(this.check_skill_roles.bind(this));
+        for (const id of skill_roles_order_id) {
+            this.register_role_update_listener(id, this.check_for_skill_role_bump.bind(this));
+        }
+
+        const check = () => {
             this.check_members().catch(this.wheatley.critical_error.bind(this.wheatley));
-        }, HOUR);
-        this.startup_recovery().catch(this.wheatley.critical_error.bind(this.wheatley));
+        };
+        check();
+        this.interval = set_interval(check, HOUR);
     }
 
     get_highest_skill_role(roles: string[]) {
         return skill_roles_order_id.filter(id => roles.includes(id)).at(-1) ?? null;
     }
 
-    async update_user_roles(member: Discord.GuildMember) {
-        const old_roles = this.roles.get(member.id) ?? [];
-        const current_roles = member.roles.cache.map(role => role.id);
-        if (!equal(old_roles, current_roles)) {
-            const skill_role = this.get_highest_skill_role(current_roles);
-            await this.database.user_roles.updateOne(
+    async check_member_roles(member: Discord.GuildMember) {
+        for (const check of this.role_checks) {
+            await check(member);
+        }
+        const old_roles = this.roles.get(member.id);
+        const current_roles = member.roles.cache;
+        const diff = old_roles?.symmetricDifference(current_roles);
+        if (diff === undefined || diff.size > 0) {
+            const role_ids = current_roles.map(role => role.id);
+            const skill_role = this.get_highest_skill_role(member.roles.cache.map(role => role.id));
+            await this.database.user_roles.findOneAndUpdate(
                 { user_id: member.id },
-                {
-                    $set: skill_role
-                        ? {
-                              roles: current_roles,
-                              last_known_skill_role: this.get_highest_skill_role(current_roles),
-                          }
-                        : {
-                              roles: current_roles,
-                          },
-                },
+                { $set: skill_role ? { roles: role_ids } : { roles: role_ids, last_known_skill_role: skill_role } },
                 { upsert: true },
             );
+            const new_roles = new Set(role_ids);
+            this.roles.set(member.id, new_roles);
+            const events = (diff ?? new_roles).intersection(this.on_role_changed);
+            for (const id of events) {
+                const listeners = this.on_role_changed.get(id);
+                if (listeners) {
+                    for (const listener of listeners) {
+                        await listener(id, member);
+                    }
+                }
+            }
         }
     }
 
@@ -146,7 +177,7 @@ export default class RoleManager extends BotComponent {
         await member.roles.remove(this.pink_role);
     }
 
-    async handle_pink(member: Discord.GuildMember) {
+    async check_pink(member: Discord.GuildMember) {
         if (member.roles.cache.some(role => role.id == this.wheatley.roles.pink.id)) {
             if (member.premiumSince == null) {
                 M.log("removing pink for", member.user.tag);
@@ -155,7 +186,7 @@ export default class RoleManager extends BotComponent {
         }
     }
 
-    async handle_skill_roles(member: Discord.GuildMember) {
+    async check_skill_roles(member: Discord.GuildMember) {
         const skill_roles = member.roles.cache.filter(role =>
             Object.values(this.wheatley.skill_roles).some(skill_role => role.id == skill_role.id),
         );
@@ -170,35 +201,26 @@ export default class RoleManager extends BotComponent {
         }
     }
 
-    async check_for_skill_role_bump(
-        old_member: Discord.GuildMember | Discord.PartialGuildMember,
-        new_member: Discord.GuildMember,
-    ) {
-        const roles_entry = await this.database.user_roles.findOne({ user_id: new_member.id });
+    async check_for_skill_role_bump(role_id: string, member: Discord.GuildMember) {
+        const roles_entry = await this.database.user_roles.findOne({ user_id: member.id });
         const last_known_skill_level =
             roles_entry && roles_entry.last_known_skill_role
                 ? this.wheatley.get_skill_role_index(roles_entry.last_known_skill_role)
                 : -1;
-        const current_skill_role = this.get_highest_skill_role(new_member.roles.cache.map(role => role.id));
+        const current_skill_role = this.get_highest_skill_role(member.roles.cache.map(role => role.id));
         const current_skill_level = current_skill_role ? this.wheatley.get_skill_role_index(current_skill_role) : -1;
         if (
             current_skill_level > skill_roles_order.indexOf("beginner") &&
             current_skill_level > last_known_skill_level
         ) {
             assert(current_skill_role);
-            const debounce_key = `${new_member.id},${current_skill_role}`;
-            // Updates are bumpy...
-            if (this.debounce_map.has(debounce_key)) {
-                return;
-            }
-            this.debounce_map.insert(debounce_key);
-            M.log("Detected skill level increase for", new_member.user.tag);
+            M.log("Detected skill level increase for", member.user.tag);
             await this.skill_role_log.send({
                 embeds: [
                     new Discord.EmbedBuilder()
                         .setAuthor({
-                            name: new_member.displayName,
-                            iconURL: new_member.displayAvatarURL(),
+                            name: member.displayName,
+                            iconURL: member.displayAvatarURL(),
                         })
                         .setColor(unwrap(await this.wheatley.guild.roles.fetch(current_skill_role)).color)
                         .setDescription(
@@ -209,12 +231,6 @@ export default class RoleManager extends BotComponent {
                 ],
             });
         }
-    }
-
-    async check_member_roles(member: Discord.GuildMember) {
-        await this.handle_pink(member);
-        await this.handle_skill_roles(member);
-        await this.update_user_roles(member);
     }
 
     async check_members() {
@@ -230,19 +246,10 @@ export default class RoleManager extends BotComponent {
         M.log("Finished role checks");
     }
 
-    async startup_recovery() {
-        const entries = await this.database.user_roles.find().toArray();
-        for (const entry of entries) {
-            this.roles.set(entry.user_id, entry.roles);
-        }
-        await this.check_members();
-    }
-
     override async on_guild_member_update(
         old_member: Discord.GuildMember | Discord.PartialGuildMember,
         new_member: Discord.GuildMember,
     ) {
-        await this.check_for_skill_role_bump(old_member, new_member);
         await this.check_member_roles(new_member);
     }
 
