@@ -2,35 +2,156 @@ import { strict as assert } from "assert";
 
 import * as Discord from "discord.js";
 
+import { M } from "../utils/debugging-and-logging.js";
 import { BotComponent } from "../bot-component.js";
 import { departialize } from "../utils/discord.js";
 import { CommandSetBuilder } from "../command-abstractions/command-set-builder.js";
+import { Wheatley } from "../wheatley.js";
+import { EarlyReplyMode, TextBasedCommandBuilder } from "../command-abstractions/text-based-command-builder.js";
+import { TextBasedCommand } from "../command-abstractions/text-based-command.js";
 
 const INVITE_RE =
     /(?:(?:discord(?:app)?|disboard)\.(?:gg|(?:com|org|me)\/(?:invite|server\/join))|(?<!\w)\.gg)\/(\S+)/i;
-
-const whitelist = [
-    "tccpp",
-    "python",
-    "csharp",
-    "bVTPVpYVcv", // cuda
-    "Eb7P3wH", // graphics
-];
 
 export function match_invite(content: string): string | null {
     const match = content.match(INVITE_RE);
     return match ? match[1] : null;
 }
 
+type allowed_invite_entry = {
+    code: string;
+    url: string;
+    guild_id: string;
+    guild_name: string;
+    icon_url?: string;
+};
+
 export default class AntiInviteLinks extends BotComponent {
-    static override get is_freestanding() {
-        return true;
-    }
+    private allowed_invites = new Set<string>();
 
     private staff_flag_log!: Discord.TextChannel;
 
+    private database = this.wheatley.database.create_proxy<{
+        allowed_invites: allowed_invite_entry;
+    }>();
+
     override async setup(commands: CommandSetBuilder) {
         this.staff_flag_log = await this.utilities.get_channel(this.wheatley.channels.staff_flag_log);
+
+        commands.add(
+            new TextBasedCommandBuilder("allowed-invites", EarlyReplyMode.ephemeral)
+                .set_category("Admin utilities")
+                .set_permissions(Discord.PermissionFlagsBits.ModerateMembers)
+                .set_description("manage allowed server invites")
+                .add_subcommand(
+                    new TextBasedCommandBuilder("add", EarlyReplyMode.ephemeral)
+                        .set_permissions(Discord.PermissionFlagsBits.Administrator)
+                        .set_description("add allowed invite code")
+                        .add_string_option({
+                            title: "code",
+                            description: "code to add",
+                            required: true,
+                        })
+                        .set_handler(this.handle_add.bind(this)),
+                )
+                .add_subcommand(
+                    new TextBasedCommandBuilder("remove", EarlyReplyMode.ephemeral)
+                        .set_permissions(Discord.PermissionFlagsBits.Administrator)
+                        .set_description("remove allowed invite code")
+                        .add_string_option({
+                            title: "code",
+                            description: "code to remove",
+                            required: true,
+                        })
+                        .set_handler(this.handle_remove.bind(this)),
+                )
+                .add_subcommand(
+                    new TextBasedCommandBuilder("list", EarlyReplyMode.ephemeral)
+                        .set_description("list all allowed server invites")
+                        .set_handler(this.handle_list.bind(this)),
+                ),
+        );
+    }
+
+    override async on_ready() {
+        this.allowed_invites = new Set((await this.database.allowed_invites.find().toArray()).map(e => e.code));
+    }
+
+    private static build_guild_embed(entry: allowed_invite_entry) {
+        return new Discord.EmbedBuilder()
+            .setAuthor({
+                name: entry.guild_name,
+                url: entry.url,
+                iconURL: entry.icon_url,
+            })
+            .setFooter({ text: entry.code });
+    }
+
+    private async handle_add(command: TextBasedCommand, code: string) {
+        try {
+            if (this.allowed_invites.has(code)) {
+                await command.react("🤷", true);
+                return;
+            }
+            M.log("Adding ", code, " to allowed invites");
+            const invite = await this.wheatley.client.fetchInvite(code);
+            if (invite.guild == null) {
+                throw Error("not a Guild invite");
+            }
+            if (invite.expiresAt != null) {
+                throw Error("not a permanent invite");
+            }
+            const res = await this.database.allowed_invites.findOneAndUpdate(
+                { code: code },
+                {
+                    $set: {
+                        code: code,
+                        url: invite.url,
+                        guild_id: invite.guild.id,
+                        guild_name: invite.guild.name,
+                        icon_url: invite.guild.iconURL() ?? undefined,
+                    },
+                },
+                { upsert: true, returnDocument: "after" },
+            );
+            if (res == null) {
+                throw Error("database update failed");
+            }
+            this.allowed_invites.add(code);
+            await command.replyOrFollowUp({
+                embeds: [AntiInviteLinks.build_guild_embed(res)],
+            });
+        } catch (e) {
+            await command.replyOrFollowUp(`${this.wheatley.emoji.error} ${e}`, true);
+        }
+    }
+
+    private async handle_remove(command: TextBasedCommand, code: string) {
+        if (!this.allowed_invites.has(code)) {
+            await command.react("🤷", true);
+            return;
+        }
+        M.log("Removing ", code, " from allowed invites");
+        const res = await this.database.allowed_invites.findOneAndDelete({ code: code });
+        if (res == null) {
+            await command.replyOrFollowUp(`${this.wheatley.emoji.error} database update failed`, true);
+            return;
+        }
+        this.allowed_invites.delete(code);
+        await command.react(this.wheatley.emoji.success, true);
+    }
+
+    private async handle_list(command: TextBasedCommand) {
+        const codes = await this.database.allowed_invites.find().toArray();
+        await command.replyOrFollowUp(
+            codes.length > 0
+                ? {
+                      embeds: codes.map(AntiInviteLinks.build_guild_embed),
+                  }
+                : {
+                      content: "📂 currently no allowed invites",
+                  },
+        );
     }
 
     async member_is_proficient_or_higher(member: Discord.GuildMember | null) {
@@ -54,7 +175,7 @@ export default class AntiInviteLinks extends BotComponent {
             return;
         }
         const match = match_invite(message.content);
-        if (match && !whitelist.includes(match) && !(await this.member_is_proficient_or_higher(message.member))) {
+        if (match && !this.allowed_invites.has(match) && !(await this.member_is_proficient_or_higher(message.member))) {
             const quote = await this.utilities.make_quote_embeds([message]);
             await message.delete();
             assert(!(message.channel instanceof Discord.PartialGroupDMChannel));
