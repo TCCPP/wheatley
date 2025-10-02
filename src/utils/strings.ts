@@ -159,3 +159,10 @@ export function debug_unicode(str: string) {
 export function truncate(str: string, length: number) {
     return str.length <= length ? str : str.slice(0, length - 3) + "...";
 }
+
+export function normalize_smart_punctuation(str: string) {
+    return str
+        .replace(/[\u2018\u2019]/g, "'") // smart single quotes
+        .replace(/[\u201C\u201D]/g, '"') // smart double quotes
+        .replace(/[\u2013\u2014]/g, "-"); // en-dash and em-dash
+}
