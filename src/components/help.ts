@@ -108,6 +108,11 @@ export default class Help extends BotComponent {
             }
         }
 
+        // Sort aliases alphabetically
+        for (const aliases of command_name_to_aliases.values()) {
+            aliases.sort((a, b) => a.localeCompare(b));
+        }
+
         // Second pass: build command map with aliases
         for (const command_descriptor of Object.values(all_commands)) {
             // If this command has subcommands, process them instead of the parent
@@ -189,6 +194,7 @@ export default class Help extends BotComponent {
         for (const category of Help.category_order) {
             if (categories_map.has(category)) {
                 const commands = unwrap(categories_map.get(category));
+                commands.sort((a, b) => a.info.localeCompare(b.info));
                 const value_parts: string[] = [];
 
                 for (const command of commands) {
@@ -207,6 +213,7 @@ export default class Help extends BotComponent {
         // TODO: Assert this doesn't happen...
         for (const [category, commands] of categories_map.entries()) {
             if (!Help.category_order.includes(category)) {
+                commands.sort((a, b) => a.info.localeCompare(b.info));
                 const value_parts: string[] = [];
                 for (const command of commands) {
                     value_parts.push(command.info);
