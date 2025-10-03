@@ -27,7 +27,7 @@ type allowed_invite_entry = {
 };
 
 export default class AntiInviteLinks extends BotComponent {
-    private allowed_invites = new Set<string>();
+    private allowed_guilds = new Set<string>();
 
     private staff_flag_log!: Discord.TextChannel;
 
@@ -74,7 +74,7 @@ export default class AntiInviteLinks extends BotComponent {
     }
 
     override async on_ready() {
-        this.allowed_invites = new Set((await this.database.allowed_invites.find().toArray()).map(e => e.code));
+        this.allowed_guilds = new Set((await this.database.allowed_invites.find().toArray()).map(e => e.guild_id));
     }
 
     private static build_guild_embed(entry: allowed_invite_entry) {
@@ -87,25 +87,18 @@ export default class AntiInviteLinks extends BotComponent {
             .setFooter({ text: entry.code });
     }
 
-    private async handle_add(command: TextBasedCommand, code: string) {
+    private async handle_add(command: TextBasedCommand, resolvable: Discord.InviteResolvable) {
         try {
-            if (this.allowed_invites.has(code)) {
-                await command.react("🤷", true);
-                return;
-            }
-            M.log("Adding ", code, " to allowed invites");
-            const invite = await this.wheatley.client.fetchInvite(code);
+            M.log("Adding ", resolvable, " to allowed invites");
+            const invite = await this.wheatley.client.fetchInvite(resolvable);
             if (invite.guild == null) {
                 throw Error("not a Guild invite");
             }
-            if (invite.expiresAt != null) {
-                throw Error("not a permanent invite");
-            }
             const res = await this.database.allowed_invites.findOneAndUpdate(
-                { code: code },
+                { code: invite.code },
                 {
                     $set: {
-                        code: code,
+                        code: invite.code,
                         url: invite.url,
                         guild_id: invite.guild.id,
                         guild_name: invite.guild.name,
@@ -115,9 +108,10 @@ export default class AntiInviteLinks extends BotComponent {
                 { upsert: true, returnDocument: "after" },
             );
             if (res == null) {
-                throw Error("database update failed");
+                await command.react("🤷", true);
+                return;
             }
-            this.allowed_invites.add(code);
+            this.allowed_guilds.add(res.guild_id);
             await command.replyOrFollowUp({
                 embeds: [AntiInviteLinks.build_guild_embed(res)],
             });
@@ -127,17 +121,13 @@ export default class AntiInviteLinks extends BotComponent {
     }
 
     private async handle_remove(command: TextBasedCommand, code: string) {
-        if (!this.allowed_invites.has(code)) {
-            await command.react("🤷", true);
-            return;
-        }
         M.log("Removing ", code, " from allowed invites");
         const res = await this.database.allowed_invites.findOneAndDelete({ code: code });
         if (res == null) {
-            await command.replyOrFollowUp(`${this.wheatley.emoji.error} database update failed`, true);
+            await command.react("🤷", true);
             return;
         }
-        this.allowed_invites.delete(code);
+        this.allowed_guilds.delete(res.guild_id);
         await command.react(this.wheatley.emoji.success, true);
     }
 
@@ -152,6 +142,18 @@ export default class AntiInviteLinks extends BotComponent {
                       content: "📂 currently no allowed invites",
                   },
         );
+    }
+
+    private async is_allowed(code: Discord.InviteResolvable) {
+        try {
+            const invite = await this.wheatley.client.fetchInvite(code);
+            if (invite.guild == null) {
+                return false;
+            }
+            return this.allowed_guilds.has(invite.guild.id);
+        } catch {
+            return false;
+        }
     }
 
     async member_is_proficient_or_higher(member: Discord.GuildMember | null) {
@@ -175,7 +177,7 @@ export default class AntiInviteLinks extends BotComponent {
             return;
         }
         const match = match_invite(message.content);
-        if (match && !this.allowed_invites.has(match) && !(await this.member_is_proficient_or_higher(message.member))) {
+        if (match && !(await this.is_allowed(match)) && !(await this.member_is_proficient_or_higher(message.member))) {
             const quote = await this.utilities.make_quote_embeds([message]);
             await message.delete();
             assert(!(message.channel instanceof Discord.PartialGroupDMChannel));
