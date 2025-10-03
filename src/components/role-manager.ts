@@ -22,7 +22,11 @@ type user_role_entry = {
 };
 
 type role_check = (member: Discord.GuildMember) => Promise<void>;
-type role_change_listener = (role_id: string, member: Discord.GuildMember) => Promise<void>;
+type role_update_callback = (member: Discord.GuildMember) => Promise<void>;
+type role_update_listener = {
+    roles_of_interest: Set<string>;
+    callback: role_update_callback;
+};
 
 export default class RoleManager extends BotComponent {
     private skill_role_log!: Discord.TextChannel;
@@ -41,17 +45,14 @@ export default class RoleManager extends BotComponent {
     }>();
 
     private role_checks: role_check[] = [];
-    private on_role_changed = new Map<string, role_change_listener[]>();
+    private role_update_listeners: role_update_listener[] = [];
 
     register_role_check(check: role_check) {
         this.role_checks.push(check);
     }
 
-    register_role_update_listener(role_id: string, listener: role_change_listener) {
-        if (!this.on_role_changed.has(role_id)) {
-            this.on_role_changed.set(role_id, []);
-        }
-        unwrap(this.on_role_changed.get(role_id)).push(listener);
+    register_role_update_listener(roles_of_interest: Set<string>, callback: role_update_callback) {
+        this.role_update_listeners.push({ roles_of_interest: roles_of_interest, callback: callback });
     }
 
     override async setup(commands: CommandSetBuilder) {
@@ -110,9 +111,7 @@ export default class RoleManager extends BotComponent {
 
         this.register_role_check(this.check_pink.bind(this));
         this.register_role_check(this.check_skill_roles.bind(this));
-        for (const id of skill_roles_order_id) {
-            this.register_role_update_listener(id, this.check_for_skill_role_bump.bind(this));
-        }
+        this.register_role_update_listener(new Set(skill_roles_order_id), this.check_for_skill_role_bump.bind(this));
 
         const check = () => {
             this.check_members().catch(this.wheatley.critical_error.bind(this.wheatley));
@@ -142,13 +141,9 @@ export default class RoleManager extends BotComponent {
             );
             const new_roles = new Set(role_ids);
             this.roles.set(member.id, new_roles);
-            const events = (diff ?? new_roles).intersection(this.on_role_changed);
-            for (const id of events) {
-                const listeners = this.on_role_changed.get(id);
-                if (listeners) {
-                    for (const listener of listeners) {
-                        await listener(id, member);
-                    }
+            for (const { roles_of_interest, callback } of this.role_update_listeners) {
+                if (!roles_of_interest.isDisjointFrom(diff ?? new_roles)) {
+                    await callback(member);
                 }
             }
         }
@@ -201,7 +196,7 @@ export default class RoleManager extends BotComponent {
         }
     }
 
-    async check_for_skill_role_bump(role_id: string, member: Discord.GuildMember) {
+    async check_for_skill_role_bump(member: Discord.GuildMember) {
         const roles_entry = await this.database.user_roles.findOne({ user_id: member.id });
         const last_known_skill_level =
             roles_entry && roles_entry.last_known_skill_role
