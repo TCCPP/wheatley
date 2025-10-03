@@ -12,6 +12,7 @@ import { CommandSetBuilder } from "../../../command-abstractions/command-set-bui
 import { Wheatley } from "../../../wheatley.js";
 import { EarlyReplyMode, TextBasedCommandBuilder } from "../../../command-abstractions/text-based-command-builder.js";
 import { TextBasedCommand } from "../../../command-abstractions/text-based-command.js";
+import { MessageContextMenuInteractionBuilder } from "../../../command-abstractions/context-menu.js";
 
 const star_threshold = 5;
 const other_threshold = 5;
@@ -139,6 +140,12 @@ export default class Starboard extends BotComponent {
                         .set_description("List starboard config")
                         .set_handler(this.list_config.bind(this)),
                 ),
+        );
+
+        commands.add(
+            new MessageContextMenuInteractionBuilder("Add to starboard")
+                .set_permissions(Discord.PermissionFlagsBits.Administrator)
+                .set_handler(this.add_to_starboard_context_menu.bind(this)),
         );
     }
 
@@ -575,5 +582,25 @@ export default class Starboard extends BotComponent {
                 `Repost emojis: ${this.repost_emojis.join(", ")}`,
             ].join("\n"),
         );
+    }
+
+    async add_to_starboard_context_menu(interaction: Discord.MessageContextMenuCommandInteraction) {
+        await interaction.deferReply({ ephemeral: true });
+
+        const message = interaction.targetMessage;
+
+        if (!(await this.is_valid_channel(message.channel))) {
+            await interaction.editReply("Cannot add messages from this channel to the starboard.");
+            return;
+        }
+
+        const existing_entry = await this.database.starboard_entries.findOne({ message: message.id });
+        if (existing_entry) {
+            await interaction.editReply("This message is already on the starboard.");
+            return;
+        }
+
+        await this.update_starboard(message);
+        await interaction.editReply("Message added to the starboard.");
     }
 }
