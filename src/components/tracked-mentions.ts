@@ -12,13 +12,13 @@ import { Staff_notification_button_helper, Staff_notification_buttons } from "..
  * Tracks certain mentions, such as mentions of root, moderators, Wheatley, etc.
  */
 export default class TrackedMentions extends BotComponent {
-    private staff_action_log!: Discord.TextChannel;
+    private flag_log!: Discord.TextChannel;
     tracked_mentions!: Set<string>;
     private buttons!: Staff_notification_buttons;
     private button_helper = new Staff_notification_button_helper();
 
     override async setup(commands: CommandSetBuilder) {
-        this.staff_action_log = await this.utilities.get_channel(this.wheatley.channels.staff_action_log);
+        this.flag_log = await this.utilities.get_channel(this.wheatley.channels.staff_flag_log);
 
         this.buttons = this.button_helper.register_buttons(commands, "tracked-mention", {
             handling: this.handling_handler.bind(this),
@@ -61,7 +61,7 @@ export default class TrackedMentions extends BotComponent {
                 })
                 .setTimestamp();
             const row = this.button_helper.create_standard_action_row(this.buttons);
-            await this.staff_action_log.send({ embeds: [embed], components: [row] });
+            await this.flag_log.send({ embeds: [embed], components: [row] });
         }
     }
 
