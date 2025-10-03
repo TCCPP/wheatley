@@ -14,6 +14,8 @@ import * as util from "util";
 import { M } from "../utils/debugging-and-logging.js";
 import { Wheatley } from "../wheatley.js";
 
+const global_context_menu_limit = 5;
+
 export class CommandSetBuilder {
     commands: (Discord.SlashCommandBuilder | Discord.ContextMenuCommandBuilder)[] = [];
     text_commands: Record<string, BotTextBasedCommand<unknown[]>> = {};
@@ -83,17 +85,57 @@ export class CommandSetBuilder {
     async finalize(token: string) {
         try {
             const rest = new REST({ version: "10" }).setToken(token);
-            const route = this.wheatley.freestanding
-                ? Discord.Routes.applicationGuildCommands(this.wheatley.user.id, this.wheatley.guild.id)
-                : Discord.Routes.applicationCommands(this.wheatley.user.id);
+            if (this.wheatley.freestanding) {
+                const route = Discord.Routes.applicationGuildCommands(this.wheatley.user.id, this.wheatley.guild.id);
+                this.wheatley.info(`Registering ${this.commands.length} application commands to guild`);
+                M.log(
+                    "Sending application commands to guild:",
+                    this.commands.length,
+                    this.commands.map(builder => builder.name),
+                );
+                await rest.put(route, { body: this.commands });
+            } else {
+                const slash_commands = this.commands.filter(cmd => cmd instanceof Discord.SlashCommandBuilder);
+                const context_menu_commands = this.commands.filter(
+                    cmd => cmd instanceof Discord.ContextMenuCommandBuilder,
+                );
 
-            this.wheatley.info(`Registering ${this.commands.length} application commands`);
-            M.log(
-                "Sending application commands:",
-                this.commands.length,
-                this.commands.map(builder => builder.name),
-            );
-            await rest.put(route, { body: this.commands });
+                const global_context_menu_commands = context_menu_commands.slice(0, global_context_menu_limit);
+                const guild_context_menu_commands = context_menu_commands.slice(global_context_menu_limit);
+
+                const global_commands = [...slash_commands, ...global_context_menu_commands];
+
+                this.wheatley.info(
+                    `Registering ${global_commands.length} commands globally ` +
+                        `(${slash_commands.length} slash, ${global_context_menu_commands.length} context menu) and ` +
+                        `${guild_context_menu_commands.length} context menu commands to guild`,
+                );
+
+                if (global_commands.length > 0) {
+                    M.log(
+                        "Sending commands globally:",
+                        global_commands.length,
+                        global_commands.map(builder => builder.name),
+                    );
+                    await rest.put(Discord.Routes.applicationCommands(this.wheatley.user.id), {
+                        body: global_commands,
+                    });
+                }
+
+                if (guild_context_menu_commands.length > 0) {
+                    M.log(
+                        "Sending context menu commands to guild:",
+                        guild_context_menu_commands.length,
+                        guild_context_menu_commands.map(builder => builder.name),
+                    );
+                    await rest.put(
+                        Discord.Routes.applicationGuildCommands(this.wheatley.user.id, this.wheatley.guild.id),
+                        {
+                            body: guild_context_menu_commands,
+                        },
+                    );
+                }
+            }
             M.log("Finished sending commands");
             return {
                 text_commands: this.text_commands,
