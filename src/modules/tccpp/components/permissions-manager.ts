@@ -364,7 +364,7 @@ export default class PermissionManager extends BotComponent {
                     `with category ${category.id} ${category.name}`,
             );
             await channel.permissionOverwrites.set(
-                Object.entries(this.channel_overrides[channel.id].permissions).map(([id, permissions]) => ({
+                Object.entries(this.channel_overrides[channel.id]).map(([id, permissions]) => ({
                     id,
                     ...permissions,
                 })),
