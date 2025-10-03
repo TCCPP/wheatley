@@ -90,63 +90,55 @@ export default class Starboard extends BotComponent {
         this.staff_flag_log = await this.utilities.get_channel(this.wheatley.channels.staff_flag_log);
 
         commands.add(
-            new TextBasedCommandBuilder("add-negative-emoji", EarlyReplyMode.visible)
+            new TextBasedCommandBuilder("starboard-manage", EarlyReplyMode.visible)
                 .set_category("Admin utilities")
-                .set_description("Register a negative emoji")
-                .add_string_option({
-                    title: "emojis",
-                    description: "emojis",
-                    required: true,
-                })
+                .set_description("Manage starboard configuration")
                 .set_permissions(Discord.PermissionFlagsBits.Administrator)
-                .set_handler(this.add_negative_emoji.bind(this)),
-        );
-
-        commands.add(
-            new TextBasedCommandBuilder("add-delete-emoji", EarlyReplyMode.visible)
-                .set_category("Admin utilities")
-                .set_description("Register a delete emoji")
-                .add_string_option({
-                    title: "emojis",
-                    description: "emojis",
-                    required: true,
-                })
-                .set_permissions(Discord.PermissionFlagsBits.Administrator)
-                .set_handler(this.add_delete_emoji.bind(this)),
-        );
-
-        commands.add(
-            new TextBasedCommandBuilder("add-ignored-emoji", EarlyReplyMode.visible)
-                .set_category("Admin utilities")
-                .set_description("Register an ignored emoji")
-                .add_string_option({
-                    title: "emojis",
-                    description: "emojis",
-                    required: true,
-                })
-                .set_permissions(Discord.PermissionFlagsBits.Administrator)
-                .set_handler(this.add_ignored_emoji.bind(this)),
-        );
-
-        commands.add(
-            new TextBasedCommandBuilder("add-repost-emoji", EarlyReplyMode.visible)
-                .set_category("Admin utilities")
-                .set_description("Register a repost emoji")
-                .add_string_option({
-                    title: "emojis",
-                    description: "emojis",
-                    required: true,
-                })
-                .set_permissions(Discord.PermissionFlagsBits.Administrator)
-                .set_handler(this.add_repost_emoji.bind(this)),
-        );
-
-        commands.add(
-            new TextBasedCommandBuilder("list-starboard-config", EarlyReplyMode.visible)
-                .set_category("Admin utilities")
-                .set_description("List starboard config")
-                .set_permissions(Discord.PermissionFlagsBits.Administrator)
-                .set_handler(this.list_config.bind(this)),
+                .add_subcommand(
+                    new TextBasedCommandBuilder("add-negative-emoji", EarlyReplyMode.visible)
+                        .set_description("Register a negative emoji")
+                        .add_string_option({
+                            title: "emojis",
+                            description: "emojis",
+                            required: true,
+                        })
+                        .set_handler(this.add_negative_emoji.bind(this)),
+                )
+                .add_subcommand(
+                    new TextBasedCommandBuilder("add-delete-emoji", EarlyReplyMode.visible)
+                        .set_description("Register a delete emoji")
+                        .add_string_option({
+                            title: "emojis",
+                            description: "emojis",
+                            required: true,
+                        })
+                        .set_handler(this.add_delete_emoji.bind(this)),
+                )
+                .add_subcommand(
+                    new TextBasedCommandBuilder("add-ignored-emoji", EarlyReplyMode.visible)
+                        .set_description("Register an ignored emoji")
+                        .add_string_option({
+                            title: "emojis",
+                            description: "emojis",
+                            required: true,
+                        })
+                        .set_handler(this.add_ignored_emoji.bind(this)),
+                )
+                .add_subcommand(
+                    new TextBasedCommandBuilder("add-repost-emoji", EarlyReplyMode.visible)
+                        .set_description("Register a repost emoji")
+                        .add_string_option({
+                            title: "emojis",
+                            description: "emojis",
+                            required: true,
+                        })
+                        .set_handler(this.add_repost_emoji.bind(this)),
+                )
+                .add_subcommand(
+                    new TextBasedCommandBuilder("list-config", EarlyReplyMode.visible)
+                        .set_description("List starboard config")
+                        .set_handler(this.list_config.bind(this)),
+                ),
         );
     }
 
