@@ -5,15 +5,9 @@ import { unwrap } from "../utils/misc.js";
 import { M } from "../utils/debugging-and-logging.js";
 import { BotComponent } from "../bot-component.js";
 import { CommandSetBuilder } from "../command-abstractions/command-set-builder.js";
-import { EarlyReplyMode, TextBasedCommandBuilder } from "../command-abstractions/text-based-command-builder.js";
-import { TextBasedCommand } from "../command-abstractions/text-based-command.js";
 import { skill_roles_order, skill_roles_order_id, Wheatley } from "../wheatley.js";
 import { set_interval } from "../utils/node.js";
 import { build_description } from "../utils/strings.js";
-
-// Role cleanup
-// Auto-remove pink roles when members are no longer boosting
-// Auto-remove duplicate skill roles
 
 type user_role_entry = {
     user_id: string;
@@ -31,7 +25,6 @@ type role_update_listener = {
 export default class RoleManager extends BotComponent {
     private skill_role_log!: Discord.TextChannel;
     private staff_member_log!: Discord.TextChannel;
-    pink_role!: Discord.Role;
     interval: NodeJS.Timeout | null = null;
 
     // current database state
@@ -58,22 +51,6 @@ export default class RoleManager extends BotComponent {
     override async setup(commands: CommandSetBuilder) {
         this.skill_role_log = await this.utilities.get_channel(this.wheatley.channels.skill_role_log);
         this.staff_member_log = await this.utilities.get_channel(this.wheatley.channels.staff_member_log);
-
-        commands.add(
-            new TextBasedCommandBuilder("gimmepink", EarlyReplyMode.ephemeral)
-                .set_category("Misc")
-                .set_description("Gives pink")
-                .set_slash(false)
-                .set_handler(this.gibpink.bind(this)),
-        );
-
-        commands.add(
-            new TextBasedCommandBuilder("unpink", EarlyReplyMode.ephemeral)
-                .set_category("Misc")
-                .set_description("Takes pink")
-                .set_slash(false)
-                .set_handler(this.unpink.bind(this)),
-        );
     }
 
     override async on_ready() {
@@ -107,9 +84,7 @@ export default class RoleManager extends BotComponent {
             this.wheatley.roles.herald.id,
             this.wheatley.roles.linked_github.id,
         ]);
-        this.pink_role = unwrap(await this.wheatley.guild.roles.fetch(this.wheatley.roles.pink.id));
 
-        this.register_role_check(this.check_pink.bind(this));
         this.register_role_check(this.check_skill_roles.bind(this));
         this.register_role_update_listener(new Set(skill_roles_order_id), this.check_for_skill_role_bump.bind(this));
 
@@ -145,38 +120,6 @@ export default class RoleManager extends BotComponent {
                 if (!roles_of_interest.isDisjointFrom(diff ?? new_roles)) {
                     await callback(member);
                 }
-            }
-        }
-    }
-
-    async gibpink(command: TextBasedCommand) {
-        const member = await command.get_member(this.wheatley.guild);
-        if (member.premiumSince == null) {
-            await command.reply("Nice try.", true, true);
-            return;
-        }
-        if (member.roles.cache.some(r => r.id == this.pink_role.id)) {
-            await command.reply("You are currently pink", true, true);
-            return;
-        }
-        await member.roles.add(this.pink_role);
-        await command.reply("You are now pink", true, true);
-    }
-
-    async unpink(command: TextBasedCommand) {
-        const member = await command.get_member(this.wheatley.guild);
-        if (!member.roles.cache.some(r => r.id == this.pink_role.id)) {
-            await command.reply("You are not currently pink", true, true);
-            return;
-        }
-        await member.roles.remove(this.pink_role);
-    }
-
-    async check_pink(member: Discord.GuildMember) {
-        if (member.roles.cache.some(role => role.id == this.wheatley.roles.pink.id)) {
-            if (member.premiumSince == null) {
-                M.log("removing pink for", member.user.tag);
-                await member.roles.remove(this.pink_role);
             }
         }
     }
