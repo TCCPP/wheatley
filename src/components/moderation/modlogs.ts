@@ -17,6 +17,7 @@ import { remove } from "../../utils/arrays.js";
 import { moderation_entry } from "./schemata.js";
 import { discord_timestamp } from "../../utils/discord.js";
 import { unwrap } from "../../utils/misc.js";
+import LinkedAccounts from "../linked-accounts.js";
 
 const moderations_per_page = 5;
 
@@ -26,8 +27,10 @@ export default class Modlogs extends BotComponent {
     }>();
 
     private modlogs_page_button!: BotButton<[string, number]>;
+    private linked_accounts!: LinkedAccounts;
 
     override async setup(commands: CommandSetBuilder) {
+        this.linked_accounts = unwrap(this.wheatley.components.get("LinkedAccounts")) as LinkedAccounts;
         commands.add(
             new TextBasedCommandBuilder("modlogs", EarlyReplyMode.visible)
                 .set_category("Moderation")
@@ -155,8 +158,10 @@ export default class Modlogs extends BotComponent {
         page: number,
         show_private_logs = false,
     ): Promise<Discord.BaseMessageOptions & CommandAbstractionReplyOptions> {
-        // TODO: Expunged or irrelevant? Show how things were removed / why?
-        const query: mongo.Filter<moderation_entry> = { user: user.id, expunged: null };
+        const linked_accounts = await this.linked_accounts.get_all_linked_accounts(user.id);
+        const all_user_ids = [user.id, ...Array.from(linked_accounts)];
+
+        const query: mongo.Filter<moderation_entry> = { user: { $in: all_user_ids }, expunged: null };
         if (!show_private_logs) {
             query.type = { $ne: "note" };
         }
@@ -184,18 +189,32 @@ export default class Modlogs extends BotComponent {
                     .setStyle(Discord.ButtonStyle.Primary),
             );
         }
+        const has_linked_accounts = linked_accounts.size > 0;
+        const title_suffix = has_linked_accounts && show_private_logs ? " & Linked Accounts" : "";
+        const description_parts = [`<@${user.id}>`];
+        if (has_linked_accounts && show_private_logs) {
+            const account_mentions = Array.from(linked_accounts)
+                .map(id => `<@${id}>`)
+                .join(", ");
+            description_parts.push(`**Linked Accounts (${linked_accounts.size}):** ${account_mentions}`);
+        }
+
         return {
             embeds: [
                 new Discord.EmbedBuilder()
-                    .setTitle(`Modlogs for ${user.displayName} (page ${page + 1} of ${pages})`)
+                    .setTitle(`Modlogs for ${user.displayName}${title_suffix} (page ${page + 1} of ${pages})`)
                     .setColor(colors.wheatley)
-                    .setDescription(`<@${user.id}>`)
+                    .setDescription(build_description(...description_parts))
                     .setFields(
                         moderations
                             .slice(page * moderations_per_page, (page + 1) * moderations_per_page)
                             .map(moderation => {
+                                const case_label =
+                                    has_linked_accounts && moderation.user !== user.id
+                                        ? `Case ${moderation.case_number} (<@${moderation.user}>)`
+                                        : `Case ${moderation.case_number}`;
                                 return {
-                                    name: `Case ${moderation.case_number}`,
+                                    name: case_label,
                                     value: Modlogs.moderation_description(moderation, true, show_private_logs),
                                 };
                             }),
