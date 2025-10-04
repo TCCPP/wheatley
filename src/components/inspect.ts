@@ -121,7 +121,7 @@ export default class Inspect extends BotComponent {
             command_object,
             message.content.length > 0 ? escape_discord(message.content) : "<empty>",
             true,
-            Discord.MessageFlags.SuppressEmbeds,
+            { flags: Discord.MessageFlags.SuppressEmbeds },
         );
         if (message.attachments.size > 0) {
             await command_object.followUp({

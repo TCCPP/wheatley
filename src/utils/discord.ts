@@ -393,14 +393,12 @@ export async function send_long_response_markdown_aware(
     command_object: Discord.MessageContextMenuCommandInteraction | TextBasedCommand,
     msg: string,
     ephemeral_if_possible = false,
-    flags?: Discord.MessageFlags.SuppressEmbeds,
-    extra_options?: Omit<Discord.InteractionReplyOptions, "content" | "ephemeral" | "flags">,
+    extra_options?: Omit<Discord.InteractionReplyOptions, "content" | "ephemeral" | "components">,
 ): Promise<void> {
     const chunks = split_message_markdown_aware(msg);
-
+    const { files, embeds, ...rest_options } = extra_options ?? {};
     for (let i = 0; i < chunks.length; i++) {
         const is_last = i === chunks.length - 1;
-
         await (
             command_object.replied &&
             (command_object instanceof Discord.MessageContextMenuCommandInteraction || !command_object.is_editing)
@@ -410,8 +408,8 @@ export async function send_long_response_markdown_aware(
             ephemeral: ephemeral_if_possible,
             ephemeral_if_possible,
             content: chunks[i],
-            flags,
-            ...(is_last ? extra_options : { allowedMentions: extra_options?.allowedMentions }),
+            ...rest_options,
+            ...(is_last ? { files, embeds } : {}),
         });
     }
 }
