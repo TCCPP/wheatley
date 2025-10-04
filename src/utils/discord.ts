@@ -218,31 +218,149 @@ export function split_message_markdown_aware(content: string, limit = 2000): str
     const ast = parser.parse(content);
     const chunks: string[] = [];
     let current_chunk = "";
-    let open_code_block: { language: string } | null = null;
 
-    const add_to_chunk = (text: string) => {
-        if (current_chunk.length + text.length <= limit) {
-            current_chunk += text;
+    type add_context = {
+        wrap_open?: string;
+        wrap_close?: string;
+        continuation_prefix?: string;
+    };
+
+    const INLINE_FORMATS: Record<string, string> = {
+        italics: "*",
+        bold: "**",
+        underline: "__",
+        strikethrough: "~~",
+        spoiler: "||",
+    };
+
+    const BLOCK_PATTERNS = ["> ", "-# ", "# ", "## ", "### ", "#### ", "##### ", "###### "];
+
+    const split_on_word_boundary = (text: string, max_length: number): string => {
+        if (text.length <= max_length) {
+            return text;
+        }
+        let split_pos = max_length;
+        while (split_pos > 0 && text[split_pos] !== " ") {
+            split_pos--;
+        }
+        if (split_pos === 0) {
+            return text.substring(0, max_length);
+        }
+
+        const before_split = text.substring(0, split_pos);
+        for (const pattern of BLOCK_PATTERNS) {
+            const pattern_pos = before_split.lastIndexOf(" " + pattern);
+            if (pattern_pos !== -1 && pattern_pos > split_pos - 20) {
+                split_pos = pattern_pos;
+                break;
+            }
+        }
+
+        return text.substring(0, split_pos);
+    };
+
+    const flush_chunk = () => {
+        if (current_chunk.length > 0) {
+            chunks.push(current_chunk);
+            current_chunk = "";
+        }
+    };
+
+    const get_block_pattern_prefix = (text: string): string => {
+        for (const pattern of BLOCK_PATTERNS) {
+            if (text.startsWith(pattern)) {
+                return pattern;
+            }
+        }
+        return "";
+    };
+
+    const add_with_context = (text: string, context: add_context = {}) => {
+        const { wrap_open = "", wrap_close = "", continuation_prefix = "" } = context;
+        const full_text = wrap_open + text + wrap_close;
+
+        if (current_chunk.length + full_text.length <= limit) {
+            current_chunk += full_text;
+            return;
+        }
+
+        if (current_chunk.length > 0) {
+            const overhead = wrap_open.length + wrap_close.length;
+            const available = limit - current_chunk.length - overhead;
+
+            if (available > 0) {
+                const first_part = split_on_word_boundary(text, available);
+                if (first_part.length > 0) {
+                    current_chunk += wrap_open + first_part + wrap_close;
+                    flush_chunk();
+                    let remaining = text.substring(first_part.length).trimStart();
+                    if (remaining.length > 0) {
+                        const block_prefix = get_block_pattern_prefix(text);
+                        if (block_prefix && !remaining.startsWith(block_prefix)) {
+                            remaining = block_prefix + remaining;
+                        }
+                        add_with_context(continuation_prefix + remaining, context);
+                    }
+                    return;
+                }
+            }
+            flush_chunk();
+        }
+
+        if (full_text.length <= limit) {
+            current_chunk = full_text;
         } else {
-            const remaining_space = limit - current_chunk.length;
-            if (remaining_space > 0) {
-                current_chunk += text.substring(0, remaining_space);
-                chunks.push(current_chunk);
-                current_chunk = "";
-                add_to_chunk(text.substring(remaining_space));
-            } else {
-                chunks.push(current_chunk);
-                current_chunk = "";
-                add_to_chunk(text);
+            const overhead = wrap_open.length + wrap_close.length;
+            const available = limit - overhead;
+            const first_part = split_on_word_boundary(text, available);
+            current_chunk = wrap_open + first_part + wrap_close;
+            flush_chunk();
+            let remaining = text.substring(first_part.length).trimStart();
+            if (remaining.length > 0) {
+                const block_prefix = get_block_pattern_prefix(text);
+                if (block_prefix && !remaining.startsWith(block_prefix)) {
+                    remaining = block_prefix + remaining;
+                }
+                add_with_context(continuation_prefix + remaining, context);
             }
         }
     };
 
-    const close_code_block_if_needed = () => {
-        if (open_code_block !== null) {
-            add_to_chunk("\n```");
-            chunks.push(current_chunk);
-            current_chunk = `\`\`\`${open_code_block.language}\n`;
+    const render_node_to_string = (node: markdown_node, indent = ""): string => {
+        switch (node.type) {
+            case "plain":
+                return node.content;
+            case "inline_code":
+                return `\`${node.content}\``;
+            case "italics":
+                return `*${render_node_to_string(node.content, indent)}*`;
+            case "bold":
+                return `**${render_node_to_string(node.content, indent)}**`;
+            case "underline":
+                return `__${render_node_to_string(node.content, indent)}__`;
+            case "strikethrough":
+                return `~~${render_node_to_string(node.content, indent)}~~`;
+            case "spoiler":
+                return `||${render_node_to_string(node.content, indent)}||`;
+            case "masked_link":
+                return `[${render_node_to_string(node.content, indent)}](${node.target})`;
+            case "header":
+                return `${"#".repeat(node.level)} ${render_node_to_string(node.content, indent)}`;
+            case "blockquote":
+                return `> ${render_node_to_string(node.content, indent)}`;
+            case "subtext":
+                return `-# ${render_node_to_string(node.content, indent)}`;
+            case "list":
+                return node.items
+                    .map((item, i) => {
+                        const prefix = node.start_number ? `${node.start_number + i}. ` : "- ";
+                        return indent + prefix + render_node_to_string(item, indent + "  ");
+                    })
+                    .join("");
+            case "doc":
+                return node.content.map(child => render_node_to_string(child, indent)).join("");
+            default:
+                throw new Error(`Cannot render node type: ${(node as markdown_node).type}`);
         }
     };
 
@@ -251,116 +369,109 @@ export function split_message_markdown_aware(content: string, limit = 2000): str
             case "doc":
                 node.content.forEach(process_node);
                 break;
-            case "code_block": {
-                close_code_block_if_needed();
-                const language = node.language ?? "";
-                const lines = node.content.split("\n");
-                open_code_block = { language };
-                add_to_chunk(`\`\`\`${language}\n`);
-
-                for (let i = 0; i < lines.length; i++) {
-                    const line = lines[i];
-                    const line_with_newline = i < lines.length - 1 ? line + "\n" : line;
-
-                    if (current_chunk.length + line_with_newline.length + 4 > limit) {
-                        add_to_chunk("\n```");
-                        chunks.push(current_chunk);
-                        current_chunk = `\`\`\`${language}\n${line_with_newline}`;
-                    } else {
-                        add_to_chunk(line_with_newline);
-                    }
-                }
-
-                add_to_chunk("\n```");
-                open_code_block = null;
-                break;
-            }
-            case "inline_code":
-                close_code_block_if_needed();
-                add_to_chunk(`\`${node.content}\``);
-                break;
             case "plain":
-                close_code_block_if_needed();
-                add_to_chunk(node.content);
+                add_with_context(node.content);
+                break;
+            case "inline_code":
+                add_with_context(node.content, { wrap_open: "`", wrap_close: "`" });
                 break;
             case "italics":
-                close_code_block_if_needed();
-                add_to_chunk("*");
-                process_node(node.content);
-                add_to_chunk("*");
-                break;
             case "bold":
-                close_code_block_if_needed();
-                add_to_chunk("**");
-                process_node(node.content);
-                add_to_chunk("**");
-                break;
             case "underline":
-                close_code_block_if_needed();
-                add_to_chunk("__");
-                process_node(node.content);
-                add_to_chunk("__");
-                break;
             case "strikethrough":
-                close_code_block_if_needed();
-                add_to_chunk("~~");
-                process_node(node.content);
-                add_to_chunk("~~");
+            case "spoiler": {
+                const marker = INLINE_FORMATS[node.type];
+                const content_text = render_node_to_string(node.content);
+                add_with_context(content_text, { wrap_open: marker, wrap_close: marker });
                 break;
-            case "spoiler":
-                close_code_block_if_needed();
-                add_to_chunk("||");
-                process_node(node.content);
-                add_to_chunk("||");
-                break;
-            case "masked_link":
-                close_code_block_if_needed();
-                add_to_chunk("[");
-                process_node(node.content);
-                add_to_chunk(`](${node.target})`);
-                break;
-            case "header":
-                close_code_block_if_needed();
-                add_to_chunk("#".repeat(node.level) + " ");
-                process_node(node.content);
-                add_to_chunk("\n");
-                break;
-            case "blockquote":
-                close_code_block_if_needed();
-                add_to_chunk("> ");
-                process_node(node.content);
-                add_to_chunk("\n");
-                break;
-            case "subtext":
-                close_code_block_if_needed();
-                add_to_chunk("-# ");
-                process_node(node.content);
-                add_to_chunk("\n");
-                break;
-            case "list":
-                close_code_block_if_needed();
-                for (let i = 0; i < node.items.length; i++) {
-                    if (node.start_number) {
-                        add_to_chunk(`${node.start_number + i}. `);
-                    } else {
-                        add_to_chunk("- ");
-                    }
-                    process_node(node.items[i]);
-                    add_to_chunk("\n");
+            }
+            case "masked_link": {
+                const link_text = render_node_to_string(node.content);
+                const full_link = `[${link_text}](${node.target})`;
+                if (current_chunk.length + full_link.length <= limit) {
+                    current_chunk += full_link;
+                } else {
+                    add_with_context(link_text, {
+                        wrap_open: "[",
+                        wrap_close: `](${node.target})`,
+                    });
                 }
                 break;
+            }
+            case "header":
+            case "blockquote":
+            case "subtext": {
+                const prefix_map: Record<string, string> = {
+                    header: "#".repeat((node as any).level) + " ",
+                    blockquote: "> ",
+                    subtext: "-# ",
+                };
+                const prefix = prefix_map[node.type];
+                const content_text = render_node_to_string(node.content);
+                const full_text = prefix + content_text + "\n";
+
+                if (current_chunk.length + full_text.length <= limit) {
+                    current_chunk += full_text;
+                } else {
+                    add_with_context(content_text, { wrap_open: prefix, wrap_close: "" });
+                }
+                break;
+            }
+            case "code_block": {
+                const language = node.language ?? "";
+                const lines = node.content.split("\n");
+                const code_open = `\`\`\`${language}\n`;
+                const code_close = "\n```";
+
+                if (current_chunk.length + code_open.length + node.content.length + code_close.length <= limit) {
+                    current_chunk += code_open + node.content + code_close;
+                } else {
+                    flush_chunk();
+                    let code_chunk = code_open;
+
+                    for (let i = 0; i < lines.length; i++) {
+                        const line = lines[i] + (i < lines.length - 1 ? "\n" : "");
+                        if (code_chunk.length + line.length + code_close.length > limit) {
+                            code_chunk += code_close;
+                            chunks.push(code_chunk);
+                            code_chunk = code_open + line;
+                        } else {
+                            code_chunk += line;
+                        }
+                    }
+                    current_chunk = code_chunk + code_close;
+                }
+                break;
+            }
+            case "list": {
+                for (let i = 0; i < node.items.length; i++) {
+                    const prefix = node.start_number ? `${node.start_number + i}. ` : "- ";
+                    const item_text = prefix + render_node_to_string(node.items[i], "  ");
+
+                    if (current_chunk.length + item_text.length <= limit) {
+                        current_chunk += item_text;
+                    } else if (current_chunk.length > 0) {
+                        flush_chunk();
+                        if (item_text.length <= limit) {
+                            current_chunk = item_text;
+                        } else {
+                            add_with_context(item_text);
+                        }
+                    } else {
+                        add_with_context(item_text);
+                    }
+                }
+                break;
+            }
             default:
                 throw new Error(`Unhandled markdown node type: ${(node as markdown_node).type}`);
         }
     };
 
     process_node(ast);
+    flush_chunk();
 
-    if (current_chunk.length > 0) {
-        chunks.push(current_chunk);
-    }
-
-    return chunks;
+    return chunks.filter(chunk => chunk.length > 0);
 }
 
 export async function send_long_message_markdown_aware(

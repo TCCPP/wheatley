@@ -211,4 +211,74 @@ describe("split_message_markdown_aware", () => {
         expect(chunks[0].length).toBeLessThanOrEqual(100);
         expect(chunks[1].length).toBeLessThanOrEqual(100);
     });
+
+    it("should handle mixed lists", () => {
+        const text = "1. test\n- abba\n- foobar";
+        expect(split_message_markdown_aware(text)).toEqual(["1. test\n- abba\n- foobar"]);
+    });
+
+    it("should handle splitting general text", () => {
+        const text = "foo bar baz biz buzzzz boz bez";
+        expect(split_message_markdown_aware(text, 20)).toEqual(["foo bar baz biz", "buzzzz boz bez"]);
+    });
+
+    it("should handle splitting general formatters", () => {
+        const text = "*foo bar baz biz buzzzz boz bez*";
+        expect(split_message_markdown_aware(text, 20)).toEqual(["*foo bar baz biz*", "*buzzzz boz bez*"]);
+    });
+
+    it("should avoid splitting block items", () => {
+        let chunks = split_message_markdown_aware("foo bar baz > biz buzzzz boz bez", 20);
+        expect(chunks).to.deep.equal(["foo bar baz", "> biz buzzzz boz bez"]);
+        chunks = split_message_markdown_aware("foo bar baz # biz buzzzz boz bez", 20);
+        expect(chunks).to.deep.equal(["foo bar baz", "# biz buzzzz boz bez"]);
+        chunks = split_message_markdown_aware("foo bar baz -# biz buzzzz boz bez", 20);
+        expect(chunks).to.deep.equal(["foo bar baz", "-# biz buzzzz boz", "-# bez"]);
+    });
+
+    it("should split block items correctly", () => {
+        const chunks = split_message_markdown_aware("> foo bar baz biz buzzzz boz bez", 20);
+        expect(chunks).to.deep.equal(["> foo bar baz biz", "> buzzzz boz bez"]);
+    });
+
+    it("not split nested lists", () => {
+        const chunks = split_message_markdown_aware("- foo\n- bar\n- baz\n  - biz", 20);
+        expect(chunks).to.deep.equal(["- foo\n- bar\n", "- baz\n  - biz"]);
+    });
+
+    it("not split in the middle of a list bullet", () => {
+        const chunks = split_message_markdown_aware("- test\n- foo\n- foo bar baz", 20);
+        expect(chunks).to.deep.equal(["- test\n- foo\n", "- foo bar baz"]);
+    });
+
+    it("should handle deeply nested lists", () => {
+        const text = "- foo\n  - bar\n    - baz\n      - deep";
+        expect(split_message_markdown_aware(text)).toEqual([text]);
+    });
+
+    it("should preserve indentation in nested numbered lists", () => {
+        const text = "1. first\n2. second\n   1. nested one\n   2. nested two\n3. third";
+        expect(split_message_markdown_aware(text)).toEqual([text]);
+    });
+
+    it("should handle mixed nested and non-nested list items", () => {
+        const text = "- item1\n- item2\n  - nested\n- item3";
+        expect(split_message_markdown_aware(text)).toEqual([text]);
+    });
+
+    it("should split long nested lists correctly", () => {
+        const text = "- " + "a".repeat(15) + "\n- " + "b".repeat(15) + "\n  - " + "c".repeat(15);
+        const chunks = split_message_markdown_aware(text, 40);
+        expect(chunks.length).toBeGreaterThan(1);
+        const rejoined = chunks.join("");
+        expect(rejoined).toContain("  - ");
+        for (const chunk of chunks) {
+            expect(chunk.length).toBeLessThanOrEqual(40);
+        }
+    });
+
+    it("should handle nested lists with multiple items", () => {
+        const text = "- parent1\n  - child1\n  - child2\n  - child3\n- parent2";
+        expect(split_message_markdown_aware(text)).toEqual([text]);
+    });
 });
