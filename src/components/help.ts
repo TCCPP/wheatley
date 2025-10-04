@@ -222,20 +222,65 @@ export default class Help extends BotComponent {
         return fields;
     }
 
+    private calculate_embed_size(embed: Discord.EmbedBuilder): number {
+        let size = 0;
+        const data = embed.data;
+        if (data.title) {
+            size += data.title.length;
+        }
+        if (data.description) {
+            size += data.description.length;
+        }
+        if (data.footer?.text) {
+            size += data.footer.text.length;
+        }
+        if (data.author?.name) {
+            size += data.author.name.length;
+        }
+        if (data.fields) {
+            for (const field of data.fields) {
+                size += field.name.length + field.value.length;
+            }
+        }
+        return size;
+    }
+
     private build_help_embeds(fields: Discord.APIEmbedField[]): Discord.EmbedBuilder[] {
-        const embed = new Discord.EmbedBuilder()
+        const embeds: Discord.EmbedBuilder[] = [];
+        const base_description = build_description(
+            "Wheatley discord bot for the Together C & C++ server. The bot is open source, contributions " +
+                "are welcome at https://github.com/TCCPP/wheatley.",
+        );
+        const MAX_EMBED_SIZE = 5500;
+        const MAX_FIELDS = 25;
+
+        let current_embed = new Discord.EmbedBuilder()
             .setColor(colors.wheatley)
             .setTitle("Wheatley")
-            .setDescription(
-                build_description(
-                    "Wheatley discord bot for the Together C & C++ server. The bot is open source, contributions " +
-                        "are welcome at https://github.com/TCCPP/wheatley.",
-                ),
-            )
-            .setThumbnail("https://avatars.githubusercontent.com/u/142943210")
-            .addFields(...fields);
+            .setDescription(base_description)
+            .setThumbnail("https://avatars.githubusercontent.com/u/142943210");
 
-        return [embed];
+        for (const field of fields) {
+            const field_size = field.name.length + field.value.length;
+            const current_size = this.calculate_embed_size(current_embed);
+            const current_field_count = current_embed.data.fields?.length ?? 0;
+
+            if (
+                (current_size + field_size > MAX_EMBED_SIZE || current_field_count >= MAX_FIELDS) &&
+                current_field_count > 0
+            ) {
+                embeds.push(current_embed);
+                current_embed = new Discord.EmbedBuilder().setColor(colors.wheatley).setTitle("Wheatley (continued)");
+            }
+
+            current_embed.addFields(field);
+        }
+
+        if ((current_embed.data.fields?.length ?? 0) > 0) {
+            embeds.push(current_embed);
+        }
+
+        return embeds;
     }
 
     async help(command: TextBasedCommand) {
