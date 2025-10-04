@@ -19,11 +19,10 @@ export function match_invite(content: string): string | null {
 }
 
 type allowed_invite_entry = {
-    code: string;
-    url: string;
     guild_id: string;
     guild_name: string;
     icon_url?: string;
+    url: string;
 };
 
 export default class AntiInviteLinks extends BotComponent {
@@ -42,14 +41,14 @@ export default class AntiInviteLinks extends BotComponent {
             new TextBasedCommandBuilder("allowed-invites", EarlyReplyMode.ephemeral)
                 .set_category("Admin utilities")
                 .set_permissions(Discord.PermissionFlagsBits.ModerateMembers)
-                .set_description("manage allowed server invites")
+                .set_description("Manage allowed server invites")
                 .add_subcommand(
                     new TextBasedCommandBuilder("add", EarlyReplyMode.ephemeral)
                         .set_permissions(Discord.PermissionFlagsBits.Administrator)
-                        .set_description("add allowed invite code")
+                        .set_description("Add allowed invite")
                         .add_string_option({
-                            title: "code",
-                            description: "code to add",
+                            title: "invite",
+                            description: "invite code or url for the guild to add",
                             required: true,
                         })
                         .set_handler(this.handle_add.bind(this)),
@@ -57,10 +56,10 @@ export default class AntiInviteLinks extends BotComponent {
                 .add_subcommand(
                     new TextBasedCommandBuilder("remove", EarlyReplyMode.ephemeral)
                         .set_permissions(Discord.PermissionFlagsBits.Administrator)
-                        .set_description("remove allowed invite code")
+                        .set_description("Remove allowed invite")
                         .add_string_option({
-                            title: "code",
-                            description: "code to remove",
+                            title: "guild-id",
+                            description: "guild to remove",
                             required: true,
                         })
                         .set_handler(this.handle_remove.bind(this)),
@@ -84,7 +83,7 @@ export default class AntiInviteLinks extends BotComponent {
                 url: entry.url,
                 iconURL: entry.icon_url,
             })
-            .setFooter({ text: entry.code });
+            .setFooter({ text: entry.guild_id });
     }
 
     private async handle_add(command: TextBasedCommand, resolvable: Discord.InviteResolvable) {
@@ -95,14 +94,13 @@ export default class AntiInviteLinks extends BotComponent {
                 throw Error("not a Guild invite");
             }
             const res = await this.database.allowed_invites.findOneAndUpdate(
-                { code: invite.code },
+                { guild_id: invite.guild.id },
                 {
                     $set: {
-                        code: invite.code,
-                        url: invite.url,
                         guild_id: invite.guild.id,
                         guild_name: invite.guild.name,
                         icon_url: invite.guild.iconURL() ?? undefined,
+                        url: invite.url,
                     },
                 },
                 { upsert: true, returnDocument: "after" },
@@ -120,9 +118,9 @@ export default class AntiInviteLinks extends BotComponent {
         }
     }
 
-    private async handle_remove(command: TextBasedCommand, code: string) {
-        M.log("Removing ", code, " from allowed invites");
-        const res = await this.database.allowed_invites.findOneAndDelete({ code: code });
+    private async handle_remove(command: TextBasedCommand, guild_id: string) {
+        M.log("Removing ", guild_id, " from allowed invites");
+        const res = await this.database.allowed_invites.findOneAndDelete({ guild_id: guild_id });
         if (res == null) {
             await command.react("🤷", true);
             return;
