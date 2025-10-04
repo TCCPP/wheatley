@@ -158,7 +158,9 @@ export default class Modlogs extends BotComponent {
         page: number,
         show_private_logs = false,
     ): Promise<Discord.BaseMessageOptions & CommandAbstractionReplyOptions> {
-        const linked_accounts = await this.linked_accounts.get_all_linked_accounts(user.id);
+        const linked_accounts = show_private_logs
+            ? await this.linked_accounts.get_all_linked_accounts(user.id)
+            : new Set([user.id]);
         const all_user_ids = [user.id, ...Array.from(linked_accounts)];
 
         const query: mongo.Filter<moderation_entry> = { user: { $in: all_user_ids }, expunged: null };
@@ -211,7 +213,7 @@ export default class Modlogs extends BotComponent {
                             .map(moderation => {
                                 const case_label =
                                     has_linked_accounts && moderation.user !== user.id
-                                        ? `Case ${moderation.case_number} (<@${moderation.user}>)`
+                                        ? `Case ${moderation.case_number} (${moderation.user_name})`
                                         : `Case ${moderation.case_number}`;
                                 return {
                                     name: case_label,
