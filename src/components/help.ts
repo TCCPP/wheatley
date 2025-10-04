@@ -291,9 +291,11 @@ export default class Help extends BotComponent {
         const fields = this.build_category_fields(categories_map);
         const embeds = this.build_help_embeds(fields);
 
-        await command.reply({
-            embeds,
-            ephemeral_if_possible: true,
-        });
+        for (let i = 0; i < embeds.length; i++) {
+            await command.replyOrFollowUp({
+                embeds: [embeds[i]],
+                ephemeral_if_possible: true,
+            });
+        }
     }
 }
