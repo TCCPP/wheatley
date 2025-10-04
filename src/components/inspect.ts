@@ -11,7 +11,7 @@ import { colors } from "../common.js";
 import { MessageContextMenuInteractionBuilder } from "../command-abstractions/context-menu.js";
 import { EarlyReplyMode, TextBasedCommandBuilder } from "../command-abstractions/text-based-command-builder.js";
 import { TextBasedCommand } from "../command-abstractions/text-based-command.js";
-import { discord_url_re, send_long_response } from "../utils/discord.js";
+import { discord_url_re, send_long_response_markdown_aware } from "../utils/discord.js";
 
 // These looks silly, but it is the best way I can think of to call all the getters and re-package
 function repackage_attachment({
@@ -117,7 +117,7 @@ export default class Inspect extends BotComponent {
                 ephemeral_if_possible: true,
             });
         }
-        await send_long_response(
+        await send_long_response_markdown_aware(
             command_object,
             message.content.length > 0 ? escape_discord(message.content) : "<empty>",
             true,

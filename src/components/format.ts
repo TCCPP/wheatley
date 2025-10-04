@@ -314,7 +314,7 @@ export default class Format extends BotComponent {
                 ];
             }
 
-            await send_long_response_markdown_aware(interaction, content, {
+            await send_long_response_markdown_aware(interaction, content, false, undefined, {
                 embeds,
                 files: attachments.filter(x => x != null),
                 allowedMentions: {

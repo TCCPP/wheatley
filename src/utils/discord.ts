@@ -153,86 +153,6 @@ export function is_media_link_embed(embed: Discord.APIEmbed | Discord.Embed) {
     return embed.image || embed.video || embed.thumbnail;
 }
 
-export async function send_long_message(
-    channel: Discord.TextBasedChannel,
-    msg: string,
-    extra_options: Discord.MessageCreateOptions = {},
-) {
-    assert(!(channel instanceof Discord.PartialGroupDMChannel));
-    if (msg.length > 2000) {
-        const lines = msg.split("\n");
-        let partial = "";
-        const queue: string[] = [];
-        while (lines.length > 0) {
-            if (partial.length + lines[0].length + 1 <= 2000) {
-                if (partial != "") {
-                    partial += "\n";
-                }
-                partial += lines.shift();
-            } else {
-                queue.push(partial);
-                partial = "";
-            }
-        }
-        if (partial != "") {
-            queue.push(partial);
-        }
-        while (queue.length > 0) {
-            await channel.send({
-                content: queue.shift()!,
-                ...extra_options,
-            });
-        }
-    } else {
-        await channel.send({
-            content: msg,
-            ...extra_options,
-        });
-    }
-}
-
-export async function send_long_response(
-    command_object: Discord.MessageContextMenuCommandInteraction | TextBasedCommand,
-    msg: string,
-    ephemeral_if_possible = false,
-    flags?: Discord.MessageFlags.SuppressEmbeds,
-) {
-    const queue: string[] = [];
-    if (msg.length > 2000) {
-        const lines = msg.split("\n");
-        let partial = "";
-        while (lines.length > 0) {
-            if (partial.length + lines[0].length + 1 <= 2000) {
-                if (partial != "") {
-                    partial += "\n";
-                }
-                partial += lines.shift();
-            } else {
-                queue.push(partial);
-                partial = "";
-            }
-        }
-        if (partial != "") {
-            queue.push(partial);
-        }
-    } else {
-        queue.push(msg);
-    }
-    while (queue.length > 0) {
-        await (
-            command_object.replied &&
-            (command_object instanceof Discord.MessageContextMenuCommandInteraction || !command_object.is_editing)
-                ? command_object.followUp
-                : command_object.reply
-        ).bind(command_object)({
-            ephemeral: ephemeral_if_possible,
-            ephemeral_if_possible,
-            content: unwrap(queue.shift()),
-            flags,
-        });
-    }
-}
-
 export async function api_wrap<R>(fn: () => Promise<R>, ignored_errors: Discord.RESTJSONErrorCodes[]) {
     try {
         return await fn();
@@ -472,23 +392,26 @@ export async function send_long_message_markdown_aware(
 export async function send_long_response_markdown_aware(
     command_object: Discord.MessageContextMenuCommandInteraction | TextBasedCommand,
     msg: string,
-    extra_options: Omit<Discord.InteractionReplyOptions, "content"> = {},
+    ephemeral_if_possible = false,
+    flags?: Discord.MessageFlags.SuppressEmbeds,
+    extra_options?: Omit<Discord.InteractionReplyOptions, "content" | "ephemeral" | "flags">,
 ): Promise<void> {
     const chunks = split_message_markdown_aware(msg);
 
     for (let i = 0; i < chunks.length; i++) {
         const is_last = i === chunks.length - 1;
 
-        if (i === 0) {
-            await command_object.reply({
-                content: chunks[i],
-                ...(is_last ? extra_options : { allowedMentions: extra_options.allowedMentions }),
-            });
-        } else {
-            await command_object.followUp({
-                content: chunks[i],
-                ...(is_last ? extra_options : { allowedMentions: extra_options.allowedMentions }),
-            });
-        }
+        await (
+            command_object.replied &&
+            (command_object instanceof Discord.MessageContextMenuCommandInteraction || !command_object.is_editing)
+                ? command_object.followUp
+                : command_object.reply
+        ).bind(command_object)({
+            ephemeral: ephemeral_if_possible,
+            ephemeral_if_possible,
+            content: chunks[i],
+            flags,
+            ...(is_last ? extra_options : { allowedMentions: extra_options?.allowedMentions }),
+        });
     }
 }

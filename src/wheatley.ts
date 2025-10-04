@@ -17,7 +17,7 @@ import { CommandAbstractionReplyOptions } from "./command-abstractions/text-base
 
 import { WheatleyDatabase } from "./infra/database-interface.js";
 import { MemberTracker } from "./infra/member-tracker.js";
-import { forge_snowflake, send_long_message } from "./utils/discord.js";
+import { forge_snowflake, send_long_message_markdown_aware } from "./utils/discord.js";
 import { TypedEventEmitter } from "./utils/event-emitter.js";
 import { setup_metrics_server } from "./infra/prometheus.js";
 import { moderation_entry } from "./components/moderation/schemata.js";
@@ -490,7 +490,7 @@ export class Wheatley {
         if (!this.log_channel) {
             return;
         }
-        send_long_message(this.log_channel, `🛑 Critical error: ${to_string(arg)}` + this.mom_ping)
+        send_long_message_markdown_aware(this.log_channel, `🛑 Critical error: ${to_string(arg)}` + this.mom_ping)
             .catch(() => M.error)
             .finally(() => {
                 if (arg instanceof Error) {
@@ -506,7 +506,7 @@ export class Wheatley {
         if (!this.log_channel) {
             return;
         }
-        send_long_message(this.log_channel, `⚠️ Ignorable error: ${to_string(arg)}`)
+        send_long_message_markdown_aware(this.log_channel, `⚠️ Ignorable error: ${to_string(arg)}`)
             .catch(M.error)
             .finally(() => {
                 if (arg instanceof Error) {
@@ -522,7 +522,7 @@ export class Wheatley {
         if (!this.log_channel) {
             return;
         }
-        send_long_message(this.log_channel, `ℹ️ Info: ${message}`)
+        send_long_message_markdown_aware(this.log_channel, `ℹ️ Info: ${message}`)
             .catch(M.error)
             .finally(() => {
                 Sentry.captureMessage(message);
@@ -534,7 +534,7 @@ export class Wheatley {
         if (!this.log_channel) {
             return;
         }
-        send_long_message(this.log_channel, `🚨 Alert: ${message}` + this.mom_ping)
+        send_long_message_markdown_aware(this.log_channel, `🚨 Alert: ${message}` + this.mom_ping)
             .catch(M.error)
             .finally(() => {
                 Sentry.captureMessage(message);
