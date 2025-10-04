@@ -174,11 +174,6 @@ export abstract class ModerationComponent extends BotComponent {
     sleep_list: SleepList<mongo.WithId<moderation_entry>, mongo.BSON.ObjectId>;
     timer: NodeJS.Timer | null = null;
 
-    override async setup(commands: CommandSetBuilder) {
-        this.staff_action_log = await this.utilities.get_channel(this.wheatley.channels.staff_action_log);
-        this.public_action_log = await this.utilities.get_channel(this.wheatley.channels.public_action_log);
-    }
-
     static non_duration_moderation_set = new Set(["warn", "kick", "softban", "note"]);
 
     static moderations_count = new PromClient.Gauge({
@@ -204,6 +199,12 @@ export abstract class ModerationComponent extends BotComponent {
         this.wheatley.event_hub.on("update_moderation", (entry: mongo.WithId<moderation_entry>) => {
             this.handle_moderation_update(entry).catch(this.wheatley.critical_error.bind(this.wheatley));
         });
+    }
+
+    // Critical stuff happens in setup(), it's important extending classes call super here
+    override async setup(commands: CommandSetBuilder) {
+        this.staff_action_log = await this.utilities.get_channel(this.wheatley.channels.staff_action_log);
+        this.public_action_log = await this.utilities.get_channel(this.wheatley.channels.public_action_log);
     }
 
     update_counters() {

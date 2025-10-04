@@ -26,6 +26,8 @@ export default class Rolepersist extends ModerationComponent {
     }
 
     override async setup(commands: CommandSetBuilder) {
+        await super.setup(commands);
+
         commands.add(
             new TextBasedCommandBuilder("rolepersist", EarlyReplyMode.visible)
                 .set_category("Moderation")

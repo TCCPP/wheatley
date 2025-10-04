@@ -24,6 +24,7 @@ export default class Timeout extends ModerationComponent {
 
     override async setup(commands: CommandSetBuilder) {
         await super.setup(commands);
+
         commands.add(
             new TextBasedCommandBuilder("timeout", EarlyReplyMode.visible)
                 .set_category("Moderation")

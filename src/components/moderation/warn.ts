@@ -25,6 +25,7 @@ export default class Warn extends ModerationComponent {
 
     override async setup(commands: CommandSetBuilder) {
         await super.setup(commands);
+
         commands.add(
             new TextBasedCommandBuilder("warn", EarlyReplyMode.visible)
                 .set_category("Moderation")

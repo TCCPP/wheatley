@@ -27,6 +27,7 @@ export default class Note extends ModerationComponent {
 
     override async setup(commands: CommandSetBuilder) {
         await super.setup(commands);
+
         commands.add(
             new TextBasedCommandBuilder("note", EarlyReplyMode.ephemeral)
                 .set_category("Moderation")

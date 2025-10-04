@@ -24,6 +24,7 @@ export default class Ban extends ModerationComponent {
 
     override async setup(commands: CommandSetBuilder) {
         await super.setup(commands);
+
         commands.add(
             new TextBasedCommandBuilder("ban", EarlyReplyMode.visible)
                 .set_category("Moderation")

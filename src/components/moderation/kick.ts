@@ -28,6 +28,7 @@ export default class Kick extends ModerationComponent {
 
     override async setup(commands: CommandSetBuilder) {
         await super.setup(commands);
+
         commands.add(
             new TextBasedCommandBuilder("kick", EarlyReplyMode.visible)
                 .set_category("Moderation")
