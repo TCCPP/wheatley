@@ -30,6 +30,8 @@ import { set_interval } from "../../utils/node.js";
 
 import { get_random_array_element } from "../../utils/arrays.js";
 import { CommandSetBuilder } from "../../command-abstractions/command-set-builder.js";
+import { BotButton, ButtonInteractionBuilder } from "../../command-abstractions/button.js";
+import { discord_timestamp } from "../../utils/discord.js";
 
 /*
  * !mute !unmute
@@ -169,6 +171,11 @@ export abstract class ModerationComponent extends BotComponent {
     }>();
     protected staff_action_log!: Discord.TextChannel;
     protected public_action_log!: Discord.TextChannel;
+    protected red_telephone_alerts!: Discord.TextChannel;
+    private static ring_red_telephone_button_instance: BotButton<[number]> | null = null;
+    protected get ring_red_telephone_button() {
+        return unwrap(ModerationComponent.ring_red_telephone_button_instance);
+    }
 
     // Sorted by moderation end time
     sleep_list: SleepList<mongo.WithId<moderation_entry>, mongo.BSON.ObjectId>;
@@ -205,6 +212,65 @@ export abstract class ModerationComponent extends BotComponent {
     override async setup(commands: CommandSetBuilder) {
         this.staff_action_log = await this.utilities.get_channel(this.wheatley.channels.staff_action_log);
         this.public_action_log = await this.utilities.get_channel(this.wheatley.channels.public_action_log);
+        this.red_telephone_alerts = await this.utilities.get_channel(this.wheatley.channels.red_telephone_alerts);
+
+        // Only register button handler once across all ModerationComponent instances
+        // In effect, the first component to be loaded extending ModerationComponent will be responsible for handling
+        // all red telephone button presses, which doesn't feel very elegant but works.
+        if (!ModerationComponent.ring_red_telephone_button_instance) {
+            ModerationComponent.ring_red_telephone_button_instance = commands.add(
+                new ButtonInteractionBuilder("ring_red_telephone")
+                    .add_number_metadata()
+                    .set_handler(this.handle_ring_red_telephone.bind(this)),
+            );
+        }
+    }
+
+    async handle_ring_red_telephone(interaction: Discord.ButtonInteraction, case_number: number) {
+        const moderation = await this.database.moderations.findOne({ case_number });
+        if (!moderation) {
+            await interaction.reply({
+                content: "Error: Could not find moderation case",
+                ephemeral: true,
+            });
+            return;
+        }
+
+        const user = await this.wheatley.client.users.fetch(moderation.user);
+
+        const embed = new Discord.EmbedBuilder()
+            .setColor(colors.wheatley)
+            .setTitle(`Case ${case_number}`)
+            .setAuthor({
+                name: moderation.user_name,
+                iconURL: user.displayAvatarURL(),
+            })
+            .setDescription(
+                build_description(
+                    `**User:** <@${moderation.user}>`,
+                    `**Type:** ${moderation.type}`,
+                    `**Issued At:** ${discord_timestamp(moderation.issued_at)}`,
+                    moderation.duration === null ? null : `**Duration:** ${time_to_human(moderation.duration)}`,
+                    `**Reason:** ${moderation.reason ?? "No reason provided"}`,
+                ),
+            )
+            .setFooter({
+                text: `ID: ${moderation.user}`,
+            });
+
+        await this.red_telephone_alerts.send({ embeds: [embed] });
+
+        await interaction.update({
+            components: [
+                new Discord.ActionRowBuilder<Discord.ButtonBuilder>().addComponents(
+                    new Discord.ButtonBuilder()
+                        .setCustomId(this.ring_red_telephone_button.generate_custom_id(case_number))
+                        .setLabel("Sent to Red Telephone ✓")
+                        .setStyle(Discord.ButtonStyle.Success)
+                        .setDisabled(true),
+                ),
+            ],
+        });
     }
 
     update_counters() {
@@ -449,13 +515,24 @@ export abstract class ModerationComponent extends BotComponent {
                     },
                 ]);
             }
-            this.staff_action_log
-                .send({
-                    embeds: [
-                        Modlogs.case_summary(moderation, await this.wheatley.client.users.fetch(moderation.user), true),
-                    ],
-                })
-                .catch(this.wheatley.critical_error.bind(this.wheatley));
+            const message_options: Discord.MessageCreateOptions = {
+                embeds: [
+                    Modlogs.case_summary(moderation, await this.wheatley.client.users.fetch(moderation.user), true),
+                ],
+            };
+            // Only include the red telephone button if this is not an automatic moderation
+            if (moderation.moderator !== this.wheatley.user.id) {
+                message_options.components = [
+                    new Discord.ActionRowBuilder<Discord.ButtonBuilder>().addComponents(
+                        new Discord.ButtonBuilder()
+                            .setCustomId(this.ring_red_telephone_button.generate_custom_id(moderation.case_number))
+                            .setLabel("Ring the Red Telephone")
+                            .setStyle(Discord.ButtonStyle.Secondary)
+                            .setEmoji("📞"),
+                    ),
+                ];
+            }
+            this.staff_action_log.send(message_options).catch(this.wheatley.critical_error.bind(this.wheatley));
             if (moderation.type !== "note") {
                 this.public_action_log
                     .send({
