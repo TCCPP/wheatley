@@ -240,19 +240,27 @@ export function split_message_markdown_aware(content: string, limit = 2000): str
             return text;
         }
         let split_pos = max_length;
-        while (split_pos > 0 && text[split_pos] !== " ") {
-            split_pos--;
-        }
-        if (split_pos === 0) {
-            return text.substring(0, max_length);
-        }
 
-        const before_split = text.substring(0, split_pos);
-        for (const pattern of BLOCK_PATTERNS) {
-            const pattern_pos = before_split.lastIndexOf(" " + pattern);
-            if (pattern_pos !== -1 && pattern_pos > split_pos - 20) {
-                split_pos = pattern_pos;
-                break;
+        // First, try to split on a newline
+        const last_newline = text.lastIndexOf("\n", split_pos);
+        if (last_newline !== -1 && last_newline > 0) {
+            split_pos = last_newline;
+        } else {
+            // Fall back to splitting on a space
+            while (split_pos > 0 && text[split_pos] !== " ") {
+                split_pos--;
+            }
+            if (split_pos === 0) {
+                return text.substring(0, max_length);
+            }
+
+            const before_split = text.substring(0, split_pos);
+            for (const pattern of BLOCK_PATTERNS) {
+                const pattern_pos = before_split.lastIndexOf(" " + pattern);
+                if (pattern_pos !== -1 && pattern_pos > split_pos - 20) {
+                    split_pos = pattern_pos;
+                    break;
+                }
             }
         }
 

@@ -281,4 +281,45 @@ describe("split_message_markdown_aware", () => {
         const text = "- parent1\n  - child1\n  - child2\n  - child3\n- parent2";
         expect(split_message_markdown_aware(text)).toEqual([text]);
     });
+
+    it("should prefer splitting on newlines instead of spaces", () => {
+        const text = "This is a long line of text that goes on and on\nAnd this is another line that continues";
+        const chunks = split_message_markdown_aware(text, 50);
+        expect(chunks.length).toBe(2);
+        expect(chunks[0]).toBe("This is a long line of text that goes on and on");
+        expect(chunks[1]).toBe("And this is another line that continues");
+    });
+
+    it("should prefer splitting on newlines with multiple newlines", () => {
+        const text = "Line 1 has some text\nLine 2 has more text\nLine 3 has even more text\nLine 4 continues";
+        const chunks = split_message_markdown_aware(text, 45);
+        expect(chunks.length).toBe(2);
+        expect(chunks[0]).toBe("Line 1 has some text\nLine 2 has more text");
+        expect(chunks[1]).toBe("Line 3 has even more text\nLine 4 continues");
+    });
+
+    it("should prefer splitting on newlines", () => {
+        const text = "This is a somewhat long paragraph\nthat contains multiple lines";
+        const chunks = split_message_markdown_aware(text, 50);
+        expect(chunks.length).toBe(2);
+        expect(chunks[0]).toBe("This is a somewhat long paragraph");
+        expect(chunks[1]).toBe("that contains multiple lines");
+    });
+
+    it("should fall back to space splitting when no newlines available", () => {
+        const text = "This is a very long single line without any newlines that needs to be split somewhere";
+        const chunks = split_message_markdown_aware(text, 50);
+        expect(chunks.length).toBe(2);
+        // Should split on a space since no newlines are available
+        expect(chunks[0]).not.toContain("\n");
+        expect(chunks[1]).not.toContain("\n");
+    });
+
+    it("should handle text with newlines at the boundary", () => {
+        const text = "A".repeat(20) + "\n" + "B".repeat(20);
+        const chunks = split_message_markdown_aware(text, 21);
+        expect(chunks.length).toBe(2);
+        expect(chunks[0]).toBe("A".repeat(20));
+        expect(chunks[1]).toBe("B".repeat(20));
+    });
 });
