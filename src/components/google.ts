@@ -17,7 +17,7 @@ export default class Google extends BotComponent {
     override async setup(commands: CommandSetBuilder) {
         commands.add(
             new TextBasedCommandBuilder("google", EarlyReplyMode.none)
-                .set_category("Misc")
+                .set_category("References")
                 .set_description("google")
                 .add_string_option({
                     title: "query",

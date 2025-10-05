@@ -42,7 +42,7 @@ export default class Roulette extends BotComponent {
         commands.add(
             new TextBasedCommandBuilder("leaderboard", EarlyReplyMode.visible)
                 .set_category("Misc")
-                .set_description("Leaderboard")
+                .set_description("Roulette leaderboard")
                 .set_handler(this.leaderboard.bind(this)),
         );
     }
