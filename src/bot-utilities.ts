@@ -37,6 +37,14 @@ type UserData = {
     id: string;
 };
 
+export type StickerData = {
+    guildId: string | null;
+    id: string;
+    name: string;
+    format: Discord.StickerFormatType;
+    url: string;
+};
+
 type MessageData = {
     author: UserData;
     guild: string;
@@ -45,6 +53,7 @@ type MessageData = {
     content: string;
     embeds: Discord.APIEmbed[];
     attachments: Discord.Attachment[];
+    stickers?: StickerData[];
 };
 
 export class BotUtilities {
@@ -64,6 +73,13 @@ export class BotUtilities {
             content: message.content,
             embeds: message.embeds.map(embed => embed.data),
             attachments: [...message.attachments.values()],
+            stickers: [...message.stickers.values()].map(sticker => ({
+                guildId: sticker.guildId,
+                id: sticker.id,
+                name: sticker.name,
+                format: sticker.format,
+                url: sticker.url,
+            })),
         };
     }
 
@@ -209,6 +225,17 @@ export class BotUtilities {
                     // video
                     attachments.push(medium.attachment);
                 }
+            }
+        }
+        // Handle stickers
+        const stickers = messages.map(m => m.stickers).flat();
+        for (const sticker of stickers) {
+            if (sticker && sticker.url) {
+                media_embeds.push(
+                    new Discord.EmbedBuilder({
+                        image: { url: sticker.url },
+                    }),
+                );
             }
         }
         if (options?.no_extra_media_embeds) {
