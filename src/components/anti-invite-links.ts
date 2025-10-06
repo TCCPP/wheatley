@@ -9,6 +9,7 @@ import { CommandSetBuilder } from "../command-abstractions/command-set-builder.j
 import { Wheatley } from "../wheatley.js";
 import { EarlyReplyMode, TextBasedCommandBuilder } from "../command-abstractions/text-based-command-builder.js";
 import { TextBasedCommand } from "../command-abstractions/text-based-command.js";
+import { BotButton, ButtonInteractionBuilder } from "../command-abstractions/button.js";
 
 const INVITE_RE =
     /(?:(?:discord(?:app)?|disboard)\.(?:gg|(?:com|org|me)\/(?:invite|server\/join))|(?<!\w)\.gg)\/(\S+)/i;
@@ -33,6 +34,8 @@ export default class AntiInviteLinks extends BotComponent {
     private database = this.wheatley.database.create_proxy<{
         allowed_invites: allowed_invite_entry;
     }>();
+
+    private allowed_invites_page_button!: BotButton<[number]>;
 
     override async setup(commands: CommandSetBuilder) {
         this.staff_flag_log = await this.utilities.get_channel(this.wheatley.channels.staff_flag_log);
@@ -69,6 +72,13 @@ export default class AntiInviteLinks extends BotComponent {
                         .set_description("list all allowed server invites")
                         .set_handler(this.handle_list.bind(this)),
                 ),
+        );
+
+        this.allowed_invites_page_button = commands.add(
+            new ButtonInteractionBuilder("allowed_invites_page")
+                .add_number_metadata()
+                .set_permissions(Discord.PermissionFlagsBits.ModerateMembers)
+                .set_handler(this.handle_page.bind(this)),
         );
     }
 
@@ -129,17 +139,56 @@ export default class AntiInviteLinks extends BotComponent {
         await command.react(this.wheatley.emoji.success, true);
     }
 
+    private async build_list_message(page: number): Promise<Discord.BaseMessageOptions> {
+        const max_entries_per_page = 10;
+        const invites = await this.database.allowed_invites.find().toArray();
+        const pages = Math.ceil(invites.length / max_entries_per_page);
+        page = Math.min(Math.max(page, 0), pages - 1);
+        const page_buttons: Discord.ButtonBuilder[] = [];
+        if (page > 0) {
+            page_buttons.push(
+                this.allowed_invites_page_button
+                    .create_button(page - 1)
+                    .setLabel("🡄")
+                    .setStyle(Discord.ButtonStyle.Primary),
+            );
+        }
+        if (page < pages - 1) {
+            page_buttons.push(
+                this.allowed_invites_page_button
+                    .create_button(page + 1)
+                    .setLabel("🡆")
+                    .setStyle(Discord.ButtonStyle.Primary),
+            );
+        }
+        if (invites.length > 0) {
+            return {
+                embeds: invites
+                    .slice(page * max_entries_per_page, page * max_entries_per_page + max_entries_per_page)
+                    .map(AntiInviteLinks.build_guild_embed),
+                components:
+                    page_buttons.length > 0
+                        ? [
+                              new Discord.ActionRowBuilder<Discord.MessageActionRowComponentBuilder>().addComponents(
+                                  ...page_buttons,
+                              ),
+                          ]
+                        : undefined,
+            };
+        } else {
+            return {
+                content: "📂 currently no allowed invites",
+            };
+        }
+    }
+
     private async handle_list(command: TextBasedCommand) {
-        const codes = await this.database.allowed_invites.find().toArray();
-        await command.replyOrFollowUp(
-            codes.length > 0
-                ? {
-                      embeds: codes.map(AntiInviteLinks.build_guild_embed),
-                  }
-                : {
-                      content: "📂 currently no allowed invites",
-                  },
-        );
+        await command.replyOrFollowUp(await this.build_list_message(0));
+    }
+
+    private async handle_page(interaction: Discord.ButtonInteraction, page: number) {
+        await interaction.message.edit(await this.build_list_message(page));
+        await interaction.deferUpdate();
     }
 
     private async is_allowed(code: Discord.InviteResolvable) {
