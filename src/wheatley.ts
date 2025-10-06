@@ -196,8 +196,12 @@ type EventMap = {
 };
 
 export class Wheatley {
+    private discord_application!: Discord.Application | null;
     private discord_user!: Discord.User | null;
     private discord_guild!: Discord.Guild | null;
+    get application() {
+        return unwrap(this.discord_application);
+    }
     get user() {
         return unwrap(this.discord_user);
     }
@@ -324,6 +328,7 @@ export class Wheatley {
 
                 this.info("Bot started");
 
+                this.discord_application = (await this.client.application?.fetch()) ?? null;
                 this.discord_user = await this.client.users.fetch(config.id);
                 this.discord_guild = await this.client.guilds.fetch(config.guild);
                 await this.fetch_emoji();
