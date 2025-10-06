@@ -247,18 +247,22 @@ export default class Help extends BotComponent {
 
     private build_help_embeds(fields: Discord.APIEmbedField[]): Discord.EmbedBuilder[] {
         const embeds: Discord.EmbedBuilder[] = [];
-        const base_description = build_description(
-            "Wheatley discord bot for the Together C & C++ server. The bot is open source, contributions " +
-                "are welcome at https://github.com/TCCPP/wheatley.",
-        );
         const MAX_EMBED_SIZE = 5500;
         const MAX_FIELDS = 25;
 
         let current_embed = new Discord.EmbedBuilder()
             .setColor(colors.wheatley)
-            .setTitle("Wheatley")
-            .setDescription(base_description)
-            .setThumbnail("https://avatars.githubusercontent.com/u/142943210");
+            .setTitle(this.wheatley.application.name ?? "Wheatley")
+            .setDescription(
+                (
+                    (this.wheatley.application.description ?? "") +
+                    (!this.wheatley.application.description?.includes("https://github.com/TCCPP/wheatley")
+                        ? "\n\nBased on the open-source discord bot Wheatley. " +
+                          "Contributions are welcome at https://github.com/TCCPP/wheatley."
+                        : "")
+                ).trim(),
+            )
+            .setThumbnail(this.wheatley.application.iconURL() ?? "https://avatars.githubusercontent.com/u/142943210");
 
         for (const field of fields) {
             const field_size = field.name.length + field.value.length;
