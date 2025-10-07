@@ -14,10 +14,13 @@ import { unwrap } from "../../utils/misc.js";
 
 export default class VoiceDeputies extends BotComponent {
     private recently_in_voice = new SelfClearingSet<string>(5 * MINUTE);
+    private staff_action_log!: Discord.TextChannel;
     private voice_hotline!: Discord.TextChannel;
 
     override async setup(commands: CommandSetBuilder) {
+        this.staff_action_log = await this.utilities.get_channel(this.wheatley.channels.staff_action_log);
         this.voice_hotline = await this.utilities.get_channel(this.wheatley.channels.voice_hotline);
+
         commands.add(
             new TextBasedCommandBuilder("voice", EarlyReplyMode.ephemeral)
                 .set_category("Misc")
@@ -124,6 +127,10 @@ export default class VoiceDeputies extends BotComponent {
         }
 
         await target.timeout(3 * HOUR);
+        await this.staff_action_log.send({
+            content: `<@${target.id}> was quarantined by <@${command.user.id}>`,
+            allowedMentions: { parse: [] },
+        });
         await this.voice_hotline.send({
             content: `<@&${this.wheatley.roles.moderators.id}>`,
             embeds: [
@@ -164,19 +171,19 @@ export default class VoiceDeputies extends BotComponent {
             for (const change of entry.changes) {
                 if (change.key == "mute") {
                     const action = change.old ? "unmuted" : "muted";
-                    await this.voice_hotline.send({
+                    await this.staff_action_log.send({
                         content: `<@${entry.targetId}> was ${action} by <@${entry.executorId}>`,
                         allowedMentions: { parse: [] },
                     });
                 }
             }
         } else if (entry.action == Discord.AuditLogEvent.MemberMove) {
-            await this.voice_hotline.send({
+            await this.staff_action_log.send({
                 content: `user was moved by <@${entry.executorId}>`,
                 allowedMentions: { parse: [] },
             });
         } else if (entry.action == Discord.AuditLogEvent.MemberDisconnect) {
-            await this.voice_hotline.send({
+            await this.staff_action_log.send({
                 content: `user was disconnected by <@${entry.executorId}>`,
                 allowedMentions: { parse: [] },
             });
