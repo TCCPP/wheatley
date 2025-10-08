@@ -175,7 +175,12 @@ export default class Quote extends BotComponent {
                             break;
                         }
                         messages.push(message);
-                        if (message.attachments.size > 0 || message.embeds.length > 0 || message.stickers.size > 0) {
+                        if (
+                            message.attachments.size > 0 ||
+                            message.embeds.length > 0 ||
+                            message.stickers.size > 0 ||
+                            message.messageSnapshots.size > 0
+                        ) {
                             break;
                         }
                     }

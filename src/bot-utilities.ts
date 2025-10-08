@@ -2,6 +2,7 @@ import { strict as assert } from "assert";
 
 import * as Discord from "discord.js";
 import { M } from "./utils/debugging-and-logging.js";
+import * as util from "util";
 
 import { Wheatley } from "./wheatley.js";
 import { decode_snowflake, is_media_link_embed, make_url } from "./utils/discord.js";
@@ -45,6 +46,31 @@ export type StickerData = {
     url: string;
 };
 
+function sticker_map(sticker: Discord.Sticker): StickerData {
+    return {
+        guildId: sticker.guildId,
+        id: sticker.id,
+        name: sticker.name,
+        format: sticker.format,
+        url: sticker.url,
+    };
+}
+
+type ForwardedMessageData = {
+    content: string;
+    embeds: Discord.APIEmbed[];
+    attachments: Discord.Attachment[];
+    stickers?: StickerData[];
+    timestamp: number;
+    author: {
+        display_name: string;
+        iconURL: string;
+        username: string;
+        id: string;
+    } | null;
+    url: string | null;
+};
+
 type MessageData = {
     author: UserData;
     guild: string;
@@ -54,10 +80,30 @@ type MessageData = {
     embeds: Discord.APIEmbed[];
     attachments: Discord.Attachment[];
     stickers?: StickerData[];
+    forwarded_message?: ForwardedMessageData | null;
 };
 
 export class BotUtilities {
     constructor(protected readonly wheatley: Wheatley) {}
+
+    async get_snapshot_message_data(snapshot: Discord.MessageSnapshot): Promise<ForwardedMessageData> {
+        return {
+            author: snapshot.author
+                ? {
+                      display_name: await this.wheatley.get_display_name(snapshot.author),
+                      iconURL: snapshot.author.avatarURL() ?? snapshot.author.displayAvatarURL(),
+                      username: snapshot.author.username,
+                      id: snapshot.author.id,
+                  }
+                : null,
+            content: snapshot.content,
+            embeds: snapshot.embeds.map(e => e.data),
+            attachments: [...snapshot.attachments.values()],
+            stickers: [...snapshot.stickers.values()].map(sticker_map),
+            timestamp: snapshot.createdTimestamp,
+            url: snapshot.url,
+        };
+    }
 
     async get_raw_message_data(message: Discord.Message): Promise<MessageData> {
         return {
@@ -73,17 +119,15 @@ export class BotUtilities {
             content: message.content,
             embeds: message.embeds.map(embed => embed.data),
             attachments: [...message.attachments.values()],
-            stickers: [...message.stickers.values()].map(sticker => ({
-                guildId: sticker.guildId,
-                id: sticker.id,
-                name: sticker.name,
-                format: sticker.format,
-                url: sticker.url,
-            })),
+            stickers: [...message.stickers.values()].map(sticker_map),
+            forwarded_message:
+                message.reference?.type === Discord.MessageReferenceType.Forward
+                    ? await this.get_snapshot_message_data(unwrap(message.messageSnapshots.first()))
+                    : null,
         };
     }
 
-    async get_media(message: MessageData) {
+    async get_media(message: MessageData | ForwardedMessageData) {
         return [
             ...message.attachments
                 .filter(a => a.contentType?.indexOf("image") == 0)
@@ -122,6 +166,67 @@ export class BotUtilities {
                 })
                 .filter(x => x !== undefined),
         ] as MediaDescriptor[];
+    }
+
+    async set_up_embeds_and_attachments(
+        message: MessageData | ForwardedMessageData,
+        options: quote_options | undefined,
+        embed: Discord.EmbedBuilder,
+    ): Promise<[Discord.EmbedBuilder[], (Discord.Attachment | Discord.AttachmentPayload)[]]> {
+        const media = await this.get_media(message);
+        const other_embeds = message.embeds.filter(e => !is_media_link_embed(e));
+        const attachments: (Discord.Attachment | Discord.AttachmentPayload)[] = [];
+        const other_attachments: Discord.Attachment[] = message.attachments
+            .map(a => a)
+            .filter(a => !(a.contentType?.indexOf("image") == 0 || a.contentType?.indexOf("video") == 0));
+        let set_primary_image = false;
+        const media_embeds: Discord.EmbedBuilder[] = [];
+        if (media.length > 0) {
+            for (const medium of media) {
+                if (medium.type == "image") {
+                    if (!set_primary_image) {
+                        embed.setImage(
+                            medium.attachment instanceof Discord.Attachment
+                                ? medium.attachment.url
+                                : medium.attachment.attachment,
+                        );
+                        set_primary_image = true;
+                    } else {
+                        media_embeds.push(
+                            new Discord.EmbedBuilder({
+                                image: {
+                                    url:
+                                        medium.attachment instanceof Discord.Attachment
+                                            ? medium.attachment.url
+                                            : medium.attachment.attachment,
+                                },
+                            }),
+                        );
+                    }
+                } else {
+                    // video
+                    attachments.push(medium.attachment);
+                }
+            }
+        }
+        for (const sticker of message.stickers ?? []) {
+            if (sticker.url) {
+                media_embeds.push(
+                    new Discord.EmbedBuilder({
+                        image: { url: sticker.url },
+                    }),
+                );
+            }
+        }
+        if (options?.no_extra_media_embeds) {
+            media_embeds.splice(0, media_embeds.length);
+            other_embeds.splice(0, other_embeds.length);
+            attachments.splice(0, attachments.length);
+            other_attachments.splice(0, other_attachments.length);
+        }
+        const embeds = [...media_embeds, ...other_embeds.map(api_embed => new Discord.EmbedBuilder(api_embed))];
+        const files = [...attachments, ...other_attachments];
+        return [embeds, files];
     }
 
     async make_quote_embeds(
@@ -178,61 +283,35 @@ export class BotUtilities {
         if (options?.title) {
             embed.setTitle(options.title);
         }
-        const media = await this.get_media(message);
-        const other_embeds = message.embeds.filter(e => !is_media_link_embed(e));
-        const media_embeds: Discord.EmbedBuilder[] = [];
-        const attachments: (Discord.Attachment | Discord.AttachmentPayload)[] = [];
-        const other_attachments: Discord.Attachment[] = message.attachments
-            .map(a => a)
-            .filter(a => !(a.contentType?.indexOf("image") == 0 || a.contentType?.indexOf("video") == 0));
-        let set_primary_image = false;
-        if (media.length > 0) {
-            for (const medium of media) {
-                if (medium.type == "image") {
-                    if (!set_primary_image) {
-                        embed.setImage(
-                            medium.attachment instanceof Discord.Attachment
-                                ? medium.attachment.url
-                                : medium.attachment.attachment,
-                        );
-                        set_primary_image = true;
-                    } else {
-                        media_embeds.push(
-                            new Discord.EmbedBuilder({
-                                image: {
-                                    url:
-                                        medium.attachment instanceof Discord.Attachment
-                                            ? medium.attachment.url
-                                            : medium.attachment.attachment,
-                                },
-                            }),
-                        );
-                    }
-                } else {
-                    // video
-                    attachments.push(medium.attachment);
-                }
+        const [extra_embeds, attachments] = await this.set_up_embeds_and_attachments(message, options, embed);
+        if (message.forwarded_message) {
+            const embed = new Discord.EmbedBuilder()
+                .setTitle("Forwarded Message")
+                .setColor(colors.alert_color)
+                .setDescription(
+                    message.forwarded_message.content +
+                        (message.forwarded_message.url
+                            ? `\n\n[[Jump to message source]](${message.forwarded_message.url})`
+                            : ""),
+                )
+                .setTimestamp(decode_snowflake(message.id));
+            if (message.forwarded_message.author) {
+                embed.setAuthor({
+                    name: author.display_name, // already resolved
+                    iconURL: member?.avatarURL() ?? author.iconURL,
+                });
             }
-        }
-        for (const sticker of message.stickers ?? []) {
-            if (sticker.url) {
-                media_embeds.push(
-                    new Discord.EmbedBuilder({
-                        image: { url: sticker.url },
-                    }),
-                );
-            }
-        }
-        if (options?.no_extra_media_embeds) {
-            media_embeds.splice(0, media_embeds.length);
-            other_embeds.splice(0, other_embeds.length);
-            attachments.splice(0, attachments.length);
-            other_attachments.splice(0, other_attachments.length);
+            const [forward_embeds, forward_attachments] = await this.set_up_embeds_and_attachments(
+                message.forwarded_message,
+                options,
+                embed,
+            );
+            extra_embeds.push(embed, ...forward_embeds);
+            attachments.push(...forward_attachments);
         }
         return {
-            embeds: [embed, ...media_embeds, ...other_embeds.map(api_embed => new Discord.EmbedBuilder(api_embed))],
-            files:
-                attachments.length + other_attachments.length == 0 ? undefined : [...attachments, ...other_attachments],
+            embeds: [embed, ...extra_embeds],
+            files: attachments.length ? undefined : attachments,
         };
     }
 
@@ -260,6 +339,7 @@ export class BotUtilities {
             assert(message.attachments.length == 0);
             assert(message.embeds.length == 0);
             assert(!message.stickers || message.stickers.length == 0);
+            assert(message.forwarded_message);
         }
         return await this.make_quote_embeds(
             {
@@ -271,6 +351,7 @@ export class BotUtilities {
                 embeds: unwrap(messages.at(-1)).embeds,
                 attachments: unwrap(messages.at(-1)).attachments,
                 stickers: unwrap(messages.at(-1)).stickers,
+                forwarded_message: unwrap(messages.at(-1)).forwarded_message,
             },
             options,
         );
