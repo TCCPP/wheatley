@@ -225,7 +225,7 @@ export default class AntiInviteLinks extends BotComponent {
         }
         const match = match_invite(message.content);
         if (match && !(await this.is_allowed(match)) && !(await this.member_is_proficient_or_higher(message.member))) {
-            const quote = await this.utilities.make_quote_embeds([message]);
+            const quote = await this.utilities.make_quote_embeds(message);
             await message.delete();
             assert(!(message.channel instanceof Discord.PartialGroupDMChannel));
             await message.channel.send(`<@${message.author.id}> Please do not send invite links`);

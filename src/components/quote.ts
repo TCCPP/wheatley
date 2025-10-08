@@ -165,19 +165,26 @@ export default class Quote extends BotComponent {
                         .map(m => m)
                         .reverse();
                     const start_time = fetched_messages.length > 0 ? fetched_messages[0].createdTimestamp : undefined;
-                    const end = index_of_first_not_satisfying(
-                        fetched_messages,
-                        m =>
-                            m.author.id == fetched_messages[0].author.id &&
-                            m.createdTimestamp - start_time! <= 60 * MINUTE,
-                    );
-                    messages = fetched_messages.slice(0, end == -1 ? fetched_messages.length : end);
+                    // build a continuous block, subject to a time constraint and ensuring only the last message has
+                    // media
+                    for (const message of messages) {
+                        if (
+                            message.author.id != fetched_messages[0].author.id ||
+                            message.createdTimestamp - start_time! > 60 * MINUTE
+                        ) {
+                            break;
+                        }
+                        messages.push(message);
+                        if (message.attachments.size > 0 || message.embeds.length > 0 || message.stickers.size > 0) {
+                            break;
+                        }
+                    }
                 } else {
                     const quote_message = await channel.messages.fetch(message_id);
                     messages = [quote_message];
                 }
                 assert(messages.length >= 1);
-                const quote_embeds = await this.utilities.make_quote_embeds(messages, {
+                const quote_embeds = await this.utilities.make_quote_embeds_multi_message(messages, {
                     requested_by: member,
                     safe_link: known_discord_domains.has(domain),
                 });

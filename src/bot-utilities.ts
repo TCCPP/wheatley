@@ -125,29 +125,22 @@ export class BotUtilities {
     }
 
     async make_quote_embeds(
-        messages_objects: (MessageData | Discord.Message)[],
+        message_object: MessageData | Discord.Message,
         options?: quote_options,
     ): Promise<{
         embeds: (Discord.EmbedBuilder | Discord.Embed)[];
         files?: (Discord.AttachmentPayload | Discord.Attachment)[];
     }> {
-        const messages = await Promise.all(
-            messages_objects.map(async message_object => {
-                if (message_object instanceof Discord.Message) {
-                    return await this.get_raw_message_data(message_object);
-                } else {
-                    return message_object;
-                }
-            }),
-        );
-        assert(messages.length >= 1);
-        const head = messages[0];
-        const contents = options?.custom_content ?? messages.map(m => m.content).join("\n");
+        const message =
+            message_object instanceof Discord.Message
+                ? await this.get_raw_message_data(message_object)
+                : message_object;
+        const contents = options?.custom_content ?? message.content;
         const template = options?.template ?? "\n\nFrom <##> [[Jump to message]]($$)";
-        const url = make_url(head);
-        const template_string = template.replaceAll("##", "#" + head.channel).replaceAll("$$", url);
+        const url = make_url(message);
+        const template_string = template.replaceAll("##", "#" + message.channel).replaceAll("$$", url);
         const safe_link = options?.safe_link === undefined ? true : options.safe_link;
-        const author = head.author;
+        const author = message.author;
         const member = await this.wheatley.try_fetch_guild_member(author.id);
         const embed = new Discord.EmbedBuilder()
             .setColor(colors.default)
@@ -158,7 +151,7 @@ export class BotUtilities {
             .setDescription(
                 contents + template_string + (safe_link ? "" : " ⚠️ Unexpected domain, be careful clicking this link"),
             )
-            .setTimestamp(decode_snowflake(head.id));
+            .setTimestamp(decode_snowflake(message.id));
         if (options?.requested_by) {
             embed.setFooter({
                 text: `Quoted by ${options.requested_by.displayName}`,
@@ -172,7 +165,7 @@ export class BotUtilities {
         }
         const footer: string[] = [];
         if (options?.message_id_footer) {
-            footer.push(`Message ID: ${head.id}`);
+            footer.push(`Message ID: ${message.id}`);
         }
         if (options?.user_id_footer) {
             footer.push(`User ID: ${author.id}`);
@@ -185,19 +178,13 @@ export class BotUtilities {
         if (options?.title) {
             embed.setTitle(options.title);
         }
-        const media = (await Promise.all(messages.map(this.get_media))).flat();
-        // M.log(media);
-        const other_embeds = messages.map(message => message.embeds.filter(e => !is_media_link_embed(e))).flat();
-        // M.log(other_embeds);
+        const media = await this.get_media(message);
+        const other_embeds = message.embeds.filter(e => !is_media_link_embed(e));
         const media_embeds: Discord.EmbedBuilder[] = [];
         const attachments: (Discord.Attachment | Discord.AttachmentPayload)[] = [];
-        const other_attachments: Discord.Attachment[] = messages
-            .map(message => [
-                ...message.attachments
-                    .map(a => a)
-                    .filter(a => !(a.contentType?.indexOf("image") == 0 || a.contentType?.indexOf("video") == 0)),
-            ])
-            .flat();
+        const other_attachments: Discord.Attachment[] = message.attachments
+            .map(a => a)
+            .filter(a => !(a.contentType?.indexOf("image") == 0 || a.contentType?.indexOf("video") == 0));
         let set_primary_image = false;
         if (media.length > 0) {
             for (const medium of media) {
@@ -227,10 +214,8 @@ export class BotUtilities {
                 }
             }
         }
-        // Handle stickers
-        const stickers = messages.map(m => m.stickers).flat();
-        for (const sticker of stickers) {
-            if (sticker && sticker.url) {
+        for (const sticker of message.stickers ?? []) {
+            if (sticker.url) {
                 media_embeds.push(
                     new Discord.EmbedBuilder({
                         image: { url: sticker.url },
@@ -244,12 +229,51 @@ export class BotUtilities {
             attachments.splice(0, attachments.length);
             other_attachments.splice(0, other_attachments.length);
         }
-        // M.log([embed, ...media_embeds, ...other_embeds], [...attachments, ...other_attachments]);
         return {
             embeds: [embed, ...media_embeds, ...other_embeds.map(api_embed => new Discord.EmbedBuilder(api_embed))],
             files:
                 attachments.length + other_attachments.length == 0 ? undefined : [...attachments, ...other_attachments],
         };
+    }
+
+    async make_quote_embeds_multi_message(
+        message_objects: (MessageData | Discord.Message)[],
+        options?: quote_options,
+    ): Promise<{
+        embeds: (Discord.EmbedBuilder | Discord.Embed)[];
+        files?: (Discord.AttachmentPayload | Discord.Attachment)[];
+    }> {
+        const messages = await Promise.all(
+            message_objects.map(async message_object => {
+                if (message_object instanceof Discord.Message) {
+                    return await this.get_raw_message_data(message_object);
+                } else {
+                    return message_object;
+                }
+            }),
+        );
+        assert(messages.length >= 1);
+        // ensure all by the same author and only last message has media
+        const head = messages[0];
+        for (const message of messages.slice(0, -1)) {
+            assert(message.author.id == head.author.id);
+            assert(message.attachments.length == 0);
+            assert(message.embeds.length == 0);
+            assert(!message.stickers || message.stickers.length == 0);
+        }
+        return await this.make_quote_embeds(
+            {
+                author: head.author,
+                guild: head.guild,
+                channel: head.channel,
+                id: head.id,
+                content: messages.map(m => m.content).join("\n"),
+                embeds: unwrap(messages.at(-1)).embeds,
+                attachments: unwrap(messages.at(-1)).attachments,
+                stickers: unwrap(messages.at(-1)).stickers,
+            },
+            options,
+        );
     }
 
     async get_channel(id: string) {
