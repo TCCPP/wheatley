@@ -2,11 +2,11 @@ import { strict as assert } from "assert";
 
 import * as Discord from "discord.js";
 
-import { M } from "../utils/debugging-and-logging.js";
-import { BotComponent } from "../bot-component.js";
-import { CommandSetBuilder } from "../command-abstractions/command-set-builder.js";
-import { EarlyReplyMode, TextBasedCommandBuilder } from "../command-abstractions/text-based-command-builder.js";
-import { TextBasedCommand } from "../command-abstractions/text-based-command.js";
+import { M } from "../../utils/debugging-and-logging.js";
+import { BotComponent } from "../../bot-component.js";
+import { CommandSetBuilder } from "../../command-abstractions/command-set-builder.js";
+import { EarlyReplyMode, TextBasedCommandBuilder } from "../../command-abstractions/text-based-command-builder.js";
+import { TextBasedCommand } from "../../command-abstractions/text-based-command.js";
 
 type voice_limit_entry = {
     channel: string;
