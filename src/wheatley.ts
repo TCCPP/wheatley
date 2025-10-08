@@ -16,7 +16,6 @@ import { BotComponent } from "./bot-component.js";
 import { CommandAbstractionReplyOptions } from "./command-abstractions/text-based-command.js";
 
 import { WheatleyDatabase } from "./infra/database-interface.js";
-import { MemberTracker } from "./infra/member-tracker.js";
 import { forge_snowflake, send_long_message_markdown_aware } from "./utils/discord.js";
 import { TypedEventEmitter } from "./utils/event-emitter.js";
 import { setup_metrics_server } from "./infra/prometheus.js";
@@ -211,7 +210,6 @@ export class Wheatley {
 
     readonly event_hub = new TypedEventEmitter<EventMap>();
     readonly components = new Map<string, BotComponent>();
-    readonly tracker: MemberTracker; // TODO: Rename
     readonly log_limiter: LogLimiter;
 
     private command_handler!: CommandHandler;
@@ -270,7 +268,6 @@ export class Wheatley {
 
         this.mom_ping = config.mom ? ` <@${config.mom}>` : "";
 
-        this.tracker = new MemberTracker();
         this.log_limiter = new LogLimiter(this);
 
         // temporary until fixed in djs or @types/node
@@ -353,7 +350,6 @@ export class Wheatley {
                 );
 
                 this.event_hub.emit("wheatley_ready");
-                this.tracker.connect(this);
                 this.client.on("messageCreate", (message: Discord.Message) => {
                     this.on_message(message).catch(this.critical_error.bind(this));
                 });
