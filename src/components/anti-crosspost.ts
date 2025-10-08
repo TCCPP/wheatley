@@ -69,6 +69,7 @@ export default class AntiCrosspost extends BotComponent {
             }
         }
         if (crosspost_channels.size > 0) {
+            crosspost_channels.add(current_message.channel_id);
             M.log("Crosspost detected:", message.author.tag, "across", crosspost_channels.size + 1, "channels");
             const channel_list = Array.from(crosspost_channels)
                 .map(id => `<#${id}>`)
