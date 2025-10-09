@@ -17,6 +17,10 @@ export default class Speedrun extends BotComponent {
     private staff_action_log!: Discord.TextChannel;
     private recent_joins = new SelfClearingMap<Discord.Snowflake, speedrun_join_info>(30 * MINUTE, 10 * MINUTE);
 
+    override async on_ready() {
+        this.setup_listener("guildBanAdd", this.on_guild_ban_add);
+    }
+
     override async setup(commands: CommandSetBuilder) {
         this.staff_action_log = await this.utilities.get_channel(this.wheatley.channels.staff_action_log);
     }
@@ -31,7 +35,7 @@ export default class Speedrun extends BotComponent {
         });
     }
 
-    override async on_guild_member_remove(ban: Discord.GuildBan) {
+    async on_guild_ban_add(ban: Discord.GuildBan) {
         M.debug("speedrun check");
         const user = ban.user;
         const join_info = this.recent_joins.get(user.id);

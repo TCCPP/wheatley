@@ -38,7 +38,7 @@ export class BotComponent {
 
     listeners: [keyof Discord.ClientEvents, (...args: any[]) => any][] = [];
 
-    private setup_listener<E extends keyof Discord.ClientEvents>(
+    protected setup_listener<E extends keyof Discord.ClientEvents>(
         event: E,
         f: undefined | ((...args: Discord.ClientEvents[E]) => Promise<void>),
     ) {
