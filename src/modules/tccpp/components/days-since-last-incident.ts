@@ -6,7 +6,7 @@ import { BotComponent } from "../../../bot-component.js";
 import { Wheatley } from "../../../wheatley.js";
 import { unwrap } from "../../../utils/misc.js";
 import { build_description, capitalize, time_to_human } from "../../../utils/strings.js";
-import { MINUTE } from "../../../common.js";
+import { DAY, MINUTE } from "../../../common.js";
 import { moderation_entry } from "../../../components/moderation/schemata.js";
 import { set_interval } from "../../../utils/node.js";
 
@@ -34,15 +34,42 @@ export default class DaysSinceLastIncident extends BotComponent {
         );
     }
 
-    make_embed(incident: incident_info) {
+    async get_recent_moderations(): Promise<moderation_entry[]> {
+        const cutoff = Date.now() - 30 * DAY;
+        return await this.database.moderations
+            .find({ type: { $ne: "note" }, issued_at: { $gte: cutoff } })
+            .sort({ issued_at: -1 })
+            .toArray();
+    }
+
+    make_embed(incident: incident_info, moderations: moderation_entry[]) {
         const [count, unit] = incident.time.split(" ");
-        return new Discord.EmbedBuilder().setColor(0xefd30a).setDescription(
-            build_description(
-                `# \`${count}\` \`${unit}\` since last incident`,
-                // `**Culprit:** <@${incident.user}> ("${incident.user_name}")`,
-                `**Punishment:** ${capitalize(incident.type)}`,
-            ),
-        );
+        const embed = new Discord.EmbedBuilder()
+            .setColor(0xefd30a)
+            .setDescription(
+                build_description(
+                    `# \`${count}\` \`${unit}\` since last incident`,
+                    `**Last Punishment Type:** ${capitalize(incident.type)}`,
+                ),
+            );
+
+        if (moderations.length > 1) {
+            const survival_streaks = this.calculate_survival_streaks(moderations);
+            embed.addFields({
+                name: "Survival Streaks (Last 30 Days)",
+                value: `\`\`\`\n${survival_streaks}\n\`\`\``,
+                inline: false,
+            });
+
+            const ascii_chart = this.generate_record_attempts_ascii_chart(moderations);
+            embed.addFields({
+                name: "Latest Scores",
+                value: `\`\`\`\n${ascii_chart}\n\`\`\``,
+                inline: false,
+            });
+        }
+
+        return embed;
     }
 
     async last_incident_info(): Promise<incident_info> {
@@ -58,12 +85,104 @@ export default class DaysSinceLastIncident extends BotComponent {
         return { time, user: last_incident.user, user_name: last_incident.user_name, type: last_incident.type };
     }
 
+    calculate_survival_streaks(moderations: moderation_entry[]): string {
+        const buckets = {
+            "<1 min": 0,
+            "1-5 min": 0,
+            "5-15 min": 0,
+            "15-60 min": 0,
+            "1-6 hrs": 0,
+            "6-24 hrs": 0,
+            "1+ day": 0,
+        };
+
+        for (let i = 0; i < moderations.length - 1; i++) {
+            const time_between = moderations[i].issued_at - moderations[i + 1].issued_at;
+            const minutes = time_between / MINUTE;
+
+            if (minutes < 1) {
+                buckets["<1 min"]++;
+            } else if (minutes < 5) {
+                buckets["1-5 min"]++;
+            } else if (minutes < 15) {
+                buckets["5-15 min"]++;
+            } else if (minutes < 60) {
+                buckets["15-60 min"]++;
+            } else if (minutes < 360) {
+                buckets["1-6 hrs"]++;
+            } else if (minutes < 1440) {
+                buckets["6-24 hrs"]++;
+            } else {
+                buckets["1+ day"]++;
+            }
+        }
+
+        const max_count = Math.max(...Object.values(buckets));
+        const bar_length = 20;
+
+        return Object.entries(buckets)
+            .map(([label, count]) => {
+                const filled = Math.round((count / (max_count || 1)) * bar_length);
+                const bar = "█".repeat(filled) + "░".repeat(bar_length - filled);
+                return `${label.padEnd(10)}: ${bar} ${count}`;
+            })
+            .join("\n");
+    }
+
+    generate_record_attempts_ascii_chart(moderations: moderation_entry[]): string {
+        const chart_height = 8;
+        const max_bars = 50;
+
+        if (moderations.length === 0) {
+            return "No incidents to display";
+        }
+
+        const time_between: number[] = [];
+        for (let i = 0; i < moderations.length - 1; i++) {
+            time_between.push((moderations[i].issued_at - moderations[i + 1].issued_at) / MINUTE);
+        }
+
+        const display_data = time_between.slice(0, max_bars).reverse();
+        const max_time = Math.max(...display_data, 1);
+
+        const grid: string[][] = Array(chart_height)
+            .fill(null)
+            .map(() => Array(display_data.length).fill(" "));
+
+        for (let col = 0; col < display_data.length; col++) {
+            const bar_height = Math.round(((chart_height - 1) * display_data[col]) / max_time);
+            for (let row = 0; row < bar_height; row++) {
+                grid[chart_height - 1 - row][col] = "│";
+            }
+        }
+
+        const y_labels = [];
+        for (let i = 0; i < chart_height; i++) {
+            const value = Math.round((max_time * (chart_height - 1 - i)) / (chart_height - 1));
+            const label = value >= 60 ? `${Math.floor(value / 60)}h` : `${value}m`;
+            y_labels.push(label.padStart(4));
+        }
+
+        const lines = [];
+        lines.push("Time");
+        for (let y = 0; y < chart_height; y++) {
+            lines.push(`${y_labels[y]} ┤${grid[y].join("")}`);
+        }
+
+        lines.push(`     ┴${"─".repeat(display_data.length)}`);
+        const label_text = "← Older          Incidents          Newer →";
+        lines.push(`      ${" ".repeat(Math.floor((display_data.length - label_text.length) / 2))}${label_text}`);
+
+        return lines.join("\n");
+    }
+
     async update_or_send_if_needed() {
         const info = await this.last_incident_info();
         if (info.time !== this.last_time) {
             this.last_time = info.time;
+            const moderations = await this.get_recent_moderations();
             await unwrap(this.message).edit({
-                embeds: [this.make_embed(info)],
+                embeds: [this.make_embed(info, moderations)],
             });
         }
     }
@@ -78,9 +197,10 @@ export default class DaysSinceLastIncident extends BotComponent {
             await this.update_or_send_if_needed();
         } else {
             const info = await this.last_incident_info();
+            const moderations = await this.get_recent_moderations();
             this.last_time = info.time;
             await this.days_since_last_incident.send({
-                embeds: [this.make_embed(info)],
+                embeds: [this.make_embed(info, moderations)],
             });
         }
         this.timer = set_interval(() => {
