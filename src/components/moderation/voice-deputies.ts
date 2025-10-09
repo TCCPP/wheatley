@@ -27,6 +27,38 @@ export default class VoiceDeputies extends BotComponent {
                 .set_permissions(Discord.PermissionFlagsBits.MoveMembers | Discord.PermissionFlagsBits.MuteMembers)
                 .set_description("Voice moderation")
                 .add_subcommand(
+                    new TextBasedCommandBuilder("mute", EarlyReplyMode.ephemeral)
+                        .set_permissions(Discord.PermissionFlagsBits.MuteMembers)
+                        .set_description("mute person")
+                        .add_user_option({
+                            description: "User to mute",
+                            title: "user",
+                            required: true,
+                        })
+                        .add_string_option({
+                            description: "Reason",
+                            title: "reason",
+                            required: false,
+                        })
+                        .set_handler(this.wrap_command_handler(this.handle_mute.bind(this))),
+                )
+                .add_subcommand(
+                    new TextBasedCommandBuilder("unmute", EarlyReplyMode.ephemeral)
+                        .set_permissions(Discord.PermissionFlagsBits.MuteMembers)
+                        .set_description("unmute person")
+                        .add_user_option({
+                            description: "User to unmute",
+                            title: "user",
+                            required: true,
+                        })
+                        .add_string_option({
+                            description: "Reason",
+                            title: "reason",
+                            required: false,
+                        })
+                        .set_handler(this.wrap_command_handler(this.handle_unmute.bind(this))),
+                )
+                .add_subcommand(
                     new TextBasedCommandBuilder("give", EarlyReplyMode.ephemeral)
                         .set_description("Give voice")
                         .add_user_option({
@@ -34,7 +66,7 @@ export default class VoiceDeputies extends BotComponent {
                             title: "user",
                             required: true,
                         })
-                        .set_handler(this.wrap_command_handler(this.on_give_voice.bind(this))),
+                        .set_handler(this.wrap_command_handler(this.handle_give_voice.bind(this))),
                 )
                 .add_subcommand(
                     new TextBasedCommandBuilder("take", EarlyReplyMode.ephemeral)
@@ -44,7 +76,12 @@ export default class VoiceDeputies extends BotComponent {
                             title: "user",
                             required: true,
                         })
-                        .set_handler(this.wrap_command_handler(this.on_take_voice.bind(this))),
+                        .add_string_option({
+                            description: "Reason",
+                            title: "reason",
+                            required: false,
+                        })
+                        .set_handler(this.wrap_command_handler(this.handle_take_voice.bind(this))),
                 )
                 .add_subcommand(
                     new TextBasedCommandBuilder("quarantine", EarlyReplyMode.ephemeral)
@@ -59,7 +96,7 @@ export default class VoiceDeputies extends BotComponent {
                             description: "Reason",
                             required: false,
                         })
-                        .set_handler(this.wrap_command_handler(this.on_quarantine.bind(this))),
+                        .set_handler(this.wrap_command_handler(this.handle_quarantine.bind(this))),
                 ),
         );
     }
@@ -102,58 +139,112 @@ export default class VoiceDeputies extends BotComponent {
         });
     }
 
-    private async on_give_voice(command: TextBasedCommand, target: Discord.GuildMember) {
+    static case_summary(
+        target: Discord.User | Discord.PartialUser | null,
+        issuer: Discord.User | Discord.PartialUser,
+        action: string,
+        reason?: string,
+    ) {
+        return new Discord.EmbedBuilder()
+            .setColor(colors.wheatley)
+            .setAuthor(
+                target
+                    ? {
+                          name: target.displayName,
+                          iconURL: target.avatarURL() ?? target.displayAvatarURL(),
+                      }
+                    : null,
+            )
+            .setDescription(
+                build_description(
+                    (target ? `<@${target.id}> ` : "User ") + action,
+                    `**Issuer:** <@${issuer.id}>`,
+                    reason ? `**Reason:** ${reason}` : null,
+                ),
+            )
+            .setFooter(
+                target
+                    ? {
+                          text: `ID: ${target.id}`,
+                      }
+                    : null,
+            );
+    }
+
+    async log_action(
+        target: Discord.User | Discord.PartialUser | null,
+        issuer: Discord.User | Discord.PartialUser,
+        action: string,
+        reason?: string,
+    ) {
+        const summary = VoiceDeputies.case_summary(target, issuer, action, reason);
+        await this.staff_action_log.send({
+            ...summary,
+            allowedMentions: { parse: [] },
+        });
+        return summary;
+    }
+
+    private async log_and_reply_success(
+        command: TextBasedCommand,
+        target: Discord.User | Discord.PartialUser,
+        issuer: Discord.User | Discord.PartialUser,
+        action: string,
+        reason?: string,
+    ) {
+        await this.log_action(target, issuer, action, reason);
+        await this.reply_success(command, `${target.displayName} was ` + action);
+    }
+
+    private async handle_mute(command: TextBasedCommand, target: Discord.GuildMember, reason: string | null) {
+        if (!target.voice.serverMute) {
+            await this.reply_error(command, "user is already muted");
+            return;
+        }
+        await target.voice.setMute(true, reason ?? undefined);
+        await this.log_and_reply_success(command, target.user, command.user, "was muted", reason ?? undefined);
+    }
+
+    private async handle_unmute(command: TextBasedCommand, target: Discord.GuildMember, reason: string | null) {
+        if (!target.voice.serverMute) {
+            await this.reply_error(command, "user is not currently muted");
+            return;
+        }
+        await target.voice.setMute(false, reason ?? undefined);
+        await this.log_and_reply_success(command, target.user, command.user, "was unmuted", reason ?? undefined);
+    }
+
+    private async handle_give_voice(command: TextBasedCommand, target: Discord.GuildMember) {
         if (target.roles.cache.some(r => r.id == this.wheatley.roles.voice.id)) {
             await this.reply_error(command, "user already has voice");
             return;
         }
         await target.roles.add(this.wheatley.roles.voice);
-        await this.reply_success(command, `<@${target.id}> now has voice`);
+        await this.log_and_reply_success(command, target.user, command.user, "was given voice");
     }
 
-    private async on_take_voice(command: TextBasedCommand, target: Discord.GuildMember) {
+    private async handle_take_voice(command: TextBasedCommand, target: Discord.GuildMember, reason: string | null) {
         if (!target.roles.cache.some(r => r.id == this.wheatley.roles.voice.id)) {
             await this.reply_error(command, "user doesn't have voice");
             return;
         }
         await target.roles.remove(this.wheatley.roles.voice);
-        await this.reply_success(command, `<@${target.id}> doesn't have voice anymore`);
+        await this.log_and_reply_success(command, target.user, command.user, "was devoiced", reason ?? undefined);
     }
 
-    private async on_quarantine(command: TextBasedCommand, target: Discord.GuildMember, reason: string | null) {
+    private async handle_quarantine(command: TextBasedCommand, target: Discord.GuildMember, reason: string | null) {
         if (!target.voice.channel && !this.recently_in_voice.has(target.id)) {
             await this.reply_error(command, "user was not recently seen in voice");
             return;
         }
 
         await target.timeout(3 * HOUR);
-        await this.staff_action_log.send({
-            content: `<@${target.id}> was quarantined by <@${command.user.id}>`,
-            allowedMentions: { parse: [] },
-        });
+        const summary = await this.log_action(target.user, command.user, "was quarantined");
         await this.voice_hotline.send({
             content: `<@&${this.wheatley.roles.moderators.id}>`,
-            embeds: [
-                new Discord.EmbedBuilder()
-                    .setColor(colors.alert_color)
-                    .setAuthor({
-                        name: command.user.displayName,
-                        iconURL: command.user.avatarURL() ?? command.user.displayAvatarURL(),
-                    })
-                    // .setTitle(`Moderator Alert!`)
-                    .setDescription(
-                        build_description(
-                            `<@${target.id}> was quarantined`,
-                            `**Issuer:** <@${command.user.id}>`,
-                            reason ? `**Reason:** ${reason}` : null,
-                        ),
-                    )
-                    .setFooter({
-                        text: `ID: ${target.id}`,
-                    }),
-            ],
+            embeds: [summary.setColor(colors.alert_color)],
         });
-        await this.reply_success(command, `<@${target.id}> was quarantined`);
+        await this.reply_success(command, `${target.displayName} was quarantined`);
     }
 
     override async on_voice_state_update(old_state: Discord.VoiceState, new_state: Discord.VoiceState) {
@@ -163,30 +254,25 @@ export default class VoiceDeputies extends BotComponent {
     }
 
     override async on_audit_log_entry_create(entry: Discord.GuildAuditLogsEntry): Promise<void> {
-        if (entry.executorId == this.wheatley.user.id) {
+        if (!entry.executor || entry.executorId == this.wheatley.user.id) {
             return;
         }
 
         if (entry.action == Discord.AuditLogEvent.MemberUpdate) {
             for (const change of entry.changes) {
                 if (change.key == "mute") {
-                    const action = change.old ? "unmuted" : "muted";
-                    await this.staff_action_log.send({
-                        content: `<@${entry.targetId}> was ${action} by <@${entry.executorId}>`,
-                        allowedMentions: { parse: [] },
-                    });
+                    assert(entry.targetType == "User");
+                    await this.log_action(
+                        entry.target as Discord.User,
+                        entry.executor,
+                        change.old ? "was unmuted" : "was muted",
+                    );
                 }
             }
         } else if (entry.action == Discord.AuditLogEvent.MemberMove) {
-            await this.staff_action_log.send({
-                content: `user was moved by <@${entry.executorId}>`,
-                allowedMentions: { parse: [] },
-            });
+            await this.log_action(null, entry.executor, "was moved");
         } else if (entry.action == Discord.AuditLogEvent.MemberDisconnect) {
-            await this.staff_action_log.send({
-                content: `user was disconnected by <@${entry.executorId}>`,
-                allowedMentions: { parse: [] },
-            });
+            await this.log_action(null, entry.executor, "was disconnected");
         }
     }
 
