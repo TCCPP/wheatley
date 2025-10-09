@@ -1,5 +1,5 @@
 import * as fs from "fs";
-import { PCA } from "ml-pca";
+import TSNE from "tsne-js";
 
 const INDEX_DIR = "indexes/wiki";
 
@@ -62,7 +62,7 @@ function generate_visualization_html(
         <div class="info">
             <strong>Model:</strong> ${model_info.model}<br>
             <strong>Original Dimension:</strong> ${model_info.dimension}<br>
-            <strong>Reduced Dimension:</strong> 2 (using PCA)<br>
+            <strong>Reduced Dimension:</strong> 2 (using t-SNE)<br>
             <strong>Number of Articles:</strong> ${points.length}<br>
             <br>
             <em>Article names are displayed next to each point. Hover for details. Use the toolbar to zoom, pan, and interact with the plot.</em>
@@ -154,12 +154,12 @@ function generate_visualization_html(
         const layout = {
             title: 'Wiki Articles in 2D Embedding Space',
             xaxis: {
-                title: 'Principal Component 1',
+                title: 'Component 1',
                 zeroline: true,
                 gridcolor: '#e0e0e0'
             },
             yaxis: {
-                title: 'Principal Component 2',
+                title: 'Component 2',
                 zeroline: true,
                 gridcolor: '#e0e0e0'
             },
@@ -193,17 +193,31 @@ function generate_visualization_html(
 
     console.log(`Loaded ${article_names.length} embeddings of dimension ${embeddings_data.model_info.dimension}`);
 
-    console.log("Applying PCA to reduce dimensions to 2D...");
-    const pca = new PCA(embeddings_matrix);
-    const reduced = pca.predict(embeddings_matrix, { nComponents: 2 });
+    console.log("Applying t-SNE to reduce dimensions to 2D...");
+    const model = new TSNE({
+        dim: 2,
+        perplexity: 30.0,
+        earlyExaggeration: 4.0,
+        learningRate: 100.0,
+        nIter: 1000,
+        metric: "euclidean",
+    });
 
-    const points = reduced.to2DArray().map((coords, idx) => ({
+    model.init({
+        data: embeddings_matrix,
+        type: "dense",
+    });
+
+    model.run();
+    const output = model.getOutput();
+
+    const points = output.map((coords, idx) => ({
         x: coords[0],
         y: coords[1],
         name: article_names[idx],
     }));
 
-    console.log(`Reduced to 2D. Explained variance: ${(pca.getExplainedVariance()[0] + pca.getExplainedVariance()[1]) * 100}%`);
+    console.log("t-SNE dimensionality reduction complete.");
 
     console.log("Generating HTML visualization...");
     const html = generate_visualization_html(points, embeddings_data.model_info);

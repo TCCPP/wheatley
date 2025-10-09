@@ -63,6 +63,7 @@
         "lint-staged": "^16.2.3",
         "ml-pca": "^4.1.1",
         "node-fetch": "^3.3.2",
+        "tsne-js": "^1.0.3",
         "prettier": "3.6.2",
         "vitest": "^3.2.4"
     },
