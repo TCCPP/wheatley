@@ -74,3 +74,7 @@ run-dev-container: build-dev-container  ## Runs the dev container container
 .PHONY: dev
 dev: build  ## Runs in dev mode
 	node build/src/main.js
+
+.PHONY: wiki-index
+wiki-index: prereqs  ## Generates embeddings index for wiki articles
+	npx tsx indexes/wiki/generate-wiki-embeddings.ts
