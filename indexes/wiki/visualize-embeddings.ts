@@ -1,4 +1,5 @@
 import * as fs from "fs";
+// @ts-expect-error tsne-js has no types
 import TSNE from "tsne-js";
 
 const INDEX_DIR = "indexes/wiki";
@@ -211,7 +212,7 @@ function generate_visualization_html(
     model.run();
     const output = model.getOutput();
 
-    const points = output.map((coords, idx) => ({
+    const points = output.map((coords: number[], idx: number) => ({
         x: coords[0],
         y: coords[1],
         name: article_names[idx],
