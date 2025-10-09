@@ -14,8 +14,15 @@ import { Wheatley } from "../wheatley.js";
 import { EarlyReplyMode, TextBasedCommandBuilder } from "../command-abstractions/text-based-command-builder.js";
 import { TextBasedCommand } from "../command-abstractions/text-based-command.js";
 import Help from "./help.js";
+import { Index, IndexEntry, tokenize } from "../algorithm/search.js";
+import {
+    create_embedding_pipeline,
+    generate_embedding,
+    cosine_similarity_vectors,
+    EMBEDDING_MODEL,
+} from "../utils/wiki-embeddings.js";
 
-type WikiArticle = {
+export type WikiArticle = {
     name: string | null; // basename for the article
     title: string;
     body?: string;
@@ -33,6 +40,19 @@ type WikiField = {
     inline: boolean;
 };
 
+type WikiSearchEntry = IndexEntry & {
+    article: WikiArticle;
+    aliases: string[];
+    content: string;
+};
+
+// search tuning
+const EXACT_MATCH_BONUS = 5.0;
+const ALIAS_WEIGHT = 0.8;
+const CONTENT_WEIGHT = 0.4;
+const EMBEDDING_WEIGHT = 0.6;
+const FUZZY_WEIGHT = 0.4;
+
 enum parse_state {
     body,
     field,
@@ -45,7 +65,7 @@ const image_regex = /!\[[^\]]*]\(([^)]*)\)/;
 const reference_definition_regex = /\s*\[([^\]]*)]: (.+)/;
 const reference_link_regex = /\[([^\]]*)]\[([^\]]*)]/g;
 
-export const wiki_articles_path = "wiki/bot-articles";
+export const WIKI_ARTICLES_PATH = "wiki/bot-articles";
 
 type substitution_fun = (str: string) => string;
 
@@ -313,6 +333,141 @@ export function parse_article(
     return [parser.article, parser.article_aliases];
 }
 
+export class WikiSearchIndex extends Index<WikiSearchEntry> {
+    private embeddings: Map<string, number[]> | null = null;
+    private embedding_dimension = 0;
+    private extractor: any = null;
+    private query_embedding: number[] | null = null;
+
+    constructor(entries: WikiSearchEntry[]) {
+        super(entries, (title: string) => [title.toLowerCase()]);
+    }
+
+    async load_embeddings() {
+        const embeddings_path = "indexes/wiki/embeddings.json";
+        try {
+            if (!fs.existsSync(embeddings_path)) {
+                M.info("Wiki embeddings not found, using fuzzy search only");
+                return;
+            }
+            const data = JSON.parse(await fs.promises.readFile(embeddings_path, "utf-8")) as {
+                embeddings: Record<string, number[]>;
+                model_info: { model: string; dimension: number };
+            };
+            this.embeddings = new Map(Object.entries(data.embeddings));
+            this.embedding_dimension = data.model_info.dimension;
+            const { model } = data.model_info;
+            M.info(
+                `Loaded ${this.embeddings.size} wiki article embeddings (${model}, dim=${this.embedding_dimension})`,
+            );
+            M.info(`Loading embedding model ${EMBEDDING_MODEL} for query processing...`);
+            this.extractor = await create_embedding_pipeline();
+            M.info("Embedding model loaded successfully");
+        } catch (e) {
+            M.warn("Failed to load wiki embeddings, falling back to fuzzy search only", e);
+            this.embeddings = null;
+            this.extractor = null;
+        }
+    }
+
+    override score_entry(query: string, entry: WikiSearchEntry & { parsed_title: string[] }) {
+        const base_result = super.score_entry(query, entry);
+        const query_lower = query.toLowerCase();
+        const title_lower = entry.title.toLowerCase();
+
+        let fuzzy_score = base_result.score;
+
+        if (title_lower === query_lower) {
+            fuzzy_score += EXACT_MATCH_BONUS;
+        }
+
+        for (const alias of entry.aliases) {
+            const alias_score = super.score(query, alias).score;
+            if (alias.toLowerCase() === query_lower) {
+                fuzzy_score = Math.max(fuzzy_score, alias_score * ALIAS_WEIGHT + EXACT_MATCH_BONUS);
+            } else {
+                fuzzy_score = Math.max(fuzzy_score, alias_score * ALIAS_WEIGHT);
+            }
+        }
+
+        if (entry.content) {
+            const query_tokens = new Set(tokenize(query));
+            const content_tokens = new Set(tokenize(entry.content));
+            const common_tokens = [...query_tokens].filter(t => content_tokens.has(t));
+            if (common_tokens.length > 0) {
+                fuzzy_score += common_tokens.length * CONTENT_WEIGHT;
+            }
+        }
+
+        let final_score = fuzzy_score;
+
+        if (this.embeddings && this.query_embedding && entry.article.name) {
+            const article_embedding = this.embeddings.get(entry.article.name);
+            if (article_embedding) {
+                const similarity = cosine_similarity_vectors(this.query_embedding, article_embedding);
+                const embedding_score = similarity * 10;
+                final_score = fuzzy_score * FUZZY_WEIGHT + embedding_score * EMBEDDING_WEIGHT;
+            }
+        }
+
+        return {
+            score: final_score,
+            debug_info: base_result.debug_info,
+        };
+    }
+
+    async search_get_top_5_async(query: string) {
+        if (this.extractor) {
+            try {
+                this.query_embedding = await generate_embedding(query, this.extractor);
+            } catch (e) {
+                M.warn("Failed to generate query embedding, falling back to fuzzy search only", e);
+                this.query_embedding = null;
+            }
+        }
+
+        const results = this.search_get_top_5(query);
+        this.query_embedding = null;
+        return results;
+    }
+
+    async search_with_suggestions(query: string): Promise<{
+        result: WikiSearchEntry | null;
+        suggestions: WikiSearchEntry[];
+    }> {
+        const results = await this.search_get_top_5_async(query);
+        return {
+            result: results[0] ?? null,
+            suggestions: results.slice(1, 4),
+        };
+    }
+}
+
+export function create_wiki_search_entries(
+    articles: Record<string, WikiArticle>,
+    article_aliases: Map<string, string>,
+): WikiSearchEntry[] {
+    const entries: WikiSearchEntry[] = [];
+    for (const [name, article] of Object.entries(articles)) {
+        const aliases: string[] = [];
+        for (const [alias, article_name] of article_aliases.entries()) {
+            if (article_name === name) {
+                aliases.push(alias);
+            }
+        }
+        const content_parts = [article.body ?? "", ...article.fields.map(f => `${f.name} ${f.value}`)];
+        const content = content_parts.join(" ").trim();
+        entries.push({
+            title: article.title,
+            article,
+            aliases,
+            content,
+        });
+    }
+
+    return entries;
+}
+
 export default class Wiki extends BotComponent {
     private bot_spam!: Discord.TextChannel;
 
@@ -323,6 +478,7 @@ export default class Wiki extends BotComponent {
     articles: Record<string, WikiArticle> = {};
     article_aliases = new Discord.Collection<string, string>();
     substitute_refs: substitution_fun = str => str;
+    wiki_search_index: WikiSearchIndex | null = null;
 
     override async setup(commands: CommandSetBuilder) {
         this.bot_spam = await this.utilities.get_channel(this.wheatley.channels.bot_spam);
@@ -362,12 +518,20 @@ export default class Wiki extends BotComponent {
                     title: "query",
                     description: "Query",
                     required: true,
-                    autocomplete: query =>
-                        Object.values(this.articles)
-                            .map(article => article.title)
-                            .filter(title => title.toLowerCase().includes(query))
-                            .map(title => ({ name: title, value: title }))
-                            .slice(0, 25),
+                    autocomplete: query => {
+                        if (!this.wiki_search_index) {
+                            return [];
+                        }
+                        if (query.trim() === "") {
+                            return Object.values(this.articles)
+                                .map(article => article.title)
+                                .sort()
+                                .slice(0, 25)
+                                .map(title => ({ name: title, value: title }));
+                        }
+                        const results = this.wiki_search_index.search_get_top_5(query);
+                        return results.slice(0, 25).map(entry => ({ name: entry.title, value: entry.title }));
+                    },
                 })
                 .add_user_option({
                     title: "user",
@@ -411,7 +575,7 @@ export default class Wiki extends BotComponent {
     }
 
     async load_wiki_pages() {
-        for await (const file_path of globIterate(`${wiki_articles_path}/**/*.md`, { withFileTypes: true })) {
+        for await (const file_path of globIterate(`${WIKI_ARTICLES_PATH}/**/*.md`, { withFileTypes: true })) {
             const content = await fs.promises.readFile(file_path.fullpath(), { encoding: "utf-8" });
             let parsed;
             try {
@@ -426,6 +590,11 @@ export default class Wiki extends BotComponent {
                 this.article_aliases.set(alias, file_path.name);
             }
         }
+
+        // Initialize search index
+        const search_entries = create_wiki_search_entries(this.articles, this.article_aliases);
+        this.wiki_search_index = new WikiSearchIndex(search_entries);
+        await this.wiki_search_index.load_embeddings();
     }
 
     async send_wiki_article(article: WikiArticle, command: TextBasedCommand, user: Discord.User | null) {
@@ -479,14 +648,17 @@ export default class Wiki extends BotComponent {
     }
 
     async wiki(command: TextBasedCommand, query: string, user: Discord.User | null) {
-        const matching_articles = Object.entries(this.articles)
-            .filter(([name, { title }]) => name == query || title == query)
-            .map(([_, article]) => article);
-        const article = matching_articles.length > 0 ? matching_articles[0] : undefined;
-        if (article) {
-            await this.send_wiki_article(article, command, user);
+        assert(this.wiki_search_index, "Wiki search index not initialized");
+        const { result, suggestions } = await this.wiki_search_index.search_with_suggestions(query);
+        if (result) {
+            await this.send_wiki_article(result.article, command, user);
         } else {
-            await command.reply("Couldn't find article", true, true);
+            let error_message = "Couldn't find article";
+            if (suggestions.length > 0) {
+                const suggestion_titles = suggestions.map(s => s.title).join(", ");
+                error_message += `\n\nDid you mean: ${suggestion_titles}?`;
+            }
+            await command.reply(error_message, true, true);
         }
     }
 
