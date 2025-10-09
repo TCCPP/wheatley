@@ -40,6 +40,7 @@ const SET_VOICE_STATUS_PERMISSION_BIT = 1n << 48n; // TODO: Replace once discord
 export default class PermissionManager extends BotComponent {
     category_permissions: Record<string, permission_overwrites> = {};
     channel_overrides: Record<string, permission_overwrites> = {};
+    dynamic_channel_overrides: Record<string, permission_overwrites> = {};
 
     setup_permissions_map() {
         // permission sets
@@ -357,22 +358,28 @@ export default class PermissionManager extends BotComponent {
         this.channel_overrides[channel_id] = permissions;
     }
 
-    async sync_channel_permissions(channel: Discord.CategoryChildChannel, category: Discord.CategoryChannel) {
-        if (channel.id in this.channel_overrides) {
-            M.log(
-                `Setting permissions for channel ${channel.id} ${channel.name} ` +
-                    `with category ${category.id} ${category.name}`,
-            );
-            await channel.permissionOverwrites.set(
-                Object.entries(this.channel_overrides[channel.id]).map(([id, permissions]) => ({
-                    id,
-                    ...permissions,
-                })),
-            );
-        } else {
-            M.log(`Syncing channel ${channel.id} ${channel.name} with category ${category.id} ${category.name}`);
-            await channel.lockPermissions();
+    private async set_channel_permissions(channel: Discord.CategoryChildChannel, permissions: permission_overwrites) {
+        await channel.permissionOverwrites.set(
+            Object.entries(permissions).map(([id, permissions]) => ({
+                id,
+                ...permissions,
+            })),
+        );
+    }
+
+    async sync_channel_permissions(channel: Discord.CategoryChildChannel) {
+        if (channel.id in this.dynamic_channel_overrides) {
+            M.log(`Setting dynamic permissions for channel ${channel.id} ${channel.name}`);
+            await this.set_channel_permissions(channel, this.dynamic_channel_overrides[channel.id]);
+            return;
         }
+        if (channel.id in this.channel_overrides) {
+            M.log(`Setting permissions for channel ${channel.id} ${channel.name}`);
+            await this.set_channel_permissions(channel, this.channel_overrides[channel.id]);
+            return;
+        }
+        M.log(`Syncing channel ${channel.id} ${channel.name}`);
+        await channel.lockPermissions();
     }
 
     async sync_category_permissions(category: Discord.CategoryChannel, permissions: permission_overwrites) {
@@ -382,7 +389,7 @@ export default class PermissionManager extends BotComponent {
         );
         const channels = category.children.cache.map(channel => channel);
         for (const channel of channels) {
-            await this.sync_channel_permissions(channel, category);
+            await this.sync_channel_permissions(channel);
         }
     }
 
@@ -401,5 +408,46 @@ export default class PermissionManager extends BotComponent {
         setTimeout(() => {
             this.sync_permissions().catch(this.wheatley.critical_error.bind(this.wheatley));
         }, HOUR);
+    }
+
+    private async mod_has_entered_the_building(channel: Discord.Channel) {
+        assert(channel.isVoiceBased());
+        if (channel.id in this.dynamic_channel_overrides) {
+            return;
+        }
+        const perms = Object.assign({}, this.channel_overrides[channel.id]);
+        perms[this.wheatley.guild.roles.everyone.id].allow = [
+            Discord.PermissionsBitField.Flags.Speak,
+            Discord.PermissionsBitField.Flags.Stream,
+            ...(this.channel_overrides[channel.id][this.wheatley.guild.roles.everyone.id].allow ?? []),
+        ];
+        this.dynamic_channel_overrides[channel.id] = perms;
+        await this.sync_channel_permissions(channel);
+    }
+
+    private async mod_has_left_the_building(channel: Discord.Channel) {
+        assert(channel.isVoiceBased());
+        for (const [id, member] of channel.members) {
+            if (await this.wheatley.check_permissions(member, Discord.PermissionFlagsBits.MuteMembers)) {
+                return;
+            }
+        }
+        delete this.dynamic_channel_overrides[channel.id];
+        await this.sync_channel_permissions(channel);
+    }
+
+    override async on_voice_state_update(old_state: Discord.VoiceState, new_state: Discord.VoiceState) {
+        if (
+            new_state.member &&
+            new_state.member.permissions.has(Discord.PermissionFlagsBits.MuteMembers) &&
+            new_state.channelId != old_state.channelId
+        ) {
+            if (old_state.channel) {
+                await this.mod_has_left_the_building(old_state.channel);
+            }
+            if (new_state.channel) {
+                await this.mod_has_entered_the_building(new_state.channel);
+            }
+        }
     }
 }
