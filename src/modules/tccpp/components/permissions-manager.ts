@@ -416,11 +416,14 @@ export default class PermissionManager extends BotComponent {
             return;
         }
         const perms = Object.assign({}, this.channel_overrides[channel.id]);
-        perms[this.wheatley.guild.roles.everyone.id].allow = [
-            Discord.PermissionsBitField.Flags.Speak,
-            Discord.PermissionsBitField.Flags.Stream,
-            ...(this.channel_overrides[channel.id][this.wheatley.guild.roles.everyone.id].allow ?? []),
-        ];
+        perms[this.wheatley.guild.roles.everyone.id] = {
+            allow: [
+                Discord.PermissionsBitField.Flags.Speak,
+                Discord.PermissionsBitField.Flags.Stream,
+                ...(this.channel_overrides[channel.id][this.wheatley.guild.roles.everyone.id].allow ?? []),
+            ],
+            deny: this.channel_overrides[channel.id][this.wheatley.guild.roles.everyone.id].deny,
+        };
         this.dynamic_channel_overrides[channel.id] = perms;
         await this.sync_channel_permissions(channel);
     }
