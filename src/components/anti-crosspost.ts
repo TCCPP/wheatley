@@ -74,10 +74,11 @@ export default class AntiCrosspost extends BotComponent {
             const channel_list = Array.from(crosspost_channels)
                 .map(id => `<#${id}>`)
                 .join(", ");
-            await message.reply(
+            const reply = await message.reply(
                 `Please don't cross-post the same message across multiple channels (${channel_list}). ` +
                     `Pick the most appropriate channel for your question and ask there.`,
             );
+            this.wheatley.register_non_command_bot_reply(message, reply);
         }
         user_messages.push(current_message);
         this.recent_messages.set(message.author.id, user_messages);
