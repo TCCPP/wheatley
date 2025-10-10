@@ -12,7 +12,7 @@ import { SelfClearingSet } from "../../utils/containers.js";
 import { build_description } from "../../utils/strings.js";
 import { unwrap } from "../../utils/misc.js";
 
-export default class VoiceDeputies extends BotComponent {
+export default class VoiceModeration extends BotComponent {
     private recently_in_voice = new SelfClearingSet<string>(5 * MINUTE);
     private staff_action_log!: Discord.TextChannel;
     private voice_hotline!: Discord.TextChannel;
@@ -177,7 +177,7 @@ export default class VoiceDeputies extends BotComponent {
         action: string,
         reason?: string,
     ) {
-        const summary = VoiceDeputies.case_summary(target, issuer, action, reason);
+        const summary = VoiceModeration.case_summary(target, issuer, action, reason);
         await this.staff_action_log.send({
             embeds: [summary],
             allowedMentions: { parse: [] },
@@ -280,12 +280,12 @@ export default class VoiceDeputies extends BotComponent {
         if (
             message.channel.isVoiceBased() &&
             message.mentions.roles.has(this.wheatley.roles.moderators.id) &&
-            !message.mentions.roles.has(this.wheatley.roles.voice_deputy.id) &&
+            !message.mentions.roles.has(this.wheatley.roles.voice_moderator.id) &&
             !(await this.wheatley.try_fetch_guild_member(message.author))?.roles.cache.has(
-                this.wheatley.roles.voice_deputy.id,
+                this.wheatley.roles.voice_moderator.id,
             )
         ) {
-            await message.channel.send(`<@&${this.wheatley.roles.voice_deputy.id}>`);
+            await message.channel.send(`<@&${this.wheatley.roles.voice_moderator.id}>`);
         }
     }
 }

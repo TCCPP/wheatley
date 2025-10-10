@@ -145,7 +145,7 @@ export default class PermissionManager extends BotComponent {
             [this.wheatley.roles.server_booster.id]: { allow: acive_voice_permissions },
             [this.wheatley.roles.no_voice.id]: no_interaction_at_all,
             [this.wheatley.roles.no_off_topic.id]: no_interaction_at_all,
-            [this.wheatley.roles.voice_deputy.id]: {
+            [this.wheatley.roles.voice_moderator.id]: {
                 allow: [...acive_voice_permissions, SET_VOICE_STATUS_PERMISSION_BIT],
             },
         };
@@ -343,7 +343,7 @@ export default class PermissionManager extends BotComponent {
                     SET_VOICE_STATUS_PERMISSION_BIT,
                 ],
             },
-            [this.wheatley.roles.voice_deputy.id]: {
+            [this.wheatley.roles.voice_moderator.id]: {
                 allow: [Discord.PermissionsBitField.Flags.ViewChannel, Discord.PermissionsBitField.Flags.Connect],
             },
         });
