@@ -179,7 +179,7 @@ export default class VoiceDeputies extends BotComponent {
     ) {
         const summary = VoiceDeputies.case_summary(target, issuer, action, reason);
         await this.staff_action_log.send({
-            ...summary,
+            embeds: [summary],
             allowedMentions: { parse: [] },
         });
         return summary;
