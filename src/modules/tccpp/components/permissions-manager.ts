@@ -420,9 +420,9 @@ export default class PermissionManager extends BotComponent {
             allow: [
                 Discord.PermissionsBitField.Flags.Speak,
                 Discord.PermissionsBitField.Flags.Stream,
-                ...(this.channel_overwrites[channel.id][this.wheatley.guild.roles.everyone.id].allow ?? []),
+                ...(perms[this.wheatley.guild.roles.everyone.id].allow ?? []),
             ],
-            deny: this.channel_overwrites[channel.id][this.wheatley.guild.roles.everyone.id].deny,
+            deny: perms[this.wheatley.guild.roles.everyone.id].deny,
         };
         this.dynamic_channel_overwrites[channel.id] = perms;
         await this.sync_channel_permissions(channel);
