@@ -300,14 +300,17 @@ export class BotTextBasedCommand<Args extends unknown[] = []> extends BaseBotInt
         return command_options as Args;
     }
 
+    get_usage_name_pattern(): string {
+        return `${this.slash ? "/⁠" : "!⁠"}${this.display_prefix}${this.all_names.join("|")}`;
+    }
+
     get_usage(): string {
         if (this.subcommands) {
             return this.subcommands.map(command => command.get_usage()).join("\n");
         } else {
-            const command_part = `!${this.display_prefix}${this.all_names.join("/")}`;
             return wrap(
                 [
-                    command_part,
+                    this.get_usage_name_pattern(),
                     ...this.options.map(option => (option.required ? `<${option.title}>` : `[${option.title}]`)),
                 ].join(" "),
                 "`",

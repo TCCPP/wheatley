@@ -112,7 +112,7 @@ export default class Help extends BotComponent {
                     command_name_to_aliases.set(command_descriptor.alias_of, []);
                 }
                 unwrap(command_name_to_aliases.get(command_descriptor.alias_of)).push(
-                    `\`!${command_descriptor.display_name}\``,
+                    `\`${command_descriptor.get_usage_name_pattern()}\``,
                 );
             }
         }
