@@ -13,6 +13,7 @@ import { Wheatley } from "../../../wheatley.js";
 import { EarlyReplyMode, TextBasedCommandBuilder } from "../../../command-abstractions/text-based-command-builder.js";
 import { TextBasedCommand } from "../../../command-abstractions/text-based-command.js";
 import { MessageContextMenuInteractionBuilder } from "../../../command-abstractions/context-menu.js";
+import { has_media } from "./autoreact.js";
 
 const star_threshold = 5;
 const other_threshold = 5;
@@ -20,6 +21,7 @@ const memes_star_threshold = 16;
 const memes_other_threshold = 16;
 
 const auto_delete_threshold = 5;
+const auto_delete_threshold_no_media = 8;
 
 const max_deletes_in_24h = 7;
 
@@ -169,6 +171,10 @@ export default class Starboard extends BotComponent {
             this.wheatley.channels.skill_role_log,
             this.wheatley.channels.polls,
         ]);
+    }
+
+    get_delete_threshold(message: Discord.Message) {
+        return has_media(message) ? auto_delete_threshold : auto_delete_threshold_no_media;
     }
 
     reactions_string(message: Discord.Message) {
@@ -407,24 +413,21 @@ export default class Starboard extends BotComponent {
             await last_reaction?.remove();
         }
         // Check delete emojis
+        const message = await departialize(reaction.message);
         if (
             reaction.emoji.name &&
             this.delete_emojis.includes(reaction.emoji.name) &&
-            reaction.count >= auto_delete_threshold
+            reaction.count >= this.get_delete_threshold(message)
         ) {
-            await this.handle_auto_delete(
-                await departialize(reaction.message),
-                reaction,
-                delete_trigger_type.delete_this,
-            );
+            await this.handle_auto_delete(message, reaction, delete_trigger_type.delete_this);
             return;
         }
         if (
             reaction.emoji.name &&
             this.repost_emojis.includes(reaction.emoji.name) &&
-            reaction.count >= auto_delete_threshold
+            reaction.count >= this.get_delete_threshold(message)
         ) {
-            await this.handle_auto_delete(await departialize(reaction.message), reaction, delete_trigger_type.repost);
+            await this.handle_auto_delete(message, reaction, delete_trigger_type.repost);
             return;
         }
 
