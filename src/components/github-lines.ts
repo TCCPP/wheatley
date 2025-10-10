@@ -7,7 +7,7 @@ const fetch = (url: RequestInfo, init?: RequestInit) =>
 import { M } from "../utils/debugging-and-logging.js";
 import { BotComponent } from "../bot-component.js";
 
-const MAX_LINES = 20;
+const MAX_LINES = 12;
 
 type code_link_info =
     | {
