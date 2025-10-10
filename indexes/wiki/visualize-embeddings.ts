@@ -1,6 +1,5 @@
 import * as fs from "fs";
-// @ts-expect-error tsne-js has no types
-import TSNE from "tsne-js";
+import tsnejs from "./tsne.js";
 
 const INDEX_DIR = "indexes/wiki";
 
@@ -195,22 +194,19 @@ function generate_visualization_html(
     console.log(`Loaded ${article_names.length} embeddings of dimension ${embeddings_data.model_info.dimension}`);
 
     console.log("Applying t-SNE to reduce dimensions to 2D...");
-    const model = new TSNE({
-        dim: 2,
+    const tsne = new tsnejs.tSNE({
+        epsilon: 100.0,
         perplexity: 30.0,
-        earlyExaggeration: 4.0,
-        learningRate: 100.0,
-        nIter: 1000,
-        metric: "euclidean",
+        dim: 2,
     });
 
-    model.init({
-        data: embeddings_matrix,
-        type: "dense",
-    });
+    tsne.initDataRaw(embeddings_matrix);
 
-    model.run();
-    const output = model.getOutput();
+    for (let i = 0; i < 1000; i++) {
+        tsne.step();
+    }
+
+    const output = tsne.getSolution();
 
     const points = output.map((coords: number[], idx: number) => ({
         x: coords[0],
