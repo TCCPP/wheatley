@@ -468,6 +468,10 @@ export function create_wiki_search_entries(
     return entries;
 }
 
+function alphabetical_compare(a: string, b: string): number {
+    return a.localeCompare(b);
+}
+
 export default class Wiki extends BotComponent {
     private bot_spam!: Discord.TextChannel;
 
@@ -525,7 +529,7 @@ export default class Wiki extends BotComponent {
                         if (query.trim() === "") {
                             return Object.values(this.articles)
                                 .map(article => article.title)
-                                .sort()
+                                .sort(alphabetical_compare)
                                 .slice(0, 25)
                                 .map(title => ({ name: title, value: title }));
                         }
