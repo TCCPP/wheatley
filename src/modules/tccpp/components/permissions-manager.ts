@@ -412,7 +412,7 @@ export default class PermissionManager extends BotComponent {
 
     private async mod_has_entered_the_building(channel: Discord.Channel) {
         assert(channel.isVoiceBased());
-        if (channel.id in this.dynamic_channel_overwrites) {
+        if (channel.id in this.dynamic_channel_overwrites || !(channel.id in this.channel_overwrites)) {
             return;
         }
         const perms = Object.assign({}, this.channel_overwrites[channel.id]);
