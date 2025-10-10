@@ -7,10 +7,24 @@ import { Wheatley } from "../../../wheatley.js";
 import { unwrap } from "../../../utils/misc.js";
 import { build_description, capitalize, time_to_human } from "../../../utils/strings.js";
 import { DAY, MINUTE } from "../../../common.js";
-import { moderation_entry } from "../../../components/moderation/schemata.js";
+import { moderation_entry, moderation_type } from "../../../components/moderation/schemata.js";
 import { set_interval } from "../../../utils/node.js";
 
-type incident_info = { time: string; user: string; user_name: string; type: string };
+const type_labels = {
+    ban: "Permanent Ban",
+    temp_ban: "Temp Ban",
+    kick: "Kick",
+    mute: "Mute",
+    rolepersist: "Rolepersist",
+};
+
+type incident_info = {
+    time: string;
+    user: string;
+    user_name: string;
+    type: string;
+    type_times: Map<keyof typeof type_labels, string>;
+};
 
 export default class DaysSinceLastIncident extends BotComponent {
     message: Discord.Message | null = null;
@@ -53,6 +67,23 @@ export default class DaysSinceLastIncident extends BotComponent {
                 ),
             );
 
+        const type_breakdown_lines: string[] = [];
+        for (const [type, label] of Object.entries(type_labels) as [keyof typeof type_labels, string][]) {
+            const time = incident.type_times.get(type);
+            if (time) {
+                const [count, unit] = time.split(" ");
+                type_breakdown_lines.push(`**${label}: \`${count}\` \`${unit}\`**`);
+            } else {
+                type_breakdown_lines.push(`**${label}: Never**`);
+            }
+        }
+
+        embed.addFields({
+            name: "Incident Drilldown",
+            value: type_breakdown_lines.join("\n"),
+            inline: false,
+        });
+
         if (moderations.length > 1) {
             const survival_streaks = this.calculate_survival_streaks(moderations);
             embed.addFields({
@@ -82,7 +113,37 @@ export default class DaysSinceLastIncident extends BotComponent {
         const last_incident = moderations[0];
         const delta = Date.now() - last_incident.issued_at;
         const time = delta < MINUTE ? "0 minutes" : time_to_human(delta, 1);
-        return { time, user: last_incident.user, user_name: last_incident.user_name, type: last_incident.type };
+
+        const type_times = new Map<keyof typeof type_labels, string>();
+        for (const key of Object.keys(type_labels) as (keyof typeof type_labels)[]) {
+            const query = (() => {
+                if (key === "ban") {
+                    return { type: "ban" as const, duration: null };
+                } else if (key === "temp_ban") {
+                    return { type: "ban" as const, duration: { $ne: null } };
+                } else {
+                    return { type: key as moderation_type };
+                }
+            })();
+            const type_moderations = await this.database.moderations
+                .find(query)
+                .sort({ issued_at: -1 })
+                .limit(1)
+                .toArray();
+            if (type_moderations.length > 0) {
+                const type_delta = Date.now() - type_moderations[0].issued_at;
+                const type_time = type_delta < MINUTE ? "0 minutes" : time_to_human(type_delta, 1);
+                type_times.set(key, type_time);
+            }
+        }
+
+        return {
+            time,
+            user: last_incident.user,
+            user_name: last_incident.user_name,
+            type: last_incident.type,
+            type_times,
+        };
     }
 
     calculate_survival_streaks(moderations: moderation_entry[]): string {
