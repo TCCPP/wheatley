@@ -390,6 +390,14 @@ export default class PermissionManager extends BotComponent {
         const channels = category.children.cache.map(channel => channel);
         for (const channel of channels) {
             await this.sync_channel_permissions(channel);
+            if (channel.isVoiceBased()) {
+                for (const [id, member] of channel.members) {
+                    if (await this.wheatley.check_permissions(member, Discord.PermissionFlagsBits.MuteMembers)) {
+                        await this.mod_has_entered_the_building(channel);
+                        break;
+                    }
+                }
+            }
         }
     }
 
@@ -410,19 +418,28 @@ export default class PermissionManager extends BotComponent {
         }, HOUR);
     }
 
+    private mods_boost_voice_permissions(channel: Discord.VoiceBasedChannel) {
+        const perms = channel.permissionsFor(this.wheatley.guild.roles.everyone);
+        return (
+            !perms.has(Discord.PermissionsBitField.Flags.Speak) &&
+            !perms.has(Discord.PermissionsBitField.Flags.Stream) &&
+            channel.id != this.wheatley.guild.afkChannelId
+        );
+    }
+
     private async mod_has_entered_the_building(channel: Discord.Channel) {
         assert(channel.isVoiceBased());
-        if (channel.id in this.dynamic_channel_overwrites || !(channel.id in this.channel_overwrites)) {
+        if (channel.id in this.dynamic_channel_overwrites || !this.mods_boost_voice_permissions(channel)) {
             return;
         }
-        const perms = Object.assign({}, this.channel_overwrites[channel.id]);
+        const perms = Object.assign({}, this.channel_overwrites[channel.id] ?? {});
         perms[this.wheatley.guild.roles.everyone.id] = {
             allow: [
                 Discord.PermissionsBitField.Flags.Speak,
                 Discord.PermissionsBitField.Flags.Stream,
-                ...(perms[this.wheatley.guild.roles.everyone.id].allow ?? []),
+                ...(perms[this.wheatley.guild.roles.everyone.id]?.allow ?? []),
             ],
-            deny: perms[this.wheatley.guild.roles.everyone.id].deny,
+            deny: perms[this.wheatley.guild.roles.everyone.id]?.deny,
         };
         this.dynamic_channel_overwrites[channel.id] = perms;
         await this.sync_channel_permissions(channel);
@@ -430,6 +447,9 @@ export default class PermissionManager extends BotComponent {
 
     private async mod_has_left_the_building(channel: Discord.Channel) {
         assert(channel.isVoiceBased());
+        if (!(channel.id in this.dynamic_channel_overwrites) || !this.mods_boost_voice_permissions(channel)) {
+            return;
+        }
         for (const [id, member] of channel.members) {
             if (await this.wheatley.check_permissions(member, Discord.PermissionFlagsBits.MuteMembers)) {
                 return;
