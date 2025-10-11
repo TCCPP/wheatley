@@ -13,9 +13,20 @@ type speedrun_join_info = {
     joined_at: number;
 };
 
+export type speedrun_entry = {
+    user_id: string;
+    user_name: string;
+    joined_at: number;
+    banned_at: number;
+    duration: number;
+};
+
 export default class Speedrun extends BotComponent {
     private staff_action_log!: Discord.TextChannel;
     private recent_joins = new SelfClearingMap<Discord.Snowflake, speedrun_join_info>(30 * MINUTE, 10 * MINUTE);
+    private database = this.wheatley.database.create_proxy<{
+        speedrun_attempts: speedrun_entry;
+    }>();
 
     override async on_ready() {
         this.setup_listener("guildBanAdd", this.on_guild_ban_add);
@@ -43,7 +54,15 @@ export default class Speedrun extends BotComponent {
             return;
         }
         const now = Date.now();
-        M.log("Ban speedrun", time_to_human(now - join_info.joined_at), user.id, user.tag);
+        const duration = now - join_info.joined_at;
+        M.log("Ban speedrun", time_to_human(duration), user.id, user.tag);
+        await this.database.speedrun_attempts.insertOne({
+            user_id: user.id,
+            user_name: user.tag,
+            joined_at: join_info.joined_at,
+            banned_at: now,
+            duration: duration,
+        });
         const embed = new Discord.EmbedBuilder()
             .setColor(colors.speedrun_color)
             .setAuthor({
@@ -53,7 +72,7 @@ export default class Speedrun extends BotComponent {
             .setDescription(
                 `User <@${user.id}> joined at ${discord_timestamp(join_info.joined_at, "T")} and` +
                     ` banned at ${discord_timestamp(now, "T")}.\n` +
-                    `Final timer: ${time_to_human(now - join_info.joined_at)}.`,
+                    `Final timer: ${time_to_human(duration)}.`,
             )
             .setFooter({
                 text: `ID: ${user.id}`,
