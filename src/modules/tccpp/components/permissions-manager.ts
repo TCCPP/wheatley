@@ -33,7 +33,7 @@ type permissions_entry = {
     deny?: bigint[];
 };
 
-type permission_overwrites = Record<string, permissions_entry>;
+type permission_overwrites = Partial<Record<string, permissions_entry>>;
 
 const SET_VOICE_STATUS_PERMISSION_BIT = 1n << 48n; // TODO: Replace once discord.js supports this in PermissionsBitField
 
