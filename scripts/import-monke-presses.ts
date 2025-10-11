@@ -23,6 +23,7 @@
 import * as fs from "fs";
 import * as path from "path";
 import * as zlib from "zlib";
+import * as readline from "readline";
 import { promisify } from "util";
 import moment from "moment";
 import JSONC from "jsonc-parser";
@@ -30,9 +31,7 @@ import { WheatleyDatabase } from "../src/infra/database-interface.js";
 import { wheatley_config } from "../src/wheatley.js";
 import { monke_button_press_entry } from "../src/components/moderation/schemata.js";
 
-const readFile = promisify(fs.readFile);
 const readdir = promisify(fs.readdir);
-const gunzip = promisify(zlib.gunzip);
 
 // Logged to log files since May 18, 2022 https://github.com/TCCPP/wheatley/commit/c4af42c137f1fee6aac780a4fe7ebdb9f14c2dc5
 const LOG_PATTERNS = [
@@ -53,14 +52,15 @@ async function parse_gzipped_log(log_path: string): Promise<monke_button_press_e
 
     console.log(`Processing log file: ${log_path}`);
 
-    // Read and decompress the gzipped log file
-    const compressed_data = await readFile(log_path);
-    const decompressed_data = await gunzip(compressed_data);
-    const content = decompressed_data.toString("utf-8");
+    // Create a stream pipeline: read -> decompress -> readline
+    const read_stream = fs.createReadStream(log_path);
+    const gunzip_stream = zlib.createGunzip();
+    const rl = readline.createInterface({
+        input: read_stream.pipe(gunzip_stream),
+        crlfDelay: Infinity,
+    });
 
-    // Parse log lines
-    const lines = content.split("\n");
-    for (const line of lines) {
+    for await (const line of rl) {
         for (const { regex, format } of LOG_PATTERNS) {
             const match = line.match(regex);
             if (match) {
