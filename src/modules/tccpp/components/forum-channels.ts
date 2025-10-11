@@ -9,6 +9,8 @@ import { Wheatley } from "../../../wheatley.js";
 import { clear_timeout, set_interval, set_timeout } from "../../../utils/node.js";
 import { Synopsinator } from "../../../utils/synopsis.js";
 import { CommandSetBuilder } from "../../../command-abstractions/command-set-builder.js";
+import { unwrap } from "../../../utils/misc.js";
+import ForumControl from "./forum-control.js";
 
 // TODO: Take into account thread's inactivity setting
 
@@ -54,6 +56,7 @@ export default class ForumChannels extends BotComponent {
     private c_help!: Discord.ForumChannel;
     private cpp_help_text!: Discord.TextChannel;
     private c_help_text!: Discord.TextChannel;
+    private forum_control!: ForumControl;
 
     override async setup(commands: CommandSetBuilder) {
         this.general_discussion = await this.utilities.get_channel(this.wheatley.channels.general_discussion);
@@ -61,6 +64,7 @@ export default class ForumChannels extends BotComponent {
         this.c_help = await this.utilities.get_forum_channel(this.wheatley.channels.c_help);
         this.cpp_help_text = await this.utilities.get_channel(this.wheatley.channels.cpp_help_text);
         this.c_help_text = await this.utilities.get_channel(this.wheatley.channels.c_help_text);
+        this.forum_control = unwrap(this.wheatley.components.get("ForumControl")) as ForumControl;
     }
 
     private get_corresponding_text_help_channel(thread: Discord.ThreadChannel): Discord.TextChannel {
@@ -309,12 +313,13 @@ export default class ForumChannels extends BotComponent {
                         create_embed(
                             undefined,
                             colors.wheatley,
-                            "When your question is answered use **`!solved`** to " +
+                            "When your question is answered use **`!solved`** or the button below to " +
                                 "mark the question as resolved.\n\nRemember to ask __specific questions__, provide " +
                                 "__necessary details__, and reduce your question to its __simplest form__. For tips " +
                                 "on how to ask a good question use `!howto ask`.",
                         ),
                     ],
+                    components: this.forum_control.create_thread_control_components(thread.id, false),
                 });
                 await this.mirror_forum_post(
                     message,

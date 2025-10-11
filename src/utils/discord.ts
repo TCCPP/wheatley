@@ -532,3 +532,13 @@ export async function send_long_response_markdown_aware(
         });
     }
 }
+
+export async function get_thread_owner(thread: Discord.ThreadChannel) {
+    if (unwrap(thread.parent) instanceof Discord.ForumChannel) {
+        return thread.ownerId;
+    } else {
+        return thread.type == Discord.ChannelType.PrivateThread
+            ? thread.ownerId
+            : (await thread.fetchStarterMessage())! /*TODO*/.author.id;
+    }
+}
