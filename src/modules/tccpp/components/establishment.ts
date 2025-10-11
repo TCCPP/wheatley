@@ -2,16 +2,11 @@ import * as Discord from "discord.js";
 import { unwrap } from "../../../utils/misc.js";
 import { M } from "../../../utils/debugging-and-logging.js";
 import { BotComponent } from "../../../bot-component.js";
-import RoleManager from "../../../components/role-manager.js";
 import { CommandSetBuilder } from "../../../command-abstractions/command-set-builder.js";
 import SkillRoles from "./skill-roles.js";
 
 export default class TheEstablishment extends BotComponent {
-    // private established_role!: Discord.Role;
-
     override async setup(commands: CommandSetBuilder) {
-        // const role_manager = unwrap(this.wheatley.components.get("RoleManager")) as RoleManager;
-        // role_manager.register_role_check(this.check_established.bind(this));
         this.wheatley.is_established_member = this.is_established_member.bind(this);
     }
 
@@ -29,6 +24,4 @@ export default class TheEstablishment extends BotComponent {
             member.permissions.has(Discord.PermissionFlagsBits.ModerateMembers)
         );
     }
-
-    // private async check_established(member: Discord.GuildMember) {}
 }
