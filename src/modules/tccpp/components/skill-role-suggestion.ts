@@ -9,7 +9,7 @@ import { M } from "../../../utils/debugging-and-logging.js";
 import { colors, DAY, MINUTE } from "../../../common.js";
 import { BotComponent } from "../../../bot-component.js";
 import { CommandSetBuilder } from "../../../command-abstractions/command-set-builder.js";
-import SkillRoles from "./skill-roles.js";
+import SkillRoles, { skill_level, skill_levels } from "./skill-roles.js";
 import {
     UserContextMenuInteractionBuilder,
     MessageContextMenuInteractionBuilder,
@@ -18,8 +18,6 @@ import { ModalInteractionBuilder, BotModal, BotModalSubmitInteraction } from "..
 import { build_description, capitalize } from "../../../utils/strings.js";
 import { EarlyReplyMode, TextBasedCommandBuilder } from "../../../command-abstractions/text-based-command-builder.js";
 import { TextBasedCommand } from "../../../command-abstractions/text-based-command.js";
-
-type skill_level = "beginner" | "intermediate" | "proficient" | "advanced" | "expert";
 
 type skill_suggestion_entry = {
     user_id: string;
@@ -34,8 +32,6 @@ type skill_suggestion_thread_entry = {
     thread_opened: number;
     thread_closed: number | null;
 };
-
-const skill_levels: skill_level[] = ["beginner", "intermediate", "proficient", "advanced", "expert"];
 
 type interaction_context = { member: Discord.GuildMember; level?: skill_level; context?: Discord.Message };
 

@@ -8,6 +8,9 @@ import { BotComponent } from "../../../bot-component.js";
 import { CommandSetBuilder } from "../../../command-abstractions/command-set-builder.js";
 import RoleManager, { user_role_entry } from "../../../components/role-manager.js";
 
+export type skill_level = "beginner" | "intermediate" | "proficient" | "advanced" | "expert";
+export const skill_levels: skill_level[] = ["beginner", "intermediate", "proficient", "advanced", "expert"];
+
 export const skill_role_ids = [
     "784733371275673600", // beginner
     "331876085820030978", // intermediate
