@@ -44,3 +44,9 @@ export type moderation_entry = basic_moderation & {
     link: string | null;
     context?: string[];
 };
+
+export type monke_button_press_entry = {
+    user: string; // snowflake
+    user_name: string;
+    timestamp: number; // milliseconds since epoch
+};

@@ -6,7 +6,7 @@ import { M } from "../../utils/debugging-and-logging.js";
 import { colors, HOUR, MINUTE } from "../../common.js";
 import { BotComponent } from "../../bot-component.js";
 import { Wheatley } from "../../wheatley.js";
-import { moderation_state } from "./schemata.js";
+import { moderation_state, monke_button_press_entry } from "./schemata.js";
 import { SelfClearingMap } from "../../utils/containers.js";
 import { unwrap } from "../../utils/misc.js";
 import { set_timeout } from "../../utils/node.js";
@@ -52,6 +52,7 @@ export default class Modmail extends BotComponent {
 
     private database = this.wheatley.database.create_proxy<{
         component_state: moderation_state;
+        monke_button_presses: monke_button_press_entry;
     }>();
     private rules!: Discord.TextChannel;
     private mods!: Discord.TextChannel;
@@ -230,6 +231,11 @@ export default class Modmail extends BotComponent {
             ephemeral: true,
         });
         await this.log_action(interaction.member, "Monkey pressed the button");
+        await this.database.monke_button_presses.insertOne({
+            user: interaction.user.id,
+            user_name: interaction.user.tag,
+            timestamp: Date.now(),
+        });
         try {
             if ((await this.wheatley.try_fetch_guild_member(interaction.user))?.manageable) {
                 const member = await this.wheatley.guild.members.fetch(interaction.user.id);
