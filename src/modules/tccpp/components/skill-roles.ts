@@ -8,24 +8,22 @@ import { BotComponent } from "../../../bot-component.js";
 import { CommandSetBuilder } from "../../../command-abstractions/command-set-builder.js";
 import RoleManager, { user_role_entry } from "../../../components/role-manager.js";
 
-export type skill_level = "beginner" | "intermediate" | "proficient" | "advanced" | "expert";
-export const skill_levels: skill_level[] = ["beginner", "intermediate", "proficient", "advanced", "expert"];
-
-export const skill_role_ids = [
-    "784733371275673600", // beginner
-    "331876085820030978", // intermediate
-    "849399021838925834", // proficient
-    "331719590990184450", // advanced
-    "331719591405551616", // expert
-];
+export enum SkillLevel {
+    Beginner,
+    Intermediate,
+    Proficient,
+    Advanced,
+    Expert,
+}
+export type skill_level = keyof typeof SkillLevel;
 
 export default class SkillRoles extends BotComponent {
     private skill_role_log!: Discord.TextChannel;
     private skill_roles!: Discord.Role[];
 
-    get roles() {
-        return this.skill_roles;
-    }
+    public readonly roles: {
+        [k in skill_level]: Discord.Role;
+    } = {} as any;
 
     database = unwrap(this.wheatley.database).create_proxy<{
         user_roles: user_role_entry & { last_known_skill_role: string | null };
@@ -33,27 +31,33 @@ export default class SkillRoles extends BotComponent {
 
     override async setup(commands: CommandSetBuilder) {
         this.skill_role_log = await this.utilities.get_channel(this.wheatley.channels.skill_role_log);
-        const role_manager = unwrap(this.wheatley.components.get("RoleManager")) as RoleManager;
-        role_manager.register_role_check(this.check_skill_roles.bind(this));
-        role_manager.register_role_update_listener(new Set(skill_role_ids), this.on_skill_role_change.bind(this));
     }
 
     override async on_ready(): Promise<void> {
-        this.skill_roles = await Promise.all(
-            skill_role_ids.map(async (id, index) => {
-                const role = await this.wheatley.guild.roles.fetch(id);
-                assert(role !== null, `Skill role ${id} not found`);
-                return role;
-            }),
+        for (const name in SkillLevel) {
+            const role = this.wheatley.get_role_by_name(name);
+            this.skill_roles.push(role);
+            this.roles[name as skill_level] = role;
+        }
+        const role_manager = unwrap(this.wheatley.components.get("RoleManager")) as RoleManager;
+        role_manager.register_role_check(this.check_skill_roles.bind(this));
+        role_manager.register_role_update_listener(
+            new Set(this.skill_roles.map(r => r.id)),
+            this.on_skill_role_change.bind(this),
         );
     }
 
-    static find_highest_skill_role_index(roles: ReadonlySetLike<string>) {
-        return skill_role_ids.findLastIndex(id => roles.has(id));
+    find_highest_skill_level(member: Discord.GuildMember): number;
+    find_highest_skill_level(roles: ReadonlySetLike<string>): number;
+    find_highest_skill_level(options: ReadonlySetLike<string> | Discord.GuildMember) {
+        if (options instanceof Discord.GuildMember) {
+            return this.find_highest_skill_level(options.roles.cache);
+        }
+        return this.skill_roles.findLastIndex(r => options.has(r.id));
     }
 
     private async check_skill_roles(member: Discord.GuildMember) {
-        const skill_roles = skill_role_ids.filter(id => member.roles.cache.has(id));
+        const skill_roles = this.skill_roles.filter(r => member.roles.cache.has(r.id));
         if (skill_roles.length > 1) {
             M.log("removing redundant skill roles for", member.user.tag);
             for (const id of skill_roles.slice(0, -1)) {
@@ -65,12 +69,12 @@ export default class SkillRoles extends BotComponent {
     private async on_skill_role_change(member: Discord.GuildMember) {
         const roles_entry = await this.database.user_roles.findOne({ user_id: member.id });
         const last_known_skill_level = roles_entry?.last_known_skill_role
-            ? skill_role_ids.indexOf(roles_entry.last_known_skill_role)
+            ? this.skill_roles.findIndex(r => r.id == roles_entry.last_known_skill_role)
             : -1;
-        const current_skill_level = SkillRoles.find_highest_skill_role_index(member.roles.cache);
+        const current_skill_level = this.find_highest_skill_level(member);
         if (current_skill_level > last_known_skill_level) {
             M.log("Detected skill level increase for", member.user.tag);
-            const current_skill_role = this.roles[current_skill_level];
+            const current_skill_role = this.skill_roles[current_skill_level];
             assert(current_skill_role);
             if (current_skill_level > 0) {
                 // don't announce self-assigned roles

@@ -5,11 +5,13 @@ import { strict as assert } from "assert";
 import { M } from "../../../utils/debugging-and-logging.js";
 import { colors, MINUTE } from "../../../common.js";
 import { BotComponent } from "../../../bot-component.js";
-import SkillRoles from "./skill-roles.js";
+import SkillRoles, { SkillLevel } from "./skill-roles.js";
 import { build_description, parse_out } from "../../../utils/strings.js";
 import Code from "../../../components/code.js";
 import { SelfClearingMap, SelfClearingSet } from "../../../utils/containers.js";
 import * as dismark from "dismark";
+import { CommandSetBuilder } from "../../../command-abstractions/command-set-builder.js";
+import { unwrap } from "../../../utils/misc.js";
 
 const FAILED_CODE_BLOCK_RE = /^(?:"""?|'''?)(.+?)(?:"""?|'''?|$)/s;
 
@@ -39,6 +41,8 @@ class FailedCodeBlockRule extends dismark.Rule {
 }
 
 export default class FormattingErrorDetection extends BotComponent {
+    private skill_roles!: SkillRoles;
+
     messaged = new SelfClearingSet<string>(10 * MINUTE);
     // trigger message -> reply
     replies = new SelfClearingMap<string, Discord.Message>(10 * MINUTE);
@@ -121,9 +125,13 @@ export default class FormattingErrorDetection extends BotComponent {
         return (has_likely_format_mistakes as boolean) && !(has_properly_formatted_code_blocks as boolean);
     }
 
+    override async setup(commands: CommandSetBuilder) {
+        this.skill_roles = unwrap(this.wheatley.components.get("SkillRoles")) as SkillRoles;
+    }
+
     has_likely_format_errors(message: Discord.Message) {
         // trust Proficient+ members
-        if (message.member && SkillRoles.find_highest_skill_role_index(message.member.roles.cache) >= 2) {
+        if (message.member && this.skill_roles.find_highest_skill_level(message.member) >= SkillLevel.Proficient) {
             return false;
         }
         return FormattingErrorDetection.has_likely_format_errors(message.content);

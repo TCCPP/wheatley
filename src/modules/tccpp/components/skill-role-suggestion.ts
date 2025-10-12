@@ -9,7 +9,7 @@ import { M } from "../../../utils/debugging-and-logging.js";
 import { colors, DAY, MINUTE } from "../../../common.js";
 import { BotComponent } from "../../../bot-component.js";
 import { CommandSetBuilder } from "../../../command-abstractions/command-set-builder.js";
-import SkillRoles, { skill_level, skill_levels } from "./skill-roles.js";
+import SkillRoles, { SkillLevel, skill_level } from "./skill-roles.js";
 import {
     UserContextMenuInteractionBuilder,
     MessageContextMenuInteractionBuilder,
@@ -115,9 +115,9 @@ export default class SkillRoleSuggestion extends BotComponent {
         const context =
             interaction instanceof Discord.MessageContextMenuCommandInteraction ? interaction.targetMessage : undefined;
         this.target_map.set(interaction.user.id, { member, context });
-        const target_skill_index = SkillRoles.find_highest_skill_role_index(member.roles.cache);
-        const suggestor_skill_index = SkillRoles.find_highest_skill_role_index(suggester.roles.cache);
-        const skill_levels_available = skill_levels.slice(
+        const target_skill_index = this.skill_roles.find_highest_skill_level(member);
+        const suggestor_skill_index = this.skill_roles.find_highest_skill_level(suggester);
+        const skill_levels_available = Object.keys(SkillLevel).slice(
             target_skill_index + 1, // can't suggest anything <= the target's skill
             Math.max(suggestor_skill_index, 0) + 2, // can't suggest anything >= suggestor's skill + 1
         );
@@ -150,17 +150,17 @@ export default class SkillRoleSuggestion extends BotComponent {
             .find({ user_id: member.id, time: { $gte: thread_start_time } })
             .toArray();
         const counts: Record<skill_level, number> = {
-            beginner: 0,
-            intermediate: 0,
-            proficient: 0,
-            advanced: 0,
-            expert: 0,
+            Beginner: 0,
+            Intermediate: 0,
+            Proficient: 0,
+            Advanced: 0,
+            Expert: 0,
         };
         for (const suggestion of suggestions) {
             assert(suggestion.level in counts);
             counts[suggestion.level]++;
         }
-        const sorted_filtered_counts = (Object.entries(counts) as [skill_level, number][])
+        const sorted_filtered_counts = Object.entries(counts)
             .toSorted((a, b) => descending(a, b, v => v[1]))
             .filter(v => v[1] !== 0);
         const suggested_levels = sorted_filtered_counts.map(([k, _]) => k);
@@ -171,7 +171,7 @@ export default class SkillRoleSuggestion extends BotComponent {
             content: build_description(
                 `<@${member.id}> ${member.displayName}`,
                 `Suggested roles: ${sorted_filtered_counts
-                    .map(([level, count]) => `${count}x<@&${this.skill_roles.roles[skill_levels.indexOf(level)].id}>`)
+                    .map(([level, count]) => `${count}x<@&${this.skill_roles.roles[level as skill_level].id}>`)
                     .join(", ")}`,
             ),
         };
@@ -243,7 +243,7 @@ export default class SkillRoleSuggestion extends BotComponent {
         comments: string,
         context: Discord.Message<boolean> | undefined,
     ) {
-        const role = this.skill_roles.roles[skill_levels.indexOf(level)];
+        const role = this.skill_roles.roles[level];
         const suggestion_time = Date.now();
         const res = await this.database.skill_role_suggestions.insertOne({
             user_id: member.user.id,

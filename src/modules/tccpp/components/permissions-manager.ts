@@ -5,9 +5,10 @@ import { strict as assert } from "assert";
 import { M } from "../../../utils/debugging-and-logging.js";
 import { HOUR } from "../../../common.js";
 import { BotComponent } from "../../../bot-component.js";
+import SkillRoles from "./skill-roles.js";
 import { Wheatley } from "../../../wheatley.js";
 import { unwrap } from "../../../utils/misc.js";
-import { skill_role_ids } from "./skill-roles.js";
+import { CommandSetBuilder } from "../../../command-abstractions/command-set-builder.js";
 
 const categories_map = {
     staff_logs: "1135927261472755712",
@@ -39,8 +40,14 @@ type permission_overwrites = Record<string, permissions_entry>;
 const SET_VOICE_STATUS_PERMISSION_BIT = 1n << 48n; // TODO: Replace once discord.js supports this in PermissionsBitField
 
 export default class PermissionManager extends BotComponent {
+    private skill_roles!: SkillRoles;
+
     category_permissions: Record<string, permission_overwrites> = {};
     channel_overrides: Record<string, permission_overwrites> = {};
+
+    override async setup(commands: CommandSetBuilder) {
+        this.skill_roles = unwrap(this.wheatley.components.get("SkillRoles")) as SkillRoles;
+    }
 
     setup_permissions_map() {
         // permission sets
@@ -139,10 +146,10 @@ export default class PermissionManager extends BotComponent {
                 deny: [...acive_voice_permissions, SET_VOICE_STATUS_PERMISSION_BIT],
             },
             [this.wheatley.roles.voice.id]: { allow: acive_voice_permissions },
-            [skill_role_ids[1]]: { allow: acive_voice_permissions },
-            [skill_role_ids[2]]: { allow: acive_voice_permissions },
-            [skill_role_ids[3]]: { allow: acive_voice_permissions },
-            [skill_role_ids[4]]: { allow: acive_voice_permissions },
+            [this.skill_roles.roles.Intermediate.id]: { allow: acive_voice_permissions },
+            [this.skill_roles.roles.Proficient.id]: { allow: acive_voice_permissions },
+            [this.skill_roles.roles.Advanced.id]: { allow: acive_voice_permissions },
+            [this.skill_roles.roles.Expert.id]: { allow: acive_voice_permissions },
             [this.wheatley.roles.server_booster.id]: { allow: acive_voice_permissions },
             [this.wheatley.roles.no_voice.id]: no_interaction_at_all,
             [this.wheatley.roles.no_off_topic.id]: no_interaction_at_all,
