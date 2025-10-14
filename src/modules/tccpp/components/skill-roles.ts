@@ -8,18 +8,19 @@ import { BotComponent } from "../../../bot-component.js";
 import { CommandSetBuilder } from "../../../command-abstractions/command-set-builder.js";
 import RoleManager, { user_role_entry } from "../../../components/role-manager.js";
 
-export enum SkillLevel {
-    Beginner,
-    Intermediate,
-    Proficient,
-    Advanced,
-    Expert,
-}
+// eslint-disable-next-line @typescript-eslint/naming-convention
+export const SkillLevel = {
+    Beginner: 0,
+    Intermediate: 1,
+    Proficient: 2,
+    Advanced: 3,
+    Expert: 4,
+} as const;
 export type skill_level = keyof typeof SkillLevel;
 
 export default class SkillRoles extends BotComponent {
     private skill_role_log!: Discord.TextChannel;
-    private skill_roles!: Discord.Role[];
+    private skill_roles: Discord.Role[] = [];
 
     public readonly roles: {
         [k in skill_level]: Discord.Role;
@@ -33,7 +34,7 @@ export default class SkillRoles extends BotComponent {
         this.skill_role_log = await this.utilities.get_channel(this.wheatley.channels.skill_role_log);
     }
 
-    override async on_ready(): Promise<void> {
+    override async on_ready() {
         for (const name in SkillLevel) {
             const role = this.wheatley.get_role_by_name(name);
             this.skill_roles.push(role);
