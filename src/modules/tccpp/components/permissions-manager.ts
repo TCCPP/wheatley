@@ -432,7 +432,10 @@ export default class PermissionManager extends BotComponent {
         if (channel.id in this.dynamic_channel_overwrites || !this.mods_boost_voice_permissions(channel)) {
             return;
         }
-        const perms = Object.assign({}, this.channel_overwrites[channel.id] ?? {});
+        if (!channel.parent || !(channel.parent.id in this.category_permissions)) {
+            return;
+        }
+        const perms = Object.assign({}, this.category_permissions[channel.parent.id]);
         perms[this.wheatley.guild.roles.everyone.id] = {
             allow: [
                 Discord.PermissionsBitField.Flags.Speak,
