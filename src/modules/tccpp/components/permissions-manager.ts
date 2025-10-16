@@ -418,24 +418,27 @@ export default class PermissionManager extends BotComponent {
         }, HOUR);
     }
 
-    private mods_boost_voice_permissions(channel: Discord.VoiceBasedChannel) {
-        const perms = channel.permissionsFor(this.wheatley.guild.roles.everyone);
-        return (
-            !perms.has(Discord.PermissionsBitField.Flags.Speak) &&
-            !perms.has(Discord.PermissionsBitField.Flags.Stream) &&
-            channel.id != this.wheatley.guild.afkChannelId
-        );
-    }
-
     private async mod_has_entered_the_building(channel: Discord.Channel) {
         assert(channel.isVoiceBased());
-        if (channel.id in this.dynamic_channel_overwrites || !this.mods_boost_voice_permissions(channel)) {
+        if (channel.id in this.dynamic_channel_overwrites || channel.id == this.wheatley.guild.afkChannelId) {
             return;
         }
-        if (!channel.parent || !(channel.parent.id in this.category_permissions)) {
+        const base_perms =
+            channel.id in this.channel_overwrites[channel.id]
+                ? this.channel_overwrites[channel.id]
+                : channel.parent
+                  ? this.category_permissions[channel.parent.id]
+                  : null;
+        if (
+            !base_perms ||
+            !base_perms[this.wheatley.guild.roles.everyone.id]?.deny?.includes(
+                Discord.PermissionsBitField.Flags.Speak,
+            ) ||
+            !base_perms[this.wheatley.guild.roles.everyone.id]?.deny?.includes(Discord.PermissionsBitField.Flags.Stream)
+        ) {
             return;
         }
-        const perms = Object.assign({}, this.category_permissions[channel.parent.id]);
+        const perms = Object.assign({}, base_perms);
         perms[this.wheatley.guild.roles.everyone.id] = {
             allow: [
                 Discord.PermissionsBitField.Flags.Speak,
@@ -450,7 +453,7 @@ export default class PermissionManager extends BotComponent {
 
     private async mod_has_left_the_building(channel: Discord.Channel) {
         assert(channel.isVoiceBased());
-        if (!(channel.id in this.dynamic_channel_overwrites) || !this.mods_boost_voice_permissions(channel)) {
+        if (!(channel.id in this.dynamic_channel_overwrites)) {
             return;
         }
         for (const [id, member] of channel.members) {
