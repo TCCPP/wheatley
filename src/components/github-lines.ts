@@ -164,7 +164,7 @@ export default class GithubLines extends BotComponent {
     private async send_snippet_reply(message: Discord.Message, content: string): Promise<void> {
         const reply = await message.reply({
             content,
-            allowedMentions: { repliedUser: false },
+            allowedMentions: { repliedUser: false, parse: [] },
         });
         this.wheatley.register_non_command_bot_reply(message, reply);
     }
@@ -177,7 +177,14 @@ export default class GithubLines extends BotComponent {
             if (start_line <= 0 || end_line <= 0) {
                 return null;
             }
-            return { type: "github", owner_repo, branch, file_path, start_line, end_line };
+            return {
+                type: "github",
+                owner_repo,
+                branch,
+                file_path: decodeURIComponent(file_path),
+                start_line,
+                end_line,
+            };
         } else {
             const [_, user_gist, revision, filename, start_str, end_str] = match;
             const start_line = parseInt(start_str, 10);
@@ -185,7 +192,7 @@ export default class GithubLines extends BotComponent {
             if (start_line <= 0 || end_line <= 0) {
                 return null;
             }
-            return { type: "gist", user_gist, revision, filename, start_line, end_line };
+            return { type: "gist", user_gist, revision, filename: decodeURIComponent(filename), start_line, end_line };
         }
     }
 
@@ -228,6 +235,9 @@ export default class GithubLines extends BotComponent {
 
     override async on_message_create(message: Discord.Message) {
         if (message.author.bot || message.guildId !== this.wheatley.guild.id) {
+            return;
+        }
+        if (!message.mentions.has(this.wheatley.user.id)) {
             return;
         }
         const github_matches = [...message.content.matchAll(this.github_url_regex)].map(match => ({
