@@ -62,7 +62,7 @@ export default class DaysSinceLastIncident extends BotComponent {
     }
 
     async get_recent_monke_presses(): Promise<monke_button_press_entry[]> {
-        const cutoff = Date.now() - 30 * DAY;
+        const cutoff = Date.now() - 40 * DAY;
         return await this.database.monke_button_presses
             .find({ timestamp: { $gte: cutoff } })
             .sort({ timestamp: -1 })
@@ -304,7 +304,7 @@ export default class DaysSinceLastIncident extends BotComponent {
     }
 
     generate_presses_per_day_chart(daily_data: { date: string; count: number }[]): string {
-        const max_bars = 30;
+        const max_bars = 40;
         if (daily_data.length === 0) {
             return "No press data to display";
         }
@@ -359,7 +359,7 @@ export default class DaysSinceLastIncident extends BotComponent {
             value:
                 `**Total Presses (All Time):** ${total_presses.toLocaleString("en-US")}\n` +
                 `**Unique Users (All Time):** ${unique_users.toLocaleString("en-US")}\n` +
-                `**Average Unique Presses/Day (Last 30 Days):** ${average_presses.toFixed(2)}\n` +
+                `**Average Unique Presses/Day (Last 40 Days):** ${average_presses.toFixed(2)}\n` +
                 `${this.analyze_historical_trend(daily_data)}`,
             inline: false,
         });
@@ -367,7 +367,7 @@ export default class DaysSinceLastIncident extends BotComponent {
         if (daily_data.length > 0) {
             const chart = this.generate_presses_per_day_chart(daily_data);
             embed.addFields({
-                name: "Unique Presses Per Day (Last 30 Days)",
+                name: "Unique Presses Per Day (Last 40 Days)",
                 value: `\`\`\`\n${chart}\n\`\`\``,
                 inline: false,
             });
