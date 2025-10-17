@@ -358,6 +358,10 @@ export function split_message_markdown_aware(content: string, limit = 2000): str
                 return `> ${render_node_to_string(node.content, indent)}`;
             case "subtext":
                 return `-# ${render_node_to_string(node.content, indent)}`;
+            case "code_block": {
+                const language = node.language ?? "";
+                return `\`\`\`${language}\n${node.content}\n\`\`\``;
+            }
             case "list":
                 return node.items
                     .map((item, i) => {
