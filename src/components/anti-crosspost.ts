@@ -5,6 +5,7 @@ import { BotComponent } from "../bot-component.js";
 import { Wheatley } from "../wheatley.js";
 import { SelfClearingMap } from "../utils/containers.js";
 import { levenshtein } from "../algorithm/levenshtein.js";
+import { CUSTOM_EMOJIREGEX } from "../utils/discord.js";
 
 type message_info = {
     content: string;
@@ -18,7 +19,13 @@ const MIN_MESSAGE_LENGTH = 50;
 const SIMILARITY_THRESHOLD = 0.3;
 
 function normalize_content(content: string): string {
-    return content.toLowerCase().trim().replace(/\s+/g, " ");
+    return content
+        .replace(CUSTOM_EMOJIREGEX, (match, full, animated, name) => {
+            return `<${animated}:${name}:>`;
+        })
+        .toLowerCase()
+        .trim()
+        .replace(/\s+/g, " ");
 }
 
 function calculate_similarity(content1: string, content2: string): number {
