@@ -38,9 +38,9 @@ type permission_overwrites = Partial<Record<string, permissions_entry>>;
 const SET_VOICE_STATUS_PERMISSION_BIT = 1n << 48n; // TODO: Replace once discord.js supports this in PermissionsBitField
 
 export default class PermissionManager extends BotComponent {
-    category_permissions: Record<string, permission_overwrites> = {};
-    channel_overwrites: Record<string, permission_overwrites> = {};
-    dynamic_channel_overwrites: Record<string, permission_overwrites> = {};
+    category_permissions: Partial<Record<string, permission_overwrites>> = {};
+    channel_overwrites: Partial<Record<string, permission_overwrites>> = {};
+    dynamic_channel_overwrites: Partial<Record<string, permission_overwrites>> = {};
 
     setup_permissions_map() {
         // permission sets
@@ -370,12 +370,12 @@ export default class PermissionManager extends BotComponent {
     async sync_channel_permissions(channel: Discord.CategoryChildChannel) {
         if (channel.id in this.dynamic_channel_overwrites) {
             M.log(`Setting dynamic permissions for channel ${channel.id} ${channel.name}`);
-            await this.set_channel_permissions(channel, this.dynamic_channel_overwrites[channel.id]);
+            await this.set_channel_permissions(channel, unwrap(this.dynamic_channel_overwrites[channel.id]));
             return;
         }
         if (channel.id in this.channel_overwrites) {
             M.log(`Setting permissions for channel ${channel.id} ${channel.name}`);
-            await this.set_channel_permissions(channel, this.channel_overwrites[channel.id]);
+            await this.set_channel_permissions(channel, unwrap(this.channel_overwrites[channel.id]));
             return;
         }
         M.log(`Syncing channel ${channel.id} ${channel.name}`);
@@ -405,7 +405,7 @@ export default class PermissionManager extends BotComponent {
         await Promise.all(
             Object.entries(this.category_permissions).map(async ([id, permissions]) => {
                 const category = await this.utilities.get_category(id);
-                await this.sync_category_permissions(category, permissions);
+                await this.sync_category_permissions(category, unwrap(permissions));
             }),
         );
     }
@@ -423,29 +423,27 @@ export default class PermissionManager extends BotComponent {
         if (channel.id in this.dynamic_channel_overwrites || channel.id == this.wheatley.guild.afkChannelId) {
             return;
         }
+        const everyone = this.wheatley.guild.roles.everyone.id;
         const base_perms =
-            channel.id in this.channel_overwrites[channel.id]
-                ? this.channel_overwrites[channel.id]
-                : channel.parent
-                  ? this.category_permissions[channel.parent.id]
-                  : null;
+            this.channel_overwrites[channel.id] ??
+            (channel.parent ? this.category_permissions[channel.parent.id] : undefined);
         if (
             !base_perms ||
-            !base_perms[this.wheatley.guild.roles.everyone.id]?.deny?.includes(
-                Discord.PermissionsBitField.Flags.Speak,
-            ) ||
-            !base_perms[this.wheatley.guild.roles.everyone.id]?.deny?.includes(Discord.PermissionsBitField.Flags.Stream)
+            !base_perms[everyone] ||
+            !base_perms[everyone].deny ||
+            !base_perms[everyone].deny.includes(Discord.PermissionsBitField.Flags.Speak) ||
+            !base_perms[everyone].deny.includes(Discord.PermissionsBitField.Flags.Stream)
         ) {
             return;
         }
         const perms = Object.assign({}, base_perms);
-        perms[this.wheatley.guild.roles.everyone.id] = {
+        perms[everyone] = {
             allow: [
                 Discord.PermissionsBitField.Flags.Speak,
                 Discord.PermissionsBitField.Flags.Stream,
-                ...(perms[this.wheatley.guild.roles.everyone.id]?.allow ?? []),
+                ...(perms[everyone]?.allow ?? []),
             ],
-            deny: perms[this.wheatley.guild.roles.everyone.id]?.deny,
+            deny: perms[everyone]?.deny,
         };
         this.dynamic_channel_overwrites[channel.id] = perms;
         await this.sync_channel_permissions(channel);
