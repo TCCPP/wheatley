@@ -21,6 +21,17 @@ export type TextBasedCommandParameterOptions = {
     autocomplete?: (partial: string, command_name: string) => { name: string; value: string }[];
 };
 
+export type TextBasedCommandParameterOptionsWithChoices<T> = TextBasedCommandParameterOptions &
+    (
+        | {
+              choices: { name: string; value: T }[];
+              autocomplete?: never;
+          }
+        | {
+              choices?: never;
+          }
+    );
+
 export type CommandCategory =
     | "Wiki Articles"
     | "References"
@@ -77,7 +88,7 @@ export class TextBasedCommandBuilder<
         return this as unknown as TextBasedCommandBuilder<Args, true, HasHandler, HasSubcommands>;
     }
 
-    add_string_option<O extends TextBasedCommandParameterOptions>(
+    add_string_option<O extends TextBasedCommandParameterOptionsWithChoices<string>>(
         option: O,
     ): TextBasedCommandBuilder<
         Append<Args, ConditionalNull<O["required"], string>>,
@@ -98,7 +109,7 @@ export class TextBasedCommandBuilder<
         >;
     }
 
-    add_number_option<O extends TextBasedCommandParameterOptions>(
+    add_number_option<O extends TextBasedCommandParameterOptionsWithChoices<number>>(
         option: O,
     ): TextBasedCommandBuilder<
         Append<Args, ConditionalNull<O["required"], number>>,
