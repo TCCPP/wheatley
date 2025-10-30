@@ -24,7 +24,7 @@ const memes_other_threshold = 16;
 const auto_delete_threshold = 5;
 const auto_delete_threshold_no_media = 8;
 
-const max_deletes_in_24h = 7;
+const max_deletes_in_24h = 12;
 
 const starboard_epoch = new Date("2023-04-01T00:00:00.000Z").getTime();
 
@@ -321,6 +321,40 @@ export default class Starboard extends BotComponent {
         return { recent_message_count, recent_delete_count, total_delete_count };
     }
 
+    async send_auto_delete_dm(message: Discord.Message, trigger_type: delete_trigger_type): Promise<boolean> {
+        try {
+            const trigger_emoji =
+                trigger_type === delete_trigger_type.delete_this ? "<:delet_this:669598943117836312>" : ":recycle:";
+            const channel_context =
+                message.channel.id === this.wheatley.channels.memes
+                    ? " in #memes"
+                    : message.channel.id === this.wheatley.channels.cursed_code
+                      ? " in #cursed-code"
+                      : "";
+            const notification_embed = new Discord.EmbedBuilder()
+                .setColor(colors.red)
+                .setTitle(`Message Auto-Deleted in ${message.channel.url}`)
+                .setDescription(`Triggered by ${trigger_emoji} reactions threshold reached`)
+                .setTimestamp();
+            const quote_embeds = await this.utilities.make_quote_embeds(message, {
+                template: "\n\n**Your deleted message:**",
+            });
+            const dm_channel = await message.author.createDM();
+            await dm_channel.send({
+                embeds: [notification_embed, ...quote_embeds.embeds],
+                files: quote_embeds.files,
+            });
+            return true;
+        } catch (e) {
+            if (e instanceof Discord.DiscordAPIError && e.code === 50007) {
+                M.log(`Could not send DM to ${message.author.tag} (DMs disabled)`);
+                return false;
+            } else {
+                throw e;
+            }
+        }
+    }
+
     async handle_auto_delete(
         message: Discord.Message,
         trigger_reaction: Discord.MessageReaction,
@@ -354,6 +388,7 @@ export default class Starboard extends BotComponent {
         const action = do_delete ? "Auto-deleting" : "Auto-delete threshold reached";
         M.log(`${action} ${message.url} for ${trigger_reaction.count} ${trigger_reaction.emoji.name} reactions`);
         let flag_message: Discord.Message | null = null;
+        let dm_sent = false;
         try {
             await this.wheatley.database.lock();
             if (
@@ -378,6 +413,9 @@ export default class Starboard extends BotComponent {
                             `Deletes: ${stats.recent_delete_count} (30d), ${stats.total_delete_count} total`,
                     )
                     .join("\n");
+                if (do_delete) {
+                    dm_sent = await this.send_auto_delete_dm(message, trigger_type);
+                }
                 const stats_embed = new Discord.EmbedBuilder()
                     .setColor(
                         trigger_type == delete_trigger_type.repost
@@ -405,6 +443,13 @@ export default class Starboard extends BotComponent {
                         },
                     )
                     .setFooter({ text: `ID: ${message.author.id}` });
+                if (do_delete && !dm_sent) {
+                    stats_embed.addFields({
+                        name: "DM Notification",
+                        value: "⚠️ Failed to send DM (user has DMs disabled)",
+                        inline: false,
+                    });
+                }
                 const quote_embeds = await this.utilities.make_quote_embeds(message);
                 flag_message = await this.staff_flag_log.send({
                     embeds: [stats_embed, ...quote_embeds.embeds],
