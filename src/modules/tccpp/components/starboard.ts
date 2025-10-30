@@ -404,13 +404,14 @@ export default class Starboard extends BotComponent {
                     }),
                 );
                 const author_stats_value =
-                    `${author_stats.recent_message_count} msgs (7d) | ` +
-                    `Deletes: ${author_stats.recent_delete_count} (30d), ${author_stats.total_delete_count} total`;
+                    `Recent activity: \`${author_stats.recent_message_count}\` messages (7d) | ` +
+                    `Deletes: \`${author_stats.recent_delete_count}\` (30d), ` +
+                    `\`${author_stats.total_delete_count}\` total`;
                 const voter_lines = voter_stats
                     .map(
                         ({ user, stats }) =>
-                            `<@${user.id}> ${user.tag} | ${stats.recent_message_count} msgs (7d) | ` +
-                            `Deletes: ${stats.recent_delete_count} (30d), ${stats.total_delete_count} total`,
+                            `<@${user.id}> ${user.tag} | \`${stats.recent_message_count}\` messages (7d) | ` +
+                            `Deletes: \`${stats.recent_delete_count}\` (30d), \`${stats.total_delete_count}\` total`,
                     )
                     .join("\n");
                 if (do_delete) {
