@@ -6,7 +6,7 @@ import { unwrap } from "../../../utils/misc.js";
 import { EMOJIREGEX, departialize } from "../../../utils/discord.js";
 import { KeyedMutexSet } from "../../../utils/containers.js";
 import { M } from "../../../utils/debugging-and-logging.js";
-import { DAY, MINUTE } from "../../../common.js";
+import { colors, DAY, MINUTE } from "../../../common.js";
 import { BotComponent } from "../../../bot-component.js";
 import { CommandSetBuilder } from "../../../command-abstractions/command-set-builder.js";
 import { Wheatley } from "../../../wheatley.js";
@@ -368,8 +368,8 @@ export default class Starboard extends BotComponent {
                         return { user, stats };
                     }),
                 );
-                const author_stats_line =
-                    `Author: ${author_stats.recent_message_count} msgs (7d) | ` +
+                const author_stats_value =
+                    `${author_stats.recent_message_count} msgs (7d) | ` +
                     `Deletes: ${author_stats.recent_delete_count} (30d), ${author_stats.total_delete_count} total`;
                 const voter_lines = voter_stats
                     .map(
@@ -378,15 +378,37 @@ export default class Starboard extends BotComponent {
                             `Deletes: ${stats.recent_delete_count} (30d), ${stats.total_delete_count} total`,
                     )
                     .join("\n");
+                const stats_embed = new Discord.EmbedBuilder()
+                    .setColor(
+                        trigger_type == delete_trigger_type.repost
+                            ? colors.green
+                            : do_delete
+                              ? colors.red
+                              : colors.alert_color,
+                    )
+                    .setTitle(action)
+                    .setDescription(
+                        `Message from <@${message.author.id}> for ${trigger_reaction.count} ` +
+                            `${trigger_reaction.emoji.name} reactions\n` +
+                            `${this.reactions_string(message)}`,
+                    )
+                    .addFields(
+                        {
+                            name: "Author Statistics",
+                            value: author_stats_value,
+                            inline: false,
+                        },
+                        {
+                            name: "Voters",
+                            value: voter_lines,
+                            inline: false,
+                        },
+                    )
+                    .setFooter({ text: `ID: ${message.author.id}` });
+                const quote_embeds = await this.utilities.make_quote_embeds(message);
                 flag_message = await this.staff_flag_log.send({
-                    content:
-                        `${action} message from <@${message.author.id}> for ` +
-                        `${trigger_reaction.count} ${trigger_reaction.emoji.name} reactions` +
-                        `\n${this.reactions_string(message)}` +
-                        `\n${author_stats_line}` +
-                        "\n" +
-                        voter_lines,
-                    ...(await this.utilities.make_quote_embeds(message)),
+                    embeds: [stats_embed, ...quote_embeds.embeds],
+                    files: quote_embeds.files,
                     allowedMentions: { parse: [] },
                 });
                 // E11000 duplicate key error collection can happen here if somehow the key is inserted but the delete
