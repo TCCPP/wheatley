@@ -61,6 +61,21 @@ type auto_delete_entry = {
     flag_link: string | undefined;
 };
 
+type auto_delete_voter = {
+    user_id: string;
+    username: string;
+};
+
+type auto_delete_detail_entry = {
+    message_id: string;
+    message_author_id: string;
+    message_author_name: string;
+    voters: auto_delete_voter[];
+    vote_count: number;
+    trigger_type: "delete_this" | "repost";
+    delete_timestamp: number;
+};
+
 export default class Starboard extends BotComponent {
     mutex = new KeyedMutexSet<string>();
 
@@ -86,6 +101,7 @@ export default class Starboard extends BotComponent {
         auto_delete_threshold_notifications: auto_delete_threshold_notifications;
         starboard_entries: starboard_entry;
         auto_deletes: auto_delete_entry;
+        auto_delete_details: auto_delete_detail_entry;
     }>();
 
     override async setup(commands: CommandSetBuilder) {
@@ -352,12 +368,27 @@ export default class Starboard extends BotComponent {
             this.wheatley.database.unlock();
         }
         if (do_delete) {
+            const delete_timestamp = Date.now();
             await this.database.auto_deletes.insertOne({
                 user: message.author.id,
                 message_id: message.id,
                 message_timestamp: message.createdTimestamp,
-                delete_timestamp: Date.now(),
+                delete_timestamp,
                 flag_link: flag_message?.url,
+            });
+            const voters = await trigger_reaction.users.fetch();
+            const voter_list: auto_delete_voter[] = voters.map(user => ({
+                user_id: user.id,
+                username: user.tag,
+            }));
+            await this.database.auto_delete_details.insertOne({
+                message_id: message.id,
+                message_author_id: message.author.id,
+                message_author_name: message.author.tag,
+                voters: voter_list,
+                vote_count: trigger_reaction.count,
+                trigger_type: trigger_type === delete_trigger_type.delete_this ? "delete_this" : "repost",
+                delete_timestamp,
             });
             await message.delete();
             assert(!(message.channel instanceof Discord.PartialGroupDMChannel));
