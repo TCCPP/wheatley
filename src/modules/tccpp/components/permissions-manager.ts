@@ -138,6 +138,7 @@ export default class PermissionManager extends BotComponent {
             [this.wheatley.guild.roles.everyone.id]: {
                 deny: [...acive_voice_permissions, SET_VOICE_STATUS_PERMISSION_BIT],
             },
+            [this.wheatley.roles.official_bot.id]: { allow: acive_voice_permissions },
             [this.wheatley.roles.voice.id]: { allow: acive_voice_permissions },
             [this.wheatley.skill_roles.intermediate.id]: { allow: acive_voice_permissions },
             [this.wheatley.skill_roles.proficient.id]: { allow: acive_voice_permissions },
