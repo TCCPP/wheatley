@@ -14,6 +14,7 @@ import { EarlyReplyMode, TextBasedCommandBuilder } from "../../../command-abstra
 import { TextBasedCommand } from "../../../command-abstractions/text-based-command.js";
 import { MessageContextMenuInteractionBuilder } from "../../../command-abstractions/context-menu.js";
 import { has_media } from "./autoreact.js";
+import { message_database_entry } from "../../wheatley-private/components/message-logging.js";
 
 const star_threshold = 5;
 const other_threshold = 5;
@@ -102,6 +103,7 @@ export default class Starboard extends BotComponent {
         starboard_entries: starboard_entry;
         auto_deletes: auto_delete_entry;
         auto_delete_details: auto_delete_detail_entry;
+        message_database: message_database_entry;
     }>();
 
     override async setup(commands: CommandSetBuilder) {
@@ -301,6 +303,24 @@ export default class Starboard extends BotComponent {
         return this.deletes.length;
     }
 
+    async get_user_statistics(user_id: string) {
+        const now = Date.now();
+        const seven_days_ago = now - 7 * DAY;
+        const thirty_days_ago = now - 30 * DAY;
+        const recent_message_count = await this.database.message_database.countDocuments({
+            "author.id": user_id,
+            timestamp: { $gte: seven_days_ago },
+        });
+        const recent_delete_count = await this.database.auto_deletes.countDocuments({
+            user: user_id,
+            delete_timestamp: { $gte: thirty_days_ago },
+        });
+        const total_delete_count = await this.database.auto_deletes.countDocuments({
+            user: user_id,
+        });
+        return { recent_message_count, recent_delete_count, total_delete_count };
+    }
+
     async handle_auto_delete(
         message: Discord.Message,
         trigger_reaction: Discord.MessageReaction,
@@ -340,13 +360,32 @@ export default class Starboard extends BotComponent {
                 do_delete ||
                 !(await this.database.auto_delete_threshold_notifications.findOne({ message: message.id }))
             ) {
+                const author_stats = await this.get_user_statistics(message.author.id);
+                const voters = await trigger_reaction.users.fetch();
+                const voter_stats = await Promise.all(
+                    voters.map(async user => {
+                        const stats = await this.get_user_statistics(user.id);
+                        return { user, stats };
+                    }),
+                );
+                const author_stats_line =
+                    `Author: ${author_stats.recent_message_count} msgs (7d) | ` +
+                    `Deletes: ${author_stats.recent_delete_count} (30d), ${author_stats.total_delete_count} total`;
+                const voter_lines = voter_stats
+                    .map(
+                        ({ user, stats }) =>
+                            `<@${user.id}> ${user.tag} | ${stats.recent_message_count} msgs (7d) | ` +
+                            `Deletes: ${stats.recent_delete_count} (30d), ${stats.total_delete_count} total`,
+                    )
+                    .join("\n");
                 flag_message = await this.staff_flag_log.send({
                     content:
                         `${action} message from <@${message.author.id}> for ` +
                         `${trigger_reaction.count} ${trigger_reaction.emoji.name} reactions` +
                         `\n${this.reactions_string(message)}` +
+                        `\n${author_stats_line}` +
                         "\n" +
-                        (await trigger_reaction.users.fetch()).map(user => `<@${user.id}> ${user.tag}`).join("\n"),
+                        voter_lines,
                     ...(await this.utilities.make_quote_embeds(message)),
                     allowedMentions: { parse: [] },
                 });
