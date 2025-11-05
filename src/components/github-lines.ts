@@ -68,10 +68,12 @@ export default class GithubLines extends BotComponent {
     }
 
     private readonly github_url_regex =
-        /https?:\/\/github\.com\/([a-zA-Z0-9-_]+\/[A-Za-z0-9_.-]+)\/blob\/(.+?)\/(.+?)#L(\d+)[-~]?L?(\d*)/g;
+        // eslint-disable-next-line max-len
+        /https?:\/\/github\.com\/([a-zA-Z0-9-_]+\/[A-Za-z0-9_.-]+)\/blob\/(.+?)\/(.+?)#L(\d+)(?:C\d+)?[-~]?L?(\d*)(?:C\d+)?/g;
 
     private readonly gist_url_regex =
-        /https?:\/\/gist\.github\.com\/([a-zA-Z0-9-_]+\/[0-9a-zA-Z]+)\/?([0-9a-z]*)\/*#file-(.+?)-L(\d+)[-~]?L?(\d*)/g;
+        // eslint-disable-next-line max-len
+        /https?:\/\/gist\.github\.com\/([a-zA-Z0-9-_]+\/[0-9a-zA-Z]+)\/?([0-9a-z]*)\/*#file-(.+?)-L(\d+)(?:C\d+)?[-~]?L?(\d*)(?:C\d+)?/g;
 
     private get_display_name(link_info: code_link_info): string {
         if (link_info.type === "github") {
