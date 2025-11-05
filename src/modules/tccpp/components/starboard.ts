@@ -54,14 +54,6 @@ type auto_delete_threshold_notifications = {
     message: string;
 };
 
-type auto_delete_entry = {
-    user: string;
-    message_id: string;
-    message_timestamp: number;
-    delete_timestamp: number;
-    flag_link: string | undefined;
-};
-
 type auto_delete_voter = {
     user_id: string;
     username: string;
@@ -101,7 +93,6 @@ export default class Starboard extends BotComponent {
         component_state: starboard_state;
         auto_delete_threshold_notifications: auto_delete_threshold_notifications;
         starboard_entries: starboard_entry;
-        auto_deletes: auto_delete_entry;
         auto_delete_details: auto_delete_detail_entry;
         message_database: message_database_entry;
     }>();
@@ -311,12 +302,14 @@ export default class Starboard extends BotComponent {
             "author.id": user_id,
             timestamp: { $gte: seven_days_ago },
         });
-        const recent_delete_count = await this.database.auto_deletes.countDocuments({
+        const recent_delete_count = await this.database.auto_delete_details.countDocuments({
             user: user_id,
             delete_timestamp: { $gte: thirty_days_ago },
+            trigger_type: "delete_this",
         });
-        const total_delete_count = await this.database.auto_deletes.countDocuments({
+        const total_delete_count = await this.database.auto_delete_details.countDocuments({
             user: user_id,
+            trigger_type: "delete_this",
         });
         return { recent_message_count, recent_delete_count, total_delete_count };
     }
@@ -476,13 +469,6 @@ export default class Starboard extends BotComponent {
         }
         if (do_delete) {
             const delete_timestamp = Date.now();
-            await this.database.auto_deletes.insertOne({
-                user: message.author.id,
-                message_id: message.id,
-                message_timestamp: message.createdTimestamp,
-                delete_timestamp,
-                flag_link: flag_message?.url,
-            });
             const voters = await trigger_reaction.users.fetch();
             const voter_list: auto_delete_voter[] = voters.map(user => ({
                 user_id: user.id,
