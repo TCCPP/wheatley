@@ -9,6 +9,8 @@ import { build_description, parse_out } from "../../../utils/strings.js";
 import Code from "../../../components/code.js";
 import { SelfClearingMap, SelfClearingSet } from "../../../utils/containers.js";
 import * as dismark from "dismark";
+import { CommandSetBuilder } from "../../../command-abstractions/command-set-builder.js";
+import { ButtonInteractionBuilder, BotButton } from "../../../command-abstractions/button.js";
 
 const FAILED_CODE_BLOCK_RE = /^(?:"""?|'''?)(.+?)(?:"""?|'''?|$)/s;
 
@@ -41,6 +43,30 @@ export default class FormattingErrorDetection extends BotComponent {
     messaged = new SelfClearingSet<string>(10 * MINUTE);
     // trigger message -> reply
     replies = new SelfClearingMap<string, Discord.Message>(10 * MINUTE);
+    private dismiss_button!: BotButton<[string]>;
+
+    override async setup(commands: CommandSetBuilder) {
+        this.dismiss_button = commands.add(
+            new ButtonInteractionBuilder("formatting_error_dismiss")
+                .add_user_id_metadata()
+                .set_handler(this.dismiss_handler.bind(this)),
+        );
+    }
+
+    async dismiss_handler(interaction: Discord.ButtonInteraction, target_user_id: string) {
+        if (interaction.user.id !== target_user_id) {
+            await interaction.reply({
+                ephemeral: true,
+                content: "Only the mentioned user can dismiss this message.",
+            });
+            return;
+        }
+        await interaction.message.delete();
+        await interaction.reply({
+            ephemeral: true,
+            content: "Done",
+        });
+    }
 
     static readonly markdown_parser = new dismark.MarkdownParser([
         new dismark.EscapeRule(),
@@ -135,6 +161,12 @@ export default class FormattingErrorDetection extends BotComponent {
             return;
         }
         if (this.has_likely_format_errors(message)) {
+            const row = new Discord.ActionRowBuilder<Discord.MessageActionRowComponentBuilder>().addComponents(
+                this.dismiss_button
+                    .create_button(message.author.id)
+                    .setLabel("Acknowledge")
+                    .setStyle(Discord.ButtonStyle.Secondary),
+            );
             const reply = await message.channel.send({
                 content: `<@${message.author.id}>`,
                 embeds: [
@@ -150,6 +182,7 @@ export default class FormattingErrorDetection extends BotComponent {
                             ),
                         ),
                 ],
+                components: [row],
             });
             this.messaged.insert(message.author.id);
             this.replies.set(message.id, reply);
