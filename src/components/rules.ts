@@ -64,7 +64,7 @@ export default class RulesMessage extends BotComponent {
 
     async maybe_update_rules_message(existing_message: Discord.Message) {
         const current_embed = this.get_rules();
-        if (existing_message.embeds.length > 0 && embeds_match(existing_message.embeds[0], current_embed)) {
+        if (existing_message.embeds.length > 0 && embeds_match(existing_message.embeds[0], current_embed.data)) {
             M.log("Rules message content is up to date");
         } else {
             M.log("Rules message content has changed, updating");
