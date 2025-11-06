@@ -1,7 +1,7 @@
 import * as Discord from "discord.js";
 import { strict as assert } from "assert";
 import { decode_snowflake, fetch_all_threads_archive_count, get_tag } from "../../../utils/discord.js";
-import { SelfClearingSet } from "../../../utils/containers.js";
+import { SelfClearingMap, SelfClearingSet } from "../../../utils/containers.js";
 import { M } from "../../../utils/debugging-and-logging.js";
 import { colors, DAY, HOUR, MINUTE } from "../../../common.js";
 import { BotComponent } from "../../../bot-component.js";
@@ -48,6 +48,8 @@ export default class ForumChannels extends BotComponent {
 
     // don't prompt twice within 2 hours - that's just annoying
     readonly possibly_resolved = new SelfClearingSet<string>(2 * 60 * MINUTE);
+    // forum post to mirrored message mapping
+    readonly forum_post_mirrors = new SelfClearingMap<string, Discord.Message>(HOUR);
     readonly timeout_map = new Map<string, NodeJS.Timeout>();
     interval!: NodeJS.Timeout;
 
@@ -285,7 +287,15 @@ export default class ForumChannels extends BotComponent {
             custom_content: Synopsinator.make_synopsis(message.content),
             title,
         });
-        await to.send(quote);
+        const mirrored_message = await to.send(quote);
+        this.forum_post_mirrors.set(message.channelId, mirrored_message);
+    }
+
+    is_non_forum_mirror_channel(thread: Discord.ThreadChannel) {
+        return (
+            thread.parentId != null &&
+            [this.wheatley.channels.code_review, this.wheatley.channels.showcase].includes(thread.parentId)
+        );
     }
 
     override async on_message_create(message: Discord.Message) {
@@ -327,10 +337,7 @@ export default class ForumChannels extends BotComponent {
                     true,
                     this.get_corresponding_text_help_channel(thread),
                 );
-            } else if (
-                thread.parentId != null &&
-                [this.wheatley.channels.code_review, this.wheatley.channels.showcase].includes(thread.parentId)
-            ) {
+            } else if (this.is_non_forum_mirror_channel(thread)) {
                 await this.mirror_forum_post(
                     message,
                     `New ${
@@ -343,6 +350,29 @@ export default class ForumChannels extends BotComponent {
         } else {
             if (channel instanceof Discord.ThreadChannel && this.wheatley.is_forum_help_thread(channel)) {
                 await this.handle_message_for_solved_prompt(message);
+            }
+        }
+    }
+
+    async delete_mirrored_message(thread: Discord.ThreadChannel) {
+        const mirrored_message = this.forum_post_mirrors.get(thread.id);
+        if (mirrored_message !== undefined) {
+            try {
+                await mirrored_message.delete();
+                this.forum_post_mirrors.remove(thread.id);
+                M.debug("Deleted mirrored message", mirrored_message.id, "for forum post", thread.id);
+            } catch (error) {
+                M.log("Failed to delete mirrored message for forum post", thread.id, error);
+            }
+        }
+    }
+
+    override async on_message_delete(message: Discord.Message | Discord.PartialMessage) {
+        if (message.channel.id == message.id) {
+            assert(message.channel.isThread());
+            const thread = message.channel;
+            if (this.wheatley.is_forum_help_thread(thread) || this.is_non_forum_mirror_channel(thread)) {
+                await this.delete_mirrored_message(thread);
             }
         }
     }
