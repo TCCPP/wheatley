@@ -601,6 +601,34 @@ export default class Wiki extends BotComponent {
         await this.wiki_search_index.load_embeddings();
     }
 
+    build_article_embed(
+        article: WikiArticle,
+        options?: {
+            member?: Discord.GuildMember | Discord.User;
+        },
+    ): Discord.EmbedBuilder {
+        const embed = new Discord.EmbedBuilder()
+            .setColor(colors.wheatley)
+            .setTitle(article.title)
+            .setDescription(article.body ?? null)
+            .setFields(article.fields);
+        if (article.image) {
+            embed.setImage(article.image);
+        }
+        if (article.set_author && options?.member) {
+            embed.setAuthor({
+                name: options.member.displayName,
+                iconURL: options.member.avatarURL() ?? options.member.displayAvatarURL(),
+            });
+        }
+        if (article.footer) {
+            embed.setFooter({
+                text: article.footer,
+            });
+        }
+        return embed;
+    }
+
     async send_wiki_article(article: WikiArticle, command: TextBasedCommand, user: Discord.User | null) {
         M.log(`Sending wiki article "${article.name}"`);
         let mention: string | null = null;
@@ -614,24 +642,8 @@ export default class Wiki extends BotComponent {
                 should_text_reply: true,
             });
         } else {
-            const embed = new Discord.EmbedBuilder()
-                .setColor(colors.wheatley)
-                .setTitle(article.title)
-                .setImage(article.image ?? null)
-                .setDescription(article.body ?? null)
-                .setFields(article.fields);
-            if (article.set_author) {
-                const member = await command.get_member();
-                embed.setAuthor({
-                    name: member.displayName,
-                    iconURL: member.avatarURL() ?? command.user.displayAvatarURL(),
-                });
-            }
-            if (article.footer) {
-                embed.setFooter({
-                    text: article.footer,
-                });
-            }
+            const member = article.set_author ? await command.get_member() : undefined;
+            const embed = this.build_article_embed(article, { member });
             let components: Discord.ActionRowBuilder<Discord.MessageActionRowComponentBuilder>[] | undefined;
             if (article.wikilink) {
                 const row = new Discord.ActionRowBuilder<Discord.MessageActionRowComponentBuilder>().addComponents(

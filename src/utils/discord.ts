@@ -546,3 +546,42 @@ export async function get_thread_owner(thread: Discord.ThreadChannel) {
             : (await thread.fetchStarterMessage())! /*TODO*/.author.id;
     }
 }
+
+export function embeds_match(existing_embed: Discord.Embed, new_embed: Discord.EmbedBuilder) {
+    const new_embed_data = new_embed.data;
+
+    if (existing_embed.title !== new_embed_data.title) {
+        return false;
+    }
+
+    if (existing_embed.description !== new_embed_data.description) {
+        return false;
+    }
+
+    if (existing_embed.image?.url !== new_embed_data.image?.url) {
+        return false;
+    }
+
+    if (existing_embed.footer?.text !== new_embed_data.footer?.text) {
+        return false;
+    }
+
+    const existing_fields = existing_embed.fields;
+    const new_fields = new_embed_data.fields ?? [];
+
+    if (existing_fields.length !== new_fields.length) {
+        return false;
+    }
+
+    for (let i = 0; i < existing_fields.length; i++) {
+        if (
+            existing_fields[i].name !== new_fields[i].name ||
+            existing_fields[i].value !== new_fields[i].value ||
+            existing_fields[i].inline !== new_fields[i].inline
+        ) {
+            return false;
+        }
+    }
+
+    return true;
+}
