@@ -19,9 +19,17 @@ import { BaseBotInteraction } from "./interaction-base.js";
 import { Wheatley, create_basic_embed } from "../wheatley.js";
 import { colors } from "../common.js";
 
+enum ParseErrorType {
+    RequiredArgument,
+    InvalidChoice,
+}
+
 class ParseError extends Error {
-    constructor(readonly promise: Promise<unknown>) {
-        super();
+    constructor(
+        readonly error_type: ParseErrorType,
+        message: string,
+    ) {
+        super(message);
     }
 }
 
@@ -151,17 +159,15 @@ export class BotTextBasedCommand<Args extends unknown[] = []> extends BaseBotInt
         for (const [i, option] of [...this.options.values()].entries()) {
             try {
                 const required_arg_error = async () => {
-                    if (i === 0) {
-                        return new ParseError(
-                            command_obj.reply({ embeds: [this.command_info_and_description_embed()] }),
-                        );
-                    }
-                    return new ParseError(reply_with_error(`Required argument "${option.title}" not found`));
+                    return new ParseError(
+                        ParseErrorType.RequiredArgument,
+                        `Required argument "${option.title}" not found`,
+                    );
                 };
                 const validate_choices = <T>(v: T) => {
                     const opt = option as TextBasedCommandParameterOptionsWithChoices<T>;
                     if (opt.choices && !opt.choices.find(({ name, value }) => v == value)) {
-                        throw new ParseError(reply_with_error(`Invalid argument choice ${v}`));
+                        throw new ParseError(ParseErrorType.InvalidChoice, `Invalid argument choice ${v}`);
                     }
                     return v;
                 };
@@ -308,7 +314,11 @@ export class BotTextBasedCommand<Args extends unknown[] = []> extends BaseBotInt
                 }
             } catch (e) {
                 if (e instanceof ParseError) {
-                    await e.promise;
+                    if (i === 0 && e.error_type === ParseErrorType.RequiredArgument) {
+                        await command_obj.reply({ embeds: [this.command_info_and_description_embed()] });
+                    } else {
+                        await reply_with_error(e.message);
+                    }
                     return;
                 }
                 this.wheatley.critical_error(e);
