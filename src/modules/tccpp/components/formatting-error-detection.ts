@@ -154,7 +154,7 @@ export default class FormattingErrorDetection extends BotComponent {
 
     has_likely_format_errors(message: Discord.Message) {
         // trust Proficient+ members
-        if (message.member && this.skill_roles.find_highest_skill_level(message.member) >= SkillLevel.Proficient) {
+        if (message.member && this.skill_roles.find_highest_skill_level(message.member) >= SkillLevel.proficient) {
             return false;
         }
         return FormattingErrorDetection.has_likely_format_errors(message.content);

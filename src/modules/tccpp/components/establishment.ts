@@ -21,7 +21,7 @@ export default class TheEstablishment extends BotComponent {
             return false;
         }
         return (
-            this.skill_roles.find_highest_skill_level(member) > SkillLevel.Beginner ||
+            this.skill_roles.find_highest_skill_level(member) > SkillLevel.beginner ||
             member.premiumSince != null ||
             member.permissions.has(Discord.PermissionFlagsBits.MuteMembers) ||
             member.permissions.has(Discord.PermissionFlagsBits.ModerateMembers)

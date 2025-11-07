@@ -150,11 +150,11 @@ export default class SkillRoleSuggestion extends BotComponent {
             .find({ user_id: member.id, time: { $gte: thread_start_time } })
             .toArray();
         const counts: Record<skill_level, number> = {
-            Beginner: 0,
-            Intermediate: 0,
-            Proficient: 0,
-            Advanced: 0,
-            Expert: 0,
+            beginner: 0,
+            intermediate: 0,
+            proficient: 0,
+            advanced: 0,
+            expert: 0,
         };
         for (const suggestion of suggestions) {
             assert(suggestion.level in counts);
