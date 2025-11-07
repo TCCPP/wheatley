@@ -264,7 +264,7 @@ export default class Modlogs extends BotComponent {
     }
 
     async case_info(command: TextBasedCommand, case_number: number) {
-        const moderation = await this.database.moderations.findOne({ case_number });
+        const moderation = await this.get_case(case_number);
         if (moderation) {
             await command.reply({
                 embeds: [
@@ -278,6 +278,10 @@ export default class Modlogs extends BotComponent {
         } else {
             await this.reply_with_error(command, `Case ${case_number} not found`);
         }
+    }
+
+    async get_case(case_number: number) {
+        return await this.database.moderations.findOne({ case_number });
     }
 
     // TODO: Code duplication
