@@ -5,7 +5,7 @@ import { M } from "./utils/debugging-and-logging.js";
 import * as util from "util";
 
 import { Wheatley } from "./wheatley.js";
-import { decode_snowflake, is_media_link_embed, make_url } from "./utils/discord.js";
+import { decode_snowflake, is_media_link_embed, make_url, get_thread_owner } from "./utils/discord.js";
 import { unwrap } from "./utils/misc.js";
 import { colors } from "./common.js";
 
@@ -391,5 +391,13 @@ export class BotUtilities {
         }
         assert(category instanceof Discord.CategoryChannel, `Category ${category} (${id}) not of the expected type`);
         return category;
+    }
+
+    async can_user_control_thread(user: Discord.User, thread: Discord.ThreadChannel) {
+        const owner_id = await get_thread_owner(thread);
+        return (
+            owner_id === user.id ||
+            (await this.wheatley.check_permissions(user, Discord.PermissionFlagsBits.ManageThreads))
+        );
     }
 }

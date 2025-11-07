@@ -1,6 +1,5 @@
 import * as Discord from "discord.js";
 import { strict as assert } from "assert";
-import { unwrap } from "../utils/misc.js";
 import { M } from "../utils/debugging-and-logging.js";
 import { BotComponent } from "../bot-component.js";
 import { CommandSetBuilder } from "../command-abstractions/command-set-builder.js";
@@ -33,16 +32,6 @@ export default class ThreadControl extends BotComponent {
         );
     }
 
-    async get_owner(thread: Discord.ThreadChannel) {
-        if (unwrap(thread.parent) instanceof Discord.ForumChannel) {
-            return thread.ownerId;
-        } else {
-            return thread.type == Discord.ChannelType.PrivateThread
-                ? thread.ownerId
-                : (await thread.fetchStarterMessage())! /*TODO*/.author.id;
-        }
-    }
-
     // returns whether the thread can be controlled
     // or sends an error message
     async try_to_control_thread(request: TextBasedCommand, action: string) {
@@ -52,11 +41,7 @@ export default class ThreadControl extends BotComponent {
             if (thread.parentId == this.rules.id) {
                 return true; // just let the user do it, should be fine
             }
-            const owner_id = await this.get_owner(thread);
-            if (
-                owner_id == request.user.id ||
-                (await this.wheatley.check_permissions(request.user, Discord.PermissionFlagsBits.ManageThreads))
-            ) {
+            if (await this.utilities.can_user_control_thread(request.user, thread)) {
                 return true;
             } else {
                 await request.reply({

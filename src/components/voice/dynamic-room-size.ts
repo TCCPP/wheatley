@@ -2,11 +2,12 @@ import { strict as assert } from "assert";
 
 import * as Discord from "discord.js";
 
-import { M } from "../utils/debugging-and-logging.js";
-import { BotComponent } from "../bot-component.js";
-import { CommandSetBuilder } from "../command-abstractions/command-set-builder.js";
-import { EarlyReplyMode, TextBasedCommandBuilder } from "../command-abstractions/text-based-command-builder.js";
-import { TextBasedCommand } from "../command-abstractions/text-based-command.js";
+import { M } from "../../utils/debugging-and-logging.js";
+import { BotComponent } from "../../bot-component.js";
+import { CommandSetBuilder } from "../../command-abstractions/command-set-builder.js";
+import { EarlyReplyMode, TextBasedCommandBuilder } from "../../command-abstractions/text-based-command-builder.js";
+import { TextBasedCommand } from "../../command-abstractions/text-based-command.js";
+import { unwrap } from "../../utils/misc.js";
 
 type voice_limit_entry = {
     channel: string;
@@ -26,27 +27,56 @@ export default class DynamicRoomSize extends BotComponent {
                 .set_category("Admin utilities")
                 .set_permissions(Discord.PermissionFlagsBits.MuteMembers)
                 .set_description("Manage voice channel user limits")
+                .set_slash(true)
                 .add_subcommand(
-                    new TextBasedCommandBuilder("push", EarlyReplyMode.ephemeral)
+                    new TextBasedCommandBuilder("bump", EarlyReplyMode.ephemeral)
+                        .set_description("Bump channel limit")
+                        .add_number_option({
+                            title: "count",
+                            description: "count to increase channel limit by",
+                            required: false,
+                        })
+                        .set_handler(
+                            async (command: TextBasedCommand, limit: number | null) =>
+                                await this.handle_push(false, command, limit),
+                        ),
+                )
+                .add_subcommand(
+                    new TextBasedCommandBuilder("set", EarlyReplyMode.ephemeral)
                         .set_description("Push new channel limit")
-                        .set_slash(true)
                         .add_number_option({
                             title: "limit",
                             description: "new channel limit",
                             required: true,
                         })
-                        .set_handler(this.handle_push.bind(this)),
+                        .set_handler(
+                            async (command: TextBasedCommand, limit: number) =>
+                                await this.handle_push(true, command, limit),
+                        ),
                 )
                 .add_subcommand(
                     new TextBasedCommandBuilder("pop", EarlyReplyMode.ephemeral)
                         .set_description("Pop channel limit")
-                        .set_slash(true)
                         .set_handler(this.handle_pop.bind(this)),
                 ),
         );
     }
 
-    private async handle_push(command: TextBasedCommand, limit: number) {
+    private handle_push<Absolute extends false>(
+        absolute: Absolute,
+        command: TextBasedCommand,
+        limit: number | null,
+    ): Promise<void>;
+    private handle_push<Absolute extends true>(
+        absolute: Absolute,
+        command: TextBasedCommand,
+        limit: number,
+    ): Promise<void>;
+    private async handle_push<Absolute extends boolean>(
+        absolute: Absolute,
+        command: TextBasedCommand,
+        limit: number | null,
+    ) {
         try {
             if ((await command.get_member()).voice.channelId != command.channel_id) {
                 throw Error("command can only be used in a voice channel you're currently in");
@@ -54,6 +84,7 @@ export default class DynamicRoomSize extends BotComponent {
             if (!command.channel?.isVoiceBased()) {
                 throw Error("command can only be used in voice channel");
             }
+            limit = absolute ? unwrap(limit) : command.channel.userLimit + (limit ?? 1);
             const res = await this.database.voice_limits.findOneAndUpdate(
                 { channel: command.channel_id },
                 {

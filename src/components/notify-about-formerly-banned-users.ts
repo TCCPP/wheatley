@@ -9,6 +9,14 @@ import { moderation_entry } from "./moderation/schemata.js";
 import { unwrap } from "../utils/misc.js";
 import { CommandSetBuilder } from "../command-abstractions/command-set-builder.js";
 import LinkedAccounts from "./linked-accounts.js";
+import { BotButton } from "../command-abstractions/button.js";
+
+export type notify_plugin = {
+    maybe_create_button: (
+        member: Discord.GuildMember,
+        most_recent: moderation_entry,
+    ) => Discord.ButtonBuilder | undefined;
+};
 
 export default class NotifyAboutFormerlyBannedUsers extends BotComponent {
     private staff_action_log!: Discord.TextChannel;
@@ -16,27 +24,29 @@ export default class NotifyAboutFormerlyBannedUsers extends BotComponent {
         moderations: moderation_entry;
     }>();
     private linked_accounts!: LinkedAccounts;
+    private plugins: notify_plugin[] = [];
 
     override async setup(commands: CommandSetBuilder) {
         this.staff_action_log = await this.utilities.get_channel(this.wheatley.channels.staff_action_log);
         this.linked_accounts = unwrap(this.wheatley.components.get("LinkedAccounts")) as LinkedAccounts;
     }
 
+    register_plugin(plugin: notify_plugin) {
+        this.plugins.push(plugin);
+    }
+
     async alert(member: Discord.GuildMember, most_recent: moderation_entry, linked_accounts: Set<string>) {
         const action = most_recent.type == "kick" ? "kicked" : "banned";
-
         const description_parts = [
             `User <@${member.user.id}> was previously ${action} on ${discord_timestamp(most_recent.issued_at)}`,
             most_recent.reason ? `Reason: ${most_recent.reason}` : null,
         ];
-
         if (linked_accounts.size > 0) {
             const account_mentions = Array.from(linked_accounts)
                 .map(id => `<@${id}>`)
                 .join(", ");
             description_parts.push(`⚠️ User has ${linked_accounts.size} linked accounts: ${account_mentions}`);
         }
-
         const embed = new Discord.EmbedBuilder()
             .setColor(colors.alert_color)
             .setAuthor({
@@ -48,7 +58,18 @@ export default class NotifyAboutFormerlyBannedUsers extends BotComponent {
                 text: `ID: ${member.id}`,
             })
             .setTimestamp();
-        await this.staff_action_log.send({ embeds: [embed] });
+        const components = (() => {
+            const buttons = this.plugins
+                .map(plugin => plugin.maybe_create_button(member, most_recent))
+                .filter(x => x !== undefined);
+            return buttons.length > 0
+                ? [new Discord.ActionRowBuilder<Discord.ButtonBuilder>().addComponents(...buttons)]
+                : undefined;
+        })();
+        await this.staff_action_log.send({
+            embeds: [embed],
+            components,
+        });
     }
 
     async find_most_recent_kick_or_ban(user_ids: string[]) {

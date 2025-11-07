@@ -2,9 +2,9 @@ import { strict as assert } from "assert";
 
 import * as Discord from "discord.js";
 
-import { SECOND } from "../common.js";
-import { BotComponent } from "../bot-component.js";
-import { clear_timeout, set_timeout } from "../utils/node.js";
+import { SECOND } from "../../common.js";
+import { BotComponent } from "../../bot-component.js";
+import { clear_timeout, set_timeout } from "../../utils/node.js";
 
 export default class AntiAFK extends BotComponent {
     private countdown = new Map<string, NodeJS.Timeout>();

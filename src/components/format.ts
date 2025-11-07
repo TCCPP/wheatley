@@ -202,7 +202,7 @@ export default class Format extends BotComponent {
         commands.add(new MessageContextMenuInteractionBuilder("Format").set_handler(this.format_ctxmenu.bind(this)));
 
         const help = this.wheatley.components.get("Help") as Help | undefined;
-        help?.add_category_content("Utility", "`!f <reply>` Format the message being replied to");
+        help?.add_category_content("Utility", "`↩︎ !f` Format the message being replied to");
     }
 
     // TODO: More refactoring needed

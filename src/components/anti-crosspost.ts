@@ -5,6 +5,7 @@ import { BotComponent } from "../bot-component.js";
 import { Wheatley } from "../wheatley.js";
 import { SelfClearingMap } from "../utils/containers.js";
 import { levenshtein } from "../algorithm/levenshtein.js";
+import { CUSTOM_EMOJIREGEX } from "../utils/discord.js";
 
 type message_info = {
     content: string;
@@ -18,7 +19,13 @@ const MIN_MESSAGE_LENGTH = 50;
 const SIMILARITY_THRESHOLD = 0.3;
 
 function normalize_content(content: string): string {
-    return content.toLowerCase().trim().replace(/\s+/g, " ");
+    return content
+        .replace(CUSTOM_EMOJIREGEX, (match, full, animated, name) => {
+            return `<${animated}:${name}:>`;
+        })
+        .toLowerCase()
+        .trim()
+        .replace(/\s+/g, " ");
 }
 
 function calculate_similarity(content1: string, content2: string): number {
@@ -74,10 +81,11 @@ export default class AntiCrosspost extends BotComponent {
             const channel_list = Array.from(crosspost_channels)
                 .map(id => `<#${id}>`)
                 .join(", ");
-            await message.reply(
+            const reply = await message.reply(
                 `Please don't cross-post the same message across multiple channels (${channel_list}). ` +
                     `Pick the most appropriate channel for your question and ask there.`,
             );
+            this.wheatley.register_non_command_bot_reply(message, reply);
         }
         user_messages.push(current_message);
         this.recent_messages.set(message.author.id, user_messages);

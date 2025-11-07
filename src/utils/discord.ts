@@ -4,6 +4,7 @@ import { unwrap } from "./misc.js";
 import { TextBasedCommand } from "../command-abstractions/text-based-command.js";
 import { is_string } from "./strings.js";
 import { markdown_node, MarkdownParser } from "dismark";
+import { M } from "./debugging-and-logging.js";
 
 // https://stackoverflow.com/questions/64053658/get-emojis-from-message-discord-js-v12
 // https://www.reddit.com/r/Discord_Bots/comments/gteo6t/discordjs_is_there_a_way_to_detect_emojis_in_a/
@@ -358,6 +359,10 @@ export function split_message_markdown_aware(content: string, limit = 2000): str
                 return `> ${render_node_to_string(node.content, indent)}`;
             case "subtext":
                 return `-# ${render_node_to_string(node.content, indent)}`;
+            case "code_block": {
+                const language = node.language ?? "";
+                return `\`\`\`${language}\n${node.content}\n\`\`\``;
+            }
             case "list":
                 return node.items
                     .map((item, i) => {
@@ -531,4 +536,54 @@ export async function send_long_response_markdown_aware(
             ...(is_last ? { files, embeds } : {}),
         });
     }
+}
+
+export async function get_thread_owner(thread: Discord.ThreadChannel) {
+    if (unwrap(thread.parent) instanceof Discord.ForumChannel) {
+        return thread.ownerId;
+    } else {
+        return thread.type == Discord.ChannelType.PrivateThread
+            ? thread.ownerId
+            : (await thread.fetchStarterMessage())! /*TODO*/.author.id;
+    }
+}
+
+export function embeds_match(
+    existing_embed: Discord.Embed | Discord.APIEmbed,
+    new_embed_data: Discord.Embed | Discord.APIEmbed,
+) {
+    if (existing_embed.title !== new_embed_data.title) {
+        return false;
+    }
+
+    if (existing_embed.description !== new_embed_data.description) {
+        return false;
+    }
+
+    if (existing_embed.image?.url !== new_embed_data.image?.url) {
+        return false;
+    }
+
+    if (existing_embed.footer?.text.trim() !== new_embed_data.footer?.text.trim()) {
+        return false;
+    }
+
+    const existing_fields = existing_embed.fields ?? [];
+    const new_fields = new_embed_data.fields ?? [];
+
+    if (existing_fields.length !== new_fields.length) {
+        return false;
+    }
+
+    for (let i = 0; i < existing_fields.length; i++) {
+        if (
+            existing_fields[i].name !== new_fields[i].name ||
+            existing_fields[i].value.trim() !== new_fields[i].value.trim() ||
+            existing_fields[i].inline !== new_fields[i].inline
+        ) {
+            return false;
+        }
+    }
+
+    return true;
 }

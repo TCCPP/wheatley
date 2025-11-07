@@ -6,13 +6,15 @@ import { unwrap } from "../../../utils/misc.js";
 import { EMOJIREGEX, departialize } from "../../../utils/discord.js";
 import { KeyedMutexSet } from "../../../utils/containers.js";
 import { M } from "../../../utils/debugging-and-logging.js";
-import { DAY, MINUTE } from "../../../common.js";
+import { colors, DAY, MINUTE } from "../../../common.js";
 import { BotComponent } from "../../../bot-component.js";
 import { CommandSetBuilder } from "../../../command-abstractions/command-set-builder.js";
 import { Wheatley } from "../../../wheatley.js";
 import { EarlyReplyMode, TextBasedCommandBuilder } from "../../../command-abstractions/text-based-command-builder.js";
 import { TextBasedCommand } from "../../../command-abstractions/text-based-command.js";
 import { MessageContextMenuInteractionBuilder } from "../../../command-abstractions/context-menu.js";
+import { has_media } from "./autoreact.js";
+import { message_database_entry } from "../../../components/moderation/purge.js";
 
 const star_threshold = 5;
 const other_threshold = 5;
@@ -20,8 +22,9 @@ const memes_star_threshold = 16;
 const memes_other_threshold = 16;
 
 const auto_delete_threshold = 5;
+const auto_delete_threshold_no_media = 8;
 
-const max_deletes_in_24h = 7;
+const max_deletes_in_24h = 12;
 
 const starboard_epoch = new Date("2023-04-01T00:00:00.000Z").getTime();
 
@@ -51,12 +54,19 @@ type auto_delete_threshold_notifications = {
     message: string;
 };
 
-type auto_delete_entry = {
-    user: string;
+type auto_delete_voter = {
+    user_id: string;
+    username: string;
+};
+
+type auto_delete_detail_entry = {
     message_id: string;
-    message_timestamp: number;
+    message_author_id: string;
+    message_author_name: string;
+    voters: auto_delete_voter[];
+    vote_count: number;
+    trigger_type: "delete_this" | "repost";
     delete_timestamp: number;
-    flag_link: string | undefined;
 };
 
 export default class Starboard extends BotComponent {
@@ -83,7 +93,8 @@ export default class Starboard extends BotComponent {
         component_state: starboard_state;
         auto_delete_threshold_notifications: auto_delete_threshold_notifications;
         starboard_entries: starboard_entry;
-        auto_deletes: auto_delete_entry;
+        auto_delete_details: auto_delete_detail_entry;
+        message_database: message_database_entry;
     }>();
 
     override async setup(commands: CommandSetBuilder) {
@@ -169,6 +180,10 @@ export default class Starboard extends BotComponent {
             this.wheatley.channels.skill_role_log,
             this.wheatley.channels.polls,
         ]);
+    }
+
+    get_delete_threshold(message: Discord.Message) {
+        return has_media(message) ? auto_delete_threshold : auto_delete_threshold_no_media;
     }
 
     reactions_string(message: Discord.Message) {
@@ -279,6 +294,60 @@ export default class Starboard extends BotComponent {
         return this.deletes.length;
     }
 
+    async get_user_statistics(user_id: string) {
+        const now = Date.now();
+        const seven_days_ago = now - 7 * DAY;
+        const thirty_days_ago = now - 30 * DAY;
+        const recent_message_count = await this.database.message_database.countDocuments({
+            "author.id": user_id,
+            timestamp: { $gte: seven_days_ago },
+        });
+        const recent_delete_count = await this.database.auto_delete_details.countDocuments({
+            user: user_id,
+            delete_timestamp: { $gte: thirty_days_ago },
+            trigger_type: "delete_this",
+        });
+        const total_delete_count = await this.database.auto_delete_details.countDocuments({
+            user: user_id,
+            trigger_type: "delete_this",
+        });
+        return { recent_message_count, recent_delete_count, total_delete_count };
+    }
+
+    async send_auto_delete_dm(message: Discord.Message, trigger_type: delete_trigger_type): Promise<boolean> {
+        try {
+            const trigger_emoji =
+                trigger_type === delete_trigger_type.delete_this ? "<:delet_this:669598943117836312>" : ":recycle:";
+            const channel_context =
+                message.channel.id === this.wheatley.channels.memes
+                    ? " in #memes"
+                    : message.channel.id === this.wheatley.channels.cursed_code
+                      ? " in #cursed-code"
+                      : "";
+            const notification_embed = new Discord.EmbedBuilder()
+                .setColor(colors.red)
+                .setTitle(`Message Auto-Deleted in ${message.channel.url}`)
+                .setDescription(`Triggered by ${trigger_emoji} reactions threshold reached`)
+                .setTimestamp();
+            const quote_embeds = await this.utilities.make_quote_embeds(message, {
+                template: "\n\n**Your deleted message:**",
+            });
+            const dm_channel = await message.author.createDM();
+            await dm_channel.send({
+                embeds: [notification_embed, ...quote_embeds.embeds],
+                files: quote_embeds.files,
+            });
+            return true;
+        } catch (e) {
+            if (e instanceof Discord.DiscordAPIError && e.code === 50007) {
+                M.log(`Could not send DM to ${message.author.tag} (DMs disabled)`);
+                return false;
+            } else {
+                throw e;
+            }
+        }
+    }
+
     async handle_auto_delete(
         message: Discord.Message,
         trigger_reaction: Discord.MessageReaction,
@@ -312,20 +381,73 @@ export default class Starboard extends BotComponent {
         const action = do_delete ? "Auto-deleting" : "Auto-delete threshold reached";
         M.log(`${action} ${message.url} for ${trigger_reaction.count} ${trigger_reaction.emoji.name} reactions`);
         let flag_message: Discord.Message | null = null;
+        let dm_sent = false;
         try {
             await this.wheatley.database.lock();
             if (
                 do_delete ||
                 !(await this.database.auto_delete_threshold_notifications.findOne({ message: message.id }))
             ) {
+                const author_stats = await this.get_user_statistics(message.author.id);
+                const voters = await trigger_reaction.users.fetch();
+                const voter_stats = await Promise.all(
+                    voters.map(async user => {
+                        const stats = await this.get_user_statistics(user.id);
+                        return { user, stats };
+                    }),
+                );
+                const author_stats_value =
+                    `Recent activity: \`${author_stats.recent_message_count}\` messages (7d) | ` +
+                    `Deletes: \`${author_stats.recent_delete_count}\` (30d), ` +
+                    `\`${author_stats.total_delete_count}\` total`;
+                const voter_lines = voter_stats
+                    .map(
+                        ({ user, stats }) =>
+                            `<@${user.id}> ${user.tag} | \`${stats.recent_message_count}\` messages (7d) | ` +
+                            `Deletes: \`${stats.recent_delete_count}\` (30d), \`${stats.total_delete_count}\` total`,
+                    )
+                    .join("\n");
+                if (do_delete) {
+                    dm_sent = await this.send_auto_delete_dm(message, trigger_type);
+                }
+                const stats_embed = new Discord.EmbedBuilder()
+                    .setColor(
+                        trigger_type == delete_trigger_type.repost
+                            ? colors.green
+                            : do_delete
+                              ? colors.red
+                              : colors.alert_color,
+                    )
+                    .setTitle(action)
+                    .setDescription(
+                        `Message from <@${message.author.id}> for ${trigger_reaction.count} ` +
+                            `${trigger_reaction.emoji.name} reactions\n` +
+                            `${this.reactions_string(message)}`,
+                    )
+                    .addFields(
+                        {
+                            name: "Author Statistics",
+                            value: author_stats_value,
+                            inline: false,
+                        },
+                        {
+                            name: "Voters",
+                            value: voter_lines,
+                            inline: false,
+                        },
+                    )
+                    .setFooter({ text: `ID: ${message.author.id}` });
+                if (do_delete && !dm_sent) {
+                    stats_embed.addFields({
+                        name: "DM Notification",
+                        value: "⚠️ Failed to send DM (user has DMs disabled)",
+                        inline: false,
+                    });
+                }
+                const quote_embeds = await this.utilities.make_quote_embeds(message);
                 flag_message = await this.staff_flag_log.send({
-                    content:
-                        `${action} message from <@${message.author.id}> for ` +
-                        `${trigger_reaction.count} ${trigger_reaction.emoji.name} reactions` +
-                        `\n${this.reactions_string(message)}` +
-                        "\n" +
-                        (await trigger_reaction.users.fetch()).map(user => `<@${user.id}> ${user.tag}`).join("\n"),
-                    ...(await this.utilities.make_quote_embeds(message)),
+                    embeds: [stats_embed, ...quote_embeds.embeds],
+                    files: quote_embeds.files,
                     allowedMentions: { parse: [] },
                 });
                 // E11000 duplicate key error collection can happen here if somehow the key is inserted but the delete
@@ -346,12 +468,20 @@ export default class Starboard extends BotComponent {
             this.wheatley.database.unlock();
         }
         if (do_delete) {
-            await this.database.auto_deletes.insertOne({
-                user: message.author.id,
+            const delete_timestamp = Date.now();
+            const voters = await trigger_reaction.users.fetch();
+            const voter_list: auto_delete_voter[] = voters.map(user => ({
+                user_id: user.id,
+                username: user.tag,
+            }));
+            await this.database.auto_delete_details.insertOne({
                 message_id: message.id,
-                message_timestamp: message.createdTimestamp,
-                delete_timestamp: Date.now(),
-                flag_link: flag_message?.url,
+                message_author_id: message.author.id,
+                message_author_name: message.author.tag,
+                voters: voter_list,
+                vote_count: trigger_reaction.count,
+                trigger_type: trigger_type === delete_trigger_type.delete_this ? "delete_this" : "repost",
+                delete_timestamp,
             });
             await message.delete();
             assert(!(message.channel instanceof Discord.PartialGroupDMChannel));
@@ -407,24 +537,21 @@ export default class Starboard extends BotComponent {
             await last_reaction?.remove();
         }
         // Check delete emojis
+        const message = await departialize(reaction.message);
         if (
             reaction.emoji.name &&
             this.delete_emojis.includes(reaction.emoji.name) &&
-            reaction.count >= auto_delete_threshold
+            reaction.count >= this.get_delete_threshold(message)
         ) {
-            await this.handle_auto_delete(
-                await departialize(reaction.message),
-                reaction,
-                delete_trigger_type.delete_this,
-            );
+            await this.handle_auto_delete(message, reaction, delete_trigger_type.delete_this);
             return;
         }
         if (
             reaction.emoji.name &&
             this.repost_emojis.includes(reaction.emoji.name) &&
-            reaction.count >= auto_delete_threshold
+            reaction.count >= this.get_delete_threshold(message)
         ) {
-            await this.handle_auto_delete(await departialize(reaction.message), reaction, delete_trigger_type.repost);
+            await this.handle_auto_delete(message, reaction, delete_trigger_type.repost);
             return;
         }
 

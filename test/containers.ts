@@ -111,7 +111,7 @@ describe.sequential("SelfClearingMap", () => {
 describe.sequential("SelfClearingSet", () => {
     beforeEach(() => {
         // tell vitest we use mocked timers
-        vi.useFakeTimers({ toFake: ["setTimeout", "setImmediate", "Date"] });
+        vi.useFakeTimers();
         vi.setSystemTime(0);
     });
     afterEach(() => {
@@ -198,7 +198,7 @@ describe.sequential("SelfClearingSet", () => {
 describe.sequential("SelfClearingMap and SelfClearingSet", () => {
     beforeEach(() => {
         // tell vitest we use mocked timers
-        vi.useFakeTimers({ toFake: ["setTimeout", "setImmediate", "Date"] });
+        vi.useFakeTimers();
         vi.setSystemTime(0);
     });
     afterEach(async () => {

@@ -9,6 +9,7 @@ import { CommandSetBuilder } from "../../../command-abstractions/command-set-bui
 import { Wheatley } from "../../../wheatley.js";
 import { EarlyReplyMode, TextBasedCommandBuilder } from "../../../command-abstractions/text-based-command-builder.js";
 import { TextBasedCommand } from "../../../command-abstractions/text-based-command.js";
+import { BotButton, ButtonInteractionBuilder } from "../../../command-abstractions/button.js";
 
 /*
  * Forum thread handling:
@@ -24,7 +25,14 @@ function create_embed(title: string | undefined, color: number, msg: string) {
     return embed;
 }
 
+const SOLVED_MESSAGE =
+    "Thank you and let us know if you have any more questions!\n\n" +
+    "This thread is now set to auto-hide after an hour of inactivity";
+
 export default class ForumControl extends BotComponent {
+    private mark_solved_button!: BotButton<[string]>;
+    private reopen_button!: BotButton<[string]>;
+
     override async setup(commands: CommandSetBuilder) {
         commands.add(
             new TextBasedCommandBuilder(["solve", "solved", "close"], EarlyReplyMode.visible)
@@ -39,16 +47,18 @@ export default class ForumControl extends BotComponent {
                 .set_description("Re-open forum post")
                 .set_handler(this.unsolve.bind(this)),
         );
-    }
 
-    async get_owner(thread: Discord.ThreadChannel) {
-        if (unwrap(thread.parent) instanceof Discord.ForumChannel) {
-            return thread.ownerId;
-        } else {
-            return thread.type == Discord.ChannelType.PrivateThread
-                ? thread.ownerId
-                : (await thread.fetchStarterMessage())! /*TODO*/.author.id;
-        }
+        this.mark_solved_button = commands.add(
+            new ButtonInteractionBuilder("mark_solved")
+                .add_string_metadata()
+                .set_handler(this.handle_mark_solved_button.bind(this)),
+        );
+
+        this.reopen_button = commands.add(
+            new ButtonInteractionBuilder("reopen_thread")
+                .add_string_metadata()
+                .set_handler(this.handle_reopen_button.bind(this)),
+        );
     }
 
     // returns whether the thread can be controlled
@@ -57,11 +67,7 @@ export default class ForumControl extends BotComponent {
         const channel = await request.get_channel();
         if (channel.isThread()) {
             const thread = channel;
-            const owner_id = await this.get_owner(thread);
-            if (
-                owner_id == request.user.id ||
-                (await this.wheatley.check_permissions(request.user, Discord.PermissionFlagsBits.ManageThreads))
-            ) {
+            if (await this.utilities.can_user_control_thread(request.user, thread)) {
                 return true;
             } else {
                 await request.reply({
@@ -88,7 +94,58 @@ export default class ForumControl extends BotComponent {
         }
     }
 
-    // TODO: more to dedupe
+    async validate_thread_control(
+        user: Discord.User,
+        thread_id: string,
+        interaction: Discord.ButtonInteraction,
+    ): Promise<Discord.ThreadChannel | null> {
+        const thread = await this.wheatley.client.channels.fetch(thread_id);
+        if (!thread || !thread.isThread()) {
+            await interaction.reply({
+                content: "This thread no longer exists",
+                ephemeral: true,
+            });
+            return null;
+        }
+        if (!(thread.parent instanceof Discord.ForumChannel)) {
+            await interaction.reply({
+                content: "This is not a forum thread",
+                ephemeral: true,
+            });
+            return null;
+        }
+        if (!(await this.utilities.can_user_control_thread(user, thread))) {
+            await interaction.reply({ content: "You can only control threads you own", ephemeral: true });
+            return null;
+        }
+        if (!this.wheatley.is_forum_help_thread(thread)) {
+            await interaction.reply({ content: "Cannot use outside a help channel", ephemeral: true });
+            return null;
+        }
+        return thread;
+    }
+
+    async mark_thread_solved(thread: Discord.ThreadChannel) {
+        assert(thread.parent instanceof Discord.ForumChannel);
+        const forum = thread.parent;
+        const solved_tag = get_tag(forum, "Solved").id;
+        const open_tag = get_tag(forum, "Open").id;
+        const stale_tag = get_tag(forum, "Stale").id;
+        await thread.setAppliedTags(
+            [solved_tag].concat(thread.appliedTags.filter(tag => ![open_tag, stale_tag].includes(tag))),
+        );
+        await thread.setAutoArchiveDuration(Discord.ThreadAutoArchiveDuration.OneHour, "Solved");
+        await this.update_control_message(thread.id, true);
+    }
+
+    async mark_thread_open(thread: Discord.ThreadChannel) {
+        assert(thread.parent instanceof Discord.ForumChannel);
+        const forum = thread.parent;
+        const solved_tag = get_tag(forum, "Solved").id;
+        const open_tag = get_tag(forum, "Open").id;
+        await thread.setAppliedTags([open_tag].concat(thread.appliedTags.filter(tag => tag !== solved_tag)));
+        await this.update_control_message(thread.id, false);
+    }
 
     async solve(command: TextBasedCommand) {
         if (await this.try_to_control_thread(command, command.name.startsWith("!solve") ? "solve" : "close")) {
@@ -107,38 +164,18 @@ export default class ForumControl extends BotComponent {
                 return;
             }
             const thread = channel;
-            const forum = channel.parent;
+            assert(thread.parent instanceof Discord.ForumChannel);
+            const forum = thread.parent;
             const solved_tag = get_tag(forum, "Solved").id;
-            const open_tag = get_tag(forum, "Open").id;
-            const stale_tag = get_tag(forum, "Stale").id;
-            if (this.wheatley.is_forum_help_thread(thread)) {
-                // TODO
-                if (!thread.appliedTags.some(tag => tag == solved_tag)) {
-                    M.log("Marking thread as solved", thread.id, thread.name);
-                    await command.reply({
-                        embeds: [
-                            create_embed(
-                                undefined,
-                                colors.wheatley,
-                                "Thank you and let us know if you have any more questions!\n\n" +
-                                    "This thread is now set to auto-hide after an hour of inactivity",
-                            ),
-                        ],
-                    });
-                    await thread.setAppliedTags(
-                        [solved_tag].concat(thread.appliedTags.filter(tag => ![open_tag, stale_tag].includes(tag))),
-                    );
-                    //await thread.setArchived(true);
-                    await thread.setAutoArchiveDuration(Discord.ThreadAutoArchiveDuration.OneHour, "Solved");
-                } else {
-                    await command.reply({
-                        content: "Message is already solved",
-                        should_text_reply: true,
-                    });
-                }
+            if (!thread.appliedTags.some(tag => tag === solved_tag)) {
+                M.log("Marking thread as solved", thread.id, thread.name);
+                await command.reply({
+                    embeds: [create_embed(undefined, colors.wheatley, SOLVED_MESSAGE)],
+                });
+                await this.mark_thread_solved(thread);
             } else {
                 await command.reply({
-                    content: "You can't use that here",
+                    content: "Thread is already solved",
                     should_text_reply: true,
                 });
             }
@@ -162,22 +199,110 @@ export default class ForumControl extends BotComponent {
                 return;
             }
             const thread = channel;
-            const forum = channel.parent;
+            assert(thread.parent instanceof Discord.ForumChannel);
+            const forum = thread.parent;
             const solved_tag = get_tag(forum, "Solved").id;
-            const open_tag = get_tag(forum, "Open").id;
-            if (this.wheatley.is_forum_help_thread(thread)) {
-                // TODO
-                if (thread.appliedTags.some(tag => tag == solved_tag)) {
-                    M.log("Unsolving thread", thread.id, thread.name);
-                    await command.react("✅");
-                    await thread.setAppliedTags([open_tag].concat(thread.appliedTags.filter(tag => tag != solved_tag)));
-                }
+            if (thread.appliedTags.some(tag => tag === solved_tag)) {
+                M.log("Unsolving thread", thread.id, thread.name);
+                await command.react("✅");
+                await this.mark_thread_open(thread);
             } else {
                 await command.reply({
-                    content: "You can't use that here",
+                    content: "Thread isn't solved",
                     should_text_reply: true,
                 });
             }
+        }
+    }
+
+    async handle_mark_solved_button(interaction: Discord.ButtonInteraction, thread_id: string) {
+        const thread = await this.validate_thread_control(interaction.user, thread_id, interaction);
+        if (!thread) {
+            return;
+        }
+        assert(thread.parent instanceof Discord.ForumChannel);
+        const forum = thread.parent;
+        const solved_tag = get_tag(forum, "Solved").id;
+        if (!thread.appliedTags.some(tag => tag === solved_tag)) {
+            M.log("Marking thread as solved via button", thread.id, thread.name);
+            await interaction.reply({
+                embeds: [create_embed(undefined, colors.wheatley, SOLVED_MESSAGE)],
+            });
+            await this.mark_thread_solved(thread);
+        } else {
+            await interaction.reply({
+                content: "Thread is already solved",
+                ephemeral: true,
+            });
+        }
+    }
+
+    async handle_reopen_button(interaction: Discord.ButtonInteraction, thread_id: string) {
+        const thread = await this.validate_thread_control(interaction.user, thread_id, interaction);
+        if (!thread) {
+            return;
+        }
+        assert(thread.parent instanceof Discord.ForumChannel);
+        const forum = thread.parent;
+        const solved_tag = get_tag(forum, "Solved").id;
+        if (thread.appliedTags.some(tag => tag === solved_tag)) {
+            M.log("Reopening thread via button", thread.id, thread.name);
+            await interaction.reply({
+                content: "Thread reopened",
+                ephemeral: true,
+            });
+            await this.mark_thread_open(thread);
+        } else {
+            await interaction.reply({
+                content: "Thread is already open",
+                ephemeral: true,
+            });
+        }
+    }
+
+    async update_control_message(thread_id: string, is_solved: boolean) {
+        const thread = await this.wheatley.client.channels.fetch(thread_id);
+        if (!thread || !thread.isThread()) {
+            return;
+        }
+        try {
+            const messages = await thread.messages.fetch({ limit: 20 });
+            const control_message = messages.find(
+                msg => msg.author.id === this.wheatley.user.id && msg.embeds.length > 0,
+            );
+            if (control_message) {
+                const components = this.create_thread_control_components(thread_id, is_solved);
+                await control_message.edit({ components });
+            }
+        } catch (error) {
+            M.debug("Failed to update control message:", error);
+        }
+    }
+
+    create_thread_control_components(
+        thread_id: string,
+        is_solved: boolean,
+    ): Discord.ActionRowBuilder<Discord.MessageActionRowComponentBuilder>[] {
+        if (is_solved) {
+            return [
+                new Discord.ActionRowBuilder<Discord.MessageActionRowComponentBuilder>().addComponents(
+                    this.reopen_button
+                        .create_button(thread_id)
+                        .setLabel("Reopen")
+                        .setStyle(Discord.ButtonStyle.Secondary)
+                        .setEmoji("🔄"),
+                ),
+            ];
+        } else {
+            return [
+                new Discord.ActionRowBuilder<Discord.MessageActionRowComponentBuilder>().addComponents(
+                    this.mark_solved_button
+                        .create_button(thread_id)
+                        .setLabel("Mark as Solved")
+                        .setStyle(Discord.ButtonStyle.Success)
+                        .setEmoji("✅"),
+                ),
+            ];
         }
     }
 }
