@@ -220,6 +220,9 @@ export default class AntiInviteLinks extends BotComponent {
     }
 
     async handle_message(message: Discord.Message) {
+        if (message.author.bot || message.author.system) {
+            return;
+        }
         if (await this.wheatley.check_permissions(message.author, Discord.PermissionFlagsBits.ModerateMembers)) {
             return;
         }
