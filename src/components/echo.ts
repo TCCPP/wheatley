@@ -23,6 +23,7 @@ export default class Echo extends BotComponent {
         commands.add(
             new TextBasedCommandBuilder("echo", EarlyReplyMode.none)
                 .set_category("Misc")
+                .set_permissions(Discord.PermissionFlagsBits.BanMembers)
                 .set_description("Echo")
                 .add_string_option({
                     title: "input",
