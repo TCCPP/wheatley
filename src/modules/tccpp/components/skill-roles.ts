@@ -6,7 +6,7 @@ import { M } from "../../../utils/debugging-and-logging.js";
 import { Wheatley } from "../../../wheatley.js";
 import { BotComponent } from "../../../bot-component.js";
 import { CommandSetBuilder } from "../../../command-abstractions/command-set-builder.js";
-import RoleManager, { user_role_entry } from "../../../components/role-manager.js";
+import RoleManager, { user_role_entry } from "../../wheatley/components/role-manager.js";
 import { capitalize } from "../../../utils/strings.js";
 
 // eslint-disable-next-line @typescript-eslint/naming-convention

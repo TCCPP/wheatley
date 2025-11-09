@@ -7,7 +7,7 @@ import { colors, MINUTE } from "../../../common.js";
 import { BotComponent } from "../../../bot-component.js";
 import SkillRoles, { SkillLevel } from "./skill-roles.js";
 import { build_description, parse_out } from "../../../utils/strings.js";
-import Code from "../../../components/code.js";
+import Code from "../../wheatley/components/code.js";
 import { SelfClearingMap, SelfClearingSet } from "../../../utils/containers.js";
 import * as dismark from "dismark";
 import { CommandSetBuilder } from "../../../command-abstractions/command-set-builder.js";

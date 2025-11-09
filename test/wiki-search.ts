@@ -7,7 +7,7 @@ import {
     WikiArticle,
     WikiSearchIndex,
     create_wiki_search_entries,
-} from "../src/components/wiki.js";
+} from "../src/modules/wheatley/components/wiki.js";
 
 describe("wiki search system", () => {
     let search_index: WikiSearchIndex;

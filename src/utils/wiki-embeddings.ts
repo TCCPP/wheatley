@@ -1,5 +1,5 @@
 import { FeatureExtractionPipeline, pipeline } from "@xenova/transformers";
-import type { WikiArticle } from "../components/wiki.js";
+import type { WikiArticle } from "../modules/wheatley/components/wiki.js";
 
 export const EMBEDDING_MODEL = "Xenova/all-MiniLM-L6-v2";
 

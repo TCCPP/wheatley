@@ -14,7 +14,7 @@ import { EarlyReplyMode, TextBasedCommandBuilder } from "../../../command-abstra
 import { TextBasedCommand } from "../../../command-abstractions/text-based-command.js";
 import { MessageContextMenuInteractionBuilder } from "../../../command-abstractions/context-menu.js";
 import { has_media } from "./autoreact.js";
-import { message_database_entry } from "../../../components/moderation/purge.js";
+import { message_database_entry } from "../../wheatley/components/moderation/purge.js";
 
 const star_threshold = 5;
 const other_threshold = 5;

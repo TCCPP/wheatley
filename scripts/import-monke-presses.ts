@@ -29,7 +29,7 @@ import moment from "moment";
 import JSONC from "jsonc-parser";
 import { WheatleyDatabase } from "../src/infra/database-interface.js";
 import { wheatley_config } from "../src/wheatley.js";
-import { monke_button_press_entry } from "../src/components/moderation/schemata.js";
+import { monke_button_press_entry } from "../modules/wheatley/components/moderation/schemata.js";
 
 const readdir = promisify(fs.readdir);
 

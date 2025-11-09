@@ -11,7 +11,7 @@ import {
     moderation_entry,
     moderation_type,
     monke_button_press_entry,
-} from "../../../components/moderation/schemata.js";
+} from "../../wheatley/components/moderation/schemata.js";
 import { set_interval } from "../../../utils/node.js";
 
 const type_labels = {

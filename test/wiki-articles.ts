@@ -4,7 +4,7 @@ import * as fs from "fs";
 import matter from "gray-matter";
 import { globSync } from "glob";
 
-import { parse_article, WIKI_ARTICLES_PATH } from "../src/components/wiki.js";
+import { parse_article, WIKI_ARTICLES_PATH } from "../src/modules/wheatley/components/wiki.js";
 
 describe("parse wiki articles", () => {
     for (const file_path of globSync(`${WIKI_ARTICLES_PATH}/**/*.md`, { withFileTypes: true })) {

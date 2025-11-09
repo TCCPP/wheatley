@@ -19,11 +19,11 @@ import { WheatleyDatabase } from "./infra/database-interface.js";
 import { forge_snowflake, send_long_message_markdown_aware } from "./utils/discord.js";
 import { TypedEventEmitter } from "./utils/event-emitter.js";
 import { setup_metrics_server } from "./infra/prometheus.js";
-import { moderation_entry } from "./components/moderation/schemata.js";
+import { moderation_entry } from "./modules/wheatley/components/moderation/schemata.js";
 import { LoggableChannel, LogLimiter } from "./infra/log-limiter.js";
 import { CommandHandler } from "./command-handler.js";
 import { CommandSetBuilder } from "./command-abstractions/command-set-builder.js";
-import { message_database_entry } from "./components/moderation/purge.js";
+import { message_database_entry } from "./modules/wheatley/components/moderation/purge.js";
 
 export function create_basic_embed(title: string | undefined, color: number, content: string) {
     const embed = new Discord.EmbedBuilder().setColor(color).setDescription(content);

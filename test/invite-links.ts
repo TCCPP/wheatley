@@ -1,6 +1,6 @@
 import { describe, expect, it } from "vitest";
 
-import { match_invite } from "../src/components/anti-invite-links.js";
+import { match_invite } from "../src/modules/wheatley/components/anti-invite-links.js";
 
 describe("invite link tests", () => {
     it("should block invite links", () => {
