@@ -1,4 +1,4 @@
-module.exports = {
+export default {
     trailingComma: "all",
     printWidth: 120,
     singleQuote: false,
