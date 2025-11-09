@@ -1,6 +1,6 @@
 import * as fs from "fs";
 import { globIterate } from "glob";
-import { parse_article, WIKI_ARTICLES_PATH, WikiArticle } from "../../src/components/wiki.js";
+import { parse_article, WIKI_ARTICLES_PATH, WikiArticle } from "../../src/modules/wheatley/components/wiki.js";
 import {
     create_embedding_pipeline,
     generate_embedding,

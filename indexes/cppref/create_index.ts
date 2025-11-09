@@ -7,7 +7,7 @@ import { cppref_index, CpprefSubIndex, WorkerJob, WorkerResponse } from "./types
 
 import { Funnel, ThreadPool } from "../common/utils.js";
 
-import { clang_format_embed_code } from "../../src/components/format.js";
+import { clang_format_embed_code } from "../../src/modules/wheatley/components/format.js";
 
 async function* walk_dir(dir: string): AsyncGenerator<string> {
     for(const f of await fs.promises.readdir(dir)) {
