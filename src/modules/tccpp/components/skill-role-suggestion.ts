@@ -9,7 +9,7 @@ import { M } from "../../../utils/debugging-and-logging.js";
 import { colors, DAY, MINUTE } from "../../../common.js";
 import { BotComponent } from "../../../bot-component.js";
 import { CommandSetBuilder } from "../../../command-abstractions/command-set-builder.js";
-import { skill_roles_order, Wheatley } from "../../../wheatley.js";
+import SkillRoles, { SkillLevel, skill_level } from "./skill-roles.js";
 import {
     UserContextMenuInteractionBuilder,
     MessageContextMenuInteractionBuilder,
@@ -18,10 +18,6 @@ import { ModalInteractionBuilder, BotModal, BotModalSubmitInteraction } from "..
 import { build_description, capitalize } from "../../../utils/strings.js";
 import { EarlyReplyMode, TextBasedCommandBuilder } from "../../../command-abstractions/text-based-command-builder.js";
 import { TextBasedCommand } from "../../../command-abstractions/text-based-command.js";
-
-type interaction_context = { member: Discord.GuildMember; role?: string; context?: Discord.Message };
-
-type skill_level = "beginner" | "intermediate" | "proficient" | "advanced" | "expert";
 
 type skill_suggestion_entry = {
     user_id: string;
@@ -37,7 +33,11 @@ type skill_suggestion_thread_entry = {
     thread_closed: number | null;
 };
 
+type interaction_context = { member: Discord.GuildMember; level?: skill_level; context?: Discord.Message };
+
 export default class SkillRoleSuggestion extends BotComponent {
+    private skill_roles!: SkillRoles;
+
     readonly target_map = new SelfClearingMap<string, interaction_context>(15 * MINUTE);
 
     private database = this.wheatley.database.create_proxy<{
@@ -49,9 +49,11 @@ export default class SkillRoleSuggestion extends BotComponent {
     private suggestion_modal!: BotModal<[]>;
 
     override async setup(commands: CommandSetBuilder) {
+        this.skill_roles = unwrap(this.wheatley.components.get("SkillRoles")) as SkillRoles;
         this.skill_role_suggestions = await this.utilities.get_forum_channel(
             this.wheatley.channels.skill_role_suggestions,
         );
+
         commands.add(
             new UserContextMenuInteractionBuilder("Suggest Skill Role User").set_handler(
                 this.skill_suggestion.bind(this),
@@ -113,21 +115,13 @@ export default class SkillRoleSuggestion extends BotComponent {
         const context =
             interaction instanceof Discord.MessageContextMenuCommandInteraction ? interaction.targetMessage : undefined;
         this.target_map.set(interaction.user.id, { member, context });
-        const target_skill_index = Math.max(
-            ...member.roles.cache
-                .filter(r => Object.values(this.wheatley.skill_roles).some(skill_role => r.id == skill_role.id))
-                .map(role => this.wheatley.get_skill_role_index(role.id)),
-        );
-        const suggestor_skill_index = Math.max(
-            ...suggester.roles.cache
-                .filter(r => Object.values(this.wheatley.skill_roles).some(skill_role => r.id == skill_role.id))
-                .map(role => this.wheatley.get_skill_role_index(role.id)),
-        );
-        const skill_roles_available = skill_roles_order.slice(
+        const target_skill_index = this.skill_roles.find_highest_skill_level(member);
+        const suggestor_skill_index = this.skill_roles.find_highest_skill_level(suggester);
+        const skill_levels_available = Object.keys(SkillLevel).slice(
             target_skill_index + 1, // can't suggest anything <= the target's skill
             Math.max(suggestor_skill_index, 0) + 2, // can't suggest anything >= suggestor's skill + 1
         );
-        if (skill_roles_available.length == 0) {
+        if (skill_levels_available.length == 0) {
             await interaction.editReply({
                 content: `Unable to suggest skill roles for this user, they are either the max role or exceed yours`,
             });
@@ -137,9 +131,9 @@ export default class SkillRoleSuggestion extends BotComponent {
                 components: [
                     new Discord.ActionRowBuilder<Discord.StringSelectMenuBuilder>().addComponents(
                         new Discord.StringSelectMenuBuilder().setCustomId("skill-role-suggestion-picker").setOptions(
-                            skill_roles_available.map(role => ({
-                                label: capitalize(role),
-                                value: capitalize(role),
+                            skill_levels_available.map(level => ({
+                                label: capitalize(level),
+                                value: level,
                             })),
                         ),
                     ),
@@ -166,7 +160,7 @@ export default class SkillRoleSuggestion extends BotComponent {
             assert(suggestion.level in counts);
             counts[suggestion.level]++;
         }
-        const sorted_filtered_counts = (Object.entries(counts) as [skill_level, number][])
+        const sorted_filtered_counts = Object.entries(counts)
             .toSorted((a, b) => descending(a, b, v => v[1]))
             .filter(v => v[1] !== 0);
         const suggested_levels = sorted_filtered_counts.map(([k, _]) => k);
@@ -177,7 +171,7 @@ export default class SkillRoleSuggestion extends BotComponent {
             content: build_description(
                 `<@${member.id}> ${member.displayName}`,
                 `Suggested roles: ${sorted_filtered_counts
-                    .map(([level, count]) => `${count}x<@&${this.wheatley.skill_roles[level].id}>`)
+                    .map(([level, count]) => `${count}x<@&${this.skill_roles.roles[level as skill_level].id}>`)
                     .join(", ")}`,
             ),
         };
@@ -245,30 +239,31 @@ export default class SkillRoleSuggestion extends BotComponent {
     async handle_suggestion(
         member: Discord.GuildMember,
         suggester: Discord.GuildMember,
-        role: string,
+        level: skill_level,
         comments: string,
         context: Discord.Message<boolean> | undefined,
     ) {
+        const role = this.skill_roles.roles[level];
         const suggestion_time = Date.now();
         const res = await this.database.skill_role_suggestions.insertOne({
             user_id: member.user.id,
             suggested_by: suggester.user.id,
             time: suggestion_time,
-            level: role.toLowerCase() as skill_level,
+            level: level,
         });
         assert(res.acknowledged);
         const thread = await this.update_or_make_thread(member, suggestion_time);
         await thread.send({
             embeds: [
                 new Discord.EmbedBuilder()
-                    .setColor(this.wheatley.skill_roles[role.toLowerCase() as skill_level].color)
+                    .setColor(role.color)
                     .setAuthor({
                         name: member.displayName,
                         iconURL: member.avatarURL() ?? member.user.displayAvatarURL(),
                     })
                     .setDescription(
                         build_description(
-                            `Skill role suggestion for <@${member.user.id}>: **${role}**`,
+                            `Skill role suggestion for <@${member.user.id}>: **${role.name}**`,
                             `Suggested by: <@${suggester.user.id}>`,
                             `Context: ${context ? `[link](${context.url})` : "None (user context menu)"}`,
                             comments.length > 0 ? `Comments: ${comments}` : null,
@@ -283,7 +278,7 @@ export default class SkillRoleSuggestion extends BotComponent {
     }
 
     async launch_modal(interaction: Discord.StringSelectMenuInteraction) {
-        this.target_map.get(interaction.user.id)!.role = interaction.values[0];
+        this.target_map.get(interaction.user.id)!.level = interaction.values[0] as skill_level;
         const modal = this.suggestion_modal.create_modal();
         await interaction.showModal(modal);
     }
@@ -297,10 +292,10 @@ export default class SkillRoleSuggestion extends BotComponent {
             interaction.member instanceof Discord.GuildMember
                 ? interaction.member
                 : await this.wheatley.guild.members.fetch(interaction.user.id);
-        const { member, role, context } = unwrap(this.target_map.get(interaction.user.id));
+        const { member, level, context } = unwrap(this.target_map.get(interaction.user.id));
         const comments = interaction.get_field_value("skill-role-suggestion-modal-comments");
         // TODO: Why does role need to be unwrapped?
-        await this.handle_suggestion(member, suggester, unwrap(role), comments, context);
+        await this.handle_suggestion(member, suggester, unwrap(level), comments, context);
         await interaction.editReply({
             content: "Thank you, your suggestion has been received",
         });

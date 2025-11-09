@@ -5,7 +5,7 @@ import * as Discord from "discord.js";
 import * as mongo from "mongodb";
 import PromClient from "prom-client";
 
-import { colors, MINUTE } from "./common.js";
+import { colors, MINUTE, DAY } from "./common.js";
 import { unwrap } from "./utils/misc.js";
 import { to_string, is_string } from "./utils/strings.js";
 import { globIterateSync } from "glob";
@@ -169,24 +169,6 @@ const roles_map = {
     voice: "1368073548983308328",
 };
 
-const skill_roles_map = {
-    beginner: "784733371275673600",
-    intermediate: "331876085820030978",
-    proficient: "849399021838925834",
-    advanced: "331719590990184450",
-    expert: "331719591405551616",
-};
-
-export const skill_roles_order = ["beginner", "intermediate", "proficient", "advanced", "expert"];
-
-export const skill_roles_order_id = [
-    "784733371275673600",
-    "331876085820030978",
-    "849399021838925834",
-    "331719590990184450",
-    "331719591405551616",
-];
-
 type EventMap = {
     wheatley_ready: () => void;
     issue_moderation: (moderation: moderation_entry) => void;
@@ -239,9 +221,6 @@ export class Wheatley {
 
     readonly roles: {
         [k in keyof typeof roles_map]: Discord.Role;
-    } = {} as any;
-    readonly skill_roles: {
-        [k in keyof typeof skill_roles_map]: Discord.Role;
     } = {} as any;
 
     message_counter = new PromClient.Counter({
@@ -411,17 +390,6 @@ export class Wheatley {
                 }
                 assert(role !== null, `Role ${k} ${id} not found`);
                 this.roles[k as keyof typeof roles_map] = role;
-                M.log(`Fetched role ${k}`);
-            }),
-        );
-        await Promise.all(
-            Object.entries(skill_roles_map).map(async ([k, id]) => {
-                const role = await wrap(() => this.guild.roles.fetch(id));
-                if (this.freestanding && role === null) {
-                    return;
-                }
-                assert(role !== null, `Role ${k} ${id} not found`);
-                this.skill_roles[k as keyof typeof skill_roles_map] = role;
                 M.log(`Fetched role ${k}`);
             }),
         );
@@ -609,16 +577,18 @@ export class Wheatley {
         return roots.length > 1 ? roots.slice(0, -1).join(", ") + `, or ${roots[roots.length - 1]}` : roots[0];
     }
 
-    has_skill_roles_other_than_beginner(member: Discord.GuildMember) {
-        const non_beginner_skill_role_ids = Object.entries(this.skill_roles)
-            .filter(([name, _]) => name !== "beginner")
-            .map(([_, role]) => role.id);
-        return member.roles.cache.some(role => non_beginner_skill_role_ids.includes(role.id));
-    }
-
-    // higher is better
-    get_skill_role_index(role: Discord.Role | string) {
-        return skill_roles_order_id.indexOf(role instanceof Discord.Role ? role.id : role);
+    async is_established_member(
+        options: Discord.GuildMember | Discord.User | Discord.UserResolvable | Discord.FetchMemberOptions,
+    ) {
+        const member = await this.try_fetch_guild_member(options);
+        if (!member || (member.joinedAt && member.joinedAt.getDate() + 28 * DAY <= Date.now())) {
+            return false;
+        }
+        return (
+            member.premiumSince != null ||
+            member.permissions.has(Discord.PermissionFlagsBits.MuteMembers) ||
+            member.permissions.has(Discord.PermissionFlagsBits.ModerateMembers)
+        );
     }
 
     async is_public_channel(channel: Discord.GuildTextBasedChannel | Discord.TextBasedChannel) {

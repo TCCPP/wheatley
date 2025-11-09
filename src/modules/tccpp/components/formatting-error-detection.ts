@@ -5,11 +5,13 @@ import { strict as assert } from "assert";
 import { M } from "../../../utils/debugging-and-logging.js";
 import { colors, MINUTE } from "../../../common.js";
 import { BotComponent } from "../../../bot-component.js";
+import SkillRoles, { SkillLevel } from "./skill-roles.js";
 import { build_description, parse_out } from "../../../utils/strings.js";
 import Code from "../../../components/code.js";
 import { SelfClearingMap, SelfClearingSet } from "../../../utils/containers.js";
 import * as dismark from "dismark";
 import { CommandSetBuilder } from "../../../command-abstractions/command-set-builder.js";
+import { unwrap } from "../../../utils/misc.js";
 import { ButtonInteractionBuilder, BotButton } from "../../../command-abstractions/button.js";
 
 const FAILED_CODE_BLOCK_RE = /^(?:"""?|'''?)(.+?)(?:"""?|'''?|$)/s;
@@ -40,12 +42,16 @@ class FailedCodeBlockRule extends dismark.Rule {
 }
 
 export default class FormattingErrorDetection extends BotComponent {
+    private skill_roles!: SkillRoles;
+
     messaged = new SelfClearingSet<string>(10 * MINUTE);
     // trigger message -> reply
     replies = new SelfClearingMap<string, Discord.Message>(10 * MINUTE);
     private dismiss_button!: BotButton<[string]>;
 
     override async setup(commands: CommandSetBuilder) {
+        this.skill_roles = unwrap(this.wheatley.components.get("SkillRoles")) as SkillRoles;
+
         this.dismiss_button = commands.add(
             new ButtonInteractionBuilder("formatting_error_dismiss")
                 .add_user_id_metadata()
@@ -147,10 +153,8 @@ export default class FormattingErrorDetection extends BotComponent {
     }
 
     has_likely_format_errors(message: Discord.Message) {
-        const has_skill_roles_other_than_beginner = message.member
-            ? this.wheatley.has_skill_roles_other_than_beginner(message.member)
-            : false;
-        if (has_skill_roles_other_than_beginner) {
+        // trust Proficient+ members
+        if (message.member && this.skill_roles.find_highest_skill_level(message.member) >= SkillLevel.proficient) {
             return false;
         }
         return FormattingErrorDetection.has_likely_format_errors(message.content);
