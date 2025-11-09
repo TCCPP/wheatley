@@ -243,13 +243,14 @@ export default class SkillRoleSuggestion extends BotComponent {
         comments: string,
         context: Discord.Message<boolean> | undefined,
     ) {
+        assert(level in this.skill_roles.roles);
         const role = this.skill_roles.roles[level];
         const suggestion_time = Date.now();
         const res = await this.database.skill_role_suggestions.insertOne({
             user_id: member.user.id,
             suggested_by: suggester.user.id,
             time: suggestion_time,
-            level: level,
+            level,
         });
         assert(res.acknowledged);
         const thread = await this.update_or_make_thread(member, suggestion_time);
@@ -278,7 +279,7 @@ export default class SkillRoleSuggestion extends BotComponent {
     }
 
     async launch_modal(interaction: Discord.StringSelectMenuInteraction) {
-        this.target_map.get(interaction.user.id)!.level = interaction.values[0] as skill_level;
+        unwrap(this.target_map.get(interaction.user.id)).level = interaction.values[0] as skill_level;
         const modal = this.suggestion_modal.create_modal();
         await interaction.showModal(modal);
     }

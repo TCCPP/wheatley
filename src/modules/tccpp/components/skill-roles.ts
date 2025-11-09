@@ -28,7 +28,7 @@ export default class SkillRoles extends BotComponent {
     public readonly roles = {} as Record<skill_level, Discord.Role>;
 
     database = unwrap(this.wheatley.database).create_proxy<{
-        user_roles: user_role_entry;
+        user_roles: user_role_entry & { last_known_skill_role?: string | null };
         skill_roles: skill_role_entry;
     }>();
 
@@ -64,7 +64,7 @@ export default class SkillRoles extends BotComponent {
                 {
                     $set: {
                         user_id: entry.user_id,
-                        last_known_skill_role: (entry as any).last_known_skill_role,
+                        last_known_skill_role: entry.last_known_skill_role,
                     },
                 },
                 { upsert: true },
@@ -77,13 +77,8 @@ export default class SkillRoles extends BotComponent {
         M.log(`Successfully migrated ${entries_to_migrate.length} skill role entries`);
     }
 
-    find_highest_skill_level(member: Discord.GuildMember): number;
-    find_highest_skill_level(roles: ReadonlySetLike<string>): number;
-    find_highest_skill_level(options: ReadonlySetLike<string> | Discord.GuildMember) {
-        if (options instanceof Discord.GuildMember) {
-            return this.find_highest_skill_level(options.roles.cache);
-        }
-        return this.skill_roles.findLastIndex(r => options.has(r.id));
+    find_highest_skill_level(options: Discord.GuildMember) {
+        return this.skill_roles.findLastIndex(r => options.roles.cache.has(r.id));
     }
 
     private async check_skill_roles(member: Discord.GuildMember) {
