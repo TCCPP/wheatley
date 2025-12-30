@@ -177,6 +177,7 @@ export default class Starboard extends BotComponent {
             this.wheatley.channels.starboard,
             this.wheatley.channels.goals2024,
             this.wheatley.channels.goals2025,
+            this.wheatley.channels.goals2026,
             this.wheatley.channels.skill_role_log,
             this.wheatley.channels.polls,
         ]);
