@@ -127,142 +127,139 @@ export class CommandHandler {
     // returns false if the message was not a wheatley command
     private async handle_text_command(message: Discord.Message, prev_command_obj?: TextBasedCommand) {
         const match = message.content.match(CommandHandler.command_regex);
-        if (match) {
-            const command_name = match[1];
-            if (command_name in this.text_commands) {
-                let command_body = message.content.substring(match[0].length).trim();
-                let command = this.text_commands[command_name];
-                const command_obj = prev_command_obj
-                    ? new TextBasedCommand(prev_command_obj, command_name, command, message)
-                    : new TextBasedCommand(command_name, command, message, this.wheatley);
-                this.register_issued_command(message, command_obj);
-                let command_log_name = command_name;
-                if (command.subcommands) {
-                    // expect a subcommand argument
-                    const re = /^\S+/;
-                    const match = command_body.match(re);
-                    const subcommand = match ? command.subcommands.get(match[0]) : undefined;
-                    if (subcommand) {
-                        command_log_name = `${command_name} ${match![0]}`;
-                        command = unwrap(subcommand);
-                        command_body = command_body.slice(unwrap(match)[0].length).trim();
-                        command_obj.command_descriptor = command;
-                    } else {
-                        await command_obj.reply({ embeds: [command.command_info_and_description_embed()] });
-                        return;
-                    }
-                }
-                M.log(
-                    `Received !${command_log_name}${prev_command_obj ? " (message edit)" : ""}`,
-                    "From:",
-                    message.author.tag,
-                    message.author.id,
-                    "At:",
-                    message.url,
-                    "Body:",
-                    JSON.stringify(command_body),
-                );
-                if (command.permissions !== undefined) {
-                    if (!(await this.wheatley.check_permissions(command_obj.user, command.permissions))) {
-                        await command_obj.reply({
-                            files: ["https://miro.medium.com/v2/resize:fit:750/1*lMV_u6tnu9WmFuJRyhTsFQ.jpeg"],
-                            should_text_reply: true,
-                        });
-                        return;
-                    }
-                }
-                const command_options = await command.parse_text_arguments(command_obj, message, command_body);
-                if (command_options !== undefined) {
-                    await this.do_command_dispatch(command, command_obj, ...command_options);
-                }
-                return true;
-            } else {
-                // unknown command
-                return false;
-            }
-        } else {
+        if (!match) {
             // starts with ! but doesn't match the command regex
             return false;
         }
+        const command_name = match[1];
+        if (!(command_name in this.text_commands)) {
+            // unknown command
+            return false;
+        }
+        let command_body = message.content.substring(match[0].length).trim();
+        let command = this.text_commands[command_name];
+        const command_obj = prev_command_obj
+            ? new TextBasedCommand(prev_command_obj, command_name, command, message)
+            : new TextBasedCommand(command_name, command, message, this.wheatley);
+        this.register_issued_command(message, command_obj);
+        let command_log_name = command_name;
+        if (command.subcommands) {
+            // expect a subcommand argument
+            const re = /^\S+/;
+            const match = command_body.match(re);
+            const subcommand = match ? command.subcommands.get(match[0]) : undefined;
+            if (subcommand) {
+                command_log_name = `${command_name} ${match![0]}`;
+                command = unwrap(subcommand);
+                command_body = command_body.slice(unwrap(match)[0].length).trim();
+                command_obj.command_descriptor = command;
+            } else {
+                await command_obj.reply({ embeds: [command.command_info_and_description_embed()] });
+                return;
+            }
+        }
+        M.log(
+            `Received !${command_log_name}${prev_command_obj ? " (message edit)" : ""}`,
+            "From:",
+            message.author.tag,
+            message.author.id,
+            "At:",
+            message.url,
+            "Body:",
+            JSON.stringify(command_body),
+        );
+        if (command.permissions !== undefined) {
+            if (!(await this.wheatley.check_permissions(command_obj.user, command.permissions))) {
+                await command_obj.reply({
+                    files: ["https://miro.medium.com/v2/resize:fit:750/1*lMV_u6tnu9WmFuJRyhTsFQ.jpeg"],
+                    should_text_reply: true,
+                });
+                return;
+            }
+        }
+        const command_options = await command.parse_text_arguments(command_obj, message, command_body);
+        if (command_options !== undefined) {
+            await this.do_command_dispatch(command, command_obj, ...command_options);
+        }
+        return true;
     }
 
     private async handle_slash_comand(interaction: Discord.ChatInputCommandInteraction) {
-        if (interaction.commandName in this.text_commands) {
-            let command = this.text_commands[interaction.commandName];
-            let command_log_name = interaction.commandName;
-            if (interaction.options.getSubcommand(false)) {
-                command_log_name = `${interaction.commandName} ${interaction.options.getSubcommand()}`;
-                command = unwrap(unwrap(command.subcommands).get(interaction.options.getSubcommand()));
+        if (!(interaction.commandName in this.text_commands)) {
+            // TODO: Unknown command
+        }
+        let command = this.text_commands[interaction.commandName];
+        let command_log_name = interaction.commandName;
+        if (interaction.options.getSubcommand(false)) {
+            command_log_name = `${interaction.commandName} ${interaction.options.getSubcommand()}`;
+            command = unwrap(unwrap(command.subcommands).get(interaction.options.getSubcommand()));
+        }
+        M.log(
+            `Received /${command_log_name}`,
+            "From:",
+            interaction.user.tag,
+            interaction.user.id,
+            "At:",
+            make_url(interaction, forge_snowflake(Date.now())),
+            "Args:",
+            [
+                ...[...command.options.values()].map(opt => {
+                    if (opt.type == "string") {
+                        return JSON.stringify(interaction.options.getString(opt.title));
+                    } else if (opt.type == "user") {
+                        return interaction.options.getUser(opt.title)?.id;
+                    } else if (opt.type == "role") {
+                        return interaction.options.getRole(opt.title)?.name;
+                    } else if (opt.type == "number") {
+                        return interaction.options.getNumber(opt.title)?.toString();
+                    } else if (opt.type == "boolean") {
+                        return interaction.options.getBoolean(opt.title)?.toString();
+                    } else {
+                        return "<unknown>";
+                    }
+                }),
+            ],
+        );
+        const command_options: unknown[] = [];
+        const command_object = new TextBasedCommand(interaction.commandName, command, interaction, this.wheatley);
+        if (command.permissions !== undefined) {
+            if (!(await this.wheatley.check_permissions(interaction.user, command.permissions))) {
+                await interaction.reply({
+                    files: ["https://miro.medium.com/v2/resize:fit:750/1*lMV_u6tnu9WmFuJRyhTsFQ.jpeg"],
+                });
+                return;
             }
-            M.log(
-                `Received /${command_log_name}`,
-                "From:",
-                interaction.user.tag,
-                interaction.user.id,
-                "At:",
-                make_url(interaction, forge_snowflake(Date.now())),
-                "Args:",
-                [
-                    ...[...command.options.values()].map(opt => {
-                        if (opt.type == "string") {
-                            return JSON.stringify(interaction.options.getString(opt.title));
-                        } else if (opt.type == "user") {
-                            return interaction.options.getUser(opt.title)?.id;
-                        } else if (opt.type == "role") {
-                            return interaction.options.getRole(opt.title)?.name;
-                        } else if (opt.type == "number") {
-                            return interaction.options.getNumber(opt.title)?.toString();
-                        } else if (opt.type == "boolean") {
-                            return interaction.options.getBoolean(opt.title)?.toString();
-                        } else {
-                            return "<unknown>";
-                        }
-                    }),
-                ],
-            );
-            const command_options: unknown[] = [];
-            const command_object = new TextBasedCommand(interaction.commandName, command, interaction, this.wheatley);
-            if (command.permissions !== undefined) {
-                if (!(await this.wheatley.check_permissions(interaction.user, command.permissions))) {
-                    await interaction.reply({
-                        files: ["https://miro.medium.com/v2/resize:fit:750/1*lMV_u6tnu9WmFuJRyhTsFQ.jpeg"],
-                    });
+        }
+        for (const option of command.options.values()) {
+            if (option.type == "string") {
+                const option_value = interaction.options.getString(option.title);
+                if (!option_value && option.required) {
+                    await command_object.reply(create_error_reply("Required argument not found"), true);
+                    this.wheatley.critical_error("this shouldn't happen");
                     return;
                 }
-            }
-            for (const option of command.options.values()) {
-                if (option.type == "string") {
-                    const option_value = interaction.options.getString(option.title);
-                    if (!option_value && option.required) {
-                        await command_object.reply(create_error_reply("Required argument not found"), true);
-                        this.wheatley.critical_error("this shouldn't happen");
-                        return;
-                    }
-                    if (option_value && option.regex && !option_value.trim().match(option.regex)) {
-                        await command_object.reply(
-                            create_error_reply(`Argument ${option.title} doesn't match expected format`),
-                            true,
-                        );
-                        return;
-                    }
-                    command_options.push(option_value);
-                } else if (option.type == "user") {
-                    command_options.push(interaction.options.getUser(option.title));
-                } else if (option.type == "role") {
-                    command_options.push(interaction.options.getRole(option.title));
-                } else if (option.type == "number") {
-                    command_options.push(interaction.options.getNumber(option.title));
-                } else if (option.type == "boolean") {
-                    command_options.push(interaction.options.getBoolean(option.title));
-                } else {
-                    assert(false, "unhandled option type");
+                if (option_value && option.regex && !option_value.trim().match(option.regex)) {
+                    await command_object.reply(
+                        create_error_reply(`Argument ${option.title} doesn't match expected format`),
+                        true,
+                    );
+                    return;
                 }
+                command_options.push(option_value);
+            } else if (option.type == "user") {
+                command_options.push(interaction.options.getUser(option.title));
+            } else if (option.type == "role") {
+                command_options.push(interaction.options.getRole(option.title));
+            } else if (option.type == "number") {
+                command_options.push(interaction.options.getNumber(option.title));
+            } else if (option.type == "boolean") {
+                command_options.push(interaction.options.getBoolean(option.title));
+            } else {
+                assert(false, "unhandled option type");
             }
-            await command_object.maybe_early_reply();
-            await this.do_command_dispatch(command, command_object, ...command_options);
-        } else {
-            // TODO unknown command
         }
+        await command_object.maybe_early_reply();
+        await this.do_command_dispatch(command, command_object, ...command_options);
     }
 
     //
