@@ -370,7 +370,10 @@ export class CommandHandler {
                 await this.handle_slash_comand(interaction);
             } else if (interaction.isAutocomplete()) {
                 if (interaction.commandName in this.text_commands) {
-                    const command = this.text_commands[interaction.commandName];
+                    let command = this.text_commands[interaction.commandName];
+                    if (interaction.options.getSubcommand(false)) {
+                        command = unwrap(unwrap(command.subcommands).get(interaction.options.getSubcommand()));
+                    }
                     // TODO: permissions sanity check?
                     const field = interaction.options.getFocused(true);
                     assert(command.options.has(field.name));
