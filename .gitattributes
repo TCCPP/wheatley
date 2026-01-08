@@ -23,11 +23,6 @@
 *.html          text eol=lf
 *.svg           text eol=lf
 
-# Lockfiles: prevent merge drivers from “fixing” them
-pnpm-lock.yaml  -merge
-yarn.lock       -merge
-package-lock.json -merge
-
 # Binary assets
 *.png           binary
 *.jpg           binary
