@@ -18,10 +18,12 @@ import { unwrap } from "../../../../utils/misc.js";
 export default class VoiceModeration extends BotComponent {
     private recently_in_voice = new SelfClearingSet<string>(5 * MINUTE);
     private staff_action_log!: Discord.TextChannel;
+    private public_action_log!: Discord.TextChannel;
     private voice_hotline!: Discord.TextChannel;
 
     override async setup(commands: CommandSetBuilder) {
         this.staff_action_log = await this.utilities.get_channel(this.wheatley.channels.staff_action_log);
+        this.public_action_log = await this.utilities.get_channel(this.wheatley.channels.public_action_log);
         this.voice_hotline = await this.utilities.get_channel(this.wheatley.channels.voice_hotline);
 
         commands.add(
@@ -242,10 +244,18 @@ export default class VoiceModeration extends BotComponent {
         }
 
         await target.timeout(3 * HOUR);
-        const summary = await this.log_action(target.user, command.user, "was quarantined");
+        const summary = await this.log_action(target.user, command.user, "was quarantined", reason ?? undefined);
+        await this.public_action_log.send({
+            embeds: [Discord.EmbedBuilder.from(summary)],
+            allowedMentions: { parse: [] },
+        });
         await this.voice_hotline.send({
             content: `<@&${this.wheatley.roles.moderators.id}>`,
             embeds: [summary.setColor(colors.alert_color)],
+            allowedMentions: {
+                roles: [this.wheatley.roles.moderators.id],
+                users: [target.id],
+            },
         });
         await this.reply_success(command, `${target.displayName} was quarantined`);
     }
