@@ -14,29 +14,15 @@ import { TextBasedCommand } from "../../../../command-abstractions/text-based-co
 import { SelfClearingSet } from "../../../../utils/containers.js";
 import { build_description } from "../../../../utils/strings.js";
 import { unwrap } from "../../../../utils/misc.js";
-import SkillRoles, { SkillLevel } from "../../../tccpp/components/skill-roles.js";
-
-type voice_first_join_notice_entry = {
-    guild: string;
-    user: string;
-    first_seen_at: Date;
-    first_channel: string;
-};
 
 export default class VoiceModeration extends BotComponent {
     private recently_in_voice = new SelfClearingSet<string>(5 * MINUTE);
     private staff_action_log!: Discord.TextChannel;
     private voice_hotline!: Discord.TextChannel;
 
-    private database = this.wheatley.database.create_proxy<{
-        voice_first_join_notice: voice_first_join_notice_entry;
-    }>();
-
     override async setup(commands: CommandSetBuilder) {
         this.staff_action_log = await this.utilities.get_channel(this.wheatley.channels.staff_action_log);
         this.voice_hotline = await this.utilities.get_channel(this.wheatley.channels.voice_hotline);
-
-        await this.database.voice_first_join_notice.createIndex({ guild: 1, user: 1 }, { unique: true });
 
         commands.add(
             new TextBasedCommandBuilder("voice", EarlyReplyMode.ephemeral)
@@ -116,17 +102,6 @@ export default class VoiceModeration extends BotComponent {
                         .set_handler(this.wrap_command_handler(this.handle_quarantine.bind(this))),
                 ),
         );
-    }
-
-    private has_skill_role_above_beginner(member: Discord.GuildMember) {
-        const skill_roles_component = this.wheatley.components.get("SkillRoles");
-        if (skill_roles_component && skill_roles_component instanceof SkillRoles) {
-            return skill_roles_component.find_highest_skill_level(member) > SkillLevel.beginner;
-        }
-
-        // If the SkillRoles component isn't loaded, check by role name.
-        const higher_skill_role_names = new Set(["intermediate", "proficient", "advanced", "expert"]);
-        return member.roles.cache.some(role => higher_skill_role_names.has(role.name.toLowerCase()));
     }
 
     private wrap_command_handler<Args extends unknown[] = []>(
@@ -279,49 +254,6 @@ export default class VoiceModeration extends BotComponent {
         // Track "recently in voice" for quarantine purposes
         if (!new_state.channel && new_state.member) {
             this.recently_in_voice.insert(new_state.member.id);
-        }
-
-        // First-ever voice join notice for users without permanent voice access
-        if (
-            old_state.channelId == null &&
-            new_state.channelId != null &&
-            new_state.guild.id === this.wheatley.guild.id &&
-            new_state.member != null &&
-            !new_state.member.user.bot &&
-            new_state.channelId !== this.wheatley.guild.afkChannelId
-        ) {
-            const member = new_state.member;
-            const res = await this.database.voice_first_join_notice.updateOne(
-                { guild: new_state.guild.id, user: member.id },
-                {
-                    $setOnInsert: {
-                        guild: new_state.guild.id,
-                        user: member.id,
-                        first_seen_at: new Date(),
-                        first_channel: new_state.channelId,
-                    },
-                },
-                { upsert: true },
-            );
-
-            if (
-                res.upsertedCount > 0 &&
-                !member.roles.cache.has(this.wheatley.roles.voice.id) &&
-                !member.roles.cache.has(this.wheatley.roles.no_voice.id) &&
-                !member.roles.cache.has(this.wheatley.roles.server_booster.id) &&
-                !this.has_skill_role_above_beginner(member) &&
-                new_state.channel?.isVoiceBased()
-            ) {
-                await new_state.channel.send({
-                    content:
-                        `<@${member.id}> ` +
-                        "new users are suppressed by default to protect our voice channels. " +
-                        "You will be able to speak when joining a channel with a voice moderator present. " +
-                        "Stick around and you will eventually be granted permanent voice access. " +
-                        "Please do not ping voice moderators to be unsupressed or for the voice role.",
-                    allowedMentions: { users: [member.id] },
-                });
-            }
         }
     }
 
