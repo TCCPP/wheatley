@@ -235,6 +235,7 @@ export default class Modmail extends BotComponent {
             content:
                 "Hello and welcome to Together C&C++ :wave: Please read before pressing buttons and only " +
                 "use the modmail system when there is an __issue requiring staff attention__.",
+            files: ["https://i.kym-cdn.com/photos/images/newsfeed/001/919/939/366.jpg"],
             ephemeral: true,
         });
         await this.log_action(interaction.member, "Monkey pressed the button");
