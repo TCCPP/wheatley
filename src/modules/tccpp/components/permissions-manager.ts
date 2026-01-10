@@ -308,7 +308,6 @@ export default class PermissionManager extends BotComponent {
                 allow: [Discord.PermissionsBitField.Flags.ViewChannel],
             },
         });
-        this.add_channel_overwrite(this.wheatley.channels.goals2025, read_only_channel);
         // misc overwrites
         this.add_channel_overwrite(this.wheatley.channels.days_since_last_incident, {
             ...default_permissions,
