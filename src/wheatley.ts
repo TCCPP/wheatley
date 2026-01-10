@@ -455,15 +455,28 @@ export class Wheatley {
     // Logging
     //
 
-    critical_error(arg: any) {
-        M.error(arg);
+    critical_error(error: Error): void;
+    critical_error<T>(arg: T extends Error ? never : T, error?: Error): void;
+    critical_error(arg: any, error?: Error) {
+        if (error === undefined) {
+            M.error(arg);
+        } else {
+            M.error(arg, error);
+        }
         if (!this.log_channel) {
             return;
         }
-        send_long_message_markdown_aware(this.log_channel, `🛑 Critical error: ${to_string(arg)}` + this.mom_ping)
+        let message = `🛑 Critical error: ${to_string(arg)}` + this.mom_ping;
+        if (error !== undefined) {
+            message += ` ${error}`;
+        }
+        send_long_message_markdown_aware(this.log_channel, message)
             .catch(() => M.error)
             .finally(() => {
-                if (arg instanceof Error) {
+                assert(!(error && arg instanceof Error)); // should be prevented statically
+                if (error !== undefined) {
+                    Sentry.captureException(error, { data: to_string(arg) });
+                } else if (arg instanceof Error) {
                     Sentry.captureException(arg);
                 } else {
                     Sentry.captureMessage(to_string(arg));

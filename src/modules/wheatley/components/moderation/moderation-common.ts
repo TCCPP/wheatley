@@ -8,7 +8,7 @@ import { strict as assert } from "assert";
 
 import { M } from "../../../../utils/debugging-and-logging.js";
 
-import { unwrap } from "../../../../utils/misc.js";
+import { assert_type, unwrap } from "../../../../utils/misc.js";
 import { build_description, capitalize } from "../../../../utils/strings.js";
 import { time_to_human } from "../../../../utils/strings.js";
 import { DistributedOmit } from "../../../../utils/typing.js";
@@ -596,7 +596,7 @@ export abstract class ModerationComponent extends BotComponent {
                 // 50007: Cannot send messages to this user
                 return true;
             } else {
-                this.wheatley.critical_error(`Error notifying user ${e}`);
+                this.wheatley.critical_error(`Error notifying user`, assert_type(e, Error));
                 return true;
             }
         }

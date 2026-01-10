@@ -21,6 +21,11 @@ export function unwrap<T>(x: T): T & NonNullable<unknown> {
     return x;
 }
 
+export function assert_type<T>(x: unknown, type: new (...args: any[]) => T): T {
+    assert(x instanceof type);
+    return x;
+}
+
 function compare<T>(a: T, b: T) {
     if (a < b) {
         return -1;

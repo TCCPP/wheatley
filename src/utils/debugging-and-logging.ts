@@ -35,6 +35,13 @@ export class M {
     static error(...args: any[]) {
         process.stdout.write(`${chalk.redBright(`🛑 [${M.get_timestamp()}] [error]`)} `);
         console.log(...args);
+        console.group("Error");
+        for (const arg of args) {
+            if (arg instanceof Error && arg.stack) {
+                console.log(arg.stack);
+            }
+        }
         console.trace();
+        console.groupEnd();
     }
 }

@@ -8,7 +8,7 @@ import { CommandSetBuilder } from "../../../command-abstractions/command-set-bui
 import { Wheatley } from "../../../wheatley.js";
 import { EarlyReplyMode, TextBasedCommandBuilder } from "../../../command-abstractions/text-based-command-builder.js";
 import { TextBasedCommand } from "../../../command-abstractions/text-based-command.js";
-import { unwrap } from "../../../utils/misc.js";
+import { assert_type, unwrap } from "../../../utils/misc.js";
 
 const LEADERBOARD_ENTRIES = 20;
 
@@ -122,6 +122,7 @@ export default class Roulette extends BotComponent {
                 } catch (error) {
                     this.wheatley.critical_error(
                         `promise failed for timeout of roulette loser ${[command.user.id, command.user.tag]}`,
+                        assert_type(error, Error),
                     );
                     M.error(error);
                     ok = false;

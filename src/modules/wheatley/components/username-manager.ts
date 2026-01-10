@@ -140,23 +140,27 @@ export default class UsernameManager extends BotComponent {
     }
 
     async cleanup() {
-        const members = await this.wheatley.guild.members.fetch();
-        for (const [_, member] of members) {
-            // undo my first go
-            //if(member.displayName.startsWith("Monke ")) {
-            //    const old = member.displayName.slice("Monke ".length);
-            //    if(!(is_valid_codepoint(old, 0) && is_valid_codepoint(old, 1) && is_valid_codepoint(old, 2))) {
-            //        // we changed it
-            //        await member.setNickname(old);
-            //    }
-            //    //if(member.displayName.match(/Monke \d{4}/gi)) {
-            //    //    M.debug("Revert?", [member.displayName, member.user.username]);
-            //    //    await member.setNickname(null);
-            //    //}
-            //}
-            // end
-            await this.check_member(member);
+        try {
+            const members = await this.wheatley.guild.members.fetch();
+            for (const [_, member] of members) {
+                // undo my first go
+                //if(member.displayName.startsWith("Monke ")) {
+                //    const old = member.displayName.slice("Monke ".length);
+                //    if(!(is_valid_codepoint(old, 0) && is_valid_codepoint(old, 1) && is_valid_codepoint(old, 2))) {
+                //        // we changed it
+                //        await member.setNickname(old);
+                //    }
+                //    //if(member.displayName.match(/Monke \d{4}/gi)) {
+                //    //    M.debug("Revert?", [member.displayName, member.user.username]);
+                //    //    await member.setNickname(null);
+                //    //}
+                //}
+                // end
+                await this.check_member(member);
+            }
+            M.log("Finished username manager cleanup");
+        } catch (e) {
+            this.wheatley.critical_error(e);
         }
-        M.log("Finished username manager cleanup");
     }
 }

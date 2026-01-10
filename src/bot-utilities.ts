@@ -71,7 +71,7 @@ type ForwardedMessageData = {
     url: string | null;
 };
 
-type MessageData = {
+export type MessageData = {
     author: UserData;
     guild: string;
     channel: string;
