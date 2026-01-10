@@ -1,12 +1,13 @@
 import * as Discord from "discord.js";
 import { strict as assert } from "assert";
 import { colors, HOUR, MINUTE } from "../../../common.js";
-import { unwrap } from "../../../utils/misc.js";
+import { delay, unwrap } from "../../../utils/misc.js";
 import { M } from "../../../utils/debugging-and-logging.js";
 import { BotComponent } from "../../../bot-component.js";
 import { CommandSetBuilder } from "../../../command-abstractions/command-set-builder.js";
 import { set_interval } from "../../../utils/node.js";
 import { build_description } from "../../../utils/strings.js";
+import { with_retry } from "../../../utils/discord.js";
 
 export type user_role_entry = {
     user_id: string;
@@ -115,12 +116,15 @@ export default class RoleManager extends BotComponent {
     async check_members() {
         M.log("Starting role checks");
         try {
-            const members = await this.wheatley.guild.members.fetch();
-            for (const member of members.values()) {
-                await this.check_member_roles(member);
-            }
+            await with_retry(async () => {
+                const members = await this.wheatley.guild.members.fetch();
+                for (const member of members.values()) {
+                    await this.check_member_roles(member);
+                }
+            });
         } catch (e) {
             this.wheatley.critical_error(e);
+            return;
         }
         M.log("Finished role checks");
     }

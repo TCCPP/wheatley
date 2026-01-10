@@ -1,6 +1,6 @@
 import { strict as assert } from "assert";
 import * as Discord from "discord.js";
-import { unwrap } from "./misc.js";
+import { delay, unwrap } from "./misc.js";
 import { TextBasedCommand } from "../command-abstractions/text-based-command.js";
 import { is_string } from "./strings.js";
 import { markdown_node, MarkdownParser } from "dismark";
@@ -586,4 +586,20 @@ export function embeds_match(
     }
 
     return true;
+}
+
+export async function with_retry<T>(fn: () => Promise<T>, max_retries = 3) {
+    for (let retry = 0; retry < max_retries; retry++) {
+        try {
+            return await fn();
+        } catch (e) {
+            if (e instanceof Discord.GatewayRateLimitError) {
+                assert((e.data.opcode as any) === 8);
+                await delay(e.data.retry_after * 1000 + 1000);
+            } else {
+                throw e;
+            }
+        }
+    }
+    throw new Error(`Operation failed after ${max_retries} retries`);
 }
