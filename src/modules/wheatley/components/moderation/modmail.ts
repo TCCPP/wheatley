@@ -255,13 +255,15 @@ export default class Modmail extends BotComponent {
     }
 
     async not_monkey_button_press(interaction: Discord.ButtonInteraction) {
+        await interaction.deferReply({
+            ephemeral: true,
+        });
         await this.log_action(interaction.member, "Monkey pressed the not monkey button");
         const member = await this.wheatley.guild.members.fetch(interaction.user.id);
         if (member.roles.cache.has(this.wheatley.roles.monke.id)) {
             if (!this.monke_set.has(member.id) || Date.now() - unwrap(this.monke_set.get(member.id)) >= HOUR) {
-                await interaction.reply({
+                await interaction.editReply({
                     content: "Congratulations on graduating from your monke status.",
-                    ephemeral: true,
                 });
                 try {
                     if ((await this.wheatley.try_fetch_guild_member(interaction.user))?.manageable) {
@@ -272,15 +274,13 @@ export default class Modmail extends BotComponent {
                     this.wheatley.critical_error(e);
                 }
             } else {
-                await interaction.reply({
+                await interaction.editReply({
                     content: "You must wait at least an hour to remove your monke status.",
-                    ephemeral: true,
                 });
             }
         } else {
-            await interaction.reply({
+            await interaction.editReply({
                 content: "No monke role present. If you'd like to become a monke press the \"I'm a monke\" button.",
-                ephemeral: true,
             });
         }
     }

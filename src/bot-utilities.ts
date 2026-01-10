@@ -394,10 +394,19 @@ export class BotUtilities {
     }
 
     async can_user_control_thread(user: Discord.User, thread: Discord.ThreadChannel) {
-        const owner_id = await get_thread_owner(thread);
-        return (
-            owner_id === user.id ||
-            (await this.wheatley.check_permissions(user, Discord.PermissionFlagsBits.ManageThreads))
-        );
+        try {
+            const owner_id = await get_thread_owner(thread);
+            return (
+                owner_id === user.id ||
+                (await this.wheatley.check_permissions(user, Discord.PermissionFlagsBits.ManageThreads))
+            );
+        } catch (e) {
+            if (e instanceof Discord.DiscordAPIError && e.code == 10008) {
+                // unknown message
+                return false;
+            } else {
+                throw e;
+            }
+        }
     }
 }
