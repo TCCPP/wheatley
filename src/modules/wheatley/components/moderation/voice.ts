@@ -261,6 +261,7 @@ export default class VoiceModeration extends BotComponent {
     }
 
     override async on_voice_state_update(old_state: Discord.VoiceState, new_state: Discord.VoiceState) {
+        // Track "recently in voice" for quarantine purposes
         if (!new_state.channel && new_state.member) {
             this.recently_in_voice.insert(new_state.member.id);
         }
