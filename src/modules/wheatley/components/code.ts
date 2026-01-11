@@ -57,7 +57,7 @@ export default class Code extends BotComponent {
                         return;
                     }
                 } catch (e) {
-                    this.wheatley.ignorable_error(e);
+                    this.wheatley.warn(e);
                 }
             }
             // Check for a user trying to format a string

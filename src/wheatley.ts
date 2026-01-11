@@ -484,7 +484,7 @@ export class Wheatley {
             });
     }
 
-    ignorable_error(arg: any) {
+    warn(arg: any) {
         M.error(arg);
         if (!this.log_channel) {
             return;
