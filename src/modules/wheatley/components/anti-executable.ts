@@ -14,6 +14,15 @@ import { CommandSetBuilder } from "../../../command-abstractions/command-set-bui
 
 const ACTION_THRESHOLD = 5;
 
+class HTTPError extends Error {
+    constructor(
+        public readonly url: string,
+        public readonly status_code: number | undefined,
+    ) {
+        super(`HTTP Error for request \`${url}\`: ${status_code}`);
+    }
+}
+
 export default class AntiExecutable extends BotComponent {
     private staff_flag_log!: Discord.TextChannel;
     private staff_action_log!: Discord.TextChannel;
@@ -115,7 +124,7 @@ export default class AntiExecutable extends BotComponent {
             https
                 .get(url, res => {
                     if (res.statusCode !== 200) {
-                        reject(new Error(`Request failed status code: ${res.statusCode}`));
+                        reject(new HTTPError(url, res.statusCode));
                         return;
                     }
                     res.on("data", chunk => {
@@ -195,6 +204,7 @@ export default class AntiExecutable extends BotComponent {
         attachments: Discord.Attachment[],
         flag_message: Discord.Message,
         author: Discord.User,
+        message_url: string,
         original_message: Discord.Message | null,
     ) {
         await Promise.all(
@@ -204,8 +214,16 @@ export default class AntiExecutable extends BotComponent {
                 try {
                     file_buffer = await this.fetch(attachment.url);
                 } catch (e) {
-                    this.wheatley.critical_error(e);
-                    return;
+                    if (e instanceof HTTPError) {
+                        this.wheatley.warn(
+                            `HTTP Error ${e.status_code} while fetching attachment for ` +
+                                `message ${message_url}: \`${attachment.url}\``,
+                        );
+                        return;
+                    } else {
+                        this.wheatley.critical_error(e);
+                        return;
+                    }
                 }
                 // virustotal
                 await this.virustotal_scan(file_buffer, flag_message, author, original_message);
@@ -222,7 +240,7 @@ export default class AntiExecutable extends BotComponent {
             content: `:warning: Executable file(s) detected`,
             ...quote,
         });
-        await this.scan_attachments(attachments, flag_message, message.author, null);
+        await this.scan_attachments(attachments, flag_message, message.author, message.url, null);
     }
 
     async handle_archives(message: Discord.Message, attachments: Discord.Attachment[]) {
@@ -231,7 +249,7 @@ export default class AntiExecutable extends BotComponent {
             content: `:warning: Archive file(s) detected`,
             ...quote,
         });
-        await this.scan_attachments(attachments, flag_message, message.author, message);
+        await this.scan_attachments(attachments, flag_message, message.author, message.url, message);
     }
 
     override async on_message_create(message: Discord.Message) {
@@ -242,11 +260,24 @@ export default class AntiExecutable extends BotComponent {
             const executables: Discord.Attachment[] = [];
             const archives: Discord.Attachment[] = [];
             for (const [_, attachment] of message.attachments) {
-                const res = await this.fetch(attachment.url, 512);
-                if (this.looks_like_executable(res)) {
-                    executables.push(attachment);
-                } else if (this.looks_like_archive(res)) {
-                    archives.push(attachment);
+                try {
+                    const res = await this.fetch(attachment.url, 512);
+                    if (this.looks_like_executable(res)) {
+                        executables.push(attachment);
+                    } else if (this.looks_like_archive(res)) {
+                        archives.push(attachment);
+                    }
+                } catch (e) {
+                    if (e instanceof HTTPError) {
+                        this.wheatley.warn(
+                            `HTTP Error ${e.status_code} while fetching attachment for ` +
+                                `message ${message.url}: \`${attachment.url}\``,
+                        );
+                        return;
+                    } else {
+                        this.wheatley.critical_error(e);
+                        return;
+                    }
                 }
             }
             if (executables.length > 0) {
