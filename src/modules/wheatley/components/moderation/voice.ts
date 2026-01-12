@@ -149,6 +149,7 @@ export default class VoiceModeration extends BotComponent {
         issuer: Discord.User | Discord.PartialUser,
         action: string,
         reason?: string,
+        show_issuer: boolean = true,
     ) {
         return new Discord.EmbedBuilder()
             .setColor(colors.wheatley)
@@ -163,7 +164,7 @@ export default class VoiceModeration extends BotComponent {
             .setDescription(
                 build_description(
                     (target ? `<@${target.id}> ` : "User ") + action,
-                    `**Issuer:** <@${issuer.id}>`,
+                    show_issuer ? `**Issuer:** <@${issuer.id}>` : null,
                     reason ? `**Reason:** ${reason}` : null,
                 ),
             )
@@ -244,14 +245,21 @@ export default class VoiceModeration extends BotComponent {
         }
 
         await target.timeout(3 * HOUR);
-        const summary = await this.log_action(target.user, command.user, "was quarantined", reason ?? undefined);
+        const staff_summary = await this.log_action(target.user, command.user, "was quarantined", reason ?? undefined);
+        const public_summary = VoiceModeration.case_summary(
+            target.user,
+            command.user,
+            "was quarantined",
+            reason ?? undefined,
+            false,
+        );
         await this.public_action_log.send({
-            embeds: [Discord.EmbedBuilder.from(summary)],
+            embeds: [public_summary],
             allowedMentions: { parse: [] },
         });
         await this.voice_hotline.send({
             content: `<@&${this.wheatley.roles.moderators.id}>`,
-            embeds: [summary.setColor(colors.alert_color)],
+            embeds: [staff_summary.setColor(colors.alert_color)],
             allowedMentions: {
                 roles: [this.wheatley.roles.moderators.id],
                 users: [target.id],
