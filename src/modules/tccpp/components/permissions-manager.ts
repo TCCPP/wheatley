@@ -9,6 +9,7 @@ import SkillRoles from "./skill-roles.js";
 import { Wheatley } from "../../../wheatley.js";
 import { unwrap } from "../../../utils/misc.js";
 import { CommandSetBuilder } from "../../../command-abstractions/command-set-builder.js";
+import { set_timeout } from "../../../utils/node.js";
 
 const categories_map = {
     staff_logs: "1135927261472755712",
@@ -422,7 +423,7 @@ export default class PermissionManager extends BotComponent {
     override async on_ready() {
         this.setup_permissions_map();
         this.sync_permissions().catch(this.wheatley.critical_error.bind(this.wheatley));
-        setTimeout(() => {
+        set_timeout(() => {
             this.sync_permissions().catch(this.wheatley.critical_error.bind(this.wheatley));
         }, HOUR);
     }
