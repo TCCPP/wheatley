@@ -21,11 +21,6 @@ type failed_code_block = {
     content: string;
 };
 
-// Allows channel-specific tweaks (e.g. optional language tags) without extra branching in the parser.
-type formatting_detection_options = {
-    require_language_tag: boolean;
-};
-
 class FailedCodeBlockRule extends dismark.Rule {
     override match(remaining: string): dismark.match_result | null {
         return remaining.match(FAILED_CODE_BLOCK_RE);
@@ -102,9 +97,7 @@ export default class FormattingErrorDetection extends BotComponent {
         return count / content.length >= 0.05 && count >= 6;
     }
 
-    static has_likely_format_errors(content: string, options?: formatting_detection_options) {
-        // Default to enforcing language tags unless a caller explicitly opts out.
-        const require_language_tag = options?.require_language_tag ?? true;
+    static has_likely_format_errors(content: string, require_language_tag = true) {
         // early return
         if (content.search(/['"`]{2}/) === -1) {
             return false;
@@ -159,22 +152,11 @@ export default class FormattingErrorDetection extends BotComponent {
         return (has_likely_format_mistakes as boolean) && !(has_properly_formatted_code_blocks as boolean);
     }
 
-    // Only treat the canonical #language-design channel in the main guild as "special".
     private is_language_design_channel(message: Discord.Message) {
         if (!message.inGuild()) {
             return false;
         }
-        if (message.guildId !== this.wheatley.guild.id) {
-            return false;
-        }
-        return message.channel instanceof Discord.TextChannel && message.channel.name === "language-design";
-    }
-
-    // Relax the “language tag required” rule for #language-design, keep stock behavior elsewhere.
-    private get_format_detection_options(message: Discord.Message): formatting_detection_options {
-        return {
-            require_language_tag: !this.is_language_design_channel(message),
-        };
+        return message.channelId === "893852731192782898";
     }
 
     has_likely_format_errors(message: Discord.Message) {
@@ -182,10 +164,8 @@ export default class FormattingErrorDetection extends BotComponent {
         if (message.member && this.skill_roles.find_highest_skill_level(message.member) >= SkillLevel.proficient) {
             return false;
         }
-        return FormattingErrorDetection.has_likely_format_errors(
-            message.content,
-            this.get_format_detection_options(message),
-        );
+        const require_language_tag = !this.is_language_design_channel(message);
+        return FormattingErrorDetection.has_likely_format_errors(message.content, require_language_tag);
     }
 
     override async on_message_create(message: Discord.Message) {
