@@ -97,7 +97,7 @@ export default class FormattingErrorDetection extends BotComponent {
         return count / content.length >= 0.05 && count >= 6;
     }
 
-    static has_likely_format_errors(content: string) {
+    static has_likely_format_errors(content: string, require_language_tag = true) {
         // early return
         if (content.search(/['"`]{2}/) === -1) {
             return false;
@@ -130,7 +130,7 @@ export default class FormattingErrorDetection extends BotComponent {
                     }
                     break;
                 case "code_block":
-                    if (node.language !== null) {
+                    if (node.language !== null || !require_language_tag) {
                         has_properly_formatted_code_blocks = true;
                     } else if (this.has_enough_special_characters_to_likely_be_code(node.content)) {
                         has_likely_format_mistakes = true;
@@ -152,12 +152,20 @@ export default class FormattingErrorDetection extends BotComponent {
         return (has_likely_format_mistakes as boolean) && !(has_properly_formatted_code_blocks as boolean);
     }
 
+    private is_language_design_channel(message: Discord.Message) {
+        if (!message.inGuild()) {
+            return false;
+        }
+        return message.channelId === "893852731192782898";
+    }
+
     has_likely_format_errors(message: Discord.Message) {
         // trust Proficient+ members
         if (message.member && this.skill_roles.find_highest_skill_level(message.member) >= SkillLevel.proficient) {
             return false;
         }
-        return FormattingErrorDetection.has_likely_format_errors(message.content);
+        const require_language_tag = !this.is_language_design_channel(message);
+        return FormattingErrorDetection.has_likely_format_errors(message.content, require_language_tag);
     }
 
     override async on_message_create(message: Discord.Message) {
