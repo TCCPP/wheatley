@@ -9,7 +9,7 @@ import { Wheatley } from "../../../wheatley.js";
 import { build_description, capitalize } from "../../../utils/strings.js";
 import { Virustotal } from "../../../infra/virustotal.js";
 import Mute from "./moderation/mute.js";
-import { unwrap } from "../../../utils/misc.js";
+import { delay, unwrap } from "../../../utils/misc.js";
 import { CommandSetBuilder } from "../../../command-abstractions/command-set-builder.js";
 
 const ACTION_THRESHOLD = 5;
@@ -144,6 +144,30 @@ export default class AntiExecutable extends BotComponent {
         });
     }
 
+    private is_retryable_error(e: unknown): boolean {
+        if (e instanceof HTTPError && e.status_code !== undefined) {
+            return e.status_code >= 500;
+        }
+        return true;
+    }
+
+    private async fetch_with_retry(url: string, limit?: number, max_retries = 3): Promise<Buffer> {
+        const base_delay_ms = 1000;
+        for (let attempt = 0; attempt <= max_retries; attempt++) {
+            try {
+                return await this.fetch(url, limit);
+            } catch (e) {
+                const is_last_attempt = attempt === max_retries;
+                if (is_last_attempt || !this.is_retryable_error(e)) {
+                    throw e;
+                }
+                const delay_ms = base_delay_ms * Math.pow(2, attempt);
+                await delay(delay_ms);
+            }
+        }
+        throw new Error("Unreachable");
+    }
+
     async virustotal_scan(
         file_buffer: Buffer,
         flag_messsage: Discord.Message,
@@ -212,7 +236,7 @@ export default class AntiExecutable extends BotComponent {
                 // download
                 let file_buffer: Buffer;
                 try {
-                    file_buffer = await this.fetch(attachment.url);
+                    file_buffer = await this.fetch_with_retry(attachment.url);
                 } catch (e) {
                     if (e instanceof HTTPError) {
                         this.wheatley.warn(
@@ -261,7 +285,7 @@ export default class AntiExecutable extends BotComponent {
             const archives: Discord.Attachment[] = [];
             for (const [_, attachment] of message.attachments) {
                 try {
-                    const res = await this.fetch(attachment.url, 512);
+                    const res = await this.fetch_with_retry(attachment.url, 512);
                     if (this.looks_like_executable(res)) {
                         executables.push(attachment);
                     } else if (this.looks_like_archive(res)) {
