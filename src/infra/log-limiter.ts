@@ -29,6 +29,7 @@ export class LogLimiter {
     }
 
     public log(channel: LoggableChannel, message: Discord.MessageCreateOptions) {
+        assert((channel as unknown) !== undefined, "Shouldn't happen");
         this.log_queue.push([channel, message]);
         this.queued_counter.inc();
     }

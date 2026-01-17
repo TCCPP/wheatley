@@ -373,9 +373,9 @@ export class CommandHandler {
                     }
                     // TODO: permissions sanity check?
                     const field = interaction.options.getFocused(true);
-                    assert(command.options.has(field.name));
+                    assert(command.options.has(field.name), `${interaction.commandName} ${field.name}`);
                     const option = command.options.get(field.name)!;
-                    assert(option.autocomplete);
+                    assert(option.autocomplete, `${interaction.commandName} ${field.name}`);
                     await interaction.respond(
                         option.autocomplete(field.value, interaction.commandName).map(({ name, value }) => ({
                             name: name.substring(0, 100),
@@ -386,7 +386,7 @@ export class CommandHandler {
                     // TODO unknown command
                 }
             } else if (interaction.isMessageContextMenuCommand()) {
-                assert(interaction.commandName in this.other_commands);
+                assert(interaction.commandName in this.other_commands, interaction.commandName);
                 M.log(
                     `Received message context menu interaction ${interaction.commandName}`,
                     "From:",
@@ -397,7 +397,7 @@ export class CommandHandler {
                 );
                 await this.other_commands[interaction.commandName].handler(interaction);
             } else if (interaction.isUserContextMenuCommand()) {
-                assert(interaction.commandName in this.other_commands);
+                assert(interaction.commandName in this.other_commands, interaction.commandName);
                 M.log(
                     `Received user context menu interaction ${interaction.commandName}`,
                     "From:",
