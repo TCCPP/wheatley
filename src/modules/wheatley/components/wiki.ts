@@ -33,6 +33,7 @@ export type WikiArticle = {
     set_author: boolean;
     no_embed: boolean;
     wikilink: string | undefined;
+    wiki_page_title: string | undefined;
 };
 
 type WikiField = {
@@ -315,6 +316,7 @@ class ArticleParser {
             set_author: this.set_author,
             no_embed: this.no_embed,
             wikilink: this.wikilink,
+            wiki_page_title: undefined,
         };
     }
 
@@ -617,6 +619,7 @@ export default class Wiki extends BotComponent {
                 }
                 existing_titles.add(article.title);
                 article.wikilink = wiki_article.url;
+                article.wiki_page_title = wiki_article.page_title;
                 this.articles[wiki_article.path] = article;
                 const frontmatter_aliases = Array.isArray(wiki_article.alias)
                     ? wiki_article.alias
@@ -637,16 +640,25 @@ export default class Wiki extends BotComponent {
         await this.wiki_search_index.load_embeddings();
     }
 
+    build_see_link(article: WikiArticle): string {
+        if (!article.wikilink) {
+            return "";
+        }
+        return `\n\nSee: [${article.wiki_page_title ?? article.title}](${article.wikilink}) :tccpp:`;
+    }
+
     build_article_embed(
         article: WikiArticle,
         options?: {
             member?: Discord.GuildMember | Discord.User;
         },
     ): Discord.EmbedBuilder {
+        const see_link = this.build_see_link(article);
+        const description = (article.body ?? "") + see_link;
         const embed = new Discord.EmbedBuilder()
             .setColor(colors.wheatley)
             .setTitle(article.title)
-            .setDescription(article.body ?? null)
+            .setDescription(description || null)
             .setFields(article.fields);
         if (article.image) {
             embed.setImage(article.image);
@@ -673,8 +685,9 @@ export default class Wiki extends BotComponent {
         }
         if (article.no_embed) {
             assert(article.body);
+            const see_link = this.build_see_link(article);
             await command.reply({
-                content: (mention ? mention + "\n" : "") + article.body,
+                content: (mention ? mention + "\n" : "") + article.body + see_link,
                 should_text_reply: true,
             });
         } else {

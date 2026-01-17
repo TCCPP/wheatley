@@ -2,8 +2,11 @@ import * as fs from "fs";
 
 import { globIterate } from "glob";
 import matter from "gray-matter";
+import MarkdownIt from "markdown-it";
 
 import { M } from "../../utils/debugging-and-logging.js";
+
+const md = new MarkdownIt();
 
 export const WIKI_WEB_ARTICLES_PATH = "wiki/wiki";
 export const WIKI_BASE_URL = "https://tccpp.wiki";
@@ -13,12 +16,26 @@ export type WikiWebArticle = {
     url: string;
     preview: string;
     alias: string | string[] | undefined;
+    page_title: string;
 };
 
 type WikiFrontmatter = {
     preview?: string;
     alias?: string | string[];
 };
+
+function extract_title_from_markdown(content: string): string | null {
+    const tokens = md.parse(content, {});
+    for (let i = 0; i < tokens.length; i++) {
+        if (tokens[i].type === "heading_open" && tokens[i].tag === "h1") {
+            // The next token contains the heading content
+            if (i + 1 < tokens.length && tokens[i + 1].type === "inline") {
+                return tokens[i + 1].content;
+            }
+        }
+    }
+    return null;
+}
 
 function file_path_to_wiki_path(file_path: string): string {
     // Remove the base path and .md extension
@@ -65,12 +82,14 @@ export async function load_wiki_web_articles(): Promise<WikiWebArticle[]> {
 
             const wiki_path = file_path_to_wiki_path(file_path.relative());
             const url = wiki_path_to_url(wiki_path);
+            const page_title = extract_title_from_markdown(parsed.content) ?? wiki_path;
 
             articles.push({
                 path: wiki_path,
                 url,
                 preview: frontmatter.preview,
                 alias: frontmatter.alias,
+                page_title,
             });
         } catch (e) {
             M.error(`Failed to parse wiki article ${file_path.fullpath()}: ${e}`);
