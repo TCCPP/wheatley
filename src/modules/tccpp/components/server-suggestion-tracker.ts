@@ -7,6 +7,7 @@ import { KeyedMutexSet, SelfClearingSet } from "../../../utils/containers.js";
 import { M } from "../../../utils/debugging-and-logging.js";
 import { MINUTE } from "../../../common.js";
 import { BotComponent } from "../../../bot-component.js";
+import { ensure_index } from "../../../infra/database-interface.js";
 import { CommandSetBuilder } from "../../../command-abstractions/command-set-builder.js";
 import { Wheatley } from "../../../wheatley.js";
 import { EarlyReplyMode, TextBasedCommandBuilder } from "../../../command-abstractions/text-based-command-builder.js";
@@ -53,8 +54,8 @@ export default class ServerSuggestionTracker extends BotComponent {
     private server_suggestions!: Discord.TextChannel;
 
     override async setup(commands: CommandSetBuilder) {
-        await this.database.server_suggestions.createIndex({ suggestion: 1 }, { unique: true });
-        await this.database.server_suggestions.createIndex({ status_message: 1 }, { unique: true });
+        await ensure_index(this.wheatley, this.database.server_suggestions, { suggestion: 1 }, { unique: true });
+        await ensure_index(this.wheatley, this.database.server_suggestions, { status_message: 1 }, { unique: true });
 
         this.suggestion_action_log = await this.utilities.get_thread_channel(
             this.wheatley.channels.suggestion_action_log,

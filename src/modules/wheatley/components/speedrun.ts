@@ -4,6 +4,7 @@ import { time_to_human } from "../../../utils/strings.js";
 import { M } from "../../../utils/debugging-and-logging.js";
 import { colors, MINUTE } from "../../../common.js";
 import { BotComponent } from "../../../bot-component.js";
+import { ensure_index } from "../../../infra/database-interface.js";
 import { Wheatley } from "../../../wheatley.js";
 import { discord_timestamp } from "../../../utils/discord.js";
 import { CommandSetBuilder } from "../../../command-abstractions/command-set-builder.js";
@@ -33,7 +34,7 @@ export default class Speedrun extends BotComponent {
     }
 
     override async setup(commands: CommandSetBuilder) {
-        await this.database.speedrun_attempts.createIndex({ user: 1 });
+        await ensure_index(this.wheatley, this.database.speedrun_attempts, { user: 1 });
 
         this.staff_action_log = await this.utilities.get_channel(this.wheatley.channels.staff_action_log);
     }

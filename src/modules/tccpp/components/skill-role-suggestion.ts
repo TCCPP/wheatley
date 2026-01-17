@@ -8,6 +8,7 @@ import { SelfClearingMap } from "../../../utils/containers.js";
 import { M } from "../../../utils/debugging-and-logging.js";
 import { colors, DAY, MINUTE } from "../../../common.js";
 import { BotComponent } from "../../../bot-component.js";
+import { ensure_index } from "../../../infra/database-interface.js";
 import { CommandSetBuilder } from "../../../command-abstractions/command-set-builder.js";
 import SkillRoles, { SkillLevel, skill_level } from "./skill-roles.js";
 import {
@@ -49,8 +50,8 @@ export default class SkillRoleSuggestion extends BotComponent {
     private suggestion_modal!: BotModal<[]>;
 
     override async setup(commands: CommandSetBuilder) {
-        await this.database.skill_role_threads.createIndex({ channel_id: 1 }, { unique: true });
-        await this.database.skill_role_threads.createIndex({ user_id: 1 }, { unique: true });
+        await ensure_index(this.wheatley, this.database.skill_role_threads, { channel_id: 1 }, { unique: true });
+        await ensure_index(this.wheatley, this.database.skill_role_threads, { user_id: 1 });
 
         this.skill_roles = unwrap(this.wheatley.components.get("SkillRoles")) as SkillRoles;
         this.skill_role_suggestions = await this.utilities.get_forum_channel(

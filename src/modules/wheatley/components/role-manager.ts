@@ -4,6 +4,7 @@ import { colors, HOUR, MINUTE } from "../../../common.js";
 import { delay, unwrap } from "../../../utils/misc.js";
 import { M } from "../../../utils/debugging-and-logging.js";
 import { BotComponent } from "../../../bot-component.js";
+import { ensure_index } from "../../../infra/database-interface.js";
 import { CommandSetBuilder } from "../../../command-abstractions/command-set-builder.js";
 import { set_interval } from "../../../utils/node.js";
 import { build_description } from "../../../utils/strings.js";
@@ -47,7 +48,7 @@ export default class RoleManager extends BotComponent {
     }
 
     override async setup(commands: CommandSetBuilder) {
-        await this.database.user_roles.createIndex({ user_id: 1 }, { unique: true });
+        await ensure_index(this.wheatley, this.database.user_roles, { user_id: 1 }, { unique: true });
 
         this.staff_member_log = await this.utilities.get_channel(this.wheatley.channels.staff_member_log);
     }

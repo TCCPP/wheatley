@@ -2,6 +2,7 @@ import * as Discord from "discord.js";
 import { strict as assert } from "assert";
 import { M } from "../../../utils/debugging-and-logging.js";
 import { BotComponent } from "../../../bot-component.js";
+import { ensure_index } from "../../../infra/database-interface.js";
 import { CommandSetBuilder } from "../../../command-abstractions/command-set-builder.js";
 import { Wheatley } from "../../../wheatley.js";
 import { EarlyReplyMode, TextBasedCommandBuilder } from "../../../command-abstractions/text-based-command-builder.js";
@@ -76,7 +77,7 @@ export default class Nodistractions extends BotComponent {
     }>();
 
     override async setup(commands: CommandSetBuilder) {
-        await this.database.nodistractions.createIndex({ user: 1 }, { unique: true });
+        await ensure_index(this.wheatley, this.database.nodistractions, { user: 1 }, { unique: true });
 
         commands.add(
             new TextBasedCommandBuilder("nodistractions", EarlyReplyMode.ephemeral)

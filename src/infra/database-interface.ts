@@ -4,7 +4,7 @@ import { is_string } from "../utils/strings.js";
 import { Mutex } from "../utils/containers.js";
 
 import * as mongo from "mongodb";
-import { wheatley_database_credentials } from "../wheatley.js";
+import { Wheatley, wheatley_database_credentials } from "../wheatley.js";
 
 export class WheatleyDatabase {
     private readonly mutex = new Mutex();
@@ -68,5 +68,48 @@ export class WheatleyDatabase {
 
     unlock() {
         this.mutex.unlock();
+    }
+}
+
+function generate_index_name(spec: mongo.IndexSpecification): string {
+    if (typeof spec === "string") {
+        return `wheatley_${spec}_1`;
+    }
+    if (Array.isArray(spec)) {
+        return "wheatley_" + spec.map(item => (Array.isArray(item) ? `${item[0]}_${item[1]}` : item)).join("_");
+    }
+    return (
+        "wheatley_" +
+        Object.entries(spec)
+            .map(([k, v]) => `${k}_${v}`)
+            .join("_")
+    );
+}
+
+export async function ensure_index<T extends mongo.Document>(
+    wheatley: Wheatley,
+    collection: mongo.Collection<T>,
+    index_spec: mongo.IndexSpecification,
+    options?: mongo.CreateIndexesOptions,
+) {
+    const index_name = generate_index_name(index_spec);
+    const full_options = { ...options, name: index_name };
+    try {
+        return await collection.createIndex(index_spec, full_options);
+    } catch (e) {
+        if (e instanceof mongo.MongoServerError && e.code === 85) {
+            const indexes = await collection.indexes();
+            const conflicting = indexes.find(idx => JSON.stringify(idx.key) === JSON.stringify(index_spec));
+            if (conflicting) {
+                // && !conflicting.name?.startsWith("wheatley_")
+                // Old auto-generated index, safe to drop
+                await collection.dropIndex(conflicting.name!);
+                await collection.createIndex(index_spec, full_options);
+            } else {
+                wheatley.critical_error(e);
+            }
+        } else {
+            wheatley.critical_error(e);
+        }
     }
 }

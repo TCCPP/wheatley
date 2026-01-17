@@ -8,6 +8,7 @@ import { KeyedMutexSet } from "../../../utils/containers.js";
 import { M } from "../../../utils/debugging-and-logging.js";
 import { colors, DAY, MINUTE } from "../../../common.js";
 import { BotComponent } from "../../../bot-component.js";
+import { ensure_index } from "../../../infra/database-interface.js";
 import { CommandSetBuilder } from "../../../command-abstractions/command-set-builder.js";
 import { Wheatley } from "../../../wheatley.js";
 import { EarlyReplyMode, TextBasedCommandBuilder } from "../../../command-abstractions/text-based-command-builder.js";
@@ -98,9 +99,18 @@ export default class Starboard extends BotComponent {
     }>();
 
     override async setup(commands: CommandSetBuilder) {
-        await this.database.starboard_entries.createIndex({ message: 1 }, { unique: true });
-        await this.database.auto_delete_threshold_notifications.createIndex({ message: 1 }, { unique: true });
-        await this.database.auto_delete_details.createIndex({ user: 1, trigger_type: 1, delete_timestamp: -1 });
+        await ensure_index(this.wheatley, this.database.starboard_entries, { message: 1 }, { unique: true });
+        await ensure_index(
+            this.wheatley,
+            this.database.auto_delete_threshold_notifications,
+            { message: 1 },
+            { unique: true },
+        );
+        await ensure_index(this.wheatley, this.database.auto_delete_details, {
+            user: 1,
+            trigger_type: 1,
+            delete_timestamp: -1,
+        });
 
         this.starboard = await this.utilities.get_channel(this.wheatley.channels.starboard);
         this.staff_flag_log = await this.utilities.get_channel(this.wheatley.channels.staff_flag_log);

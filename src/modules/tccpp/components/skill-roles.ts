@@ -5,6 +5,7 @@ import { unwrap } from "../../../utils/misc.js";
 import { M } from "../../../utils/debugging-and-logging.js";
 import { Wheatley } from "../../../wheatley.js";
 import { BotComponent } from "../../../bot-component.js";
+import { ensure_index } from "../../../infra/database-interface.js";
 import { CommandSetBuilder } from "../../../command-abstractions/command-set-builder.js";
 import RoleManager, { user_role_entry } from "../../wheatley/components/role-manager.js";
 import { capitalize } from "../../../utils/strings.js";
@@ -33,7 +34,7 @@ export default class SkillRoles extends BotComponent {
     }>();
 
     override async setup(commands: CommandSetBuilder) {
-        await this.database.skill_roles.createIndex({ user_id: 1 }, { unique: true });
+        await ensure_index(this.wheatley, this.database.skill_roles, { user_id: 1 }, { unique: true });
 
         this.skill_role_log = await this.utilities.get_channel(this.wheatley.channels.skill_role_log);
     }

@@ -15,6 +15,7 @@ import { DistributedOmit } from "../../../../utils/typing.js";
 import { SleepList } from "../../../../utils/containers.js";
 import { Mutex } from "../../../../utils/containers.js";
 import { BotComponent } from "../../../../bot-component.js";
+import { ensure_index } from "../../../../infra/database-interface.js";
 import { Wheatley } from "../../../../wheatley.js";
 import { colors, DAY, HOUR, MINUTE, MONTH, SECOND, WEEK, YEAR } from "../../../../common.js";
 import Modlogs from "./modlogs.js";
@@ -210,12 +211,12 @@ export abstract class ModerationComponent extends BotComponent {
 
     // Critical stuff happens in setup(), it's important extending classes call super here
     override async setup(commands: CommandSetBuilder) {
-        await this.database.moderations.createIndex({ case_number: 1 }, { unique: true });
-        await this.database.moderations.createIndex({ type: 1, active: 1 });
-        await this.database.moderations.createIndex({ user: 1, expunged: 1, issued_at: -1 });
-        await this.database.moderations.createIndex({ user: 1, type: 1, active: 1 });
-        await this.database.moderations.createIndex({ type: 1, issued_at: -1 });
-        await this.database.component_state.createIndex({ id: 1 }, { unique: true });
+        await ensure_index(this.wheatley, this.database.moderations, { case_number: 1 }, { unique: true });
+        await ensure_index(this.wheatley, this.database.moderations, { type: 1, active: 1 });
+        await ensure_index(this.wheatley, this.database.moderations, { user: 1, expunged: 1, issued_at: -1 });
+        await ensure_index(this.wheatley, this.database.moderations, { user: 1, type: 1, active: 1 });
+        await ensure_index(this.wheatley, this.database.moderations, { type: 1, issued_at: -1 });
+        await ensure_index(this.wheatley, this.database.component_state, { id: 1 }, { unique: true });
 
         this.staff_action_log = await this.utilities.get_channel(this.wheatley.channels.staff_action_log);
         this.public_action_log = await this.utilities.get_channel(this.wheatley.channels.public_action_log);

@@ -3,6 +3,7 @@ import * as Discord from "discord.js";
 import { strict as assert } from "assert";
 
 import { BotComponent } from "../../../bot-component.js";
+import { ensure_index } from "../../../infra/database-interface.js";
 import { Wheatley } from "../../../wheatley.js";
 import { unwrap } from "../../../utils/misc.js";
 import { build_description, capitalize, time_to_human } from "../../../utils/strings.js";
@@ -52,7 +53,7 @@ export default class DaysSinceLastIncident extends BotComponent {
     }
 
     override async setup() {
-        await this.database.monke_button_presses.createIndex({ timestamp: -1 });
+        await ensure_index(this.wheatley, this.database.monke_button_presses, { timestamp: -1 });
 
         this.days_since_last_incident = await this.utilities.get_channel(
             this.wheatley.channels.days_since_last_incident,

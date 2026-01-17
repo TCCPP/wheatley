@@ -4,6 +4,7 @@ import * as Discord from "discord.js";
 
 import { M } from "../../../utils/debugging-and-logging.js";
 import { BotComponent } from "../../../bot-component.js";
+import { ensure_index } from "../../../infra/database-interface.js";
 import { colors } from "../../../common.js";
 import { Wheatley } from "../../../wheatley.js";
 import { EarlyReplyMode, TextBasedCommandBuilder } from "../../../command-abstractions/text-based-command-builder.js";
@@ -34,8 +35,8 @@ export default class LinkedAccounts extends BotComponent {
     private staff_action_log!: Discord.TextChannel;
 
     override async setup(commands: CommandSetBuilder) {
-        await this.database.linked_accounts.createIndex({ alt_account: 1 }, { unique: true });
-        await this.database.linked_accounts.createIndex({ main_account: 1 });
+        await ensure_index(this.wheatley, this.database.linked_accounts, { alt_account: 1 }, { unique: true });
+        await ensure_index(this.wheatley, this.database.linked_accounts, { main_account: 1 });
 
         this.staff_action_log = await this.utilities.get_channel(this.wheatley.channels.staff_action_log);
 

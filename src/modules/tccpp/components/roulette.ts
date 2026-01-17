@@ -4,6 +4,7 @@ import { SelfClearingMap, SelfClearingSet } from "../../../utils/containers.js";
 import { M } from "../../../utils/debugging-and-logging.js";
 import { colors, MINUTE } from "../../../common.js";
 import { BotComponent } from "../../../bot-component.js";
+import { ensure_index } from "../../../infra/database-interface.js";
 import { CommandSetBuilder } from "../../../command-abstractions/command-set-builder.js";
 import { Wheatley } from "../../../wheatley.js";
 import { EarlyReplyMode, TextBasedCommandBuilder } from "../../../command-abstractions/text-based-command-builder.js";
@@ -30,8 +31,8 @@ export default class Roulette extends BotComponent {
     }>();
 
     override async setup(commands: CommandSetBuilder) {
-        await this.database.roulette_leaderboard.createIndex({ user: 1 }, { unique: true });
-        await this.database.roulette_leaderboard.createIndex({ highscore: -1 });
+        await ensure_index(this.wheatley, this.database.roulette_leaderboard, { user: 1 }, { unique: true });
+        await ensure_index(this.wheatley, this.database.roulette_leaderboard, { highscore: -1 });
 
         this.staff_member_log = await this.utilities.get_channel(this.wheatley.channels.staff_member_log);
 

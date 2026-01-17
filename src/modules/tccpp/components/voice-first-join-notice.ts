@@ -2,6 +2,7 @@ import { strict as assert } from "assert";
 import * as Discord from "discord.js";
 
 import { BotComponent } from "../../../bot-component.js";
+import { ensure_index } from "../../../infra/database-interface.js";
 import SkillRoles, { SkillLevel } from "./skill-roles.js";
 import { assert_type, unwrap } from "../../../utils/misc.js";
 
@@ -20,7 +21,12 @@ export default class VoiceFirstJoinNotice extends BotComponent {
     skill_roles_component!: SkillRoles;
 
     override async setup() {
-        await this.database.voice_first_join_notice.createIndex({ guild: 1, user: 1 }, { unique: true });
+        await ensure_index(
+            this.wheatley,
+            this.database.voice_first_join_notice,
+            { guild: 1, user: 1 },
+            { unique: true },
+        );
         this.skill_roles_component = assert_type(unwrap(this.wheatley.components.get("SkillRoles")), SkillRoles);
     }
 

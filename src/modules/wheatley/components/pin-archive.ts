@@ -5,6 +5,7 @@ import { strict as assert } from "assert";
 import { M } from "../../../utils/debugging-and-logging.js";
 import { colors } from "../../../common.js";
 import { BotComponent } from "../../../bot-component.js";
+import { ensure_index } from "../../../infra/database-interface.js";
 import { Wheatley, create_error_reply } from "../../../wheatley.js";
 import { TextBasedCommandBuilder } from "../../../command-abstractions/text-based-command-builder.js";
 import { TextBasedCommand } from "../../../command-abstractions/text-based-command.js";
@@ -42,8 +43,8 @@ export default class PinArchive extends BotComponent {
     }
 
     override async setup(commands: CommandSetBuilder) {
-        await this.database.pin_archive.createIndex({ source_message: 1 }, { unique: true });
-        await this.database.pins.createIndex({ channel: 1, message: 1 }, { unique: true });
+        await ensure_index(this.wheatley, this.database.pin_archive, { source_message: 1 }, { unique: true });
+        await ensure_index(this.wheatley, this.database.pins, { channel: 1, message: 1 }, { unique: true });
 
         this.pin_archive = await this.utilities.get_channel(this.wheatley.channels.pin_archive);
     }
