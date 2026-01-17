@@ -7,11 +7,7 @@ import { Wheatley } from "../../../wheatley.js";
 import { unwrap } from "../../../utils/misc.js";
 import { build_description, capitalize, time_to_human } from "../../../utils/strings.js";
 import { colors, DAY, MINUTE } from "../../../common.js";
-import {
-    moderation_entry,
-    moderation_type,
-    monke_button_press_entry,
-} from "../../wheatley/components/moderation/schemata.js";
+import { moderation_entry, monke_button_press_entry } from "../../wheatley/components/moderation/schemata.js";
 import { set_interval } from "../../../utils/node.js";
 
 const type_labels = {
@@ -21,6 +17,15 @@ const type_labels = {
     mute: "Mute",
     rolepersist: "Rolepersist",
 };
+
+// Braille dot patterns for 0-4 filled dots, bottom to top
+const BRAILLE_LEFT_DOTS = [0, 0x40, 0x44, 0x46, 0x47];
+const BRAILLE_RIGHT_DOTS = [0, 0x80, 0xa0, 0xb0, 0xb8];
+const BRAILLE_SPACE = "\u2800";
+
+function get_braille_char(left_filled: number, right_filled: number): string {
+    return String.fromCharCode(0x2800 + BRAILLE_LEFT_DOTS[left_filled] + BRAILLE_RIGHT_DOTS[right_filled]);
+}
 
 type incident_info = {
     time: string;
@@ -80,83 +85,59 @@ export default class DaysSinceLastIncident extends BotComponent {
                     `# \`${count}\` \`${unit}\` since last incident`,
                     `**Last Punishment Type:** ${capitalize(incident.type)}`,
                 ),
-            );
-
-        const type_breakdown_lines: string[] = [];
-        for (const [type, label] of Object.entries(type_labels) as [keyof typeof type_labels, string][]) {
-            const time = incident.type_times.get(type);
-            if (time) {
-                const [count, unit] = time.split(" ");
-                type_breakdown_lines.push(`**${label}: \`${count}\` \`${unit}\`**`);
-            } else {
-                type_breakdown_lines.push(`**${label}: Never**`);
-            }
-        }
-
-        embed.addFields({
-            name: "Incident Drilldown",
-            value: type_breakdown_lines.join("\n"),
-            inline: false,
-        });
-
+            )
+            .addFields({
+                name: "Incident Drilldown",
+                value: this.format_type_breakdown(incident.type_times),
+                inline: false,
+            });
         if (moderations.length > 1) {
-            embed.addFields({
-                name: "Survival Streaks (Last 30 Days)",
-                value: `\`\`\`\n${this.calculate_time_frequency_histogram(moderations, "issued_at")}\n\`\`\``,
-                inline: false,
-            });
-
-            const incident_chart = this.generate_time_interval_chart(
-                moderations,
-                "issued_at",
-                "← Older          Incidents          Newer →",
-                "No incidents to display",
+            embed.addFields(
+                {
+                    name: "Survival Streaks (Last 30 Days)",
+                    value: `\`\`\`\n${this.calculate_time_frequency_histogram(moderations, "issued_at")}\n\`\`\``,
+                    inline: false,
+                },
+                {
+                    name: "Latest Scores",
+                    value: `\`\`\`\n${this.generate_time_interval_chart(
+                        moderations,
+                        "issued_at",
+                        "← Older          Incidents          Newer →",
+                        "No incidents to display",
+                    )}\n\`\`\``,
+                    inline: false,
+                },
             );
-            embed.addFields({
-                name: "Latest Scores",
-                value: `\`\`\`\n${incident_chart}\n\`\`\``,
-                inline: false,
-            });
         }
-
         return embed;
     }
 
-    async last_incident_info(): Promise<incident_info> {
-        const moderations = await this.database.moderations
-            .find({ type: { $ne: "note" } })
-            .sort({ issued_at: -1 })
-            .limit(1)
-            .toArray();
-        assert(moderations.length == 1);
-        const last_incident = moderations[0];
-        const delta = Date.now() - last_incident.issued_at;
-        const time = this.format_time_delta(delta);
+    async get_time_since_last_type(type: keyof typeof type_labels): Promise<string | null> {
+        const moderation = await this.database.moderations.findOne(this.build_type_query(type), {
+            sort: { issued_at: -1 },
+        });
+        if (moderation) {
+            return this.format_time_delta(Date.now() - moderation.issued_at);
+        }
+        return null;
+    }
 
+    async last_incident_info(): Promise<incident_info> {
+        const last_incident = await this.database.moderations.findOne(
+            { type: { $ne: "note" } },
+            { sort: { issued_at: -1 } },
+        );
+        assert(last_incident);
         const type_times = new Map<keyof typeof type_labels, string>();
-        for (const key of Object.keys(type_labels) as (keyof typeof type_labels)[]) {
-            const query = (() => {
-                if (key === "ban") {
-                    return { type: "ban" as const, duration: null };
-                } else if (key === "temp_ban") {
-                    return { type: "ban" as const, duration: { $ne: null } };
-                } else {
-                    return { type: key as moderation_type };
-                }
-            })();
-            const type_moderations = await this.database.moderations
-                .find(query)
-                .sort({ issued_at: -1 })
-                .limit(1)
-                .toArray();
-            if (type_moderations.length > 0) {
-                const type_delta = Date.now() - type_moderations[0].issued_at;
-                type_times.set(key, this.format_time_delta(type_delta));
+        for (const type of Object.keys(type_labels) as (keyof typeof type_labels)[]) {
+            const time = await this.get_time_since_last_type(type);
+            if (time) {
+                type_times.set(type, time);
             }
         }
-
         return {
-            time,
+            time: this.format_time_delta(Date.now() - last_incident.issued_at),
             user: last_incident.user,
             user_name: last_incident.user_name,
             type: last_incident.type,
@@ -184,6 +165,35 @@ export default class DaysSinceLastIncident extends BotComponent {
 
     format_time_delta(delta: number): string {
         return delta < MINUTE ? "0 minutes" : time_to_human(delta, 1);
+    }
+
+    format_time_styled(delta: number): string {
+        const [count, unit] = this.format_time_delta(delta).split(" ");
+        return `\`${count}\` \`${unit}\``;
+    }
+
+    build_type_query(type: keyof typeof type_labels): object {
+        if (type === "ban") {
+            return { type: "ban", duration: null };
+        } else if (type === "temp_ban") {
+            return { type: "ban", duration: { $ne: null } };
+        } else {
+            return { type };
+        }
+    }
+
+    format_type_breakdown(type_times: Map<keyof typeof type_labels, string>): string {
+        return (Object.entries(type_labels) as [keyof typeof type_labels, string][])
+            .map(([type, label]) => {
+                const time = type_times.get(type);
+                if (time) {
+                    const [count, unit] = time.split(" ");
+                    return `**${label}: \`${count}\` \`${unit}\`**`;
+                } else {
+                    return `**${label}: Never**`;
+                }
+            })
+            .join("\n");
     }
 
     format_date_key(timestamp: number): string {
@@ -229,37 +239,34 @@ export default class DaysSinceLastIncident extends BotComponent {
             .join("\n");
     }
 
-    render_ascii_bar_chart(
+    render_bar_chart(
         data: number[],
         title: string,
         bottom_label: string,
         format_y_label: (value: number) => string,
     ): string {
-        const chart_height = 8;
+        const chart_character_rows = 8;
+        const dots_per_row = 4;
+        const chart_height = chart_character_rows * dots_per_row;
         const max_value = Math.max(...data, 1);
-        const grid: string[][] = Array(chart_height)
-            .fill(null)
-            .map(() => Array(data.length).fill(" "));
-        for (let col = 0; col < data.length; col++) {
-            const bar_height = Math.round(((chart_height - 1) * data[col]) / max_value);
-            for (let row = 0; row < bar_height; row++) {
-                grid[chart_height - 1 - row][col] = "│";
+        const bar_heights = data.map(v => Math.round((chart_height * v) / max_value));
+        const lines: string[] = [title];
+        for (let row = 0; row < chart_character_rows; row++) {
+            const row_start = (chart_character_rows - 1 - row) * dots_per_row;
+            let row_chars = "";
+            for (let col = 0; col < data.length; col += 2) {
+                const left = Math.max(0, Math.min(dots_per_row, bar_heights[col] - row_start));
+                const right = Math.max(0, Math.min(dots_per_row, (bar_heights[col + 1] ?? 0) - row_start));
+                row_chars += get_braille_char(left, right);
             }
+            const y_value = Math.round((max_value * (chart_character_rows - 1 - row)) / (chart_character_rows - 1));
+            const y_label = format_y_label(y_value).padStart(4).replaceAll(" ", BRAILLE_SPACE);
+            lines.push(`${y_label}${BRAILLE_SPACE}┤${row_chars}`);
         }
-        const y_labels = [];
-        for (let i = 0; i < chart_height; i++) {
-            const value = Math.round((max_value * (chart_height - 1 - i)) / (chart_height - 1));
-            y_labels.push(format_y_label(value).padStart(4));
-        }
-        const lines = [];
-        lines.push(title);
-        for (let y = 0; y < chart_height; y++) {
-            lines.push(`${y_labels[y]} ┤${grid[y].join("")}`);
-        }
-        lines.push(`     ┴${"─".repeat(data.length)}`);
-        lines.push(
-            `      ${" ".repeat(Math.max(0, Math.floor((data.length - bottom_label.length) / 2)))}${bottom_label}`,
-        );
+        const char_width = Math.ceil(data.length / 2);
+        lines.push(`${BRAILLE_SPACE.repeat(5)}┴${"─".repeat(char_width)}`);
+        const padding = BRAILLE_SPACE.repeat(Math.max(0, Math.floor((char_width - bottom_label.length) / 2)));
+        lines.push(`${BRAILLE_SPACE.repeat(6)}${padding}${bottom_label}`);
         return lines.join("\n");
     }
 
@@ -269,7 +276,7 @@ export default class DaysSinceLastIncident extends BotComponent {
         label_text: string,
         no_data_message: string,
     ): string {
-        const max_bars = 50;
+        const max_bars = 80;
         if (items.length === 0) {
             return no_data_message;
         }
@@ -278,7 +285,7 @@ export default class DaysSinceLastIncident extends BotComponent {
             time_between.push(((items[i][timestamp_key] as number) - (items[i + 1][timestamp_key] as number)) / MINUTE);
         }
         const display_data = time_between.slice(0, max_bars).reverse();
-        return this.render_ascii_bar_chart(display_data, "Time", label_text, value =>
+        return this.render_bar_chart(display_data, "Time", label_text, value =>
             value >= 60 ? `${Math.floor(value / 60)}h` : `${value}m`,
         );
     }
@@ -306,12 +313,12 @@ export default class DaysSinceLastIncident extends BotComponent {
     }
 
     generate_presses_per_day_chart(daily_data: { date: string; count: number }[]): string {
-        const max_bars = 40;
+        const max_bars = 80;
         if (daily_data.length === 0) {
             return "No press data to display";
         }
         const display_data = daily_data.slice(-max_bars).map(d => d.count);
-        return this.render_ascii_bar_chart(display_data, "Presses", "← Older      Days      Newer →", value =>
+        return this.render_bar_chart(display_data, "Presses", "← Older      Days      Newer →", value =>
             value.toString(),
         );
     }
@@ -336,56 +343,62 @@ export default class DaysSinceLastIncident extends BotComponent {
         }
     }
 
+    format_monke_statistics(total: number, unique: number, average: number, trend: string): string {
+        return [
+            `**Total Presses (All Time):** ${total.toLocaleString("en-US")}`,
+            `**Unique Users (All Time):** ${unique.toLocaleString("en-US")}`,
+            `**Average Unique Presses/Day (Last 40 Days):** ${average.toFixed(2)}`,
+            trend,
+        ].join("\n");
+    }
+
     async make_monke_embed() {
+        const last_press = await this.database.monke_button_presses.findOne({}, { sort: { timestamp: -1 } });
         const recent_presses = await this.get_recent_monke_presses();
         const total_presses = await this.database.monke_button_presses.countDocuments();
         const unique_users = (
             await this.database.monke_button_presses.aggregate([{ $group: { _id: "$user" } }]).toArray()
         ).length;
         const daily_data = this.get_unique_presses_per_day(recent_presses);
-        const average_presses = this.calculate_average_presses_per_day(daily_data);
-
-        const embed = new Discord.EmbedBuilder().setColor(colors.wheatley);
-
-        const last_press = await this.database.monke_button_presses.findOne({}, { sort: { timestamp: -1 } });
-        if (last_press) {
-            const delta = Date.now() - last_press.timestamp;
-            const [count, unit] = this.format_time_delta(delta).split(" ");
-            embed.setDescription(build_description(`# \`${count}\` \`${unit}\` since last monke press`));
-        } else {
-            embed.setDescription("# No monke button presses recorded");
-        }
-
-        embed.addFields({
-            name: "Monke Button Statistics",
-            value:
-                `**Total Presses (All Time):** ${total_presses.toLocaleString("en-US")}\n` +
-                `**Unique Users (All Time):** ${unique_users.toLocaleString("en-US")}\n` +
-                `**Average Unique Presses/Day (Last 40 Days):** ${average_presses.toFixed(2)}\n` +
-                `${this.analyze_historical_trend(daily_data)}`,
-            inline: false,
-        });
-
+        const description = last_press
+            ? build_description(
+                  `# ${this.format_time_styled(Date.now() - last_press.timestamp)} since last monke press`,
+              )
+            : "# No monke button presses recorded";
+        const embed = new Discord.EmbedBuilder()
+            .setColor(colors.wheatley)
+            .setDescription(description)
+            .addFields({
+                name: "Monke Button Statistics",
+                value: this.format_monke_statistics(
+                    total_presses,
+                    unique_users,
+                    this.calculate_average_presses_per_day(daily_data),
+                    this.analyze_historical_trend(daily_data),
+                ),
+                inline: false,
+            });
         if (daily_data.length > 0) {
-            const chart = this.generate_presses_per_day_chart(daily_data);
             embed.addFields({
                 name: "Unique Presses Per Day (Last 40 Days)",
-                value: `\`\`\`\n${chart}\n\`\`\``,
+                value: `\`\`\`\n${this.generate_presses_per_day_chart(daily_data)}\n\`\`\``,
                 inline: false,
             });
         }
-
         return embed;
     }
 
-    async update_or_send_if_needed() {
+    async build_embeds(): Promise<Discord.EmbedBuilder[]> {
+        const info = await this.last_incident_info();
+        this.last_time = info.time;
+        const moderations = await this.get_recent_moderations();
+        return [this.make_embed(info, moderations), await this.make_monke_embed()];
+    }
+
+    async update_if_changed() {
         const info = await this.last_incident_info();
         if (info.time !== this.last_time) {
-            this.last_time = info.time;
-            const moderations = await this.get_recent_moderations();
-            await unwrap(this.message).edit({
-                embeds: [this.make_embed(info, moderations), await this.make_monke_embed()],
-            });
+            await unwrap(this.message).edit({ embeds: await this.build_embeds() });
         }
     }
 
@@ -396,17 +409,12 @@ export default class DaysSinceLastIncident extends BotComponent {
         assert(messages.size <= 1);
         if (messages.size == 1) {
             this.message = unwrap(messages.first());
-            await this.update_or_send_if_needed();
+            await this.update_if_changed();
         } else {
-            const info = await this.last_incident_info();
-            const moderations = await this.get_recent_moderations();
-            this.last_time = info.time;
-            await this.days_since_last_incident.send({
-                embeds: [this.make_embed(info, moderations), await this.make_monke_embed()],
-            });
+            this.message = await this.days_since_last_incident.send({ embeds: await this.build_embeds() });
         }
         this.timer = set_interval(() => {
-            this.update_or_send_if_needed().catch(this.wheatley.critical_error.bind(this.wheatley));
+            this.update_if_changed().catch(this.wheatley.critical_error.bind(this.wheatley));
         }, MINUTE);
     }
 
@@ -414,8 +422,6 @@ export default class DaysSinceLastIncident extends BotComponent {
         if (moderation.type === "note") {
             return;
         }
-        (async () => {
-            await this.update_or_send_if_needed();
-        })().catch(this.wheatley.critical_error.bind(this.wheatley));
+        this.update_if_changed().catch(this.wheatley.critical_error.bind(this.wheatley));
     }
 }
