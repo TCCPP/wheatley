@@ -42,6 +42,9 @@ export default class PinArchive extends BotComponent {
     }
 
     override async setup(commands: CommandSetBuilder) {
+        await this.database.pin_archive.createIndex({ source_message: 1 }, { unique: true });
+        await this.database.pins.createIndex({ channel: 1, message: 1 }, { unique: true });
+
         this.pin_archive = await this.utilities.get_channel(this.wheatley.channels.pin_archive);
     }
 

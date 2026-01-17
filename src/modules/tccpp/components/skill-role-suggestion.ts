@@ -49,6 +49,9 @@ export default class SkillRoleSuggestion extends BotComponent {
     private suggestion_modal!: BotModal<[]>;
 
     override async setup(commands: CommandSetBuilder) {
+        await this.database.skill_role_threads.createIndex({ channel_id: 1 }, { unique: true });
+        await this.database.skill_role_threads.createIndex({ user_id: 1 }, { unique: true });
+
         this.skill_roles = unwrap(this.wheatley.components.get("SkillRoles")) as SkillRoles;
         this.skill_role_suggestions = await this.utilities.get_forum_channel(
             this.wheatley.channels.skill_role_suggestions,

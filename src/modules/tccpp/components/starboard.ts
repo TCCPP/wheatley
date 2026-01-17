@@ -98,6 +98,10 @@ export default class Starboard extends BotComponent {
     }>();
 
     override async setup(commands: CommandSetBuilder) {
+        await this.database.starboard_entries.createIndex({ message: 1 }, { unique: true });
+        await this.database.auto_delete_threshold_notifications.createIndex({ message: 1 }, { unique: true });
+        await this.database.auto_delete_details.createIndex({ user: 1, trigger_type: 1, delete_timestamp: -1 });
+
         this.starboard = await this.utilities.get_channel(this.wheatley.channels.starboard);
         this.staff_flag_log = await this.utilities.get_channel(this.wheatley.channels.staff_flag_log);
 

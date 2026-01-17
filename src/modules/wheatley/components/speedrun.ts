@@ -33,6 +33,8 @@ export default class Speedrun extends BotComponent {
     }
 
     override async setup(commands: CommandSetBuilder) {
+        await this.database.speedrun_attempts.createIndex({ user: 1 });
+
         this.staff_action_log = await this.utilities.get_channel(this.wheatley.channels.staff_action_log);
     }
 

@@ -53,6 +53,9 @@ export default class ServerSuggestionTracker extends BotComponent {
     private server_suggestions!: Discord.TextChannel;
 
     override async setup(commands: CommandSetBuilder) {
+        await this.database.server_suggestions.createIndex({ suggestion: 1 }, { unique: true });
+        await this.database.server_suggestions.createIndex({ status_message: 1 }, { unique: true });
+
         this.suggestion_action_log = await this.utilities.get_thread_channel(
             this.wheatley.channels.suggestion_action_log,
         );

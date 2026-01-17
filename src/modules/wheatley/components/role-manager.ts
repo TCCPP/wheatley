@@ -47,6 +47,8 @@ export default class RoleManager extends BotComponent {
     }
 
     override async setup(commands: CommandSetBuilder) {
+        await this.database.user_roles.createIndex({ user_id: 1 }, { unique: true });
+
         this.staff_member_log = await this.utilities.get_channel(this.wheatley.channels.staff_member_log);
     }
 

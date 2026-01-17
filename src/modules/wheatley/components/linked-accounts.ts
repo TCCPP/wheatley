@@ -34,6 +34,9 @@ export default class LinkedAccounts extends BotComponent {
     private staff_action_log!: Discord.TextChannel;
 
     override async setup(commands: CommandSetBuilder) {
+        await this.database.linked_accounts.createIndex({ alt_account: 1 }, { unique: true });
+        await this.database.linked_accounts.createIndex({ main_account: 1 });
+
         this.staff_action_log = await this.utilities.get_channel(this.wheatley.channels.staff_action_log);
 
         this.wheatley.event_hub.on("issue_moderation", (moderation: moderation_entry) => {

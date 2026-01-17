@@ -33,6 +33,8 @@ export default class SkillRoles extends BotComponent {
     }>();
 
     override async setup(commands: CommandSetBuilder) {
+        await this.database.skill_roles.createIndex({ user_id: 1 }, { unique: true });
+
         this.skill_role_log = await this.utilities.get_channel(this.wheatley.channels.skill_role_log);
     }
 

@@ -48,6 +48,8 @@ export default class DaysSinceLastIncident extends BotComponent {
     }
 
     override async setup() {
+        await this.database.monke_button_presses.createIndex({ timestamp: -1 });
+
         this.days_since_last_incident = await this.utilities.get_channel(
             this.wheatley.channels.days_since_last_incident,
         );

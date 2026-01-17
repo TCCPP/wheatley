@@ -30,6 +30,9 @@ export default class Roulette extends BotComponent {
     }>();
 
     override async setup(commands: CommandSetBuilder) {
+        await this.database.roulette_leaderboard.createIndex({ user: 1 }, { unique: true });
+        await this.database.roulette_leaderboard.createIndex({ highscore: -1 });
+
         this.staff_member_log = await this.utilities.get_channel(this.wheatley.channels.staff_member_log);
 
         commands.add(

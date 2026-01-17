@@ -76,6 +76,8 @@ export default class Nodistractions extends BotComponent {
     }>();
 
     override async setup(commands: CommandSetBuilder) {
+        await this.database.nodistractions.createIndex({ user: 1 }, { unique: true });
+
         commands.add(
             new TextBasedCommandBuilder("nodistractions", EarlyReplyMode.ephemeral)
                 .set_category("Utility")
