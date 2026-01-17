@@ -70,6 +70,7 @@ export default class PermissionManager extends BotComponent {
             deny: [
                 ...write_permissions,
                 Discord.PermissionsBitField.Flags.Connect,
+                Discord.PermissionsBitField.Flags.Stream,
                 Discord.PermissionsBitField.Flags.ViewChannel,
             ],
         };
