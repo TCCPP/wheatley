@@ -190,6 +190,9 @@ export default class SkillRoleSuggestion extends BotComponent {
             if (entry) {
                 const thread = await this.skill_role_suggestions.threads.fetch(entry.channel_id);
                 if (thread) {
+                    if (thread.archived) {
+                        await thread.setArchived(false);
+                    }
                     const start = unwrap(await thread.fetchStarterMessage());
                     const { content, tags } = await this.make_thread_status(member, entry.thread_opened);
                     await start.edit({ content });
