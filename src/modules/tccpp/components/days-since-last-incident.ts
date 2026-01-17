@@ -18,13 +18,12 @@ const type_labels = {
     rolepersist: "Rolepersist",
 };
 
-// Braille dot patterns for 0-4 filled dots, bottom to top
-const BRAILLE_LEFT_DOTS = [0, 0x40, 0x44, 0x46, 0x47];
-const BRAILLE_RIGHT_DOTS = [0, 0x80, 0xa0, 0xb0, 0xb8];
-const BRAILLE_SPACE = "\u2800";
+// Block quadrant characters indexed by bitmask: upper_left(8) | upper_right(4) | lower_left(2) | lower_right(1)
+const BLOCK_QUADRANTS = [" ", "▗", "▖", "▄", "▝", "▐", "▞", "▟", "▘", "▚", "▌", "▙", "▀", "▜", "▛", "█"];
 
-function get_braille_char(left_filled: number, right_filled: number): string {
-    return String.fromCharCode(0x2800 + BRAILLE_LEFT_DOTS[left_filled] + BRAILLE_RIGHT_DOTS[right_filled]);
+function get_block_char(upper_left: boolean, upper_right: boolean, lower_left: boolean, lower_right: boolean): string {
+    const index = (upper_left ? 8 : 0) | (upper_right ? 4 : 0) | (lower_left ? 2 : 0) | (lower_right ? 1 : 0);
+    return BLOCK_QUADRANTS[index];
 }
 
 type incident_info = {
@@ -61,7 +60,7 @@ export default class DaysSinceLastIncident extends BotComponent {
     }
 
     async get_recent_moderations(): Promise<moderation_entry[]> {
-        const cutoff = Date.now() - 30 * DAY;
+        const cutoff = Date.now() - 100 * DAY;
         return await this.database.moderations
             .find({ type: { $ne: "note" }, issued_at: { $gte: cutoff } })
             .sort({ issued_at: -1 })
@@ -69,7 +68,7 @@ export default class DaysSinceLastIncident extends BotComponent {
     }
 
     async get_recent_monke_presses(): Promise<monke_button_press_entry[]> {
-        const cutoff = Date.now() - 40 * DAY;
+        const cutoff = Date.now() - 100 * DAY;
         return await this.database.monke_button_presses
             .find({ timestamp: { $gte: cutoff } })
             .sort({ timestamp: -1 })
@@ -245,28 +244,32 @@ export default class DaysSinceLastIncident extends BotComponent {
         bottom_label: string,
         format_y_label: (value: number) => string,
     ): string {
-        const chart_character_rows = 8;
-        const dots_per_row = 4;
-        const chart_height = chart_character_rows * dots_per_row;
+        const chart_rows = 8;
+        const units_per_row = 2;
+        const chart_height = chart_rows * units_per_row;
         const max_value = Math.max(...data, 1);
         const bar_heights = data.map(v => Math.round((chart_height * v) / max_value));
         const lines: string[] = [title];
-        for (let row = 0; row < chart_character_rows; row++) {
-            const row_start = (chart_character_rows - 1 - row) * dots_per_row;
+        for (let row = 0; row < chart_rows; row++) {
+            const row_bottom = (chart_rows - 1 - row) * units_per_row;
             let row_chars = "";
             for (let col = 0; col < data.length; col += 2) {
-                const left = Math.max(0, Math.min(dots_per_row, bar_heights[col] - row_start));
-                const right = Math.max(0, Math.min(dots_per_row, (bar_heights[col + 1] ?? 0) - row_start));
-                row_chars += get_braille_char(left, right);
+                const left_height = bar_heights[col];
+                const right_height = bar_heights[col + 1] ?? 0;
+                row_chars += get_block_char(
+                    left_height > row_bottom + 1,
+                    right_height > row_bottom + 1,
+                    left_height > row_bottom,
+                    right_height > row_bottom,
+                );
             }
-            const y_value = Math.round((max_value * (chart_character_rows - 1 - row)) / (chart_character_rows - 1));
-            const y_label = format_y_label(y_value).padStart(4).replaceAll(" ", BRAILLE_SPACE);
-            lines.push(`${y_label}${BRAILLE_SPACE}┤${row_chars}`);
+            const y_value = Math.round((max_value * (chart_rows - 1 - row)) / (chart_rows - 1));
+            lines.push(`${format_y_label(y_value).padStart(4)} ┤${row_chars}`);
         }
         const char_width = Math.ceil(data.length / 2);
-        lines.push(`${BRAILLE_SPACE.repeat(5)}┴${"─".repeat(char_width)}`);
-        const padding = BRAILLE_SPACE.repeat(Math.max(0, Math.floor((char_width - bottom_label.length) / 2)));
-        lines.push(`${BRAILLE_SPACE.repeat(6)}${padding}${bottom_label}`);
+        lines.push(`     ┴${"─".repeat(char_width)}`);
+        const padding = " ".repeat(Math.max(0, Math.floor((char_width - bottom_label.length) / 2)));
+        lines.push(`      ${padding}${bottom_label}`);
         return lines.join("\n");
     }
 
@@ -276,7 +279,7 @@ export default class DaysSinceLastIncident extends BotComponent {
         label_text: string,
         no_data_message: string,
     ): string {
-        const max_bars = 80;
+        const max_bars = 100;
         if (items.length === 0) {
             return no_data_message;
         }
@@ -313,7 +316,7 @@ export default class DaysSinceLastIncident extends BotComponent {
     }
 
     generate_presses_per_day_chart(daily_data: { date: string; count: number }[]): string {
-        const max_bars = 80;
+        const max_bars = 100;
         if (daily_data.length === 0) {
             return "No press data to display";
         }
