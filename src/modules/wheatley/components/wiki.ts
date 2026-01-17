@@ -644,7 +644,9 @@ export default class Wiki extends BotComponent {
         if (!article.wikilink) {
             return "";
         }
-        return `\n\nSee: [${article.wiki_page_title ?? article.title}](${article.wikilink}) :tccpp:`;
+        return this.substitute_refs(
+            `\n\nSee: [${article.wiki_page_title ?? article.title}](${article.wikilink}) :tccpp:`,
+        );
     }
 
     build_article_embed(
@@ -693,20 +695,9 @@ export default class Wiki extends BotComponent {
         } else {
             const member = article.set_author ? await command.get_member() : undefined;
             const embed = this.build_article_embed(article, { member });
-            let components: Discord.ActionRowBuilder<Discord.MessageActionRowComponentBuilder>[] | undefined;
-            if (article.wikilink) {
-                const row = new Discord.ActionRowBuilder<Discord.MessageActionRowComponentBuilder>().addComponents(
-                    new Discord.ButtonBuilder()
-                        .setLabel("More information on the wiki")
-                        .setURL(article.wikilink)
-                        .setStyle(Discord.ButtonStyle.Link),
-                );
-                components = [row];
-            }
             await command.reply({
                 content: mention ?? undefined,
                 embeds: [embed],
-                components,
                 should_text_reply: true,
             });
         }
