@@ -27,7 +27,9 @@ export default class Report extends BotComponent {
     override async setup(commands: CommandSetBuilder) {
         this.staff_flag_log = await this.utilities.get_channel(this.wheatley.channels.staff_flag_log);
 
-        commands.add(new MessageContextMenuInteractionBuilder("Report").set_handler(this.report.bind(this)));
+        commands.add(
+            new MessageContextMenuInteractionBuilder("🚩 Report to Moderators 🚩").set_handler(this.report.bind(this)),
+        );
 
         this.report_modal = commands.add(
             new ModalInteractionBuilder("report-modal")
