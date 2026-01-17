@@ -21,6 +21,7 @@ import {
     cosine_similarity_vectors,
     EMBEDDING_MODEL,
 } from "../../../utils/wiki-embeddings.js";
+import { load_wiki_web_articles } from "../wiki-article-loader.js";
 
 export type WikiArticle = {
     name: string | null; // basename for the article
@@ -593,6 +594,41 @@ export default class Wiki extends BotComponent {
             for (const alias of aliases) {
                 this.article_aliases.set(alias, file_path.name);
             }
+        }
+
+        try {
+            const wiki_articles = await load_wiki_web_articles();
+            const existing_titles = new Set(Object.values(this.articles).map(a => a.title));
+            for (const wiki_article of wiki_articles) {
+                let parsed;
+                try {
+                    parsed = parse_article(wiki_article.path, wiki_article.preview, this.substitute_refs);
+                } catch (e: any) {
+                    this.wheatley.alert(`Failed to parse wiki article preview ${wiki_article.path}: ${e.message}`);
+                    continue;
+                }
+                const [article, aliases] = parsed;
+                // Skip if an article with the same title already exists (search index requires unique titles)
+                if (existing_titles.has(article.title)) {
+                    this.wheatley.warn(
+                        `Skipping wiki article ${wiki_article.path}: title "${article.title}" already exists`,
+                    );
+                    continue;
+                }
+                existing_titles.add(article.title);
+                article.wikilink = wiki_article.url;
+                this.articles[wiki_article.path] = article;
+                const frontmatter_aliases = Array.isArray(wiki_article.alias)
+                    ? wiki_article.alias
+                    : wiki_article.alias
+                      ? [wiki_article.alias]
+                      : [];
+                for (const alias of [...aliases, ...frontmatter_aliases]) {
+                    this.article_aliases.set(alias, wiki_article.path);
+                }
+            }
+        } catch (e) {
+            this.wheatley.alert(`Failed to load wiki web articles: ${e}`);
         }
 
         // Initialize search index

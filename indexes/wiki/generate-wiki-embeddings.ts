@@ -1,6 +1,7 @@
 import * as fs from "fs";
 import { globIterate } from "glob";
 import { parse_article, WIKI_ARTICLES_PATH, WikiArticle } from "../../src/modules/wheatley/components/wiki.js";
+import { load_wiki_web_articles } from "../../src/modules/wheatley/wiki-article-loader.js";
 import {
     create_embedding_pipeline,
     generate_embedding,
@@ -11,7 +12,7 @@ import {
 const INDEX_DIR = "indexes/wiki";
 
 (async () => {
-    console.log("Loading wiki articles...");
+    console.log("Loading bot-articles...");
     const articles: Record<string, WikiArticle> = {};
     for await (const file_path of globIterate(`${WIKI_ARTICLES_PATH}/**/*.md`, { withFileTypes: true })) {
         const content = await fs.promises.readFile(file_path.fullpath(), { encoding: "utf-8" });
@@ -22,7 +23,24 @@ const INDEX_DIR = "indexes/wiki";
             console.error(`Failed to parse article ${file_path.name}: ${e.message}`);
         }
     }
-    console.log(`Loaded ${Object.keys(articles).length} articles`);
+    console.log(`Loaded ${Object.keys(articles).length} bot-articles`);
+
+    console.log("Loading wiki web articles with preview...");
+    const wiki_articles = await load_wiki_web_articles();
+    for (const wiki_article of wiki_articles) {
+        // Skip if bot-article already exists with same name
+        if (articles[wiki_article.path]) {
+            continue;
+        }
+        try {
+            const [article] = parse_article(wiki_article.path, wiki_article.preview, str => str);
+            article.wikilink = wiki_article.url;
+            articles[wiki_article.path] = article;
+        } catch (e: any) {
+            console.error(`Failed to parse wiki article preview ${wiki_article.path}: ${e.message}`);
+        }
+    }
+    console.log(`Total articles: ${Object.keys(articles).length}`);
 
     console.log("Loading embedding model (this may take a while on first run)...");
     const extractor = await create_embedding_pipeline();

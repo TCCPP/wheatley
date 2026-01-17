@@ -16,7 +16,7 @@ const compat = new FlatCompat({
 });
 
 export default [{
-    ignores: ["**/scratch", "**/*.js"],
+    ignores: ["**/scratch", "**/*.js", "**/indexes"],
 }, ...compat.extends("eslint:recommended", "plugin:@typescript-eslint/recommended", "prettier"), {
     plugins: {
         "@typescript-eslint": typescriptEslint,
