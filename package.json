@@ -31,7 +31,7 @@
         "xxhashjs": "^0.2.2"
     },
     "scripts": {
-        "start": "tsc && unbuffer node build/src/main.js 2>&1 | tee -a log.txt",
+        "start": "tsc && unbuffer node --enable-source-maps build/src/main.js 2>&1 | tee -a log.txt",
         "lint": "eslint src",
         "lint-files": "eslint --color",
         "prepare": "husky install",

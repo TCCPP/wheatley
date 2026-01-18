@@ -43,7 +43,7 @@ build: prereqs  ## Cleans up everything
 
 .PHONY: run
 run: build  ## Runs the bot locally
-	$(NODE) build/src/main.js
+	$(NODE) --enable-source-maps build/src/main.js
 
 .PHONY: deploy
 deploy: ts-check  ## Deploys code
@@ -73,7 +73,7 @@ run-dev-container: build-dev-container  ## Runs the dev container container
 
 .PHONY: dev
 dev: build  ## Runs in dev mode
-	node build/src/main.js
+	node --enable-source-maps build/src/main.js
 
 .PHONY: wiki-index
 wiki-index: prereqs  ## Generates embeddings index for wiki articles
