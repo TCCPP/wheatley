@@ -247,15 +247,15 @@ export class BotUtilities {
         const safe_link = options?.safe_link === undefined ? true : options.safe_link;
         const author = message.author;
         const member = await this.wheatley.try_fetch_guild_member(author.id);
+        const description =
+            contents + template_string + (safe_link ? "" : " ⚠️ Unexpected domain, be careful clicking this link");
         const embed = new Discord.EmbedBuilder()
             .setColor(colors.default)
             .setAuthor({
                 name: author.display_name, // already resolved
                 iconURL: member?.avatarURL() ?? author.iconURL,
             })
-            .setDescription(
-                contents + template_string + (safe_link ? "" : " ⚠️ Unexpected domain, be careful clicking this link"),
-            )
+            .setDescription(description || null)
             .setTimestamp(decode_snowflake(message.id));
         if (options?.requested_by) {
             embed.setFooter({
