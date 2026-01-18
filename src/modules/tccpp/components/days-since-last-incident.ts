@@ -11,6 +11,8 @@ import { colors, DAY, MINUTE } from "../../../common.js";
 import { moderation_entry, monke_button_press_entry } from "../../wheatley/components/moderation/schemata.js";
 import { set_interval } from "../../../utils/node.js";
 
+const TRACKER_EPOCH = 1705219394732; // 2024-01-14T08:03:14.732Z
+
 const type_labels = {
     ban: "Permanent Ban",
     temp_ban: "Temp Ban",
@@ -33,12 +35,16 @@ type incident_info = {
     user_name: string;
     type: string;
     type_times: Map<keyof typeof type_labels, string>;
+    record_streak: string;
 };
 
 export default class DaysSinceLastIncident extends BotComponent {
     message: Discord.Message | null = null;
     last_time = "";
     timer!: NodeJS.Timeout;
+
+    private longest_streak = 0;
+    private last_incident_time = 0;
 
     private days_since_last_incident!: Discord.TextChannel;
 
@@ -76,6 +82,26 @@ export default class DaysSinceLastIncident extends BotComponent {
             .toArray();
     }
 
+    async initialize_longest_streak() {
+        const moderations = await this.database.moderations
+            .find({ type: { $ne: "note" }, issued_at: { $gte: TRACKER_EPOCH } })
+            .sort({ issued_at: 1 })
+            .toArray();
+        if (moderations.length === 0) {
+            return;
+        }
+        this.last_incident_time = moderations[moderations.length - 1].issued_at;
+        if (moderations.length < 2) {
+            return;
+        }
+        for (let i = 1; i < moderations.length; i++) {
+            const gap = moderations[i].issued_at - moderations[i - 1].issued_at;
+            if (gap > this.longest_streak) {
+                this.longest_streak = gap;
+            }
+        }
+    }
+
     make_embed(incident: incident_info, moderations: moderation_entry[]) {
         const [count, unit] = incident.time.split(" ");
         const embed = new Discord.EmbedBuilder()
@@ -84,6 +110,7 @@ export default class DaysSinceLastIncident extends BotComponent {
                 build_description(
                     `# \`${count}\` \`${unit}\` since last incident`,
                     `**Last Punishment Type:** ${capitalize(incident.type)}`,
+                    `**Record Streak:** \`${incident.record_streak}\``,
                 ),
             )
             .addFields({
@@ -136,12 +163,15 @@ export default class DaysSinceLastIncident extends BotComponent {
                 type_times.set(type, time);
             }
         }
+        const current_streak = Date.now() - last_incident.issued_at;
+        const record = Math.max(this.longest_streak, current_streak);
         return {
-            time: this.format_time_delta(Date.now() - last_incident.issued_at),
+            time: this.format_time_delta(current_streak),
             user: last_incident.user,
             user_name: last_incident.user_name,
             type: last_incident.type,
             type_times,
+            record_streak: time_to_human(record, 2),
         };
     }
 
@@ -407,6 +437,7 @@ export default class DaysSinceLastIncident extends BotComponent {
     }
 
     override async on_ready() {
+        await this.initialize_longest_streak();
         const messages = (await this.days_since_last_incident.messages.fetch()).filter(
             message => message.author.id == this.wheatley.user.id,
         );
@@ -426,6 +457,13 @@ export default class DaysSinceLastIncident extends BotComponent {
         if (moderation.type === "note") {
             return;
         }
+        if (this.last_incident_time > 0) {
+            const gap = moderation.issued_at - this.last_incident_time;
+            if (gap > this.longest_streak) {
+                this.longest_streak = gap;
+            }
+        }
+        this.last_incident_time = moderation.issued_at;
         this.update_if_changed().catch(this.wheatley.critical_error.bind(this.wheatley));
     }
 }
