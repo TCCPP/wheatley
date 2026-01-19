@@ -72,6 +72,7 @@ export type wheatley_config = core_config & {
 const channels = {
     // staff
     staff_flag_log: "1026972603019169842",
+    staff_delet_log: "1462879414864838869",
     staff_experimental_log: "1207899185790197760",
     staff_action_log: "845290775692443699",
     public_action_log: "1341611685223596103",

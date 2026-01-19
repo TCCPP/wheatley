@@ -88,7 +88,7 @@ export default class Starboard extends BotComponent {
     excluded_channels!: Set<string>;
 
     private starboard!: Discord.TextChannel;
-    private staff_flag_log!: Discord.TextChannel;
+    private staff_delet_log!: Discord.TextChannel;
 
     private database = this.wheatley.database.create_proxy<{
         component_state: starboard_state;
@@ -113,7 +113,7 @@ export default class Starboard extends BotComponent {
         });
 
         this.starboard = await this.utilities.get_channel(this.wheatley.channels.starboard);
-        this.staff_flag_log = await this.utilities.get_channel(this.wheatley.channels.staff_flag_log);
+        this.staff_delet_log = await this.utilities.get_channel(this.wheatley.channels.staff_delet_log);
 
         commands.add(
             new TextBasedCommandBuilder("starboard-manage", EarlyReplyMode.visible)
@@ -468,7 +468,7 @@ export default class Starboard extends BotComponent {
                     });
                 }
                 const quote_embeds = await this.utilities.make_quote_embeds(message);
-                flag_message = await this.staff_flag_log.send({
+                flag_message = await this.staff_delet_log.send({
                     embeds: [stats_embed, ...quote_embeds.embeds],
                     files: quote_embeds.files,
                     allowedMentions: { parse: [] },
