@@ -8,7 +8,7 @@ import { strict as assert } from "assert";
 
 import { M } from "../../../../utils/debugging-and-logging.js";
 
-import { assert_type, unwrap } from "../../../../utils/misc.js";
+import { unwrap } from "../../../../utils/misc.js";
 import { build_description, capitalize } from "../../../../utils/strings.js";
 import { time_to_human } from "../../../../utils/strings.js";
 import { DistributedOmit } from "../../../../utils/typing.js";
@@ -173,6 +173,7 @@ export abstract class ModerationComponent extends BotComponent {
     protected staff_action_log!: Discord.TextChannel;
     protected public_action_log!: Discord.TextChannel;
     protected red_telephone_alerts!: Discord.TextChannel;
+    protected rules!: Discord.TextChannel;
     private static ring_red_telephone_button_instance: BotButton<[number]> | null = null;
     protected get ring_red_telephone_button() {
         return unwrap(ModerationComponent.ring_red_telephone_button_instance);
@@ -221,6 +222,7 @@ export abstract class ModerationComponent extends BotComponent {
         this.staff_action_log = await this.utilities.get_channel(this.wheatley.channels.staff_action_log);
         this.public_action_log = await this.utilities.get_channel(this.wheatley.channels.public_action_log);
         this.red_telephone_alerts = await this.utilities.get_channel(this.wheatley.channels.red_telephone_alerts);
+        this.rules = await this.utilities.get_channel(this.wheatley.channels.rules);
 
         // Only register button handler once across all ModerationComponent instances
         // In effect, the first component to be loaded extending ModerationComponent will be responsible for handling
@@ -623,7 +625,7 @@ export abstract class ModerationComponent extends BotComponent {
     // Notification stuff
     //
 
-    // returns true if unable to dm user
+    // returns true if able to notify user (via DM or thread fallback)
     async notify_user(
         user: Discord.User,
         action: string,
@@ -632,42 +634,35 @@ export abstract class ModerationComponent extends BotComponent {
     ) {
         assert(moderation.type == this.type);
         const duration = moderation.duration ? time_to_human(moderation.duration) : "Permanent";
-        try {
-            await (
-                await user.createDM()
-            ).send({
-                embeds: [
-                    new Discord.EmbedBuilder()
-                        .setColor(colors.wheatley)
-                        .setTitle(`You have been ${action} in Together C & C++.`)
-                        .setDescription(
-                            build_description(
-                                is_removal || this.is_once_off ? null : `**Duration:** ${duration}`,
-                                moderation.reason ? `**Reason:** ${moderation.reason}` : null,
-                                moderation.type === "rolepersist" ? `**Role:** ${moderation.role_name}` : null,
-                            ),
-                        )
-                        .setFooter(
-                            is_removal
-                                ? null
-                                : {
-                                      text:
-                                          `To appeal this you may open a modmail in Server Guide -> #rules ` +
-                                          `or reach out to a staff member.`,
-                                  },
+        const message: Discord.MessageCreateOptions = {
+            embeds: [
+                new Discord.EmbedBuilder()
+                    .setColor(colors.wheatley)
+                    .setTitle(`You have been ${action} in Together C & C++.`)
+                    .setDescription(
+                        build_description(
+                            is_removal || this.is_once_off ? null : `**Duration:** ${duration}`,
+                            moderation.reason ? `**Reason:** ${moderation.reason}` : null,
+                            moderation.type === "rolepersist" ? `**Role:** ${moderation.role_name}` : null,
                         ),
-                ],
-            });
-        } catch (e) {
-            if (e instanceof Discord.DiscordAPIError && e.code === 50007) {
-                // 50007: Cannot send messages to this user
-                return true;
-            } else {
-                this.wheatley.critical_error(`Error notifying user`, assert_type(e, Error));
-                return true;
-            }
-        }
-        return false;
+                    )
+                    .setFooter(
+                        is_removal
+                            ? null
+                            : {
+                                  text:
+                                      `To appeal this you may open a modmail in Server Guide -> #rules ` +
+                                      `or reach out to a staff member.`,
+                              },
+                    ),
+            ],
+        };
+        return await this.utilities.notify_user_with_thread_fallback(
+            this.rules,
+            user,
+            message,
+            "Moderation Notification",
+        );
     }
 
     async issue_moderation_internal(
@@ -758,7 +753,7 @@ export abstract class ModerationComponent extends BotComponent {
                 expunged: null,
                 link: command.get_or_forge_url(),
             };
-            const cant_dm = await this.notify_user(user, this.past_participle, moderation);
+            const cant_dm = !(await this.notify_user(user, this.past_participle, moderation));
             await this.issue_moderation(moderation);
             await command.reply({
                 content:
@@ -783,7 +778,7 @@ export abstract class ModerationComponent extends BotComponent {
                                 !this.is_once_off && duration_string !== null
                                     ? `**Duration**: ${duration == null ? "permanent" : time_to_human(duration)}`
                                     : null,
-                                cant_dm ? "Note: Couldn't DM user. Their loss." : null,
+                                cant_dm ? "Note: Couldn't notify user (DM and thread fallback both failed)." : null,
                             ),
                         )
                         .setFooter({

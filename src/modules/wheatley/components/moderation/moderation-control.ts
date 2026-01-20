@@ -25,10 +25,12 @@ export default class ModerationControl extends BotComponent {
     }>();
     private staff_action_log!: Discord.TextChannel;
     private public_action_log!: Discord.TextChannel;
+    private rules!: Discord.TextChannel;
 
     override async setup(commands: CommandSetBuilder) {
         this.staff_action_log = await this.utilities.get_channel(this.wheatley.channels.staff_action_log);
         this.public_action_log = await this.utilities.get_channel(this.wheatley.channels.public_action_log);
+        this.rules = await this.utilities.get_channel(this.wheatley.channels.rules);
 
         (this.wheatley.components.get("Help") as Help | undefined)?.add_category_content(
             "Moderation",
@@ -112,28 +114,21 @@ export default class ModerationControl extends BotComponent {
         );
     }
 
-    // returns true if unable to dm user
-    async notify_user(command: TextBasedCommand, user: string, case_number: number, message: string) {
-        try {
-            await (
-                await (await this.wheatley.client.users.fetch(user)).createDM()
-            ).send({
+    async notify_user(user: string, case_number: number, description: string) {
+        const discord_user = await this.wheatley.client.users.fetch(user);
+        await this.utilities.notify_user_with_thread_fallback(
+            this.rules,
+            discord_user,
+            {
                 embeds: [
                     new Discord.EmbedBuilder()
                         .setColor(colors.wheatley)
                         .setTitle(`Case ${case_number} updated`)
-                        .setDescription(message),
+                        .setDescription(description),
                 ],
-            });
-        } catch (e) {
-            if (e instanceof Discord.DiscordAPIError && e.code === 50007) {
-                // 50007: Cannot send messages to this user
-                return true;
-            } else {
-                await this.reply_with_error(command, "Error notifying");
-            }
-        }
-        return false;
+            },
+            "Moderation Notification",
+        );
     }
 
     async reason(command: TextBasedCommand, case_number: number, reason: string) {
@@ -165,7 +160,7 @@ export default class ModerationControl extends BotComponent {
                         ),
                     ],
                 });
-                await this.notify_user(command, res.user, case_number, `**Reason:** ${reason}`);
+                await this.notify_user(res.user, case_number, `**Reason:** ${reason}`);
             }
         } else {
             await this.reply_with_error(command, `Case ${case_number} not found`);
@@ -240,7 +235,7 @@ export default class ModerationControl extends BotComponent {
                     ],
                 });
                 const duration_str = res.duration ? time_to_human(res.duration) : "Permanent";
-                await this.notify_user(command, res.user, case_number, `**Duration:** ${duration_str}`);
+                await this.notify_user(res.user, case_number, `**Duration:** ${duration_str}`);
             }
         }
     }
@@ -282,12 +277,7 @@ export default class ModerationControl extends BotComponent {
                         ),
                     ],
                 });
-                await this.notify_user(
-                    command,
-                    res.user,
-                    case_number,
-                    `**Expunged:** ${reason ?? "No reason provided"}`,
-                );
+                await this.notify_user(res.user, case_number, `**Expunged:** ${reason ?? "No reason provided"}`);
             }
         } else {
             await this.reply_with_error(command, `Case ${case_number} not found`);

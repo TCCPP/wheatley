@@ -409,4 +409,50 @@ export class BotUtilities {
             }
         }
     }
+
+    async notify_user_via_dm(user: Discord.User, message: Discord.MessageCreateOptions): Promise<boolean> {
+        try {
+            await (await user.createDM()).send(message);
+            return true;
+        } catch (e) {
+            if (e instanceof Discord.DiscordAPIError && e.code === 50007) {
+                // 50007: Cannot send messages to this user
+                return false;
+            }
+            throw e;
+        }
+    }
+
+    async notify_user_via_thread(
+        thread_channel: Discord.TextChannel,
+        user: Discord.User,
+        message: Discord.MessageCreateOptions,
+        thread_name: string,
+    ): Promise<boolean> {
+        const member = await this.wheatley.try_fetch_guild_member(user);
+        if (!member) {
+            return false;
+        }
+        const thread = await thread_channel.threads.create({
+            type: Discord.ChannelType.PrivateThread,
+            invitable: false,
+            name: `Moderation Notice`,
+            autoArchiveDuration: Discord.ThreadAutoArchiveDuration.OneWeek,
+        });
+        await thread.send(message);
+        await thread.members.add(member.id);
+        return true;
+    }
+
+    async notify_user_with_thread_fallback(
+        thread_channel: Discord.TextChannel,
+        user: Discord.User,
+        message: Discord.MessageCreateOptions,
+        thread_name: string,
+    ): Promise<boolean> {
+        if (await this.notify_user_via_dm(user, message)) {
+            return true;
+        }
+        return await this.notify_user_via_thread(thread_channel, user, message, thread_name);
+    }
 }
