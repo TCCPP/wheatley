@@ -9,6 +9,8 @@ import { SelfClearingMap } from "../../../utils/containers.js";
 import { clear_timeout, set_timeout } from "../../../utils/node.js";
 import { MessageData } from "../../../bot-utilities.js";
 
+const DISABLED: boolean = true;
+
 const GRACE_PERIOD = 10 * SECOND;
 
 export default class Memes extends BotComponent {
@@ -80,6 +82,9 @@ export default class Memes extends BotComponent {
     }
 
     override async on_message_create(message: Discord.Message) {
+        if (DISABLED) {
+            return;
+        }
         if (message.channel.id !== this.wheatley.channels.memes) {
             return;
         }
@@ -95,6 +100,9 @@ export default class Memes extends BotComponent {
         _old_message: Discord.Message | Discord.PartialMessage,
         new_message: Discord.Message | Discord.PartialMessage,
     ) {
+        if (DISABLED) {
+            return;
+        }
         if (new_message.channel.id !== this.wheatley.channels.memes) {
             return;
         }
