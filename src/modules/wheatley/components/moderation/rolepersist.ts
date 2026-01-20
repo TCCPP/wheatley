@@ -204,18 +204,15 @@ export default class Rolepersist extends ModerationComponent {
         }
     }
 
-    async is_moderation_applied(moderation: basic_moderation_with_user) {
+    async is_moderation_applied_in_discord(moderation: basic_moderation_with_user) {
         assert(moderation.type == this.type);
-        const member = await this.wheatley.try_fetch_guild_member(moderation.user);
-        // for a role that no longer exists
         if (moderation.role === "") {
             return false;
         }
+        const member = await this.wheatley.try_fetch_guild_member(moderation.user);
         if (member) {
             return member.roles.cache.filter(role => role.id == moderation.role).size > 0;
-        } else {
-            // if the member isn't in the guild then let's call the moderation applied
-            return true;
         }
+        return false;
     }
 }

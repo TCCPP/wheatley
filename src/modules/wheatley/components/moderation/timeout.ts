@@ -124,16 +124,14 @@ export default class Timeout extends ModerationComponent {
         }
     }
 
-    async is_moderation_applied(moderation: basic_moderation_with_user) {
+    async is_moderation_applied_in_discord(moderation: basic_moderation_with_user) {
         assert(moderation.type == this.type);
         try {
             const member = await this.wheatley.guild.members.fetch(moderation.user);
             return member.communicationDisabledUntil !== null;
         } catch (e) {
             if (e instanceof Discord.DiscordAPIError && e.code === 10007) {
-                // Unknown member
-                // There's no way to check if a timeout is applied to a user outside the guild, just presume it is...
-                return true;
+                return false;
             } else {
                 throw e;
             }

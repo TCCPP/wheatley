@@ -108,7 +108,7 @@ export default class Note extends ModerationComponent {
         assert(false);
     }
 
-    is_moderation_applied(moderation: basic_moderation): never {
+    is_moderation_applied_in_discord(moderation: basic_moderation): never {
         void moderation;
         assert(false);
     }

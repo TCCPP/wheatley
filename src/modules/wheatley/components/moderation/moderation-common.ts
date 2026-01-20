@@ -338,8 +338,58 @@ export abstract class ModerationComponent extends BotComponent {
     // Remove the moderation to the user (e.g. remove a role or unban)
     abstract remove_moderation(entry: mongo.WithId<moderation_entry>): Promise<void>;
 
-    // Check if the moderation is in effect
-    abstract is_moderation_applied(moderation: basic_moderation_with_user): Promise<boolean>;
+    // Check if the moderation is currently applied in Discord (role present, ban in place, etc.)
+    abstract is_moderation_applied_in_discord(moderation: basic_moderation_with_user): Promise<boolean>;
+
+    // Check if there are other active moderations of the same type for this user (excluding the given entry)
+    async has_other_active_moderations(entry: mongo.WithId<moderation_entry>): Promise<boolean> {
+        const query: mongo.Filter<moderation_entry> = {
+            user: entry.user,
+            type: entry.type,
+            active: true,
+            _id: { $ne: entry._id },
+        };
+        if (entry.type === "rolepersist") {
+            query.role = entry.role;
+        }
+        return (await this.database.moderations.countDocuments(query)) > 0;
+    }
+
+    // Get all other active moderations of the same type for this user (excluding the given entry)
+    async get_remaining_active_moderations(
+        entry: mongo.WithId<moderation_entry>,
+    ): Promise<mongo.WithId<moderation_entry>[]> {
+        const query: mongo.Filter<moderation_entry> = {
+            user: entry.user,
+            type: entry.type,
+            active: true,
+            _id: { $ne: entry._id },
+        };
+        if (entry.type === "rolepersist") {
+            query.role = entry.role;
+        }
+        return await this.database.moderations.find(query).sort({ issued_at: -1 }).toArray();
+    }
+
+    // Check if the same moderation type was applied to the user recently and is still active
+    async check_for_recent_duplicate(
+        user_id: string,
+        basic_moderation_info: basic_moderation,
+    ): Promise<mongo.WithId<moderation_entry> | null> {
+        if (this.is_once_off) {
+            return null;
+        }
+        const query: mongo.Filter<moderation_entry> = {
+            user: user_id,
+            type: this.type,
+            active: true,
+            issued_at: { $gt: Date.now() - 5 * MINUTE },
+        };
+        if (basic_moderation_info.type === "rolepersist") {
+            query.role = basic_moderation_info.role;
+        }
+        return await this.database.moderations.findOne(query);
+    }
 
     //
     // Moderation events
@@ -374,16 +424,23 @@ export abstract class ModerationComponent extends BotComponent {
             );
             return;
         }
-        // Check if remove logic should be done
-        if (await this.is_moderation_applied(entry)) {
+        // Check if remove logic should be done - only remove from Discord if no other active moderations exist
+        const has_other_active = await this.has_other_active_moderations(entry);
+        if (await this.is_moderation_applied_in_discord(entry)) {
             M.debug("Handling moderation expire", entry);
-            await this.remove_moderation(entry);
             this.sleep_list.remove(entry._id);
+            if (!has_other_active) {
+                await this.remove_moderation(entry);
+            }
             await this.staff_action_log.send({
                 embeds: [
-                    Modlogs.case_summary(entry, await this.wheatley.client.users.fetch(entry.user), true).setTitle(
-                        `${capitalize(this.type)} is being lifted (case ${entry.case_number})`,
-                    ),
+                    Modlogs.case_summary(entry, await this.wheatley.client.users.fetch(entry.user), true)
+                        .setTitle(`${capitalize(this.type)} is being lifted (case ${entry.case_number})`)
+                        .setDescription(
+                            has_other_active
+                                ? "Note: Other active moderation exists, not removing moderation in discord"
+                                : null,
+                        ),
                 ],
             });
         } else {
@@ -420,13 +477,15 @@ export abstract class ModerationComponent extends BotComponent {
                         this.sleep_list.insert([entry.issued_at + entry.duration, entry]);
                     }
                     // Entry is active, check if it needs to be applied
-                    if (!(await this.is_moderation_applied(entry))) {
+                    if (!(await this.is_moderation_applied_in_discord(entry))) {
                         M.debug("Moderation wasn't applied, applying", entry.case_number);
                         await this.apply_moderation(entry);
                     }
                 } else {
                     // Entry is not active, check if it needs to be removed
-                    if (await this.is_moderation_applied(entry)) {
+                    // Only remove from Discord if no other active moderations exist
+                    const has_other_active = await this.has_other_active_moderations(entry);
+                    if (!has_other_active && (await this.is_moderation_applied_in_discord(entry))) {
                         M.debug("Moderation was applied, removing", entry.case_number);
                         await this.remove_moderation(entry);
                     }
@@ -463,7 +522,7 @@ export abstract class ModerationComponent extends BotComponent {
                     M.debug("Skipping ensure_moderations_are_in_place on removed moderation", moderation);
                     continue;
                 }
-                if (!(await this.is_moderation_applied(moderation))) {
+                if (!(await this.is_moderation_applied_in_discord(moderation))) {
                     M.debug("Reapplying moderation", moderation);
                     await this.apply_moderation(moderation);
                 }
@@ -482,7 +541,7 @@ export abstract class ModerationComponent extends BotComponent {
             .find({ user: member.user.id, type: this.type, active: true })
             .toArray();
         for (const moderation of moderations) {
-            if (!(await this.is_moderation_applied(moderation))) {
+            if (!(await this.is_moderation_applied_in_discord(moderation))) {
                 await this.apply_moderation(moderation);
             }
         }
@@ -619,6 +678,14 @@ export abstract class ModerationComponent extends BotComponent {
         basic_moderation_info: basic_moderation,
         link: string | null = null,
     ) {
+        const recent_duplicate = await this.check_for_recent_duplicate(user.id, basic_moderation_info);
+        if (recent_duplicate) {
+            this.wheatley.warn(
+                `Automatically issued moderation not applied due to duplicating a recent moderation. ` +
+                    `reason=${reason} info=${JSON.stringify(basic_moderation_info)}`,
+            );
+            return;
+        }
         const moderation: moderation_entry = {
             ...basic_moderation_info,
             case_number: -1,
@@ -665,9 +732,14 @@ export abstract class ModerationComponent extends BotComponent {
                 await this.reply_with_error(command, unwrap(get_random_array_element(joke_responses_other)));
                 return;
             }
-            const base_moderation: basic_moderation_with_user = { ...basic_moderation_info, user: user.id };
-            if (!this.is_once_off && (await this.is_moderation_applied(base_moderation))) {
-                await this.reply_with_error(command, `User is already ${this.past_participle}`);
+            const recent_duplicate = await this.check_for_recent_duplicate(user.id, basic_moderation_info);
+            if (recent_duplicate) {
+                const time_ago = time_to_human(Date.now() - recent_duplicate.issued_at);
+                await this.reply_with_error(
+                    command,
+                    `User was ${this.past_participle} recently ` +
+                        `(case ${recent_duplicate.case_number}, ${time_ago} ago by ${recent_duplicate.moderator_name})`,
+                );
                 return;
             }
             const duration = parse_nullable_duration(duration_string);
@@ -744,9 +816,18 @@ export abstract class ModerationComponent extends BotComponent {
                     await this.reply_with_error(command, unwrap(get_random_array_element(joke_responses_other)));
                     continue;
                 }
-                const base_moderation: basic_moderation_with_user = { ...basic_moderation_info, user: user.id };
-                if (!this.is_once_off && (await this.is_moderation_applied(base_moderation))) {
-                    await this.reply_with_error(command, `${user.displayName} is already ${this.past_participle}`);
+                const recent_duplicate = await this.check_for_recent_duplicate(user.id, basic_moderation_info);
+                if (recent_duplicate) {
+                    await command.replyOrFollowUp({
+                        embeds: [
+                            new Discord.EmbedBuilder()
+                                .setColor(colors.alert_color)
+                                .setDescription(
+                                    `${this.wheatley.emoji.error} ***Skipping ${user.displayName}: was recently ` +
+                                        `${this.past_participle} (case ${recent_duplicate.case_number})***`,
+                                ),
+                        ],
+                    });
                     continue;
                 }
                 const moderation: moderation_entry = {
@@ -809,13 +890,23 @@ export abstract class ModerationComponent extends BotComponent {
                 },
                 {
                     returnDocument: "after",
+                    sort: { issued_at: -1 },
                 },
             );
-            if (!res || !(await this.is_moderation_applied(res))) {
+            if (!res) {
                 await this.reply_with_error(command, `User is not ${this.past_participle}`);
             } else {
-                await this.remove_moderation(res);
                 this.sleep_list.remove(res._id);
+                // Only remove from Discord if no other active moderations exist
+                const remaining_moderations = await this.get_remaining_active_moderations(res);
+                const has_other_active = remaining_moderations.length > 0;
+                if (!has_other_active) {
+                    await this.remove_moderation(res);
+                }
+                const remaining_message = has_other_active
+                    ? `Note: ${remaining_moderations.length} other active ${this.type}(s) still applied: ` +
+                      remaining_moderations.map(m => `case ${m.case_number}`).join(", ")
+                    : null;
                 await command.reply({
                     embeds: [
                         new Discord.EmbedBuilder()
@@ -825,25 +916,26 @@ export abstract class ModerationComponent extends BotComponent {
                                     `${this.wheatley.emoji.success} ` +
                                         `***${user.displayName} was un${this.past_participle}***`,
                                     command.is_slash() && reason ? `**Reason:** ${reason}` : null,
+                                    remaining_message,
                                 ),
                             )
                             .setFooter({
-                                text: `Case ${res.case_number}`,
+                                text: `Removed case ${res.case_number}`,
                             }),
                     ],
                 });
                 await this.staff_action_log.send({
                     embeds: [
-                        Modlogs.case_summary(res, await this.wheatley.client.users.fetch(res.user), true).setTitle(
-                            `Case ${res.case_number}: Un${this.past_participle}`,
-                        ),
+                        Modlogs.case_summary(res, await this.wheatley.client.users.fetch(res.user), true)
+                            .setTitle(`Removed case ${res.case_number}: Un${this.past_participle}`)
+                            .setDescription(remaining_message),
                     ],
                 });
                 if (res.type !== "note") {
                     await this.public_action_log.send({
                         embeds: [
                             Modlogs.case_summary(res, await this.wheatley.client.users.fetch(res.user), false).setTitle(
-                                `Case ${res.case_number}: Un${this.past_participle}`,
+                                `Removed case ${res.case_number}: Un${this.past_participle}`,
                             ),
                         ],
                     });

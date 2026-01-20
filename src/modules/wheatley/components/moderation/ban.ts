@@ -127,19 +127,13 @@ export default class Ban extends ModerationComponent {
         );
     }
 
-    async is_moderation_applied(moderation: basic_moderation_with_user) {
+    async is_moderation_applied_in_discord(moderation: basic_moderation_with_user) {
         assert(moderation.type == this.type);
         try {
             await this.wheatley.guild.bans.fetch(moderation.user);
             return true;
-        } catch (e) {
-            // fallback to the database
-            const res = await this.database.moderations.findOne({
-                user: moderation.user,
-                type: this.type,
-                active: true,
-            });
-            return res !== null;
+        } catch {
+            return false;
         }
     }
 

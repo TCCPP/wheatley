@@ -98,19 +98,12 @@ export default class Mute extends ModerationComponent {
         }
     }
 
-    async is_moderation_applied(moderation: basic_moderation_with_user) {
+    async is_moderation_applied_in_discord(moderation: basic_moderation_with_user) {
         assert(moderation.type == this.type);
         const member = await this.wheatley.try_fetch_guild_member(moderation.user);
         if (member) {
             return member.roles.cache.filter(role => role.id == this.wheatley.roles.muted.id).size > 0;
-        } else {
-            // if the member isn't in the guild then lookup
-            const res = await this.database.moderations.findOne({
-                user: moderation.user,
-                type: this.type,
-                active: true,
-            });
-            return res !== null;
         }
+        return false;
     }
 }

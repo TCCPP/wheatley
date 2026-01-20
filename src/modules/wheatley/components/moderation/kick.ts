@@ -66,7 +66,7 @@ export default class Kick extends ModerationComponent {
         assert(false);
     }
 
-    is_moderation_applied(moderation: basic_moderation_with_user): never {
+    is_moderation_applied_in_discord(moderation: basic_moderation_with_user): never {
         void moderation;
         assert(false);
     }
