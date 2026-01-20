@@ -33,6 +33,7 @@ import { get_random_array_element } from "../../../../utils/arrays.js";
 import { CommandSetBuilder } from "../../../../command-abstractions/command-set-builder.js";
 import { BotButton, ButtonInteractionBuilder } from "../../../../command-abstractions/button.js";
 import { discord_timestamp } from "../../../../utils/discord.js";
+import NotificationThreads from "../notification-threads.js";
 
 /*
  * !mute !unmute
@@ -174,6 +175,7 @@ export abstract class ModerationComponent extends BotComponent {
     protected public_action_log!: Discord.TextChannel;
     protected red_telephone_alerts!: Discord.TextChannel;
     protected rules!: Discord.TextChannel;
+    protected notification_threads!: NotificationThreads;
     private static ring_red_telephone_button_instance: BotButton<[number]> | null = null;
     protected get ring_red_telephone_button() {
         return unwrap(ModerationComponent.ring_red_telephone_button_instance);
@@ -223,6 +225,7 @@ export abstract class ModerationComponent extends BotComponent {
         this.public_action_log = await this.utilities.get_channel(this.wheatley.channels.public_action_log);
         this.red_telephone_alerts = await this.utilities.get_channel(this.wheatley.channels.red_telephone_alerts);
         this.rules = await this.utilities.get_channel(this.wheatley.channels.rules);
+        this.notification_threads = unwrap(this.wheatley.components.get("NotificationThreads")) as NotificationThreads;
 
         // Only register button handler once across all ModerationComponent instances
         // In effect, the first component to be loaded extending ModerationComponent will be responsible for handling
@@ -657,7 +660,7 @@ export abstract class ModerationComponent extends BotComponent {
                     ),
             ],
         };
-        return await this.utilities.notify_user_with_thread_fallback(
+        return await this.notification_threads.notify_user_with_thread_fallback(
             this.rules,
             user,
             message,

@@ -18,6 +18,7 @@ import {
 import { TextBasedCommand } from "../../../../command-abstractions/text-based-command.js";
 import { unwrap } from "../../../../utils/misc.js";
 import Help from "../help.js";
+import NotificationThreads from "../notification-threads.js";
 
 export default class ModerationControl extends BotComponent {
     private database = this.wheatley.database.create_proxy<{
@@ -26,11 +27,13 @@ export default class ModerationControl extends BotComponent {
     private staff_action_log!: Discord.TextChannel;
     private public_action_log!: Discord.TextChannel;
     private rules!: Discord.TextChannel;
+    private notification_threads!: NotificationThreads;
 
     override async setup(commands: CommandSetBuilder) {
         this.staff_action_log = await this.utilities.get_channel(this.wheatley.channels.staff_action_log);
         this.public_action_log = await this.utilities.get_channel(this.wheatley.channels.public_action_log);
         this.rules = await this.utilities.get_channel(this.wheatley.channels.rules);
+        this.notification_threads = unwrap(this.wheatley.components.get("NotificationThreads")) as NotificationThreads;
 
         (this.wheatley.components.get("Help") as Help | undefined)?.add_category_content(
             "Moderation",
@@ -116,7 +119,7 @@ export default class ModerationControl extends BotComponent {
 
     async notify_user(user: string, case_number: number, description: string) {
         const discord_user = await this.wheatley.client.users.fetch(user);
-        await this.utilities.notify_user_with_thread_fallback(
+        await this.notification_threads.notify_user_with_thread_fallback(
             this.rules,
             discord_user,
             {
