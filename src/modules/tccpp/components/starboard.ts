@@ -218,13 +218,21 @@ export default class Starboard extends BotComponent {
         ].join(" | ");
     }
 
+    get_parent_channel_id(channel: Discord.TextBasedChannel): string {
+        if (channel.isThread() && channel.parentId) {
+            return channel.parentId;
+        }
+        return channel.id;
+    }
+
     meets_threshold(reaction: Discord.MessageReaction) {
         assert(reaction.emoji.name);
         if (!(reaction.emoji instanceof Discord.GuildEmoji || reaction.emoji.id === null)) {
             return false;
         }
+        const parent_channel_id = this.get_parent_channel_id(reaction.message.channel);
         if (reaction.emoji.name == "⭐") {
-            if (reaction.message.channel.id == this.wheatley.channels.memes) {
+            if (parent_channel_id == this.wheatley.channels.memes) {
                 return reaction.count >= memes_star_threshold;
             } else {
                 return reaction.count >= star_threshold;
@@ -232,7 +240,7 @@ export default class Starboard extends BotComponent {
         } else if (
             !(this.negative_emojis.includes(reaction.emoji.name) || this.ignored_emojis.includes(reaction.emoji.name))
         ) {
-            if (reaction.message.channel.id == this.wheatley.channels.memes) {
+            if (parent_channel_id == this.wheatley.channels.memes) {
                 return reaction.count >= memes_other_threshold;
             } else {
                 return reaction.count >= other_threshold;
