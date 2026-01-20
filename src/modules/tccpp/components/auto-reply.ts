@@ -26,5 +26,11 @@ export default class Autoreply extends BotComponent {
             M.log("firing llm auto-reply");
             await message.reply("Did you mean: [***LLVM***](https://llvm.org/)");
         }
+        if (
+            message.mentions.has(this.wheatley.user.id) &&
+            /^(<@\d+>)?\s*is\s*this\s*true\s*\??(<@\d+>)?$/gi.test(message.content)
+        ) {
+            await message.reply("Depends");
+        }
     }
 }
