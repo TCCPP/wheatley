@@ -297,7 +297,12 @@ export class Wheatley {
         }
 
         this.client.on("ready", () => {
+            M.log("Wheatley starting in the following guilds:");
             (async () => {
+                await this.client.guilds.fetch();
+                for (const [_, guild] of this.client.guilds.cache) {
+                    M.log(guild.id, guild.name);
+                }
                 // Fetch the log channel immediately
                 if (!config.freestanding) {
                     const channel = await this.client.channels.fetch(channels.log);
