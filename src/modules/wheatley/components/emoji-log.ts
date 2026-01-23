@@ -15,6 +15,9 @@ export default class EmojiLog extends BotComponent {
     }
 
     override async on_emoji_create(emoji: Discord.GuildEmoji) {
+        if (emoji.guild.id !== this.wheatley.guild.id) {
+            return;
+        }
         await this.staff_action_log.send({
             embeds: [
                 new Discord.EmbedBuilder()
@@ -31,6 +34,9 @@ export default class EmojiLog extends BotComponent {
     }
 
     override async on_emoji_delete(emoji: Discord.GuildEmoji) {
+        if (emoji.guild.id !== this.wheatley.guild.id) {
+            return;
+        }
         await this.staff_action_log.send({
             embeds: [
                 new Discord.EmbedBuilder()
@@ -47,6 +53,9 @@ export default class EmojiLog extends BotComponent {
     }
 
     override async on_emoji_update(old_emoji: Discord.GuildEmoji, new_emoji: Discord.GuildEmoji) {
+        if (new_emoji.guild.id !== this.wheatley.guild.id) {
+            return;
+        }
         await this.staff_action_log.send({
             embeds: [
                 new Discord.EmbedBuilder()

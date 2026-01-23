@@ -50,6 +50,9 @@ export default class PinArchive extends BotComponent {
     }
 
     on_pin_update(channel: Discord.TextBasedChannel, time: Date) {
+        if (channel.isDMBased() || channel.guildId !== this.wheatley.guild.id) {
+            return;
+        }
         M.log("Got channelPinsUpdate update", channel.url);
         this.update_for_channel(channel).catch(this.wheatley.critical_error.bind(this.wheatley));
     }

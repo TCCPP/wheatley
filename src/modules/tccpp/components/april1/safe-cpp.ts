@@ -21,6 +21,9 @@ export default class SafeCpp extends BotComponent {
     ratelimit = new SelfClearingSet<string>(10 * MINUTE, 10 * MINUTE);
 
     override async on_message_create(message: Discord.Message) {
+        if (message.guildId !== this.wheatley.guild.id) {
+            return;
+        }
         // eslint-disable-next-line @typescript-eslint/no-unnecessary-condition
         if (!ENABLED) {
             return;

@@ -19,6 +19,9 @@ export default class Insult extends BotComponent {
     }
 
     override async on_message_create(message: Discord.Message) {
+        if (message.guildId !== this.wheatley.guild.id) {
+            return;
+        }
         let is_unkind = false;
         if (message.mentions.has(this.wheatley.user.id)) {
             if (message.content.match(/\bk\s*y\s*s\b/gi)) {

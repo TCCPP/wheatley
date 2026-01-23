@@ -85,6 +85,9 @@ export default class Memes extends BotComponent {
         if (DISABLED) {
             return;
         }
+        if (message.guildId !== this.wheatley.guild.id) {
+            return;
+        }
         if (message.channel.id !== this.wheatley.channels.memes) {
             return;
         }
@@ -101,6 +104,9 @@ export default class Memes extends BotComponent {
         new_message: Discord.Message | Discord.PartialMessage,
     ) {
         if (DISABLED) {
+            return;
+        }
+        if (new_message.guildId !== this.wheatley.guild.id) {
             return;
         }
         if (new_message.channel.id !== this.wheatley.channels.memes) {

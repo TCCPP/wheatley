@@ -208,6 +208,9 @@ export default class Format extends BotComponent {
     // TODO: More refactoring needed
 
     override async on_message_create(message: Discord.Message) {
+        if (message.guildId !== this.wheatley.guild.id) {
+            return;
+        }
         // TODO: Leaving for now, need better way to handle this in the general case. Will probably be part of a larger
         // command abstraction
         try {

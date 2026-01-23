@@ -42,6 +42,9 @@ export default class AntiScreenshot extends BotComponent {
     }
 
     override async on_message_create(message: Discord.Message) {
+        if (message.guildId !== this.wheatley.guild.id) {
+            return;
+        }
         if (message.author.bot) {
             return;
         }

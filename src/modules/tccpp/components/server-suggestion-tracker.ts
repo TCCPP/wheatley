@@ -349,6 +349,9 @@ export default class ServerSuggestionTracker extends BotComponent {
     }
 
     override async on_message_create(message: Discord.Message) {
+        if (message.guildId !== this.wheatley.guild.id) {
+            return;
+        }
         if (this.recovering) {
             return;
         }
@@ -365,6 +368,9 @@ export default class ServerSuggestionTracker extends BotComponent {
     }
 
     override async on_message_delete(message: Discord.Message | Discord.PartialMessage) {
+        if (message.guildId !== this.wheatley.guild.id) {
+            return;
+        }
         if (this.recovering) {
             return;
         }
@@ -424,6 +430,9 @@ export default class ServerSuggestionTracker extends BotComponent {
         old_message: Discord.Message | Discord.PartialMessage,
         new_message: Discord.Message | Discord.PartialMessage,
     ) {
+        if (new_message.guildId !== this.wheatley.guild.id) {
+            return;
+        }
         if (this.recovering) {
             return;
         }
@@ -509,6 +518,9 @@ export default class ServerSuggestionTracker extends BotComponent {
         reaction: Discord.MessageReaction | Discord.PartialMessageReaction,
         user: Discord.User | Discord.PartialUser,
     ) {
+        if (reaction.message.guildId !== this.wheatley.guild.id) {
+            return;
+        }
         if (this.recovering) {
             return;
         }
@@ -587,6 +599,9 @@ export default class ServerSuggestionTracker extends BotComponent {
         reaction: Discord.MessageReaction | Discord.PartialMessageReaction,
         user: Discord.User | Discord.PartialUser,
     ) {
+        if (reaction.message.guildId !== this.wheatley.guild.id) {
+            return;
+        }
         if (this.recovering) {
             return;
         }

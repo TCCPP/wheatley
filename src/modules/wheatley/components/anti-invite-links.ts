@@ -224,6 +224,9 @@ export default class AntiInviteLinks extends BotComponent {
     }
 
     override async on_message_create(message: Discord.Message) {
+        if (message.guildId !== this.wheatley.guild.id) {
+            return;
+        }
         await this.handle_message(message);
     }
 
@@ -231,6 +234,9 @@ export default class AntiInviteLinks extends BotComponent {
         old_message: Discord.Message | Discord.PartialMessage,
         new_message: Discord.Message | Discord.PartialMessage,
     ) {
+        if (new_message.guildId !== this.wheatley.guild.id) {
+            return;
+        }
         await this.handle_message(await departialize(new_message));
     }
 }

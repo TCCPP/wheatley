@@ -269,13 +269,19 @@ export default class VoiceModeration extends BotComponent {
     }
 
     override async on_voice_state_update(old_state: Discord.VoiceState, new_state: Discord.VoiceState) {
+        if (new_state.guild.id !== this.wheatley.guild.id) {
+            return;
+        }
         // Track "recently in voice" for quarantine purposes
         if (!new_state.channel && new_state.member) {
             this.recently_in_voice.insert(new_state.member.id);
         }
     }
 
-    override async on_audit_log_entry_create(entry: Discord.GuildAuditLogsEntry): Promise<void> {
+    override async on_audit_log_entry_create(entry: Discord.GuildAuditLogsEntry, guild: Discord.Guild): Promise<void> {
+        if (guild.id !== this.wheatley.guild.id) {
+            return;
+        }
         if (!entry.executor || entry.executorId == this.wheatley.user.id) {
             return;
         }
@@ -299,6 +305,9 @@ export default class VoiceModeration extends BotComponent {
     }
 
     override async on_message_create(message: Discord.Message) {
+        if (message.guildId !== this.wheatley.guild.id) {
+            return;
+        }
         if (
             message.channel.isVoiceBased() &&
             message.mentions.roles.has(this.wheatley.roles.moderators.id) &&

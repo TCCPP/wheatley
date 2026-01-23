@@ -92,6 +92,9 @@ export default class AntiCrosspost extends BotComponent {
     }
 
     override async on_message_delete(message: Discord.Message | Discord.PartialMessage) {
+        if (message.guildId !== this.wheatley.guild.id) {
+            return;
+        }
         if (!message.author || message.author.bot) {
             return;
         }

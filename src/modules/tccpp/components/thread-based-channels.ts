@@ -43,6 +43,9 @@ export default class ThreadBasedChannels extends BotComponent {
     }
 
     override async on_message_create(message: Discord.Message) {
+        if (message.guildId !== this.wheatley.guild.id) {
+            return;
+        }
         // Ignore bots and thread create messages
         if (message.author.bot || message.type == Discord.MessageType.ThreadCreated) {
             return;
@@ -64,6 +67,9 @@ export default class ThreadBasedChannels extends BotComponent {
     }
 
     override async on_thread_create(thread: Discord.ThreadChannel) {
+        if (thread.guildId !== this.wheatley.guild.id) {
+            return;
+        }
         if (thread.ownerId == this.wheatley.user.id) {
             // wheatley threads are either modlogs or thread help threads
             return;
@@ -84,6 +90,9 @@ export default class ThreadBasedChannels extends BotComponent {
     }
 
     override async on_message_delete(message: Discord.Message | Discord.PartialMessage) {
+        if (message.guildId !== this.wheatley.guild.id) {
+            return;
+        }
         if (message.channelId === this.wheatley.channels.today_i_learned) {
             if (message.hasThread) {
                 await unwrap(message.thread).send(

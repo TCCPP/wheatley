@@ -20,6 +20,9 @@ export default class Autoreply extends BotComponent {
     ratelimit = new SelfClearingSet<string>(DAY, HOUR);
 
     override async on_message_create(message: Discord.Message) {
+        if (message.guildId !== this.wheatley.guild.id) {
+            return;
+        }
         // eslint-disable-next-line @typescript-eslint/no-unnecessary-condition
         if (LLM_AUTOREPLY_ENABLED && LLM_REGEX.test(message.content) && !this.ratelimit.has(message.channelId)) {
             this.ratelimit.insert(message.channelId);

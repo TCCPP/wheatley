@@ -73,6 +73,10 @@ export default class AntiEveryone extends BotComponent {
      * Auto-delete replies to messages that were deleted
      */
     override async on_message_delete(message: Discord.Message): Promise<void> {
+        if (message.guildId !== this.wheatley.guild.id) {
+            return;
+        }
+
         if (Math.abs(Date.now() - message.createdTimestamp) > 1000) {
             // Message was likely deleted by the user, rather than automatically
             return;

@@ -299,6 +299,9 @@ export default class ForumChannels extends BotComponent {
     }
 
     override async on_message_create(message: Discord.Message) {
+        if (message.guildId !== this.wheatley.guild.id) {
+            return;
+        }
         // Ignore bots and thread create messages
         if (message.author.bot || message.type == Discord.MessageType.ThreadCreated) {
             return;
@@ -368,6 +371,9 @@ export default class ForumChannels extends BotComponent {
     }
 
     override async on_message_delete(message: Discord.Message | Discord.PartialMessage) {
+        if (message.guildId !== this.wheatley.guild.id) {
+            return;
+        }
         if (message.channel.id == message.id) {
             assert(message.channel.isThread());
             const thread = message.channel;

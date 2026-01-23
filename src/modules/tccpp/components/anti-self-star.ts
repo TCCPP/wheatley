@@ -15,6 +15,9 @@ export default class AntiSelfStar extends BotComponent {
         reaction: Discord.MessageReaction | Discord.PartialMessageReaction,
         user: Discord.User | Discord.PartialUser,
     ) {
+        if (reaction.message.guildId !== this.wheatley.guild.id) {
+            return;
+        }
         const message = reaction.message;
         if (!message.author) {
             M.warn("message.author is null");

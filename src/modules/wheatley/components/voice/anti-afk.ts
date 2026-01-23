@@ -40,6 +40,9 @@ export default class AntiAFK extends BotComponent {
     }
 
     override async on_voice_state_update(old_state: Discord.VoiceState, new_state: Discord.VoiceState) {
+        if (new_state.guild.id !== this.wheatley.guild.id) {
+            return;
+        }
         this.check_voice_state(old_state, new_state);
     }
 

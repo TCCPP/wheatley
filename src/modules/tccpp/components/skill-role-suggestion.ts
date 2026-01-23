@@ -311,6 +311,9 @@ export default class SkillRoleSuggestion extends BotComponent {
 
     override async on_interaction_create(interaction: Discord.Interaction) {
         if (interaction.isStringSelectMenu() && interaction.customId == "skill-role-suggestion-picker") {
+            if (interaction.guildId !== this.wheatley.guild.id) {
+                await interaction.reply("Can only be used in the guild");
+            }
             return this.launch_modal(interaction);
         }
     }

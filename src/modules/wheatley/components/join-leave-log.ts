@@ -17,6 +17,9 @@ export default class JoinLeaveLog extends BotComponent {
     }
 
     override async on_guild_member_add(member: Discord.GuildMember) {
+        if (member.guild.id !== this.wheatley.guild.id) {
+            return;
+        }
         this.wheatley.llog(this.staff_member_log, {
             embeds: [
                 new Discord.EmbedBuilder()
@@ -41,6 +44,9 @@ export default class JoinLeaveLog extends BotComponent {
     }
 
     override async on_guild_member_remove(member: Discord.GuildMember | Discord.PartialGuildMember) {
+        if (member.guild.id !== this.wheatley.guild.id) {
+            return;
+        }
         this.wheatley.llog(this.staff_member_log, {
             embeds: [
                 new Discord.EmbedBuilder()
@@ -64,6 +70,9 @@ export default class JoinLeaveLog extends BotComponent {
         old_member: Discord.GuildMember | Discord.PartialGuildMember,
         new_member: Discord.GuildMember,
     ) {
+        if (new_member.guild.id !== this.wheatley.guild.id) {
+            return;
+        }
         const old_roles = old_member.roles.cache.map(role => role.id);
         const new_roles = new_member.roles.cache.map(role => role.id);
         const extra_description: string[] = [];

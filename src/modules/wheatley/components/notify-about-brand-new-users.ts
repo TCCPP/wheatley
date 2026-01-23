@@ -36,6 +36,9 @@ export default class NotifyAboutBrandNewUsers extends BotComponent {
     }
 
     override async on_guild_member_add(member: Discord.GuildMember) {
+        if (member.guild.id !== this.wheatley.guild.id) {
+            return;
+        }
         const age = Date.now() - member.user.createdTimestamp;
         assert(age >= 0);
         if (age <= NEW_USER_THRESHOLD) {

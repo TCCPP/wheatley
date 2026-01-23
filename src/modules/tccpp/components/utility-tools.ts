@@ -29,6 +29,9 @@ export default class UtilityTools extends BotComponent {
     }
 
     override async on_message_create(message: Discord.Message) {
+        if (message.guildId !== this.wheatley.guild.id) {
+            return;
+        }
         // Ignore bots
         if (message.author.bot) {
             return;

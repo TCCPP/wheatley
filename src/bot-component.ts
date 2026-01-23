@@ -105,5 +105,5 @@ export class BotComponent {
     ): Promise<void>;
     async on_thread_create?(thread: Discord.ThreadChannel): Promise<void>;
     async on_voice_state_update?(old_state: Discord.VoiceState, new_state: Discord.VoiceState): Promise<void>;
-    async on_audit_log_entry_create?(entry: Discord.GuildAuditLogsEntry): Promise<void>;
+    async on_audit_log_entry_create?(entry: Discord.GuildAuditLogsEntry, guild: Discord.Guild): Promise<void>;
 }

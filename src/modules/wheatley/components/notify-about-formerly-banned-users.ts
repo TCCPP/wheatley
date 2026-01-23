@@ -88,6 +88,9 @@ export default class NotifyAboutFormerlyBannedUsers extends BotComponent {
     }
 
     override async on_guild_member_add(member: Discord.GuildMember) {
+        if (member.guild.id !== this.wheatley.guild.id) {
+            return;
+        }
         const linked_accounts = await this.linked_accounts.get_all_linked_accounts(member.id);
         const all_user_ids = [member.id, ...Array.from(linked_accounts)];
 

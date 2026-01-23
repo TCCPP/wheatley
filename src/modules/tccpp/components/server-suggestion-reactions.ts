@@ -122,6 +122,9 @@ export default class ServerSuggestionReactions extends BotComponent {
         reaction: Discord.MessageReaction | Discord.PartialMessageReaction,
         user: Discord.User | Discord.PartialUser,
     ) {
+        if (reaction.message.guildId !== this.wheatley.guild.id) {
+            return;
+        }
         if (this.monitored_channels_ids.indexOf(reaction.message.channel.id) > -1) {
             if (reaction.users.cache.some(user => react_blacklist.has(user.id))) {
                 // Remove but not immediately

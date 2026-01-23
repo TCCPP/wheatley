@@ -548,6 +548,9 @@ export default class Starboard extends BotComponent {
         );
     }
     override async on_reaction_add(reaction: Discord.MessageReaction | Discord.PartialMessageReaction) {
+        if (reaction.message.guildId !== this.wheatley.guild.id) {
+            return;
+        }
         if (!(await this.is_valid_channel(reaction.message.channel))) {
             return;
         }
@@ -595,6 +598,9 @@ export default class Starboard extends BotComponent {
     }
 
     override async on_reaction_remove(reaction: Discord.MessageReaction | Discord.PartialMessageReaction) {
+        if (reaction.message.guildId !== this.wheatley.guild.id) {
+            return;
+        }
         if (!(await this.is_valid_channel(reaction.message.channel))) {
             return;
         }
@@ -608,6 +614,9 @@ export default class Starboard extends BotComponent {
         old_message: Discord.Message | Discord.PartialMessage,
         new_message: Discord.Message | Discord.PartialMessage,
     ) {
+        if (new_message.guildId !== this.wheatley.guild.id) {
+            return;
+        }
         if (!(await this.is_valid_channel(new_message.channel))) {
             return;
         }
@@ -619,6 +628,9 @@ export default class Starboard extends BotComponent {
     }
 
     override async on_message_delete(message: Discord.Message | Discord.PartialMessage) {
+        if (message.guildId !== this.wheatley.guild.id) {
+            return;
+        }
         const entry = await this.database.starboard_entries.findOne({ message: message.id });
         if (entry) {
             await this.mutex.lock(message.id);

@@ -9,6 +9,9 @@ import { M } from "../../../utils/debugging-and-logging.js";
 
 export default class ThreadCreatedMessage extends BotComponent {
     override async on_message_create(message: Discord.Message) {
+        if (message.guildId !== this.wheatley.guild.id) {
+            return;
+        }
         if (message.type == Discord.MessageType.ThreadCreated) {
             //M.log(message);
             //assert(message.channel instanceof Discord.TextChannel);

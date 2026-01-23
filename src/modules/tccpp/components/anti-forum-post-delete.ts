@@ -17,6 +17,9 @@ function create_embed(title: string | undefined, color: number, msg: string) {
 
 export default class AntiForumPostDelete extends BotComponent {
     override async on_message_delete(message: Discord.Message | Discord.PartialMessage) {
+        if (message.guildId !== this.wheatley.guild.id) {
+            return;
+        }
         if (message.channel.id == message.id) {
             assert(message.channel.isThread());
             const thread = message.channel;

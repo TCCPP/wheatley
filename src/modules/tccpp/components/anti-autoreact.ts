@@ -19,6 +19,9 @@ export default class AntiAutoreact extends BotComponent {
     }
 
     override async on_reaction_add(reaction: Discord.MessageReaction | Discord.PartialMessageReaction) {
+        if (reaction.message.guildId !== this.wheatley.guild.id) {
+            return;
+        }
         const emoji_name = reaction.emoji.name?.toLowerCase();
         assert(emoji_name != null);
         if (

@@ -138,6 +138,9 @@ export default class Ban extends ModerationComponent {
     }
 
     override async on_guild_member_remove(member: Discord.GuildMember | Discord.PartialGuildMember) {
+        if (member.guild.id !== this.wheatley.guild.id) {
+            return;
+        }
         const logs = await member.guild.fetchAuditLogs({
             limit: 10,
             type: Discord.AuditLogEvent.MemberBanAdd,

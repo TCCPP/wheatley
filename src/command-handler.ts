@@ -273,6 +273,9 @@ export class CommandHandler {
             if (message.author.bot) {
                 return;
             }
+            if (message.guildId !== this.wheatley.guild.id) {
+                return;
+            }
             if (message.content.startsWith("!")) {
                 await this.handle_text_command(message);
             }
@@ -286,6 +289,9 @@ export class CommandHandler {
         old_message: Discord.Message | Discord.PartialMessage,
         new_message: Discord.Message | Discord.PartialMessage,
     ) {
+        if (new_message.guildId !== this.wheatley.guild.id) {
+            return;
+        }
         try {
             if (this.issued_commands_map.has(new_message.id)) {
                 const { command, content } = this.issued_commands_map.get(new_message.id)!;
@@ -316,6 +322,9 @@ export class CommandHandler {
     }
 
     private async on_message_delete(message: Discord.Message | Discord.PartialMessage) {
+        if (message.guildId !== this.wheatley.guild.id) {
+            return;
+        }
         try {
             if (this.issued_commands_map.has(message.id)) {
                 const { command } = this.issued_commands_map.get(message.id)!;
@@ -341,6 +350,9 @@ export class CommandHandler {
     }
 
     async on_reaction_add(reaction: Discord.MessageReaction | Discord.PartialMessageReaction) {
+        if (reaction.message.guildId !== this.wheatley.guild.id) {
+            return;
+        }
         const emoji_name = reaction.emoji.name?.toLowerCase();
         assert(emoji_name != null);
         if (emoji_name === "❌" && this.bot_reply_to_user_map.has(reaction.message.id)) {
@@ -362,6 +374,9 @@ export class CommandHandler {
     }
 
     private async on_interaction(interaction: Discord.Interaction) {
+        if (interaction.guildId !== this.wheatley.guild.id) {
+            return;
+        }
         try {
             if (interaction.isChatInputCommand()) {
                 await this.handle_slash_comand(interaction);

@@ -62,6 +62,9 @@ export default class UsernameManager extends BotComponent {
     }
 
     override async on_guild_member_add(member: Discord.GuildMember) {
+        if (member.guild.id !== this.wheatley.guild.id) {
+            return;
+        }
         await this.check_member(member);
     }
 
@@ -69,6 +72,9 @@ export default class UsernameManager extends BotComponent {
         old_member: Discord.GuildMember | Discord.PartialGuildMember,
         new_member: Discord.GuildMember,
     ) {
+        if (new_member.guild.id !== this.wheatley.guild.id) {
+            return;
+        }
         if (old_member.nickname !== new_member.nickname) {
             await this.check_member(new_member);
         }

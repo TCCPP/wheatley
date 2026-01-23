@@ -169,6 +169,9 @@ export default class FormattingErrorDetection extends BotComponent {
     }
 
     override async on_message_create(message: Discord.Message) {
+        if (message.guildId !== this.wheatley.guild.id) {
+            return;
+        }
         if (message.author.bot || message.channel.isDMBased() || this.messaged.has(message.author.id)) {
             return;
         }
@@ -218,6 +221,9 @@ export default class FormattingErrorDetection extends BotComponent {
         old_message: Discord.Message | Discord.PartialMessage,
         new_message: Discord.Message | Discord.PartialMessage,
     ) {
+        if (new_message.guildId !== this.wheatley.guild.id) {
+            return;
+        }
         if (this.replies.has(new_message.id)) {
             const message = !new_message.partial ? new_message : await new_message.fetch();
             if (!this.has_likely_format_errors(message)) {
@@ -227,6 +233,9 @@ export default class FormattingErrorDetection extends BotComponent {
     }
 
     override async on_message_delete(message: Discord.Message | Discord.PartialMessage) {
+        if (message.guildId !== this.wheatley.guild.id) {
+            return;
+        }
         if (this.replies.has(message.id)) {
             await this.delete_reply(message.id);
         }

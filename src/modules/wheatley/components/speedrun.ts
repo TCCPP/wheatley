@@ -40,6 +40,9 @@ export default class Speedrun extends BotComponent {
     }
 
     override async on_guild_member_add(member: Discord.GuildMember) {
+        if (member.guild.id !== this.wheatley.guild.id) {
+            return;
+        }
         if (member.joinedAt === null) {
             M.warn("member.joinedAt is null in speedrun");
             return;
@@ -50,6 +53,9 @@ export default class Speedrun extends BotComponent {
     }
 
     async on_guild_ban_add(ban: Discord.GuildBan) {
+        if (ban.guild.id !== this.wheatley.guild.id) {
+            return;
+        }
         M.debug("speedrun check");
         const user = ban.user;
         const join_info = this.recent_joins.get(user.id);

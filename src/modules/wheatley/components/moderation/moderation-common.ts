@@ -539,6 +539,9 @@ export abstract class ModerationComponent extends BotComponent {
 
     // Address users trying to leave and rejoin
     override async on_guild_member_add(member: Discord.GuildMember) {
+        if (member.guild.id !== this.wheatley.guild.id) {
+            return;
+        }
         if (this.is_once_off) {
             return;
         }

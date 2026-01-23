@@ -136,10 +136,16 @@ export default class RoleManager extends BotComponent {
         old_member: Discord.GuildMember | Discord.PartialGuildMember,
         new_member: Discord.GuildMember,
     ) {
+        if (new_member.guild.id !== this.wheatley.guild.id) {
+            return;
+        }
         await this.check_member_roles(new_member);
     }
 
     override async on_guild_member_add(member: Discord.GuildMember) {
+        if (member.guild.id !== this.wheatley.guild.id) {
+            return;
+        }
         // apply old roles
         const roles_entry = await this.database.user_roles.findOne({ user_id: member.id });
         if (roles_entry === null) {
