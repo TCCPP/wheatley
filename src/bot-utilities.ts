@@ -330,14 +330,14 @@ export class BotUtilities {
             }),
         );
         assert(messages.length >= 1);
-        // ensure all by the same author and only last message has media
+        // ensure all by the same author and only last message has media or forwarded messages
         const head = messages[0];
         for (const message of messages.slice(0, -1)) {
             assert(message.author.id == head.author.id);
             assert(message.attachments.length == 0);
             assert(message.embeds.length == 0);
             assert(!message.stickers || message.stickers.length == 0);
-            assert(message.forwarded_message);
+            assert(!message.forwarded_message);
         }
         return await this.make_quote_embeds(
             {
