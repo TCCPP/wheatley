@@ -44,7 +44,7 @@ export class BotComponent {
     ) {
         if (f) {
             M.log("Adding listener", event, this.constructor.name);
-            const listener = this.wrap(f.bind(this));
+            const listener = this.wrap(f);
             this.wheatley.client.on(event, listener);
             this.listeners.push([event, listener]);
         }
@@ -54,22 +54,22 @@ export class BotComponent {
         this.on_ready()
             .catch(this.wheatley.critical_error.bind(this.wheatley))
             .finally(() => {
-                this.setup_listener("messageCreate", this.on_message_create);
-                this.setup_listener("messageDelete", this.on_message_delete);
-                this.setup_listener("messageDeleteBulk", this.on_message_delete_bulk);
-                this.setup_listener("messageUpdate", this.on_message_update);
-                this.setup_listener("messageReactionAdd", this.on_reaction_add);
-                this.setup_listener("messageReactionRemove", this.on_reaction_remove);
-                this.setup_listener("interactionCreate", this.on_interaction_create);
-                this.setup_listener("guildMemberAdd", this.on_guild_member_add);
-                this.setup_listener("guildMemberUpdate", this.on_guild_member_update);
-                this.setup_listener("guildMemberRemove", this.on_guild_member_remove);
-                this.setup_listener("emojiCreate", this.on_emoji_create);
-                this.setup_listener("emojiDelete", this.on_emoji_delete);
-                this.setup_listener("emojiUpdate", this.on_emoji_update);
-                this.setup_listener("threadCreate", this.on_thread_create);
-                this.setup_listener("voiceStateUpdate", this.on_voice_state_update);
-                this.setup_listener("guildAuditLogEntryCreate", this.on_audit_log_entry_create);
+                this.setup_listener("messageCreate", this.on_message_create?.bind(this));
+                this.setup_listener("messageDelete", this.on_message_delete?.bind(this));
+                this.setup_listener("messageDeleteBulk", this.on_message_delete_bulk?.bind(this));
+                this.setup_listener("messageUpdate", this.on_message_update?.bind(this));
+                this.setup_listener("messageReactionAdd", this.on_reaction_add?.bind(this));
+                this.setup_listener("messageReactionRemove", this.on_reaction_remove?.bind(this));
+                this.setup_listener("interactionCreate", this.on_interaction_create?.bind(this));
+                this.setup_listener("guildMemberAdd", this.on_guild_member_add?.bind(this));
+                this.setup_listener("guildMemberUpdate", this.on_guild_member_update?.bind(this));
+                this.setup_listener("guildMemberRemove", this.on_guild_member_remove?.bind(this));
+                this.setup_listener("emojiCreate", this.on_emoji_create?.bind(this));
+                this.setup_listener("emojiDelete", this.on_emoji_delete?.bind(this));
+                this.setup_listener("emojiUpdate", this.on_emoji_update?.bind(this));
+                this.setup_listener("threadCreate", this.on_thread_create?.bind(this));
+                this.setup_listener("voiceStateUpdate", this.on_voice_state_update?.bind(this));
+                this.setup_listener("guildAuditLogEntryCreate", this.on_audit_log_entry_create?.bind(this));
             });
     }
 

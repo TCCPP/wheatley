@@ -218,14 +218,14 @@ export default class Cppref extends BotComponent {
             if (result.headers) {
                 embed.addFields({
                     name: "Defined in",
-                    value: format_list(result.headers.map(this.link_headers)),
+                    value: format_list(result.headers.map(Cppref.link_headers)),
                 });
             }
             await command.reply({ embeds: [embed] });
         }
     }
 
-    link_headers(header: string) {
+    static link_headers(header: string) {
         const matches = [...header.matchAll(/^<(.+)>$/g)];
         assert(matches.length == 1);
         const header_part = matches[0][1];

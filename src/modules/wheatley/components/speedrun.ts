@@ -30,7 +30,7 @@ export default class Speedrun extends BotComponent {
     }>();
 
     override async on_ready() {
-        this.setup_listener("guildBanAdd", this.on_guild_ban_add);
+        this.setup_listener("guildBanAdd", this.on_guild_ban_add.bind(this));
     }
 
     override async setup(commands: CommandSetBuilder) {
