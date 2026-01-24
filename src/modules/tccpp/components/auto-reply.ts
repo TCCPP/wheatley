@@ -22,7 +22,7 @@ export default class Autoreply extends BotComponent {
     ratelimit = new SelfClearingSet<string>(DAY, HOUR);
 
     override async on_message_create(message: Discord.Message) {
-        if (message.guildId !== this.wheatley.guild.id) {
+        if (message.guildId !== this.wheatley.guild.id || message.author.bot) {
             return;
         }
         // eslint-disable-next-line @typescript-eslint/no-unnecessary-condition
@@ -39,7 +39,7 @@ export default class Autoreply extends BotComponent {
         ) {
             this.ratelimit.insert(message.channelId);
             M.log("firing microslop auto-reply");
-            await message.reply("Did you mean: ***Microslop***");
+            await message.reply("Did you mean: [***Microslop***](https://microslop.com/)");
         }
         if (
             message.mentions.has(this.wheatley.user.id) &&
