@@ -17,4 +17,5 @@ export enum colors {
     speedrun_color = 0x0fc644, // red
     red = 0xed2d2d, // red
     green = 0x31ea6c, // green
+    grey = 0x3e3f45,
 }

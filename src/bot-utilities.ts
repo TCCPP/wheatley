@@ -285,7 +285,7 @@ export class BotUtilities {
         if (message.forwarded_message) {
             const embed = new Discord.EmbedBuilder()
                 .setTitle("Forwarded Message")
-                .setColor(colors.alert_color)
+                .setColor(colors.grey)
                 .setDescription(
                     message.forwarded_message.content +
                         (message.forwarded_message.url
