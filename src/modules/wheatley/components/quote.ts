@@ -163,7 +163,7 @@ export default class Quote extends BotComponent {
                     const start_time = fetched_messages.length > 0 ? fetched_messages[0].createdTimestamp : undefined;
                     // build a continuous block, subject to a time constraint and ensuring only the last message has
                     // media
-                    for (const message of messages) {
+                    for (const message of fetched_messages) {
                         if (
                             message.author.id != fetched_messages[0].author.id ||
                             message.createdTimestamp - start_time! > 60 * MINUTE
