@@ -175,8 +175,7 @@ export default class Quote extends BotComponent {
                             message.attachments.size > 0 ||
                             message.embeds.length > 0 ||
                             message.stickers.size > 0 ||
-                            message.messageSnapshots.size > 0 ||
-                            message.reference?.type === Discord.MessageReferenceType.Forward
+                            message.messageSnapshots.size > 0
                         ) {
                             break;
                         }
