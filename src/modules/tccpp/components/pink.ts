@@ -30,6 +30,10 @@ export default class Pink extends BotComponent {
         );
     }
 
+    override async on_ready() {
+        this.pink_role = unwrap(await this.wheatley.guild.roles.fetch(this.wheatley.roles.pink.id));
+    }
+
     async gibpink(command: TextBasedCommand) {
         const member = await command.get_member(this.wheatley.guild);
         if (member.premiumSince == null) {
