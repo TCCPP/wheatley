@@ -149,7 +149,7 @@ export default class VoiceModeration extends BotComponent {
         issuer: Discord.User | Discord.PartialUser,
         action: string,
         reason?: string,
-        show_issuer: boolean = true,
+        show_private_logs: boolean = true,
     ) {
         return new Discord.EmbedBuilder()
             .setColor(colors.wheatley)
@@ -163,8 +163,8 @@ export default class VoiceModeration extends BotComponent {
             )
             .setDescription(
                 build_description(
-                    (target ? `<@${target.id}> ` : "User ") + action,
-                    show_issuer ? `**Issuer:** <@${issuer.id}>` : null,
+                    (target && show_private_logs ? `<@${target.id}> ` : "User ") + action,
+                    show_private_logs ? `**Issuer:** <@${issuer.id}>` : null,
                     reason ? `**Reason:** ${reason}` : null,
                 ),
             )
