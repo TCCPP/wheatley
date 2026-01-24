@@ -133,11 +133,7 @@ export default class Quote extends BotComponent {
         const files: (Discord.AttachmentPayload | Discord.Attachment)[] = [];
         for (const { domain, channel_id, message_id, block } of messages) {
             const channel = await this.wheatley.guild.channels.fetch(channel_id);
-            if (
-                channel instanceof Discord.TextChannel ||
-                channel instanceof Discord.ThreadChannel ||
-                channel instanceof Discord.NewsChannel
-            ) {
+            if (channel && channel.isTextBased()) {
                 // TODO: Handle null command.member case better...
                 const member =
                     command instanceof TextBasedCommand ? await command.get_member() : unwrap(command.member);
