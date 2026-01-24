@@ -1,7 +1,7 @@
 import * as fs from "fs";
 import { UMAP } from "umap-js";
 
-const INDEX_DIR = "indexes/wiki";
+const INDEX_DIR = process.argv[2] || "indexes/wiki";
 
 interface EmbeddingsData {
     model_info: {
