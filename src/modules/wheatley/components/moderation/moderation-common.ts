@@ -17,7 +17,8 @@ import { Mutex } from "../../../../utils/containers.js";
 import { BotComponent } from "../../../../bot-component.js";
 import { ensure_index } from "../../../../infra/database-interface.js";
 import { Wheatley } from "../../../../wheatley.js";
-import { colors, DAY, HOUR, MINUTE, MONTH, SECOND, WEEK, YEAR } from "../../../../common.js";
+import { colors, HOUR, MINUTE } from "../../../../common.js";
+import { parse_time_unit } from "../../../../utils/time.js";
 import Modlogs from "./modlogs.js";
 import { TextBasedCommand } from "../../../../command-abstractions/text-based-command.js";
 import {
@@ -68,47 +69,6 @@ export const joke_responses_self = [
     "Didn't work. skill issue?",
 ];
 
-function millis_of_time_unit(u: string) {
-    switch (u) {
-        case "y":
-        case "year":
-        case "years":
-            return YEAR;
-        case "d":
-        case "day":
-        case "days":
-            return DAY;
-        case "h":
-        case "hr":
-        case "hour":
-        case "hours":
-            return HOUR;
-        case "m":
-        case "min":
-        case "mins":
-        case "minute":
-        case "minutes":
-            return MINUTE;
-        case "s":
-        case "sec":
-        case "secs":
-        case "second":
-        case "seconds":
-            return SECOND;
-        case "w":
-        case "week":
-        case "weeks":
-            return WEEK;
-        case "M":
-        case "mo":
-        case "month":
-        case "months":
-            return MONTH;
-        default:
-            return null;
-    }
-}
-
 export class ParseError extends Error {
     constructor(message: string) {
         super(message);
@@ -128,8 +88,8 @@ export function parse_duration(duration: string) {
         return null;
     }
     const [_, n, unit] = match;
-    const unit_millis = millis_of_time_unit(unit);
-    if (unit_millis == null) {
+    const unit_millis = parse_time_unit(unit);
+    if (unit_millis === null) {
         throw new ParseError(`Invalid time unit in duration: ${unit}`);
     }
     return parseInt(n) * unit_millis;

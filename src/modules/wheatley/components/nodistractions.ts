@@ -9,6 +9,7 @@ import { EarlyReplyMode, TextBasedCommandBuilder } from "../../../command-abstra
 import { TextBasedCommand } from "../../../command-abstractions/text-based-command.js";
 import { set_timeout, clear_timeout } from "../../../utils/node.js";
 import { unwrap } from "../../../utils/misc.js";
+import { parse_time_unit } from "../../../utils/time.js";
 
 /*
  * !nodistractions
@@ -28,35 +29,6 @@ import { unwrap } from "../../../utils/misc.js";
  */
 
 // TODO: Rephrase in terms of a moderation component
-
-function parse_unit(u: string) {
-    let factor = 1000; // in ms
-    switch (u) {
-        case "C":
-        case "c":
-            factor *= 100; // 100 years, fallthrough
-        case "Y":
-        case "y":
-            factor *= 365; // 365 days, fallthrough
-        case "d":
-            factor *= 24; // 24 hours, fallthrough
-        case "h":
-            factor *= 60; // 60 minutes, fallthrough
-        case "m":
-            factor *= 60; // 60 seconds
-            break;
-        // Weeks and months can't be folded into the above as nicely
-        case "w":
-            factor *= 7 * parse_unit("d");
-            break;
-        case "M":
-            factor *= 30 * parse_unit("d");
-            break;
-        default:
-            return -1;
-    }
-    return factor;
-}
 
 const nodistractions_arg_re = /^(\d*)\s*(\w*)/i;
 const INT_MAX = 0x7fffffff;
@@ -276,8 +248,8 @@ export default class Nodistractions extends BotComponent {
                 await command.reply("Missing units", true, true);
                 return;
             }
-            const factor = parse_unit(u);
-            if (factor == -1) {
+            const factor = parse_time_unit(u);
+            if (factor === null) {
                 await command.reply("Unknown units", true, true);
                 return;
             }
