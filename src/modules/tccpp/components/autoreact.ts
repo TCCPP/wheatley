@@ -83,7 +83,7 @@ export default class Autoreact extends BotComponent {
                         // must be TCCPP (and thus always a valid guild)
                         const reaction = message.guild!.emojis.cache.find(emoji => emoji.name === "what");
                         if (reaction !== undefined) {
-                            message.react(reaction).catch(this.wheatley.critical_error);
+                            message.react(reaction).catch(this.wheatley.critical_error.bind(this.wheatley));
                         } else {
                             this.wheatley.warn("Unable to find emoji what");
                         }
@@ -94,7 +94,7 @@ export default class Autoreact extends BotComponent {
                 this.react_timeouts.set(
                     message.author.id,
                     set_timeout(() => {
-                        message.react("🆗").catch(this.wheatley.critical_error);
+                        message.react("🆗").catch(this.wheatley.critical_error.bind(this.wheatley));
                     }, REACT_TIMEOUT),
                 );
             }
@@ -109,7 +109,7 @@ export default class Autoreact extends BotComponent {
             ) {
                 const reaction = message.guild!.emojis.cache.find(emoji => emoji.name === "monke2");
                 if (reaction !== undefined) {
-                    message.react(reaction).catch(this.wheatley.critical_error);
+                    message.react(reaction).catch(this.wheatley.critical_error.bind(this.wheatley));
                 } else {
                     this.wheatley.warn("Unable to find emoji monke2");
                 }

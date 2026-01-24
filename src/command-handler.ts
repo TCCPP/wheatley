@@ -47,7 +47,7 @@ export class CommandHandler {
         private readonly other_commands: Record<string, BaseBotInteraction<unknown[]>>,
     ) {
         this.wheatley.client.on("messageCreate", (message: Discord.Message) => {
-            this.on_message(message).catch(this.wheatley.critical_error.bind(this));
+            this.on_message(message).catch(this.wheatley.critical_error.bind(this.wheatley));
         });
         this.wheatley.client.on(
             "messageUpdate",
