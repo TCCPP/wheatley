@@ -461,9 +461,9 @@ export class Wheatley {
     // Logging
     //
 
-    critical_error(error: Error): void;
-    critical_error<T>(arg: T extends Error ? never : T, error?: Error): void;
-    critical_error(arg: any, error?: Error) {
+    critical_error(this: this, error: Error): void;
+    critical_error<T>(this: this, arg: T extends Error ? never : T, error?: Error): void;
+    critical_error(this: this, arg: any, error?: Error) {
         if (error === undefined) {
             M.error(arg);
         } else {
