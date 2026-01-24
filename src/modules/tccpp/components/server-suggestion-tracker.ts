@@ -276,7 +276,15 @@ export default class ServerSuggestionTracker extends BotComponent {
 
     async update_message_if_needed(message: Discord.Message) {
         try {
-            const entry = unwrap(await this.database.server_suggestions.findOne({ suggestion: message.id }));
+            const entry = await this.database.server_suggestions.findOne({ suggestion: message.id });
+            if (!entry) {
+                M.debug(
+                    "No server suggestion database entry for message when fetching in update_message_if_needed, " +
+                        "it must either not be tracked or have been deleted",
+                    message.id,
+                );
+                return;
+            }
             const hash = xxh3(message.content);
             if (hash != entry.hash) {
                 M.log("Suggestion edited", message.author.tag, message.author.id, message.url);
