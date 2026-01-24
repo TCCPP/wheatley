@@ -245,6 +245,7 @@ export default class VoiceModeration extends BotComponent {
         }
 
         await target.timeout(3 * HOUR);
+        await target.voice.disconnect();
         const staff_summary = await this.log_action(target.user, command.user, "was quarantined", reason ?? undefined);
         const public_summary = VoiceModeration.case_summary(
             target.user,

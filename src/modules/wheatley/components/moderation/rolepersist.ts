@@ -170,8 +170,12 @@ export default class Rolepersist extends ModerationComponent {
         if (member) {
             try {
                 await member.roles.add(entry.role);
+                if (entry.role === this.wheatley.roles.no_voice.id) {
+                    await member.voice.disconnect();
+                }
             } catch (e) {
                 if (e instanceof Discord.DiscordAPIError && e.code === 10011) {
+                    this.wheatley.critical_error("Unknown role in rolepersist apply_moderation", e);
                     return; // Unknown Role - nop
                 } else {
                     throw e;
