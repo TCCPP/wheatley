@@ -11,4 +11,5 @@ backup
 scratch
 indexes/wiki/*.json
 indexes/wiki/*.html
-!indexes/wiki/tsne.js
+indexes/cppref/*.json
+indexes/cppref/*.html
