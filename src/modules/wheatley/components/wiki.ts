@@ -604,9 +604,9 @@ export default class Wiki extends BotComponent {
             for (const wiki_article of wiki_articles) {
                 let parsed;
                 try {
-                    parsed = parse_article(wiki_article.path, wiki_article.preview, this.substitute_refs);
+                    parsed = parse_article(wiki_article.path, wiki_article.bot_article, this.substitute_refs);
                 } catch (e: any) {
-                    this.wheatley.alert(`Failed to parse wiki article preview ${wiki_article.path}: ${e.message}`);
+                    this.wheatley.alert(`Failed to parse wiki article bot_article ${wiki_article.path}: ${e.message}`);
                     continue;
                 }
                 const [article, aliases] = parsed;

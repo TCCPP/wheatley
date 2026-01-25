@@ -14,13 +14,13 @@ export const WIKI_BASE_URL = "https://tccpp.wiki";
 export type WikiWebArticle = {
     path: string;
     url: string;
-    preview: string;
+    bot_article: string;
     alias: string | string[] | undefined;
     page_title: string;
 };
 
 type WikiFrontmatter = {
-    preview?: string;
+    bot_article?: string;
     alias?: string | string[];
 };
 
@@ -76,7 +76,7 @@ export async function load_wiki_web_articles(): Promise<WikiWebArticle[]> {
             const parsed = matter(content);
             const frontmatter = parsed.data as WikiFrontmatter;
 
-            if (!frontmatter.preview) {
+            if (!frontmatter.bot_article) {
                 continue;
             }
 
@@ -87,7 +87,7 @@ export async function load_wiki_web_articles(): Promise<WikiWebArticle[]> {
             articles.push({
                 path: wiki_path,
                 url,
-                preview: frontmatter.preview,
+                bot_article: frontmatter.bot_article,
                 alias: frontmatter.alias,
                 page_title,
             });
@@ -96,6 +96,6 @@ export async function load_wiki_web_articles(): Promise<WikiWebArticle[]> {
         }
     }
 
-    M.info(`Loaded ${articles.length} wiki web articles with previews`);
+    M.info(`Loaded ${articles.length} wiki web articles with bot_article frontmatter`);
     return articles;
 }

@@ -25,19 +25,19 @@ const INDEX_DIR = "indexes/wiki";
     }
     console.log(`Loaded ${Object.keys(articles).length} bot-articles`);
 
-    console.log("Loading wiki web articles with preview...");
+    console.log("Loading wiki web articles with in-line bot articles...");
     const wiki_articles = await load_wiki_web_articles();
     for (const wiki_article of wiki_articles) {
-        // Skip if bot-article already exists with same name
+        // Skip if bot_article already exists with same name
         if (articles[wiki_article.path]) {
             continue;
         }
         try {
-            const [article] = parse_article(wiki_article.path, wiki_article.preview, str => str);
+            const [article] = parse_article(wiki_article.path, wiki_article.bot_article, str => str);
             article.wikilink = wiki_article.url;
             articles[wiki_article.path] = article;
         } catch (e: any) {
-            console.error(`Failed to parse wiki article preview ${wiki_article.path}: ${e.message}`);
+            console.error(`Failed to parse wiki article bot article ${wiki_article.path}: ${e.message}`);
         }
     }
     console.log(`Total articles: ${Object.keys(articles).length}`);
