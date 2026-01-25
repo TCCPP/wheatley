@@ -640,13 +640,11 @@ export default class Wiki extends BotComponent {
         await this.wiki_search_index.load_embeddings();
     }
 
-    build_see_link(article: WikiArticle): string {
+    build_see_link_text(article: WikiArticle): string {
         if (!article.wikilink) {
             return "";
         }
-        return this.substitute_refs(
-            `\n\nSee: [${article.wiki_page_title ?? article.title}](${article.wikilink}) :tccpp:`,
-        );
+        return this.substitute_refs(`[${article.wiki_page_title ?? article.title}](${article.wikilink}) :tccpp:`);
     }
 
     build_article_embed(
@@ -655,13 +653,19 @@ export default class Wiki extends BotComponent {
             member?: Discord.GuildMember | Discord.User;
         },
     ): Discord.EmbedBuilder {
-        const see_link = this.build_see_link(article);
-        const description = (article.body ?? "") + see_link;
+        const see_link_text = this.build_see_link_text(article);
+        const has_fields = article.fields.length > 0;
+        const description =
+            (article.body ?? "") + (see_link_text && !has_fields ? `\n\n**See:** ${see_link_text}` : "");
+        const fields = [...article.fields];
+        if (has_fields && see_link_text) {
+            fields.push({ name: "See Also", value: see_link_text, inline: false });
+        }
         const embed = new Discord.EmbedBuilder()
             .setColor(colors.wheatley)
             .setTitle(article.title)
             .setDescription(description || null)
-            .setFields(article.fields);
+            .setFields(fields);
         if (article.image) {
             embed.setImage(article.image);
         }
@@ -687,7 +691,8 @@ export default class Wiki extends BotComponent {
         }
         if (article.no_embed) {
             assert(article.body);
-            const see_link = this.build_see_link(article);
+            const see_link_text = this.build_see_link_text(article);
+            const see_link = see_link_text ? `\n\n**See:** ${see_link_text}` : "";
             await command.reply({
                 content: (mention ? mention + "\n" : "") + article.body + see_link,
                 should_text_reply: true,
