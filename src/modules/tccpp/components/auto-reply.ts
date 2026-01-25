@@ -1,33 +1,34 @@
 import * as Discord from "discord.js";
 
-import { strict as assert } from "assert";
-
 import { M } from "../../../utils/debugging-and-logging.js";
-import { DAY, HOUR } from "../../../common.js";
+import { HOUR } from "../../../common.js";
 import { BotComponent } from "../../../bot-component.js";
-import { SelfClearingSet } from "../../../utils/containers.js";
 
 const LLM_REGEX = /\b(?<!!)llms?\b/gi;
 const MICROSLOP_REGEX = /\b(?<!!)microsoft?\b/gi;
 
 const LLM_AUTOREPLY_ENABLED = false;
 const MICROSLOP_AUTOREPLY_ENABLED = true;
+const RATELIMIT_DURATION = 4 * HOUR;
 
 export default class Autoreply extends BotComponent {
     static override get is_freestanding() {
         return true;
     }
 
-    // set of channel ids
-    ratelimit = new SelfClearingSet<string>(DAY, HOUR);
+    last_reply_time = 0;
+
+    is_ratelimited() {
+        return Date.now() - this.last_reply_time < RATELIMIT_DURATION;
+    }
 
     override async on_message_create(message: Discord.Message) {
         if (message.guildId !== this.wheatley.guild.id || message.author.bot) {
             return;
         }
         // eslint-disable-next-line @typescript-eslint/no-unnecessary-condition
-        if (LLM_AUTOREPLY_ENABLED && LLM_REGEX.test(message.content) && !this.ratelimit.has(message.channelId)) {
-            this.ratelimit.insert(message.channelId);
+        if (LLM_AUTOREPLY_ENABLED && LLM_REGEX.test(message.content) && !this.is_ratelimited()) {
+            this.last_reply_time = Date.now();
             M.log("firing llm auto-reply");
             await message.reply("Did you mean: [***LLVM***](https://llvm.org/)");
         }
@@ -35,9 +36,9 @@ export default class Autoreply extends BotComponent {
             // eslint-disable-next-line @typescript-eslint/no-unnecessary-condition
             MICROSLOP_AUTOREPLY_ENABLED &&
             MICROSLOP_REGEX.test(message.content) &&
-            !this.ratelimit.has(message.channelId)
+            !this.is_ratelimited()
         ) {
-            this.ratelimit.insert(message.channelId);
+            this.last_reply_time = Date.now();
             M.log("firing microslop auto-reply");
             await message.reply("Did you mean: [***Microslop***](https://microslop.com/)");
         }
