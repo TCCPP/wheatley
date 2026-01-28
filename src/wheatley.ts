@@ -334,7 +334,6 @@ export class Wheatley {
 
                 // Fetch the log channel immediately
                 if (!config.freestanding) {
-                    // TODO: use bot utilities to get channel by name here aswell
                     const channel = await this.client.channels.fetch(channels.log.id);
                     this.log_channel = channel && channel.isTextBased() ? channel : null;
                 }
@@ -606,7 +605,6 @@ export class Wheatley {
     }
 
     is_forum_help_channel(id: Discord.Snowflake) {
-        // TODO: use bot utilities to get channel by name here aswell
         return [this.channels.cpp_help, this.channels.c_help].some(ch => ch.id === id);
     }
 

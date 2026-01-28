@@ -35,7 +35,6 @@ export default class ThreadBasedChannels extends BotComponent {
     thread_based_channel_ids!: Set<string>;
 
     override async on_ready() {
-        // TODO: use bot utilities to get channel by name here aswell
         this.thread_based_channel_ids = new Set([
             this.wheatley.channels.server_suggestions.id,
             this.wheatley.channels.showcase.id,
@@ -95,7 +94,6 @@ export default class ThreadBasedChannels extends BotComponent {
             return;
         }
 
-        // TODO: use bot utilities to get channel by name here aswell
         if (message.channelId === this.wheatley.channels.today_i_learned.id) {
             if (message.hasThread) {
                 await unwrap(message.thread).send(

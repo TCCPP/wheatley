@@ -27,7 +27,7 @@ export default class Autoreply extends BotComponent {
         if (message.guildId !== this.wheatley.guild.id || message.author.bot) {
             return;
         }
-        // TODO: use bot utilities to get channel by name here aswell
+
         if (
             // eslint-disable-next-line @typescript-eslint/no-unnecessary-condition
             LLM_AUTOREPLY_ENABLED &&
@@ -43,7 +43,7 @@ export default class Autoreply extends BotComponent {
                 allowedMentions: { repliedUser: false },
             });
         }
-        // TODO: use bot utilities to get channel by name here aswell
+
         if (
             // eslint-disable-next-line @typescript-eslint/no-unnecessary-condition
             MICROSLOP_AUTOREPLY_ENABLED &&
@@ -59,6 +59,7 @@ export default class Autoreply extends BotComponent {
                 allowedMentions: { repliedUser: false },
             });
         }
+
         if (
             message.mentions.has(this.wheatley.user.id) &&
             /^(<@\d+>)?\s*is\s*this\s*true\s*\??(<@\d+>)?$/gi.test(message.content)

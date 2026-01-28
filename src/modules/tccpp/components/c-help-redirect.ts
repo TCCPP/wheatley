@@ -190,7 +190,6 @@ export default class CHelpRedirect extends BotComponent {
         assert(command.channel instanceof Discord.GuildChannel);
 
         // Only allowed in #c-help-text
-        // TODO: use bot utilities to get channel by name here aswell
         if (command.channel.id != this.wheatley.channels.c_help_text.id) {
             await command.reply(`Can only be used in <#${this.wheatley.channels.c_help_text.id}>`, true);
             return;
@@ -216,7 +215,6 @@ export default class CHelpRedirect extends BotComponent {
         assert(command.channel instanceof Discord.GuildChannel);
 
         // Only allowed in #cpp-help-text
-        // TODO: use bot utilities to get channel by name here aswell
         if (command.channel.id != this.wheatley.channels.cpp_help_text.id) {
             await command.reply(`Can only be used in <#${this.wheatley.channels.cpp_help_text.id}>`, true);
             return;
@@ -258,7 +256,6 @@ export default class CHelpRedirect extends BotComponent {
         }
 
         // Only check messages in help-text channels
-        // TODO: use bot utilities to get channel by name here aswell
         if (message.channel.id == this.wheatley.channels.c_help_text.id) {
             if (this.check_message_for_cpp_code(message)) {
                 this.auto_triggered_users.insert(message.author.id);
@@ -267,8 +264,6 @@ export default class CHelpRedirect extends BotComponent {
                         `Did you mean to post in <#${this.wheatley.channels.cpp_help_text.id}>?`,
                 );
             }
-
-            // TODO: use bot utilities to get channel by name here aswell
         } else if (message.channel.id == this.wheatley.channels.cpp_help_text.id) {
             if (this.check_message_for_c_code(message)) {
                 this.auto_triggered_users.insert(message.author.id);

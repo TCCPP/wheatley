@@ -123,7 +123,6 @@ export default class Autoreact extends BotComponent {
                 }
             }
 
-            // TODO: use bot utilities to get channel by name here aswell
             if (message.channel.id == this.wheatley.channels.introductions.id) {
                 if (message.member == null) {
                     // TODO: Ping zelis?
@@ -134,13 +133,9 @@ export default class Autoreact extends BotComponent {
                     M.log("Waving to new user", message.author.tag, message.author.id, message.url);
                     await message.react("👋");
                 }
-
-                // TODO: use bot utilities to get channel by name here aswell
             } else if (message.channel.id == this.wheatley.channels.memes.id && has_media(message)) {
                 M.log("Adding star reaction", message.author.tag, message.author.id, message.url);
                 await message.react("⭐");
-
-                // TODO: use bot utilities to get channel by name here aswell
             } else if (message.channel.id == this.wheatley.channels.server_suggestions.id) {
                 M.log("Adding server suggestion reactions", message.author.tag, message.author.id, message.url);
                 await message.react("👍");
@@ -159,7 +154,6 @@ export default class Autoreact extends BotComponent {
             if (e instanceof Discord.DiscordAPIError && e.code === 90001) {
                 await message.member?.timeout(1 * MINUTE, "Thou shall not block the bot");
 
-                // TODO: use bot utilities to get channel by name here aswell
                 if (message.channel.id == this.wheatley.channels.server_suggestions.id) {
                     await message.delete();
                 }
@@ -186,7 +180,6 @@ export default class Autoreact extends BotComponent {
             return;
         }
 
-        // TODO: use bot utilities to get channel by name here aswell
         if (new_message.channel.id == this.wheatley.channels.memes.id) {
             const bot_starred = new_message.reactions.cache.get("⭐")?.users.cache.has(this.wheatley.user.id);
             // If we haven't stared (or don't know if we've starred) and the new message has media, star
@@ -215,7 +208,6 @@ export default class Autoreact extends BotComponent {
 
     async catch_up() {
         const TCCPP = await this.wheatley.client.guilds.fetch(this.wheatley.guild.id);
-        // TODO: use bot utilities to get channel by name here aswell
         const introductions_channel = await TCCPP.channels.fetch(this.wheatley.channels.introductions.id);
         assert(introductions_channel);
         assert(introductions_channel.type == Discord.ChannelType.GuildText);

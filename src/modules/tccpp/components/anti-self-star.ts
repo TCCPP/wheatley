@@ -27,7 +27,6 @@ export default class AntiSelfStar extends BotComponent {
             return;
         }
 
-        // TODO: use bot utilities to get channel by name here aswell
         if (
             message.channelId == this.wheatley.channels.memes.id &&
             user.id == message.author.id &&

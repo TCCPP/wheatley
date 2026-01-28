@@ -292,7 +292,6 @@ export default class ForumChannels extends BotComponent {
     }
 
     is_non_forum_mirror_channel(thread: Discord.ThreadChannel) {
-        // TODO: use bot utilities to get channel by name here aswell
         return (
             thread.parentId != null &&
             [this.wheatley.channels.code_review, this.wheatley.channels.showcase].some(ch => ch.id === thread.parentId)
@@ -342,7 +341,6 @@ export default class ForumChannels extends BotComponent {
                     this.get_corresponding_text_help_channel(thread),
                 );
             } else if (this.is_non_forum_mirror_channel(thread)) {
-                // TODO: use bot utilities to get channel by name here aswell
                 await this.mirror_forum_post(
                     message,
                     `New ${

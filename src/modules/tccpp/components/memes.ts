@@ -89,7 +89,6 @@ export default class Memes extends BotComponent {
             return;
         }
 
-        // TODO: use bot utilities to get channel by name here aswell
         if (message.channel.id !== this.wheatley.channels.memes.id) {
             return;
         }
@@ -112,7 +111,6 @@ export default class Memes extends BotComponent {
             return;
         }
 
-        // TODO: use bot utilities to get channel by name here aswell
         if (new_message.channel.id !== this.wheatley.channels.memes.id) {
             return;
         }

@@ -59,7 +59,6 @@ export default class ServerSuggestionReactions extends BotComponent {
     // 100 messages every 3 minutes, avoid ratelimits
     // runs only on restart, no rush
     async hard_catch_up() {
-        // TODO: use bot utilities to get channel by name here aswell
         const server_suggestions_channel = this.monitored_channels.get(this.wheatley.channels.server_suggestions.id);
         let oldest_seen = Date.now();
         assert(server_suggestions_channel != undefined);
@@ -94,7 +93,6 @@ export default class ServerSuggestionReactions extends BotComponent {
     }
 
     override async on_ready() {
-        // TODO: use bot utilities to get channel by name here aswell
         this.monitored_channels_ids = [
             this.wheatley.channels.server_suggestions.id,
             this.wheatley.channels.suggestion_dashboard.id,

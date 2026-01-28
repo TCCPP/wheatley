@@ -190,7 +190,6 @@ export default class PermissionManager extends BotComponent {
         this.add_category_permissions(categories_map.meta_archive, mod_only_channel);
 
         // meta overwrites
-        // TODO: use bot utilities to get channel by name here aswell
         this.add_channel_overwrite(this.wheatley.channels.rules.id, {
             [this.wheatley.guild.roles.everyone.id]: {
                 deny: [
@@ -208,7 +207,6 @@ export default class PermissionManager extends BotComponent {
             },
         });
 
-        // TODO: use bot utilities to get channel by name here aswell
         this.add_channel_overwrite(this.wheatley.channels.announcements.id, read_only_channel);
         this.add_channel_overwrite(this.wheatley.channels.resources.id, read_only_channel);
         this.add_channel_overwrite(this.wheatley.channels.old_resources.id, read_only_channel);
@@ -236,7 +234,6 @@ export default class PermissionManager extends BotComponent {
             },
         });
 
-        // TODO: use bot utilities to get channel by name here aswell
         this.add_channel_overwrite(this.wheatley.channels.the_button.id, {
             ...default_permissions,
             [this.wheatley.guild.roles.everyone.id]: {
@@ -255,12 +252,10 @@ export default class PermissionManager extends BotComponent {
             },
         };
 
-        // TODO: use bot utilities to get channel by name here aswell
         this.add_channel_overwrite(this.wheatley.channels.skill_roles_meta.id, jedi_council);
         this.add_channel_overwrite(this.wheatley.channels.skill_role_suggestions.id, jedi_council);
 
         // community overwrites
-        // TODO: use bot utilities to get channel by name here aswell
         this.add_channel_overwrite(this.wheatley.channels.polls.id, {
             ...read_only_channel_no_reactions,
             [this.wheatley.roles.moderators.id]: {
@@ -272,49 +267,41 @@ export default class PermissionManager extends BotComponent {
             },
         });
 
-        // TODO: use bot utilities to get channel by name here aswell
         this.add_channel_overwrite(this.wheatley.channels.today_i_learned.id, {
             ...default_permissions,
             [this.wheatley.roles.no_til.id]: muted_permissions,
         });
 
         // off topic overwrites
-        // TODO: use bot utilities to get channel by name here aswell
         this.add_channel_overwrite(this.wheatley.channels.memes.id, {
             ...off_topic_permissions,
             [this.wheatley.roles.no_memes.id]: no_interaction_at_all,
         });
 
-        // TODO: use bot utilities to get channel by name here aswell
         this.add_channel_overwrite(this.wheatley.channels.starboard.id, {
             ...off_topic_permissions,
             [this.wheatley.roles.no_memes.id]: no_interaction_at_all,
             ...read_only_channel,
         });
 
-        // TODO: use bot utilities to get channel by name here aswell
         this.add_channel_overwrite(this.wheatley.channels.pin_archive.id, {
             ...off_topic_permissions,
             ...read_only_channel,
         });
 
-        // TODO: use bot utilities to get channel by name here aswell
         this.add_channel_overwrite(this.wheatley.channels.skill_role_log.id, {
             ...read_only_channel,
         });
 
-        // TODO: use bot utilities to get channel by name here aswell
         this.add_channel_overwrite(this.wheatley.channels.public_action_log.id, {
             ...read_only_channel_no_reactions,
         });
 
-        // TODO: use bot utilities to get channel by name here aswell
         this.add_channel_overwrite(this.wheatley.channels.serious_off_topic.id, {
             ...off_topic_permissions,
             [this.wheatley.roles.no_serious_off_topic.id]: no_interaction_at_all,
         });
 
-        // TODO: use bot utilities to get channel by name here aswell
         this.add_channel_overwrite(this.wheatley.channels.room_of_requirement.id, {
             ...off_topic_permissions,
             [this.wheatley.roles.moderators.id]: {
@@ -337,13 +324,11 @@ export default class PermissionManager extends BotComponent {
         });
 
         // misc overwrites
-        // TODO: use bot utilities to get channel by name here aswell
         this.add_channel_overwrite(this.wheatley.channels.days_since_last_incident.id, {
             ...default_permissions,
             ...read_only_channel,
         });
 
-        // TODO: use bot utilities to get channel by name here aswell
         this.add_channel_overwrite(this.wheatley.channels.literally_1984.id, {
             ...default_permissions,
             ...read_only_channel,
@@ -360,11 +345,9 @@ export default class PermissionManager extends BotComponent {
         });
 
         // bot dev overwrites
-        // TODO: use bot utilities to get channel by name here aswell
         this.add_channel_overwrite(this.wheatley.channels.bot_dev_internal.id, mod_only_channel);
 
         // voice overwrites
-        // TODO: use bot utilities to get channel by name here aswell
         this.add_channel_overwrite(this.wheatley.channels.afk.id, {
             [this.wheatley.guild.roles.everyone.id]: {
                 deny: [
@@ -381,7 +364,6 @@ export default class PermissionManager extends BotComponent {
             },
         });
 
-        // TODO: use bot utilities to get channel by name here aswell
         this.add_channel_overwrite(this.wheatley.channels.deans_office.id, {
             ...voice_permissions,
             [this.wheatley.guild.roles.everyone.id]: {
