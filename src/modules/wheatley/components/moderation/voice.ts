@@ -22,9 +22,9 @@ export default class VoiceModeration extends BotComponent {
     private voice_hotline!: Discord.TextChannel;
 
     override async setup(commands: CommandSetBuilder) {
-        this.staff_action_log = await this.utilities.get_channel(this.wheatley.channels.staff_action_log);
-        this.public_action_log = await this.utilities.get_channel(this.wheatley.channels.public_action_log);
-        this.voice_hotline = await this.utilities.get_channel(this.wheatley.channels.voice_hotline);
+        this.staff_action_log = await this.utilities.get_channel(this.wheatley.channels.staff_action_log.id);
+        this.public_action_log = await this.utilities.get_channel(this.wheatley.channels.public_action_log.id);
+        this.voice_hotline = await this.utilities.get_channel(this.wheatley.channels.voice_hotline.id);
 
         commands.add(
             new TextBasedCommandBuilder("voice", EarlyReplyMode.ephemeral)

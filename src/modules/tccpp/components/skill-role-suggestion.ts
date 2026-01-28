@@ -55,7 +55,7 @@ export default class SkillRoleSuggestion extends BotComponent {
 
         this.skill_roles = unwrap(this.wheatley.components.get("SkillRoles")) as SkillRoles;
         this.skill_role_suggestions = await this.utilities.get_forum_channel(
-            this.wheatley.channels.skill_role_suggestions,
+            this.wheatley.channels.skill_role_suggestions.id,
         );
 
         commands.add(

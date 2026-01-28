@@ -58,12 +58,13 @@ export default class ServerSuggestionTracker extends BotComponent {
         await ensure_index(this.wheatley, this.database.server_suggestions, { status_message: 1 }, { unique: true });
 
         this.suggestion_action_log = await this.utilities.get_thread_channel(
-            this.wheatley.channels.suggestion_action_log,
+            this.wheatley.channels.suggestion_action_log.id,
         );
         this.suggestion_dashboard = await this.utilities.get_thread_channel(
-            this.wheatley.channels.suggestion_dashboard,
+            this.wheatley.channels.suggestion_dashboard.id,
         );
-        this.server_suggestions = await this.utilities.get_channel(this.wheatley.channels.server_suggestions);
+        this.server_suggestions = await this.utilities.get_channel(this.wheatley.channels.server_suggestions.id);
+
         commands.add(
             new TextBasedCommandBuilder("suggestions-dashboard-count", EarlyReplyMode.visible)
                 .set_category("Admin utilities")

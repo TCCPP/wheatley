@@ -25,7 +25,7 @@ export default class Report extends BotComponent {
     readonly target_map = new SelfClearingMap<string, Discord.Message>(10 * MINUTE);
 
     override async setup(commands: CommandSetBuilder) {
-        this.staff_flag_log = await this.utilities.get_channel(this.wheatley.channels.staff_flag_log);
+        this.staff_flag_log = await this.utilities.get_channel(this.wheatley.channels.staff_flag_log.id);
 
         commands.add(
             new MessageContextMenuInteractionBuilder("🚩 Report to Moderators 🚩").set_handler(this.report.bind(this)),

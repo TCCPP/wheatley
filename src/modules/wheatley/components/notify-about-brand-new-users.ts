@@ -13,7 +13,7 @@ export default class NotifyAboutBrandNewUsers extends BotComponent {
     private welcome!: Discord.TextChannel;
 
     override async setup(commands: CommandSetBuilder) {
-        this.welcome = await this.utilities.get_channel(this.wheatley.channels.welcome);
+        this.welcome = await this.utilities.get_channel(this.wheatley.channels.welcome.id);
     }
 
     async notify_about_brand_new_user(member: Discord.GuildMember) {

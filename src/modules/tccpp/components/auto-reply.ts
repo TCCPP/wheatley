@@ -27,13 +27,14 @@ export default class Autoreply extends BotComponent {
         if (message.guildId !== this.wheatley.guild.id || message.author.bot) {
             return;
         }
+
         if (
             // eslint-disable-next-line @typescript-eslint/no-unnecessary-condition
             LLM_AUTOREPLY_ENABLED &&
             LLM_REGEX.test(message.content) &&
             !this.is_ratelimited() &&
             Math.random() <= RATELIMIT_PROBABILITY &&
-            message.channel.id !== this.wheatley.channels.bot_spam
+            message.channel.id !== this.wheatley.channels.bot_spam.id
         ) {
             this.last_reply_time = Date.now();
             M.log("firing llm auto-reply");
@@ -42,13 +43,14 @@ export default class Autoreply extends BotComponent {
                 allowedMentions: { repliedUser: false },
             });
         }
+
         if (
             // eslint-disable-next-line @typescript-eslint/no-unnecessary-condition
             MICROSLOP_AUTOREPLY_ENABLED &&
             MICROSLOP_REGEX.test(message.content) &&
             !this.is_ratelimited() &&
             Math.random() <= RATELIMIT_PROBABILITY &&
-            message.channel.id !== this.wheatley.channels.bot_spam
+            message.channel.id !== this.wheatley.channels.bot_spam.id
         ) {
             this.last_reply_time = Date.now();
             M.log("firing microslop auto-reply");
@@ -57,6 +59,7 @@ export default class Autoreply extends BotComponent {
                 allowedMentions: { repliedUser: false },
             });
         }
+
         if (
             message.mentions.has(this.wheatley.user.id) &&
             /^(<@\d+>)?\s*is\s*this\s*true\s*\??(<@\d+>)?$/gi.test(message.content)

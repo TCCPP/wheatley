@@ -62,7 +62,7 @@ export default class DaysSinceLastIncident extends BotComponent {
         await ensure_index(this.wheatley, this.database.monke_button_presses, { timestamp: -1 });
 
         this.days_since_last_incident = await this.utilities.get_channel(
-            this.wheatley.channels.days_since_last_incident,
+            this.wheatley.channels.days_since_last_incident.id,
         );
     }
 

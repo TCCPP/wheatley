@@ -38,7 +38,7 @@ export default class LinkedAccounts extends BotComponent {
         await ensure_index(this.wheatley, this.database.linked_accounts, { alt_account: 1 }, { unique: true });
         await ensure_index(this.wheatley, this.database.linked_accounts, { main_account: 1 });
 
-        this.staff_action_log = await this.utilities.get_channel(this.wheatley.channels.staff_action_log);
+        this.staff_action_log = await this.utilities.get_channel(this.wheatley.channels.staff_action_log.id);
 
         this.wheatley.event_hub.on("issue_moderation", (moderation: moderation_entry) => {
             this.on_moderation_issue(moderation).catch(this.wheatley.critical_error.bind(this.wheatley));
