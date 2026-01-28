@@ -328,15 +328,15 @@ export class Wheatley {
                 this.discord_user = await this.client.users.fetch(config.id);
                 this.discord_guild = await this.client.guilds.fetch(config.guild);
 
-                if (!this.validateChannelsAndRoles()) {
-                    throw new Error("One or more channels/roles could not be found");
+                this.validateChannelsAndRoles("channel", this.channels);
+                this.validateChannelsAndRoles("role", this.roles_map);
+
+                // cache roles
+                for (const [key, info] of Object.entries(this.roles_map)) {
+                    this.roles[key as keyof typeof this.roles_map] = unwrap(this.guild.roles.cache.get(info.id));
                 }
 
-                // Fetch the log channel immediately
-                if (!config.freestanding) {
-                    const channel = await this.client.channels.fetch(channels.log.id);
-                    this.log_channel = channel && channel.isTextBased() ? channel : null;
-                }
+                console.log(this.roles);
 
                 this.info("Bot started");
 
@@ -446,31 +446,27 @@ export class Wheatley {
         }
     }
 
-    validateChannelsAndRoles() {
-        let success = true;
+    validateChannelsAndRoles(type: "channel" | "role", values: Record<string, named_id>) {
+        let cache: Map<string, any>;
 
-        for (const [key, info] of Object.entries(this.channels)) {
-            const channel = this.resolveByIdOrName(key, info, this.client.channels.cache, "channel");
-
-            if (!channel) {
-                M.warn(`Could not resolve channel ${key} (id: ${info.id}, name: ${info.name ?? "<unknown>"})`);
-                success = false;
+        switch (type) {
+            case "channel": {
+                cache = this.client.channels.cache;
+                break;
+            }
+            case "role": {
+                cache = this.guild.roles.cache;
+                break;
             }
         }
 
-        for (const [key, info] of Object.entries(this.roles_map)) {
-            const role = this.resolveByIdOrName(key, info, this.guild.roles.cache, "role");
+        for (const [key, info] of Object.entries(values)) {
+            const cached_item = this.resolveByIdOrName(type, info, cache, type);
 
-            if (!role) {
-                M.warn(`Could not resolve role ${key} (id: ${info.id}, name: ${info.name ?? "<unknown>"})`);
-                success = false;
-                continue;
+            if (!cached_item) {
+                throw new Error(`Could not resolve ${type} ${key} (id: ${info.id}, name: ${info.name ?? "<unknown>"})`);
             }
-
-            this.roles[key as keyof typeof this.roles_map] = role;
         }
-
-        return success;
     }
 
     private resolveByIdOrName<T extends { id: string; name?: string }>(

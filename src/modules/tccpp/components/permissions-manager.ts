@@ -11,24 +11,32 @@ import { unwrap } from "../../../utils/misc.js";
 import { CommandSetBuilder } from "../../../command-abstractions/command-set-builder.js";
 import { set_timeout } from "../../../utils/node.js";
 
-const categories_map = {
-    staff_logs: "1135927261472755712",
-    staff: "873125551064363028",
-    meta: "360691699288113163",
-    tutoring: "923430684041818153",
-    cpp_help: "897465499535949874",
-    c_help: "931970218442493992",
-    discussion: "855220194887335977",
-    specialized: "360691955031867392",
-    community: "1131921460034801747",
-    off_topic: "360691500985745409",
-    misc: "506274316623544320",
-    bot_dev: "1166516815472640050",
-    voice: "360692425242705921",
-    archive: "910306041969913938",
-    private_archive: "455278783352537099",
-    challenges_archive: "429594248099135488",
-    meta_archive: "910308747929321492",
+type named_id = {
+    // channel id used in production
+    id: Discord.Snowflake;
+
+    // fallback channel name (for development only)
+    name?: string;
+};
+
+const categories_map: { [key: string]: named_id } = {
+    staff_logs: { id: "1135927261472755712", name: "Staff Logs" },
+    staff: { id: "873125551064363028", name: "Staff" },
+    meta: { id: "360691699288113163", name: "Meta" },
+    tutoring: { id: "923430684041818153", name: "Tutoring" },
+    cpp_help: { id: "897465499535949874", name: "C++ Help" },
+    c_help: { id: "931970218442493992", name: "C Help" },
+    discussion: { id: "855220194887335977", name: "Discussion" },
+    specialized: { id: "360691955031867392", name: "Specialized" },
+    community: { id: "1131921460034801747", name: "Community" },
+    off_topic: { id: "360691500985745409", name: "Off-Topic" },
+    misc: { id: "506274316623544320", name: "Miscellaneous" },
+    bot_dev: { id: "1166516815472640050", name: "Bot Dev" },
+    voice: { id: "360692425242705921", name: "Voice" },
+    archive: { id: "910306041969913938", name: "Archive" },
+    private_archive: { id: "455278783352537099", name: "Private Archive" },
+    challenges_archive: { id: "429594248099135488", name: "Challenges Archive" },
+    meta_archive: { id: "910308747929321492", name: "Meta Archive" },
 };
 
 type permissions_entry = {
@@ -49,6 +57,8 @@ export default class PermissionManager extends BotComponent {
 
     override async setup(commands: CommandSetBuilder) {
         this.skill_roles = unwrap(this.wheatley.components.get("SkillRoles")) as SkillRoles;
+
+        this.wheatley.validateChannelsAndRoles("channel", categories_map);
     }
 
     setup_permissions_map() {
@@ -173,21 +183,21 @@ export default class PermissionManager extends BotComponent {
             },
         };
 
-        this.add_category_permissions(categories_map.staff_logs, mod_only_channel);
-        this.add_category_permissions(categories_map.meta, default_permissions);
-        this.add_category_permissions(categories_map.cpp_help, default_permissions);
-        this.add_category_permissions(categories_map.c_help, default_permissions);
-        this.add_category_permissions(categories_map.discussion, default_permissions);
-        this.add_category_permissions(categories_map.specialized, default_permissions);
-        this.add_category_permissions(categories_map.community, default_permissions);
-        this.add_category_permissions(categories_map.off_topic, off_topic_permissions);
-        this.add_category_permissions(categories_map.misc, default_permissions);
-        this.add_category_permissions(categories_map.bot_dev, default_permissions);
-        this.add_category_permissions(categories_map.voice, voice_permissions);
-        this.add_category_permissions(categories_map.archive, read_only_archive_channel);
-        this.add_category_permissions(categories_map.private_archive, mod_only_channel);
-        this.add_category_permissions(categories_map.challenges_archive, mod_only_channel);
-        this.add_category_permissions(categories_map.meta_archive, mod_only_channel);
+        this.add_category_permissions(categories_map.staff_logs.id, mod_only_channel);
+        this.add_category_permissions(categories_map.meta.id, default_permissions);
+        this.add_category_permissions(categories_map.cpp_help.id, default_permissions);
+        this.add_category_permissions(categories_map.c_help.id, default_permissions);
+        this.add_category_permissions(categories_map.discussion.id, default_permissions);
+        this.add_category_permissions(categories_map.specialized.id, default_permissions);
+        this.add_category_permissions(categories_map.community.id, default_permissions);
+        this.add_category_permissions(categories_map.off_topic.id, off_topic_permissions);
+        this.add_category_permissions(categories_map.misc.id, default_permissions);
+        this.add_category_permissions(categories_map.bot_dev.id, default_permissions);
+        this.add_category_permissions(categories_map.voice.id, voice_permissions);
+        this.add_category_permissions(categories_map.archive.id, read_only_archive_channel);
+        this.add_category_permissions(categories_map.private_archive.id, mod_only_channel);
+        this.add_category_permissions(categories_map.challenges_archive.id, mod_only_channel);
+        this.add_category_permissions(categories_map.meta_archive.id, mod_only_channel);
 
         // meta overwrites
         this.add_channel_overwrite(this.wheatley.channels.rules.id, {
