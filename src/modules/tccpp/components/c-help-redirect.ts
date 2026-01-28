@@ -192,7 +192,7 @@ export default class CHelpRedirect extends BotComponent {
         // Only allowed in #c-help-text
         // TODO: use bot utilities to get channel by name here aswell
         if (command.channel.id != this.wheatley.channels.c_help_text.id) {
-            await command.reply(`Can only be used in <#${this.wheatley.channels.c_help_text}>`, true);
+            await command.reply(`Can only be used in <#${this.wheatley.channels.c_help_text.id}>`, true);
             return;
         }
 
@@ -201,12 +201,12 @@ export default class CHelpRedirect extends BotComponent {
         if (user) {
             await this.c_help_text.send(
                 `<@${user.id}> Your code looks like C++ code, but this is a C channel. ` +
-                    `Did you mean to post in <#${this.wheatley.channels.cpp_help_text}>?`,
+                    `Did you mean to post in <#${this.wheatley.channels.cpp_help_text.id}>?`,
             );
         } else {
             await this.c_help_text.send(
                 `This code looks like C++ code, but this is a C channel. ` +
-                    `Did you mean to post in <#${this.wheatley.channels.cpp_help_text}>?`,
+                    `Did you mean to post in <#${this.wheatley.channels.cpp_help_text.id}>?`,
             );
         }
     }
@@ -218,7 +218,7 @@ export default class CHelpRedirect extends BotComponent {
         // Only allowed in #cpp-help-text
         // TODO: use bot utilities to get channel by name here aswell
         if (command.channel.id != this.wheatley.channels.cpp_help_text.id) {
-            await command.reply(`Can only be used in <#${this.wheatley.channels.cpp_help_text}>`, true);
+            await command.reply(`Can only be used in <#${this.wheatley.channels.cpp_help_text.id}>`, true);
             return;
         }
 
@@ -227,12 +227,12 @@ export default class CHelpRedirect extends BotComponent {
         if (user) {
             await this.cpp_help_text.send(
                 `<@${user.id}> Your code looks like C code, but this is a C++ channel. ` +
-                    `Did you mean to post in <#${this.wheatley.channels.c_help_text}>?`,
+                    `Did you mean to post in <#${this.wheatley.channels.c_help_text.id}>?`,
             );
         } else {
             await this.cpp_help_text.send(
                 `This code looks like C code, but this is a C++ channel. ` +
-                    `Did you mean to post in <#${this.wheatley.channels.c_help_text}>?`,
+                    `Did you mean to post in <#${this.wheatley.channels.c_help_text.id}>?`,
             );
         }
     }
@@ -264,7 +264,7 @@ export default class CHelpRedirect extends BotComponent {
                 this.auto_triggered_users.insert(message.author.id);
                 await message.reply(
                     `<@${message.author.id}> Your code looks like C++ code, but this is a C channel. ` +
-                        `Did you mean to post in <#${this.wheatley.channels.cpp_help_text}>?`,
+                        `Did you mean to post in <#${this.wheatley.channels.cpp_help_text.id}>?`,
                 );
             }
 
@@ -274,7 +274,7 @@ export default class CHelpRedirect extends BotComponent {
                 this.auto_triggered_users.insert(message.author.id);
                 await message.reply(
                     `<@${message.author.id}> Your code looks like C code, but this is a C++ channel. ` +
-                        `Did you mean to post in <#${this.wheatley.channels.c_help_text}>?`,
+                        `Did you mean to post in <#${this.wheatley.channels.c_help_text.id}>?`,
                 );
             }
         }

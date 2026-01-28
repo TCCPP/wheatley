@@ -324,6 +324,10 @@ export class Wheatley {
                     M.log(guild.id, guild.name);
                 }
 
+                this.discord_application = (await this.client.application?.fetch()) ?? null;
+                this.discord_user = await this.client.users.fetch(config.id);
+                this.discord_guild = await this.client.guilds.fetch(config.guild);
+
                 if (!this.validateChannelsAndRoles()) {
                     throw new Error("One or more channels/roles could not be found");
                 }
@@ -337,9 +341,6 @@ export class Wheatley {
 
                 this.info("Bot started");
 
-                this.discord_application = (await this.client.application?.fetch()) ?? null;
-                this.discord_user = await this.client.users.fetch(config.id);
-                this.discord_guild = await this.client.guilds.fetch(config.guild);
                 await this.fetch_emoji();
                 await this.fetch_guild_info();
 
@@ -414,20 +415,6 @@ export class Wheatley {
                 return value as T;
             }
         };
-
-        // Roles
-        await Promise.all(
-            Object.entries(roles_map).map(async ([k, id]) => {
-                // TODO: use bot utilities to get channel by name here aswell
-                const role = await wrap(() => this.guild.roles.fetch(id.id));
-                if (this.freestanding && role === null) {
-                    return;
-                }
-                assert(role !== null, `Role ${k} ${id} not found`);
-                this.roles[k as keyof typeof roles_map] = role;
-                M.log(`Fetched role ${k}`);
-            }),
-        );
     }
 
     async add_component<T extends BotComponent>(component: { new (w: Wheatley): T; get is_freestanding(): boolean }) {
@@ -496,7 +483,8 @@ export class Wheatley {
 
                 if (matches.size === 1) {
                     channel = matches.first()!;
-                    M.info(`Resolved channel ${key} by name "${info.name}" (${channel.id})`);
+                    M.debug(`Resolved channel ${key} by name "${info.name}" (${channel.id})`);
+                    info.id = channel.id;
                 } else if (matches.size > 1) {
                     M.warn(`Multiple channels named "${info.name}" — cannot resolve ${key}`);
                     success = false;
@@ -517,20 +505,23 @@ export class Wheatley {
 
                 if (matches.size === 1) {
                     role = matches.first()!;
-                    M.info(`Resolved role ${key} by name "${info.name}" (${role.id})`);
+                    M.debug(`Resolved role ${key} by name "${info.name}" (${role.id})`);
+                    info.id = role.id;
                 } else if (matches.size > 1) {
                     M.warn(`Multiple roles named "${info.name}" — cannot resolve ${key}`);
                     success = false;
                 }
             }
 
-            if (!role) {
+            if (role) {
+                this.roles[key as keyof typeof this.roles_map] = role;
+            } else {
                 M.warn(`Could not resolve role ${key} (id: ${info.id}, name: ${info.name ?? "n/a"})`);
                 success = false;
             }
         }
 
-        return true;
+        return success;
     }
 
     //

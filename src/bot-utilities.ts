@@ -355,29 +355,37 @@ export class BotUtilities {
         );
     }
 
-    async get_channel({ id, name }: (typeof this.wheatley.channels)[0]) {
-        let channel: Discord.TextChannel | Discord.Channel | null = await this.wheatley.client.channels.fetch(id);
-
+    async get_channel(
+        { id }: (typeof this.wheatley.channels)[0],
+        channelType: Discord.ChannelType = Discord.ChannelType.GuildText,
+    ) {
+        const channel = await this.wheatley.client.channels.fetch(id);
         if (!channel) {
-            if (this.wheatley.devmode_enabled) {
-                channel =
-                    this.wheatley.client.channels.cache.find(ch => (ch as Discord.TextChannel).name === name) || null;
-            }
+            throw Error(`Channel ${id} not found`);
+        }
 
-            if (!channel) {
-                throw Error(`Channel ${id} not found`);
-            }
+        if (channel.type !== channelType) {
+            throw Error(`Channel ${id} not of expected type ${channelType}, got ${channel.type}`);
         }
 
         assert(channel instanceof Discord.TextChannel, `Channel ${channel} (${id}) not of the expected type`);
         return channel;
     }
 
-    async get_forum_channel({ id, name }: (typeof this.wheatley.channels)[0]) {
+    async get_forum_channel(
+        { id }: (typeof this.wheatley.channels)[0],
+        channelType: Discord.ChannelType = Discord.ChannelType.GuildForum,
+    ) {
         const channel = await this.wheatley.client.channels.fetch(id);
+
         if (!channel) {
             throw Error(`Forum channel ${id} not found`);
         }
+
+        if (channel.type !== channelType) {
+            throw Error(`Channel ${id} not of expected type ${channelType}, got ${channel.type}`);
+        }
+
         assert(channel instanceof Discord.ForumChannel, `Channel ${channel} (${id}) not of the expected type`);
         return channel;
     }
