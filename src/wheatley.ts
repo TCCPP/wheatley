@@ -336,7 +336,10 @@ export class Wheatley {
                     this.roles[key as keyof typeof this.roles_map] = unwrap(this.guild.roles.cache.get(info.id));
                 }
 
-                console.log(this.roles);
+                if (!config.freestanding) {
+                    const channel = this.client.channels.cache.get(channels.log.id);
+                    this.log_channel = channel && channel.isTextBased() ? channel : null;
+                }
 
                 this.info("Bot started");
 
