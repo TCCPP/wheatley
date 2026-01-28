@@ -361,11 +361,11 @@ export class BotUtilities {
     ) {
         const channel = await this.wheatley.client.channels.fetch(id);
         if (!channel) {
-            throw Error(`Channel ${id} not found`);
+            throw new Error(`Channel ${id} not found`);
         }
 
         if (channel.type !== channelType) {
-            throw Error(`Channel ${id} not of expected type ${channelType}, got ${channel.type}`);
+            throw new Error(`Channel ${id} not of expected type ${channelType}, got ${channel.type}`);
         }
 
         assert(channel instanceof Discord.TextChannel, `Channel ${channel} (${id}) not of the expected type`);
@@ -379,11 +379,11 @@ export class BotUtilities {
         const channel = await this.wheatley.client.channels.fetch(id);
 
         if (!channel) {
-            throw Error(`Forum channel ${id} not found`);
+            throw new Error(`Forum channel ${id} not found`);
         }
 
         if (channel.type !== channelType) {
-            throw Error(`Channel ${id} not of expected type ${channelType}, got ${channel.type}`);
+            throw new Error(`Channel ${id} not of expected type ${channelType}, got ${channel.type}`);
         }
 
         assert(channel instanceof Discord.ForumChannel, `Channel ${channel} (${id}) not of the expected type`);

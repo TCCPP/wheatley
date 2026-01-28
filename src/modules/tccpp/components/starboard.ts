@@ -343,12 +343,6 @@ export default class Starboard extends BotComponent {
         try {
             const trigger_emoji =
                 trigger_type === delete_trigger_type.delete_this ? "<:delet_this:669598943117836312>" : ":recycle:";
-            const channel_context =
-                message.channel.id === this.wheatley.channels.memes.id
-                    ? " in #memes"
-                    : message.channel.id === this.wheatley.channels.cursed_code.id
-                      ? " in #cursed-code"
-                      : "";
             const notification_embed = new Discord.EmbedBuilder()
                 .setColor(colors.red)
                 .setTitle(`Message Auto-Deleted in ${message.channel.url}`)
