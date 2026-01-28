@@ -450,52 +450,54 @@ export class Wheatley {
         let success = true;
 
         for (const [key, info] of Object.entries(this.channels)) {
-            let channel: any = this.client.channels.cache.get(info.id);
-
-            if (!channel && this.devmode_enabled && info.name) {
-                const matches = this.client.channels.cache.filter(ch => (ch as any).name === info.name);
-
-                if (matches.size === 1) {
-                    channel = matches.first()!;
-                    M.debug(`Resolved channel ${key} by name "${info.name}" (${channel.id})`);
-                    info.id = channel.id;
-                } else if (matches.size > 1) {
-                    M.warn(`Multiple channels named "${info.name}" — cannot resolve ${key}`);
-                    success = false;
-                }
-            }
+            const channel = this.resolveByIdOrName(key, info, this.client.channels.cache, "channel");
 
             if (!channel) {
-                M.warn(`Could not resolve channel ${key} (id: ${info.id}, name: ${info.name ?? "-"})`);
+                M.warn(`Could not resolve channel ${key} (id: ${info.id}, name: ${info.name ?? "<unknown>"})`);
                 success = false;
             }
         }
 
         for (const [key, info] of Object.entries(this.roles_map)) {
-            let role = this.guild.roles.cache.get(info.id);
+            const role = this.resolveByIdOrName(key, info, this.guild.roles.cache, "role");
 
-            if (!role && this.devmode_enabled && info.name) {
-                const matches = this.guild.roles.cache.filter(r => r.name === info.name);
-
-                if (matches.size === 1) {
-                    role = matches.first()!;
-                    M.debug(`Resolved role ${key} by name "${info.name}" (${role.id})`);
-                    info.id = role.id;
-                } else if (matches.size > 1) {
-                    M.warn(`Multiple roles named "${info.name}" — cannot resolve ${key}`);
-                    success = false;
-                }
-            }
-
-            if (role) {
-                this.roles[key as keyof typeof this.roles_map] = role;
-            } else {
-                M.warn(`Could not resolve role ${key} (id: ${info.id}, name: ${info.name ?? "n/a"})`);
+            if (!role) {
+                M.warn(`Could not resolve role ${key} (id: ${info.id}, name: ${info.name ?? "<unknown>"})`);
                 success = false;
+                continue;
             }
+
+            this.roles[key as keyof typeof this.roles_map] = role;
         }
 
         return success;
+    }
+
+    private resolveByIdOrName<T extends { id: string; name?: string }>(
+        key: string,
+        info: T,
+        cache: Map<string, any>,
+        type: "channel" | "role",
+    ): any | null {
+        let entity = cache.get(info.id);
+        if (entity || !this.devmode_enabled || !info.name) {
+            return entity ?? null;
+        }
+
+        const matches = [...cache.values()].filter(e => e.name === info.name);
+
+        if (matches.length === 1) {
+            entity = matches[0];
+            M.debug(`Resolved ${type} ${key} by name "${info.name}" (${entity.id})`);
+            info.id = entity.id;
+            return entity;
+        }
+
+        if (matches.length > 1) {
+            M.warn(`Multiple ${type}s named "${info.name}" — cannot resolve ${key}`);
+        }
+
+        return null;
     }
 
     //
