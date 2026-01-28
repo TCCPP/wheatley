@@ -341,7 +341,6 @@ export class Wheatley {
                 this.info("Bot started");
 
                 await this.fetch_emoji();
-                await this.fetch_guild_info();
 
                 const command_set_builder = new CommandSetBuilder(this);
                 for (const component of this.components.values()) {
@@ -390,30 +389,6 @@ export class Wheatley {
                 this.emoji_map[value.name as keyof typeof this.emoji_map] = `<:${value.identifier}>`;
             }
         }
-    }
-
-    async fetch_guild_info() {
-        const wrap = async <T>(fn: () => Promise<T>): Promise<T | null> => {
-            try {
-                return await fn();
-            } catch (e) {
-                if (!this.freestanding) {
-                    this.critical_error(e);
-                    throw e;
-                } else {
-                    // absorb error
-                    return null;
-                }
-            }
-        };
-        const fudged_unwrap = <T>(value: T | null | undefined): T => {
-            if (!this.freestanding) {
-                // for the real bot actually check
-                return unwrap(value);
-            } else {
-                return value as T;
-            }
-        };
     }
 
     async add_component<T extends BotComponent>(component: { new (w: Wheatley): T; get is_freestanding(): boolean }) {

@@ -56,7 +56,7 @@ export default class Memes extends BotComponent {
             });
             await user.send({
                 content:
-                    `Your message in <#${this.wheatley.channels.memes}> was deleted because it didn't contain ` +
+                    `Your message in <#${this.wheatley.channels.memes.id}> was deleted because it didn't contain ` +
                     `any images, videos, or media embeds. This channel is for sharing memes only. For commentary ` +
                     `please open a thread.`,
                 embeds: quote.embeds,

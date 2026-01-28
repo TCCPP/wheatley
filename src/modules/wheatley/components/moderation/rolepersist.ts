@@ -104,7 +104,7 @@ export default class Rolepersist extends ModerationComponent {
                 ),
         );
 
-        const aliases: Record<string, keyof Wheatley["roles"]> = {
+        const aliases: Record<string, string> = {
             noofftopic: "no_off_topic",
             nosuggestions: "no_suggestions",
             nosuggestionsatall: "no_suggestions_at_all",
@@ -122,8 +122,7 @@ export default class Rolepersist extends ModerationComponent {
                     .set_category("Moderation")
                     .set_alias_of("rolepersist add")
                     .set_permissions(Discord.PermissionFlagsBits.ModerateMembers)
-                    // TODO
-                    .set_description(`${capitalize(role as string).replace("_", " ")}`)
+                    .set_description(`${capitalize(role).replace("_", " ")}`)
                     .add_user_option({
                         title: "user",
                         description: "User to rolepersist",
