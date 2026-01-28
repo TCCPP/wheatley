@@ -40,12 +40,19 @@ export default class AntiEveryone extends BotComponent {
             if (!this.replies.has(message.author)) {
                 this.replies.set(message.author, []);
             }
-            const reply = await message.reply({
-                content: `Did you really just try to ping ${member_count} people?`,
-            });
-
-            // Store the reply for later deletion, along with the message it was replying to
-            unwrap(this.replies.get(message.author)).push({ reply_to: message.id, reply });
+            try {
+                const reply = await message.reply({
+                    content: `Did you really just try to ping ${member_count} people?`,
+                });
+                // Store the reply for later deletion, along with the message it was replying to
+                unwrap(this.replies.get(message.author)).push({ reply_to: message.id, reply });
+            } catch (e) {
+                if (e instanceof Discord.DiscordAPIError && e.code === 50035) {
+                    // If the original message was deleted before we could reply, ignore the error
+                } else {
+                    this.wheatley.critical_error(e);
+                }
+            }
         }
     }
 
