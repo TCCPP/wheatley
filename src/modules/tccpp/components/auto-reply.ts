@@ -27,13 +27,14 @@ export default class Autoreply extends BotComponent {
         if (message.guildId !== this.wheatley.guild.id || message.author.bot) {
             return;
         }
+        // TODO: use bot utilities to get channel by name here aswell
         if (
             // eslint-disable-next-line @typescript-eslint/no-unnecessary-condition
             LLM_AUTOREPLY_ENABLED &&
             LLM_REGEX.test(message.content) &&
             !this.is_ratelimited() &&
             Math.random() <= RATELIMIT_PROBABILITY &&
-            message.channel.id !== this.wheatley.channels.bot_spam
+            message.channel.id !== this.wheatley.channels.bot_spam.id
         ) {
             this.last_reply_time = Date.now();
             M.log("firing llm auto-reply");
@@ -42,13 +43,14 @@ export default class Autoreply extends BotComponent {
                 allowedMentions: { repliedUser: false },
             });
         }
+        // TODO: use bot utilities to get channel by name here aswell
         if (
             // eslint-disable-next-line @typescript-eslint/no-unnecessary-condition
             MICROSLOP_AUTOREPLY_ENABLED &&
             MICROSLOP_REGEX.test(message.content) &&
             !this.is_ratelimited() &&
             Math.random() <= RATELIMIT_PROBABILITY &&
-            message.channel.id !== this.wheatley.channels.bot_spam
+            message.channel.id !== this.wheatley.channels.bot_spam.id
         ) {
             this.last_reply_time = Date.now();
             M.log("firing microslop auto-reply");

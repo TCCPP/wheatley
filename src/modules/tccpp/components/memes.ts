@@ -88,7 +88,9 @@ export default class Memes extends BotComponent {
         if (message.guildId !== this.wheatley.guild.id) {
             return;
         }
-        if (message.channel.id !== this.wheatley.channels.memes) {
+
+        // TODO: use bot utilities to get channel by name here aswell
+        if (message.channel.id !== this.wheatley.channels.memes.id) {
             return;
         }
         if (await this.should_skip(message)) {
@@ -109,7 +111,9 @@ export default class Memes extends BotComponent {
         if (new_message.guildId !== this.wheatley.guild.id) {
             return;
         }
-        if (new_message.channel.id !== this.wheatley.channels.memes) {
+
+        // TODO: use bot utilities to get channel by name here aswell
+        if (new_message.channel.id !== this.wheatley.channels.memes.id) {
             return;
         }
         const message = await departialize(new_message);

@@ -94,7 +94,8 @@ export default class Roulette extends BotComponent {
     }
 
     async roulette(command: TextBasedCommand) {
-        if (command.channel_id != this.wheatley.channels.bot_spam) {
+        // TODO: use bot utilities to get channel by name here aswell
+        if (command.channel_id != this.wheatley.channels.bot_spam.id) {
             await command.reply(`Must be used in <#${this.wheatley.channels.bot_spam}>`, true);
             return;
         }

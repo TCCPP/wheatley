@@ -85,7 +85,8 @@ export default class Starboard extends BotComponent {
     negative_emojis!: string[];
     repost_emojis!: string[];
 
-    excluded_channels!: Set<string>;
+    // TODO: use bot utilities to get channel by name here aswell
+    excluded_channels!: Set<any>;
 
     private starboard!: Discord.TextChannel;
     private staff_delet_log!: Discord.TextChannel;
@@ -232,7 +233,8 @@ export default class Starboard extends BotComponent {
         }
         const parent_channel_id = this.get_parent_channel_id(reaction.message.channel);
         if (reaction.emoji.name == "⭐") {
-            if (parent_channel_id == this.wheatley.channels.memes) {
+            // TODO: use bot utilities to get channel by name here aswell
+            if (parent_channel_id == this.wheatley.channels.memes.id) {
                 return reaction.count >= memes_star_threshold;
             } else {
                 return reaction.count >= star_threshold;
@@ -240,7 +242,8 @@ export default class Starboard extends BotComponent {
         } else if (
             !(this.negative_emojis.includes(reaction.emoji.name) || this.ignored_emojis.includes(reaction.emoji.name))
         ) {
-            if (parent_channel_id == this.wheatley.channels.memes) {
+            // TODO: use bot utilities to get channel by name here aswell
+            if (parent_channel_id == this.wheatley.channels.memes.id) {
                 return reaction.count >= memes_other_threshold;
             } else {
                 return reaction.count >= other_threshold;
@@ -342,9 +345,10 @@ export default class Starboard extends BotComponent {
             const trigger_emoji =
                 trigger_type === delete_trigger_type.delete_this ? "<:delet_this:669598943117836312>" : ":recycle:";
             const channel_context =
-                message.channel.id === this.wheatley.channels.memes
+                // TODO: use bot utilities to get channel by name here aswell
+                message.channel.id === this.wheatley.channels.memes.id
                     ? " in #memes"
-                    : message.channel.id === this.wheatley.channels.cursed_code
+                    : message.channel.id === this.wheatley.channels.cursed_code.id
                       ? " in #cursed-code"
                       : "";
             const notification_embed = new Discord.EmbedBuilder()
@@ -385,7 +389,9 @@ export default class Starboard extends BotComponent {
         );
         const max_non_negative = Math.max(...non_negative_reactions.map(([_, count]) => count)); // -inf if |a|=0
         let do_delete = true;
-        if (![this.wheatley.channels.memes, this.wheatley.channels.cursed_code].includes(message.channel.id)) {
+        if (
+            ![this.wheatley.channels.memes, this.wheatley.channels.cursed_code].some(ch => ch.id === message.channel.id)
+        ) {
             do_delete = false;
         }
         if (trigger_reaction.count <= max_non_negative) {
@@ -509,7 +515,8 @@ export default class Starboard extends BotComponent {
             await message.delete();
             assert(!(message.channel instanceof Discord.PartialGroupDMChannel));
             if (trigger_type == delete_trigger_type.delete_this) {
-                if (message.channel.id == this.wheatley.channels.memes) {
+                // TODO: use bot utilities to get channel by name here aswell
+                if (message.channel.id == this.wheatley.channels.memes.id) {
                     await message.channel.send(
                         `<@${message.author.id}> A message of yours was automatically deleted because a threshold for` +
                             " <:delet_this:669598943117836312> reactions (or similar) was reached.\n\n" +
@@ -536,7 +543,8 @@ export default class Starboard extends BotComponent {
     // Check if the # of reactions is full, and there is no negative emojis reacted yet
     should_delete_reaction(reaction: Discord.MessageReaction) {
         return (
-            reaction.message.channel.id === this.wheatley.channels.memes &&
+            // TODO: use bot utilities to get channel by name here aswell
+            reaction.message.channel.id === this.wheatley.channels.memes.id &&
             reaction.message.reactions.cache.size === 20 &&
             reaction.message.reactions.cache.filter(
                 reaction =>

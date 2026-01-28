@@ -355,16 +355,25 @@ export class BotUtilities {
         );
     }
 
-    async get_channel(id: string) {
-        const channel = await this.wheatley.client.channels.fetch(id);
+    async get_channel({ id, name }: (typeof this.wheatley.channels)[0]) {
+        let channel: Discord.TextChannel | Discord.Channel | null = await this.wheatley.client.channels.fetch(id);
+
         if (!channel) {
-            throw Error(`Channel ${id} not found`);
+            if (this.wheatley.devmode_enabled) {
+                channel =
+                    this.wheatley.client.channels.cache.find(ch => (ch as Discord.TextChannel).name === name) || null;
+            }
+
+            if (!channel) {
+                throw Error(`Channel ${id} not found`);
+            }
         }
+
         assert(channel instanceof Discord.TextChannel, `Channel ${channel} (${id}) not of the expected type`);
         return channel;
     }
 
-    async get_forum_channel(id: string) {
+    async get_forum_channel({ id, name }: (typeof this.wheatley.channels)[0]) {
         const channel = await this.wheatley.client.channels.fetch(id);
         if (!channel) {
             throw Error(`Forum channel ${id} not found`);

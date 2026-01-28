@@ -73,7 +73,7 @@ export default class Redirect extends BotComponent {
                 this.wheatley.channels.c_help_text,
                 this.wheatley.channels.tooling,
                 this.wheatley.channels.algorithms_and_compsci,
-            ].includes(command.channel_id)
+            ].some(ch => ch.id === command.channel_id)
         ) {
             await command.reply("Can't be used in a help channel", true);
             return;

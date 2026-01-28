@@ -26,7 +26,13 @@ export default class AntiSelfStar extends BotComponent {
         if (reaction.emoji.name !== "⭐") {
             return;
         }
-        if (message.channelId == this.wheatley.channels.memes && user.id == message.author.id && has_media(message)) {
+
+        // TODO: use bot utilities to get channel by name here aswell
+        if (
+            message.channelId == this.wheatley.channels.memes.id &&
+            user.id == message.author.id &&
+            has_media(message)
+        ) {
             await this.handle_self_star(await departialize(message));
         }
     }

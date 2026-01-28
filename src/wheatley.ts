@@ -69,106 +69,121 @@ export type wheatley_config = core_config & {
     [key: string]: any;
 };
 
-const channels = {
-    // staff
-    staff_flag_log: "1026972603019169842",
-    staff_delet_log: "1462879414864838869",
-    staff_experimental_log: "1207899185790197760",
-    staff_action_log: "845290775692443699",
-    public_action_log: "1341611685223596103",
-    staff_clock_log: "1220882759862452284",
-    welcome: "778017793567490078",
-    staff_member_log: "875681819662622730",
-    staff_message_log: "467729928956411914",
-    staff_only: "342153262260289537",
-    mods: "847993258600038460",
-    voice_hotline: "1379456835634987098",
-    // meta
-    rules: "659868782877212723",
-    announcements: "331881381477089282",
-    server_suggestions: "802541516655951892",
-    skill_role_suggestions: "1211089633547526204",
-    skill_roles_meta: "1182536717056618557",
-    news: "1269506410530738267",
-    old_resources: "1124619767542718524",
-    resources: "1361574878561570926",
-    partners: "904790565000986745",
-    the_button: "1069678919667687455",
-    articles: "1130174377539940475",
-    // language channels
-    cpp_help: "1013107104678162544",
-    c_help: "1013104018739974194",
-    cpp_help_text: "331718580070645760",
-    c_help_text: "331718539738087426",
-    c_cpp_discussion: "851121440425639956",
-    general_discussion: "855220264149057556",
-    code_review: "1078717238678409369",
-    showcase: "1014328785685979136",
-    tooling: "331913460080181258",
-    algorithms_and_compsci: "857668280012242944",
-    // off-topic
-    starboard: "800509841424252968",
-    memes: "526518219549442071",
-    food: "1288515484513468436",
-    serious_off_topic: "921113903574958080",
-    room_of_requirement: "1082800064113672192",
-    boosters_only: "792183875241639977",
-    // other
-    bot_spam: "506274405500977153",
-    introductions: "933113495304679494",
-    cursed_code: "855220292736516128",
-    suggestion_dashboard: "908928083879415839",
-    suggestion_action_log: "909309608512880681",
-    today_i_learned: "873682069325217802",
-    goals2024: "1189255286364569640",
-    goals2025: "1323734788707848253",
-    goals2026: "1454237273712492615",
-    days_since_last_incident: "1195920462958575676",
-    literally_1984: "1097993854214488154",
-    lore: "890067781628866620",
-    bot_dev_internal: "1166517065763536977",
-    pin_archive: "1284234644396572714",
-    skill_role_log: "1315023714206617610",
-    polls: "1319336135213846568",
-    wiki_dev: "1350899338229846127",
-    // voice
-    chill: "1358502332941467879",
-    work_3: "1358502770575147230",
-    work_4: "1367735453112864838",
-    afk: "331732845523369985",
-    deans_office: "1379612678649155755",
-    // red telephone
-    red_telephone_alerts: "1140096352278290512",
-    // error log
-    log: "1260777903700971581",
+type named_id = {
+    // channel id used in production
+    id: Discord.Snowflake;
+
+    // fallback channel name (for development only)
+    name?: string;
 };
 
-const roles_map = {
-    muted: "815987333094178825",
-    monke: "1139378060450332752",
-    no_off_topic: "879419994004422666",
-    no_suggestions: "831567015457980447",
-    no_suggestions_at_all: "895011256023535657",
-    no_reactions: "880152014036819968",
-    no_images: "1181029004866760854",
-    no_threads: "870181444742447135",
-    no_serious_off_topic: "921116034948272260",
-    no_til: "883474632370454588",
-    no_memes: "982307359370141756",
-    no_voice: "1371771250363465892",
-    voice_moderator: "1371706420730531870",
-    moderators: "847915341954154536",
-    root: "331719468440879105",
-    pink: "888158339878490132",
-    server_booster: "643013330616844333",
-    historian: "890067617069551646",
-    official_bot: "331886851784704001",
-    featured_bot: "995847409374605392",
-    jedi_council: "1138950835208990750",
-    herald: "1095555811536797787",
-    linked_github: "1080596526478397471",
-    wiki_core: "1354998426370314411",
-    voice: "1368073548983308328",
+const channels: { [key: string]: named_id } = {
+    // staff
+    staff_flag_log: { id: "1026972603019169842", name: "🚩-flag-log" },
+    staff_delet_log: { id: "1462879414864838869", name: "🗑️-delet-log" },
+    staff_experimental_log: { id: "1207899185790197760", name: "😱-experimental-log" },
+    staff_action_log: { id: "845290775692443699", name: "🔨-action-log" },
+    public_action_log: { id: "1341611685223596103", name: "moderation-log" },
+    staff_clock_log: { id: "1220882759862452284", name: "👀-clock-log" },
+    welcome: { id: "778017793567490078", name: "📈-join-boost-log" },
+    staff_member_log: { id: "875681819662622730", name: "👥-member-log" },
+    staff_message_log: { id: "467729928956411914", name: "💬-message-log" },
+    staff_only: { id: "342153262260289537", name: "staff-only" },
+    mods: { id: "847993258600038460", name: "mods-🚲" },
+    voice_hotline: { id: "1379456835634987098", name: "voice-hotline" },
+
+    // meta
+    rules: { id: "659868782877212723", name: "rules" },
+    announcements: { id: "331881381477089282", name: "announcements" },
+    server_suggestions: { id: "802541516655951892", name: "server-suggestions" },
+    skill_role_suggestions: { id: "1211089633547526204", name: "skill-role-suggestions" },
+    skill_roles_meta: { id: "1182536717056618557", name: "skill-roles-meta" },
+    news: { id: "1269506410530738267", name: "news" },
+    old_resources: { id: "1124619767542718524", name: "⁠old-resources" },
+    resources: { id: "1361574878561570926", name: "resources" },
+    partners: { id: "904790565000986745", name: "partners" },
+    the_button: { id: "1069678919667687455", name: "the-button" },
+    articles: { id: "1130174377539940475", name: "archived-articles" },
+
+    // language channels
+    cpp_help: { id: "1013107104678162544", name: "⁠cpp-help" },
+    c_help: { id: "1013104018739974194", name: "⁠c-help" },
+    cpp_help_text: { id: "331718580070645760", name: "cpp-help-text" },
+    c_help_text: { id: "331718539738087426", name: "⁠c-help-text" },
+    c_cpp_discussion: { id: "851121440425639956", name: "c-cpp-discussion" },
+    general_discussion: { id: "855220264149057556", name: "⁠general-technical" },
+    code_review: { id: "1078717238678409369", name: "code-review" },
+    showcase: { id: "1014328785685979136", name: "showcase" },
+    tooling: { id: "331913460080181258", name: "tooling" },
+    algorithms_and_compsci: { id: "857668280012242944", name: "algorithms-and-compsci" },
+
+    // off-topic
+    starboard: { id: "800509841424252968", name: "starboard" },
+    memes: { id: "526518219549442071", name: "memes" },
+    food: { id: "1288515484513468436", name: "food" },
+    serious_off_topic: { id: "921113903574958080", name: "serious-off-topic" },
+    room_of_requirement: { id: "1082800064113672192", name: "⁠pets" },
+    boosters_only: { id: "792183875241639977", name: "⁠🩷pink🩷" },
+
+    // other
+    bot_spam: { id: "506274405500977153", name: "bot-spam" },
+    introductions: { id: "933113495304679494", name: "introductions" },
+    cursed_code: { id: "855220292736516128", name: "cursed-code" },
+    suggestion_dashboard: { id: "908928083879415839", name: "Suggestions Dashboard" },
+    suggestion_action_log: { id: "909309608512880681", name: "⁠Suggestion Action Log" },
+    today_i_learned: { id: "873682069325217802", name: "⁠did-you-know" },
+    goals2024: { id: "1189255286364569640", name: "⁠2024-goals" },
+    goals2025: { id: "1323734788707848253", name: "⁠2025-goals" },
+    goals2026: { id: "1454237273712492615", name: "archived-2026-goals" },
+    days_since_last_incident: { id: "1195920462958575676", name: "days-since-last-incident" },
+    literally_1984: { id: "1097993854214488154", name: "⁠literally-1984" },
+    lore: { id: "890067781628866620", name: "lore" },
+    bot_dev_internal: { id: "1166517065763536977", name: "⁠wheatley-dev-internal" },
+    pin_archive: { id: "1284234644396572714", name: "pin-archive" },
+    skill_role_log: { id: "1315023714206617610", name: "⁠skill-role-log" },
+    polls: { id: "1319336135213846568", name: "⁠polls" },
+    wiki_dev: { id: "1350899338229846127", name: "⁠wiki-dev" },
+
+    // voice
+    chill: { id: "1358502332941467879", name: "Chill" },
+    work_3: { id: "1358502770575147230", name: "Work 3" },
+    work_4: { id: "1367735453112864838", name: "Work 4" },
+    afk: { id: "331732845523369985", name: "⁠AFK" },
+    deans_office: { id: "1379612678649155755", name: "Dean's Office" },
+
+    // red telephone
+    // red_telephone_alerts: { id: "1140096352278290512" },
+
+    // error log
+    log: { id: "1260777903700971581", name: "🤖-wheatley-log" },
+};
+
+const roles_map: { [key: string]: named_id } = {
+    muted: { id: "815987333094178825", name: "Muted" },
+    monke: { id: "1139378060450332752", name: "Neuron Activation" },
+    no_off_topic: { id: "879419994004422666", name: "No Off Topic" },
+    no_suggestions: { id: "831567015457980447", name: "No Suggestions" },
+    no_suggestions_at_all: { id: "895011256023535657", name: "No Suggestions At All" },
+    no_reactions: { id: "880152014036819968", name: "No Reactions" },
+    no_images: { id: "1181029004866760854", name: "No Images" },
+    no_threads: { id: "870181444742447135", name: "No Threads" },
+    no_serious_off_topic: { id: "921116034948272260", name: "No Serious Off Topic" },
+    no_til: { id: "883474632370454588", name: "No TIL" },
+    no_memes: { id: "982307359370141756", name: "No Memes" },
+    no_voice: { id: "1371771250363465892", name: "No Voice" },
+    voice_moderator: { id: "1371706420730531870", name: "Voice Moderator" },
+    moderators: { id: "847915341954154536", name: "Moderator" },
+    root: { id: "331719468440879105", name: "root" },
+    pink: { id: "888158339878490132", name: "Pink" },
+    server_booster: { id: "643013330616844333", name: "Server Booster" },
+    historian: { id: "890067617069551646", name: "Historian" },
+    official_bot: { id: "331886851784704001", name: "Official Bot" },
+    featured_bot: { id: "995847409374605392", name: "Featured Bot" },
+    jedi_council: { id: "1138950835208990750", name: "Jedi Council" },
+    herald: { id: "1095555811536797787", name: "Herald" },
+    linked_github: { id: "1080596526478397471", name: "Linked GitHub" },
+    wiki_core: { id: "1354998426370314411", name: "core-wiki" },
+    voice: { id: "1368073548983308328", name: "voice" },
 };
 
 type EventMap = {
@@ -206,6 +221,10 @@ export class Wheatley {
     // True if freestanding mode is enabled. Defaults to false.
     readonly freestanding: boolean;
 
+    get devmode_enabled() {
+        return process.env.NODE_ENV !== "production";
+    }
+
     // Some emojis
     private emoji_map = {
         success: "✅",
@@ -220,6 +239,7 @@ export class Wheatley {
     private log_channel: Discord.TextBasedChannel | null = null;
 
     readonly channels = channels;
+    readonly roles_map = roles_map;
 
     readonly roles: {
         [k in keyof typeof roles_map]: Discord.Role;
@@ -303,9 +323,15 @@ export class Wheatley {
                 for (const [_, guild] of this.client.guilds.cache) {
                     M.log(guild.id, guild.name);
                 }
+
+                if (!this.validateChannelsAndRoles()) {
+                    throw new Error("One or more channels/roles could not be found");
+                }
+
                 // Fetch the log channel immediately
                 if (!config.freestanding) {
-                    const channel = await this.client.channels.fetch(channels.log);
+                    // TODO: use bot utilities to get channel by name here aswell
+                    const channel = await this.client.channels.fetch(channels.log.id);
                     this.log_channel = channel && channel.isTextBased() ? channel : null;
                 }
 
@@ -322,7 +348,7 @@ export class Wheatley {
                     try {
                         await component.setup(command_set_builder);
                     } catch (e) {
-                        this.critical_error(e);
+                        this.critical_error(`Error setting up component ${component.constructor.name}:\n`, e as Error);
                     }
                 }
                 const { text_commands, button_handlers, modal_handlers, other_commands } =
@@ -388,10 +414,12 @@ export class Wheatley {
                 return value as T;
             }
         };
+
         // Roles
         await Promise.all(
             Object.entries(roles_map).map(async ([k, id]) => {
-                const role = await wrap(() => this.guild.roles.fetch(id));
+                // TODO: use bot utilities to get channel by name here aswell
+                const role = await wrap(() => this.guild.roles.fetch(id.id));
                 if (this.freestanding && role === null) {
                     return;
                 }
@@ -455,6 +483,54 @@ export class Wheatley {
             }
             await Promise.all(promises);
         }
+    }
+
+    validateChannelsAndRoles() {
+        let success = true;
+
+        for (const [key, info] of Object.entries(this.channels)) {
+            let channel: any = this.client.channels.cache.get(info.id);
+
+            if (!channel && this.devmode_enabled && info.name) {
+                const matches = this.client.channels.cache.filter(ch => (ch as any).name === info.name);
+
+                if (matches.size === 1) {
+                    channel = matches.first()!;
+                    M.info(`Resolved channel ${key} by name "${info.name}" (${channel.id})`);
+                } else if (matches.size > 1) {
+                    M.warn(`Multiple channels named "${info.name}" — cannot resolve ${key}`);
+                    success = false;
+                }
+            }
+
+            if (!channel) {
+                M.warn(`Could not resolve channel ${key} (id: ${info.id}, name: ${info.name ?? "-"})`);
+                success = false;
+            }
+        }
+
+        for (const [key, info] of Object.entries(this.roles_map)) {
+            let role = this.guild.roles.cache.get(info.id);
+
+            if (!role && this.devmode_enabled && info.name) {
+                const matches = this.guild.roles.cache.filter(r => r.name === info.name);
+
+                if (matches.size === 1) {
+                    role = matches.first()!;
+                    M.info(`Resolved role ${key} by name "${info.name}" (${role.id})`);
+                } else if (matches.size > 1) {
+                    M.warn(`Multiple roles named "${info.name}" — cannot resolve ${key}`);
+                    success = false;
+                }
+            }
+
+            if (!role) {
+                M.warn(`Could not resolve role ${key} (id: ${info.id}, name: ${info.name ?? "n/a"})`);
+                success = false;
+            }
+        }
+
+        return true;
     }
 
     //
@@ -538,8 +614,9 @@ export class Wheatley {
         this.log_limiter.log(channel, message);
     }
 
-    is_forum_help_channel(id: string) {
-        return [this.channels.cpp_help, this.channels.c_help].includes(id);
+    is_forum_help_channel(id: Discord.Snowflake) {
+        // TODO: use bot utilities to get channel by name here aswell
+        return [this.channels.cpp_help, this.channels.c_help].some(ch => ch.id === id);
     }
 
     is_forum_help_thread(thread: Discord.ThreadChannel) {
