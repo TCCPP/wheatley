@@ -19,7 +19,7 @@ export default class Restart extends BotComponent {
         commands.add(
             new TextBasedCommandBuilder("restart", EarlyReplyMode.none)
                 .set_category("Admin utilities")
-                .set_permissions(Discord.PermissionFlagsBits.BanMembers)
+                .set_permissions(Discord.PermissionFlagsBits.Administrator)
                 .set_description("Restart")
                 .set_handler(this.restart.bind(this)),
         );
