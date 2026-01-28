@@ -11,8 +11,11 @@ import { Virustotal } from "../../../infra/virustotal.js";
 import Mute from "./moderation/mute.js";
 import { delay, unwrap } from "../../../utils/misc.js";
 import { CommandSetBuilder } from "../../../command-abstractions/command-set-builder.js";
+import { M } from "../../../utils/debugging-and-logging.js";
 
 const ACTION_THRESHOLD = 5;
+const BASE_RETRY_DELAY_MS = 1000;
+const NOT_FOUND_RETRY_DELAY_MS = 3000;
 
 class HTTPError extends Error {
     constructor(
@@ -151,21 +154,53 @@ export default class AntiExecutable extends BotComponent {
         return true;
     }
 
-    private async fetch_with_retry(url: string, limit?: number, max_retries = 3): Promise<Buffer> {
-        const base_delay_ms = 1000;
-        for (let attempt = 0; attempt <= max_retries; attempt++) {
+    private async fetch_with_retry(
+        url: string,
+        options?: { limit?: number; max_retries?: number },
+    ): Promise<Buffer | null> {
+        // Try to fetch, retrying on 5xx failure. If the error is 404, retry once.
+        const { limit, max_retries = 3 } = options ?? {};
+        let attempt = 0;
+        let not_found_retry_used = false;
+
+        while (true) {
             try {
                 return await this.fetch(url, limit);
             } catch (e) {
-                const is_last_attempt = attempt === max_retries;
-                if (is_last_attempt || !this.is_retryable_error(e)) {
+                if (e instanceof HTTPError && e.status_code === 404) {
+                    if (not_found_retry_used) {
+                        return null;
+                    }
+                    not_found_retry_used = true;
+                    await delay(NOT_FOUND_RETRY_DELAY_MS);
+                    continue;
+                }
+                if (attempt >= max_retries || !this.is_retryable_error(e)) {
                     throw e;
                 }
-                const delay_ms = base_delay_ms * Math.pow(2, attempt);
-                await delay(delay_ms);
+                await delay(BASE_RETRY_DELAY_MS * Math.pow(2, attempt));
+                attempt++;
             }
         }
-        throw new Error("Unreachable");
+    }
+
+    private async fetch_attachment(url: string, message_url: string, limit?: number): Promise<Buffer | null> {
+        try {
+            const buffer = await this.fetch_with_retry(url, { limit });
+            if (buffer === null) {
+                M.info(`HTTP 404 while fetching attachment for message ${message_url}: \`${url}\``);
+            }
+            return buffer;
+        } catch (e) {
+            if (e instanceof HTTPError) {
+                this.wheatley.warn(
+                    `HTTP Error ${e.status_code} while fetching attachment for message ${message_url}: \`${url}\``,
+                );
+            } else {
+                this.wheatley.critical_error(e);
+            }
+            return null;
+        }
     }
 
     async virustotal_scan(
@@ -233,24 +268,10 @@ export default class AntiExecutable extends BotComponent {
     ) {
         await Promise.all(
             attachments.map(async attachment => {
-                // download
-                let file_buffer: Buffer;
-                try {
-                    file_buffer = await this.fetch_with_retry(attachment.url);
-                } catch (e) {
-                    if (e instanceof HTTPError) {
-                        this.wheatley.warn(
-                            `HTTP Error ${e.status_code} while fetching attachment for ` +
-                                `message ${message_url}: \`${attachment.url}\``,
-                        );
-                        return;
-                    } else {
-                        this.wheatley.critical_error(e);
-                        return;
-                    }
+                const buffer = await this.fetch_attachment(attachment.url, message_url);
+                if (buffer !== null) {
+                    await this.virustotal_scan(buffer, flag_message, author, original_message);
                 }
-                // virustotal
-                await this.virustotal_scan(file_buffer, flag_message, author, original_message);
             }),
         );
     }
@@ -287,24 +308,14 @@ export default class AntiExecutable extends BotComponent {
             const executables: Discord.Attachment[] = [];
             const archives: Discord.Attachment[] = [];
             for (const [_, attachment] of message.attachments) {
-                try {
-                    const res = await this.fetch_with_retry(attachment.url, 512);
-                    if (this.looks_like_executable(res)) {
-                        executables.push(attachment);
-                    } else if (this.looks_like_archive(res)) {
-                        archives.push(attachment);
-                    }
-                } catch (e) {
-                    if (e instanceof HTTPError) {
-                        this.wheatley.warn(
-                            `HTTP Error ${e.status_code} while fetching attachment for ` +
-                                `message ${message.url}: \`${attachment.url}\``,
-                        );
-                        return;
-                    } else {
-                        this.wheatley.critical_error(e);
-                        return;
-                    }
+                const buffer = await this.fetch_attachment(attachment.url, message.url, 512);
+                if (buffer === null) {
+                    return;
+                }
+                if (this.looks_like_executable(buffer)) {
+                    executables.push(attachment);
+                } else if (this.looks_like_archive(buffer)) {
+                    archives.push(attachment);
                 }
             }
             if (executables.length > 0) {
