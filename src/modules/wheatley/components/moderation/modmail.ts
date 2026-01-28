@@ -66,9 +66,9 @@ export default class Modmail extends BotComponent {
     private staff_member_log!: Discord.TextChannel;
 
     override async setup(commands: CommandSetBuilder) {
-        this.rules = await this.utilities.get_channel(this.wheatley.channels.rules);
-        this.mods = await this.utilities.get_channel(this.wheatley.channels.mods);
-        this.staff_member_log = await this.utilities.get_channel(this.wheatley.channels.staff_member_log);
+        this.rules = await this.utilities.get_channel(this.wheatley.channels.rules.id);
+        this.mods = await this.utilities.get_channel(this.wheatley.channels.mods.id);
+        this.staff_member_log = await this.utilities.get_channel(this.wheatley.channels.staff_member_log.id);
         commands.add(
             new TextBasedCommandBuilder("wsetupmodmailsystem", EarlyReplyMode.none)
                 .set_category("Admin utilities")

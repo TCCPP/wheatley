@@ -41,8 +41,8 @@ export default class AntiExecutable extends BotComponent {
     }
 
     override async setup(commands: CommandSetBuilder) {
-        this.staff_flag_log = await this.utilities.get_channel(this.wheatley.channels.staff_flag_log);
-        this.staff_action_log = await this.utilities.get_channel(this.wheatley.channels.staff_action_log);
+        this.staff_flag_log = await this.utilities.get_channel(this.wheatley.channels.staff_flag_log.id);
+        this.staff_action_log = await this.utilities.get_channel(this.wheatley.channels.staff_action_log.id);
     }
 
     // Elf:  0x7F 0x45 0x4c 0x46 at offset 0

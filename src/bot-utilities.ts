@@ -355,35 +355,21 @@ export class BotUtilities {
         );
     }
 
-    async get_channel(
-        { id }: (typeof this.wheatley.channels)[0],
-        channelType: Discord.ChannelType = Discord.ChannelType.GuildText,
-    ) {
+    async get_channel(id: string) {
         const channel = await this.wheatley.client.channels.fetch(id);
         if (!channel) {
             throw new Error(`Channel ${id} not found`);
-        }
-
-        if (channel.type !== channelType) {
-            throw new Error(`Channel ${id} not of expected type ${channelType}, got ${channel.type}`);
         }
 
         assert(channel instanceof Discord.TextChannel, `Channel ${channel} (${id}) not of the expected type`);
         return channel;
     }
 
-    async get_forum_channel(
-        { id }: (typeof this.wheatley.channels)[0],
-        channelType: Discord.ChannelType = Discord.ChannelType.GuildForum,
-    ) {
+    async get_forum_channel(id: string) {
         const channel = await this.wheatley.client.channels.fetch(id);
 
         if (!channel) {
             throw new Error(`Forum channel ${id} not found`);
-        }
-
-        if (channel.type !== channelType) {
-            throw new Error(`Channel ${id} not of expected type ${channelType}, got ${channel.type}`);
         }
 
         assert(channel instanceof Discord.ForumChannel, `Channel ${channel} (${id}) not of the expected type`);

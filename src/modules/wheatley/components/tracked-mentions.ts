@@ -21,7 +21,7 @@ export default class TrackedMentions extends BotComponent {
     private button_helper = new Staff_notification_button_helper();
 
     override async setup(commands: CommandSetBuilder) {
-        this.flag_log = await this.utilities.get_channel(this.wheatley.channels.staff_flag_log);
+        this.flag_log = await this.utilities.get_channel(this.wheatley.channels.staff_flag_log.id);
 
         this.buttons = this.button_helper.register_buttons(commands, "tracked-mention", {
             handling: this.handling_handler.bind(this),

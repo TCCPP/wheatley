@@ -46,7 +46,7 @@ export default class PinArchive extends BotComponent {
         await ensure_index(this.wheatley, this.database.pin_archive, { source_message: 1 }, { unique: true });
         await ensure_index(this.wheatley, this.database.pins, { channel: 1, message: 1 }, { unique: true });
 
-        this.pin_archive = await this.utilities.get_channel(this.wheatley.channels.pin_archive);
+        this.pin_archive = await this.utilities.get_channel(this.wheatley.channels.pin_archive.id);
     }
 
     on_pin_update(channel: Discord.TextBasedChannel, time: Date) {

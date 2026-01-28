@@ -69,7 +69,7 @@ export type wheatley_config = core_config & {
     [key: string]: any;
 };
 
-type named_id = {
+export type named_id = {
     // channel id used in production
     id: Discord.Snowflake;
 

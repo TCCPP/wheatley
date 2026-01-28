@@ -12,7 +12,7 @@ export default class Massban extends BotComponent {
     private staff_action_log!: Discord.TextChannel;
 
     override async setup(commands: CommandSetBuilder) {
-        this.staff_action_log = await this.utilities.get_channel(this.wheatley.channels.staff_action_log);
+        this.staff_action_log = await this.utilities.get_channel(this.wheatley.channels.staff_action_log.id);
     }
     override async on_message_create(message: Discord.Message) {
         try {

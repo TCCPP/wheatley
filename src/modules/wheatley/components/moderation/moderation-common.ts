@@ -181,10 +181,10 @@ export abstract class ModerationComponent extends BotComponent {
         await ensure_index(this.wheatley, this.database.moderations, { type: 1, issued_at: -1 });
         await ensure_index(this.wheatley, this.database.component_state, { id: 1 }, { unique: true });
 
-        this.staff_action_log = await this.utilities.get_channel(this.wheatley.channels.staff_action_log);
-        this.public_action_log = await this.utilities.get_channel(this.wheatley.channels.public_action_log);
-        this.red_telephone_alerts = await this.utilities.get_channel(this.wheatley.channels.red_telephone_alerts);
-        this.rules = await this.utilities.get_channel(this.wheatley.channels.rules);
+        this.staff_action_log = await this.utilities.get_channel(this.wheatley.channels.staff_action_log.id);
+        this.public_action_log = await this.utilities.get_channel(this.wheatley.channels.public_action_log.id);
+        this.red_telephone_alerts = await this.utilities.get_channel(this.wheatley.channels.red_telephone_alerts.id);
+        this.rules = await this.utilities.get_channel(this.wheatley.channels.rules.id);
         this.notification_threads = unwrap(this.wheatley.components.get("NotificationThreads")) as NotificationThreads;
 
         // Only register button handler once across all ModerationComponent instances

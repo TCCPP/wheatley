@@ -6,18 +6,10 @@ import { M } from "../../../utils/debugging-and-logging.js";
 import { HOUR } from "../../../common.js";
 import { BotComponent } from "../../../bot-component.js";
 import SkillRoles from "./skill-roles.js";
-import { Wheatley } from "../../../wheatley.js";
+import { named_id } from "../../../wheatley.js";
 import { unwrap } from "../../../utils/misc.js";
 import { CommandSetBuilder } from "../../../command-abstractions/command-set-builder.js";
 import { set_timeout } from "../../../utils/node.js";
-
-type named_id = {
-    // channel id used in production
-    id: Discord.Snowflake;
-
-    // fallback channel name (for development only)
-    name?: string;
-};
 
 const categories_map: { [key: string]: named_id } = {
     staff_logs: { id: "1135927261472755712", name: "Staff Logs" },

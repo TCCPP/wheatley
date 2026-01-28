@@ -61,11 +61,11 @@ export default class ForumChannels extends BotComponent {
     private forum_control!: ForumControl;
 
     override async setup(commands: CommandSetBuilder) {
-        this.general_discussion = await this.utilities.get_channel(this.wheatley.channels.general_discussion);
-        this.cpp_help = await this.utilities.get_forum_channel(this.wheatley.channels.cpp_help);
-        this.c_help = await this.utilities.get_forum_channel(this.wheatley.channels.c_help);
-        this.cpp_help_text = await this.utilities.get_channel(this.wheatley.channels.cpp_help_text);
-        this.c_help_text = await this.utilities.get_channel(this.wheatley.channels.c_help_text);
+        this.general_discussion = await this.utilities.get_channel(this.wheatley.channels.general_discussion.id);
+        this.cpp_help = await this.utilities.get_forum_channel(this.wheatley.channels.cpp_help.id);
+        this.c_help = await this.utilities.get_forum_channel(this.wheatley.channels.c_help.id);
+        this.cpp_help_text = await this.utilities.get_channel(this.wheatley.channels.cpp_help_text.id);
+        this.c_help_text = await this.utilities.get_channel(this.wheatley.channels.c_help_text.id);
         this.forum_control = unwrap(this.wheatley.components.get("ForumControl")) as ForumControl;
     }
 

@@ -27,7 +27,7 @@ export default class NotifyAboutFormerlyBannedUsers extends BotComponent {
     private plugins: notify_plugin[] = [];
 
     override async setup(commands: CommandSetBuilder) {
-        this.staff_action_log = await this.utilities.get_channel(this.wheatley.channels.staff_action_log);
+        this.staff_action_log = await this.utilities.get_channel(this.wheatley.channels.staff_action_log.id);
         this.linked_accounts = unwrap(this.wheatley.components.get("LinkedAccounts")) as LinkedAccounts;
     }
 
