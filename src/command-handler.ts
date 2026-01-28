@@ -456,8 +456,11 @@ export class CommandHandler {
             }
             // TODO: Notify if errors occur in the handler....
         } catch (e) {
-            // TODO....
-            this.wheatley.critical_error(e);
+            if (interaction.isAutocomplete() && e instanceof Discord.DiscordAPIError && e.code === 10062) {
+                M.warn("Autocomplete interaction expired before response could be sent");
+            } else {
+                this.wheatley.critical_error(e);
+            }
         }
     }
 }
