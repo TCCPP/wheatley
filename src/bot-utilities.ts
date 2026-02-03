@@ -128,13 +128,13 @@ export class BotUtilities {
     async get_media(message: MessageData | ForwardedMessageData) {
         return [
             ...message.attachments
-                .filter(a => a.contentType?.indexOf("image") == 0)
+                .filter(a => a.contentType?.startsWith("image"))
                 .map(a => ({
                     type: "image",
                     attachment: a,
                 })),
             ...message.attachments
-                .filter(a => a.contentType?.indexOf("video") == 0)
+                .filter(a => a.contentType?.startsWith("video"))
                 .map(a => ({
                     type: "video",
                     attachment: a,
@@ -174,55 +174,36 @@ export class BotUtilities {
         const media = await this.get_media(message);
         const other_embeds = message.embeds.filter(e => !is_media_link_embed(e));
         const attachments: (Discord.Attachment | Discord.AttachmentPayload)[] = [];
-        const other_attachments: Discord.Attachment[] = message.attachments
-            .map(a => a)
-            .filter(a => !(a.contentType?.indexOf("image") == 0 || a.contentType?.indexOf("video") == 0));
-        let set_primary_image = false;
-        const media_embeds: Discord.EmbedBuilder[] = [];
-        if (media.length > 0) {
-            for (const medium of media) {
-                if (medium.type == "image") {
-                    if (!set_primary_image) {
-                        embed.setImage(
-                            medium.attachment instanceof Discord.Attachment
-                                ? medium.attachment.url
-                                : medium.attachment.attachment,
-                        );
-                        set_primary_image = true;
-                    } else {
-                        media_embeds.push(
-                            new Discord.EmbedBuilder({
-                                image: {
-                                    url:
-                                        medium.attachment instanceof Discord.Attachment
-                                            ? medium.attachment.url
-                                            : medium.attachment.attachment,
-                                },
-                            }),
-                        );
-                    }
-                } else {
-                    // video
-                    attachments.push(medium.attachment);
-                }
+        const other_attachments = message.attachments.filter(
+            a => !(a.contentType?.startsWith("image") || a.contentType?.startsWith("video")),
+        );
+        const images = media.filter(m => m.type === "image");
+        const videos = media.filter(m => m.type === "video");
+        for (const video of videos) {
+            attachments.push(video.attachment);
+        }
+        if (images.length === 1) {
+            const image = images[0];
+            embed.setImage(
+                image.attachment instanceof Discord.Attachment ? image.attachment.url : image.attachment.attachment,
+            );
+        } else if (images.length > 1) {
+            for (const image of images) {
+                attachments.push(image.attachment);
             }
         }
+        // Add stickers as attachments
         for (const sticker of message.stickers ?? []) {
             if (sticker.url) {
-                media_embeds.push(
-                    new Discord.EmbedBuilder({
-                        image: { url: sticker.url },
-                    }),
-                );
+                attachments.push({ attachment: sticker.url, name: `${sticker.name}.png` });
             }
         }
         if (options?.no_extra_media_embeds) {
-            media_embeds.splice(0, media_embeds.length);
             other_embeds.splice(0, other_embeds.length);
             attachments.splice(0, attachments.length);
             other_attachments.splice(0, other_attachments.length);
         }
-        const embeds = [...media_embeds, ...other_embeds.map(api_embed => new Discord.EmbedBuilder(api_embed))];
+        const embeds = other_embeds.map(api_embed => new Discord.EmbedBuilder(api_embed));
         const files = [...attachments, ...other_attachments];
         return [embeds, files];
     }
@@ -309,7 +290,7 @@ export class BotUtilities {
         }
         return {
             embeds: [embed, ...extra_embeds],
-            files: attachments.length ? undefined : attachments,
+            files: attachments.length ? attachments : undefined,
         };
     }
 
