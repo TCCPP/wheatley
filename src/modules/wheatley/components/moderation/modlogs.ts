@@ -25,6 +25,20 @@ import { discord_timestamp } from "../../../../utils/discord.js";
 import { unwrap } from "../../../../utils/misc.js";
 import LinkedAccounts from "../linked-accounts.js";
 
+export type modlog_display_options = {
+    show_private_logs: boolean;
+    show_moderator: boolean;
+};
+
+export const staff_moderation_display_options: modlog_display_options = {
+    show_private_logs: true,
+    show_moderator: true,
+};
+export const public_moderation_display_options: modlog_display_options = {
+    show_private_logs: false,
+    show_moderator: false,
+};
+
 const moderations_per_page = 5;
 
 export default class Modlogs extends BotComponent {
@@ -41,7 +55,7 @@ export default class Modlogs extends BotComponent {
             new TextBasedCommandBuilder("modlogs", EarlyReplyMode.visible)
                 .set_category("Moderation")
                 .set_description("Get user moderation logs")
-                .set_permissions(Discord.PermissionFlagsBits.BanMembers)
+                .set_permissions(Discord.PermissionFlagsBits.BanMembers | Discord.PermissionFlagsBits.MuteMembers)
                 .add_user_option({
                     title: "user",
                     description: "User to get modlogs for",
@@ -54,7 +68,7 @@ export default class Modlogs extends BotComponent {
             new TextBasedCommandBuilder("case", EarlyReplyMode.visible)
                 .set_category("Moderation")
                 .set_description("Get case info")
-                .set_permissions(Discord.PermissionFlagsBits.BanMembers)
+                .set_permissions(Discord.PermissionFlagsBits.BanMembers | Discord.PermissionFlagsBits.MuteMembers)
                 .add_number_option({
                     title: "case",
                     description: "Case to get information for",
@@ -68,18 +82,18 @@ export default class Modlogs extends BotComponent {
             new ButtonInteractionBuilder("modlogs_page")
                 .add_user_id_metadata() // user_id: string
                 .add_number_metadata() // page: number
-                .set_permissions(Discord.PermissionFlagsBits.BanMembers)
+                .set_permissions(Discord.PermissionFlagsBits.BanMembers | Discord.PermissionFlagsBits.MuteMembers)
                 .set_handler(this.handle_modlogs_page.bind(this)),
         );
     }
 
-    static moderation_description(moderation: moderation_entry, is_field: boolean, show_private_logs: boolean) {
+    static moderation_description(moderation: moderation_entry, is_field: boolean, options: modlog_display_options) {
         // 256 chosen as an ideally generous padding to allow the preceding text before the reason to fit
         const max_reason = (is_field ? 1024 : 4096) - 256;
         const description = build_description(
             `**Type:** ${moderation.type}`,
             moderation.type === "rolepersist" ? `**Role:** <@&${moderation.role}>` : null,
-            show_private_logs ? `**Moderator:** <@${moderation.moderator}>` : null,
+            options.show_moderator ? `**Moderator:** <@${moderation.moderator}>` : null,
             `**Issued At:** ${discord_timestamp(moderation.issued_at)} ${
                 moderation.link ? `[link](${moderation.link})` : ""
             }`,
@@ -87,19 +101,30 @@ export default class Modlogs extends BotComponent {
             `**Reason:** ${moderation.reason ? truncate(moderation.reason, max_reason) : "No reason provided"}`,
             moderation.removed && !moderation.auto_removed
                 ? `**Removed:** ${discord_timestamp(moderation.removed.timestamp)}` +
-                      (show_private_logs ? ` by <@${moderation.removed.moderator}>` : "") +
+                      (options.show_moderator ? ` by <@${moderation.removed.moderator}>` : "") +
                       ` with reason: "${moderation.removed.reason ? truncate(moderation.removed.reason, 100) : "None"}"`
                 : null,
-            moderation.context && show_private_logs ? `**Context:** ${moderation.context.join(", ")}` : null,
+            moderation.context && options.show_private_logs ? `**Context:** ${moderation.context.join(", ")}` : null,
         );
         return moderation.expunged ? `~~${description}~~` : description;
     }
 
-    static case_summary(moderation: moderation_entry, user: Discord.User, show_private_logs: boolean) {
+    static get_display_options(
+        channel: Discord.GuildTextBasedChannel | Discord.TextBasedChannel,
+        moderation: moderation_entry,
+    ): modlog_display_options {
+        const is_mod_only = Modlogs.is_mod_only(channel);
+        return {
+            show_private_logs: is_mod_only,
+            show_moderator: is_mod_only,
+        };
+    }
+
+    static case_summary(moderation: moderation_entry, user: Discord.User, options: modlog_display_options) {
         return new Discord.EmbedBuilder()
             .setTitle(`Case ${moderation.case_number}`)
             .setAuthor(
-                show_private_logs
+                options.show_private_logs
                     ? {
                           name: moderation.user_name,
                           iconURL: user.avatarURL() ?? undefined,
@@ -107,7 +132,7 @@ export default class Modlogs extends BotComponent {
                     : null,
             )
             .setColor(colors.wheatley)
-            .setDescription(Modlogs.moderation_description(moderation, false, show_private_logs))
+            .setDescription(Modlogs.moderation_description(moderation, false, options))
             .setFields(
                 remove(
                     [
@@ -116,7 +141,7 @@ export default class Modlogs extends BotComponent {
                                   name: "Removed",
                                   value: truncate(
                                       build_description(
-                                          show_private_logs ? `**By:** <@${moderation.removed.moderator}>` : null,
+                                          options.show_moderator ? `**By:** <@${moderation.removed.moderator}>` : null,
                                           `**At:** ${discord_timestamp(moderation.removed.timestamp)}`,
                                           `**Reason:** ${
                                               moderation.removed.reason
@@ -133,7 +158,7 @@ export default class Modlogs extends BotComponent {
                                   name: "Expunged",
                                   value: truncate(
                                       build_description(
-                                          show_private_logs ? `**By:** <@${moderation.expunged.moderator}>` : null,
+                                          options.show_moderator ? `**By:** <@${moderation.expunged.moderator}>` : null,
                                           `**At:** ${discord_timestamp(moderation.expunged.timestamp)}`,
                                           `**Reason:** ${
                                               moderation.expunged.reason
@@ -150,7 +175,7 @@ export default class Modlogs extends BotComponent {
                 ),
             )
             .setFooter(
-                show_private_logs
+                options.show_private_logs
                     ? {
                           text: `ID: ${moderation.user}`,
                       }
@@ -162,15 +187,16 @@ export default class Modlogs extends BotComponent {
     async modlogs_message(
         user: Discord.User,
         page: number,
-        show_private_logs = false,
+        channel: Discord.GuildTextBasedChannel | Discord.TextBasedChannel,
     ): Promise<Discord.BaseMessageOptions & CommandAbstractionReplyOptions> {
-        const linked_accounts = show_private_logs
+        const is_mod_only = Modlogs.is_mod_only(channel);
+        const linked_accounts = is_mod_only
             ? await this.linked_accounts.get_all_linked_accounts(user.id)
             : new Set([user.id]);
         const all_user_ids = [user.id, ...Array.from(linked_accounts)];
 
         const query: mongo.Filter<moderation_entry> = { user: { $in: all_user_ids }, expunged: null };
-        if (!show_private_logs) {
+        if (!is_mod_only) {
             query.type = { $ne: "note" };
         }
         const moderations = await this.database.moderations.find(query).sort({ issued_at: -1 }).toArray();
@@ -198,9 +224,9 @@ export default class Modlogs extends BotComponent {
             );
         }
         const has_linked_accounts = linked_accounts.size > 0;
-        const title_suffix = has_linked_accounts && show_private_logs ? " & Linked Accounts" : "";
+        const title_suffix = has_linked_accounts && is_mod_only ? " & Linked Accounts" : "";
         const description_parts = [`<@${user.id}>`];
-        if (has_linked_accounts && show_private_logs) {
+        if (has_linked_accounts && is_mod_only) {
             const account_mentions = Array.from(linked_accounts)
                 .map(id => `<@${id}>`)
                 .join(", ");
@@ -216,16 +242,17 @@ export default class Modlogs extends BotComponent {
                     .setFields(
                         moderations
                             .slice(page * moderations_per_page, (page + 1) * moderations_per_page)
-                            .map(moderation => {
-                                const case_label =
+                            .map(moderation => ({
+                                name:
                                     has_linked_accounts && moderation.user !== user.id
                                         ? `Case ${moderation.case_number} (${moderation.user_name})`
-                                        : `Case ${moderation.case_number}`;
-                                return {
-                                    name: case_label,
-                                    value: Modlogs.moderation_description(moderation, true, show_private_logs),
-                                };
-                            }),
+                                        : `Case ${moderation.case_number}`,
+                                value: Modlogs.moderation_description(
+                                    moderation,
+                                    true,
+                                    Modlogs.get_display_options(channel, moderation),
+                                ),
+                            })),
                     )
                     .setFooter({
                         text: `${pluralize(moderations.length, "log")}, ${pluralize(pages, "page")} | ID: ${user.id}`,
@@ -242,11 +269,11 @@ export default class Modlogs extends BotComponent {
         };
     }
 
-    is_mod_only(channel: Discord.GuildTextBasedChannel | Discord.TextBasedChannel) {
+    private static get_min_viewable_permissions(channel: Discord.GuildTextBasedChannel | Discord.TextBasedChannel) {
         if (channel.isDMBased() || !channel.parent) {
-            return false;
+            return 0n;
         }
-        const min_viewable_permissions = this.wheatley.guild.roles.cache
+        return channel.guild.roles.cache
             .mapValues(role => channel.permissionsFor(role).bitfield)
             .reduce((accumulator, value) => {
                 if (value & Discord.PermissionFlagsBits.ViewChannel) {
@@ -254,30 +281,41 @@ export default class Modlogs extends BotComponent {
                 }
                 return accumulator;
             }, Discord.PermissionsBitField.All);
-        return (min_viewable_permissions & Discord.PermissionFlagsBits.ModerateMembers) != 0n;
+    }
+
+    static is_mod_only(channel: Discord.GuildTextBasedChannel | Discord.TextBasedChannel) {
+        const min_permissions = Modlogs.get_min_viewable_permissions(channel);
+        return (min_permissions & Discord.PermissionFlagsBits.ModerateMembers) != 0n;
+    }
+
+    static is_voice_mod_channel(channel: Discord.GuildTextBasedChannel | Discord.TextBasedChannel) {
+        const min_permissions = Modlogs.get_min_viewable_permissions(channel);
+        return (min_permissions & Discord.PermissionFlagsBits.MuteMembers) != 0n;
     }
 
     async modlogs(command: TextBasedCommand, user: Discord.User) {
-        await command.reply(await this.modlogs_message(user, 0, this.is_mod_only(await command.get_channel())));
+        const channel = await command.get_channel();
+        await command.reply(await this.modlogs_message(user, 0, channel));
     }
 
     // Handle modlogs page button interactions
     async handle_modlogs_page(interaction: Discord.ButtonInteraction, user_id: string, page: number) {
         const user = await this.wheatley.client.users.fetch(user_id);
-        const is_mod_only = this.is_mod_only(interaction.channel as Discord.GuildTextBasedChannel);
-        await interaction.message.edit(await this.modlogs_message(user, page, is_mod_only));
+        const channel = interaction.channel as Discord.GuildTextBasedChannel;
+        await interaction.message.edit(await this.modlogs_message(user, page, channel));
         await interaction.deferUpdate();
     }
 
     async case_info(command: TextBasedCommand, case_number: number) {
         const moderation = await this.get_case(case_number);
         if (moderation) {
+            const channel = await command.get_channel();
             await command.reply({
                 embeds: [
                     Modlogs.case_summary(
                         moderation,
                         await this.wheatley.client.users.fetch(moderation.user),
-                        this.is_mod_only(await command.get_channel()),
+                        Modlogs.get_display_options(channel, moderation),
                     ),
                 ],
             });

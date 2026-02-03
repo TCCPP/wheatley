@@ -19,7 +19,7 @@ import { ensure_index } from "../../../../infra/database-interface.js";
 import { Wheatley } from "../../../../wheatley.js";
 import { colors, HOUR, MINUTE } from "../../../../common.js";
 import { parse_time_unit } from "../../../../utils/time.js";
-import Modlogs from "./modlogs.js";
+import Modlogs, { staff_moderation_display_options, public_moderation_display_options } from "./modlogs.js";
 import { TextBasedCommand } from "../../../../command-abstractions/text-based-command.js";
 import {
     moderation_state,
@@ -399,7 +399,11 @@ export abstract class ModerationComponent extends BotComponent {
             }
             await this.staff_action_log.send({
                 embeds: [
-                    Modlogs.case_summary(entry, await this.wheatley.client.users.fetch(entry.user), true)
+                    Modlogs.case_summary(
+                        entry,
+                        await this.wheatley.client.users.fetch(entry.user),
+                        staff_moderation_display_options,
+                    )
                         .setTitle(`${capitalize(this.type)} is being lifted (case ${entry.case_number})`)
                         .setDescription(
                             has_other_active
@@ -552,7 +556,11 @@ export abstract class ModerationComponent extends BotComponent {
             }
             const message_options: Discord.MessageCreateOptions = {
                 embeds: [
-                    Modlogs.case_summary(moderation, await this.wheatley.client.users.fetch(moderation.user), true),
+                    Modlogs.case_summary(
+                        moderation,
+                        await this.wheatley.client.users.fetch(moderation.user),
+                        staff_moderation_display_options,
+                    ),
                 ],
             };
             // Only include the red telephone button if this is not an automatic moderation
@@ -575,7 +583,7 @@ export abstract class ModerationComponent extends BotComponent {
                             Modlogs.case_summary(
                                 moderation,
                                 await this.wheatley.client.users.fetch(moderation.user),
-                                false,
+                                public_moderation_display_options,
                             ),
                         ],
                     })
@@ -887,7 +895,11 @@ export abstract class ModerationComponent extends BotComponent {
                 });
                 await this.staff_action_log.send({
                     embeds: [
-                        Modlogs.case_summary(res, await this.wheatley.client.users.fetch(res.user), true)
+                        Modlogs.case_summary(
+                            res,
+                            await this.wheatley.client.users.fetch(res.user),
+                            staff_moderation_display_options,
+                        )
                             .setTitle(`Removed case ${res.case_number}: Un${this.past_participle}`)
                             .setDescription(remaining_message),
                     ],
@@ -895,9 +907,11 @@ export abstract class ModerationComponent extends BotComponent {
                 if (res.type !== "note") {
                     await this.public_action_log.send({
                         embeds: [
-                            Modlogs.case_summary(res, await this.wheatley.client.users.fetch(res.user), false).setTitle(
-                                `Removed case ${res.case_number}: Un${this.past_participle}`,
-                            ),
+                            Modlogs.case_summary(
+                                res,
+                                await this.wheatley.client.users.fetch(res.user),
+                                public_moderation_display_options,
+                            ).setTitle(`Removed case ${res.case_number}: Un${this.past_participle}`),
                         ],
                     });
                 }
