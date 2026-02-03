@@ -20,7 +20,7 @@ import {
     TextBasedCommand,
 } from "../../../../command-abstractions/text-based-command.js";
 import { remove } from "../../../../utils/arrays.js";
-import { moderation_entry } from "./schemata.js";
+import { moderation_entry, voice_moderation_types } from "./schemata.js";
 import { discord_timestamp } from "../../../../utils/discord.js";
 import { unwrap } from "../../../../utils/misc.js";
 import LinkedAccounts from "../linked-accounts.js";
@@ -114,9 +114,11 @@ export default class Modlogs extends BotComponent {
         moderation: moderation_entry,
     ): modlog_display_options {
         const is_mod_only = Modlogs.is_mod_only(channel);
+        const is_voice_mod_channel = Modlogs.is_voice_mod_channel(channel);
+        const is_voice_moderation = voice_moderation_types.includes(moderation.type);
         return {
             show_private_logs: is_mod_only,
-            show_moderator: is_mod_only,
+            show_moderator: is_mod_only || (is_voice_mod_channel && is_voice_moderation),
         };
     }
 

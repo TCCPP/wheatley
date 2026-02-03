@@ -27,6 +27,7 @@ import {
     moderation_entry,
     basic_moderation_with_user,
     basic_moderation,
+    note_moderation_types,
 } from "./schemata.js";
 import { set_interval } from "../../../../utils/node.js";
 
@@ -75,6 +76,10 @@ export class ParseError extends Error {
         this.name = "ParseError";
     }
 }
+
+export type revoke_handler_options = {
+    allow_no_entry?: boolean;
+};
 
 // Returns the corresponding duration in milliseconds,
 // or null for permanent duration.
@@ -145,7 +150,7 @@ export abstract class ModerationComponent extends BotComponent {
     sleep_list: SleepList<mongo.WithId<moderation_entry>, mongo.BSON.ObjectId>;
     timer: NodeJS.Timer | null = null;
 
-    static non_duration_moderation_set = new Set(["warn", "kick", "softban", "note"]);
+    static non_duration_moderation_set = new Set(["warn", "kick", "softban", "note", "voice_note"]);
 
     static moderations_count = new PromClient.Gauge({
         name: "tccpp_moderations_count",
@@ -305,6 +310,12 @@ export abstract class ModerationComponent extends BotComponent {
 
     // Check if the moderation is currently applied in Discord (role present, ban in place, etc.)
     abstract is_moderation_applied_in_discord(moderation: basic_moderation_with_user): Promise<boolean>;
+
+    // Apply revoke action to Discord without an existing moderation entry.
+    // Must be overridden in subclasses that use allow_no_entry mode.
+    async apply_revoke_to_discord(_member: Discord.GuildMember): Promise<void> {
+        throw new Error("apply_revoke_to_discord must be overridden when using allow_no_entry");
+    }
 
     // Check if there are other active moderations of the same type for this user (excluding the given entry)
     async has_other_active_moderations(entry: mongo.WithId<moderation_entry>): Promise<boolean> {
@@ -576,7 +587,7 @@ export abstract class ModerationComponent extends BotComponent {
                 ];
             }
             this.staff_action_log.send(message_options).catch(this.wheatley.critical_error.bind(this.wheatley));
-            if (moderation.type !== "note") {
+            if (!note_moderation_types.includes(moderation.type)) {
                 this.public_action_log
                     .send({
                         embeds: [
@@ -727,8 +738,24 @@ export abstract class ModerationComponent extends BotComponent {
                 expunged: null,
                 link: command.get_or_forge_url(),
             };
-            const cant_dm = !(await this.notify_user(user, this.past_participle, moderation));
+            const is_note_type = note_moderation_types.includes(this.type);
+            const notification_failed = await (async () => {
+                if (!is_note_type) {
+                    return !(await this.notify_user(user, this.past_participle, moderation));
+                } else {
+                    return false;
+                }
+            })();
             await this.issue_moderation(moderation);
+            const success_message = is_note_type
+                ? `Note added for ${user.displayName}`
+                : `${user.displayName} was ${this.past_participle}`;
+            const reason_line = (() => {
+                if (!command.is_slash() || !reason) {
+                    return null;
+                }
+                return is_note_type ? `**Note:** ${reason}` : `**Reason:** ${reason}`;
+            })();
             await command.reply({
                 content:
                     basic_moderation_info.type === "ban"
@@ -739,8 +766,8 @@ export abstract class ModerationComponent extends BotComponent {
                         .setColor(colors.wheatley)
                         .setDescription(
                             build_description(
-                                `${this.wheatley.emoji.success} ***${user.displayName} was ${this.past_participle}***`,
-                                command.is_slash() && reason ? `**Reason:** ${reason}` : null,
+                                `${this.wheatley.emoji.success} ***${success_message}***`,
+                                reason_line,
                                 (!this.is_once_off && duration_string === null) || reason === null
                                     ? `Remember to provide a ${[
                                           !this.is_once_off && duration_string === null ? "duration" : null,
@@ -752,13 +779,16 @@ export abstract class ModerationComponent extends BotComponent {
                                 !this.is_once_off && duration_string !== null
                                     ? `**Duration**: ${duration == null ? "permanent" : time_to_human(duration)}`
                                     : null,
-                                cant_dm ? "Note: Couldn't notify user (DM and thread fallback both failed)." : null,
+                                notification_failed
+                                    ? "Note: Couldn't notify user (DM and thread fallback both failed)."
+                                    : null,
                             ),
                         )
                         .setFooter({
                             text: `Case ${moderation.case_number}`,
                         }),
                 ],
+                ephemeral_if_possible: is_note_type,
             });
         } catch (e) {
             if (e instanceof ParseError) {
@@ -841,6 +871,7 @@ export abstract class ModerationComponent extends BotComponent {
         user: Discord.User,
         reason: string | null,
         additional_moderation_properties: any = {},
+        options: revoke_handler_options = {},
     ) {
         assert(!this.is_once_off);
         try {
@@ -862,7 +893,17 @@ export abstract class ModerationComponent extends BotComponent {
                     sort: { issued_at: -1 },
                 },
             );
-            if (!res) {
+            if (!res && options.allow_no_entry) {
+                const member = await this.wheatley.try_fetch_guild_member(user);
+                if (member) {
+                    await this.apply_revoke_to_discord(member);
+                }
+                const message =
+                    `${this.wheatley.emoji.success} ` + `***${user.displayName} was un${this.past_participle}***`;
+                await command.reply({
+                    embeds: [new Discord.EmbedBuilder().setColor(colors.wheatley).setDescription(message)],
+                });
+            } else if (!res) {
                 await this.reply_with_error(command, `User is not ${this.past_participle}`);
             } else {
                 this.sleep_list.remove(res._id);
@@ -904,7 +945,7 @@ export abstract class ModerationComponent extends BotComponent {
                             .setDescription(remaining_message),
                     ],
                 });
-                if (res.type !== "note") {
+                if (!note_moderation_types.includes(res.type)) {
                     await this.public_action_log.send({
                         embeds: [
                             Modlogs.case_summary(
