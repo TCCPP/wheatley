@@ -4,7 +4,22 @@ export type moderation_state = {
     modmail_id: number;
 };
 
-export type moderation_type = "mute" | "warn" | "ban" | "kick" | "rolepersist" | "timeout" | "softban" | "note";
+export type moderation_type =
+    | "mute"
+    | "warn"
+    | "ban"
+    | "kick"
+    | "rolepersist"
+    | "timeout"
+    | "softban"
+    | "note"
+    | "voice_note"
+    | "voice_mute"
+    | "voice_take";
+
+export const voice_moderation_types: moderation_type[] = ["voice_note", "voice_mute", "voice_take"];
+
+export const note_moderation_types: moderation_type[] = ["note", "voice_note"];
 
 export type moderation_edit_info = {
     moderator: string;

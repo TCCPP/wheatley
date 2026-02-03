@@ -75,6 +75,7 @@ export default class RoleManager extends BotComponent {
             this.wheatley.roles.no_serious_off_topic.id,
             this.wheatley.roles.no_til.id,
             this.wheatley.roles.no_memes.id,
+            this.wheatley.roles.voice.id,
             // other misc roles
             this.wheatley.roles.featured_bot.id,
             this.wheatley.roles.official_bot.id,

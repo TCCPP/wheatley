@@ -12,13 +12,13 @@ import {
 import { TextBasedCommand } from "../../../../command-abstractions/text-based-command.js";
 import { moderation_entry, basic_moderation_with_user } from "./schemata.js";
 
-export default class Note extends ModerationComponent {
+export default class VoiceNote extends ModerationComponent {
     get type() {
-        return "note" as const;
+        return "voice_note" as const;
     }
 
     get past_participle() {
-        return "noted";
+        return "voice noted";
     }
 
     override get is_once_off() {
@@ -29,22 +29,25 @@ export default class Note extends ModerationComponent {
         await super.setup(commands);
 
         commands.add(
-            new TextBasedCommandBuilder("note", EarlyReplyMode.ephemeral)
-                .set_category("Moderation")
-                .set_permissions(Discord.PermissionFlagsBits.ModerateMembers)
-                .set_description("Enter note in modlogs")
-                .add_user_option({
-                    title: "user",
-                    description: "User to enter note on",
-                    required: true,
-                })
-                .add_string_option({
-                    title: "note",
-                    description: "Note",
-                    required: true,
-                })
-                .set_handler((command: TextBasedCommand, user: Discord.User, note: string | null) =>
-                    this.moderation_issue_handler(command, user, null, note, { type: this.type }),
+            new TextBasedCommandBuilder("voice", EarlyReplyMode.ephemeral)
+                .set_description("Voice moderation")
+                .set_permissions(Discord.PermissionFlagsBits.MuteMembers)
+                .add_subcommand(
+                    new TextBasedCommandBuilder("note", EarlyReplyMode.ephemeral)
+                        .set_description("Add a voice note")
+                        .add_user_option({
+                            title: "user",
+                            description: "User to add note for",
+                            required: true,
+                        })
+                        .add_string_option({
+                            title: "note",
+                            description: "Note content",
+                            required: true,
+                        })
+                        .set_handler((command: TextBasedCommand, user: Discord.User, note: string | null) =>
+                            this.moderation_issue_handler(command, user, null, note, { type: this.type }),
+                        ),
                 ),
         );
     }
