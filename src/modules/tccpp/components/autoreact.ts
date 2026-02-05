@@ -207,10 +207,12 @@ export default class Autoreact extends BotComponent {
     }
 
     async catch_up() {
-        const TCCPP = await this.wheatley.client.guilds.fetch(this.wheatley.guild.id);
-        const introductions_channel = await TCCPP.channels.fetch(this.wheatley.channels.introductions.id);
+        const introductions_channel = await this.utilities.get_channel(
+            this.wheatley.channels.introductions.id,
+            this.wheatley.channels.introductions.name,
+        );
         assert(introductions_channel);
-        assert(introductions_channel.type == Discord.ChannelType.GuildText);
+        // assert(introductions_channel.type == Discord.ChannelType.GuildText);
         const messages = await introductions_channel.messages.fetch({ limit: 100, cache: false });
         for (const [_, message] of messages) {
             if (await this.is_new_member(message)) {

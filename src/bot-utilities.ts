@@ -453,7 +453,7 @@ export class BotUtilities {
         }
 
         if (this.wheatley.devmode_enabled && !category && name && typeof name === "string") {
-            category = this.wheatley.get_channel_by_name(name);
+            category = this.wheatley.get_channel_by_name(name, false);
         }
 
         if (!category) {

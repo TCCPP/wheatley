@@ -620,8 +620,16 @@ export class Wheatley {
     }
 
     // case-insensitive
-    get_channel_by_name(name: string) {
-        return unwrap(this.guild.channels.cache.find(channel => channel.name.toLowerCase() === name.toLowerCase()));
+    get_channel_by_name(name: string, case_insensitive: boolean = true) {
+        return unwrap(
+            this.guild.channels.cache.find(channel => {
+                if (case_insensitive) {
+                    return channel.name.toLowerCase() === name.toLowerCase();
+                }
+
+                return channel.name === name;
+            }),
+        );
     }
 
     // case-insensitive
