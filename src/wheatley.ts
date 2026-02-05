@@ -328,8 +328,8 @@ export class Wheatley {
                 this.discord_user = await this.client.users.fetch(config.id);
                 this.discord_guild = await this.client.guilds.fetch(config.guild);
 
-                this.validateChannelsAndRoles("channel", this.channels);
-                this.validateChannelsAndRoles("role", this.roles_map);
+                this.validate_channels_and_roles("channel", this.channels);
+                this.validate_channels_and_roles("role", this.roles_map);
 
                 // cache roles
                 for (const [key, info] of Object.entries(this.roles_map)) {
@@ -449,7 +449,7 @@ export class Wheatley {
         }
     }
 
-    validateChannelsAndRoles(type: "channel" | "role", values: Record<string, named_id>) {
+    validate_channels_and_roles(type: "channel" | "role", values: Record<string, named_id>) {
         let cache: Map<string, any>;
 
         switch (type) {
@@ -581,7 +581,7 @@ export class Wheatley {
     }
 
     is_forum_help_channel(id: Discord.Snowflake) {
-        return [this.channels.cpp_help, this.channels.c_help].some(ch => ch.id === id);
+        return [this.channels.cpp_help, this.channels.c_help].some(channel_info => channel_info.id === id);
     }
 
     is_forum_help_thread(thread: Discord.ThreadChannel) {

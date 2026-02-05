@@ -294,7 +294,9 @@ export default class ForumChannels extends BotComponent {
     is_non_forum_mirror_channel(thread: Discord.ThreadChannel) {
         return (
             thread.parentId != null &&
-            [this.wheatley.channels.code_review, this.wheatley.channels.showcase].some(ch => ch.id === thread.parentId)
+            [this.wheatley.channels.code_review, this.wheatley.channels.showcase].some(
+                channel_info => channel_info.id === thread.parentId,
+            )
         );
     }
 

@@ -50,7 +50,7 @@ export default class PermissionManager extends BotComponent {
     override async setup(commands: CommandSetBuilder) {
         this.skill_roles = unwrap(this.wheatley.components.get("SkillRoles")) as SkillRoles;
 
-        this.wheatley.validateChannelsAndRoles("channel", categories_map);
+        this.wheatley.validate_channels_and_roles("channel", categories_map);
     }
 
     setup_permissions_map() {
