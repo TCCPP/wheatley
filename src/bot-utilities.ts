@@ -384,7 +384,10 @@ export class BotUtilities {
         }
 
         const expected_types = Array.isArray(expected_type) ? expected_type : [expected_type];
-        assert(expected_types.includes(channel.type), `Channel ${channel.name} (${id}) not of the expected type`);
+        assert(
+            expected_types.includes(channel.type),
+            `Channel ${channel.name} (${id}) not of the expected type (${channel.type})`,
+        );
         return <T>(<unknown>channel);
     }
 
