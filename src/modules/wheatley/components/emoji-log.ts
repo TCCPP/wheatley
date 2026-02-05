@@ -11,7 +11,10 @@ export default class EmojiLog extends BotComponent {
     private staff_action_log!: Discord.TextChannel;
 
     override async setup(commands: CommandSetBuilder) {
-        this.staff_action_log = await this.utilities.get_channel(this.wheatley.channels.staff_action_log.id);
+        this.staff_action_log = await this.utilities.get_channel(
+            this.wheatley.channels.staff_action_log.id,
+            this.wheatley.channels.staff_action_log.name,
+        );
     }
 
     override async on_emoji_create(emoji: Discord.GuildEmoji) {

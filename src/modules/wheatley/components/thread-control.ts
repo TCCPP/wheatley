@@ -11,7 +11,10 @@ export default class ThreadControl extends BotComponent {
     private rules!: Discord.TextChannel;
 
     override async setup(commands: CommandSetBuilder) {
-        this.rules = await this.utilities.get_channel(this.wheatley.channels.rules.id);
+        this.rules = await this.utilities.get_channel(
+            this.wheatley.channels.rules.id,
+            this.wheatley.channels.rules.name,
+        );
         commands.add(
             new TextBasedCommandBuilder("archive", EarlyReplyMode.ephemeral)
                 .set_category("Thread Control")

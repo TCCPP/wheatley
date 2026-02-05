@@ -61,8 +61,14 @@ export default class Purge extends BotComponent {
     private welcome!: Discord.TextChannel;
 
     override async setup(commands: CommandSetBuilder) {
-        this.staff_flag_log = await this.utilities.get_channel(this.wheatley.channels.staff_flag_log.id);
-        this.welcome = await this.utilities.get_channel(this.wheatley.channels.welcome.id);
+        this.staff_flag_log = await this.utilities.get_channel(
+            this.wheatley.channels.staff_flag_log.id,
+            this.wheatley.channels.staff_flag_log.name,
+        );
+        this.welcome = await this.utilities.get_channel(
+            this.wheatley.channels.welcome.id,
+            this.wheatley.channels.welcome.name,
+        );
         // purge count
         // purge after
         // purge range

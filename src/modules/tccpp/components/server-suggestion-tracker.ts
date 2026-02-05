@@ -59,11 +59,16 @@ export default class ServerSuggestionTracker extends BotComponent {
 
         this.suggestion_action_log = await this.utilities.get_thread_channel(
             this.wheatley.channels.suggestion_action_log.id,
+            this.wheatley.channels.suggestion_action_log.name,
         );
         this.suggestion_dashboard = await this.utilities.get_thread_channel(
             this.wheatley.channels.suggestion_dashboard.id,
+            this.wheatley.channels.suggestion_dashboard.name,
         );
-        this.server_suggestions = await this.utilities.get_channel(this.wheatley.channels.server_suggestions.id);
+        this.server_suggestions = await this.utilities.get_channel(
+            this.wheatley.channels.server_suggestions.id,
+            this.wheatley.channels.server_suggestions.name,
+        );
 
         commands.add(
             new TextBasedCommandBuilder("suggestions-dashboard-count", EarlyReplyMode.visible)

@@ -36,7 +36,10 @@ export default class SkillRoles extends BotComponent {
     override async setup(commands: CommandSetBuilder) {
         await ensure_index(this.wheatley, this.database.skill_roles, { user_id: 1 }, { unique: true });
 
-        this.skill_role_log = await this.utilities.get_channel(this.wheatley.channels.skill_role_log.id);
+        this.skill_role_log = await this.utilities.get_channel(
+            this.wheatley.channels.skill_role_log.id,
+            this.wheatley.channels.skill_role_log.name,
+        );
     }
 
     override async on_ready() {

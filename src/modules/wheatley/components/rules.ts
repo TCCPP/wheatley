@@ -19,7 +19,10 @@ export default class RulesMessage extends BotComponent {
     private wiki!: Wiki;
 
     override async setup() {
-        this.rules_channel = await this.utilities.get_channel(this.wheatley.channels.rules.id);
+        this.rules_channel = await this.utilities.get_channel(
+            this.wheatley.channels.rules.id,
+            this.wheatley.channels.rules.name,
+        );
         this.wiki = unwrap(this.wheatley.components.get("Wiki")) as Wiki;
     }
 

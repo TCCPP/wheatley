@@ -112,8 +112,14 @@ export default class Starboard extends BotComponent {
             delete_timestamp: -1,
         });
 
-        this.starboard = await this.utilities.get_channel(this.wheatley.channels.starboard.id);
-        this.staff_delet_log = await this.utilities.get_channel(this.wheatley.channels.staff_delet_log.id);
+        this.starboard = await this.utilities.get_channel(
+            this.wheatley.channels.starboard.id,
+            this.wheatley.channels.starboard.name,
+        );
+        this.staff_delet_log = await this.utilities.get_channel(
+            this.wheatley.channels.staff_delet_log.id,
+            this.wheatley.channels.staff_delet_log.name,
+        );
 
         commands.add(
             new TextBasedCommandBuilder("starboard-manage", EarlyReplyMode.visible)

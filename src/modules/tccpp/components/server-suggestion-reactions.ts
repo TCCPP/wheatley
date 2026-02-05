@@ -5,7 +5,7 @@ import { delay } from "../../../utils/misc.js";
 import { file_exists } from "../../../utils/filesystem.js";
 import { M } from "../../../utils/debugging-and-logging.js";
 import { BotComponent } from "../../../bot-component.js";
-import { Wheatley } from "../../../wheatley.js";
+import { named_id, Wheatley } from "../../../wheatley.js";
 import { forge_snowflake } from "../../../utils/discord.js";
 import { set_timeout } from "../../../utils/node.js";
 import { SERVER_SUGGESTION_TRACKER_START_TIME } from "./server-suggestion-tracker.js";
@@ -25,7 +25,7 @@ const root_only_reacts = new Set([
 export default class ServerSuggestionReactions extends BotComponent {
     readonly monitored_channels = new Map<string, Discord.TextChannel | Discord.AnyThreadChannel>();
     stop = false;
-    monitored_channels_ids!: string[];
+    monitored_channels_infos!: named_id[];
 
     async handle_fetched_message(message: Discord.Message) {
         for (const [_, reaction] of message.reactions.cache) {
@@ -93,18 +93,18 @@ export default class ServerSuggestionReactions extends BotComponent {
     }
 
     override async on_ready() {
-        this.monitored_channels_ids = [
-            this.wheatley.channels.server_suggestions.id,
-            this.wheatley.channels.suggestion_dashboard.id,
+        this.monitored_channels_infos = [
+            this.wheatley.channels.server_suggestions,
+            this.wheatley.channels.suggestion_dashboard,
         ];
         if (await file_exists("src/wheatley-private/config.ts")) {
             const config = "../wheatley-private/config.js";
             react_blacklist = (await import(config)).react_blacklist;
         }
-        for (const channel_id of this.monitored_channels_ids) {
-            const channel = await this.wheatley.client.channels.fetch(channel_id);
-            assert(channel && (channel instanceof Discord.TextChannel || channel instanceof Discord.ThreadChannel));
-            this.monitored_channels.set(channel_id, channel);
+        for (const channel_info of this.monitored_channels_infos) {
+            const channel = await this.utilities.get_channel(channel_info.id, channel_info.name);
+            assert(channel instanceof Discord.ThreadChannel || channel instanceof Discord.TextChannel);
+            this.monitored_channels.set(channel_info.id, channel);
         }
         M.debug("server_suggestion reactions handler got channels");
         // recover from down time: fetch last 100 messages (and add to cache)
@@ -125,7 +125,12 @@ export default class ServerSuggestionReactions extends BotComponent {
         if (reaction.message.guildId !== this.wheatley.guild.id) {
             return;
         }
-        if (this.monitored_channels_ids.indexOf(reaction.message.channel.id) > -1) {
+
+        const is_channel_monitored =
+            this.monitored_channels_infos.findIndex(channel_info => channel_info.id === reaction.message.channel.id) >
+            -1;
+
+        if (is_channel_monitored) {
             if (reaction.users.cache.some(user => react_blacklist.has(user.id))) {
                 // Remove but not immediately
                 M.debug("scheduling blacklisted user reaction removal");

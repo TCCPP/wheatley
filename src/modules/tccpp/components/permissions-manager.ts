@@ -50,7 +50,13 @@ export default class PermissionManager extends BotComponent {
     override async setup(commands: CommandSetBuilder) {
         this.skill_roles = unwrap(this.wheatley.components.get("SkillRoles")) as SkillRoles;
 
-        this.wheatley.validate_channels_and_roles("channel", categories_map);
+        for (const [, category_info] of Object.entries(categories_map)) {
+            try {
+                await this.utilities.get_category(category_info.id, category_info.name);
+            } catch (exception) {
+                M.error(`Error fetching category ${category_info.name} (${category_info.id}):`, exception);
+            }
+        }
     }
 
     setup_permissions_map() {
@@ -435,6 +441,7 @@ export default class PermissionManager extends BotComponent {
     async sync_permissions() {
         await Promise.all(
             Object.entries(this.category_permissions).map(async ([id, permissions]) => {
+                // TODO (xLuxy): This will fail if the category is missing, should also store name and pass it
                 const category = await this.utilities.get_category(id);
                 await this.sync_category_permissions(category, unwrap(permissions));
             }),

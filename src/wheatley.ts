@@ -328,12 +328,19 @@ export class Wheatley {
                 this.discord_user = await this.client.users.fetch(config.id);
                 this.discord_guild = await this.client.guilds.fetch(config.guild);
 
-                this.validate_channels_and_roles("channel", this.channels);
-                this.validate_channels_and_roles("role", this.roles_map);
+                // Pre-fetch channels and roles so name resolution works in devmode
+                await this.guild.channels.fetch().catch(this.critical_error.bind(this));
+                await this.guild.roles.fetch().catch(this.critical_error.bind(this));
 
                 // cache roles
                 for (const [key, info] of Object.entries(this.roles_map)) {
-                    this.roles[key as keyof typeof this.roles_map] = unwrap(this.guild.roles.cache.get(info.id));
+                    let role = this.guild.roles.cache.get(info.id);
+
+                    if (!role && info.name && this.devmode_enabled) {
+                        role = this.guild.roles.cache.find(role => role.name === info.name);
+                    }
+
+                    this.roles[key as keyof typeof this.roles_map] = unwrap(role);
                 }
 
                 if (!config.freestanding) {
@@ -447,56 +454,6 @@ export class Wheatley {
             }
             await Promise.all(promises);
         }
-    }
-
-    validate_channels_and_roles(type: "channel" | "role", values: Record<string, named_id>) {
-        let cache: Map<string, any>;
-
-        switch (type) {
-            case "channel": {
-                cache = this.client.channels.cache;
-                break;
-            }
-            case "role": {
-                cache = this.guild.roles.cache;
-                break;
-            }
-        }
-
-        for (const [key, info] of Object.entries(values)) {
-            const cached_item = this.resolveByIdOrName(type, info, cache, type);
-
-            if (!cached_item) {
-                throw new Error(`Could not resolve ${type} ${key} (id: ${info.id}, name: ${info.name ?? "<unknown>"})`);
-            }
-        }
-    }
-
-    private resolveByIdOrName<T extends { id: string; name?: string }>(
-        key: string,
-        info: T,
-        cache: Map<string, any>,
-        type: "channel" | "role",
-    ): any | null {
-        let entity = cache.get(info.id);
-        if (entity || !this.devmode_enabled || !info.name) {
-            return entity ?? null;
-        }
-
-        const matches = [...cache.values()].filter(e => e.name === info.name);
-
-        if (matches.length === 1) {
-            entity = matches[0];
-            M.debug(`Resolved ${type} ${key} by name "${info.name}" (${entity.id})`);
-            info.id = entity.id;
-            return entity;
-        }
-
-        if (matches.length > 1) {
-            M.warn(`Multiple ${type}s named "${info.name}" — cannot resolve ${key}`);
-        }
-
-        return null;
     }
 
     //
@@ -660,6 +617,11 @@ export class Wheatley {
             !(channel.isThread() && channel.type == Discord.ChannelType.PrivateThread) &&
             channel.permissionsFor(this.guild.roles.everyone).has("ViewChannel")
         );
+    }
+
+    // case-insensitive
+    get_channel_by_name(name: string) {
+        return unwrap(this.guild.channels.cache.find(channel => channel.name.toLowerCase() === name.toLowerCase()));
     }
 
     // case-insensitive

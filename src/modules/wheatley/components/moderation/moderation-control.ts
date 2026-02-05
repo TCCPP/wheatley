@@ -30,9 +30,18 @@ export default class ModerationControl extends BotComponent {
     private notification_threads!: NotificationThreads;
 
     override async setup(commands: CommandSetBuilder) {
-        this.staff_action_log = await this.utilities.get_channel(this.wheatley.channels.staff_action_log.id);
-        this.public_action_log = await this.utilities.get_channel(this.wheatley.channels.public_action_log.id);
-        this.rules = await this.utilities.get_channel(this.wheatley.channels.rules.id);
+        this.staff_action_log = await this.utilities.get_channel(
+            this.wheatley.channels.staff_action_log.id,
+            this.wheatley.channels.staff_action_log.name,
+        );
+        this.public_action_log = await this.utilities.get_channel(
+            this.wheatley.channels.public_action_log.id,
+            this.wheatley.channels.public_action_log.name,
+        );
+        this.rules = await this.utilities.get_channel(
+            this.wheatley.channels.rules.id,
+            this.wheatley.channels.rules.name,
+        );
         this.notification_threads = unwrap(this.wheatley.components.get("NotificationThreads")) as NotificationThreads;
 
         (this.wheatley.components.get("Help") as Help | undefined)?.add_category_content(

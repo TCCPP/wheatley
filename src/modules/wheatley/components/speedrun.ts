@@ -36,7 +36,10 @@ export default class Speedrun extends BotComponent {
     override async setup(commands: CommandSetBuilder) {
         await ensure_index(this.wheatley, this.database.speedrun_attempts, { user: 1 });
 
-        this.staff_action_log = await this.utilities.get_channel(this.wheatley.channels.staff_action_log.id);
+        this.staff_action_log = await this.utilities.get_channel(
+            this.wheatley.channels.staff_action_log.id,
+            this.wheatley.channels.staff_action_log.name,
+        );
     }
 
     override async on_guild_member_add(member: Discord.GuildMember) {

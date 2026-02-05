@@ -63,6 +63,7 @@ export default class DaysSinceLastIncident extends BotComponent {
 
         this.days_since_last_incident = await this.utilities.get_channel(
             this.wheatley.channels.days_since_last_incident.id,
+            this.wheatley.channels.days_since_last_incident.name,
         );
     }
 

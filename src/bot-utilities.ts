@@ -6,6 +6,7 @@ import { Wheatley } from "./wheatley.js";
 import { decode_snowflake, is_media_link_embed, make_url, get_thread_owner } from "./utils/discord.js";
 import { unwrap } from "./utils/misc.js";
 import { colors } from "./common.js";
+import { cat } from "@xenova/transformers";
 
 type quote_options = {
     // description template
@@ -355,8 +356,25 @@ export class BotUtilities {
         );
     }
 
-    async get_channel(id: string) {
-        const channel = await this.wheatley.client.channels.fetch(id);
+    async get_channel(id: string, name?: string) {
+        let channel: Discord.GuildBasedChannel | null = null;
+
+        try {
+            channel = await this.wheatley.guild.channels.fetch(id);
+        } catch (e) {
+            // don't throw when DiscordAPIError[50001]: Missing Access
+            if (e instanceof Discord.DiscordAPIError && e.code == 50001) {
+                // unknown channel
+                channel = null;
+            } else {
+                throw e;
+            }
+        }
+
+        if (this.wheatley.devmode_enabled && !channel && name && typeof name === "string") {
+            channel = this.wheatley.get_channel_by_name(name);
+        }
+
         if (!channel) {
             throw new Error(`Channel ${id} not found`);
         }
@@ -365,8 +383,24 @@ export class BotUtilities {
         return channel;
     }
 
-    async get_forum_channel(id: string) {
-        const channel = await this.wheatley.client.channels.fetch(id);
+    async get_forum_channel(id: string, name?: string) {
+        let channel: Discord.GuildBasedChannel | null;
+
+        try {
+            channel = await this.wheatley.guild.channels.fetch(id);
+        } catch (e) {
+            // don't throw when DiscordAPIError[50001]: Missing Access
+            if (e instanceof Discord.DiscordAPIError && e.code == 50001) {
+                // unknown channel
+                channel = null;
+            } else {
+                throw e;
+            }
+        }
+
+        if (this.wheatley.devmode_enabled && !channel && name && typeof name === "string") {
+            channel = this.wheatley.get_channel_by_name(name);
+        }
 
         if (!channel) {
             throw new Error(`Forum channel ${id} not found`);
@@ -376,8 +410,24 @@ export class BotUtilities {
         return channel;
     }
 
-    async get_thread_channel(id: string) {
-        const channel = await this.wheatley.client.channels.fetch(id);
+    async get_thread_channel(id: string, name?: string) {
+        let channel: Discord.GuildBasedChannel | null;
+
+        try {
+            channel = await this.wheatley.guild.channels.fetch(id);
+        } catch (e) {
+            // don't throw when DiscordAPIError[50001]: Missing Access
+            if (e instanceof Discord.DiscordAPIError && e.code == 50001) {
+                // unknown channel
+                channel = null;
+            } else {
+                throw e;
+            }
+        }
+
+        if (this.wheatley.devmode_enabled && !channel && name && typeof name === "string") {
+            channel = this.wheatley.get_channel_by_name(name);
+        }
 
         if (!channel) {
             throw new Error(`Thread channel ${id} not found`);
@@ -387,8 +437,24 @@ export class BotUtilities {
         return channel;
     }
 
-    async get_category(id: string) {
-        const category = await this.wheatley.client.channels.fetch(id);
+    async get_category(id: string, name?: string) {
+        let category: Discord.GuildBasedChannel | null;
+
+        try {
+            category = await this.wheatley.guild.channels.fetch(id);
+        } catch (e) {
+            // don't throw when DiscordAPIError[50001]: Missing Access
+            if (e instanceof Discord.DiscordAPIError && e.code == 50001) {
+                // unknown channel
+                category = null;
+            } else {
+                throw e;
+            }
+        }
+
+        if (this.wheatley.devmode_enabled && !category && name && typeof name === "string") {
+            category = this.wheatley.get_channel_by_name(name);
+        }
 
         if (!category) {
             throw new Error(`Category ${id} not found`);
