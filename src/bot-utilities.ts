@@ -356,7 +356,11 @@ export class BotUtilities {
         );
     }
 
-    async get_channel(id: string, name?: string) {
+    async get_channel<T extends Discord.BaseChannel = Discord.TextChannel>(
+        id: string,
+        name?: string,
+        expected_type: Discord.ChannelType | Discord.ChannelType[] = Discord.ChannelType.GuildText,
+    ): Promise<T> {
         let channel: Discord.GuildBasedChannel | null = null;
 
         try {
@@ -379,8 +383,9 @@ export class BotUtilities {
             throw new Error(`Channel ${id} not found`);
         }
 
-        assert(channel instanceof Discord.TextChannel, `Channel ${channel} (${id}) not of the expected type`);
-        return channel;
+        const expected_types = Array.isArray(expected_type) ? expected_type : [expected_type];
+        assert(expected_types.includes(channel.type), `Channel ${channel.name} (${id}) not of the expected type`);
+        return <T>(<unknown>channel);
     }
 
     async get_forum_channel(id: string, name?: string) {
