@@ -7,10 +7,10 @@ import { M } from "../../../../utils/debugging-and-logging.js";
 import { BotComponent } from "../../../../bot-component.js";
 import { Wheatley } from "../../../../wheatley.js";
 import { ModerationComponent, parse_duration } from "./moderation-common.js";
-import { moderation_entry } from "./schemata.js";
+import { moderation_entry, note_moderation_types, voice_moderation_types } from "./schemata.js";
 import { CommandSetBuilder } from "../../../../command-abstractions/command-set-builder.js";
 import { colors } from "../../../../common.js";
-import Modlogs from "./modlogs.js";
+import Modlogs, { staff_moderation_display_options, public_moderation_display_options } from "./modlogs.js";
 import {
     EarlyReplyMode,
     TextBasedCommandBuilder,
@@ -111,7 +111,7 @@ export default class ModerationControl extends BotComponent {
             new TextBasedCommandBuilder("expunge", EarlyReplyMode.visible)
                 .set_category("Moderation")
                 .set_description("Expunge a case")
-                .set_permissions(Discord.PermissionFlagsBits.BanMembers)
+                .set_permissions(Discord.PermissionFlagsBits.BanMembers | Discord.PermissionFlagsBits.MuteMembers)
                 .add_number_option({
                     title: "case",
                     description: "Case to expunge",
@@ -159,17 +159,21 @@ export default class ModerationControl extends BotComponent {
             await this.reply_with_success(command, "Reason updated");
             await this.staff_action_log.send({
                 embeds: [
-                    Modlogs.case_summary(res, await this.wheatley.client.users.fetch(res.user), true).setTitle(
-                        `Case ${res.case_number} reason updated`,
-                    ),
+                    Modlogs.case_summary(
+                        res,
+                        await this.wheatley.client.users.fetch(res.user),
+                        staff_moderation_display_options,
+                    ).setTitle(`Case ${res.case_number} reason updated`),
                 ],
             });
-            if (res.type !== "note") {
+            if (!note_moderation_types.includes(res.type)) {
                 await this.public_action_log.send({
                     embeds: [
-                        Modlogs.case_summary(res, await this.wheatley.client.users.fetch(res.user), false).setTitle(
-                            `Case ${res.case_number} reason updated`,
-                        ),
+                        Modlogs.case_summary(
+                            res,
+                            await this.wheatley.client.users.fetch(res.user),
+                            public_moderation_display_options,
+                        ).setTitle(`Case ${res.case_number} reason updated`),
                     ],
                 });
                 await this.notify_user(res.user, case_number, `**Reason:** ${reason}`);
@@ -195,9 +199,11 @@ export default class ModerationControl extends BotComponent {
             await this.reply_with_success(command, "Context updated");
             await this.staff_action_log.send({
                 embeds: [
-                    Modlogs.case_summary(res, await this.wheatley.client.users.fetch(res.user), true).setTitle(
-                        `Case ${res.case_number} context updated`,
-                    ),
+                    Modlogs.case_summary(
+                        res,
+                        await this.wheatley.client.users.fetch(res.user),
+                        staff_moderation_display_options,
+                    ).setTitle(`Case ${res.case_number} context updated`),
                 ],
             });
         } else {
@@ -233,17 +239,21 @@ export default class ModerationControl extends BotComponent {
             this.wheatley.event_hub.emit("update_moderation", res);
             await this.staff_action_log.send({
                 embeds: [
-                    Modlogs.case_summary(res, await this.wheatley.client.users.fetch(res.user), true).setTitle(
-                        `Case ${res.case_number} duration updated`,
-                    ),
+                    Modlogs.case_summary(
+                        res,
+                        await this.wheatley.client.users.fetch(res.user),
+                        staff_moderation_display_options,
+                    ).setTitle(`Case ${res.case_number} duration updated`),
                 ],
             });
-            if (res.type !== "note") {
+            if (!note_moderation_types.includes(res.type)) {
                 await this.public_action_log.send({
                     embeds: [
-                        Modlogs.case_summary(res, await this.wheatley.client.users.fetch(res.user), false).setTitle(
-                            `Case ${res.case_number} duration updated`,
-                        ),
+                        Modlogs.case_summary(
+                            res,
+                            await this.wheatley.client.users.fetch(res.user),
+                            public_moderation_display_options,
+                        ).setTitle(`Case ${res.case_number} duration updated`),
                     ],
                 });
                 const duration_str = res.duration ? time_to_human(res.duration) : "Permanent";
@@ -253,6 +263,19 @@ export default class ModerationControl extends BotComponent {
     }
 
     async expunge(command: TextBasedCommand, case_number: number, reason: string | null) {
+        const member = await command.get_member();
+        const has_ban_members = member.permissions.has(Discord.PermissionFlagsBits.BanMembers);
+        if (!has_ban_members) {
+            const moderation = await this.database.moderations.findOne({ case_number });
+            if (!moderation) {
+                await this.reply_with_error(command, `Case ${case_number} not found`);
+                return;
+            }
+            if (!voice_moderation_types.includes(moderation.type)) {
+                await this.reply_with_error(command, "You can only expunge voice moderation cases");
+                return;
+            }
+        }
         const res = await this.database.moderations.findOneAndUpdate(
             { case_number },
             {
@@ -260,7 +283,7 @@ export default class ModerationControl extends BotComponent {
                     active: false, // moderation update handler will handle the removal if necessary
                     expunged: {
                         moderator: command.user.id,
-                        moderator_name: (await command.get_member()).displayName,
+                        moderator_name: member.displayName,
                         reason,
                         timestamp: Date.now(),
                     },
@@ -276,17 +299,21 @@ export default class ModerationControl extends BotComponent {
             this.wheatley.event_hub.emit("update_moderation", res);
             await this.staff_action_log.send({
                 embeds: [
-                    Modlogs.case_summary(res, await this.wheatley.client.users.fetch(res.user), true).setTitle(
-                        `Case ${res.case_number} expunged`,
-                    ),
+                    Modlogs.case_summary(
+                        res,
+                        await this.wheatley.client.users.fetch(res.user),
+                        staff_moderation_display_options,
+                    ).setTitle(`Case ${res.case_number} expunged`),
                 ],
             });
-            if (res.type !== "note") {
+            if (!note_moderation_types.includes(res.type)) {
                 await this.public_action_log.send({
                     embeds: [
-                        Modlogs.case_summary(res, await this.wheatley.client.users.fetch(res.user), false).setTitle(
-                            `Case ${res.case_number} expunged`,
-                        ),
+                        Modlogs.case_summary(
+                            res,
+                            await this.wheatley.client.users.fetch(res.user),
+                            public_moderation_display_options,
+                        ).setTitle(`Case ${res.case_number} expunged`),
                     ],
                 });
                 await this.notify_user(res.user, case_number, `**Expunged:** ${reason ?? "No reason provided"}`);

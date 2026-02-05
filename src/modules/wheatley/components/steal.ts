@@ -27,7 +27,7 @@ export default class Steal extends BotComponent {
                     description: "url",
                     required: true,
                 })
-                .set_permissions(Discord.PermissionFlagsBits.BanMembers)
+                .set_permissions(Discord.PermissionFlagsBits.Administrator)
                 .set_handler(this.steal_url.bind(this)),
         );
 
@@ -45,7 +45,7 @@ export default class Steal extends BotComponent {
                     description: "url",
                     required: true,
                 })
-                .set_permissions(Discord.PermissionFlagsBits.BanMembers)
+                .set_permissions(Discord.PermissionFlagsBits.Administrator)
                 .set_handler(this.add_url.bind(this)),
         );
 
@@ -58,7 +58,7 @@ export default class Steal extends BotComponent {
                     description: "text",
                     required: true,
                 })
-                .set_permissions(Discord.PermissionFlagsBits.BanMembers)
+                .set_permissions(Discord.PermissionFlagsBits.Administrator)
                 .set_handler(this.steal_text.bind(this)),
         );
     }

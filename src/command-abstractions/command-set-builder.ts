@@ -17,11 +17,12 @@ import { Wheatley } from "../wheatley.js";
 const global_context_menu_limit = 5;
 
 export class CommandSetBuilder {
-    commands: (Discord.SlashCommandBuilder | Discord.ContextMenuCommandBuilder)[] = [];
-    text_commands: Record<string, BotTextBasedCommand<unknown[]>> = {};
-    other_commands: Record<string, BaseBotInteraction<unknown[]>> = {};
-    button_handlers: Record<string, BotButtonHandler<any[]>> = {};
-    modal_handlers: Record<string, BotModalHandler<any[]>> = {};
+    private commands: (Discord.SlashCommandBuilder | Discord.ContextMenuCommandBuilder)[] = [];
+    private text_commands: Record<string, BotTextBasedCommand<unknown[]>> = {};
+    private other_commands: Record<string, BaseBotInteraction<unknown[]>> = {};
+    private button_handlers: Record<string, BotButtonHandler<any[]>> = {};
+    private modal_handlers: Record<string, BotModalHandler<any[]>> = {};
+    private pending_text_commands: Map<string, TextBasedCommandBuilder<any, true, any, true>> = new Map();
 
     constructor(readonly wheatley: Wheatley) {}
 
@@ -45,12 +46,18 @@ export class CommandSetBuilder {
             | ButtonInteractionBuilder<T, true>,
     ) {
         if (command instanceof TextBasedCommandBuilder) {
-            for (const descriptor of command.to_command_descriptors(this.wheatley)) {
-                assert(!(descriptor.name in this.text_commands));
-                this.text_commands[descriptor.name] = descriptor;
-                if (descriptor.slash) {
-                    this.register(descriptor.to_slash_command(new Discord.SlashCommandBuilder()));
+            const name = command.names[0];
+            const existing = this.pending_text_commands.get(name);
+            if (existing) {
+                assert(
+                    existing.subcommands.length > 0 && command.subcommands.length > 0,
+                    `Cannot merge command "${name}" - both must have subcommands`,
+                );
+                for (const subcommand of command.subcommands) {
+                    existing.add_subcommand(subcommand);
                 }
+            } else {
+                this.pending_text_commands.set(name, command as TextBasedCommandBuilder<any, true, any, true>);
             }
         } else if (command instanceof ButtonInteractionBuilder) {
             const button_handler = command.build_handler();
@@ -83,6 +90,14 @@ export class CommandSetBuilder {
     }
 
     async finalize(token: string) {
+        for (const command of this.pending_text_commands.values()) {
+            for (const descriptor of command.to_command_descriptors(this.wheatley)) {
+                this.text_commands[descriptor.name] = descriptor;
+                if (descriptor.slash) {
+                    this.register(descriptor.to_slash_command(new Discord.SlashCommandBuilder()));
+                }
+            }
+        }
         try {
             const rest = new REST({ version: "10" }).setToken(token);
             if (this.wheatley.freestanding) {
