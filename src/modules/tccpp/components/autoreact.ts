@@ -153,7 +153,6 @@ export default class Autoreact extends BotComponent {
             // reaction blocked
             if (e instanceof Discord.DiscordAPIError && e.code === 90001) {
                 await message.member?.timeout(1 * MINUTE, "Thou shall not block the bot");
-
                 if (message.channel.id == this.wheatley.channels.server_suggestions.id) {
                     await message.delete();
                 }
@@ -179,7 +178,6 @@ export default class Autoreact extends BotComponent {
         if (new_message.createdTimestamp && Date.now() - new_message.createdTimestamp > 5 * MINUTE) {
             return;
         }
-
         if (new_message.channel.id == this.wheatley.channels.memes.id) {
             const bot_starred = new_message.reactions.cache.get("⭐")?.users.cache.has(this.wheatley.user.id);
             // If we haven't stared (or don't know if we've starred) and the new message has media, star

@@ -30,7 +30,6 @@ export default class Code extends BotComponent {
         const is_c = [wheatley.channels.c_help, wheatley.channels.c_help_text].some(
             channel_info => channel_info.id == wheatley.top_level_channel(channel),
         );
-
         return [
             {
                 name: "Markup",

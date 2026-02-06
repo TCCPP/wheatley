@@ -128,11 +128,9 @@ export default class ServerSuggestionReactions extends BotComponent {
         if (reaction.message.guildId !== this.wheatley.guild.id) {
             return;
         }
-
         const is_channel_monitored = this.monitored_channels_infos.some(
             channel_info => channel_info.id === reaction.message.channel.id,
         );
-
         if (is_channel_monitored) {
             if (reaction.users.cache.some(user => react_blacklist.has(user.id))) {
                 // Remove but not immediately

@@ -230,7 +230,6 @@ export default class Starboard extends BotComponent {
         if (!(reaction.emoji instanceof Discord.GuildEmoji || reaction.emoji.id === null)) {
             return false;
         }
-
         const parent_channel_id = this.get_parent_channel_id(reaction.message.channel);
         if (reaction.emoji.name == "⭐") {
             if (parent_channel_id == this.wheatley.channels.memes.id) {
@@ -247,7 +246,6 @@ export default class Starboard extends BotComponent {
                 return reaction.count >= other_threshold;
             }
         }
-
         return false;
     }
 

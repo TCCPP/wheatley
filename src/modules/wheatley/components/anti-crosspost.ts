@@ -47,19 +47,15 @@ export default class AntiCrosspost extends BotComponent {
         ) {
             return;
         }
-
         if (await this.wheatley.check_permissions(message.author, Discord.PermissionFlagsBits.ModerateMembers)) {
             return;
         }
-
         if (message.content.length < MIN_MESSAGE_LENGTH) {
             return;
         }
-
         if (message.channelId === this.wheatley.channels.bot_spam.id) {
             return;
         }
-
         let user_messages = this.recent_messages.get(message.author.id) ?? [];
         const cutoff_time = message.createdTimestamp - CROSSPOST_WINDOW;
         user_messages = user_messages.filter(m => m.timestamp > cutoff_time);

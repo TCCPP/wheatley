@@ -93,7 +93,6 @@ export default class ThreadBasedChannels extends BotComponent {
         if (message.guildId !== this.wheatley.guild.id) {
             return;
         }
-
         if (message.channelId === this.wheatley.channels.today_i_learned.id) {
             if (message.hasThread) {
                 await unwrap(message.thread).send(

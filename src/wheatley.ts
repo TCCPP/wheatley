@@ -150,10 +150,8 @@ const channels: { [key: string]: named_id } = {
     work_4: { id: "1367735453112864838", name: "Work 4" },
     afk: { id: "331732845523369985", name: "AFK" },
     deans_office: { id: "1379612678649155755", name: "Dean's Office" },
-
     // red telephone
     red_telephone_alerts: { id: "1140096352278290512", name: "red-telephone-alerts" },
-
     // error log
     log: { id: "1260777903700971581", name: "🤖-wheatley-log" },
 };

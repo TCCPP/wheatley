@@ -88,7 +88,6 @@ export default class Memes extends BotComponent {
         if (message.guildId !== this.wheatley.guild.id) {
             return;
         }
-
         if (message.channel.id !== this.wheatley.channels.memes.id) {
             return;
         }
@@ -110,7 +109,6 @@ export default class Memes extends BotComponent {
         if (new_message.guildId !== this.wheatley.guild.id) {
             return;
         }
-
         if (new_message.channel.id !== this.wheatley.channels.memes.id) {
             return;
         }
