@@ -42,6 +42,7 @@ export default class SkillRoles extends BotComponent {
     override async on_ready() {
         for (const name in SkillLevel) {
             const role = this.utilities.get_role_by_name(capitalize(name));
+            assert(role, `Could not find skill role: ${name}`);
             this.skill_roles.push(role);
             this.roles[name as skill_level] = role;
         }

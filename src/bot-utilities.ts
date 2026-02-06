@@ -418,6 +418,6 @@ export class BotUtilities {
 
     // case-insensitive
     get_role_by_name(name: string) {
-        return unwrap(this.wheatley.guild.roles.cache.find(role => role.name.toLowerCase() === name.toLowerCase()));
+        return this.wheatley.guild.roles.cache.find(role => role.name.toLowerCase() === name.toLowerCase());
     }
 }
