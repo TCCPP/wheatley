@@ -619,24 +619,6 @@ export class Wheatley {
         );
     }
 
-    // case-insensitive
-    get_channel_by_name(name: string, case_insensitive: boolean = true) {
-        return unwrap(
-            this.guild.channels.cache.find(channel => {
-                if (case_insensitive) {
-                    return channel.name.toLowerCase() === name.toLowerCase();
-                }
-
-                return channel.name === name;
-            }),
-        );
-    }
-
-    // case-insensitive
-    get_role_by_name(name: string) {
-        return unwrap(this.guild.roles.cache.find(role => role.name.toLowerCase() === name.toLowerCase()));
-    }
-
     async try_fetch_guild_member(
         options: Discord.GuildMember | Discord.User | Discord.UserResolvable | Discord.FetchMemberOptions,
     ): Promise<Discord.GuildMember | null> {

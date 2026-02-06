@@ -357,7 +357,7 @@ export class BotUtilities {
         }
 
         if (this.wheatley.devmode_enabled && !channel && channel_info.name && typeof channel_info.name === "string") {
-            channel = this.wheatley.get_channel_by_name(channel_info.name, case_insensitive);
+            channel = this.get_channel_by_name(channel_info.name, case_insensitive);
         }
 
         if (!channel) {
@@ -434,5 +434,23 @@ export class BotUtilities {
                 throw e;
             }
         }
+    }
+
+    // case-insensitive
+    get_channel_by_name(name: string, case_insensitive: boolean = true) {
+        return unwrap(
+            this.wheatley.guild.channels.cache.find(channel => {
+                if (case_insensitive) {
+                    return channel.name.toLowerCase() === name.toLowerCase();
+                }
+
+                return channel.name === name;
+            }),
+        );
+    }
+
+    // case-insensitive
+    get_role_by_name(name: string) {
+        return unwrap(this.wheatley.guild.roles.cache.find(role => role.name.toLowerCase() === name.toLowerCase()));
     }
 }

@@ -41,7 +41,7 @@ export default class SkillRoles extends BotComponent {
 
     override async on_ready() {
         for (const name in SkillLevel) {
-            const role = this.wheatley.get_role_by_name(capitalize(name));
+            const role = this.utilities.get_role_by_name(capitalize(name));
             this.skill_roles.push(role);
             this.roles[name as skill_level] = role;
         }
