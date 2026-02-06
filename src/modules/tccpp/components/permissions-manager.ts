@@ -425,10 +425,7 @@ export default class PermissionManager extends BotComponent {
     async sync_permissions() {
         await Promise.all(
             Object.entries(this.category_permissions).map(async ([id, permissions]) => {
-                const category_info = Object.values(categories_map).find(category_info => category_info.id === id);
-                assert(category_info, `Category with id ${id} not found in categories_map`);
-
-                const category = await this.utilities.get_category(category_info);
+                const category = await this.utilities.get_category({ id });
                 await this.sync_category_permissions(category, unwrap(permissions));
             }),
         );
