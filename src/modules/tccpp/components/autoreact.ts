@@ -205,8 +205,6 @@ export default class Autoreact extends BotComponent {
 
     async catch_up() {
         const introductions_channel = await this.utilities.get_channel(this.wheatley.channels.introductions);
-        assert(introductions_channel);
-        // assert(introductions_channel.type == Discord.ChannelType.GuildText);
         const messages = await introductions_channel.messages.fetch({ limit: 100, cache: false });
         for (const [_, message] of messages) {
             if (await this.is_new_member(message)) {
