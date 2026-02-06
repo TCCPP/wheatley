@@ -85,7 +85,7 @@ export default class Starboard extends BotComponent {
     negative_emojis!: string[];
     repost_emojis!: string[];
 
-    excluded_channels!: Set<Discord.Snowflake>;
+    excluded_channels!: Set<string>;
 
     private starboard!: Discord.TextChannel;
     private staff_delet_log!: Discord.TextChannel;

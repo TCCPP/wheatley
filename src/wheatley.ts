@@ -71,7 +71,7 @@ export type wheatley_config = core_config & {
 
 export type named_id = {
     // channel id used in production
-    id: Discord.Snowflake;
+    id: string;
 
     // fallback channel name (for development only)
     name?: string;
