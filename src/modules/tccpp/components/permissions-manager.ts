@@ -60,6 +60,7 @@ export default class PermissionManager extends BotComponent {
             Discord.PermissionsBitField.Flags.CreatePrivateThreads,
             Discord.PermissionsBitField.Flags.AddReactions,
             Discord.PermissionsBitField.Flags.Speak,
+            Discord.PermissionsBitField.Flags.Stream,
             Discord.PermissionsBitField.Flags.SendTTSMessages,
             Discord.PermissionsBitField.Flags.UseApplicationCommands,
         ];
@@ -174,6 +175,7 @@ export default class PermissionManager extends BotComponent {
         };
 
         this.add_category_permissions(categories_map.staff_logs, mod_only_channel);
+        this.add_category_permissions(categories_map.staff, mod_only_channel);
         this.add_category_permissions(categories_map.meta, default_permissions);
         this.add_category_permissions(categories_map.cpp_help, default_permissions);
         this.add_category_permissions(categories_map.c_help, default_permissions);
@@ -188,6 +190,33 @@ export default class PermissionManager extends BotComponent {
         this.add_category_permissions(categories_map.private_archive, mod_only_channel);
         this.add_category_permissions(categories_map.challenges_archive, mod_only_channel);
         this.add_category_permissions(categories_map.meta_archive, mod_only_channel);
+
+        // staff overwrites
+        this.add_channel_overwrite(this.wheatley.channels.staff_only, {
+            [this.wheatley.guild.roles.everyone.id]: {
+                deny: [Discord.PermissionsBitField.Flags.ViewChannel],
+            },
+            [this.wheatley.roles.moderators.id]: {
+                deny: [Discord.PermissionsBitField.Flags.ViewChannel],
+            },
+            [this.wheatley.user.id]: {
+                allow: [Discord.PermissionsBitField.Flags.ViewChannel],
+            },
+        });
+        this.add_channel_overwrite(this.wheatley.channels.voice_hotline, {
+            [this.wheatley.guild.roles.everyone.id]: {
+                deny: [Discord.PermissionsBitField.Flags.ViewChannel],
+            },
+            [this.wheatley.roles.moderators.id]: {
+                allow: [Discord.PermissionsBitField.Flags.ViewChannel],
+            },
+            [this.wheatley.roles.voice_moderator.id]: {
+                allow: [Discord.PermissionsBitField.Flags.ViewChannel],
+            },
+            [this.wheatley.user.id]: {
+                allow: [Discord.PermissionsBitField.Flags.ViewChannel],
+            },
+        });
 
         // meta overwrites
         this.add_channel_overwrite(this.wheatley.channels.rules, {
