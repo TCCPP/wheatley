@@ -154,7 +154,7 @@ const channels: { [key: string]: named_id } = {
     red_telephone_alerts: { id: "1140096352278290512", name: "red-telephone-alerts" },
     // error log
     log: { id: "1260777903700971581", name: "🤖-wheatley-log" },
-};
+} satisfies { [key: string]: named_id };
 
 const roles_map: { [key: string]: named_id } = {
     muted: { id: "815987333094178825", name: "Muted" },
@@ -182,7 +182,7 @@ const roles_map: { [key: string]: named_id } = {
     linked_github: { id: "1080596526478397471", name: "Linked GitHub" },
     wiki_core: { id: "1354998426370314411", name: "core-wiki" },
     voice: { id: "1368073548983308328", name: "voice" },
-};
+} satisfies { [key: string]: named_id };
 
 type EventMap = {
     wheatley_ready: () => void;
