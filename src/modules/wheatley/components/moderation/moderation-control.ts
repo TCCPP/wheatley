@@ -102,7 +102,7 @@ export default class ModerationControl extends BotComponent {
             new TextBasedCommandBuilder("expunge", EarlyReplyMode.visible)
                 .set_category("Moderation")
                 .set_description("Expunge a case")
-                .set_permissions(Discord.PermissionFlagsBits.BanMembers | Discord.PermissionFlagsBits.MuteMembers)
+                .set_permissions(Discord.PermissionFlagsBits.MuteMembers)
                 .add_number_option({
                     title: "case",
                     description: "Case to expunge",
