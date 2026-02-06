@@ -10,7 +10,10 @@ export default class VoiceModeration extends BotComponent {
     private staff_action_log!: Discord.TextChannel;
 
     override async setup() {
-        this.staff_action_log = await this.utilities.get_channel(this.wheatley.channels.staff_action_log);
+        this.staff_action_log = await this.utilities.get_channel(
+            this.wheatley.channels.staff_action_log.id,
+            this.wheatley.channels.staff_action_log.name,
+        );
     }
 
     private audit_log_summary(
