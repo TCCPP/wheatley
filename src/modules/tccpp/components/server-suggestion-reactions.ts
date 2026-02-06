@@ -129,9 +129,9 @@ export default class ServerSuggestionReactions extends BotComponent {
             return;
         }
 
-        const is_channel_monitored =
-            this.monitored_channels_infos.findIndex(channel_info => channel_info.id === reaction.message.channel.id) >
-            -1;
+        const is_channel_monitored = this.monitored_channels_infos.some(
+            channel_info => channel_info.id === reaction.message.channel.id,
+        );
 
         if (is_channel_monitored) {
             if (reaction.users.cache.some(user => react_blacklist.has(user.id))) {

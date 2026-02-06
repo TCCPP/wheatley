@@ -377,14 +377,16 @@ export class BotUtilities {
         case_insensitive: boolean = true,
         additional_types?: Discord.ChannelType | Discord.ChannelType[],
     ) {
-        return await this.get_channel<T>(channel_info, case_insensitive, [
-            Discord.ChannelType.GuildForum,
-            ...(Array.isArray(additional_types)
-                ? additional_types
-                : additional_types !== undefined
-                  ? [additional_types]
-                  : []),
-        ]);
+        let expected_types: Discord.ChannelType[] = [Discord.ChannelType.GuildForum];
+
+        if (additional_types) {
+            expected_types = [
+                ...expected_types,
+                ...(Array.isArray(additional_types) ? additional_types : [additional_types]),
+            ];
+        }
+
+        return await this.get_channel<T>(channel_info, case_insensitive, expected_types);
     }
 
     async get_thread_channel<T extends Discord.BaseChannel = Discord.ThreadChannel>(
@@ -392,16 +394,20 @@ export class BotUtilities {
         case_insensitive: boolean = true,
         additional_types?: Discord.ChannelType | Discord.ChannelType[],
     ) {
-        return await this.get_channel<T>(channel_info, case_insensitive, [
+        let expected_types: Discord.ChannelType[] = [
             Discord.ChannelType.PublicThread,
             Discord.ChannelType.PrivateThread,
             Discord.ChannelType.AnnouncementThread,
-            ...(Array.isArray(additional_types)
-                ? additional_types
-                : additional_types !== undefined
-                  ? [additional_types]
-                  : []),
-        ]);
+        ];
+
+        if (additional_types) {
+            expected_types = [
+                ...expected_types,
+                ...(Array.isArray(additional_types) ? additional_types : [additional_types]),
+            ];
+        }
+
+        return await this.get_channel<T>(channel_info, case_insensitive, expected_types);
     }
 
     async get_category<T extends Discord.BaseChannel = Discord.CategoryChannel>(
@@ -409,14 +415,15 @@ export class BotUtilities {
         case_insensitive: boolean = false,
         additional_types?: Discord.ChannelType | Discord.ChannelType[],
     ) {
-        return await this.get_channel<T>(channel_info, case_insensitive, [
-            Discord.ChannelType.GuildCategory,
-            ...(Array.isArray(additional_types)
-                ? additional_types
-                : additional_types !== undefined
-                  ? [additional_types]
-                  : []),
-        ]);
+        let expected_types: Discord.ChannelType[] = [Discord.ChannelType.GuildCategory];
+        if (additional_types) {
+            expected_types = [
+                ...expected_types,
+                ...(Array.isArray(additional_types) ? additional_types : [additional_types]),
+            ];
+        }
+
+        return await this.get_channel<T>(channel_info, case_insensitive, expected_types);
     }
 
     async can_user_control_thread(user: Discord.User, thread: Discord.ThreadChannel) {
