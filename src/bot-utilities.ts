@@ -6,7 +6,6 @@ import { named_id, Wheatley } from "./wheatley.js";
 import { decode_snowflake, is_media_link_embed, make_url, get_thread_owner } from "./utils/discord.js";
 import { unwrap } from "./utils/misc.js";
 import { colors } from "./common.js";
-import { cat } from "@xenova/transformers";
 
 type quote_options = {
     // description template
@@ -357,14 +356,14 @@ export class BotUtilities {
         }
 
         if (this.wheatley.devmode_enabled && !channel && channel_info.name && typeof channel_info.name === "string") {
-            channel = this.get_channel_by_name(channel_info.name, case_insensitive);
+            channel = this.get_channel_by_name(channel_info.name, case_insensitive) ?? null;
         }
 
         if (!channel) {
             throw new Error(`Channel ${channel_info.id} not found`);
         }
 
-        const expected_types = Array.isArray(expected_type) ? expected_type : [expected_type];
+        const expected_types = [expected_type].flat();
         assert(
             expected_types.includes(channel.type),
             `Channel ${channel.name} (${channel_info.id}) not of the expected type (${channel.type})`,
@@ -372,45 +371,20 @@ export class BotUtilities {
         return <T>(<unknown>channel);
     }
 
-    async get_forum_channel<T extends Discord.BaseChannel = Discord.ForumChannel>(
-        channel_info: named_id,
-        case_insensitive: boolean = true,
-        additional_types?: Discord.ChannelType | Discord.ChannelType[],
-    ) {
-        const expected_types: Discord.ChannelType[] = [
-            Discord.ChannelType.GuildForum,
-            ...[additional_types ?? []].flat(),
-        ];
-
-        return await this.get_channel<T>(channel_info, case_insensitive, expected_types);
+    async get_forum_channel<T extends Discord.BaseChannel = Discord.ForumChannel>(channel_info: named_id) {
+        return await this.get_channel<T>(channel_info, true, Discord.ChannelType.GuildForum);
     }
 
-    async get_thread_channel<T extends Discord.BaseChannel = Discord.ThreadChannel>(
-        channel_info: named_id,
-        case_insensitive: boolean = true,
-        additional_types?: Discord.ChannelType | Discord.ChannelType[],
-    ) {
-        const expected_types: Discord.ChannelType[] = [
+    async get_thread_channel<T extends Discord.BaseChannel = Discord.ThreadChannel>(channel_info: named_id) {
+        return await this.get_channel<T>(channel_info, true, [
             Discord.ChannelType.PublicThread,
             Discord.ChannelType.PrivateThread,
             Discord.ChannelType.AnnouncementThread,
-            ...[additional_types ?? []].flat(),
-        ];
-
-        return await this.get_channel<T>(channel_info, case_insensitive, expected_types);
+        ]);
     }
 
-    async get_category<T extends Discord.BaseChannel = Discord.CategoryChannel>(
-        channel_info: named_id,
-        case_insensitive: boolean = false,
-        additional_types?: Discord.ChannelType | Discord.ChannelType[],
-    ) {
-        const expected_types: Discord.ChannelType[] = [
-            Discord.ChannelType.GuildCategory,
-            ...[additional_types ?? []].flat(),
-        ];
-
-        return await this.get_channel<T>(channel_info, case_insensitive, expected_types);
+    async get_category<T extends Discord.BaseChannel = Discord.CategoryChannel>(channel_info: named_id) {
+        return await this.get_channel<T>(channel_info, false, Discord.ChannelType.GuildCategory);
     }
 
     async can_user_control_thread(user: Discord.User, thread: Discord.ThreadChannel) {
@@ -432,15 +406,13 @@ export class BotUtilities {
 
     // case-insensitive
     get_channel_by_name(name: string, case_insensitive: boolean = true) {
-        return unwrap(
-            this.wheatley.guild.channels.cache.find(channel => {
-                if (case_insensitive) {
-                    return channel.name.toLowerCase() === name.toLowerCase();
-                }
+        return this.wheatley.guild.channels.cache.find(channel => {
+            if (case_insensitive) {
+                return channel.name.toLowerCase() === name.toLowerCase();
+            }
 
-                return channel.name === name;
-            }),
-        );
+            return channel.name === name;
+        });
     }
 
     // case-insensitive

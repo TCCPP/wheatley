@@ -77,7 +77,7 @@ export type named_id = {
     name?: string;
 };
 
-const channels: { [key: string]: named_id } = {
+const channels = {
     // staff
     staff_flag_log: { id: "1026972603019169842", name: "🚩-flag-log" },
     staff_delet_log: { id: "1462879414864838869", name: "🗑️-delet-log" },
@@ -156,7 +156,7 @@ const channels: { [key: string]: named_id } = {
     log: { id: "1260777903700971581", name: "🤖-wheatley-log" },
 } satisfies { [key: string]: named_id };
 
-const roles_map: { [key: string]: named_id } = {
+const roles_map = {
     muted: { id: "815987333094178825", name: "Muted" },
     monke: { id: "1139378060450332752", name: "Neuron Activation" },
     no_off_topic: { id: "879419994004422666", name: "No Off Topic" },
