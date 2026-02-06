@@ -6,6 +6,7 @@ import { named_id, Wheatley } from "./wheatley.js";
 import { decode_snowflake, is_media_link_embed, make_url, get_thread_owner } from "./utils/discord.js";
 import { unwrap } from "./utils/misc.js";
 import { colors } from "./common.js";
+import { is_string } from "./utils/strings.js";
 
 type quote_options = {
     // description template
@@ -355,7 +356,7 @@ export class BotUtilities {
             }
         }
 
-        if (this.wheatley.devmode_enabled && !channel && channel_info.name && typeof channel_info.name === "string") {
+        if (this.wheatley.devmode_enabled && !channel && channel_info.name && is_string(channel_info.name)) {
             channel = this.get_channel_by_name(channel_info.name, case_insensitive) ?? null;
         }
 
