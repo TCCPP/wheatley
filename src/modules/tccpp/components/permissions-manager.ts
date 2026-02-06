@@ -49,14 +49,6 @@ export default class PermissionManager extends BotComponent {
 
     override async setup(commands: CommandSetBuilder) {
         this.skill_roles = unwrap(this.wheatley.components.get("SkillRoles")) as SkillRoles;
-
-        for (const [, category_info] of Object.entries(categories_map)) {
-            try {
-                await this.utilities.get_category(category_info);
-            } catch (exception) {
-                M.error(`Error fetching category ${category_info.name} (${category_info.id}):`, exception);
-            }
-        }
     }
 
     setup_permissions_map() {
@@ -68,6 +60,7 @@ export default class PermissionManager extends BotComponent {
             Discord.PermissionsBitField.Flags.CreatePrivateThreads,
             Discord.PermissionsBitField.Flags.AddReactions,
             Discord.PermissionsBitField.Flags.Speak,
+            Discord.PermissionsBitField.Flags.Stream,
             Discord.PermissionsBitField.Flags.SendTTSMessages,
             Discord.PermissionsBitField.Flags.UseApplicationCommands,
         ];
@@ -182,6 +175,7 @@ export default class PermissionManager extends BotComponent {
         };
 
         this.add_category_permissions(categories_map.staff_logs.id, mod_only_channel);
+        this.add_category_permissions(categories_map.staff.id, mod_only_channel);
         this.add_category_permissions(categories_map.meta.id, default_permissions);
         this.add_category_permissions(categories_map.cpp_help.id, default_permissions);
         this.add_category_permissions(categories_map.c_help.id, default_permissions);
@@ -196,6 +190,33 @@ export default class PermissionManager extends BotComponent {
         this.add_category_permissions(categories_map.private_archive.id, mod_only_channel);
         this.add_category_permissions(categories_map.challenges_archive.id, mod_only_channel);
         this.add_category_permissions(categories_map.meta_archive.id, mod_only_channel);
+
+        // staff overwrites
+        this.add_channel_overwrite(this.wheatley.channels.staff_only.id, {
+            [this.wheatley.guild.roles.everyone.id]: {
+                deny: [Discord.PermissionsBitField.Flags.ViewChannel],
+            },
+            [this.wheatley.roles.moderators.id]: {
+                deny: [Discord.PermissionsBitField.Flags.ViewChannel],
+            },
+            [this.wheatley.user.id]: {
+                allow: [Discord.PermissionsBitField.Flags.ViewChannel],
+            },
+        });
+        this.add_channel_overwrite(this.wheatley.channels.voice_hotline.id, {
+            [this.wheatley.guild.roles.everyone.id]: {
+                deny: [Discord.PermissionsBitField.Flags.ViewChannel],
+            },
+            [this.wheatley.roles.moderators.id]: {
+                allow: [Discord.PermissionsBitField.Flags.ViewChannel],
+            },
+            [this.wheatley.roles.voice_moderator.id]: {
+                allow: [Discord.PermissionsBitField.Flags.ViewChannel],
+            },
+            [this.wheatley.user.id]: {
+                allow: [Discord.PermissionsBitField.Flags.ViewChannel],
+            },
+        });
 
         // meta overwrites
         this.add_channel_overwrite(this.wheatley.channels.rules.id, {
@@ -318,7 +339,6 @@ export default class PermissionManager extends BotComponent {
                 allow: [Discord.PermissionsBitField.Flags.ViewChannel],
             },
         });
-
         // misc overwrites
         this.add_channel_overwrite(this.wheatley.channels.days_since_last_incident.id, {
             ...default_permissions,
@@ -337,7 +357,6 @@ export default class PermissionManager extends BotComponent {
                 allow: [Discord.PermissionsBitField.Flags.ViewChannel],
             },
         });
-
         // bot dev overwrites
         this.add_channel_overwrite(this.wheatley.channels.bot_dev_internal.id, mod_only_channel);
         // voice overwrites

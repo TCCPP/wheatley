@@ -55,7 +55,7 @@ export default class Modlogs extends BotComponent {
             new TextBasedCommandBuilder("modlogs", EarlyReplyMode.visible)
                 .set_category("Moderation")
                 .set_description("Get user moderation logs")
-                .set_permissions(Discord.PermissionFlagsBits.BanMembers | Discord.PermissionFlagsBits.MuteMembers)
+                .set_permissions(Discord.PermissionFlagsBits.MuteMembers)
                 .add_user_option({
                     title: "user",
                     description: "User to get modlogs for",
@@ -68,7 +68,7 @@ export default class Modlogs extends BotComponent {
             new TextBasedCommandBuilder("case", EarlyReplyMode.visible)
                 .set_category("Moderation")
                 .set_description("Get case info")
-                .set_permissions(Discord.PermissionFlagsBits.BanMembers | Discord.PermissionFlagsBits.MuteMembers)
+                .set_permissions(Discord.PermissionFlagsBits.MuteMembers)
                 .add_number_option({
                     title: "case",
                     description: "Case to get information for",
@@ -82,7 +82,7 @@ export default class Modlogs extends BotComponent {
             new ButtonInteractionBuilder("modlogs_page")
                 .add_user_id_metadata() // user_id: string
                 .add_number_metadata() // page: number
-                .set_permissions(Discord.PermissionFlagsBits.BanMembers | Discord.PermissionFlagsBits.MuteMembers)
+                .set_permissions(Discord.PermissionFlagsBits.MuteMembers)
                 .set_handler(this.handle_modlogs_page.bind(this)),
         );
     }
