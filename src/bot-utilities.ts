@@ -340,6 +340,7 @@ export class BotUtilities {
     async get_channel<T extends Discord.BaseChannel = Discord.TextChannel>(
         id: string,
         name?: string,
+        case_insensitive: boolean = true,
         expected_type: Discord.ChannelType | Discord.ChannelType[] = Discord.ChannelType.GuildText,
     ): Promise<T> {
         let channel: Discord.GuildBasedChannel | null = null;
@@ -357,7 +358,7 @@ export class BotUtilities {
         }
 
         if (this.wheatley.devmode_enabled && !channel && name && typeof name === "string") {
-            channel = this.wheatley.get_channel_by_name(name);
+            channel = this.wheatley.get_channel_by_name(name, case_insensitive);
         }
 
         if (!channel) {
@@ -372,85 +373,54 @@ export class BotUtilities {
         return <T>(<unknown>channel);
     }
 
-    async get_forum_channel(id: string, name?: string) {
-        let channel: Discord.GuildBasedChannel | null;
-
-        try {
-            channel = await this.wheatley.guild.channels.fetch(id);
-        } catch (e) {
-            // don't throw when DiscordAPIError[50001]: Missing Access
-            if (e instanceof Discord.DiscordAPIError && e.code == 50001) {
-                // unknown channel
-                channel = null;
-            } else {
-                throw e;
-            }
-        }
-
-        if (this.wheatley.devmode_enabled && !channel && name && typeof name === "string") {
-            channel = this.wheatley.get_channel_by_name(name);
-        }
-
-        if (!channel) {
-            throw new Error(`Forum channel ${id} not found`);
-        }
-
-        assert(channel instanceof Discord.ForumChannel, `Channel ${channel} (${id}) not of the expected type`);
-        return channel;
+    async get_forum_channel<T extends Discord.BaseChannel = Discord.ForumChannel>(
+        id: string,
+        name?: string,
+        case_insensitive: boolean = true,
+        additional_types?: Discord.ChannelType | Discord.ChannelType[],
+    ) {
+        return await this.get_channel<T>(id, name, case_insensitive, [
+            Discord.ChannelType.GuildForum,
+            ...(Array.isArray(additional_types)
+                ? additional_types
+                : additional_types !== undefined
+                  ? [additional_types]
+                  : []),
+        ]);
     }
 
-    async get_thread_channel(id: string, name?: string) {
-        let channel: Discord.GuildBasedChannel | null;
-
-        try {
-            channel = await this.wheatley.guild.channels.fetch(id);
-        } catch (e) {
-            // don't throw when DiscordAPIError[50001]: Missing Access
-            if (e instanceof Discord.DiscordAPIError && e.code == 50001) {
-                // unknown channel
-                channel = null;
-            } else {
-                throw e;
-            }
-        }
-
-        if (this.wheatley.devmode_enabled && !channel && name && typeof name === "string") {
-            channel = this.wheatley.get_channel_by_name(name);
-        }
-
-        if (!channel) {
-            throw new Error(`Thread channel ${id} not found`);
-        }
-
-        assert(channel instanceof Discord.ThreadChannel, `Channel ${channel} (${id}) not of the expected type`);
-        return channel;
+    async get_thread_channel<T extends Discord.BaseChannel = Discord.ThreadChannel>(
+        id: string,
+        name?: string,
+        case_insensitive: boolean = true,
+        additional_types?: Discord.ChannelType | Discord.ChannelType[],
+    ) {
+        return await this.get_channel<T>(id, name, case_insensitive, [
+            Discord.ChannelType.PublicThread,
+            Discord.ChannelType.PrivateThread,
+            Discord.ChannelType.AnnouncementThread,
+            ...(Array.isArray(additional_types)
+                ? additional_types
+                : additional_types !== undefined
+                  ? [additional_types]
+                  : []),
+        ]);
     }
 
-    async get_category(id: string, name?: string) {
-        let category: Discord.GuildBasedChannel | null;
-
-        try {
-            category = await this.wheatley.guild.channels.fetch(id);
-        } catch (e) {
-            // don't throw when DiscordAPIError[50001]: Missing Access
-            if (e instanceof Discord.DiscordAPIError && e.code == 50001) {
-                // unknown channel
-                category = null;
-            } else {
-                throw e;
-            }
-        }
-
-        if (this.wheatley.devmode_enabled && !category && name && typeof name === "string") {
-            category = this.wheatley.get_channel_by_name(name, false);
-        }
-
-        if (!category) {
-            throw new Error(`Category ${id} not found`);
-        }
-
-        assert(category instanceof Discord.CategoryChannel, `Category ${category} (${id}) not of the expected type`);
-        return category;
+    async get_category<T extends Discord.BaseChannel = Discord.CategoryChannel>(
+        id: string,
+        name?: string,
+        case_insensitive: boolean = false,
+        additional_types?: Discord.ChannelType | Discord.ChannelType[],
+    ) {
+        return await this.get_channel<T>(id, name, case_insensitive, [
+            Discord.ChannelType.GuildCategory,
+            ...(Array.isArray(additional_types)
+                ? additional_types
+                : additional_types !== undefined
+                  ? [additional_types]
+                  : []),
+        ]);
     }
 
     async can_user_control_thread(user: Discord.User, thread: Discord.ThreadChannel) {
