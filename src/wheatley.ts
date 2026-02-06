@@ -237,7 +237,6 @@ export class Wheatley {
     private log_channel: Discord.TextBasedChannel | null = null;
 
     readonly channels = channels;
-    readonly roles_map = roles_map;
 
     readonly roles: {
         [k in keyof typeof roles_map]: Discord.Role;
@@ -331,14 +330,14 @@ export class Wheatley {
                 await this.guild.roles.fetch().catch(this.critical_error.bind(this));
 
                 // cache roles
-                for (const [key, info] of Object.entries(this.roles_map)) {
+                for (const [key, info] of Object.entries(roles_map)) {
                     let role = this.guild.roles.cache.get(info.id);
 
                     if (!role && info.name && this.devmode_enabled) {
                         role = this.guild.roles.cache.find(role => role.name === info.name);
                     }
 
-                    this.roles[key as keyof typeof this.roles_map] = unwrap(role);
+                    this.roles[key as keyof typeof roles_map] = unwrap(role);
                 }
 
                 if (!config.freestanding) {

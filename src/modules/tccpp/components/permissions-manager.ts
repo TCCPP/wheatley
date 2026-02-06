@@ -29,7 +29,7 @@ const categories_map: { [key: string]: named_id } = {
     private_archive: { id: "455278783352537099", name: "Private Archive" },
     challenges_archive: { id: "429594248099135488", name: "Challenges Archive" },
     meta_archive: { id: "910308747929321492", name: "Meta Archive" },
-};
+} satisfies Record<string, named_id>;
 
 type permissions_entry = {
     allow?: bigint[];
