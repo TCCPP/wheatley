@@ -70,14 +70,8 @@ export default class CHelpRedirect extends BotComponent {
     private cpp_help_text!: Discord.TextChannel;
 
     override async setup(commands: CommandSetBuilder) {
-        this.c_help_text = await this.utilities.get_channel(
-            this.wheatley.channels.c_help_text.id,
-            this.wheatley.channels.c_help_text.name,
-        );
-        this.cpp_help_text = await this.utilities.get_channel(
-            this.wheatley.channels.cpp_help_text.id,
-            this.wheatley.channels.cpp_help_text.name,
-        );
+        this.c_help_text = await this.utilities.get_channel(this.wheatley.channels.c_help_text);
+        this.cpp_help_text = await this.utilities.get_channel(this.wheatley.channels.cpp_help_text);
 
         commands.add(
             new TextBasedCommandBuilder("not-c", EarlyReplyMode.none)

@@ -32,10 +32,7 @@ export default class AntiScreenshot extends BotComponent {
     private acknowledge_button!: BotButton<[]>;
 
     override async setup(commands: CommandSetBuilder) {
-        this.staff_message_log = await this.utilities.get_channel(
-            this.wheatley.channels.staff_message_log.id,
-            this.wheatley.channels.staff_message_log.name,
-        );
+        this.staff_message_log = await this.utilities.get_channel(this.wheatley.channels.staff_message_log);
 
         this.acknowledge_button = commands.add(
             new ButtonInteractionBuilder("anti_screenshot_acknowledge").set_handler(

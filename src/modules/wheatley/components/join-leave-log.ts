@@ -13,10 +13,7 @@ export default class JoinLeaveLog extends BotComponent {
     private staff_member_log!: Discord.TextChannel;
 
     override async setup(commands: CommandSetBuilder) {
-        this.staff_member_log = await this.utilities.get_channel(
-            this.wheatley.channels.staff_member_log.id,
-            this.wheatley.channels.staff_member_log.name,
-        );
+        this.staff_member_log = await this.utilities.get_channel(this.wheatley.channels.staff_member_log);
     }
 
     override async on_guild_member_add(member: Discord.GuildMember) {

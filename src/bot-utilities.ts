@@ -2,7 +2,7 @@ import { strict as assert } from "assert";
 
 import * as Discord from "discord.js";
 
-import { Wheatley } from "./wheatley.js";
+import { named_id, Wheatley } from "./wheatley.js";
 import { decode_snowflake, is_media_link_embed, make_url, get_thread_owner } from "./utils/discord.js";
 import { unwrap } from "./utils/misc.js";
 import { colors } from "./common.js";
@@ -338,15 +338,14 @@ export class BotUtilities {
     }
 
     async get_channel<T extends Discord.BaseChannel = Discord.TextChannel>(
-        id: string,
-        name?: string,
+        channel_info: named_id,
         case_insensitive: boolean = true,
         expected_type: Discord.ChannelType | Discord.ChannelType[] = Discord.ChannelType.GuildText,
     ): Promise<T> {
         let channel: Discord.GuildBasedChannel | null = null;
 
         try {
-            channel = await this.wheatley.guild.channels.fetch(id);
+            channel = await this.wheatley.guild.channels.fetch(channel_info.id);
         } catch (e) {
             // don't throw when DiscordAPIError[50001]: Missing Access
             if (e instanceof Discord.DiscordAPIError && e.code == 50001) {
@@ -357,29 +356,28 @@ export class BotUtilities {
             }
         }
 
-        if (this.wheatley.devmode_enabled && !channel && name && typeof name === "string") {
-            channel = this.wheatley.get_channel_by_name(name, case_insensitive);
+        if (this.wheatley.devmode_enabled && !channel && channel_info.name && typeof channel_info.name === "string") {
+            channel = this.wheatley.get_channel_by_name(channel_info.name, case_insensitive);
         }
 
         if (!channel) {
-            throw new Error(`Channel ${id} not found`);
+            throw new Error(`Channel ${channel_info.id} not found`);
         }
 
         const expected_types = Array.isArray(expected_type) ? expected_type : [expected_type];
         assert(
             expected_types.includes(channel.type),
-            `Channel ${channel.name} (${id}) not of the expected type (${channel.type})`,
+            `Channel ${channel.name} (${channel_info.id}) not of the expected type (${channel.type})`,
         );
         return <T>(<unknown>channel);
     }
 
     async get_forum_channel<T extends Discord.BaseChannel = Discord.ForumChannel>(
-        id: string,
-        name?: string,
+        channel_info: named_id,
         case_insensitive: boolean = true,
         additional_types?: Discord.ChannelType | Discord.ChannelType[],
     ) {
-        return await this.get_channel<T>(id, name, case_insensitive, [
+        return await this.get_channel<T>(channel_info, case_insensitive, [
             Discord.ChannelType.GuildForum,
             ...(Array.isArray(additional_types)
                 ? additional_types
@@ -390,12 +388,11 @@ export class BotUtilities {
     }
 
     async get_thread_channel<T extends Discord.BaseChannel = Discord.ThreadChannel>(
-        id: string,
-        name?: string,
+        channel_info: named_id,
         case_insensitive: boolean = true,
         additional_types?: Discord.ChannelType | Discord.ChannelType[],
     ) {
-        return await this.get_channel<T>(id, name, case_insensitive, [
+        return await this.get_channel<T>(channel_info, case_insensitive, [
             Discord.ChannelType.PublicThread,
             Discord.ChannelType.PrivateThread,
             Discord.ChannelType.AnnouncementThread,
@@ -408,12 +405,11 @@ export class BotUtilities {
     }
 
     async get_category<T extends Discord.BaseChannel = Discord.CategoryChannel>(
-        id: string,
-        name?: string,
+        channel_info: named_id,
         case_insensitive: boolean = false,
         additional_types?: Discord.ChannelType | Discord.ChannelType[],
     ) {
-        return await this.get_channel<T>(id, name, case_insensitive, [
+        return await this.get_channel<T>(channel_info, case_insensitive, [
             Discord.ChannelType.GuildCategory,
             ...(Array.isArray(additional_types)
                 ? additional_types

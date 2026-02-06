@@ -22,10 +22,7 @@ export default class ModStats extends BotComponent {
     private bot_spam!: Discord.TextChannel;
 
     override async setup(commands: CommandSetBuilder) {
-        this.bot_spam = await this.utilities.get_channel(
-            this.wheatley.channels.bot_spam.id,
-            this.wheatley.channels.bot_spam.name,
-        );
+        this.bot_spam = await this.utilities.get_channel(this.wheatley.channels.bot_spam);
         commands.add(
             new TextBasedCommandBuilder("modstats", EarlyReplyMode.none)
                 .set_category("Moderation")

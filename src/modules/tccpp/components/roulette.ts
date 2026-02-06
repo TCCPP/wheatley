@@ -34,10 +34,7 @@ export default class Roulette extends BotComponent {
         await ensure_index(this.wheatley, this.database.roulette_leaderboard, { user: 1 }, { unique: true });
         await ensure_index(this.wheatley, this.database.roulette_leaderboard, { highscore: -1 });
 
-        this.staff_member_log = await this.utilities.get_channel(
-            this.wheatley.channels.staff_member_log.id,
-            this.wheatley.channels.staff_member_log.name,
-        );
+        this.staff_member_log = await this.utilities.get_channel(this.wheatley.channels.staff_member_log);
 
         commands.add(
             new TextBasedCommandBuilder("roulette", EarlyReplyMode.none)

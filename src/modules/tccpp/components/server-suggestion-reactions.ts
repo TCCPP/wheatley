@@ -103,8 +103,7 @@ export default class ServerSuggestionReactions extends BotComponent {
         }
         for (const channel_info of this.monitored_channels_infos) {
             const channel = await this.utilities.get_thread_channel<Discord.AnyThreadChannel>(
-                channel_info.id,
-                channel_info.name,
+                channel_info,
                 true,
                 Discord.ChannelType.GuildText,
             );

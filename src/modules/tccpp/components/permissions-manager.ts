@@ -52,7 +52,7 @@ export default class PermissionManager extends BotComponent {
 
         for (const [, category_info] of Object.entries(categories_map)) {
             try {
-                await this.utilities.get_category(category_info.id, category_info.name);
+                await this.utilities.get_category(category_info);
             } catch (exception) {
                 M.error(`Error fetching category ${category_info.name} (${category_info.id}):`, exception);
             }
@@ -444,7 +444,7 @@ export default class PermissionManager extends BotComponent {
                 const category_info = Object.values(categories_map).find(category_info => category_info.id === id);
                 assert(category_info, `Category with id ${id} not found in categories_map`);
 
-                const category = await this.utilities.get_category(category_info.id, category_info.name);
+                const category = await this.utilities.get_category(category_info);
                 await this.sync_category_permissions(category, unwrap(permissions));
             }),
         );

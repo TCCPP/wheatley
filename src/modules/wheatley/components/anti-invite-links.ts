@@ -38,10 +38,7 @@ export default class AntiInviteLinks extends BotComponent {
     private allowed_invites_page_button!: BotButton<[number]>;
 
     override async setup(commands: CommandSetBuilder) {
-        this.staff_flag_log = await this.utilities.get_channel(
-            this.wheatley.channels.staff_flag_log.id,
-            this.wheatley.channels.staff_flag_log.name,
-        );
+        this.staff_flag_log = await this.utilities.get_channel(this.wheatley.channels.staff_flag_log);
 
         commands.add(
             new TextBasedCommandBuilder("allowed-invites", EarlyReplyMode.ephemeral)

@@ -488,10 +488,7 @@ export default class Wiki extends BotComponent {
     wiki_search_index: WikiSearchIndex | null = null;
 
     override async setup(commands: CommandSetBuilder) {
-        this.bot_spam = await this.utilities.get_channel(
-            this.wheatley.channels.bot_spam.id,
-            this.wheatley.channels.bot_spam.name,
-        );
+        this.bot_spam = await this.utilities.get_channel(this.wheatley.channels.bot_spam);
 
         (this.wheatley.components.get("Help") as Help | undefined)?.add_category_content(
             "Wiki Articles",
