@@ -102,7 +102,8 @@ export default class ServerSuggestionReactions extends BotComponent {
             react_blacklist = (await import(config)).react_blacklist;
         }
         for (const channel_info of this.monitored_channels_infos) {
-            const channel = await this.utilities.get_thread_channel<Discord.AnyThreadChannel>(channel_info);
+            const channel = await this.wheatley.guild.channels.fetch(channel_info.id);
+            assert(channel && (channel instanceof Discord.TextChannel || channel instanceof Discord.ThreadChannel));
             this.monitored_channels.set(channel_info.id, channel);
         }
         M.debug("server_suggestion reactions handler got channels");

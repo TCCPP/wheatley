@@ -337,11 +337,7 @@ export class BotUtilities {
         );
     }
 
-    async get_channel<T extends Discord.BaseChannel = Discord.TextChannel>(
-        channel_info: named_id,
-        case_insensitive: boolean = true,
-        expected_type: Discord.ChannelType | Discord.ChannelType[] = Discord.ChannelType.GuildText,
-    ): Promise<T> {
+    async #get_channel_internal(channel_info: named_id, case_insensitive: boolean = true) {
         let channel: Discord.GuildBasedChannel | null = null;
 
         try {
@@ -360,32 +356,60 @@ export class BotUtilities {
             channel = this.get_channel_by_name(channel_info.name, case_insensitive) ?? null;
         }
 
-        if (!channel) {
-            throw new Error(`Channel ${channel_info.id} not found`);
-        }
+        return channel;
+    }
 
-        const expected_types = [expected_type].flat();
+    async get_channel(channel_info: named_id) {
+        const channel = await this.#get_channel_internal(channel_info);
         assert(
-            expected_types.includes(channel.type),
-            `Channel ${channel.name} (${channel_info.id}) not of the expected type (${channel.type})`,
+            channel instanceof Discord.TextChannel,
+            `Channel ${channel?.name} (${channel_info.id}) not of the expected type`,
         );
-        return <T>(<unknown>channel);
+
+        return channel;
     }
 
-    async get_forum_channel<T extends Discord.BaseChannel = Discord.ForumChannel>(channel_info: named_id) {
-        return await this.get_channel<T>(channel_info, true, Discord.ChannelType.GuildForum);
+    async get_forum_channel(channel_info: named_id) {
+        const channel = await this.#get_channel_internal(channel_info);
+
+        assert(
+            channel instanceof Discord.ForumChannel,
+            `Channel ${channel?.name} (${channel_info.id}) not of the expected type`,
+        );
+
+        return channel;
     }
 
-    async get_thread_channel<T extends Discord.BaseChannel = Discord.ThreadChannel>(channel_info: named_id) {
-        return await this.get_channel<T>(channel_info, true, [
+    async get_thread_channel(channel_info: named_id) {
+        const channel = await this.#get_channel_internal(channel_info);
+
+        assert(
+            channel instanceof Discord.ThreadChannel,
+            `Channel ${channel?.name} (${channel_info.id}) not of the expected type`,
+        );
+
+        const expected_types = [
             Discord.ChannelType.PublicThread,
             Discord.ChannelType.PrivateThread,
             Discord.ChannelType.AnnouncementThread,
-        ]);
+        ];
+        assert(
+            expected_types.includes(channel.type),
+            `Channel ${channel.name} (${channel_info.id}) not of the expected type`,
+        );
+
+        return channel;
     }
 
-    async get_category<T extends Discord.BaseChannel = Discord.CategoryChannel>(channel_info: named_id) {
-        return await this.get_channel<T>(channel_info, false, Discord.ChannelType.GuildCategory);
+    async get_category(channel_info: named_id) {
+        const category = await this.#get_channel_internal(channel_info, false);
+
+        assert(
+            category instanceof Discord.CategoryChannel,
+            `Channel ${category?.name} (${channel_info.id}) not of the expected type`,
+        );
+
+        return category;
     }
 
     async can_user_control_thread(user: Discord.User, thread: Discord.ThreadChannel) {
