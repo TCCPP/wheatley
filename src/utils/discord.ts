@@ -129,8 +129,10 @@ export async function fetch_inactive_threads_count(forum: Discord.ForumChannel, 
     while (true) {
         const { threads, hasMore } = await forum.threads.fetchArchived({ before, limit: Math.min(count, 100) });
         thread_entries.push(...threads);
-        const last = threads.last();
-        before = last?.id;
+        // The type annotation is needed because of a typescript bug
+        // https://github.com/microsoft/TypeScript/issues/51115
+        const last: Discord.ThreadChannel = threads.last()!;
+        before = last.id;
         count -= threads.size;
         if (!hasMore || count <= 0) {
             break;
