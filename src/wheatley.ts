@@ -354,7 +354,7 @@ export class Wheatley {
                     try {
                         await component.setup(command_set_builder);
                     } catch (e) {
-                        this.critical_error(`Error setting up component ${component.constructor.name}:\n`, e as Error);
+                        this.critical_error(`Error setting up component ${component.constructor.name}:`, e as Error);
                     }
                 }
                 const { text_commands, button_handlers, modal_handlers, other_commands } =
