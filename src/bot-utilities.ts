@@ -388,16 +388,6 @@ export class BotUtilities {
             `Channel ${channel?.name} (${channel_info.id}) not of the expected type`,
         );
 
-        const expected_types = [
-            Discord.ChannelType.PublicThread,
-            Discord.ChannelType.PrivateThread,
-            Discord.ChannelType.AnnouncementThread,
-        ];
-        assert(
-            expected_types.includes(channel.type),
-            `Channel ${channel.name} (${channel_info.id}) not of the expected type`,
-        );
-
         return channel;
     }
 
