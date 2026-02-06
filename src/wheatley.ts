@@ -537,7 +537,7 @@ export class Wheatley {
         this.log_limiter.log(channel, message);
     }
 
-    is_forum_help_channel(id: Discord.Snowflake) {
+    is_forum_help_channel(id: string) {
         return [this.channels.cpp_help, this.channels.c_help].some(channel_info => channel_info.id === id);
     }
 
