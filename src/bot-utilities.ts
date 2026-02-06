@@ -377,14 +377,10 @@ export class BotUtilities {
         case_insensitive: boolean = true,
         additional_types?: Discord.ChannelType | Discord.ChannelType[],
     ) {
-        let expected_types: Discord.ChannelType[] = [Discord.ChannelType.GuildForum];
-
-        if (additional_types) {
-            expected_types = [
-                ...expected_types,
-                ...(Array.isArray(additional_types) ? additional_types : [additional_types]),
-            ];
-        }
+        const expected_types: Discord.ChannelType[] = [
+            Discord.ChannelType.GuildForum,
+            ...[additional_types ?? []].flat(),
+        ];
 
         return await this.get_channel<T>(channel_info, case_insensitive, expected_types);
     }
@@ -394,18 +390,12 @@ export class BotUtilities {
         case_insensitive: boolean = true,
         additional_types?: Discord.ChannelType | Discord.ChannelType[],
     ) {
-        let expected_types: Discord.ChannelType[] = [
+        const expected_types: Discord.ChannelType[] = [
             Discord.ChannelType.PublicThread,
             Discord.ChannelType.PrivateThread,
             Discord.ChannelType.AnnouncementThread,
+            ...[additional_types ?? []].flat(),
         ];
-
-        if (additional_types) {
-            expected_types = [
-                ...expected_types,
-                ...(Array.isArray(additional_types) ? additional_types : [additional_types]),
-            ];
-        }
 
         return await this.get_channel<T>(channel_info, case_insensitive, expected_types);
     }
@@ -415,13 +405,10 @@ export class BotUtilities {
         case_insensitive: boolean = false,
         additional_types?: Discord.ChannelType | Discord.ChannelType[],
     ) {
-        let expected_types: Discord.ChannelType[] = [Discord.ChannelType.GuildCategory];
-        if (additional_types) {
-            expected_types = [
-                ...expected_types,
-                ...(Array.isArray(additional_types) ? additional_types : [additional_types]),
-            ];
-        }
+        const expected_types: Discord.ChannelType[] = [
+            Discord.ChannelType.GuildCategory,
+            ...[additional_types ?? []].flat(),
+        ];
 
         return await this.get_channel<T>(channel_info, case_insensitive, expected_types);
     }

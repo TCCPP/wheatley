@@ -340,7 +340,6 @@ export default class PermissionManager extends BotComponent {
 
         // bot dev overwrites
         this.add_channel_overwrite(this.wheatley.channels.bot_dev_internal.id, mod_only_channel);
-
         // voice overwrites
         this.add_channel_overwrite(this.wheatley.channels.afk.id, {
             [this.wheatley.guild.roles.everyone.id]: {

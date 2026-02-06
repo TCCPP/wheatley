@@ -122,7 +122,6 @@ export default class Autoreact extends BotComponent {
                     this.wheatley.warn("Unable to find emoji nog4g");
                 }
             }
-
             if (message.channel.id == this.wheatley.channels.introductions.id) {
                 if (message.member == null) {
                     // TODO: Ping zelis?
