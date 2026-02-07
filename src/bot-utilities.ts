@@ -360,7 +360,7 @@ export class BotUtilities {
     }
 
     async get_channel(channel_info: named_id) {
-        const channel = await this.#get_channel_internal(channel_info);
+        const channel = await this.get_channel_internal(channel_info);
         assert(
             channel instanceof Discord.TextChannel,
             `Channel ${channel?.name} (${channel_info.id}) not of the expected type`,
@@ -370,7 +370,7 @@ export class BotUtilities {
     }
 
     async get_forum_channel(channel_info: named_id) {
-        const channel = await this.#get_channel_internal(channel_info);
+        const channel = await this.get_channel_internal(channel_info);
 
         assert(
             channel instanceof Discord.ForumChannel,
@@ -381,7 +381,7 @@ export class BotUtilities {
     }
 
     async get_thread_channel(channel_info: named_id) {
-        const channel = await this.#get_channel_internal(channel_info);
+        const channel = await this.get_channel_internal(channel_info);
 
         assert(
             channel instanceof Discord.ThreadChannel,
@@ -392,7 +392,7 @@ export class BotUtilities {
     }
 
     async get_category(channel_info: named_id) {
-        const category = await this.#get_channel_internal(channel_info, false);
+        const category = await this.get_channel_internal(channel_info, false);
 
         assert(
             category instanceof Discord.CategoryChannel,
