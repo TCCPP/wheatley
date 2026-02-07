@@ -11,7 +11,7 @@ import { unwrap } from "../../../utils/misc.js";
 import { CommandSetBuilder } from "../../../command-abstractions/command-set-builder.js";
 import { set_timeout } from "../../../utils/node.js";
 
-const categories_map: { [key: string]: named_id } = {
+const categories_map = {
     staff_logs: { id: "1135927261472755712", name: "Staff Logs" },
     staff: { id: "873125551064363028", name: "Staff" },
     meta: { id: "360691699288113163", name: "Meta" },
