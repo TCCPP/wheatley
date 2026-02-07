@@ -56,7 +56,7 @@ export default class Memes extends BotComponent {
             });
             await user.send({
                 content:
-                    `Your message in <#${this.wheatley.channels.memes}> was deleted because it didn't contain ` +
+                    `Your message in <#${this.wheatley.channels.memes.id}> was deleted because it didn't contain ` +
                     `any images, videos, or media embeds. This channel is for sharing memes only. For commentary ` +
                     `please open a thread.`,
                 embeds: quote.embeds,
@@ -88,7 +88,7 @@ export default class Memes extends BotComponent {
         if (message.guildId !== this.wheatley.guild.id) {
             return;
         }
-        if (message.channel.id !== this.wheatley.channels.memes) {
+        if (message.channel.id !== this.wheatley.channels.memes.id) {
             return;
         }
         if (await this.should_skip(message)) {
@@ -109,7 +109,7 @@ export default class Memes extends BotComponent {
         if (new_message.guildId !== this.wheatley.guild.id) {
             return;
         }
-        if (new_message.channel.id !== this.wheatley.channels.memes) {
+        if (new_message.channel.id !== this.wheatley.channels.memes.id) {
             return;
         }
         const message = await departialize(new_message);

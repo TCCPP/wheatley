@@ -294,7 +294,9 @@ export default class ForumChannels extends BotComponent {
     is_non_forum_mirror_channel(thread: Discord.ThreadChannel) {
         return (
             thread.parentId != null &&
-            [this.wheatley.channels.code_review, this.wheatley.channels.showcase].includes(thread.parentId)
+            [this.wheatley.channels.code_review, this.wheatley.channels.showcase].some(
+                channel_info => channel_info.id === thread.parentId,
+            )
         );
     }
 
@@ -344,7 +346,7 @@ export default class ForumChannels extends BotComponent {
                 await this.mirror_forum_post(
                     message,
                     `New ${
-                        thread.parentId == this.wheatley.channels.code_review ? "code review" : "showcase"
+                        thread.parentId == this.wheatley.channels.code_review.id ? "code review" : "showcase"
                     } post: ${thread.name}`,
                     true,
                     this.general_discussion,

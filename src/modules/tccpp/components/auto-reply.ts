@@ -33,7 +33,7 @@ export default class Autoreply extends BotComponent {
             LLM_REGEX.test(message.content) &&
             !this.is_ratelimited() &&
             Math.random() <= RATELIMIT_PROBABILITY &&
-            message.channel.id !== this.wheatley.channels.bot_spam
+            message.channel.id !== this.wheatley.channels.bot_spam.id
         ) {
             this.last_reply_time = Date.now();
             M.log("firing llm auto-reply");
@@ -48,7 +48,7 @@ export default class Autoreply extends BotComponent {
             MICROSLOP_REGEX.test(message.content) &&
             !this.is_ratelimited() &&
             Math.random() <= RATELIMIT_PROBABILITY &&
-            message.channel.id !== this.wheatley.channels.bot_spam
+            message.channel.id !== this.wheatley.channels.bot_spam.id
         ) {
             this.last_reply_time = Date.now();
             M.log("firing microslop auto-reply");

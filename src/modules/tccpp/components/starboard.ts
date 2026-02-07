@@ -182,18 +182,18 @@ export default class Starboard extends BotComponent {
         this.repost_emojis = state?.repost_emojis ?? [];
 
         this.excluded_channels = new Set([
-            this.wheatley.channels.rules,
-            this.wheatley.channels.announcements,
-            this.wheatley.channels.server_suggestions,
-            this.wheatley.channels.resources,
-            this.wheatley.channels.the_button,
-            this.wheatley.channels.introductions,
-            this.wheatley.channels.starboard,
-            this.wheatley.channels.goals2024,
-            this.wheatley.channels.goals2025,
-            this.wheatley.channels.goals2026,
-            this.wheatley.channels.skill_role_log,
-            this.wheatley.channels.polls,
+            this.wheatley.channels.rules.id,
+            this.wheatley.channels.announcements.id,
+            this.wheatley.channels.server_suggestions.id,
+            this.wheatley.channels.resources.id,
+            this.wheatley.channels.the_button.id,
+            this.wheatley.channels.introductions.id,
+            this.wheatley.channels.starboard.id,
+            this.wheatley.channels.goals2024.id,
+            this.wheatley.channels.goals2025.id,
+            this.wheatley.channels.goals2026.id,
+            this.wheatley.channels.skill_role_log.id,
+            this.wheatley.channels.polls.id,
         ]);
     }
 
@@ -232,7 +232,7 @@ export default class Starboard extends BotComponent {
         }
         const parent_channel_id = this.get_parent_channel_id(reaction.message.channel);
         if (reaction.emoji.name == "⭐") {
-            if (parent_channel_id == this.wheatley.channels.memes) {
+            if (parent_channel_id == this.wheatley.channels.memes.id) {
                 return reaction.count >= memes_star_threshold;
             } else {
                 return reaction.count >= star_threshold;
@@ -240,7 +240,7 @@ export default class Starboard extends BotComponent {
         } else if (
             !(this.negative_emojis.includes(reaction.emoji.name) || this.ignored_emojis.includes(reaction.emoji.name))
         ) {
-            if (parent_channel_id == this.wheatley.channels.memes) {
+            if (parent_channel_id == this.wheatley.channels.memes.id) {
                 return reaction.count >= memes_other_threshold;
             } else {
                 return reaction.count >= other_threshold;
@@ -341,12 +341,6 @@ export default class Starboard extends BotComponent {
         try {
             const trigger_emoji =
                 trigger_type === delete_trigger_type.delete_this ? "<:delet_this:669598943117836312>" : ":recycle:";
-            const channel_context =
-                message.channel.id === this.wheatley.channels.memes
-                    ? " in #memes"
-                    : message.channel.id === this.wheatley.channels.cursed_code
-                      ? " in #cursed-code"
-                      : "";
             const notification_embed = new Discord.EmbedBuilder()
                 .setColor(colors.red)
                 .setTitle(`Message Auto-Deleted in ${message.channel.url}`)
@@ -385,7 +379,11 @@ export default class Starboard extends BotComponent {
         );
         const max_non_negative = Math.max(...non_negative_reactions.map(([_, count]) => count)); // -inf if |a|=0
         let do_delete = true;
-        if (![this.wheatley.channels.memes, this.wheatley.channels.cursed_code].includes(message.channel.id)) {
+        if (
+            ![this.wheatley.channels.memes, this.wheatley.channels.cursed_code].some(
+                channel => channel.id === message.channel.id,
+            )
+        ) {
             do_delete = false;
         }
         if (trigger_reaction.count <= max_non_negative) {
@@ -509,7 +507,7 @@ export default class Starboard extends BotComponent {
             await message.delete();
             assert(!(message.channel instanceof Discord.PartialGroupDMChannel));
             if (trigger_type == delete_trigger_type.delete_this) {
-                if (message.channel.id == this.wheatley.channels.memes) {
+                if (message.channel.id == this.wheatley.channels.memes.id) {
                     await message.channel.send(
                         `<@${message.author.id}> A message of yours was automatically deleted because a threshold for` +
                             " <:delet_this:669598943117836312> reactions (or similar) was reached.\n\n" +
@@ -536,7 +534,7 @@ export default class Starboard extends BotComponent {
     // Check if the # of reactions is full, and there is no negative emojis reacted yet
     should_delete_reaction(reaction: Discord.MessageReaction) {
         return (
-            reaction.message.channel.id === this.wheatley.channels.memes &&
+            reaction.message.channel.id === this.wheatley.channels.memes.id &&
             reaction.message.reactions.cache.size === 20 &&
             reaction.message.reactions.cache.filter(
                 reaction =>

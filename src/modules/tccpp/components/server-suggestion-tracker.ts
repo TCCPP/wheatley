@@ -64,6 +64,7 @@ export default class ServerSuggestionTracker extends BotComponent {
             this.wheatley.channels.suggestion_dashboard,
         );
         this.server_suggestions = await this.utilities.get_channel(this.wheatley.channels.server_suggestions);
+
         commands.add(
             new TextBasedCommandBuilder("suggestions-dashboard-count", EarlyReplyMode.visible)
                 .set_category("Admin utilities")

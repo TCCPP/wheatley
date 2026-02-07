@@ -53,7 +53,7 @@ export default class AntiCrosspost extends BotComponent {
         if (message.content.length < MIN_MESSAGE_LENGTH) {
             return;
         }
-        if (message.channelId === this.wheatley.channels.bot_spam) {
+        if (message.channelId === this.wheatley.channels.bot_spam.id) {
             return;
         }
         let user_messages = this.recent_messages.get(message.author.id) ?? [];

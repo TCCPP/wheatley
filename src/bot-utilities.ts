@@ -2,10 +2,11 @@ import { strict as assert } from "assert";
 
 import * as Discord from "discord.js";
 
-import { Wheatley } from "./wheatley.js";
+import { named_id, Wheatley } from "./wheatley.js";
 import { decode_snowflake, is_media_link_embed, make_url, get_thread_owner } from "./utils/discord.js";
 import { unwrap } from "./utils/misc.js";
 import { colors } from "./common.js";
+import { is_string } from "./utils/strings.js";
 
 type quote_options = {
     // description template
@@ -336,39 +337,68 @@ export class BotUtilities {
         );
     }
 
-    async get_channel(id: string) {
-        const channel = await this.wheatley.client.channels.fetch(id);
-        if (!channel) {
-            throw Error(`Channel ${id} not found`);
+    private async get_channel_internal(channel_info: named_id, case_insensitive: boolean = true) {
+        let channel: Discord.GuildBasedChannel | null = null;
+
+        try {
+            channel = await this.wheatley.guild.channels.fetch(channel_info.id);
+        } catch (e) {
+            // don't throw when DiscordAPIError[50001]: Missing Access
+            if (e instanceof Discord.DiscordAPIError && e.code == 50001) {
+                // unknown channel
+                channel = null;
+            } else {
+                throw e;
+            }
         }
-        assert(channel instanceof Discord.TextChannel, `Channel ${channel} (${id}) not of the expected type`);
+
+        if (this.wheatley.devmode_enabled && !channel && channel_info.name && is_string(channel_info.name)) {
+            channel = this.get_channel_by_name(channel_info.name, case_insensitive) ?? null;
+        }
+
         return channel;
     }
 
-    async get_forum_channel(id: string) {
-        const channel = await this.wheatley.client.channels.fetch(id);
-        if (!channel) {
-            throw Error(`Forum channel ${id} not found`);
-        }
-        assert(channel instanceof Discord.ForumChannel, `Channel ${channel} (${id}) not of the expected type`);
+    async get_channel(channel_info: named_id) {
+        const channel = await this.get_channel_internal(channel_info);
+        assert(
+            channel instanceof Discord.TextChannel,
+            `Channel ${channel?.name} (${channel_info.id}) not of the expected type`,
+        );
+
         return channel;
     }
 
-    async get_thread_channel(id: string) {
-        const channel = await this.wheatley.client.channels.fetch(id);
-        if (!channel) {
-            throw Error(`Thread channel ${id} not found`);
-        }
-        assert(channel instanceof Discord.ThreadChannel, `Channel ${channel} (${id}) not of the expected type`);
+    async get_forum_channel(channel_info: named_id) {
+        const channel = await this.get_channel_internal(channel_info);
+
+        assert(
+            channel instanceof Discord.ForumChannel,
+            `Channel ${channel?.name} (${channel_info.id}) not of the expected type`,
+        );
+
         return channel;
     }
 
-    async get_category(id: string) {
-        const category = await this.wheatley.client.channels.fetch(id);
-        if (!category) {
-            throw Error(`Category ${id} not found`);
-        }
-        assert(category instanceof Discord.CategoryChannel, `Category ${category} (${id}) not of the expected type`);
+    async get_thread_channel(channel_info: named_id) {
+        const channel = await this.get_channel_internal(channel_info);
+
+        assert(
+            channel instanceof Discord.ThreadChannel,
+            `Channel ${channel?.name} (${channel_info.id}) not of the expected type`,
+        );
+
+        return channel;
+    }
+
+    async get_category(channel_info: named_id) {
+        const category = await this.get_channel_internal(channel_info, false);
+
+        assert(
+            category instanceof Discord.CategoryChannel,
+            `Channel ${category?.name} (${channel_info.id}) not of the expected type`,
+        );
+
         return category;
     }
 
@@ -387,5 +417,21 @@ export class BotUtilities {
                 throw e;
             }
         }
+    }
+
+    // case-insensitive
+    get_channel_by_name(name: string, case_insensitive: boolean = true) {
+        return this.wheatley.guild.channels.cache.find(channel => {
+            if (case_insensitive) {
+                return channel.name.toLowerCase() === name.toLowerCase();
+            }
+
+            return channel.name === name;
+        });
+    }
+
+    // case-insensitive
+    get_role_by_name(name: string) {
+        return this.wheatley.guild.roles.cache.find(role => role.name.toLowerCase() === name.toLowerCase());
     }
 }

@@ -29,8 +29,8 @@ export default class Redirect extends BotComponent {
             new TextBasedCommandBuilder("r", EarlyReplyMode.none)
                 .set_category("Moderation Utilities")
                 .set_description(
-                    `Redirect a conversation from <#${this.wheatley.channels.c_cpp_discussion}> or ` +
-                        `<#${this.wheatley.channels.general_discussion}> to a help channel`,
+                    `Redirect a conversation from <#${this.wheatley.channels.c_cpp_discussion.id}> or ` +
+                        `<#${this.wheatley.channels.general_discussion.id}> to a help channel`,
                 )
                 .add_user_option({
                     title: "user",
@@ -73,7 +73,7 @@ export default class Redirect extends BotComponent {
                 this.wheatley.channels.c_help_text,
                 this.wheatley.channels.tooling,
                 this.wheatley.channels.algorithms_and_compsci,
-            ].includes(command.channel_id)
+            ].some(channel_info => channel_info.id === command.channel_id)
         ) {
             await command.reply("Can't be used in a help channel", true);
             return;
@@ -83,13 +83,13 @@ export default class Redirect extends BotComponent {
             content:
                 `Hello <@${user.id}>, welcome to Together C & C++! This is not a help channel, please ask your ` +
                 `question in one of the help channels above (${format_list([
-                    `<#${this.wheatley.channels.cpp_help}>`,
-                    `<#${this.wheatley.channels.cpp_help_text}>`,
-                    `<#${this.wheatley.channels.c_help}>`,
-                    `<#${this.wheatley.channels.c_help_text}>`,
+                    `<#${this.wheatley.channels.cpp_help.id}>`,
+                    `<#${this.wheatley.channels.cpp_help_text.id}>`,
+                    `<#${this.wheatley.channels.c_help.id}>`,
+                    `<#${this.wheatley.channels.c_help_text.id}>`,
                 ])}), ` +
-                `or <#${this.wheatley.channels.tooling}> if your question is about tooling, ` +
-                `or <#${this.wheatley.channels.algorithms_and_compsci}> if your question pertains more to theory, ` +
+                `or <#${this.wheatley.channels.tooling.id}> if your question is about tooling, ` +
+                `or <#${this.wheatley.channels.algorithms_and_compsci.id}> if your question pertains more to theory, ` +
                 `or any other help channel more suited for your question.`,
             should_text_reply: false,
         });
