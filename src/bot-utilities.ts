@@ -338,10 +338,10 @@ export class BotUtilities {
     }
 
     private async get_channel_internal(channel_info: named_id, case_insensitive: boolean = true) {
-        let channel: Discord.GuildBasedChannel | null = null;
+        let channel: Discord.Channel | null = null;
 
         try {
-            channel = await this.wheatley.guild.channels.fetch(channel_info.id);
+            channel = await this.wheatley.client.channels.fetch(channel_info.id);
         } catch (e) {
             // don't throw when DiscordAPIError[50001]: Missing Access
             if (e instanceof Discord.DiscordAPIError && e.code == 50001) {
@@ -355,6 +355,8 @@ export class BotUtilities {
         if (this.wheatley.devmode_enabled && !channel && channel_info.name && is_string(channel_info.name)) {
             channel = this.get_channel_by_name(channel_info.name, case_insensitive) ?? null;
         }
+
+        assert(!channel || !channel.isDMBased());
 
         return channel;
     }
