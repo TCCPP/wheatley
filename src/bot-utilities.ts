@@ -337,7 +337,7 @@ export class BotUtilities {
         );
     }
 
-    async #get_channel_internal(channel_info: named_id, case_insensitive: boolean = true) {
+    private async get_channel_internal(channel_info: named_id, case_insensitive: boolean = true) {
         let channel: Discord.GuildBasedChannel | null = null;
 
         try {
