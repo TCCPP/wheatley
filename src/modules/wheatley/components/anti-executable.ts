@@ -12,6 +12,7 @@ import Mute from "./moderation/mute.js";
 import { delay, unwrap } from "../../../utils/misc.js";
 import { CommandSetBuilder } from "../../../command-abstractions/command-set-builder.js";
 import { M } from "../../../utils/debugging-and-logging.js";
+import { channel_map } from "../../../channel-map.js";
 
 const ACTION_THRESHOLD = 5;
 const BASE_RETRY_DELAY_MS = 1000;
@@ -27,8 +28,11 @@ class HTTPError extends Error {
 }
 
 export default class AntiExecutable extends BotComponent {
-    private staff_flag_log!: Discord.TextChannel;
-    private staff_action_log!: Discord.TextChannel;
+    private channels = channel_map(
+        this.wheatley,
+        this.wheatley.channels.staff_flag_log,
+        this.wheatley.channels.staff_action_log,
+    );
     virustotal!: Virustotal | null;
 
     static override get is_freestanding() {
@@ -44,8 +48,7 @@ export default class AntiExecutable extends BotComponent {
     }
 
     override async setup(commands: CommandSetBuilder) {
-        this.staff_flag_log = await this.utilities.get_channel(this.wheatley.channels.staff_flag_log);
-        this.staff_action_log = await this.utilities.get_channel(this.wheatley.channels.staff_action_log);
+        await this.channels.resolve();
     }
 
     // Elf:  0x7F 0x45 0x4c 0x46 at offset 0
@@ -244,7 +247,7 @@ export default class AntiExecutable extends BotComponent {
                 )
                 .catch(this.wheatley.critical_error.bind(this.wheatley))
                 .finally(() => {
-                    this.staff_action_log
+                    this.channels.staff_action_log
                         .send({
                             content:
                                 `<@&${this.wheatley.roles.moderators.id}> Please review automatic 24h mute of ` +
@@ -281,7 +284,7 @@ export default class AntiExecutable extends BotComponent {
         await message.delete();
         assert(!(message.channel instanceof Discord.PartialGroupDMChannel));
         await message.channel.send(`<@${message.author.id}> Please do not send executable files`);
-        const flag_message = await this.staff_flag_log.send({
+        const flag_message = await this.channels.staff_flag_log.send({
             content: `:warning: Executable file(s) detected`,
             ...quote,
         });
@@ -290,7 +293,7 @@ export default class AntiExecutable extends BotComponent {
 
     async handle_archives(message: Discord.Message, attachments: Discord.Attachment[]) {
         const quote = await this.utilities.make_quote_embeds(message);
-        const flag_message = await this.staff_flag_log.send({
+        const flag_message = await this.channels.staff_flag_log.send({
             content: `:warning: Archive file(s) detected`,
             ...quote,
         });

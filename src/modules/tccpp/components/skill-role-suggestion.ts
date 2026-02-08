@@ -19,6 +19,7 @@ import { ModalInteractionBuilder, BotModal, BotModalSubmitInteraction } from "..
 import { build_description, capitalize } from "../../../utils/strings.js";
 import { EarlyReplyMode, TextBasedCommandBuilder } from "../../../command-abstractions/text-based-command-builder.js";
 import { TextBasedCommand } from "../../../command-abstractions/text-based-command.js";
+import { channel_map } from "../../../channel-map.js";
 
 type skill_suggestion_entry = {
     user_id: string;
@@ -46,17 +47,15 @@ export default class SkillRoleSuggestion extends BotComponent {
         skill_role_threads: skill_suggestion_thread_entry;
     }>();
 
-    private skill_role_suggestions!: Discord.ForumChannel;
+    private channels = channel_map(this.wheatley, this.wheatley.channels.skill_role_suggestions);
     private suggestion_modal!: BotModal<[]>;
 
     override async setup(commands: CommandSetBuilder) {
         await ensure_index(this.wheatley, this.database.skill_role_threads, { channel_id: 1 }, { unique: true });
         await ensure_index(this.wheatley, this.database.skill_role_threads, { user_id: 1 });
 
+        await this.channels.resolve();
         this.skill_roles = unwrap(this.wheatley.components.get("SkillRoles")) as SkillRoles;
-        this.skill_role_suggestions = await this.utilities.get_forum_channel(
-            this.wheatley.channels.skill_role_suggestions,
-        );
 
         commands.add(
             new UserContextMenuInteractionBuilder("Suggest Skill Role User").set_handler(
@@ -168,8 +167,10 @@ export default class SkillRoleSuggestion extends BotComponent {
             .toSorted((a, b) => descending(a, b, v => v[1]))
             .filter(v => v[1] !== 0);
         const suggested_levels = sorted_filtered_counts.map(([k, _]) => k);
-        const open_tag = get_tag(this.skill_role_suggestions, "Open").id;
-        const role_tags = suggested_levels.map(role => get_tag(this.skill_role_suggestions, capitalize(role)).id);
+        const open_tag = get_tag(this.channels.skill_role_suggestions, "Open").id;
+        const role_tags = suggested_levels.map(
+            role => get_tag(this.channels.skill_role_suggestions, capitalize(role)).id,
+        );
         return {
             tags: [open_tag, ...role_tags],
             content: build_description(
@@ -192,7 +193,7 @@ export default class SkillRoleSuggestion extends BotComponent {
                 thread_closed: null,
             });
             if (entry) {
-                const thread = await this.skill_role_suggestions.threads.fetch(entry.channel_id);
+                const thread = await this.channels.skill_role_suggestions.threads.fetch(entry.channel_id);
                 if (thread) {
                     if (thread.archived) {
                         await thread.setArchived(false);
@@ -205,7 +206,7 @@ export default class SkillRoleSuggestion extends BotComponent {
                 }
             }
             const { content, tags } = await this.make_thread_status(member, suggestion_time);
-            const thread = await this.skill_role_suggestions.threads.create({
+            const thread = await this.channels.skill_role_suggestions.threads.create({
                 name: member.displayName,
                 autoArchiveDuration: Discord.ThreadAutoArchiveDuration.OneWeek,
                 message: {

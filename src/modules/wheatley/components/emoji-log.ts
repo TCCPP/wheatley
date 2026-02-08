@@ -6,19 +6,20 @@ import { M } from "../../../utils/debugging-and-logging.js";
 import { colors } from "../../../common.js";
 import { BotComponent } from "../../../bot-component.js";
 import { CommandSetBuilder } from "../../../command-abstractions/command-set-builder.js";
+import { channel_map } from "../../../channel-map.js";
 
 export default class EmojiLog extends BotComponent {
-    private staff_action_log!: Discord.TextChannel;
+    private channels = channel_map(this.wheatley, this.wheatley.channels.staff_action_log);
 
     override async setup(commands: CommandSetBuilder) {
-        this.staff_action_log = await this.utilities.get_channel(this.wheatley.channels.staff_action_log);
+        await this.channels.resolve();
     }
 
     override async on_emoji_create(emoji: Discord.GuildEmoji) {
         if (emoji.guild.id !== this.wheatley.guild.id) {
             return;
         }
-        await this.staff_action_log.send({
+        await this.channels.staff_action_log.send({
             embeds: [
                 new Discord.EmbedBuilder()
                     .setTitle("Emoji Created")
@@ -37,7 +38,7 @@ export default class EmojiLog extends BotComponent {
         if (emoji.guild.id !== this.wheatley.guild.id) {
             return;
         }
-        await this.staff_action_log.send({
+        await this.channels.staff_action_log.send({
             embeds: [
                 new Discord.EmbedBuilder()
                     .setTitle("Emoji Removed")
@@ -56,7 +57,7 @@ export default class EmojiLog extends BotComponent {
         if (new_emoji.guild.id !== this.wheatley.guild.id) {
             return;
         }
-        await this.staff_action_log.send({
+        await this.channels.staff_action_log.send({
             embeds: [
                 new Discord.EmbedBuilder()
                     .setTitle("Emoji Updated")

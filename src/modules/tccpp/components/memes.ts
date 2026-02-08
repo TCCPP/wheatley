@@ -8,12 +8,15 @@ import { has_media } from "./autoreact.js";
 import { SelfClearingMap } from "../../../utils/containers.js";
 import { clear_timeout, set_timeout } from "../../../utils/node.js";
 import { MessageData } from "../../../bot-utilities.js";
+import { channel_map } from "../../../channel-map.js";
 
 const DISABLED: boolean = true;
 
 const GRACE_PERIOD = 10 * SECOND;
 
 export default class Memes extends BotComponent {
+    private channels = channel_map(this.wheatley, this.wheatley.channels.memes);
+
     // Map of message ID -> timeout handle for pending deletions
     private readonly pending_deletions = new SelfClearingMap<string, NodeJS.Timeout>(
         GRACE_PERIOD + 5 * SECOND,
@@ -22,6 +25,10 @@ export default class Memes extends BotComponent {
             clear_timeout(timeout);
         },
     );
+
+    override async setup() {
+        await this.channels.resolve();
+    }
 
     private async should_skip(message: Discord.Message): Promise<boolean> {
         return (
@@ -56,7 +63,7 @@ export default class Memes extends BotComponent {
             });
             await user.send({
                 content:
-                    `Your message in <#${this.wheatley.channels.memes.id}> was deleted because it didn't contain ` +
+                    `Your message in <#${this.channels.memes.id}> was deleted because it didn't contain ` +
                     `any images, videos, or media embeds. This channel is for sharing memes only. For commentary ` +
                     `please open a thread.`,
                 embeds: quote.embeds,
@@ -88,7 +95,7 @@ export default class Memes extends BotComponent {
         if (message.guildId !== this.wheatley.guild.id) {
             return;
         }
-        if (message.channel.id !== this.wheatley.channels.memes.id) {
+        if (message.channel.id !== this.channels.memes.id) {
             return;
         }
         if (await this.should_skip(message)) {
@@ -109,7 +116,7 @@ export default class Memes extends BotComponent {
         if (new_message.guildId !== this.wheatley.guild.id) {
             return;
         }
-        if (new_message.channel.id !== this.wheatley.channels.memes.id) {
+        if (new_message.channel.id !== this.channels.memes.id) {
             return;
         }
         const message = await departialize(new_message);

@@ -9,6 +9,7 @@ import { CommandSetBuilder } from "../../../command-abstractions/command-set-bui
 import { set_interval } from "../../../utils/node.js";
 import { build_description } from "../../../utils/strings.js";
 import { with_retry } from "../../../utils/discord.js";
+import { channel_map } from "../../../channel-map.js";
 
 export type user_role_entry = {
     user_id: string;
@@ -23,7 +24,7 @@ type role_update_listener = {
 };
 
 export default class RoleManager extends BotComponent {
-    private staff_member_log!: Discord.TextChannel;
+    private channels = channel_map(this.wheatley, this.wheatley.channels.staff_member_log);
     interval: NodeJS.Timeout | null = null;
 
     // current database state
@@ -50,7 +51,7 @@ export default class RoleManager extends BotComponent {
     override async setup(commands: CommandSetBuilder) {
         await ensure_index(this.wheatley, this.database.user_roles, { user_id: 1 }, { unique: true });
 
-        this.staff_member_log = await this.utilities.get_channel(this.wheatley.channels.staff_member_log);
+        await this.channels.resolve();
     }
 
     override async on_ready() {
@@ -152,7 +153,7 @@ export default class RoleManager extends BotComponent {
         if (roles_entry === null) {
             return;
         }
-        this.wheatley.llog(this.staff_member_log, {
+        this.wheatley.llog(this.channels.staff_member_log, {
             embeds: [
                 new Discord.EmbedBuilder()
                     .setTitle("Re-Adding roles for Member")

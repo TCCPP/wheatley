@@ -12,7 +12,6 @@ import { globIterateSync } from "glob";
 import { PathScurry } from "path-scurry";
 import { M } from "./utils/debugging-and-logging.js";
 import { BotComponent } from "./bot-component.js";
-
 import { CommandAbstractionReplyOptions } from "./command-abstractions/text-based-command.js";
 
 import { WheatleyDatabase } from "./infra/database-interface.js";
@@ -77,84 +76,111 @@ export type named_id = {
     name?: string;
 };
 
-const channels = {
+export type channel_type = "text" | "forum" | "voice" | "thread";
+
+export type typed_channel_id = named_id & { type: channel_type };
+
+export type channel_type_map = {
+    text: Discord.TextChannel;
+    forum: Discord.ForumChannel;
+    voice: Discord.VoiceChannel;
+    thread: Discord.ThreadChannel;
+};
+
+function define_channels<const T extends Record<string, { id: string; name?: string; type: channel_type }>>(
+    channels: T,
+): { [K in keyof T & string]: T[K] & { key: K } } {
+    const result = {} as { [K in keyof T & string]: T[K] & { key: K } };
+    for (const [key, value] of Object.entries(channels)) {
+        (result as Record<string, unknown>)[key] = { ...value, key };
+    }
+    return result;
+}
+
+export type channels_map = typeof channels;
+
+export type resolved_channels<K extends keyof channels_map> = {
+    [P in K]: channel_type_map[channels_map[P]["type"]];
+};
+
+const channels = define_channels({
     // staff
-    staff_flag_log: { id: "1026972603019169842", name: "🚩-flag-log" },
-    staff_delet_log: { id: "1462879414864838869", name: "🗑️-delet-log" },
-    staff_experimental_log: { id: "1207899185790197760", name: "😱-experimental-log" },
-    staff_action_log: { id: "845290775692443699", name: "🔨-action-log" },
-    public_action_log: { id: "1341611685223596103", name: "moderation-log" },
-    staff_clock_log: { id: "1220882759862452284", name: "👀-clock-log" },
-    welcome: { id: "778017793567490078", name: "📈-join-boost-log" },
-    staff_member_log: { id: "875681819662622730", name: "👥-member-log" },
-    staff_message_log: { id: "467729928956411914", name: "💬-message-log" },
-    staff_only: { id: "342153262260289537", name: "staff-only" },
-    mods: { id: "847993258600038460", name: "mods-🚲" },
-    voice_hotline: { id: "1379456835634987098", name: "voice-hotline" },
+    staff_flag_log: { id: "1026972603019169842", name: "🚩-flag-log", type: "text" },
+    staff_delet_log: { id: "1462879414864838869", name: "🗑️-delet-log", type: "text" },
+    staff_experimental_log: { id: "1207899185790197760", name: "😱-experimental-log", type: "text" },
+    staff_action_log: { id: "845290775692443699", name: "🔨-action-log", type: "text" },
+    public_action_log: { id: "1341611685223596103", name: "moderation-log", type: "text" },
+    staff_clock_log: { id: "1220882759862452284", name: "👀-clock-log", type: "forum" },
+    welcome: { id: "778017793567490078", name: "📈-join-boost-log", type: "text" },
+    staff_member_log: { id: "875681819662622730", name: "👥-member-log", type: "text" },
+    staff_message_log: { id: "467729928956411914", name: "💬-message-log", type: "text" },
+    staff_only: { id: "342153262260289537", name: "staff-only", type: "text" },
+    mods: { id: "847993258600038460", name: "mods-🚲", type: "text" },
+    voice_hotline: { id: "1379456835634987098", name: "voice-hotline", type: "voice" },
 
     // meta
-    rules: { id: "659868782877212723", name: "rules" },
-    announcements: { id: "331881381477089282", name: "announcements" },
-    server_suggestions: { id: "802541516655951892", name: "server-suggestions" },
-    skill_role_suggestions: { id: "1211089633547526204", name: "skill-role-suggestions" },
-    skill_roles_meta: { id: "1182536717056618557", name: "skill-roles-meta" },
-    news: { id: "1269506410530738267", name: "news" },
-    old_resources: { id: "1124619767542718524", name: "old-resources" },
-    resources: { id: "1361574878561570926", name: "resources" },
-    partners: { id: "904790565000986745", name: "partners" },
-    the_button: { id: "1069678919667687455", name: "the-button" },
-    articles: { id: "1130174377539940475", name: "archived-articles" },
+    rules: { id: "659868782877212723", name: "rules", type: "text" },
+    announcements: { id: "331881381477089282", name: "announcements", type: "text" },
+    server_suggestions: { id: "802541516655951892", name: "server-suggestions", type: "text" },
+    skill_role_suggestions: { id: "1211089633547526204", name: "skill-role-suggestions", type: "forum" },
+    skill_roles_meta: { id: "1182536717056618557", name: "skill-roles-meta", type: "text" },
+    news: { id: "1269506410530738267", name: "news", type: "text" },
+    old_resources: { id: "1124619767542718524", name: "old-resources", type: "text" },
+    resources: { id: "1361574878561570926", name: "resources", type: "text" },
+    partners: { id: "904790565000986745", name: "partners", type: "text" },
+    the_button: { id: "1069678919667687455", name: "the-button", type: "text" },
+    articles: { id: "1130174377539940475", name: "archived-articles", type: "text" },
 
     // language channels
-    cpp_help: { id: "1013107104678162544", name: "cpp-help" },
-    c_help: { id: "1013104018739974194", name: "c-help" },
-    cpp_help_text: { id: "331718580070645760", name: "cpp-help-text" },
-    c_help_text: { id: "331718539738087426", name: "c-help-text" },
-    c_cpp_discussion: { id: "851121440425639956", name: "c-cpp-discussion" },
-    general_discussion: { id: "855220264149057556", name: "general-technical" },
-    code_review: { id: "1078717238678409369", name: "code-review" },
-    showcase: { id: "1014328785685979136", name: "showcase" },
-    tooling: { id: "331913460080181258", name: "tooling" },
-    algorithms_and_compsci: { id: "857668280012242944", name: "algorithms-and-compsci" },
+    cpp_help: { id: "1013107104678162544", name: "cpp-help", type: "forum" },
+    c_help: { id: "1013104018739974194", name: "c-help", type: "forum" },
+    cpp_help_text: { id: "331718580070645760", name: "cpp-help-text", type: "text" },
+    c_help_text: { id: "331718539738087426", name: "c-help-text", type: "text" },
+    c_cpp_discussion: { id: "851121440425639956", name: "c-cpp-discussion", type: "text" },
+    general_discussion: { id: "855220264149057556", name: "general-technical", type: "text" },
+    code_review: { id: "1078717238678409369", name: "code-review", type: "forum" },
+    showcase: { id: "1014328785685979136", name: "showcase", type: "forum" },
+    tooling: { id: "331913460080181258", name: "tooling", type: "text" },
+    algorithms_and_compsci: { id: "857668280012242944", name: "algorithms-and-compsci", type: "text" },
 
     // off-topic
-    starboard: { id: "800509841424252968", name: "starboard" },
-    memes: { id: "526518219549442071", name: "memes" },
-    food: { id: "1288515484513468436", name: "food" },
-    serious_off_topic: { id: "921113903574958080", name: "serious-off-topic" },
-    room_of_requirement: { id: "1082800064113672192", name: "pets" },
-    boosters_only: { id: "792183875241639977", name: "🩷pink🩷" },
+    starboard: { id: "800509841424252968", name: "starboard", type: "text" },
+    memes: { id: "526518219549442071", name: "memes", type: "text" },
+    food: { id: "1288515484513468436", name: "food", type: "text" },
+    serious_off_topic: { id: "921113903574958080", name: "serious-off-topic", type: "text" },
+    room_of_requirement: { id: "1082800064113672192", name: "pets", type: "text" },
+    boosters_only: { id: "792183875241639977", name: "🩷pink🩷", type: "text" },
 
     // other
-    bot_spam: { id: "506274405500977153", name: "bot-spam" },
-    introductions: { id: "933113495304679494", name: "introductions" },
-    cursed_code: { id: "855220292736516128", name: "cursed-code" },
-    suggestion_dashboard: { id: "908928083879415839", name: "Suggestions Dashboard" },
-    suggestion_action_log: { id: "909309608512880681", name: "Suggestion Action Log" },
-    today_i_learned: { id: "873682069325217802", name: "did-you-know" },
-    goals2024: { id: "1189255286364569640", name: "2024-goals" },
-    goals2025: { id: "1323734788707848253", name: "2025-goals" },
-    goals2026: { id: "1454237273712492615", name: "archived-2026-goals" },
-    days_since_last_incident: { id: "1195920462958575676", name: "days-since-last-incident" },
-    literally_1984: { id: "1097993854214488154", name: "literally-1984" },
-    lore: { id: "890067781628866620", name: "lore" },
-    bot_dev_internal: { id: "1166517065763536977", name: "wheatley-dev-internal" },
-    pin_archive: { id: "1284234644396572714", name: "pin-archive" },
-    skill_role_log: { id: "1315023714206617610", name: "skill-role-log" },
-    polls: { id: "1319336135213846568", name: "polls" },
-    wiki_dev: { id: "1350899338229846127", name: "wiki-dev" },
+    bot_spam: { id: "506274405500977153", name: "bot-spam", type: "text" },
+    introductions: { id: "933113495304679494", name: "introductions", type: "text" },
+    cursed_code: { id: "855220292736516128", name: "cursed-code", type: "text" },
+    suggestion_dashboard: { id: "908928083879415839", name: "Suggestions Dashboard", type: "thread" },
+    suggestion_action_log: { id: "909309608512880681", name: "Suggestion Action Log", type: "thread" },
+    today_i_learned: { id: "873682069325217802", name: "did-you-know", type: "text" },
+    goals2024: { id: "1189255286364569640", name: "2024-goals", type: "text" },
+    goals2025: { id: "1323734788707848253", name: "2025-goals", type: "text" },
+    goals2026: { id: "1454237273712492615", name: "archived-2026-goals", type: "text" },
+    days_since_last_incident: { id: "1195920462958575676", name: "days-since-last-incident", type: "text" },
+    literally_1984: { id: "1097993854214488154", name: "literally-1984", type: "text" },
+    lore: { id: "890067781628866620", name: "lore", type: "text" },
+    bot_dev_internal: { id: "1166517065763536977", name: "wheatley-dev-internal", type: "text" },
+    pin_archive: { id: "1284234644396572714", name: "pin-archive", type: "text" },
+    skill_role_log: { id: "1315023714206617610", name: "skill-role-log", type: "text" },
+    polls: { id: "1319336135213846568", name: "polls", type: "text" },
+    wiki_dev: { id: "1350899338229846127", name: "wiki-dev", type: "text" },
 
     // voice
-    chill: { id: "1358502332941467879", name: "Chill" },
-    work_3: { id: "1358502770575147230", name: "Work 3" },
-    work_4: { id: "1367735453112864838", name: "Work 4" },
-    afk: { id: "331732845523369985", name: "AFK" },
-    deans_office: { id: "1379612678649155755", name: "Dean's Office" },
+    chill: { id: "1358502332941467879", name: "Chill", type: "voice" },
+    work_3: { id: "1358502770575147230", name: "Work 3", type: "voice" },
+    work_4: { id: "1367735453112864838", name: "Work 4", type: "voice" },
+    afk: { id: "331732845523369985", name: "AFK", type: "voice" },
+    deans_office: { id: "1379612678649155755", name: "Dean's Office", type: "voice" },
     // red telephone
-    red_telephone_alerts: { id: "1140096352278290512", name: "red-telephone-alerts" },
+    red_telephone_alerts: { id: "1140096352278290512", name: "red-telephone-alerts", type: "text" },
     // error log
-    log: { id: "1260777903700971581", name: "🤖-wheatley-log" },
-} satisfies { [key: string]: named_id };
+    log: { id: "1260777903700971581", name: "🤖-wheatley-log", type: "text" },
+});
 
 const roles_map = {
     muted: { id: "815987333094178825", name: "Muted" },

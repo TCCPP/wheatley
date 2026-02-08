@@ -7,7 +7,7 @@ import { M } from "../../../utils/debugging-and-logging.js";
 import { colors, MINUTE } from "../../../common.js";
 import { BotComponent } from "../../../bot-component.js";
 import { CommandSetBuilder } from "../../../command-abstractions/command-set-builder.js";
-import { Wheatley } from "../../../wheatley.js";
+import { channel_map } from "../../../channel-map.js";
 import { MessageContextMenuInteractionBuilder } from "../../../command-abstractions/context-menu.js";
 import { ModalInteractionBuilder, BotModal, BotModalSubmitInteraction } from "../../../command-abstractions/modal.js";
 import {
@@ -16,7 +16,7 @@ import {
 } from "../../../utils/staff-notification-buttons.js";
 
 export default class Report extends BotComponent {
-    private staff_flag_log!: Discord.TextChannel;
+    private channels = channel_map(this.wheatley, this.wheatley.channels.staff_flag_log);
     private report_modal!: BotModal<[string]>;
     private buttons!: Staff_notification_buttons;
     private button_helper = new Staff_notification_button_helper();
@@ -25,7 +25,7 @@ export default class Report extends BotComponent {
     readonly target_map = new SelfClearingMap<string, Discord.Message>(10 * MINUTE);
 
     override async setup(commands: CommandSetBuilder) {
-        this.staff_flag_log = await this.utilities.get_channel(this.wheatley.channels.staff_flag_log);
+        await this.channels.resolve();
 
         commands.add(
             new MessageContextMenuInteractionBuilder("🚩 Report to Moderators 🚩").set_handler(this.report.bind(this)),
@@ -97,7 +97,7 @@ export default class Report extends BotComponent {
                     user_id_footer: true,
                 });
                 const row = this.button_helper.create_standard_action_row(this.buttons);
-                await this.staff_flag_log.send({
+                await this.channels.staff_flag_log.send({
                     content: `<@&${this.wheatley.roles.moderators.id}>`,
                     embeds: [report_embed, ...quote_embeds.embeds],
                     components: [row],

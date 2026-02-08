@@ -5,9 +5,9 @@ import { is_media_link_embed } from "../../../utils/discord.js";
 import { M } from "../../../utils/debugging-and-logging.js";
 import { MINUTE, SECOND } from "../../../common.js";
 import { BotComponent } from "../../../bot-component.js";
-import { Wheatley } from "../../../wheatley.js";
 import { SelfClearingMap } from "../../../utils/containers.js";
 import { clear_timeout, set_timeout } from "../../../utils/node.js";
+import { channel_map } from "../../../channel-map.js";
 
 /* Here's a little of an explanation as to why we do this messageSnapshot stuff
  * A forwarded message is empty, however it contains a property messageSnapshot
@@ -40,7 +40,19 @@ function regular_has_media(message: Discord.Message | Discord.PartialMessage): b
 const REACT_TIMEOUT = 90 * SECOND;
 
 export default class Autoreact extends BotComponent {
+    private channels = channel_map(
+        this.wheatley,
+        this.wheatley.channels.introductions,
+        this.wheatley.channels.memes,
+        this.wheatley.channels.server_suggestions,
+        this.wheatley.channels.food,
+    );
+
     react_timeouts = new SelfClearingMap<string, NodeJS.Timeout>(REACT_TIMEOUT);
+
+    override async setup() {
+        await this.channels.resolve();
+    }
 
     override async on_ready() {
         await this.catch_up();
@@ -122,7 +134,7 @@ export default class Autoreact extends BotComponent {
                     this.wheatley.warn("Unable to find emoji nog4g");
                 }
             }
-            if (message.channel.id == this.wheatley.channels.introductions.id) {
+            if (message.channel.id == this.channels.introductions.id) {
                 if (message.member == null) {
                     // TODO: Ping zelis?
                     M.warn("Why??", message);
@@ -132,15 +144,15 @@ export default class Autoreact extends BotComponent {
                     M.log("Waving to new user", message.author.tag, message.author.id, message.url);
                     await message.react("👋");
                 }
-            } else if (message.channel.id == this.wheatley.channels.memes.id && has_media(message)) {
+            } else if (message.channel.id == this.channels.memes.id && has_media(message)) {
                 M.log("Adding star reaction", message.author.tag, message.author.id, message.url);
                 await message.react("⭐");
-            } else if (message.channel.id == this.wheatley.channels.server_suggestions.id) {
+            } else if (message.channel.id == this.channels.server_suggestions.id) {
                 M.log("Adding server suggestion reactions", message.author.tag, message.author.id, message.url);
                 await message.react("👍");
                 await message.react("👎");
                 await message.react("🤷");
-            } else if (message.channel.id == this.wheatley.channels.food.id && has_media(message)) {
+            } else if (message.channel.id == this.channels.food.id && has_media(message)) {
                 const reaction = message.guild!.emojis.cache.find(emoji => emoji.name === "chefskiss");
                 if (reaction !== undefined) {
                     await message.react(reaction);
@@ -152,7 +164,7 @@ export default class Autoreact extends BotComponent {
             // reaction blocked
             if (e instanceof Discord.DiscordAPIError && e.code === 90001) {
                 await message.member?.timeout(1 * MINUTE, "Thou shall not block the bot");
-                if (message.channel.id == this.wheatley.channels.server_suggestions.id) {
+                if (message.channel.id == this.channels.server_suggestions.id) {
                     await message.delete();
                 }
             } else {
@@ -177,7 +189,7 @@ export default class Autoreact extends BotComponent {
         if (new_message.createdTimestamp && Date.now() - new_message.createdTimestamp > 5 * MINUTE) {
             return;
         }
-        if (new_message.channel.id == this.wheatley.channels.memes.id) {
+        if (new_message.channel.id == this.channels.memes.id) {
             const bot_starred = new_message.reactions.cache.get("⭐")?.users.cache.has(this.wheatley.user.id);
             // If we haven't stared (or don't know if we've starred) and the new message has media, star
             if (!bot_starred && has_media(new_message)) {
@@ -204,8 +216,7 @@ export default class Autoreact extends BotComponent {
     }
 
     async catch_up() {
-        const introductions_channel = await this.utilities.get_channel(this.wheatley.channels.introductions);
-        const messages = await introductions_channel.messages.fetch({ limit: 100, cache: false });
+        const messages = await this.channels.introductions.messages.fetch({ limit: 100, cache: false });
         for (const [_, message] of messages) {
             if (await this.is_new_member(message)) {
                 M.log("Waving to new user", message.author.tag, message.author.id, message.url);

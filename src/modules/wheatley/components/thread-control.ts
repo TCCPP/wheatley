@@ -3,15 +3,15 @@ import { strict as assert } from "assert";
 import { M } from "../../../utils/debugging-and-logging.js";
 import { BotComponent } from "../../../bot-component.js";
 import { CommandSetBuilder } from "../../../command-abstractions/command-set-builder.js";
-import { Wheatley } from "../../../wheatley.js";
+import { channel_map } from "../../../channel-map.js";
 import { EarlyReplyMode, TextBasedCommandBuilder } from "../../../command-abstractions/text-based-command-builder.js";
 import { TextBasedCommand } from "../../../command-abstractions/text-based-command.js";
 
 export default class ThreadControl extends BotComponent {
-    private rules!: Discord.TextChannel;
+    private channels = channel_map(this.wheatley, this.wheatley.channels.rules);
 
     override async setup(commands: CommandSetBuilder) {
-        this.rules = await this.utilities.get_channel(this.wheatley.channels.rules);
+        await this.channels.resolve();
         commands.add(
             new TextBasedCommandBuilder("archive", EarlyReplyMode.ephemeral)
                 .set_category("Thread Control")
@@ -38,7 +38,7 @@ export default class ThreadControl extends BotComponent {
         const channel = await request.get_channel();
         if (channel.isThread()) {
             const thread = channel;
-            if (thread.parentId == this.rules.id) {
+            if (thread.parentId == this.channels.rules.id) {
                 return true; // just let the user do it, should be fine
             }
             if (await this.utilities.can_user_control_thread(request.user, thread)) {
@@ -62,7 +62,7 @@ export default class ThreadControl extends BotComponent {
         if (await this.try_to_control_thread(command, "archive")) {
             const channel = await command.get_channel();
             assert(channel.isThread());
-            if (channel.parentId == this.rules.id && channel.type == Discord.ChannelType.PrivateThread) {
+            if (channel.parentId == this.channels.rules.id && channel.type == Discord.ChannelType.PrivateThread) {
                 await command.reply("Archiving", true);
                 await channel.setArchived();
             } else {

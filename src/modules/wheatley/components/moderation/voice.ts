@@ -5,12 +5,13 @@ import { strict as assert } from "assert";
 import { colors } from "../../../../common.js";
 import { BotComponent } from "../../../../bot-component.js";
 import { build_description } from "../../../../utils/strings.js";
+import { channel_map } from "../../../../channel-map.js";
 
 export default class VoiceModeration extends BotComponent {
-    private staff_action_log!: Discord.TextChannel;
+    private channels = channel_map(this.wheatley, this.wheatley.channels.staff_action_log);
 
     override async setup() {
-        this.staff_action_log = await this.utilities.get_channel(this.wheatley.channels.staff_action_log);
+        await this.channels.resolve();
     }
 
     private audit_log_summary(
@@ -47,19 +48,19 @@ export default class VoiceModeration extends BotComponent {
                 if (change.key == "mute") {
                     assert(entry.targetType == "User");
                     const action = change.old ? "was unmuted" : "was muted";
-                    await this.staff_action_log.send({
+                    await this.channels.staff_action_log.send({
                         embeds: [this.audit_log_summary(entry.target as Discord.User, entry.executor, action)],
                         allowedMentions: { parse: [] },
                     });
                 }
             }
         } else if (entry.action == Discord.AuditLogEvent.MemberMove) {
-            await this.staff_action_log.send({
+            await this.channels.staff_action_log.send({
                 embeds: [this.audit_log_summary(null, entry.executor, "was moved")],
                 allowedMentions: { parse: [] },
             });
         } else if (entry.action == Discord.AuditLogEvent.MemberDisconnect) {
-            await this.staff_action_log.send({
+            await this.channels.staff_action_log.send({
                 embeds: [this.audit_log_summary(null, entry.executor, "was disconnected")],
                 allowedMentions: { parse: [] },
             });

@@ -4,7 +4,7 @@ import { unwrap } from "../../../utils/misc.js";
 import { M } from "../../../utils/debugging-and-logging.js";
 import { colors } from "../../../common.js";
 import { BotComponent } from "../../../bot-component.js";
-import { Wheatley } from "../../../wheatley.js";
+import { channel_map } from "../../../channel-map.js";
 
 /*
  * Thread-based channel logic (non-forum)
@@ -32,13 +32,24 @@ function create_embed(title: string | undefined, color: number, msg: string) {
 }
 
 export default class ThreadBasedChannels extends BotComponent {
+    private channels = channel_map(
+        this.wheatley,
+        this.wheatley.channels.server_suggestions,
+        this.wheatley.channels.showcase,
+        this.wheatley.channels.today_i_learned,
+    );
+
     thread_based_channel_ids!: Set<string>;
+
+    override async setup() {
+        await this.channels.resolve();
+    }
 
     override async on_ready() {
         this.thread_based_channel_ids = new Set([
-            this.wheatley.channels.server_suggestions.id,
-            this.wheatley.channels.showcase.id,
-            this.wheatley.channels.today_i_learned.id,
+            this.channels.server_suggestions.id,
+            this.channels.showcase.id,
+            this.channels.today_i_learned.id,
         ]);
     }
 
@@ -93,7 +104,7 @@ export default class ThreadBasedChannels extends BotComponent {
         if (message.guildId !== this.wheatley.guild.id) {
             return;
         }
-        if (message.channelId === this.wheatley.channels.today_i_learned.id) {
+        if (message.channelId === this.channels.today_i_learned.id) {
             if (message.hasThread) {
                 await unwrap(message.thread).send(
                     "This today I learned post was removed. If it was removed by a moderator it was likely due to it " +

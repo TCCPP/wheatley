@@ -5,7 +5,6 @@ import { make_url } from "../../../../utils/discord.js";
 import { M } from "../../../../utils/debugging-and-logging.js";
 import { colors, HOUR, MINUTE } from "../../../../common.js";
 import { BotComponent } from "../../../../bot-component.js";
-import { Wheatley } from "../../../../wheatley.js";
 import { moderation_state, monke_button_press_entry } from "./schemata.js";
 import { SelfClearingMap } from "../../../../utils/containers.js";
 import { unwrap } from "../../../../utils/misc.js";
@@ -23,6 +22,7 @@ import {
     BotModal,
     BotModalSubmitInteraction,
 } from "../../../../command-abstractions/modal.js";
+import { channel_map } from "../../../../channel-map.js";
 
 /*
  * Flow:
@@ -61,14 +61,15 @@ export default class Modmail extends BotComponent {
         component_state: moderation_state;
         monke_button_presses: monke_button_press_entry;
     }>();
-    private rules!: Discord.TextChannel;
-    private mods!: Discord.TextChannel;
-    private staff_member_log!: Discord.TextChannel;
+    private channels = channel_map(
+        this.wheatley,
+        this.wheatley.channels.rules,
+        this.wheatley.channels.mods,
+        this.wheatley.channels.staff_member_log,
+    );
 
     override async setup(commands: CommandSetBuilder) {
-        this.rules = await this.utilities.get_channel(this.wheatley.channels.rules);
-        this.mods = await this.utilities.get_channel(this.wheatley.channels.mods);
-        this.staff_member_log = await this.utilities.get_channel(this.wheatley.channels.staff_member_log);
+        await this.channels.resolve();
         commands.add(
             new TextBasedCommandBuilder("wsetupmodmailsystem", EarlyReplyMode.none)
                 .set_category("Admin utilities")
@@ -154,7 +155,7 @@ export default class Modmail extends BotComponent {
                 const member = await this.wheatley.guild.members.fetch(interaction.member.user.id);
                 // make the thread
                 const id = await this.increment_modmail_id();
-                const thread = await this.rules.threads.create({
+                const thread = await this.channels.rules.threads.create({
                     type: Discord.ChannelType.PrivateThread,
                     invitable: false,
                     name: `Modmail #${id}`,
@@ -177,7 +178,7 @@ export default class Modmail extends BotComponent {
                     name: member.user.tag,
                     iconURL: member.displayAvatarURL(),
                 });
-                await this.mods.send({
+                await this.channels.mods.send({
                     content: make_url(thread),
                     embeds: [notification_embed],
                 });
@@ -392,7 +393,7 @@ export default class Modmail extends BotComponent {
         if (body) {
             embed.setDescription(body);
         }
-        await this.staff_member_log.send({
+        await this.channels.staff_member_log.send({
             embeds: [embed],
         });
     }

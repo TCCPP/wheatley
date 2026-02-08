@@ -5,12 +5,12 @@ import { SelfClearingMap, SelfClearingSet } from "../../../utils/containers.js";
 import { M } from "../../../utils/debugging-and-logging.js";
 import { colors, DAY, HOUR, MINUTE } from "../../../common.js";
 import { BotComponent } from "../../../bot-component.js";
-import { Wheatley } from "../../../wheatley.js";
 import { clear_timeout, set_interval, set_timeout } from "../../../utils/node.js";
 import { Synopsinator } from "../../../utils/synopsis.js";
 import { CommandSetBuilder } from "../../../command-abstractions/command-set-builder.js";
 import { unwrap } from "../../../utils/misc.js";
 import ForumControl from "./forum-control.js";
+import { channel_map } from "../../../channel-map.js";
 
 // TODO: Take into account thread's inactivity setting
 
@@ -53,27 +53,28 @@ export default class ForumChannels extends BotComponent {
     readonly timeout_map = new Map<string, NodeJS.Timeout>();
     interval!: NodeJS.Timeout;
 
-    private general_discussion!: Discord.TextChannel;
-    private cpp_help!: Discord.ForumChannel;
-    private c_help!: Discord.ForumChannel;
-    private cpp_help_text!: Discord.TextChannel;
-    private c_help_text!: Discord.TextChannel;
+    private channels = channel_map(
+        this.wheatley,
+        this.wheatley.channels.general_discussion,
+        this.wheatley.channels.cpp_help,
+        this.wheatley.channels.c_help,
+        this.wheatley.channels.cpp_help_text,
+        this.wheatley.channels.c_help_text,
+        this.wheatley.channels.code_review,
+        this.wheatley.channels.showcase,
+    );
     private forum_control!: ForumControl;
 
     override async setup(commands: CommandSetBuilder) {
-        this.general_discussion = await this.utilities.get_channel(this.wheatley.channels.general_discussion);
-        this.cpp_help = await this.utilities.get_forum_channel(this.wheatley.channels.cpp_help);
-        this.c_help = await this.utilities.get_forum_channel(this.wheatley.channels.c_help);
-        this.cpp_help_text = await this.utilities.get_channel(this.wheatley.channels.cpp_help_text);
-        this.c_help_text = await this.utilities.get_channel(this.wheatley.channels.c_help_text);
+        await this.channels.resolve();
         this.forum_control = unwrap(this.wheatley.components.get("ForumControl")) as ForumControl;
     }
 
     private get_corresponding_text_help_channel(thread: Discord.ThreadChannel): Discord.TextChannel {
-        if (thread.parentId === this.cpp_help.id) {
-            return this.cpp_help_text;
-        } else if (thread.parentId === this.c_help.id) {
-            return this.c_help_text;
+        if (thread.parentId === this.channels.cpp_help.id) {
+            return this.channels.cpp_help_text;
+        } else if (thread.parentId === this.channels.c_help.id) {
+            return this.channels.c_help_text;
         }
         throw new Error(`Thread ${thread.id} is not in a recognized help forum`);
     }
@@ -83,7 +84,7 @@ export default class ForumChannels extends BotComponent {
         M.debug("Running forum cleanup");
         // Routinely archive threads
         // Ensure no thread has both the solved and open tag?
-        for (const forum of [this.cpp_help, this.c_help]) {
+        for (const forum of [this.channels.cpp_help, this.channels.c_help]) {
             const open_tag = get_tag(forum, "Open").id;
             const solved_tag = get_tag(forum, "Solved").id;
             const stale_tag = get_tag(forum, "Stale").id;
@@ -294,9 +295,7 @@ export default class ForumChannels extends BotComponent {
     is_non_forum_mirror_channel(thread: Discord.ThreadChannel) {
         return (
             thread.parentId != null &&
-            [this.wheatley.channels.code_review, this.wheatley.channels.showcase].some(
-                channel_info => channel_info.id === thread.parentId,
-            )
+            [this.channels.code_review, this.channels.showcase].some(channel => channel.id === thread.parentId)
         );
     }
 
@@ -345,11 +344,11 @@ export default class ForumChannels extends BotComponent {
             } else if (this.is_non_forum_mirror_channel(thread)) {
                 await this.mirror_forum_post(
                     message,
-                    `New ${
-                        thread.parentId == this.wheatley.channels.code_review.id ? "code review" : "showcase"
-                    } post: ${thread.name}`,
+                    `New ${thread.parentId == this.channels.code_review.id ? "code review" : "showcase"} post: ${
+                        thread.name
+                    }`,
                     true,
-                    this.general_discussion,
+                    this.channels.general_discussion,
                 );
             }
         } else {

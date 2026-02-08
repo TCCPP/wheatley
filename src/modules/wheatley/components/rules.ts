@@ -4,6 +4,7 @@ import { M } from "../../../utils/debugging-and-logging.js";
 import { unwrap } from "../../../utils/misc.js";
 import Wiki from "./wiki.js";
 import { embeds_match } from "../../../utils/discord.js";
+import { channel_map } from "../../../channel-map.js";
 
 type rules_state = {
     id: "rules";
@@ -15,11 +16,11 @@ export default class RulesMessage extends BotComponent {
         component_state: rules_state;
     }>();
 
-    private rules_channel!: Discord.TextChannel;
+    private channels = channel_map(this.wheatley, this.wheatley.channels.rules);
     private wiki!: Wiki;
 
     override async setup() {
-        this.rules_channel = await this.utilities.get_channel(this.wheatley.channels.rules);
+        await this.channels.resolve();
         this.wiki = unwrap(this.wheatley.components.get("Wiki")) as Wiki;
     }
 
@@ -31,7 +32,7 @@ export default class RulesMessage extends BotComponent {
         const state = await this.database.component_state.findOne({ id: "rules" });
         if (state?.message_id) {
             try {
-                const existing_message = await this.rules_channel.messages.fetch(state.message_id);
+                const existing_message = await this.channels.rules.messages.fetch(state.message_id);
                 await this.maybe_update_rules_message(existing_message);
                 return;
             } catch (e) {
@@ -54,7 +55,7 @@ export default class RulesMessage extends BotComponent {
 
     async create_rules_message() {
         M.log("Creating rules message");
-        const message = await this.rules_channel.send({ embeds: [this.get_rules()] });
+        const message = await this.channels.rules.send({ embeds: [this.get_rules()] });
         await this.database.component_state.findOneAndUpdate(
             { id: "rules" },
             { $set: { message_id: message.id } },

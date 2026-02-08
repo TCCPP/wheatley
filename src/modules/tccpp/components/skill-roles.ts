@@ -3,12 +3,12 @@ import { strict as assert } from "assert";
 import { colors, HOUR, MINUTE } from "../../../common.js";
 import { unwrap } from "../../../utils/misc.js";
 import { M } from "../../../utils/debugging-and-logging.js";
-import { Wheatley } from "../../../wheatley.js";
 import { BotComponent } from "../../../bot-component.js";
 import { ensure_index } from "../../../infra/database-interface.js";
 import { CommandSetBuilder } from "../../../command-abstractions/command-set-builder.js";
 import RoleManager, { user_role_entry } from "../../wheatley/components/role-manager.js";
 import { capitalize } from "../../../utils/strings.js";
+import { channel_map } from "../../../channel-map.js";
 
 // eslint-disable-next-line @typescript-eslint/naming-convention
 export const SkillLevel = {
@@ -23,7 +23,7 @@ export type skill_level = keyof typeof SkillLevel;
 type skill_role_entry = { user_id: string; last_known_skill_role: string | null };
 
 export default class SkillRoles extends BotComponent {
-    private skill_role_log!: Discord.TextChannel;
+    private channels = channel_map(this.wheatley, this.wheatley.channels.skill_role_log);
 
     private skill_roles: Discord.Role[] = [];
     public readonly roles = {} as Record<skill_level, Discord.Role>;
@@ -36,7 +36,7 @@ export default class SkillRoles extends BotComponent {
     override async setup(commands: CommandSetBuilder) {
         await ensure_index(this.wheatley, this.database.skill_roles, { user_id: 1 }, { unique: true });
 
-        this.skill_role_log = await this.utilities.get_channel(this.wheatley.channels.skill_role_log);
+        await this.channels.resolve();
     }
 
     override async on_ready() {
@@ -105,7 +105,7 @@ export default class SkillRoles extends BotComponent {
             M.log("Detected skill level increase for", member.user.tag);
             const current_skill_role = this.skill_roles[current_skill_level];
             assert(current_skill_role);
-            await this.skill_role_log.send({
+            await this.channels.skill_role_log.send({
                 embeds: [
                     new Discord.EmbedBuilder()
                         .setAuthor({

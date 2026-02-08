@@ -3,17 +3,17 @@ import { strict as assert } from "assert";
 import { time_to_human } from "../../../utils/strings.js";
 import { colors, MINUTE } from "../../../common.js";
 import { BotComponent } from "../../../bot-component.js";
-import { Wheatley } from "../../../wheatley.js";
 import { discord_timestamp } from "../../../utils/discord.js";
 import { CommandSetBuilder } from "../../../command-abstractions/command-set-builder.js";
+import { channel_map } from "../../../channel-map.js";
 
 const NEW_USER_THRESHOLD = MINUTE * 30;
 
 export default class NotifyAboutBrandNewUsers extends BotComponent {
-    private welcome!: Discord.TextChannel;
+    private channels = channel_map(this.wheatley, this.wheatley.channels.welcome);
 
     override async setup(commands: CommandSetBuilder) {
-        this.welcome = await this.utilities.get_channel(this.wheatley.channels.welcome);
+        await this.channels.resolve();
     }
 
     async notify_about_brand_new_user(member: Discord.GuildMember) {
@@ -32,7 +32,7 @@ export default class NotifyAboutBrandNewUsers extends BotComponent {
                 text: `ID: ${member.id}`,
             })
             .setTimestamp();
-        await this.welcome.send({ embeds: [embed] });
+        await this.channels.welcome.send({ embeds: [embed] });
     }
 
     override async on_guild_member_add(member: Discord.GuildMember) {

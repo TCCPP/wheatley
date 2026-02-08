@@ -9,9 +9,9 @@ import { MINUTE } from "../../../common.js";
 import { BotComponent } from "../../../bot-component.js";
 import { ensure_index } from "../../../infra/database-interface.js";
 import { CommandSetBuilder } from "../../../command-abstractions/command-set-builder.js";
-import { Wheatley } from "../../../wheatley.js";
 import { EarlyReplyMode, TextBasedCommandBuilder } from "../../../command-abstractions/text-based-command-builder.js";
 import { TextBasedCommand } from "../../../command-abstractions/text-based-command.js";
+import { channel_map } from "../../../channel-map.js";
 
 const resolution_reactions = ["🟢", "🔴", "🟡", "🚫"];
 const resolution_reactions_set = new Set(resolution_reactions);
@@ -49,21 +49,18 @@ export default class ServerSuggestionTracker extends BotComponent {
         server_suggestions: server_suggestion_entry;
     }>();
 
-    private suggestion_action_log!: Discord.ThreadChannel;
-    private suggestion_dashboard!: Discord.ThreadChannel;
-    private server_suggestions!: Discord.TextChannel;
+    private channels = channel_map(
+        this.wheatley,
+        this.wheatley.channels.suggestion_action_log,
+        this.wheatley.channels.suggestion_dashboard,
+        this.wheatley.channels.server_suggestions,
+    );
 
     override async setup(commands: CommandSetBuilder) {
         await ensure_index(this.wheatley, this.database.server_suggestions, { suggestion: 1 }, { unique: true });
         await ensure_index(this.wheatley, this.database.server_suggestions, { status_message: 1 }, { unique: true });
 
-        this.suggestion_action_log = await this.utilities.get_thread_channel(
-            this.wheatley.channels.suggestion_action_log,
-        );
-        this.suggestion_dashboard = await this.utilities.get_thread_channel(
-            this.wheatley.channels.suggestion_dashboard,
-        );
-        this.server_suggestions = await this.utilities.get_channel(this.wheatley.channels.server_suggestions);
+        await this.channels.resolve();
 
         commands.add(
             new TextBasedCommandBuilder("suggestions-dashboard-count", EarlyReplyMode.visible)
@@ -187,7 +184,7 @@ export default class ServerSuggestionTracker extends BotComponent {
                 iconURL: reaction.user.displayAvatarURL(),
             })
             .setTimestamp(message.createdAt);
-        await this.suggestion_action_log.send({ embeds: [embed] });
+        await this.channels.suggestion_action_log.send({ embeds: [embed] });
     }
 
     async log_reopen(message: Discord.Message) {
@@ -202,7 +199,7 @@ export default class ServerSuggestionTracker extends BotComponent {
                 text: "Suggestion reopened",
             })
             .setTimestamp(message.createdAt);
-        await this.suggestion_action_log.send({ embeds: [embed] });
+        await this.channels.suggestion_action_log.send({ embeds: [embed] });
     }
 
     // Four operations:
@@ -229,7 +226,7 @@ export default class ServerSuggestionTracker extends BotComponent {
         try {
             M.log("New suggestion", message.author.tag, message.author.id, message.url);
             const quote = await this.make_embeds(message);
-            const status_message = await this.suggestion_dashboard.send(quote);
+            const status_message = await this.channels.suggestion_dashboard.send(quote);
             await this.database.component_state.findOneAndUpdate(
                 { id: "server_suggestions" },
                 {
@@ -266,7 +263,7 @@ export default class ServerSuggestionTracker extends BotComponent {
         try {
             const entry = unwrap(await this.database.server_suggestions.findOne({ suggestion: message_id }));
             M.log("Suggestion deleted", message_id, entry);
-            const status_message = await this.suggestion_dashboard.messages.fetch(entry.status_message);
+            const status_message = await this.channels.suggestion_dashboard.messages.fetch(entry.status_message);
             this.status_lock.insert(entry.status_message);
             await status_message.delete();
             await this.database.server_suggestions.deleteOne({ suggestion: message_id });
@@ -289,7 +286,7 @@ export default class ServerSuggestionTracker extends BotComponent {
             const hash = xxh3(message.content);
             if (hash != entry.hash) {
                 M.log("Suggestion edited", message.author.tag, message.author.id, message.url);
-                const status_message = await this.suggestion_dashboard.messages.fetch(entry.status_message);
+                const status_message = await this.channels.suggestion_dashboard.messages.fetch(entry.status_message);
                 const quote = await this.make_embeds(message);
                 await status_message.edit(quote);
                 entry.hash = hash;
@@ -307,7 +304,9 @@ export default class ServerSuggestionTracker extends BotComponent {
                         message.author.id,
                         message.url,
                     );
-                    const status_message = await this.suggestion_dashboard.messages.fetch(entry.status_message);
+                    const status_message = await this.channels.suggestion_dashboard.messages.fetch(
+                        entry.status_message,
+                    );
                     const quote = await this.make_embeds(message);
                     await status_message.edit(quote);
                     entry.up = up;
@@ -329,7 +328,7 @@ export default class ServerSuggestionTracker extends BotComponent {
             if (entry) {
                 M.log("Suggestion being resolved", [message.id]);
                 // remove status message
-                const status_message = await this.suggestion_dashboard.messages.fetch(entry.status_message);
+                const status_message = await this.channels.suggestion_dashboard.messages.fetch(entry.status_message);
                 this.status_lock.insert(entry.status_message);
                 await status_message.delete();
                 await this.database.server_suggestions.deleteOne({ suggestion: message.id });
@@ -368,7 +367,7 @@ export default class ServerSuggestionTracker extends BotComponent {
             return;
         }
         try {
-            if (message.channel.id == this.server_suggestions.id) {
+            if (message.channel.id == this.channels.server_suggestions.id) {
                 await this.handle_suggestion_channel_message(message);
             }
         } catch (e) {
@@ -387,7 +386,7 @@ export default class ServerSuggestionTracker extends BotComponent {
             return;
         }
         try {
-            if (message.channel.id == this.server_suggestions.id) {
+            if (message.channel.id == this.channels.server_suggestions.id) {
                 if (!(await this.database.server_suggestions.findOne({ suggestion: message.id }))) {
                     // TODO: This can happen under normal operation, this is here as a debug check
                     M.log("Untracked suggestion deleted", message);
@@ -399,7 +398,7 @@ export default class ServerSuggestionTracker extends BotComponent {
                 } finally {
                     this.mutex.unlock(message.id);
                 }
-            } else if (message.channel.id == this.suggestion_dashboard.id) {
+            } else if (message.channel.id == this.channels.suggestion_dashboard.id) {
                 assert(message.author != null);
                 // race condition with await status_message.delete() checked here
                 if (
@@ -425,7 +424,7 @@ export default class ServerSuggestionTracker extends BotComponent {
                     }
                 }
             } else if (
-                message.channel.id == this.suggestion_action_log.id &&
+                message.channel.id == this.channels.suggestion_action_log.id &&
                 message.author!.id == this.wheatley.user.id
             ) {
                 M.log("Wheatley message deleted", message);
@@ -445,7 +444,7 @@ export default class ServerSuggestionTracker extends BotComponent {
         if (this.recovering) {
             return;
         }
-        if (new_message.channel.id != this.server_suggestions.id) {
+        if (new_message.channel.id != this.channels.server_suggestions.id) {
             return;
         }
         try {
@@ -471,7 +470,7 @@ export default class ServerSuggestionTracker extends BotComponent {
             if (entry) {
                 M.debug("Suggestion vote", reaction.emoji.name, [message.id]);
                 // update message
-                const status_message = await this.suggestion_dashboard.messages.fetch(entry.status_message);
+                const status_message = await this.channels.suggestion_dashboard.messages.fetch(entry.status_message);
                 const quote = await this.make_embeds(message);
                 await status_message.edit(quote);
                 if (reaction.emoji.name == "👍") {
@@ -534,7 +533,7 @@ export default class ServerSuggestionTracker extends BotComponent {
             return;
         }
         try {
-            if (reaction.message.channel.id == this.server_suggestions.id) {
+            if (reaction.message.channel.id == this.channels.server_suggestions.id) {
                 if (resolution_reactions_set.has(reaction.emoji.name!)) {
                     try {
                         await this.mutex.lock(reaction.message.id);
@@ -550,7 +549,7 @@ export default class ServerSuggestionTracker extends BotComponent {
                         this.mutex.unlock(reaction.message.id);
                     }
                 }
-            } else if (reaction.message.channel.id == this.suggestion_dashboard.id) {
+            } else if (reaction.message.channel.id == this.channels.suggestion_dashboard.id) {
                 const message = await departialize(reaction.message);
                 if (
                     message.author.id == this.wheatley.user.id &&
@@ -573,7 +572,7 @@ export default class ServerSuggestionTracker extends BotComponent {
                             await this.mutex.lock(message.id);
                             // in case the message vanishes by the time we get here
                             const suggestion = await api_wrap(
-                                () => this.server_suggestions.messages.fetch(suggestion_id),
+                                () => this.channels.server_suggestions.messages.fetch(suggestion_id),
                                 [Discord.RESTJSONErrorCodes.UnknownMessage],
                             );
                             if (suggestion) {
@@ -614,7 +613,7 @@ export default class ServerSuggestionTracker extends BotComponent {
         if (this.recovering) {
             return;
         }
-        if (reaction.message.channel.id != this.server_suggestions.id) {
+        if (reaction.message.channel.id != this.channels.server_suggestions.id) {
             return;
         }
         try {
@@ -645,7 +644,7 @@ export default class ServerSuggestionTracker extends BotComponent {
             SERVER_SUGGESTION_TRACKER_START_TIME;
         while (true) {
             // TODO: Sort collection???
-            const messages = await this.server_suggestions.messages.fetch({
+            const messages = await this.channels.server_suggestions.messages.fetch({
                 limit: 100,
                 after: forge_snowflake(last_scanned + 1),
                 cache: true,
@@ -712,7 +711,7 @@ export default class ServerSuggestionTracker extends BotComponent {
             for await (const entry of this.database.server_suggestions.find()) {
                 await this.mutex.lock(entry.suggestion);
                 try {
-                    const message = await this.get_message(this.server_suggestions, entry.suggestion);
+                    const message = await this.get_message(this.channels.server_suggestions, entry.suggestion);
                     let suggestion_was_resolved = false;
                     if (message == undefined) {
                         // check if deleted
@@ -739,7 +738,7 @@ export default class ServerSuggestionTracker extends BotComponent {
                     // check if the status message was deleted (if we didn't just delete it with resolve_suggestion)
                     if (
                         !suggestion_was_resolved &&
-                        (await this.get_message(this.suggestion_dashboard, entry.status_message)) == undefined
+                        (await this.get_message(this.channels.suggestion_dashboard, entry.status_message)) == undefined
                     ) {
                         // just delete from this.database - no longer tracking
                         M.info(

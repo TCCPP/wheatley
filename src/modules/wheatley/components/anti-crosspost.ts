@@ -2,10 +2,10 @@ import * as Discord from "discord.js";
 import { M } from "../../../utils/debugging-and-logging.js";
 import { MINUTE } from "../../../common.js";
 import { BotComponent } from "../../../bot-component.js";
-import { Wheatley } from "../../../wheatley.js";
 import { SelfClearingMap } from "../../../utils/containers.js";
 import { levenshtein } from "../../../algorithm/levenshtein.js";
 import { CUSTOM_EMOJIREGEX } from "../../../utils/discord.js";
+import { channel_map } from "../../../channel-map.js";
 
 type message_info = {
     content: string;
@@ -37,7 +37,12 @@ function calculate_similarity(content1: string, content2: string): number {
 }
 
 export default class AntiCrosspost extends BotComponent {
+    private channels = channel_map(this.wheatley, this.wheatley.channels.bot_spam);
     private recent_messages = new SelfClearingMap<Discord.Snowflake, message_info[]>(CROSSPOST_WINDOW, 5 * MINUTE);
+
+    override async setup() {
+        await this.channels.resolve();
+    }
 
     override async on_message_create(message: Discord.Message) {
         if (
@@ -53,7 +58,7 @@ export default class AntiCrosspost extends BotComponent {
         if (message.content.length < MIN_MESSAGE_LENGTH) {
             return;
         }
-        if (message.channelId === this.wheatley.channels.bot_spam.id) {
+        if (message.channelId === this.channels.bot_spam.id) {
             return;
         }
         let user_messages = this.recent_messages.get(message.author.id) ?? [];
