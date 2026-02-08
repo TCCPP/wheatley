@@ -5,7 +5,8 @@ import * as mongo from "mongodb";
 
 import { capitalize } from "../../../../utils/strings.js";
 import { M } from "../../../../utils/debugging-and-logging.js";
-import { Wheatley } from "../../../../wheatley.js";
+import { role_map } from "../../../../role-map.js";
+import { wheatley_roles } from "../../../../roles.js";
 import { ModerationComponent, duration_regex } from "./moderation-common.js";
 import { CommandSetBuilder } from "../../../../command-abstractions/command-set-builder.js";
 import {
@@ -16,6 +17,19 @@ import { TextBasedCommand } from "../../../../command-abstractions/text-based-co
 import { moderation_entry, basic_moderation_with_user } from "./schemata.js";
 
 export default class Rolepersist extends ModerationComponent {
+    private roles = role_map(
+        this.wheatley,
+        wheatley_roles.no_off_topic,
+        wheatley_roles.no_suggestions,
+        wheatley_roles.no_suggestions_at_all,
+        wheatley_roles.no_reactions,
+        wheatley_roles.no_threads,
+        wheatley_roles.no_serious_off_topic,
+        wheatley_roles.no_til,
+        wheatley_roles.no_memes,
+        wheatley_roles.no_voice,
+    );
+
     get type() {
         return "rolepersist" as const;
     }
@@ -30,6 +44,7 @@ export default class Rolepersist extends ModerationComponent {
 
     override async setup(commands: CommandSetBuilder) {
         await super.setup(commands);
+        this.roles.resolve();
 
         commands.add(
             new TextBasedCommandBuilder("rolepersist", EarlyReplyMode.visible)
@@ -104,7 +119,7 @@ export default class Rolepersist extends ModerationComponent {
                 ),
         );
 
-        const aliases: Record<string, keyof Wheatley["roles"]> = {
+        const aliases = {
             noofftopic: "no_off_topic",
             nosuggestions: "no_suggestions",
             nosuggestionsatall: "no_suggestions_at_all",
@@ -114,7 +129,7 @@ export default class Rolepersist extends ModerationComponent {
             notil: "no_til",
             nomemes: "no_memes",
             novoice: "no_voice",
-        };
+        } as const;
 
         for (const [command, role] of Object.entries(aliases)) {
             commands.add(
@@ -122,7 +137,7 @@ export default class Rolepersist extends ModerationComponent {
                     .set_category("Moderation")
                     .set_alias_of("rolepersist add")
                     .set_permissions(Discord.PermissionFlagsBits.ModerateMembers)
-                    .set_description(`${capitalize(role as string).replace("_", " ")}`)
+                    .set_description(`${capitalize(role).replace("_", " ")}`)
                     .add_user_option({
                         title: "user",
                         description: "User to rolepersist",
@@ -148,8 +163,8 @@ export default class Rolepersist extends ModerationComponent {
                         ) =>
                             await this.moderation_issue_handler(command, user, duration, reason, {
                                 type: this.type,
-                                role: this.wheatley.roles[role].id,
-                                role_name: this.wheatley.roles[role].name,
+                                role: this.roles[role].id,
+                                role_name: this.roles[role].name,
                             }),
                     ),
             );
@@ -170,7 +185,7 @@ export default class Rolepersist extends ModerationComponent {
         if (member) {
             try {
                 await member.roles.add(entry.role);
-                if (entry.role === this.wheatley.roles.no_voice.id) {
+                if (entry.role === this.roles.no_voice.id) {
                     await member.voice.disconnect();
                 }
             } catch (e) {

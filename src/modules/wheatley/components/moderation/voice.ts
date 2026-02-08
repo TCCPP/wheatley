@@ -6,13 +6,17 @@ import { colors } from "../../../../common.js";
 import { BotComponent } from "../../../../bot-component.js";
 import { build_description } from "../../../../utils/strings.js";
 import { channel_map } from "../../../../channel-map.js";
+import { role_map } from "../../../../role-map.js";
 import { wheatley_channels } from "../../channels.js";
+import { wheatley_roles } from "../../../../roles.js";
 
 export default class VoiceModeration extends BotComponent {
     private channels = channel_map(this.wheatley, wheatley_channels.staff_action_log);
+    private roles = role_map(this.wheatley, wheatley_roles.moderators, wheatley_roles.voice_moderator);
 
     override async setup() {
         await this.channels.resolve();
+        this.roles.resolve();
     }
 
     private audit_log_summary(
@@ -74,13 +78,13 @@ export default class VoiceModeration extends BotComponent {
         }
         if (
             message.channel.isVoiceBased() &&
-            message.mentions.roles.has(this.wheatley.roles.moderators.id) &&
-            !message.mentions.roles.has(this.wheatley.roles.voice_moderator.id) &&
+            message.mentions.roles.has(this.roles.moderators.id) &&
+            !message.mentions.roles.has(this.roles.voice_moderator.id) &&
             !(await this.wheatley.try_fetch_guild_member(message.author))?.roles.cache.has(
-                this.wheatley.roles.voice_moderator.id,
+                this.roles.voice_moderator.id,
             )
         ) {
-            await message.channel.send(`<@&${this.wheatley.roles.voice_moderator.id}>`);
+            await message.channel.send(`<@&${this.roles.voice_moderator.id}>`);
         }
     }
 }

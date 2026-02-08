@@ -6,7 +6,6 @@ import * as mongo from "mongodb";
 import PromClient from "prom-client";
 
 import { colors, MINUTE, DAY } from "./common.js";
-import type { named_id } from "./channel-map.js";
 import { wheatley_channels } from "./modules/wheatley/channels.js";
 import { unwrap } from "./utils/misc.js";
 import { to_string, is_string } from "./utils/strings.js";
@@ -70,34 +69,6 @@ export type wheatley_config = core_config & {
     [key: string]: any;
 };
 
-const roles_map = {
-    muted: { id: "815987333094178825", name: "Muted" },
-    monke: { id: "1139378060450332752", name: "Neuron Activation" },
-    no_off_topic: { id: "879419994004422666", name: "No Off Topic" },
-    no_suggestions: { id: "831567015457980447", name: "No Suggestions" },
-    no_suggestions_at_all: { id: "895011256023535657", name: "No Suggestions At All" },
-    no_reactions: { id: "880152014036819968", name: "No Reactions" },
-    no_images: { id: "1181029004866760854", name: "No Images" },
-    no_threads: { id: "870181444742447135", name: "No Threads" },
-    no_serious_off_topic: { id: "921116034948272260", name: "No Serious Off Topic" },
-    no_til: { id: "883474632370454588", name: "No TIL" },
-    no_memes: { id: "982307359370141756", name: "No Memes" },
-    no_voice: { id: "1371771250363465892", name: "No Voice" },
-    voice_moderator: { id: "1371706420730531870", name: "Voice Moderator" },
-    moderators: { id: "847915341954154536", name: "Moderator" },
-    root: { id: "331719468440879105", name: "root" },
-    pink: { id: "888158339878490132", name: "Pink" },
-    server_booster: { id: "643013330616844333", name: "Server Booster" },
-    historian: { id: "890067617069551646", name: "Historian" },
-    official_bot: { id: "331886851784704001", name: "Official Bot" },
-    featured_bot: { id: "995847409374605392", name: "Featured Bot" },
-    jedi_council: { id: "1138950835208990750", name: "Jedi Council" },
-    herald: { id: "1095555811536797787", name: "Herald" },
-    linked_github: { id: "1080596526478397471", name: "Linked GitHub" },
-    wiki_core: { id: "1354998426370314411", name: "core-wiki" },
-    voice: { id: "1368073548983308328", name: "voice" },
-} satisfies { [key: string]: named_id };
-
 type EventMap = {
     wheatley_ready: () => void;
     issue_moderation: (moderation: moderation_entry) => void;
@@ -149,10 +120,6 @@ export class Wheatley {
     }
 
     private log_channel: Discord.TextBasedChannel | null = null;
-
-    readonly roles: {
-        [k in keyof typeof roles_map]: Discord.Role;
-    } = {} as any;
 
     message_counter = new PromClient.Counter({
         name: "tccpp_message_count",
@@ -240,17 +207,6 @@ export class Wheatley {
                 // Pre-fetch channels and roles so name resolution works in devmode
                 await this.guild.channels.fetch().catch(this.critical_error.bind(this));
                 await this.guild.roles.fetch().catch(this.critical_error.bind(this));
-
-                // cache roles
-                for (const [key, info] of Object.entries(roles_map)) {
-                    let role = this.guild.roles.cache.get(info.id);
-
-                    if (!role && info.name && this.devmode_enabled) {
-                        role = this.guild.roles.cache.find(role => role.name === info.name);
-                    }
-
-                    this.roles[key as keyof typeof roles_map] = unwrap(role);
-                }
 
                 if (!config.freestanding) {
                     const channel = this.client.channels.cache.get(wheatley_channels.log.id);
@@ -490,11 +446,6 @@ export class Wheatley {
     ) {
         const member = await this.try_fetch_guild_member(options);
         return !!member?.permissions.has(permissions);
-    }
-
-    staff_contacts() {
-        const roots = this.roles.root.members.map(member => `<@${member.id}>`);
-        return roots.length > 1 ? roots.slice(0, -1).join(", ") + `, or ${roots[roots.length - 1]}` : roots[0];
     }
 
     async is_established_member(

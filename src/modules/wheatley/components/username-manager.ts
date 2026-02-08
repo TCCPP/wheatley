@@ -2,8 +2,9 @@ import * as Discord from "discord.js";
 import { strict as assert } from "assert";
 import { M } from "../../../utils/debugging-and-logging.js";
 import { BotComponent } from "../../../bot-component.js";
-import { Wheatley } from "../../../wheatley.js";
 import { MINUTE } from "../../../common.js";
+import { role_map } from "../../../role-map.js";
+import { wheatley_roles } from "../../../roles.js";
 
 import anyAscii from "any-ascii";
 import { set_interval } from "../../../utils/node.js";
@@ -51,7 +52,12 @@ function is_herald(name: string) {
 }
 
 export default class UsernameManager extends BotComponent {
+    private roles = role_map(this.wheatley, wheatley_roles.herald);
     interval: NodeJS.Timeout | null = null;
+
+    override async setup() {
+        this.roles.resolve();
+    }
 
     override async on_ready() {
         await this.cleanup();
@@ -112,7 +118,7 @@ export default class UsernameManager extends BotComponent {
     }
 
     has_herald(member: Discord.GuildMember) {
-        return member.roles.cache.filter(role => role.id == this.wheatley.roles.herald.id).size > 0;
+        return member.roles.cache.filter(role => role.id == this.roles.herald.id).size > 0;
     }
     async check_herald(member: Discord.GuildMember) {
         if (
@@ -122,12 +128,12 @@ export default class UsernameManager extends BotComponent {
         ) {
             if (!this.has_herald(member)) {
                 this.wheatley.info(`A new herald was born: ${member.displayName}`);
-                await member.roles.add(this.wheatley.roles.herald);
+                await member.roles.add(this.roles.herald);
             }
         } else {
             if (this.has_herald(member)) {
                 this.wheatley.info(`An illegitimate herald was found: ${member.displayName}`);
-                await member.roles.remove(this.wheatley.roles.herald);
+                await member.roles.remove(this.roles.herald);
             }
         }
     }

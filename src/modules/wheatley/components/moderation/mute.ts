@@ -4,8 +4,9 @@ import * as mongo from "mongodb";
 import { strict as assert } from "assert";
 
 import { M } from "../../../../utils/debugging-and-logging.js";
-import { Wheatley } from "../../../../wheatley.js";
 import { ModerationComponent, duration_regex } from "./moderation-common.js";
+import { role_map } from "../../../../role-map.js";
+import { wheatley_roles } from "../../../../roles.js";
 import { CommandSetBuilder } from "../../../../command-abstractions/command-set-builder.js";
 import {
     EarlyReplyMode,
@@ -15,6 +16,8 @@ import { TextBasedCommand } from "../../../../command-abstractions/text-based-co
 import { moderation_entry, basic_moderation_with_user } from "./schemata.js";
 
 export default class Mute extends ModerationComponent {
+    private roles = role_map(this.wheatley, wheatley_roles.muted);
+
     get type() {
         return "mute" as const;
     }
@@ -29,6 +32,7 @@ export default class Mute extends ModerationComponent {
 
     override async setup(commands: CommandSetBuilder) {
         await super.setup(commands);
+        this.roles.resolve();
 
         commands.add(
             new TextBasedCommandBuilder("mute", EarlyReplyMode.visible)
@@ -83,7 +87,7 @@ export default class Mute extends ModerationComponent {
         }
         const member = await this.wheatley.try_fetch_guild_member(entry.user);
         if (member) {
-            await member.roles.add(this.wheatley.roles.muted);
+            await member.roles.add(this.roles.muted);
         }
     }
 
@@ -94,7 +98,7 @@ export default class Mute extends ModerationComponent {
         }
         const member = await this.wheatley.try_fetch_guild_member(entry.user);
         if (member) {
-            await member.roles.remove(this.wheatley.roles.muted);
+            await member.roles.remove(this.roles.muted);
         }
     }
 
@@ -102,7 +106,7 @@ export default class Mute extends ModerationComponent {
         assert(moderation.type == this.type);
         const member = await this.wheatley.try_fetch_guild_member(moderation.user);
         if (member) {
-            return member.roles.cache.filter(role => role.id == this.wheatley.roles.muted.id).size > 0;
+            return member.roles.cache.filter(role => role.id == this.roles.muted.id).size > 0;
         }
         return false;
     }

@@ -13,7 +13,9 @@ import { delay, unwrap } from "../../../utils/misc.js";
 import { CommandSetBuilder } from "../../../command-abstractions/command-set-builder.js";
 import { M } from "../../../utils/debugging-and-logging.js";
 import { channel_map } from "../../../channel-map.js";
+import { role_map } from "../../../role-map.js";
 import { wheatley_channels } from "../channels.js";
+import { wheatley_roles } from "../../../roles.js";
 
 const ACTION_THRESHOLD = 5;
 const BASE_RETRY_DELAY_MS = 1000;
@@ -30,6 +32,7 @@ class HTTPError extends Error {
 
 export default class AntiExecutable extends BotComponent {
     private channels = channel_map(this.wheatley, wheatley_channels.staff_flag_log, wheatley_channels.staff_action_log);
+    private roles = role_map(this.wheatley, wheatley_roles.moderators);
     virustotal!: Virustotal | null;
 
     static override get is_freestanding() {
@@ -46,6 +49,7 @@ export default class AntiExecutable extends BotComponent {
 
     override async setup(commands: CommandSetBuilder) {
         await this.channels.resolve();
+        this.roles.resolve();
     }
 
     // Elf:  0x7F 0x45 0x4c 0x46 at offset 0
@@ -247,11 +251,11 @@ export default class AntiExecutable extends BotComponent {
                     this.channels.staff_action_log
                         .send({
                             content:
-                                `<@&${this.wheatley.roles.moderators.id}> Please review automatic 24h mute of ` +
+                                `<@&${this.roles.moderators.id}> Please review automatic 24h mute of ` +
                                 `<@${author.id}> (id ${author.id}) for a potentially malicious upload, ` +
                                 `virustotal result: ${flag_reply.url}`,
                             allowedMentions: {
-                                roles: [this.wheatley.roles.moderators.id],
+                                roles: [this.roles.moderators.id],
                             },
                         })
                         .catch(this.wheatley.critical_error.bind(this.wheatley));

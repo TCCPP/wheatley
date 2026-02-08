@@ -5,7 +5,9 @@ import { M } from "../../../utils/debugging-and-logging.js";
 import { colors } from "../../../common.js";
 import { BotComponent } from "../../../bot-component.js";
 import { channel_map } from "../../../channel-map.js";
+import { role_map } from "../../../role-map.js";
 import { wheatley_channels } from "../channels.js";
+import { wheatley_roles } from "../../../roles.js";
 import { CommandSetBuilder } from "../../../command-abstractions/command-set-builder.js";
 import {
     Staff_notification_button_helper,
@@ -17,12 +19,23 @@ import {
  */
 export default class TrackedMentions extends BotComponent {
     private channels = channel_map(this.wheatley, wheatley_channels.staff_flag_log);
+    private roles = role_map(this.wheatley, wheatley_roles.root, wheatley_roles.moderators);
     tracked_mentions!: Set<string>;
     private buttons!: Staff_notification_buttons;
     private button_helper = new Staff_notification_button_helper();
 
     override async setup(commands: CommandSetBuilder) {
         await this.channels.resolve();
+        this.roles.resolve();
+
+        this.tracked_mentions = new Set([
+            "540314034894012428", // admin role on test server
+            this.roles.root.id,
+            this.roles.moderators.id,
+            "892864085006360626", // red dragon
+            "970549026514698284", // wheatley
+            "1013953887029444678", // dyno
+        ]);
 
         this.buttons = this.button_helper.register_buttons(commands, "tracked-mention", {
             handling: this.handling_handler.bind(this),
@@ -30,17 +43,6 @@ export default class TrackedMentions extends BotComponent {
             invalid: this.invalid_handler.bind(this),
             nvm: this.nvm_handler.bind(this),
         });
-    }
-
-    override async on_ready() {
-        this.tracked_mentions = new Set([
-            "540314034894012428", // admin role on test server
-            this.wheatley.roles.root.id,
-            this.wheatley.roles.moderators.id,
-            "892864085006360626", // red dragon
-            "970549026514698284", // wheatley
-            "1013953887029444678", // dyno
-        ]);
     }
 
     async check_tracked_mention_and_notify(message: Discord.Message) {

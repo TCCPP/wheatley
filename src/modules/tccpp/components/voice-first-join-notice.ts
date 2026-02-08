@@ -3,6 +3,8 @@ import * as Discord from "discord.js";
 
 import { BotComponent } from "../../../bot-component.js";
 import { ensure_index } from "../../../infra/database-interface.js";
+import { role_map } from "../../../role-map.js";
+import { wheatley_roles } from "../../../roles.js";
 import SkillRoles, { SkillLevel } from "./skill-roles.js";
 import { assert_type, unwrap } from "../../../utils/misc.js";
 
@@ -14,6 +16,12 @@ type voice_first_join_notice_entry = {
 };
 
 export default class VoiceFirstJoinNotice extends BotComponent {
+    private roles = role_map(
+        this.wheatley,
+        wheatley_roles.voice,
+        wheatley_roles.no_voice,
+        wheatley_roles.server_booster,
+    );
     private database = this.wheatley.database.create_proxy<{
         voice_first_join_notice: voice_first_join_notice_entry;
     }>();
@@ -27,6 +35,7 @@ export default class VoiceFirstJoinNotice extends BotComponent {
             { guild: 1, user: 1 },
             { unique: true },
         );
+        this.roles.resolve();
         this.skill_roles_component = assert_type(unwrap(this.wheatley.components.get("SkillRoles")), SkillRoles);
     }
 
@@ -58,9 +67,9 @@ export default class VoiceFirstJoinNotice extends BotComponent {
             return;
         }
         if (
-            member.roles.cache.has(this.wheatley.roles.voice.id) ||
-            member.roles.cache.has(this.wheatley.roles.no_voice.id) ||
-            member.roles.cache.has(this.wheatley.roles.server_booster.id) ||
+            member.roles.cache.has(this.roles.voice.id) ||
+            member.roles.cache.has(this.roles.no_voice.id) ||
+            member.roles.cache.has(this.roles.server_booster.id) ||
             (await this.wheatley.check_permissions(member, Discord.PermissionFlagsBits.BanMembers)) ||
             (await this.wheatley.check_permissions(member, Discord.PermissionFlagsBits.MuteMembers)) ||
             this.skill_roles_component.find_highest_skill_level(member) > SkillLevel.beginner

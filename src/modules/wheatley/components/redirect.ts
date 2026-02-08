@@ -9,9 +9,12 @@ import { EarlyReplyMode, TextBasedCommandBuilder } from "../../../command-abstra
 import { TextBasedCommand } from "../../../command-abstractions/text-based-command.js";
 import { format_list } from "../../../utils/strings.js";
 import { channel_map } from "../../../channel-map.js";
+import { role_map } from "../../../role-map.js";
 import { wheatley_channels } from "../channels.js";
+import { wheatley_roles } from "../../../roles.js";
 
 export default class Redirect extends BotComponent {
+    private roles = role_map(this.wheatley, wheatley_roles.moderators);
     private channels = channel_map(
         this.wheatley,
         wheatley_channels.cpp_help,
@@ -26,6 +29,7 @@ export default class Redirect extends BotComponent {
 
     override async setup(commands: CommandSetBuilder) {
         await this.channels.resolve();
+        this.roles.resolve();
 
         commands.add(
             new TextBasedCommandBuilder("redirect", EarlyReplyMode.visible)
@@ -62,7 +66,7 @@ export default class Redirect extends BotComponent {
         assert(command.channel instanceof Discord.GuildChannel);
         const initial_permissions = command.channel.permissionOverwrites.cache.clone();
         await command.channel.permissionOverwrites.edit(this.wheatley.guild.roles.everyone.id, { SendMessages: false });
-        await command.channel.permissionOverwrites.edit(this.wheatley.roles.moderators.id, { SendMessages: true });
+        await command.channel.permissionOverwrites.edit(this.roles.moderators.id, { SendMessages: true });
         await command.reply({
             embeds: [
                 new Discord.EmbedBuilder()
