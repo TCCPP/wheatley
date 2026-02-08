@@ -4,7 +4,8 @@ import { M } from "../../../utils/debugging-and-logging.js";
 import { BotComponent } from "../../../bot-component.js";
 import { ensure_index } from "../../../infra/database-interface.js";
 import { CommandSetBuilder } from "../../../command-abstractions/command-set-builder.js";
-import { Wheatley } from "../../../wheatley.js";
+import { role_map } from "../../../role-map.js";
+import { wheatley_roles } from "../roles.js";
 import { EarlyReplyMode, TextBasedCommandBuilder } from "../../../command-abstractions/text-based-command-builder.js";
 import { TextBasedCommand } from "../../../command-abstractions/text-based-command.js";
 import { set_timeout, clear_timeout } from "../../../utils/node.js";
@@ -40,6 +41,7 @@ type no_distraction_entry = {
 };
 
 export default class Nodistractions extends BotComponent {
+    private roles = role_map(this.wheatley, wheatley_roles.no_off_topic);
     // Sorted by !nodistractions end time
     undistract_queue: no_distraction_entry[] = [];
     timer: NodeJS.Timeout | null = null;
@@ -50,6 +52,7 @@ export default class Nodistractions extends BotComponent {
 
     override async setup(commands: CommandSetBuilder) {
         await ensure_index(this.wheatley, this.database.nodistractions, { user: 1 }, { unique: true });
+        this.roles.resolve();
 
         commands.add(
             new TextBasedCommandBuilder("nodistractions", EarlyReplyMode.ephemeral)
@@ -99,9 +102,9 @@ export default class Nodistractions extends BotComponent {
             try {
                 const member = await this.wheatley.guild.members.fetch(entry.user);
                 M.log("removing !nodistractions", member.id, member.user.tag);
-                if (member.roles.cache.some(r => r.id == this.wheatley.roles.no_off_topic.id)) {
+                if (member.roles.cache.some(r => r.id == this.roles.no_off_topic.id)) {
                     // might have been removed externally
-                    await member.roles.remove(this.wheatley.roles.no_off_topic.id);
+                    await member.roles.remove(this.roles.no_off_topic.id);
                 }
             } catch (e) {
                 if (e instanceof Discord.DiscordAPIError && e.code == 10007) {
@@ -145,7 +148,7 @@ export default class Nodistractions extends BotComponent {
     ) {
         M.log("Applying !nodistractions", target.user.id, target.user.tag);
         // error handling
-        if (target.roles.cache.some(r => r.id == this.wheatley.roles.no_off_topic.id)) {
+        if (target.roles.cache.some(r => r.id == this.roles.no_off_topic.id)) {
             if ((await this.database.nodistractions.findOne({ user: target.id })) !== null) {
                 await command.reply("You're already in !nodistractions", true, true);
             } else {
@@ -161,7 +164,7 @@ export default class Nodistractions extends BotComponent {
         }
         // apply role, dm, react
         try {
-            await target.roles.add(this.wheatley.roles.no_off_topic.id);
+            await target.roles.add(this.roles.no_off_topic.id);
         } catch (e) {
             M.error(e);
             return;
@@ -207,7 +210,7 @@ export default class Nodistractions extends BotComponent {
             this.timer = null;
         }
         // remove role
-        await target.roles.remove(this.wheatley.roles.no_off_topic.id);
+        await target.roles.remove(this.roles.no_off_topic.id);
         // check again
         assert((await this.database.nodistractions.findOne({ user: target.id })) !== null);
         if (!this.undistract_queue.some(e => e.user == target.id)) {
@@ -261,7 +264,7 @@ export default class Nodistractions extends BotComponent {
 
     async removenodistractions(command: TextBasedCommand) {
         const member = await command.get_member(this.wheatley.guild);
-        if (!member.roles.cache.some(r => r.id == this.wheatley.roles.no_off_topic.id)) {
+        if (!member.roles.cache.some(r => r.id == this.roles.no_off_topic.id)) {
             await command.reply("You are not currently in !nodistractions", true, true);
             return;
         }

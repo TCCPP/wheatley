@@ -23,7 +23,9 @@ import {
     BotModalSubmitInteraction,
 } from "../../../../command-abstractions/modal.js";
 import { channel_map } from "../../../../channel-map.js";
+import { role_map } from "../../../../role-map.js";
 import { wheatley_channels } from "../../channels.js";
+import { wheatley_roles } from "../../roles.js";
 
 /*
  * Flow:
@@ -45,6 +47,7 @@ function create_embed(title: string, msg: string) {
 }
 
 export default class Modmail extends BotComponent {
+    private roles = role_map(this.wheatley, wheatley_roles.moderators, wheatley_roles.monke);
     // Spam prevention, user is added to the timeout set when clicking the modmail_continue button,
     readonly timeout_set = new Set<string>();
 
@@ -71,6 +74,7 @@ export default class Modmail extends BotComponent {
 
     override async setup(commands: CommandSetBuilder) {
         await this.channels.resolve();
+        this.roles.resolve();
         commands.add(
             new TextBasedCommandBuilder("wsetupmodmailsystem", EarlyReplyMode.none)
                 .set_category("Admin utilities")
@@ -186,9 +190,9 @@ export default class Modmail extends BotComponent {
                 // add everyone
                 await thread.members.add(member.id);
                 await thread.send({
-                    content: `<@&${this.wheatley.roles.moderators.id}>`,
+                    content: `<@&${this.roles.moderators.id}>`,
                     allowedMentions: {
-                        roles: [this.wheatley.roles.moderators.id],
+                        roles: [this.roles.moderators.id],
                     },
                 });
             } catch (e) {
@@ -249,7 +253,7 @@ export default class Modmail extends BotComponent {
         try {
             if ((await this.wheatley.try_fetch_guild_member(interaction.user))?.manageable) {
                 const member = await this.wheatley.guild.members.fetch(interaction.user.id);
-                await member.roles.add(this.wheatley.roles.monke);
+                await member.roles.add(this.roles.monke);
                 this.monke_set.set(interaction.user.id, Date.now());
             }
         } catch (e) {
@@ -263,14 +267,14 @@ export default class Modmail extends BotComponent {
         });
         await this.log_action(interaction.member, "Monkey pressed the not monkey button");
         const member = await this.wheatley.guild.members.fetch(interaction.user.id);
-        if (member.roles.cache.has(this.wheatley.roles.monke.id)) {
+        if (member.roles.cache.has(this.roles.monke.id)) {
             if (!this.monke_set.has(member.id) || Date.now() - unwrap(this.monke_set.get(member.id)) >= HOUR) {
                 await interaction.editReply({
                     content: "Congratulations on graduating from your monke status.",
                 });
                 try {
                     if ((await this.wheatley.try_fetch_guild_member(interaction.user))?.manageable) {
-                        await member.roles.remove(this.wheatley.roles.monke);
+                        await member.roles.remove(this.roles.monke);
                         this.monke_set.remove(member.id);
                     }
                 } catch (e) {

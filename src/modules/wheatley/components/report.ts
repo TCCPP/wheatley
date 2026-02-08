@@ -8,7 +8,9 @@ import { colors, MINUTE } from "../../../common.js";
 import { BotComponent } from "../../../bot-component.js";
 import { CommandSetBuilder } from "../../../command-abstractions/command-set-builder.js";
 import { channel_map } from "../../../channel-map.js";
+import { role_map } from "../../../role-map.js";
 import { wheatley_channels } from "../channels.js";
+import { wheatley_roles } from "../roles.js";
 import { MessageContextMenuInteractionBuilder } from "../../../command-abstractions/context-menu.js";
 import { ModalInteractionBuilder, BotModal, BotModalSubmitInteraction } from "../../../command-abstractions/modal.js";
 import {
@@ -18,6 +20,7 @@ import {
 
 export default class Report extends BotComponent {
     private channels = channel_map(this.wheatley, wheatley_channels.staff_flag_log);
+    private roles = role_map(this.wheatley, wheatley_roles.moderators);
     private report_modal!: BotModal<[string]>;
     private buttons!: Staff_notification_buttons;
     private button_helper = new Staff_notification_button_helper();
@@ -27,6 +30,7 @@ export default class Report extends BotComponent {
 
     override async setup(commands: CommandSetBuilder) {
         await this.channels.resolve();
+        this.roles.resolve();
 
         commands.add(
             new MessageContextMenuInteractionBuilder("🚩 Report to Moderators 🚩").set_handler(this.report.bind(this)),
@@ -99,7 +103,7 @@ export default class Report extends BotComponent {
                 });
                 const row = this.button_helper.create_standard_action_row(this.buttons);
                 await this.channels.staff_flag_log.send({
-                    content: `<@&${this.wheatley.roles.moderators.id}>`,
+                    content: `<@&${this.roles.moderators.id}>`,
                     embeds: [report_embed, ...quote_embeds.embeds],
                     components: [row],
                     files: quote_embeds.files,
@@ -130,7 +134,7 @@ export default class Report extends BotComponent {
 
     async nvm_logic(interaction: Discord.ButtonInteraction, message: Discord.Message) {
         await message.edit({
-            content: `<@&${this.wheatley.roles.moderators.id}>`,
+            content: `<@&${this.roles.moderators.id}>`,
             components: [this.button_helper.create_standard_action_row(this.buttons)],
         });
     }
@@ -144,7 +148,7 @@ export default class Report extends BotComponent {
             const handler_name = await this.wheatley.get_display_name(interaction.user);
             const row = this.button_helper.create_handling_action_row(this.buttons, handler_name);
             await message.edit({
-                content: `<@&${this.wheatley.roles.moderators.id}> -- ` + `**Being handled by ${handler_name}**`,
+                content: `<@&${this.roles.moderators.id}> -- ` + `**Being handled by ${handler_name}**`,
                 components: [row],
             });
         });
@@ -154,7 +158,7 @@ export default class Report extends BotComponent {
         await this.button_helper.locked_interaction(interaction, async (message: Discord.Message) => {
             await message.edit({
                 content:
-                    `<@&${this.wheatley.roles.moderators.id}> -- ` +
+                    `<@&${this.roles.moderators.id}> -- ` +
                     `**Marked resolved by ${await this.wheatley.get_display_name(interaction.user)}**`,
                 components: [],
             });
@@ -166,7 +170,7 @@ export default class Report extends BotComponent {
         await this.button_helper.locked_interaction(interaction, async (message: Discord.Message) => {
             await message.edit({
                 content:
-                    `<@&${this.wheatley.roles.moderators.id}> -- ` +
+                    `<@&${this.roles.moderators.id}> -- ` +
                     `**Marked invalid by ${await this.wheatley.get_display_name(interaction.user)}**`,
                 components: [],
             });

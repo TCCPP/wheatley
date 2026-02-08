@@ -6,7 +6,10 @@ import { M } from "../../../utils/debugging-and-logging.js";
 import { HOUR } from "../../../common.js";
 import { BotComponent } from "../../../bot-component.js";
 import { channel_map } from "../../../channel-map.js";
+import { role_map } from "../../../role-map.js";
 import { wheatley_channels } from "../../wheatley/channels.js";
+import { wheatley_roles } from "../../wheatley/roles.js";
+import { tccpp_roles } from "../roles.js";
 import { tccpp_channels } from "../channels.js";
 import SkillRoles from "./skill-roles.js";
 import { named_id } from "../../../channel-map.js";
@@ -45,6 +48,27 @@ const SET_VOICE_STATUS_PERMISSION_BIT = 1n << 48n; // TODO: Replace once discord
 
 export default class PermissionManager extends BotComponent {
     private skill_roles!: SkillRoles;
+    private roles = role_map(
+        this.wheatley,
+        wheatley_roles.muted,
+        wheatley_roles.no_reactions,
+        wheatley_roles.no_threads,
+        wheatley_roles.no_images,
+        wheatley_roles.moderators,
+        wheatley_roles.no_off_topic,
+        wheatley_roles.official_bot,
+        wheatley_roles.voice,
+        wheatley_roles.server_booster,
+        wheatley_roles.no_voice,
+        wheatley_roles.voice_moderator,
+        wheatley_roles.no_suggestions,
+        wheatley_roles.no_suggestions_at_all,
+        wheatley_roles.jedi_council,
+        wheatley_roles.no_til,
+        wheatley_roles.no_memes,
+        wheatley_roles.no_serious_off_topic,
+        tccpp_roles.historian,
+    );
     private channels = channel_map(
         this.wheatley,
         wheatley_channels.staff_only,
@@ -83,6 +107,7 @@ export default class PermissionManager extends BotComponent {
 
     override async setup(commands: CommandSetBuilder) {
         await this.channels.resolve();
+        this.roles.resolve();
         this.skill_roles = unwrap(this.wheatley.components.get("SkillRoles")) as SkillRoles;
     }
 
@@ -112,21 +137,21 @@ export default class PermissionManager extends BotComponent {
         };
         // channel permissions
         const default_permissions: permission_overwrites = {
-            [this.wheatley.roles.muted.id]: muted_permissions,
-            [this.wheatley.roles.no_reactions.id]: {
+            [this.roles.muted.id]: muted_permissions,
+            [this.roles.no_reactions.id]: {
                 deny: [Discord.PermissionsBitField.Flags.AddReactions],
             },
-            [this.wheatley.roles.no_threads.id]: {
+            [this.roles.no_threads.id]: {
                 deny: [
                     Discord.PermissionsBitField.Flags.SendMessagesInThreads,
                     Discord.PermissionsBitField.Flags.CreatePublicThreads,
                     Discord.PermissionsBitField.Flags.CreatePrivateThreads,
                 ],
             },
-            [this.wheatley.roles.no_images.id]: {
+            [this.roles.no_images.id]: {
                 deny: [Discord.PermissionsBitField.Flags.EmbedLinks, Discord.PermissionsBitField.Flags.AttachFiles],
             },
-            [this.wheatley.roles.moderators.id]: {
+            [this.roles.moderators.id]: {
                 allow: [
                     Discord.PermissionsBitField.Flags.ViewChannel,
                     Discord.PermissionsBitField.Flags.ManageThreads,
@@ -139,7 +164,7 @@ export default class PermissionManager extends BotComponent {
         };
         const off_topic_permissions: permission_overwrites = {
             ...default_permissions,
-            [this.wheatley.roles.no_off_topic.id]: no_interaction_at_all,
+            [this.roles.no_off_topic.id]: no_interaction_at_all,
         };
         const read_only_channel: permission_overwrites = {
             ...default_permissions,
@@ -184,16 +209,16 @@ export default class PermissionManager extends BotComponent {
             [this.wheatley.guild.roles.everyone.id]: {
                 deny: [...acive_voice_permissions, SET_VOICE_STATUS_PERMISSION_BIT],
             },
-            [this.wheatley.roles.official_bot.id]: { allow: acive_voice_permissions },
-            [this.wheatley.roles.voice.id]: { allow: acive_voice_permissions },
+            [this.roles.official_bot.id]: { allow: acive_voice_permissions },
+            [this.roles.voice.id]: { allow: acive_voice_permissions },
             [this.skill_roles.roles.intermediate.id]: { allow: acive_voice_permissions },
             [this.skill_roles.roles.proficient.id]: { allow: acive_voice_permissions },
             [this.skill_roles.roles.advanced.id]: { allow: acive_voice_permissions },
             [this.skill_roles.roles.expert.id]: { allow: acive_voice_permissions },
-            [this.wheatley.roles.server_booster.id]: { allow: acive_voice_permissions },
-            [this.wheatley.roles.no_voice.id]: no_interaction_at_all,
-            [this.wheatley.roles.no_off_topic.id]: no_interaction_at_all,
-            [this.wheatley.roles.voice_moderator.id]: {
+            [this.roles.server_booster.id]: { allow: acive_voice_permissions },
+            [this.roles.no_voice.id]: no_interaction_at_all,
+            [this.roles.no_off_topic.id]: no_interaction_at_all,
+            [this.roles.voice_moderator.id]: {
                 allow: [...acive_voice_permissions, SET_VOICE_STATUS_PERMISSION_BIT],
             },
         };
@@ -201,7 +226,7 @@ export default class PermissionManager extends BotComponent {
             [this.wheatley.guild.roles.everyone.id]: {
                 deny: [Discord.PermissionsBitField.Flags.ViewChannel],
             },
-            [this.wheatley.roles.moderators.id]: {
+            [this.roles.moderators.id]: {
                 allow: [Discord.PermissionsBitField.Flags.ViewChannel],
             },
             [this.wheatley.user.id]: {
@@ -231,7 +256,7 @@ export default class PermissionManager extends BotComponent {
             [this.wheatley.guild.roles.everyone.id]: {
                 deny: [Discord.PermissionsBitField.Flags.ViewChannel],
             },
-            [this.wheatley.roles.moderators.id]: {
+            [this.roles.moderators.id]: {
                 deny: [Discord.PermissionsBitField.Flags.ViewChannel],
             },
             [this.wheatley.user.id]: {
@@ -242,10 +267,10 @@ export default class PermissionManager extends BotComponent {
             [this.wheatley.guild.roles.everyone.id]: {
                 deny: [Discord.PermissionsBitField.Flags.ViewChannel],
             },
-            [this.wheatley.roles.moderators.id]: {
+            [this.roles.moderators.id]: {
                 allow: [Discord.PermissionsBitField.Flags.ViewChannel],
             },
-            [this.wheatley.roles.voice_moderator.id]: {
+            [this.roles.voice_moderator.id]: {
                 allow: [Discord.PermissionsBitField.Flags.ViewChannel],
             },
             [this.wheatley.user.id]: {
@@ -263,7 +288,7 @@ export default class PermissionManager extends BotComponent {
                     Discord.PermissionsBitField.Flags.AddReactions,
                 ],
             },
-            [this.wheatley.roles.moderators.id]: {
+            [this.roles.moderators.id]: {
                 allow: [
                     Discord.PermissionsBitField.Flags.ManageThreads,
                     Discord.PermissionsBitField.Flags.AddReactions,
@@ -283,7 +308,7 @@ export default class PermissionManager extends BotComponent {
                     Discord.PermissionsBitField.Flags.CreatePrivateThreads,
                 ],
             },
-            [this.wheatley.roles.no_suggestions.id]: {
+            [this.roles.no_suggestions.id]: {
                 deny: [
                     Discord.PermissionsBitField.Flags.SendMessages,
                     Discord.PermissionsBitField.Flags.CreatePublicThreads,
@@ -292,7 +317,7 @@ export default class PermissionManager extends BotComponent {
                     Discord.PermissionsBitField.Flags.AddReactions,
                 ],
             },
-            [this.wheatley.roles.no_suggestions_at_all.id]: {
+            [this.roles.no_suggestions_at_all.id]: {
                 deny: [Discord.PermissionsBitField.Flags.ViewChannel],
             },
         });
@@ -309,7 +334,7 @@ export default class PermissionManager extends BotComponent {
         });
         const jedi_council: permission_overwrites = {
             ...mod_only_channel,
-            [this.wheatley.roles.jedi_council.id]: {
+            [this.roles.jedi_council.id]: {
                 allow: [Discord.PermissionsBitField.Flags.ViewChannel],
             },
         };
@@ -319,7 +344,7 @@ export default class PermissionManager extends BotComponent {
         // community overwrites
         this.add_channel_overwrite(this.channels.polls.id, {
             ...read_only_channel_no_reactions,
-            [this.wheatley.roles.moderators.id]: {
+            [this.roles.moderators.id]: {
                 allow: [
                     Discord.PermissionsBitField.Flags.ManageThreads,
                     Discord.PermissionsBitField.Flags.ViewChannel,
@@ -329,16 +354,16 @@ export default class PermissionManager extends BotComponent {
         });
         this.add_channel_overwrite(this.channels.today_i_learned.id, {
             ...default_permissions,
-            [this.wheatley.roles.no_til.id]: muted_permissions,
+            [this.roles.no_til.id]: muted_permissions,
         });
         // off topic overwrites
         this.add_channel_overwrite(this.channels.memes.id, {
             ...off_topic_permissions,
-            [this.wheatley.roles.no_memes.id]: no_interaction_at_all,
+            [this.roles.no_memes.id]: no_interaction_at_all,
         });
         this.add_channel_overwrite(this.channels.starboard.id, {
             ...off_topic_permissions,
-            [this.wheatley.roles.no_memes.id]: no_interaction_at_all,
+            [this.roles.no_memes.id]: no_interaction_at_all,
             ...read_only_channel,
         });
         this.add_channel_overwrite(this.channels.pin_archive.id, {
@@ -353,11 +378,11 @@ export default class PermissionManager extends BotComponent {
         });
         this.add_channel_overwrite(this.channels.serious_off_topic.id, {
             ...off_topic_permissions,
-            [this.wheatley.roles.no_serious_off_topic.id]: no_interaction_at_all,
+            [this.roles.no_serious_off_topic.id]: no_interaction_at_all,
         });
         this.add_channel_overwrite(this.channels.room_of_requirement.id, {
             ...off_topic_permissions,
-            [this.wheatley.roles.moderators.id]: {
+            [this.roles.moderators.id]: {
                 allow: [
                     Discord.PermissionsBitField.Flags.ManageThreads,
                     Discord.PermissionsBitField.Flags.ViewChannel,
@@ -370,7 +395,7 @@ export default class PermissionManager extends BotComponent {
             [this.wheatley.guild.roles.everyone.id]: {
                 deny: [Discord.PermissionsBitField.Flags.ViewChannel],
             },
-            [this.wheatley.roles.server_booster.id]: {
+            [this.roles.server_booster.id]: {
                 allow: [Discord.PermissionsBitField.Flags.ViewChannel],
             },
         });
@@ -388,7 +413,7 @@ export default class PermissionManager extends BotComponent {
             [this.wheatley.guild.roles.everyone.id]: {
                 deny: [Discord.PermissionsBitField.Flags.ViewChannel],
             },
-            [this.wheatley.roles.historian.id]: {
+            [this.roles.historian.id]: {
                 allow: [Discord.PermissionsBitField.Flags.ViewChannel],
             },
         });
@@ -419,7 +444,7 @@ export default class PermissionManager extends BotComponent {
                     SET_VOICE_STATUS_PERMISSION_BIT,
                 ],
             },
-            [this.wheatley.roles.voice_moderator.id]: {
+            [this.roles.voice_moderator.id]: {
                 allow: [Discord.PermissionsBitField.Flags.ViewChannel, Discord.PermissionsBitField.Flags.Connect],
             },
         });

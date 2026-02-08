@@ -5,6 +5,8 @@ import { strict as assert } from "assert";
 
 import { M } from "../../../../utils/debugging-and-logging.js";
 import { ModerationComponent } from "./moderation-common.js";
+import { role_map } from "../../../../role-map.js";
+import { wheatley_roles } from "../../roles.js";
 import { CommandSetBuilder } from "../../../../command-abstractions/command-set-builder.js";
 import {
     EarlyReplyMode,
@@ -14,6 +16,8 @@ import { TextBasedCommand } from "../../../../command-abstractions/text-based-co
 import { moderation_entry, basic_moderation_with_user } from "./schemata.js";
 
 export default class VoiceTake extends ModerationComponent {
+    private roles = role_map(this.wheatley, wheatley_roles.voice);
+
     get type() {
         return "voice_take" as const;
     }
@@ -28,6 +32,7 @@ export default class VoiceTake extends ModerationComponent {
 
     override async setup(commands: CommandSetBuilder) {
         await super.setup(commands);
+        this.roles.resolve();
 
         commands.add(
             new TextBasedCommandBuilder("voice", EarlyReplyMode.ephemeral)
@@ -67,7 +72,7 @@ export default class VoiceTake extends ModerationComponent {
             await this.reply_with_error(command, "User is not a guild member");
             return;
         }
-        if (!target.roles.cache.has(this.wheatley.roles.voice.id)) {
+        if (!target.roles.cache.has(this.roles.voice.id)) {
             await this.reply_with_error(command, "User doesn't have voice");
             return;
         }
@@ -85,7 +90,7 @@ export default class VoiceTake extends ModerationComponent {
             await this.reply_with_error(command, "You have no power over this user");
             return;
         }
-        if (target.roles.cache.has(this.wheatley.roles.voice.id)) {
+        if (target.roles.cache.has(this.roles.voice.id)) {
             await this.reply_with_error(command, "User already has voice");
             return;
         }
@@ -96,7 +101,7 @@ export default class VoiceTake extends ModerationComponent {
         M.info(`Applying voice take to ${entry.user_name}`);
         const member = await this.wheatley.try_fetch_guild_member(entry.user);
         if (member) {
-            await member.roles.remove(this.wheatley.roles.voice);
+            await member.roles.remove(this.roles.voice);
         }
     }
 
@@ -104,19 +109,19 @@ export default class VoiceTake extends ModerationComponent {
         M.info(`Removing voice take from ${entry.user_name}`);
         const member = await this.wheatley.try_fetch_guild_member(entry.user);
         if (member) {
-            await member.roles.add(this.wheatley.roles.voice);
+            await member.roles.add(this.roles.voice);
         }
     }
 
     override async apply_revoke_to_discord(member: Discord.GuildMember): Promise<void> {
-        await member.roles.add(this.wheatley.roles.voice);
+        await member.roles.add(this.roles.voice);
     }
 
     async is_moderation_applied_in_discord(moderation: basic_moderation_with_user) {
         assert(moderation.type == this.type);
         const member = await this.wheatley.try_fetch_guild_member(moderation.user);
         if (member) {
-            return !member.roles.cache.has(this.wheatley.roles.voice.id);
+            return !member.roles.cache.has(this.roles.voice.id);
         }
         return false;
     }

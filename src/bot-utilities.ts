@@ -3,6 +3,7 @@ import { strict as assert } from "assert";
 import * as Discord from "discord.js";
 
 import { named_id, typed_channel_id } from "./channel-map.js";
+import { wheatley_roles } from "./modules/wheatley/roles.js";
 import { Wheatley } from "./wheatley.js";
 import { decode_snowflake, is_media_link_embed, make_url, get_thread_owner } from "./utils/discord.js";
 import { unwrap } from "./utils/misc.js";
@@ -458,5 +459,19 @@ export class BotUtilities {
     // case-insensitive
     get_role_by_name(name: string) {
         return this.wheatley.guild.roles.cache.find(role => role.name.toLowerCase() === name.toLowerCase());
+    }
+
+    resolve_role(role_info: named_id): Discord.Role {
+        let role = this.wheatley.guild.roles.cache.get(role_info.id);
+        if (!role && role_info.name && this.wheatley.devmode_enabled) {
+            role = this.get_role_by_name(role_info.name);
+        }
+        return unwrap(role);
+    }
+
+    staff_contacts() {
+        const root_role = this.resolve_role(wheatley_roles.root);
+        const roots = root_role.members.map(member => `<@${member.id}>`);
+        return roots.length > 1 ? roots.slice(0, -1).join(", ") + `, or ${roots[roots.length - 1]}` : roots[0];
     }
 }
