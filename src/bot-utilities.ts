@@ -413,30 +413,6 @@ export class BotUtilities {
         return category;
     }
 
-    async resolve_channels<const K extends readonly (keyof channels_map)[]>(
-        ...keys: K
-    ): Promise<resolved_channels<K[number]>> {
-        const result: Record<string, Discord.Channel> = {};
-        for (const key of keys) {
-            const channel_info = this.wheatley.channels[key];
-            switch (channel_info.type) {
-                case "text":
-                    result[key] = await this.get_channel(channel_info);
-                    break;
-                case "forum":
-                    result[key] = await this.get_forum_channel(channel_info);
-                    break;
-                case "voice":
-                    result[key] = await this.get_voice_channel(channel_info);
-                    break;
-                case "thread":
-                    result[key] = await this.get_thread_channel(channel_info);
-                    break;
-            }
-        }
-        return result as resolved_channels<K[number]>;
-    }
-
     async resolve_channel(channel_info: typed_channel_id): Promise<Discord.Channel> {
         switch (channel_info.type) {
             case "text":
