@@ -5,7 +5,6 @@ import { strict as assert } from "assert";
 import { time_to_human } from "../../../../utils/strings.js";
 import { M } from "../../../../utils/debugging-and-logging.js";
 import { BotComponent } from "../../../../bot-component.js";
-import { Wheatley } from "../../../../wheatley.js";
 import { ModerationComponent, parse_duration } from "./moderation-common.js";
 import { moderation_entry, note_moderation_types, voice_moderation_types } from "./schemata.js";
 import { CommandSetBuilder } from "../../../../command-abstractions/command-set-builder.js";
@@ -19,20 +18,22 @@ import { TextBasedCommand } from "../../../../command-abstractions/text-based-co
 import { unwrap } from "../../../../utils/misc.js";
 import Help from "../help.js";
 import NotificationThreads from "../notification-threads.js";
+import { channel_map } from "../../../../channel-map.js";
 
 export default class ModerationControl extends BotComponent {
     private database = this.wheatley.database.create_proxy<{
         moderations: moderation_entry;
     }>();
-    private staff_action_log!: Discord.TextChannel;
-    private public_action_log!: Discord.TextChannel;
-    private rules!: Discord.TextChannel;
+    private channels = channel_map(
+        this.wheatley,
+        this.wheatley.channels.staff_action_log,
+        this.wheatley.channels.public_action_log,
+        this.wheatley.channels.rules,
+    );
     private notification_threads!: NotificationThreads;
 
     override async setup(commands: CommandSetBuilder) {
-        this.staff_action_log = await this.utilities.get_channel(this.wheatley.channels.staff_action_log);
-        this.public_action_log = await this.utilities.get_channel(this.wheatley.channels.public_action_log);
-        this.rules = await this.utilities.get_channel(this.wheatley.channels.rules);
+        await this.channels.resolve();
         this.notification_threads = unwrap(this.wheatley.components.get("NotificationThreads")) as NotificationThreads;
 
         (this.wheatley.components.get("Help") as Help | undefined)?.add_category_content(
@@ -120,7 +121,7 @@ export default class ModerationControl extends BotComponent {
     async notify_user(user: string, case_number: number, description: string) {
         const discord_user = await this.wheatley.client.users.fetch(user);
         await this.notification_threads.notify_user_with_thread_fallback(
-            this.rules,
+            this.channels.rules,
             discord_user,
             {
                 embeds: [
@@ -148,7 +149,7 @@ export default class ModerationControl extends BotComponent {
         );
         if (res) {
             await this.reply_with_success(command, "Reason updated");
-            await this.staff_action_log.send({
+            await this.channels.staff_action_log.send({
                 embeds: [
                     Modlogs.case_summary(
                         res,
@@ -158,7 +159,7 @@ export default class ModerationControl extends BotComponent {
                 ],
             });
             if (!note_moderation_types.includes(res.type)) {
-                await this.public_action_log.send({
+                await this.channels.public_action_log.send({
                     embeds: [
                         Modlogs.case_summary(
                             res,
@@ -188,7 +189,7 @@ export default class ModerationControl extends BotComponent {
         );
         if (res) {
             await this.reply_with_success(command, "Context updated");
-            await this.staff_action_log.send({
+            await this.channels.staff_action_log.send({
                 embeds: [
                     Modlogs.case_summary(
                         res,
@@ -228,7 +229,7 @@ export default class ModerationControl extends BotComponent {
             await this.reply_with_success(command, "Duration updated");
             // Update sleep lists and remove moderation if needed
             this.wheatley.event_hub.emit("update_moderation", res);
-            await this.staff_action_log.send({
+            await this.channels.staff_action_log.send({
                 embeds: [
                     Modlogs.case_summary(
                         res,
@@ -238,7 +239,7 @@ export default class ModerationControl extends BotComponent {
                 ],
             });
             if (!note_moderation_types.includes(res.type)) {
-                await this.public_action_log.send({
+                await this.channels.public_action_log.send({
                     embeds: [
                         Modlogs.case_summary(
                             res,
@@ -288,7 +289,7 @@ export default class ModerationControl extends BotComponent {
             await this.reply_with_success(command, "Case expunged");
             // Update sleep lists and remove moderation if needed
             this.wheatley.event_hub.emit("update_moderation", res);
-            await this.staff_action_log.send({
+            await this.channels.staff_action_log.send({
                 embeds: [
                     Modlogs.case_summary(
                         res,
@@ -298,7 +299,7 @@ export default class ModerationControl extends BotComponent {
                 ],
             });
             if (!note_moderation_types.includes(res.type)) {
-                await this.public_action_log.send({
+                await this.channels.public_action_log.send({
                     embeds: [
                         Modlogs.case_summary(
                             res,

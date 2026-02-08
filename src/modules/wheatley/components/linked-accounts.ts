@@ -6,13 +6,13 @@ import { M } from "../../../utils/debugging-and-logging.js";
 import { BotComponent } from "../../../bot-component.js";
 import { ensure_index } from "../../../infra/database-interface.js";
 import { colors } from "../../../common.js";
-import { Wheatley } from "../../../wheatley.js";
 import { EarlyReplyMode, TextBasedCommandBuilder } from "../../../command-abstractions/text-based-command-builder.js";
 import { CommandSetBuilder } from "../../../command-abstractions/command-set-builder.js";
 import { TextBasedCommand } from "../../../command-abstractions/text-based-command.js";
 import { build_description } from "../../../utils/strings.js";
 import { unwrap } from "../../../utils/misc.js";
 import { moderation_entry } from "./moderation/schemata.js";
+import { channel_map } from "../../../channel-map.js";
 
 type linked_accounts_entry = {
     main_account: string;
@@ -31,14 +31,12 @@ export default class LinkedAccounts extends BotComponent {
     private database = this.wheatley.database.create_proxy<{
         linked_accounts: linked_accounts_entry;
     }>();
-
-    private staff_action_log!: Discord.TextChannel;
+    private channels = channel_map(this.wheatley, this.wheatley.channels.staff_action_log);
 
     override async setup(commands: CommandSetBuilder) {
         await ensure_index(this.wheatley, this.database.linked_accounts, { alt_account: 1 }, { unique: true });
         await ensure_index(this.wheatley, this.database.linked_accounts, { main_account: 1 });
-
-        this.staff_action_log = await this.utilities.get_channel(this.wheatley.channels.staff_action_log);
+        await this.channels.resolve();
 
         this.wheatley.event_hub.on("issue_moderation", (moderation: moderation_entry) => {
             this.on_moderation_issue(moderation).catch(this.wheatley.critical_error.bind(this.wheatley));
@@ -288,7 +286,7 @@ export default class LinkedAccounts extends BotComponent {
 
             const description =
                 `⚠️ User <@${moderation.user}> has ${linked_accounts.size} linked account: ` + `${account_mentions}`;
-            await this.staff_action_log.send({
+            await this.channels.staff_action_log.send({
                 embeds: [new Discord.EmbedBuilder().setColor(colors.alert_color).setDescription(description)],
             });
         }

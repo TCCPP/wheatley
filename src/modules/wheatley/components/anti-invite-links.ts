@@ -6,10 +6,10 @@ import { M } from "../../../utils/debugging-and-logging.js";
 import { BotComponent } from "../../../bot-component.js";
 import { departialize } from "../../../utils/discord.js";
 import { CommandSetBuilder } from "../../../command-abstractions/command-set-builder.js";
-import { Wheatley } from "../../../wheatley.js";
 import { EarlyReplyMode, TextBasedCommandBuilder } from "../../../command-abstractions/text-based-command-builder.js";
 import { TextBasedCommand } from "../../../command-abstractions/text-based-command.js";
 import { BotButton, ButtonInteractionBuilder } from "../../../command-abstractions/button.js";
+import { channel_map } from "../../../channel-map.js";
 
 const INVITE_RE =
     /(?:(?:discord(?:app)?|disboard)\.(?:gg|(?:com|org|me)\/(?:invite|server\/join))|(?<!\w)\.gg)\/(\S+)/i;
@@ -28,9 +28,7 @@ type allowed_invite_entry = {
 
 export default class AntiInviteLinks extends BotComponent {
     private allowed_guilds = new Set<string>();
-
-    private staff_flag_log!: Discord.TextChannel;
-
+    private channels = channel_map(this.wheatley, this.wheatley.channels.staff_flag_log);
     private database = this.wheatley.database.create_proxy<{
         allowed_invites: allowed_invite_entry;
     }>();
@@ -38,7 +36,7 @@ export default class AntiInviteLinks extends BotComponent {
     private allowed_invites_page_button!: BotButton<[number]>;
 
     override async setup(commands: CommandSetBuilder) {
-        this.staff_flag_log = await this.utilities.get_channel(this.wheatley.channels.staff_flag_log);
+        await this.channels.resolve();
 
         commands.add(
             new TextBasedCommandBuilder("allowed-invites", EarlyReplyMode.ephemeral)
@@ -216,7 +214,7 @@ export default class AntiInviteLinks extends BotComponent {
             await message.delete();
             assert(!(message.channel instanceof Discord.PartialGroupDMChannel));
             await message.channel.send(`<@${message.author.id}> Please do not send invite links`);
-            await this.staff_flag_log.send({
+            await this.channels.staff_flag_log.send({
                 content: `:warning: Invite link deleted`,
                 ...quote,
             });

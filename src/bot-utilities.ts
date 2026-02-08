@@ -2,7 +2,7 @@ import { strict as assert } from "assert";
 
 import * as Discord from "discord.js";
 
-import { named_id, Wheatley } from "./wheatley.js";
+import { named_id, Wheatley, channels_map, resolved_channels, typed_channel_id } from "./wheatley.js";
 import { decode_snowflake, is_media_link_embed, make_url, get_thread_owner } from "./utils/discord.js";
 import { unwrap } from "./utils/misc.js";
 import { colors } from "./common.js";
@@ -371,6 +371,15 @@ export class BotUtilities {
         return channel;
     }
 
+    async get_voice_channel(channel_info: named_id) {
+        const channel = await this.get_channel_internal(channel_info);
+        assert(
+            channel instanceof Discord.VoiceChannel,
+            `Channel ${channel?.name} (${channel_info.id}) not of the expected type`,
+        );
+        return channel;
+    }
+
     async get_forum_channel(channel_info: named_id) {
         const channel = await this.get_channel_internal(channel_info);
 
@@ -402,6 +411,43 @@ export class BotUtilities {
         );
 
         return category;
+    }
+
+    async resolve_channels<const K extends readonly (keyof channels_map)[]>(
+        ...keys: K
+    ): Promise<resolved_channels<K[number]>> {
+        const result: Record<string, Discord.Channel> = {};
+        for (const key of keys) {
+            const channel_info = this.wheatley.channels[key];
+            switch (channel_info.type) {
+                case "text":
+                    result[key] = await this.get_channel(channel_info);
+                    break;
+                case "forum":
+                    result[key] = await this.get_forum_channel(channel_info);
+                    break;
+                case "voice":
+                    result[key] = await this.get_voice_channel(channel_info);
+                    break;
+                case "thread":
+                    result[key] = await this.get_thread_channel(channel_info);
+                    break;
+            }
+        }
+        return result as resolved_channels<K[number]>;
+    }
+
+    async resolve_channel(channel_info: typed_channel_id): Promise<Discord.Channel> {
+        switch (channel_info.type) {
+            case "text":
+                return this.get_channel(channel_info);
+            case "forum":
+                return this.get_forum_channel(channel_info);
+            case "voice":
+                return this.get_voice_channel(channel_info);
+            case "thread":
+                return this.get_thread_channel(channel_info);
+        }
     }
 
     async can_user_control_thread(user: Discord.User, thread: Discord.ThreadChannel) {

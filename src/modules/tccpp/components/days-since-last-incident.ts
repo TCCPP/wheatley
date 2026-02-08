@@ -10,6 +10,7 @@ import { build_description, capitalize, time_to_human } from "../../../utils/str
 import { colors, DAY, MINUTE } from "../../../common.js";
 import { moderation_entry, monke_button_press_entry } from "../../wheatley/components/moderation/schemata.js";
 import { set_interval } from "../../../utils/node.js";
+import { channel_map } from "../../../channel-map.js";
 
 const TRACKER_EPOCH = 1705219394732; // 2024-01-14T08:03:14.732Z
 
@@ -46,7 +47,7 @@ export default class DaysSinceLastIncident extends BotComponent {
     private longest_streak = 0;
     private last_incident_time = 0;
 
-    private days_since_last_incident!: Discord.TextChannel;
+    private channels = channel_map(this.wheatley, this.wheatley.channels.days_since_last_incident);
 
     private database = this.wheatley.database.create_proxy<{
         moderations: moderation_entry;
@@ -61,9 +62,7 @@ export default class DaysSinceLastIncident extends BotComponent {
     override async setup() {
         await ensure_index(this.wheatley, this.database.monke_button_presses, { timestamp: -1 });
 
-        this.days_since_last_incident = await this.utilities.get_channel(
-            this.wheatley.channels.days_since_last_incident,
-        );
+        await this.channels.resolve();
     }
 
     async get_recent_moderations(): Promise<moderation_entry[]> {
@@ -438,7 +437,7 @@ export default class DaysSinceLastIncident extends BotComponent {
 
     override async on_ready() {
         await this.initialize_longest_streak();
-        const messages = (await this.days_since_last_incident.messages.fetch()).filter(
+        const messages = (await this.channels.days_since_last_incident.messages.fetch()).filter(
             message => message.author.id == this.wheatley.user.id,
         );
         assert(messages.size <= 1);
@@ -446,7 +445,7 @@ export default class DaysSinceLastIncident extends BotComponent {
             this.message = unwrap(messages.first());
             await this.update_if_changed();
         } else {
-            this.message = await this.days_since_last_incident.send({ embeds: await this.build_embeds() });
+            this.message = await this.channels.days_since_last_incident.send({ embeds: await this.build_embeds() });
         }
         this.timer = set_interval(() => {
             this.update_if_changed().catch(this.wheatley.critical_error.bind(this.wheatley));

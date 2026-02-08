@@ -10,7 +10,7 @@ import { M } from "../../../utils/debugging-and-logging.js";
 import { colors } from "../../../common.js";
 import { BotComponent } from "../../../bot-component.js";
 import { CommandSetBuilder } from "../../../command-abstractions/command-set-builder.js";
-import { Wheatley } from "../../../wheatley.js";
+import { channel_map } from "../../../channel-map.js";
 import { EarlyReplyMode, TextBasedCommandBuilder } from "../../../command-abstractions/text-based-command-builder.js";
 import { TextBasedCommand } from "../../../command-abstractions/text-based-command.js";
 import Help from "./help.js";
@@ -476,7 +476,7 @@ function alphabetical_compare(a: string, b: string): number {
 }
 
 export default class Wiki extends BotComponent {
-    private bot_spam!: Discord.TextChannel;
+    private channels = channel_map(this.wheatley, this.wheatley.channels.bot_spam);
 
     static override get is_freestanding() {
         return true;
@@ -488,7 +488,7 @@ export default class Wiki extends BotComponent {
     wiki_search_index: WikiSearchIndex | null = null;
 
     override async setup(commands: CommandSetBuilder) {
-        this.bot_spam = await this.utilities.get_channel(this.wheatley.channels.bot_spam);
+        await this.channels.resolve();
 
         (this.wheatley.components.get("Help") as Help | undefined)?.add_category_content(
             "Wiki Articles",
@@ -503,18 +503,18 @@ export default class Wiki extends BotComponent {
         }
         const match_emoji = new RegExp(`(?<!<)(?:${[...emoji_map.keys()].join("|")})`, "g");
 
-        const channel_map = new Map<string, string>();
+        const channel_name_map = new Map<string, string>();
         for (const [id, channel] of this.wheatley.guild.channels.cache) {
             if (channel.name.match(/^[a-zA-Z0-9-]+$/g)) {
-                channel_map.set(`#${channel.name}`, `<#${id}>`);
+                channel_name_map.set(`#${channel.name}`, `<#${id}>`);
             }
         }
-        const match_channel = new RegExp(`(?:${[...channel_map.keys()].join("|")})(?![a-zA-Z0-9_])`, "g");
+        const match_channel = new RegExp(`(?:${[...channel_name_map.keys()].join("|")})(?![a-zA-Z0-9_])`, "g");
 
         this.substitute_refs = (str: string) => {
             return str
                 .replaceAll(match_emoji, match => emoji_map.get(match)!)
-                .replaceAll(match_channel, match => channel_map.get(match)!);
+                .replaceAll(match_channel, match => channel_name_map.get(match)!);
         };
 
         commands.add(
@@ -734,13 +734,13 @@ export default class Wiki extends BotComponent {
         if (
             !(
                 this.wheatley.freestanding ||
-                channel.id === this.bot_spam.id ||
-                (channel.isThread() && channel.parentId === this.bot_spam.id) ||
+                channel.id === this.channels.bot_spam.id ||
+                (channel.isThread() && channel.parentId === this.channels.bot_spam.id) ||
                 channel.isDMBased()
             )
         ) {
             await command.reply(
-                `!wiki-preview must be used in <#${this.bot_spam.id}>, a bot-spam thread, or a DM`,
+                `!wiki-preview must be used in <#${this.channels.bot_spam.id}>, a bot-spam thread, or a DM`,
                 true,
                 true,
             );

@@ -43,6 +43,7 @@ class FailedCodeBlockRule extends dismark.Rule {
 
 export default class FormattingErrorDetection extends BotComponent {
     private skill_roles!: SkillRoles;
+    private code!: Code;
 
     messaged = new SelfClearingSet<string>(10 * MINUTE);
     // trigger message -> reply
@@ -51,6 +52,7 @@ export default class FormattingErrorDetection extends BotComponent {
 
     override async setup(commands: CommandSetBuilder) {
         this.skill_roles = unwrap(this.wheatley.components.get("SkillRoles")) as SkillRoles;
+        this.code = unwrap(this.wheatley.components.get("Code")) as Code;
 
         this.dismiss_button = commands.add(
             new ButtonInteractionBuilder("formatting_error_dismiss")
@@ -188,7 +190,7 @@ export default class FormattingErrorDetection extends BotComponent {
                     new Discord.EmbedBuilder()
                         .setColor(colors.wheatley)
                         .setTitle("It looks like you may have code formatting errors in your message")
-                        .addFields(...Code.make_code_formatting_embeds(this.wheatley, message.channel))
+                        .addFields(...this.code.make_code_formatting_embeds(message.channel))
                         .setDescription(
                             build_description(
                                 "**Note:** Make sure to use __**back-ticks**__ (\\`) and not quotes (')",

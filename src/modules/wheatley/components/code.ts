@@ -6,17 +6,22 @@ import { M } from "../../../utils/debugging-and-logging.js";
 import { colors } from "../../../common.js";
 import { BotComponent } from "../../../bot-component.js";
 import { CommandSetBuilder } from "../../../command-abstractions/command-set-builder.js";
-import { Wheatley, create_error_reply } from "../../../wheatley.js";
+import { create_error_reply } from "../../../wheatley.js";
 import { EarlyReplyMode, TextBasedCommandBuilder } from "../../../command-abstractions/text-based-command-builder.js";
 import { TextBasedCommand } from "../../../command-abstractions/text-based-command.js";
 import { build_description } from "../../../utils/strings.js";
+import { channel_map } from "../../../channel-map.js";
 
 export default class Code extends BotComponent {
     static override get is_freestanding() {
         return true;
     }
 
+    private channels = channel_map(this.wheatley, this.wheatley.channels.c_help, this.wheatley.channels.c_help_text);
+
     override async setup(commands: CommandSetBuilder) {
+        await this.channels.resolve();
+
         commands.add(
             new TextBasedCommandBuilder("code", EarlyReplyMode.visible)
                 .set_category("Misc")
@@ -26,9 +31,9 @@ export default class Code extends BotComponent {
         );
     }
 
-    static make_code_formatting_embeds(wheatley: Wheatley, channel: Discord.TextBasedChannel): Discord.APIEmbedField[] {
-        const is_c = [wheatley.channels.c_help, wheatley.channels.c_help_text].some(
-            channel_info => channel_info.id == wheatley.top_level_channel(channel),
+    make_code_formatting_embeds(channel: Discord.TextBasedChannel): Discord.APIEmbedField[] {
+        const is_c = [this.channels.c_help, this.channels.c_help_text].some(
+            c => c.id == this.wheatley.top_level_channel(channel),
         );
         return [
             {
@@ -71,7 +76,7 @@ export default class Code extends BotComponent {
                 new Discord.EmbedBuilder()
                     .setColor(colors.wheatley)
                     .setTitle("How to Format Code on Discord")
-                    .addFields(...Code.make_code_formatting_embeds(this.wheatley, await command.get_channel()))
+                    .addFields(...this.make_code_formatting_embeds(await command.get_channel()))
                     .setFooter({
                         text: "Note: Back-tick (`) not quotes (')",
                     }),

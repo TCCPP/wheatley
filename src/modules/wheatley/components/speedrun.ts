@@ -5,7 +5,7 @@ import { M } from "../../../utils/debugging-and-logging.js";
 import { colors, MINUTE } from "../../../common.js";
 import { BotComponent } from "../../../bot-component.js";
 import { ensure_index } from "../../../infra/database-interface.js";
-import { Wheatley } from "../../../wheatley.js";
+import { channel_map } from "../../../channel-map.js";
 import { discord_timestamp } from "../../../utils/discord.js";
 import { CommandSetBuilder } from "../../../command-abstractions/command-set-builder.js";
 import { SelfClearingMap } from "../../../utils/containers.js";
@@ -23,7 +23,7 @@ export type speedrun_entry = {
 };
 
 export default class Speedrun extends BotComponent {
-    private staff_action_log!: Discord.TextChannel;
+    private channels = channel_map(this.wheatley, this.wheatley.channels.staff_action_log);
     private recent_joins = new SelfClearingMap<Discord.Snowflake, speedrun_join_info>(30 * MINUTE, 10 * MINUTE);
     private database = this.wheatley.database.create_proxy<{
         speedrun_attempts: speedrun_entry;
@@ -36,7 +36,7 @@ export default class Speedrun extends BotComponent {
     override async setup(commands: CommandSetBuilder) {
         await ensure_index(this.wheatley, this.database.speedrun_attempts, { user: 1 });
 
-        this.staff_action_log = await this.utilities.get_channel(this.wheatley.channels.staff_action_log);
+        await this.channels.resolve();
     }
 
     override async on_guild_member_add(member: Discord.GuildMember) {
@@ -87,6 +87,8 @@ export default class Speedrun extends BotComponent {
                 text: `ID: ${user.id}`,
             })
             .setTimestamp();
-        this.staff_action_log.send({ embeds: [embed] }).catch(this.wheatley.critical_error.bind(this.wheatley));
+        this.channels.staff_action_log
+            .send({ embeds: [embed] })
+            .catch(this.wheatley.critical_error.bind(this.wheatley));
     }
 }

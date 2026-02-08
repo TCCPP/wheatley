@@ -2,16 +2,30 @@ import * as Discord from "discord.js";
 import { strict as assert } from "assert";
 import { BotComponent } from "../../../bot-component.js";
 import { CommandSetBuilder } from "../../../command-abstractions/command-set-builder.js";
-import { Wheatley } from "../../../wheatley.js";
 import { colors } from "../../../common.js";
 import { delay } from "../../../utils/misc.js";
 import { M } from "../../../utils/debugging-and-logging.js";
 import { EarlyReplyMode, TextBasedCommandBuilder } from "../../../command-abstractions/text-based-command-builder.js";
 import { TextBasedCommand } from "../../../command-abstractions/text-based-command.js";
 import { format_list } from "../../../utils/strings.js";
+import { channel_map } from "../../../channel-map.js";
 
 export default class Redirect extends BotComponent {
+    private channels = channel_map(
+        this.wheatley,
+        this.wheatley.channels.cpp_help,
+        this.wheatley.channels.cpp_help_text,
+        this.wheatley.channels.c_help,
+        this.wheatley.channels.c_help_text,
+        this.wheatley.channels.c_cpp_discussion,
+        this.wheatley.channels.general_discussion,
+        this.wheatley.channels.tooling,
+        this.wheatley.channels.algorithms_and_compsci,
+    );
+
     override async setup(commands: CommandSetBuilder) {
+        await this.channels.resolve();
+
         commands.add(
             new TextBasedCommandBuilder("redirect", EarlyReplyMode.visible)
                 .set_category("Moderation Utilities")
@@ -29,8 +43,8 @@ export default class Redirect extends BotComponent {
             new TextBasedCommandBuilder("r", EarlyReplyMode.none)
                 .set_category("Moderation Utilities")
                 .set_description(
-                    `Redirect a conversation from <#${this.wheatley.channels.c_cpp_discussion.id}> or ` +
-                        `<#${this.wheatley.channels.general_discussion.id}> to a help channel`,
+                    `Redirect a conversation from <#${this.channels.c_cpp_discussion.id}> or ` +
+                        `<#${this.channels.general_discussion.id}> to a help channel`,
                 )
                 .add_user_option({
                     title: "user",
@@ -67,13 +81,13 @@ export default class Redirect extends BotComponent {
     async r(command: TextBasedCommand, user: Discord.User) {
         if (
             [
-                this.wheatley.channels.cpp_help,
-                this.wheatley.channels.cpp_help_text,
-                this.wheatley.channels.c_help,
-                this.wheatley.channels.c_help_text,
-                this.wheatley.channels.tooling,
-                this.wheatley.channels.algorithms_and_compsci,
-            ].some(channel_info => channel_info.id === command.channel_id)
+                this.channels.cpp_help,
+                this.channels.cpp_help_text,
+                this.channels.c_help,
+                this.channels.c_help_text,
+                this.channels.tooling,
+                this.channels.algorithms_and_compsci,
+            ].some(channel => channel.id === command.channel_id)
         ) {
             await command.reply("Can't be used in a help channel", true);
             return;
@@ -83,13 +97,13 @@ export default class Redirect extends BotComponent {
             content:
                 `Hello <@${user.id}>, welcome to Together C & C++! This is not a help channel, please ask your ` +
                 `question in one of the help channels above (${format_list([
-                    `<#${this.wheatley.channels.cpp_help.id}>`,
-                    `<#${this.wheatley.channels.cpp_help_text.id}>`,
-                    `<#${this.wheatley.channels.c_help.id}>`,
-                    `<#${this.wheatley.channels.c_help_text.id}>`,
+                    `<#${this.channels.cpp_help.id}>`,
+                    `<#${this.channels.cpp_help_text.id}>`,
+                    `<#${this.channels.c_help.id}>`,
+                    `<#${this.channels.c_help_text.id}>`,
                 ])}), ` +
-                `or <#${this.wheatley.channels.tooling.id}> if your question is about tooling, ` +
-                `or <#${this.wheatley.channels.algorithms_and_compsci.id}> if your question pertains more to theory, ` +
+                `or <#${this.channels.tooling.id}> if your question is about tooling, ` +
+                `or <#${this.channels.algorithms_and_compsci.id}> if your question pertains more to theory, ` +
                 `or any other help channel more suited for your question.`,
             should_text_reply: false,
         });

@@ -6,10 +6,10 @@ import { colors, MINUTE } from "../../../common.js";
 import { BotComponent } from "../../../bot-component.js";
 import { ensure_index } from "../../../infra/database-interface.js";
 import { CommandSetBuilder } from "../../../command-abstractions/command-set-builder.js";
-import { Wheatley } from "../../../wheatley.js";
 import { EarlyReplyMode, TextBasedCommandBuilder } from "../../../command-abstractions/text-based-command-builder.js";
 import { TextBasedCommand } from "../../../command-abstractions/text-based-command.js";
 import { assert_type, unwrap } from "../../../utils/misc.js";
+import { channel_map } from "../../../channel-map.js";
 
 const LEADERBOARD_ENTRIES = 20;
 
@@ -24,7 +24,11 @@ export default class Roulette extends BotComponent {
     // user id -> streak count
     readonly streaks = new SelfClearingMap<string, number>(60 * MINUTE);
 
-    private staff_member_log!: Discord.TextChannel;
+    private channels = channel_map(
+        this.wheatley,
+        this.wheatley.channels.bot_spam,
+        this.wheatley.channels.staff_member_log,
+    );
 
     private database = this.wheatley.database.create_proxy<{
         roulette_leaderboard: roulette_leaderboard_entry;
@@ -34,7 +38,7 @@ export default class Roulette extends BotComponent {
         await ensure_index(this.wheatley, this.database.roulette_leaderboard, { user: 1 }, { unique: true });
         await ensure_index(this.wheatley, this.database.roulette_leaderboard, { highscore: -1 });
 
-        this.staff_member_log = await this.utilities.get_channel(this.wheatley.channels.staff_member_log);
+        await this.channels.resolve();
 
         commands.add(
             new TextBasedCommandBuilder("roulette", EarlyReplyMode.none)
@@ -94,8 +98,8 @@ export default class Roulette extends BotComponent {
     }
 
     async roulette(command: TextBasedCommand) {
-        if (command.channel_id != this.wheatley.channels.bot_spam.id) {
-            await command.reply(`Must be used in <#${this.wheatley.channels.bot_spam.id}>`, true);
+        if (command.channel_id != this.channels.bot_spam.id) {
+            await command.reply(`Must be used in <#${this.channels.bot_spam.id}>`, true);
             return;
         }
         if (this.disabled_users.has(command.user.id)) {
@@ -134,7 +138,7 @@ export default class Roulette extends BotComponent {
                     // Send bang message
                     const m = { embeds: [this.make_bang_embed(command.user)] };
                     await command.reply(m);
-                    await this.staff_member_log.send(m);
+                    await this.channels.staff_member_log.send(m);
                     // Setup ban message
                     const ban_embed = this.make_ban_embed(command);
                     if (!ok) {
@@ -142,13 +146,13 @@ export default class Roulette extends BotComponent {
                             text: "Error: Timeout failed ",
                         });
                     }
-                    await this.staff_member_log.send({ embeds: [ban_embed] });
+                    await this.channels.staff_member_log.send({ embeds: [ban_embed] });
                 }
             } else {
                 const m = { embeds: [this.make_click_embed(command.user)] };
                 this.streaks.set(command.user.id, (this.streaks.get(command.user.id) ?? 0) + 1);
                 await command.reply(m);
-                await this.staff_member_log.send(m);
+                await this.channels.staff_member_log.send(m);
                 await this.update_score(command.user.id);
             }
         } else {

@@ -2,12 +2,12 @@ import * as Discord from "discord.js";
 import { strict as assert } from "assert";
 import { BotComponent } from "../../../bot-component.js";
 import { CommandSetBuilder } from "../../../command-abstractions/command-set-builder.js";
-import { Wheatley } from "../../../wheatley.js";
 import { EarlyReplyMode, TextBasedCommandBuilder } from "../../../command-abstractions/text-based-command-builder.js";
 import { TextBasedCommand } from "../../../command-abstractions/text-based-command.js";
 import { HOUR, DAY } from "../../../common.js";
 import { M } from "../../../utils/debugging-and-logging.js";
 import { SelfClearingSet } from "../../../utils/containers.js";
+import { channel_map } from "../../../channel-map.js";
 
 const code_block_start = "```";
 
@@ -66,12 +66,14 @@ export default class CHelpRedirect extends BotComponent {
     // use the same set for both channels, shouldn't be an issue in practice
     readonly auto_triggered_users = new SelfClearingSet<string>(1 * HOUR);
 
-    private c_help_text!: Discord.TextChannel;
-    private cpp_help_text!: Discord.TextChannel;
+    private channels = channel_map(
+        this.wheatley,
+        this.wheatley.channels.c_help_text,
+        this.wheatley.channels.cpp_help_text,
+    );
 
     override async setup(commands: CommandSetBuilder) {
-        this.c_help_text = await this.utilities.get_channel(this.wheatley.channels.c_help_text);
-        this.cpp_help_text = await this.utilities.get_channel(this.wheatley.channels.cpp_help_text);
+        await this.channels.resolve();
 
         commands.add(
             new TextBasedCommandBuilder("not-c", EarlyReplyMode.none)
@@ -190,22 +192,22 @@ export default class CHelpRedirect extends BotComponent {
         assert(command.channel instanceof Discord.GuildChannel);
 
         // Only allowed in #c-help-text
-        if (command.channel.id != this.wheatley.channels.c_help_text.id) {
-            await command.reply(`Can only be used in <#${this.wheatley.channels.c_help_text.id}>`, true);
+        if (command.channel.id != this.channels.c_help_text.id) {
+            await command.reply(`Can only be used in <#${this.channels.c_help_text.id}>`, true);
             return;
         }
 
         // For manual triggers, trust the caller and don't check the message
         // Supposedly the automatic check didn't trigger, so checking the message again would fail again
         if (user) {
-            await this.c_help_text.send(
+            await this.channels.c_help_text.send(
                 `<@${user.id}> Your code looks like C++ code, but this is a C channel. ` +
-                    `Did you mean to post in <#${this.wheatley.channels.cpp_help_text.id}>?`,
+                    `Did you mean to post in <#${this.channels.cpp_help_text.id}>?`,
             );
         } else {
-            await this.c_help_text.send(
+            await this.channels.c_help_text.send(
                 `This code looks like C++ code, but this is a C channel. ` +
-                    `Did you mean to post in <#${this.wheatley.channels.cpp_help_text.id}>?`,
+                    `Did you mean to post in <#${this.channels.cpp_help_text.id}>?`,
             );
         }
     }
@@ -215,22 +217,22 @@ export default class CHelpRedirect extends BotComponent {
         assert(command.channel instanceof Discord.GuildChannel);
 
         // Only allowed in #cpp-help-text
-        if (command.channel.id != this.wheatley.channels.cpp_help_text.id) {
-            await command.reply(`Can only be used in <#${this.wheatley.channels.cpp_help_text.id}>`, true);
+        if (command.channel.id != this.channels.cpp_help_text.id) {
+            await command.reply(`Can only be used in <#${this.channels.cpp_help_text.id}>`, true);
             return;
         }
 
         // For manual triggers, trust the caller and don't check the message
         // Supposedly the automatic check didn't trigger, so checking the message again would fail again
         if (user) {
-            await this.cpp_help_text.send(
+            await this.channels.cpp_help_text.send(
                 `<@${user.id}> Your code looks like C code, but this is a C++ channel. ` +
-                    `Did you mean to post in <#${this.wheatley.channels.c_help_text.id}>?`,
+                    `Did you mean to post in <#${this.channels.c_help_text.id}>?`,
             );
         } else {
-            await this.cpp_help_text.send(
+            await this.channels.cpp_help_text.send(
                 `This code looks like C code, but this is a C++ channel. ` +
-                    `Did you mean to post in <#${this.wheatley.channels.c_help_text.id}>?`,
+                    `Did you mean to post in <#${this.channels.c_help_text.id}>?`,
             );
         }
     }
@@ -256,20 +258,20 @@ export default class CHelpRedirect extends BotComponent {
         }
 
         // Only check messages in help-text channels
-        if (message.channel.id == this.wheatley.channels.c_help_text.id) {
+        if (message.channel.id == this.channels.c_help_text.id) {
             if (this.check_message_for_cpp_code(message)) {
                 this.auto_triggered_users.insert(message.author.id);
                 await message.reply(
                     `<@${message.author.id}> Your code looks like C++ code, but this is a C channel. ` +
-                        `Did you mean to post in <#${this.wheatley.channels.cpp_help_text.id}>?`,
+                        `Did you mean to post in <#${this.channels.cpp_help_text.id}>?`,
                 );
             }
-        } else if (message.channel.id == this.wheatley.channels.cpp_help_text.id) {
+        } else if (message.channel.id == this.channels.cpp_help_text.id) {
             if (this.check_message_for_c_code(message)) {
                 this.auto_triggered_users.insert(message.author.id);
                 await message.reply(
                     `<@${message.author.id}> Your code looks like C code, but this is a C++ channel. ` +
-                        `Did you mean to post in <#${this.wheatley.channels.c_help_text.id}>?`,
+                        `Did you mean to post in <#${this.channels.c_help_text.id}>?`,
                 );
             }
         }

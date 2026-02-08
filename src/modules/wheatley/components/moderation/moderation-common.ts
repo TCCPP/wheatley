@@ -17,6 +17,7 @@ import { Mutex } from "../../../../utils/containers.js";
 import { BotComponent } from "../../../../bot-component.js";
 import { ensure_index } from "../../../../infra/database-interface.js";
 import { Wheatley } from "../../../../wheatley.js";
+import { channel_map } from "../../../../channel-map.js";
 import { colors, HOUR, MINUTE } from "../../../../common.js";
 import { parse_time_unit } from "../../../../utils/time.js";
 import Modlogs, { staff_moderation_display_options, public_moderation_display_options } from "./modlogs.js";
@@ -136,10 +137,13 @@ export abstract class ModerationComponent extends BotComponent {
         component_state: moderation_state;
         moderations: moderation_entry;
     }>();
-    protected staff_action_log!: Discord.TextChannel;
-    protected public_action_log!: Discord.TextChannel;
-    protected red_telephone_alerts!: Discord.TextChannel;
-    protected rules!: Discord.TextChannel;
+    protected channels = channel_map(
+        this.wheatley,
+        this.wheatley.channels.staff_action_log,
+        this.wheatley.channels.public_action_log,
+        this.wheatley.channels.red_telephone_alerts,
+        this.wheatley.channels.rules,
+    );
     protected notification_threads!: NotificationThreads;
     private static ring_red_telephone_button_instance: BotButton<[number]> | null = null;
     protected get ring_red_telephone_button() {
@@ -186,10 +190,7 @@ export abstract class ModerationComponent extends BotComponent {
         await ensure_index(this.wheatley, this.database.moderations, { type: 1, issued_at: -1 });
         await ensure_index(this.wheatley, this.database.component_state, { id: 1 }, { unique: true });
 
-        this.staff_action_log = await this.utilities.get_channel(this.wheatley.channels.staff_action_log);
-        this.public_action_log = await this.utilities.get_channel(this.wheatley.channels.public_action_log);
-        this.red_telephone_alerts = await this.utilities.get_channel(this.wheatley.channels.red_telephone_alerts);
-        this.rules = await this.utilities.get_channel(this.wheatley.channels.rules);
+        await this.channels.resolve();
         this.notification_threads = unwrap(this.wheatley.components.get("NotificationThreads")) as NotificationThreads;
 
         // Only register button handler once across all ModerationComponent instances
@@ -236,7 +237,7 @@ export abstract class ModerationComponent extends BotComponent {
                 text: `ID: ${moderation.user}`,
             });
 
-        await this.red_telephone_alerts.send({ embeds: [embed] });
+        await this.channels.red_telephone_alerts.send({ embeds: [embed] });
 
         await interaction.update({
             components: [
@@ -408,7 +409,7 @@ export abstract class ModerationComponent extends BotComponent {
             if (!has_other_active) {
                 await this.remove_moderation(entry);
             }
-            await this.staff_action_log.send({
+            await this.channels.staff_action_log.send({
                 embeds: [
                     Modlogs.case_summary(
                         entry,
@@ -586,9 +587,11 @@ export abstract class ModerationComponent extends BotComponent {
                     ),
                 ];
             }
-            this.staff_action_log.send(message_options).catch(this.wheatley.critical_error.bind(this.wheatley));
+            this.channels.staff_action_log
+                .send(message_options)
+                .catch(this.wheatley.critical_error.bind(this.wheatley));
             if (!note_moderation_types.includes(moderation.type)) {
-                this.public_action_log
+                this.channels.public_action_log
                     .send({
                         embeds: [
                             Modlogs.case_summary(
@@ -643,7 +646,7 @@ export abstract class ModerationComponent extends BotComponent {
             ],
         };
         return await this.notification_threads.notify_user_with_thread_fallback(
-            this.rules,
+            this.channels.rules,
             user,
             message,
             "Moderation Notification",
@@ -934,7 +937,7 @@ export abstract class ModerationComponent extends BotComponent {
                             }),
                     ],
                 });
-                await this.staff_action_log.send({
+                await this.channels.staff_action_log.send({
                     embeds: [
                         Modlogs.case_summary(
                             res,
@@ -946,7 +949,7 @@ export abstract class ModerationComponent extends BotComponent {
                     ],
                 });
                 if (!note_moderation_types.includes(res.type)) {
-                    await this.public_action_log.send({
+                    await this.channels.public_action_log.send({
                         embeds: [
                             Modlogs.case_summary(
                                 res,

@@ -8,19 +8,20 @@ import { BotComponent } from "../../../bot-component.js";
 import { build_description, time_to_human } from "../../../utils/strings.js";
 import { equal } from "../../../utils/arrays.js";
 import { CommandSetBuilder } from "../../../command-abstractions/command-set-builder.js";
+import { channel_map } from "../../../channel-map.js";
 
 export default class JoinLeaveLog extends BotComponent {
-    private staff_member_log!: Discord.TextChannel;
+    private channels = channel_map(this.wheatley, this.wheatley.channels.staff_member_log);
 
     override async setup(commands: CommandSetBuilder) {
-        this.staff_member_log = await this.utilities.get_channel(this.wheatley.channels.staff_member_log);
+        await this.channels.resolve();
     }
 
     override async on_guild_member_add(member: Discord.GuildMember) {
         if (member.guild.id !== this.wheatley.guild.id) {
             return;
         }
-        this.wheatley.llog(this.staff_member_log, {
+        this.wheatley.llog(this.channels.staff_member_log, {
             embeds: [
                 new Discord.EmbedBuilder()
                     .setTitle("Member Joined")
@@ -47,7 +48,7 @@ export default class JoinLeaveLog extends BotComponent {
         if (member.guild.id !== this.wheatley.guild.id) {
             return;
         }
-        this.wheatley.llog(this.staff_member_log, {
+        this.wheatley.llog(this.channels.staff_member_log, {
             embeds: [
                 new Discord.EmbedBuilder()
                     .setTitle("Member Left")
@@ -90,7 +91,7 @@ export default class JoinLeaveLog extends BotComponent {
             extra_description.push(`Old display name: ${old_member.displayName}`);
             extra_description.push(`New display name: ${new_member.displayName}`);
         }
-        this.wheatley.llog(this.staff_member_log, {
+        this.wheatley.llog(this.channels.staff_member_log, {
             embeds: [
                 new Discord.EmbedBuilder()
                     .setTitle("Member Updated")

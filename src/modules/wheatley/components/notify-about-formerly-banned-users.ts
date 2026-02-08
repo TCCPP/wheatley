@@ -3,13 +3,13 @@ import { strict as assert } from "assert";
 import { build_description, pluralize, time_to_human } from "../../../utils/strings.js";
 import { colors, MINUTE } from "../../../common.js";
 import { BotComponent } from "../../../bot-component.js";
-import { Wheatley } from "../../../wheatley.js";
 import { discord_timestamp } from "../../../utils/discord.js";
 import { moderation_entry } from "./moderation/schemata.js";
 import { unwrap } from "../../../utils/misc.js";
 import { CommandSetBuilder } from "../../../command-abstractions/command-set-builder.js";
 import LinkedAccounts from "./linked-accounts.js";
 import { BotButton } from "../../../command-abstractions/button.js";
+import { channel_map } from "../../../channel-map.js";
 
 export type notify_plugin = {
     maybe_create_button: (
@@ -19,7 +19,7 @@ export type notify_plugin = {
 };
 
 export default class NotifyAboutFormerlyBannedUsers extends BotComponent {
-    private staff_action_log!: Discord.TextChannel;
+    private channels = channel_map(this.wheatley, this.wheatley.channels.staff_action_log);
     private database = this.wheatley.database.create_proxy<{
         moderations: moderation_entry;
     }>();
@@ -27,7 +27,7 @@ export default class NotifyAboutFormerlyBannedUsers extends BotComponent {
     private plugins: notify_plugin[] = [];
 
     override async setup(commands: CommandSetBuilder) {
-        this.staff_action_log = await this.utilities.get_channel(this.wheatley.channels.staff_action_log);
+        await this.channels.resolve();
         this.linked_accounts = unwrap(this.wheatley.components.get("LinkedAccounts")) as LinkedAccounts;
     }
 
@@ -66,7 +66,7 @@ export default class NotifyAboutFormerlyBannedUsers extends BotComponent {
                 ? [new Discord.ActionRowBuilder<Discord.ButtonBuilder>().addComponents(...buttons)]
                 : undefined;
         })();
-        await this.staff_action_log.send({
+        await this.channels.staff_action_log.send({
             embeds: [embed],
             components,
         });

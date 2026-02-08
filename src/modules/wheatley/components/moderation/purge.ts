@@ -6,7 +6,7 @@ import { M } from "../../../../utils/debugging-and-logging.js";
 import { DAY, HOUR, MINUTE, colors } from "../../../../common.js";
 import { BotComponent } from "../../../../bot-component.js";
 import { CommandSetBuilder } from "../../../../command-abstractions/command-set-builder.js";
-import { Wheatley } from "../../../../wheatley.js";
+import { channel_map } from "../../../../channel-map.js";
 import {
     EarlyReplyMode,
     TextBasedCommandBuilder,
@@ -57,12 +57,14 @@ export default class Purge extends BotComponent {
     private database = this.wheatley.database.create_proxy<{
         message_database: message_database_entry;
     }>();
-    private staff_flag_log!: Discord.TextChannel;
-    private welcome!: Discord.TextChannel;
+    private channels = channel_map(
+        this.wheatley,
+        this.wheatley.channels.staff_flag_log,
+        this.wheatley.channels.welcome,
+    );
 
     override async setup(commands: CommandSetBuilder) {
-        this.staff_flag_log = await this.utilities.get_channel(this.wheatley.channels.staff_flag_log);
-        this.welcome = await this.utilities.get_channel(this.wheatley.channels.welcome);
+        await this.channels.resolve();
         // purge count
         // purge after
         // purge range
@@ -376,7 +378,7 @@ export default class Purge extends BotComponent {
                 "author.id": user.id,
                 guild: this.wheatley.guild.id,
                 channel: {
-                    $nin: [this.staff_flag_log.id, this.welcome.id],
+                    $nin: [this.channels.staff_flag_log.id, this.channels.welcome.id],
                 },
                 timestamp: {
                     $gte: Date.now() - timeframe,

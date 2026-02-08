@@ -4,7 +4,7 @@ import { format_list } from "../../../utils/strings.js";
 import { M } from "../../../utils/debugging-and-logging.js";
 import { colors } from "../../../common.js";
 import { BotComponent } from "../../../bot-component.js";
-import { Wheatley } from "../../../wheatley.js";
+import { channel_map } from "../../../channel-map.js";
 import { CommandSetBuilder } from "../../../command-abstractions/command-set-builder.js";
 import {
     Staff_notification_button_helper,
@@ -15,13 +15,13 @@ import {
  * Tracks certain mentions, such as mentions of root, moderators, Wheatley, etc.
  */
 export default class TrackedMentions extends BotComponent {
-    private flag_log!: Discord.TextChannel;
+    private channels = channel_map(this.wheatley, this.wheatley.channels.staff_flag_log);
     tracked_mentions!: Set<string>;
     private buttons!: Staff_notification_buttons;
     private button_helper = new Staff_notification_button_helper();
 
     override async setup(commands: CommandSetBuilder) {
-        this.flag_log = await this.utilities.get_channel(this.wheatley.channels.staff_flag_log);
+        await this.channels.resolve();
 
         this.buttons = this.button_helper.register_buttons(commands, "tracked-mention", {
             handling: this.handling_handler.bind(this),
@@ -64,7 +64,7 @@ export default class TrackedMentions extends BotComponent {
                 })
                 .setTimestamp();
             const row = this.button_helper.create_standard_action_row(this.buttons);
-            await this.flag_log.send({ embeds: [embed], components: [row] });
+            await this.channels.staff_flag_log.send({ embeds: [embed], components: [row] });
         }
     }
 

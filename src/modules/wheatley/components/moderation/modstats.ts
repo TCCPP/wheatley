@@ -9,20 +9,20 @@ import {
 } from "../../../../command-abstractions/text-based-command-builder.js";
 import { TextBasedCommand } from "../../../../command-abstractions/text-based-command.js";
 
-import { Wheatley } from "../../../../wheatley.js";
 import { moderation_entry } from "./schemata.js";
 import { colors, DAY } from "../../../../common.js";
 import { unwrap } from "../../../../utils/misc.js";
 import { capitalize } from "../../../../utils/strings.js";
+import { channel_map } from "../../../../channel-map.js";
 
 export default class ModStats extends BotComponent {
     private database = this.wheatley.database.create_proxy<{
         moderations: moderation_entry;
     }>();
-    private bot_spam!: Discord.TextChannel;
+    private channels = channel_map(this.wheatley, this.wheatley.channels.bot_spam);
 
     override async setup(commands: CommandSetBuilder) {
-        this.bot_spam = await this.utilities.get_channel(this.wheatley.channels.bot_spam);
+        await this.channels.resolve();
         commands.add(
             new TextBasedCommandBuilder("modstats", EarlyReplyMode.none)
                 .set_category("Moderation")
@@ -64,8 +64,8 @@ export default class ModStats extends BotComponent {
     }
 
     async modstats(command: TextBasedCommand, moderator: Discord.User | null) {
-        if (command.channel_id != this.bot_spam.id) {
-            await command.reply(`Please use in <#${this.bot_spam.id}>`, true);
+        if (command.channel_id != this.channels.bot_spam.id) {
+            await command.reply(`Please use in <#${this.channels.bot_spam.id}>`, true);
             return;
         }
         await command.do_early_reply_if_slash(false);
