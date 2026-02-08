@@ -1,4 +1,4 @@
-import { define_roles } from "./role-map.js";
+import { define_roles } from "../../role-map.js";
 
 export const wheatley_roles = define_roles({
     muted: { id: "815987333094178825", name: "Muted" },
@@ -18,12 +18,10 @@ export const wheatley_roles = define_roles({
     root: { id: "331719468440879105", name: "root" },
     pink: { id: "888158339878490132", name: "Pink" },
     server_booster: { id: "643013330616844333", name: "Server Booster" },
-    historian: { id: "890067617069551646", name: "Historian" },
     official_bot: { id: "331886851784704001", name: "Official Bot" },
     featured_bot: { id: "995847409374605392", name: "Featured Bot" },
     jedi_council: { id: "1138950835208990750", name: "Jedi Council" },
     herald: { id: "1095555811536797787", name: "Herald" },
     linked_github: { id: "1080596526478397471", name: "Linked GitHub" },
-    wiki_core: { id: "1354998426370314411", name: "core-wiki" },
     voice: { id: "1368073548983308328", name: "voice" },
 });

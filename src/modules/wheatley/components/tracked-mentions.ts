@@ -7,7 +7,7 @@ import { BotComponent } from "../../../bot-component.js";
 import { channel_map } from "../../../channel-map.js";
 import { role_map } from "../../../role-map.js";
 import { wheatley_channels } from "../channels.js";
-import { wheatley_roles } from "../../../roles.js";
+import { wheatley_roles } from "../roles.js";
 import { CommandSetBuilder } from "../../../command-abstractions/command-set-builder.js";
 import {
     Staff_notification_button_helper,

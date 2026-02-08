@@ -3,7 +3,7 @@ import { unwrap } from "../../../utils/misc.js";
 import { M } from "../../../utils/debugging-and-logging.js";
 import { BotComponent } from "../../../bot-component.js";
 import { role_map } from "../../../role-map.js";
-import { wheatley_roles } from "../../../roles.js";
+import { wheatley_roles } from "../../wheatley/roles.js";
 import RoleManager from "../../wheatley/components/role-manager.js";
 import { CommandSetBuilder } from "../../../command-abstractions/command-set-builder.js";
 import { EarlyReplyMode, TextBasedCommandBuilder } from "../../../command-abstractions/text-based-command-builder.js";

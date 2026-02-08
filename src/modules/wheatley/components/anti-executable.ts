@@ -15,7 +15,7 @@ import { M } from "../../../utils/debugging-and-logging.js";
 import { channel_map } from "../../../channel-map.js";
 import { role_map } from "../../../role-map.js";
 import { wheatley_channels } from "../channels.js";
-import { wheatley_roles } from "../../../roles.js";
+import { wheatley_roles } from "../roles.js";
 
 const ACTION_THRESHOLD = 5;
 const BASE_RETRY_DELAY_MS = 1000;

@@ -3,7 +3,7 @@ import { strict as assert } from "assert";
 import * as Discord from "discord.js";
 
 import { named_id, typed_channel_id } from "./channel-map.js";
-import { wheatley_roles } from "./roles.js";
+import { wheatley_roles } from "./modules/wheatley/roles.js";
 import { Wheatley } from "./wheatley.js";
 import { decode_snowflake, is_media_link_embed, make_url, get_thread_owner } from "./utils/discord.js";
 import { unwrap } from "./utils/misc.js";

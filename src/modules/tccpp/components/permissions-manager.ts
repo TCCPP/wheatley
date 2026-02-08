@@ -8,7 +8,8 @@ import { BotComponent } from "../../../bot-component.js";
 import { channel_map } from "../../../channel-map.js";
 import { role_map } from "../../../role-map.js";
 import { wheatley_channels } from "../../wheatley/channels.js";
-import { wheatley_roles } from "../../../roles.js";
+import { wheatley_roles } from "../../wheatley/roles.js";
+import { tccpp_roles } from "../roles.js";
 import { tccpp_channels } from "../channels.js";
 import SkillRoles from "./skill-roles.js";
 import { named_id } from "../../../channel-map.js";
@@ -66,7 +67,7 @@ export default class PermissionManager extends BotComponent {
         wheatley_roles.no_til,
         wheatley_roles.no_memes,
         wheatley_roles.no_serious_off_topic,
-        wheatley_roles.historian,
+        tccpp_roles.historian,
     );
     private channels = channel_map(
         this.wheatley,

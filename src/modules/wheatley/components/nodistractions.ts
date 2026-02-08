@@ -5,7 +5,7 @@ import { BotComponent } from "../../../bot-component.js";
 import { ensure_index } from "../../../infra/database-interface.js";
 import { CommandSetBuilder } from "../../../command-abstractions/command-set-builder.js";
 import { role_map } from "../../../role-map.js";
-import { wheatley_roles } from "../../../roles.js";
+import { wheatley_roles } from "../roles.js";
 import { EarlyReplyMode, TextBasedCommandBuilder } from "../../../command-abstractions/text-based-command-builder.js";
 import { TextBasedCommand } from "../../../command-abstractions/text-based-command.js";
 import { set_timeout, clear_timeout } from "../../../utils/node.js";

@@ -6,7 +6,7 @@ import { strict as assert } from "assert";
 import { M } from "../../../../utils/debugging-and-logging.js";
 import { ModerationComponent, duration_regex } from "./moderation-common.js";
 import { role_map } from "../../../../role-map.js";
-import { wheatley_roles } from "../../../../roles.js";
+import { wheatley_roles } from "../../roles.js";
 import { CommandSetBuilder } from "../../../../command-abstractions/command-set-builder.js";
 import {
     EarlyReplyMode,

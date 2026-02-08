@@ -4,7 +4,7 @@ import * as Discord from "discord.js";
 import { BotComponent } from "../../../bot-component.js";
 import { ensure_index } from "../../../infra/database-interface.js";
 import { role_map } from "../../../role-map.js";
-import { wheatley_roles } from "../../../roles.js";
+import { wheatley_roles } from "../../wheatley/roles.js";
 import SkillRoles, { SkillLevel } from "./skill-roles.js";
 import { assert_type, unwrap } from "../../../utils/misc.js";
 

@@ -8,7 +8,7 @@ import { build_description } from "../../../../utils/strings.js";
 import { channel_map } from "../../../../channel-map.js";
 import { role_map } from "../../../../role-map.js";
 import { wheatley_channels } from "../../channels.js";
-import { wheatley_roles } from "../../../../roles.js";
+import { wheatley_roles } from "../../roles.js";
 
 export default class VoiceModeration extends BotComponent {
     private channels = channel_map(this.wheatley, wheatley_channels.staff_action_log);

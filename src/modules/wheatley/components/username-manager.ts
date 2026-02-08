@@ -4,7 +4,7 @@ import { M } from "../../../utils/debugging-and-logging.js";
 import { BotComponent } from "../../../bot-component.js";
 import { MINUTE } from "../../../common.js";
 import { role_map } from "../../../role-map.js";
-import { wheatley_roles } from "../../../roles.js";
+import { wheatley_roles } from "../roles.js";
 
 import anyAscii from "any-ascii";
 import { set_interval } from "../../../utils/node.js";
