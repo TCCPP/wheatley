@@ -4,6 +4,7 @@ import { M } from "../../../utils/debugging-and-logging.js";
 import { DAY, HOUR } from "../../../common.js";
 import { BotComponent } from "../../../bot-component.js";
 import { channel_map } from "../../../channel-map.js";
+import { wheatley_channels } from "../../wheatley/channels.js";
 
 const LLM_REGEX = /\b(?<!!)llms?\b/gi;
 const MICROSLOP_REGEX = /\b(?<!!)(?<![./])microsoft?\b/gi;
@@ -18,7 +19,7 @@ export default class Autoreply extends BotComponent {
         return true;
     }
 
-    private channels = channel_map(this.wheatley, this.wheatley.channels.bot_spam);
+    private channels = channel_map(this.wheatley, wheatley_channels.bot_spam);
 
     last_reply_time = Date.now() + RATELIMIT_DURATION; // Hedge against restarts
 

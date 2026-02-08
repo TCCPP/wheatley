@@ -11,6 +11,7 @@ import { colors, DAY, MINUTE } from "../../../common.js";
 import { moderation_entry, monke_button_press_entry } from "../../wheatley/components/moderation/schemata.js";
 import { set_interval } from "../../../utils/node.js";
 import { channel_map } from "../../../channel-map.js";
+import { tccpp_channels } from "../channels.js";
 
 const TRACKER_EPOCH = 1705219394732; // 2024-01-14T08:03:14.732Z
 
@@ -47,7 +48,7 @@ export default class DaysSinceLastIncident extends BotComponent {
     private longest_streak = 0;
     private last_incident_time = 0;
 
-    private channels = channel_map(this.wheatley, this.wheatley.channels.days_since_last_incident);
+    private channels = channel_map(this.wheatley, tccpp_channels.days_since_last_incident);
 
     private database = this.wheatley.database.create_proxy<{
         moderations: moderation_entry;

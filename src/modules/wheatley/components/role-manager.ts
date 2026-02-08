@@ -10,6 +10,7 @@ import { set_interval } from "../../../utils/node.js";
 import { build_description } from "../../../utils/strings.js";
 import { with_retry } from "../../../utils/discord.js";
 import { channel_map } from "../../../channel-map.js";
+import { wheatley_channels } from "../channels.js";
 
 export type user_role_entry = {
     user_id: string;
@@ -24,7 +25,7 @@ type role_update_listener = {
 };
 
 export default class RoleManager extends BotComponent {
-    private channels = channel_map(this.wheatley, this.wheatley.channels.staff_member_log);
+    private channels = channel_map(this.wheatley, wheatley_channels.staff_member_log);
     interval: NodeJS.Timeout | null = null;
 
     // current database state

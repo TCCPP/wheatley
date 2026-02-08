@@ -20,6 +20,7 @@ import { build_description, capitalize } from "../../../utils/strings.js";
 import { EarlyReplyMode, TextBasedCommandBuilder } from "../../../command-abstractions/text-based-command-builder.js";
 import { TextBasedCommand } from "../../../command-abstractions/text-based-command.js";
 import { channel_map } from "../../../channel-map.js";
+import { tccpp_channels } from "../channels.js";
 
 type skill_suggestion_entry = {
     user_id: string;
@@ -47,7 +48,7 @@ export default class SkillRoleSuggestion extends BotComponent {
         skill_role_threads: skill_suggestion_thread_entry;
     }>();
 
-    private channels = channel_map(this.wheatley, this.wheatley.channels.skill_role_suggestions);
+    private channels = channel_map(this.wheatley, tccpp_channels.skill_role_suggestions);
     private suggestion_modal!: BotModal<[]>;
 
     override async setup(commands: CommandSetBuilder) {

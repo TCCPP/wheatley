@@ -6,8 +6,10 @@ import { M } from "../../../utils/debugging-and-logging.js";
 import { HOUR } from "../../../common.js";
 import { BotComponent } from "../../../bot-component.js";
 import { channel_map } from "../../../channel-map.js";
+import { wheatley_channels } from "../../wheatley/channels.js";
+import { tccpp_channels } from "../channels.js";
 import SkillRoles from "./skill-roles.js";
-import { named_id } from "../../../wheatley.js";
+import { named_id } from "../../../channel-map.js";
 import { unwrap } from "../../../utils/misc.js";
 import { CommandSetBuilder } from "../../../command-abstractions/command-set-builder.js";
 import { set_timeout } from "../../../utils/node.js";
@@ -45,34 +47,34 @@ export default class PermissionManager extends BotComponent {
     private skill_roles!: SkillRoles;
     private channels = channel_map(
         this.wheatley,
-        this.wheatley.channels.staff_only,
-        this.wheatley.channels.voice_hotline,
-        this.wheatley.channels.rules,
-        this.wheatley.channels.announcements,
-        this.wheatley.channels.resources,
-        this.wheatley.channels.old_resources,
-        this.wheatley.channels.partners,
-        this.wheatley.channels.articles,
-        this.wheatley.channels.server_suggestions,
-        this.wheatley.channels.the_button,
-        this.wheatley.channels.skill_roles_meta,
-        this.wheatley.channels.skill_role_suggestions,
-        this.wheatley.channels.polls,
-        this.wheatley.channels.today_i_learned,
-        this.wheatley.channels.memes,
-        this.wheatley.channels.starboard,
-        this.wheatley.channels.pin_archive,
-        this.wheatley.channels.skill_role_log,
-        this.wheatley.channels.public_action_log,
-        this.wheatley.channels.serious_off_topic,
-        this.wheatley.channels.room_of_requirement,
-        this.wheatley.channels.boosters_only,
-        this.wheatley.channels.days_since_last_incident,
-        this.wheatley.channels.literally_1984,
-        this.wheatley.channels.lore,
-        this.wheatley.channels.bot_dev_internal,
-        this.wheatley.channels.afk,
-        this.wheatley.channels.deans_office,
+        wheatley_channels.staff_only,
+        wheatley_channels.voice_hotline,
+        wheatley_channels.rules,
+        wheatley_channels.announcements,
+        tccpp_channels.resources,
+        tccpp_channels.old_resources,
+        tccpp_channels.partners,
+        tccpp_channels.articles,
+        tccpp_channels.server_suggestions,
+        tccpp_channels.the_button,
+        tccpp_channels.skill_roles_meta,
+        tccpp_channels.skill_role_suggestions,
+        tccpp_channels.polls,
+        tccpp_channels.today_i_learned,
+        tccpp_channels.memes,
+        tccpp_channels.starboard,
+        wheatley_channels.pin_archive,
+        tccpp_channels.skill_role_log,
+        wheatley_channels.public_action_log,
+        tccpp_channels.serious_off_topic,
+        tccpp_channels.room_of_requirement,
+        tccpp_channels.boosters_only,
+        tccpp_channels.days_since_last_incident,
+        tccpp_channels.literally_1984,
+        tccpp_channels.lore,
+        tccpp_channels.bot_dev_internal,
+        tccpp_channels.afk,
+        tccpp_channels.deans_office,
     );
 
     category_permissions: Partial<Record<string, permission_overwrites>> = {};

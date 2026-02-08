@@ -14,12 +14,13 @@ import { colors, DAY } from "../../../../common.js";
 import { unwrap } from "../../../../utils/misc.js";
 import { capitalize } from "../../../../utils/strings.js";
 import { channel_map } from "../../../../channel-map.js";
+import { wheatley_channels } from "../../channels.js";
 
 export default class ModStats extends BotComponent {
     private database = this.wheatley.database.create_proxy<{
         moderations: moderation_entry;
     }>();
-    private channels = channel_map(this.wheatley, this.wheatley.channels.bot_spam);
+    private channels = channel_map(this.wheatley, wheatley_channels.bot_spam);
 
     override async setup(commands: CommandSetBuilder) {
         await this.channels.resolve();

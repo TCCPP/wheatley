@@ -5,6 +5,7 @@ import { M } from "../../../utils/debugging-and-logging.js";
 import { colors } from "../../../common.js";
 import { BotComponent } from "../../../bot-component.js";
 import { channel_map } from "../../../channel-map.js";
+import { wheatley_channels } from "../channels.js";
 import { CommandSetBuilder } from "../../../command-abstractions/command-set-builder.js";
 import {
     Staff_notification_button_helper,
@@ -15,7 +16,7 @@ import {
  * Tracks certain mentions, such as mentions of root, moderators, Wheatley, etc.
  */
 export default class TrackedMentions extends BotComponent {
-    private channels = channel_map(this.wheatley, this.wheatley.channels.staff_flag_log);
+    private channels = channel_map(this.wheatley, wheatley_channels.staff_flag_log);
     tracked_mentions!: Set<string>;
     private buttons!: Staff_notification_buttons;
     private button_helper = new Staff_notification_button_helper();

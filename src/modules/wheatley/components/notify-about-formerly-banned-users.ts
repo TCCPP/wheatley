@@ -10,6 +10,7 @@ import { CommandSetBuilder } from "../../../command-abstractions/command-set-bui
 import LinkedAccounts from "./linked-accounts.js";
 import { BotButton } from "../../../command-abstractions/button.js";
 import { channel_map } from "../../../channel-map.js";
+import { wheatley_channels } from "../channels.js";
 
 export type notify_plugin = {
     maybe_create_button: (
@@ -19,7 +20,7 @@ export type notify_plugin = {
 };
 
 export default class NotifyAboutFormerlyBannedUsers extends BotComponent {
-    private channels = channel_map(this.wheatley, this.wheatley.channels.staff_action_log);
+    private channels = channel_map(this.wheatley, wheatley_channels.staff_action_log);
     private database = this.wheatley.database.create_proxy<{
         moderations: moderation_entry;
     }>();

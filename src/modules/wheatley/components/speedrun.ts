@@ -6,6 +6,7 @@ import { colors, MINUTE } from "../../../common.js";
 import { BotComponent } from "../../../bot-component.js";
 import { ensure_index } from "../../../infra/database-interface.js";
 import { channel_map } from "../../../channel-map.js";
+import { wheatley_channels } from "../channels.js";
 import { discord_timestamp } from "../../../utils/discord.js";
 import { CommandSetBuilder } from "../../../command-abstractions/command-set-builder.js";
 import { SelfClearingMap } from "../../../utils/containers.js";
@@ -23,7 +24,7 @@ export type speedrun_entry = {
 };
 
 export default class Speedrun extends BotComponent {
-    private channels = channel_map(this.wheatley, this.wheatley.channels.staff_action_log);
+    private channels = channel_map(this.wheatley, wheatley_channels.staff_action_log);
     private recent_joins = new SelfClearingMap<Discord.Snowflake, speedrun_join_info>(30 * MINUTE, 10 * MINUTE);
     private database = this.wheatley.database.create_proxy<{
         speedrun_attempts: speedrun_entry;

@@ -13,6 +13,7 @@ import { build_description } from "../../../utils/strings.js";
 import { unwrap } from "../../../utils/misc.js";
 import { moderation_entry } from "./moderation/schemata.js";
 import { channel_map } from "../../../channel-map.js";
+import { wheatley_channels } from "../channels.js";
 
 type linked_accounts_entry = {
     main_account: string;
@@ -31,7 +32,7 @@ export default class LinkedAccounts extends BotComponent {
     private database = this.wheatley.database.create_proxy<{
         linked_accounts: linked_accounts_entry;
     }>();
-    private channels = channel_map(this.wheatley, this.wheatley.channels.staff_action_log);
+    private channels = channel_map(this.wheatley, wheatley_channels.staff_action_log);
 
     override async setup(commands: CommandSetBuilder) {
         await ensure_index(this.wheatley, this.database.linked_accounts, { alt_account: 1 }, { unique: true });

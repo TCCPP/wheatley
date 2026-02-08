@@ -6,9 +6,10 @@ import { colors } from "../../../../common.js";
 import { BotComponent } from "../../../../bot-component.js";
 import { build_description } from "../../../../utils/strings.js";
 import { channel_map } from "../../../../channel-map.js";
+import { wheatley_channels } from "../../channels.js";
 
 export default class VoiceModeration extends BotComponent {
-    private channels = channel_map(this.wheatley, this.wheatley.channels.staff_action_log);
+    private channels = channel_map(this.wheatley, wheatley_channels.staff_action_log);
 
     override async setup() {
         await this.channels.resolve();

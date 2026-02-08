@@ -5,6 +5,7 @@ import { unwrap } from "../../../utils/misc.js";
 import Wiki from "./wiki.js";
 import { embeds_match } from "../../../utils/discord.js";
 import { channel_map } from "../../../channel-map.js";
+import { wheatley_channels } from "../channels.js";
 
 type rules_state = {
     id: "rules";
@@ -16,7 +17,7 @@ export default class RulesMessage extends BotComponent {
         component_state: rules_state;
     }>();
 
-    private channels = channel_map(this.wheatley, this.wheatley.channels.rules);
+    private channels = channel_map(this.wheatley, wheatley_channels.rules);
     private wiki!: Wiki;
 
     override async setup() {

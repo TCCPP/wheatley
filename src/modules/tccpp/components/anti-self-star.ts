@@ -7,9 +7,10 @@ import { M } from "../../../utils/debugging-and-logging.js";
 import { SelfClearingSet } from "../../../utils/containers.js";
 import { MINUTE } from "../../../common.js";
 import { channel_map } from "../../../channel-map.js";
+import { tccpp_channels } from "../channels.js";
 
 export default class AntiSelfStar extends BotComponent {
-    private channels = channel_map(this.wheatley, this.wheatley.channels.memes);
+    private channels = channel_map(this.wheatley, tccpp_channels.memes);
 
     laughed_at = new SelfClearingSet<string>(5 * MINUTE, MINUTE);
 

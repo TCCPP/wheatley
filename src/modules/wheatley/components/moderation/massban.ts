@@ -5,11 +5,12 @@ import { colors } from "../../../../common.js";
 import { BotComponent } from "../../../../bot-component.js";
 import { CommandSetBuilder } from "../../../../command-abstractions/command-set-builder.js";
 import { channel_map } from "../../../../channel-map.js";
+import { wheatley_channels } from "../../channels.js";
 
 const snowflake_re = /\b\d{10,}\b/g;
 
 export default class Massban extends BotComponent {
-    private channels = channel_map(this.wheatley, this.wheatley.channels.staff_action_log);
+    private channels = channel_map(this.wheatley, wheatley_channels.staff_action_log);
 
     override async setup(commands: CommandSetBuilder) {
         await this.channels.resolve();

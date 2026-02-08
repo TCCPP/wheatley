@@ -5,6 +5,7 @@ import { M } from "../../../utils/debugging-and-logging.js";
 import { colors } from "../../../common.js";
 import { BotComponent } from "../../../bot-component.js";
 import { channel_map } from "../../../channel-map.js";
+import { tccpp_channels } from "../channels.js";
 
 /*
  * Thread-based channel logic (non-forum)
@@ -34,9 +35,9 @@ function create_embed(title: string | undefined, color: number, msg: string) {
 export default class ThreadBasedChannels extends BotComponent {
     private channels = channel_map(
         this.wheatley,
-        this.wheatley.channels.server_suggestions,
-        this.wheatley.channels.showcase,
-        this.wheatley.channels.today_i_learned,
+        tccpp_channels.server_suggestions,
+        tccpp_channels.showcase,
+        tccpp_channels.today_i_learned,
     );
 
     thread_based_channel_ids!: Set<string>;

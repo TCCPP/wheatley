@@ -8,6 +8,7 @@ import { colors, MINUTE } from "../../../common.js";
 import { BotComponent } from "../../../bot-component.js";
 import { CommandSetBuilder } from "../../../command-abstractions/command-set-builder.js";
 import { channel_map } from "../../../channel-map.js";
+import { wheatley_channels } from "../channels.js";
 import { MessageContextMenuInteractionBuilder } from "../../../command-abstractions/context-menu.js";
 import { ModalInteractionBuilder, BotModal, BotModalSubmitInteraction } from "../../../command-abstractions/modal.js";
 import {
@@ -16,7 +17,7 @@ import {
 } from "../../../utils/staff-notification-buttons.js";
 
 export default class Report extends BotComponent {
-    private channels = channel_map(this.wheatley, this.wheatley.channels.staff_flag_log);
+    private channels = channel_map(this.wheatley, wheatley_channels.staff_flag_log);
     private report_modal!: BotModal<[string]>;
     private buttons!: Staff_notification_buttons;
     private button_helper = new Staff_notification_button_helper();

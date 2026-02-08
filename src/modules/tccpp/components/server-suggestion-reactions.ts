@@ -5,11 +5,12 @@ import { delay } from "../../../utils/misc.js";
 import { file_exists } from "../../../utils/filesystem.js";
 import { M } from "../../../utils/debugging-and-logging.js";
 import { BotComponent } from "../../../bot-component.js";
-import { named_id } from "../../../wheatley.js";
+import { named_id } from "../../../channel-map.js";
 import { forge_snowflake } from "../../../utils/discord.js";
 import { set_timeout } from "../../../utils/node.js";
 import { SERVER_SUGGESTION_TRACKER_START_TIME } from "./server-suggestion-tracker.js";
 import { channel_map } from "../../../channel-map.js";
+import { tccpp_channels } from "../channels.js";
 
 let react_blacklist = new Set<string>();
 
@@ -26,8 +27,8 @@ const root_only_reacts = new Set([
 export default class ServerSuggestionReactions extends BotComponent {
     private channels = channel_map(
         this.wheatley,
-        this.wheatley.channels.server_suggestions,
-        this.wheatley.channels.suggestion_dashboard,
+        tccpp_channels.server_suggestions,
+        tccpp_channels.suggestion_dashboard,
     );
 
     readonly monitored_channels = new Map<string, Discord.TextChannel | Discord.AnyThreadChannel>();

@@ -23,6 +23,7 @@ import {
     BotModalSubmitInteraction,
 } from "../../../../command-abstractions/modal.js";
 import { channel_map } from "../../../../channel-map.js";
+import { wheatley_channels } from "../../channels.js";
 
 /*
  * Flow:
@@ -63,9 +64,9 @@ export default class Modmail extends BotComponent {
     }>();
     private channels = channel_map(
         this.wheatley,
-        this.wheatley.channels.rules,
-        this.wheatley.channels.mods,
-        this.wheatley.channels.staff_member_log,
+        wheatley_channels.rules,
+        wheatley_channels.mods,
+        wheatley_channels.staff_member_log,
     );
 
     override async setup(commands: CommandSetBuilder) {

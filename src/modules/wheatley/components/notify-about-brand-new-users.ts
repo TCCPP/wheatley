@@ -6,11 +6,12 @@ import { BotComponent } from "../../../bot-component.js";
 import { discord_timestamp } from "../../../utils/discord.js";
 import { CommandSetBuilder } from "../../../command-abstractions/command-set-builder.js";
 import { channel_map } from "../../../channel-map.js";
+import { wheatley_channels } from "../channels.js";
 
 const NEW_USER_THRESHOLD = MINUTE * 30;
 
 export default class NotifyAboutBrandNewUsers extends BotComponent {
-    private channels = channel_map(this.wheatley, this.wheatley.channels.welcome);
+    private channels = channel_map(this.wheatley, wheatley_channels.welcome);
 
     override async setup(commands: CommandSetBuilder) {
         await this.channels.resolve();

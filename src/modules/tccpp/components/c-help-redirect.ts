@@ -8,6 +8,7 @@ import { HOUR, DAY } from "../../../common.js";
 import { M } from "../../../utils/debugging-and-logging.js";
 import { SelfClearingSet } from "../../../utils/containers.js";
 import { channel_map } from "../../../channel-map.js";
+import { wheatley_channels } from "../../wheatley/channels.js";
 
 const code_block_start = "```";
 
@@ -66,11 +67,7 @@ export default class CHelpRedirect extends BotComponent {
     // use the same set for both channels, shouldn't be an issue in practice
     readonly auto_triggered_users = new SelfClearingSet<string>(1 * HOUR);
 
-    private channels = channel_map(
-        this.wheatley,
-        this.wheatley.channels.c_help_text,
-        this.wheatley.channels.cpp_help_text,
-    );
+    private channels = channel_map(this.wheatley, wheatley_channels.c_help_text, wheatley_channels.cpp_help_text);
 
     override async setup(commands: CommandSetBuilder) {
         await this.channels.resolve();
