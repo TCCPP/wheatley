@@ -11,13 +11,14 @@ import { EarlyReplyMode, TextBasedCommandBuilder } from "../../../command-abstra
 import { TextBasedCommand } from "../../../command-abstractions/text-based-command.js";
 import { build_description } from "../../../utils/strings.js";
 import { channel_map } from "../../../channel-map.js";
+import { wheatley_channels } from "../channels.js";
 
 export default class Code extends BotComponent {
     static override get is_freestanding() {
         return true;
     }
 
-    private channels = channel_map(this.wheatley, this.wheatley.channels.c_help, this.wheatley.channels.c_help_text);
+    private channels = channel_map(this.wheatley, wheatley_channels.c_help, wheatley_channels.c_help_text);
 
     override async setup(commands: CommandSetBuilder) {
         await this.channels.resolve();

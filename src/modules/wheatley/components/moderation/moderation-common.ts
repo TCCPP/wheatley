@@ -18,6 +18,7 @@ import { BotComponent } from "../../../../bot-component.js";
 import { ensure_index } from "../../../../infra/database-interface.js";
 import { Wheatley } from "../../../../wheatley.js";
 import { channel_map } from "../../../../channel-map.js";
+import { wheatley_channels } from "../../channels.js";
 import { colors, HOUR, MINUTE } from "../../../../common.js";
 import { parse_time_unit } from "../../../../utils/time.js";
 import Modlogs, { staff_moderation_display_options, public_moderation_display_options } from "./modlogs.js";
@@ -139,10 +140,10 @@ export abstract class ModerationComponent extends BotComponent {
     }>();
     protected channels = channel_map(
         this.wheatley,
-        this.wheatley.channels.staff_action_log,
-        this.wheatley.channels.public_action_log,
-        this.wheatley.channels.red_telephone_alerts,
-        this.wheatley.channels.rules,
+        wheatley_channels.staff_action_log,
+        wheatley_channels.public_action_log,
+        wheatley_channels.red_telephone_alerts,
+        wheatley_channels.rules,
     );
     protected notification_threads!: NotificationThreads;
     private static ring_red_telephone_button_instance: BotButton<[number]> | null = null;

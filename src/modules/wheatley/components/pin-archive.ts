@@ -8,6 +8,7 @@ import { BotComponent } from "../../../bot-component.js";
 import { ensure_index } from "../../../infra/database-interface.js";
 import { Wheatley, create_error_reply } from "../../../wheatley.js";
 import { channel_map } from "../../../channel-map.js";
+import { wheatley_channels } from "../channels.js";
 import { TextBasedCommandBuilder } from "../../../command-abstractions/text-based-command-builder.js";
 import { TextBasedCommand } from "../../../command-abstractions/text-based-command.js";
 import { build_description } from "../../../utils/strings.js";
@@ -30,7 +31,7 @@ type pin_archive_entry = {
 };
 
 export default class PinArchive extends BotComponent {
-    private channels = channel_map(this.wheatley, this.wheatley.channels.pin_archive);
+    private channels = channel_map(this.wheatley, wheatley_channels.pin_archive);
     mutex = new KeyedMutexSet<string>();
 
     private database = this.wheatley.database.create_proxy<{

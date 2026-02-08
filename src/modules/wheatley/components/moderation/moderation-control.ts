@@ -19,6 +19,7 @@ import { unwrap } from "../../../../utils/misc.js";
 import Help from "../help.js";
 import NotificationThreads from "../notification-threads.js";
 import { channel_map } from "../../../../channel-map.js";
+import { wheatley_channels } from "../../channels.js";
 
 export default class ModerationControl extends BotComponent {
     private database = this.wheatley.database.create_proxy<{
@@ -26,9 +27,9 @@ export default class ModerationControl extends BotComponent {
     }>();
     private channels = channel_map(
         this.wheatley,
-        this.wheatley.channels.staff_action_log,
-        this.wheatley.channels.public_action_log,
-        this.wheatley.channels.rules,
+        wheatley_channels.staff_action_log,
+        wheatley_channels.public_action_log,
+        wheatley_channels.rules,
     );
     private notification_threads!: NotificationThreads;
 

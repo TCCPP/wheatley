@@ -11,6 +11,8 @@ import { CommandSetBuilder } from "../../../command-abstractions/command-set-bui
 import { unwrap } from "../../../utils/misc.js";
 import ForumControl from "./forum-control.js";
 import { channel_map } from "../../../channel-map.js";
+import { wheatley_channels } from "../../wheatley/channels.js";
+import { tccpp_channels, is_forum_help_thread } from "../channels.js";
 
 // TODO: Take into account thread's inactivity setting
 
@@ -55,13 +57,13 @@ export default class ForumChannels extends BotComponent {
 
     private channels = channel_map(
         this.wheatley,
-        this.wheatley.channels.general_discussion,
-        this.wheatley.channels.cpp_help,
-        this.wheatley.channels.c_help,
-        this.wheatley.channels.cpp_help_text,
-        this.wheatley.channels.c_help_text,
-        this.wheatley.channels.code_review,
-        this.wheatley.channels.showcase,
+        wheatley_channels.general_discussion,
+        wheatley_channels.cpp_help,
+        wheatley_channels.c_help,
+        wheatley_channels.cpp_help_text,
+        wheatley_channels.c_help_text,
+        tccpp_channels.code_review,
+        tccpp_channels.showcase,
     );
     private forum_control!: ForumControl;
 
@@ -316,7 +318,7 @@ export default class ForumChannels extends BotComponent {
                 // wheatley threads are either modlogs or thread help threads
                 return;
             }
-            if (this.wheatley.is_forum_help_thread(thread)) {
+            if (is_forum_help_thread(thread)) {
                 const forum = thread.parent;
                 assert(forum instanceof Discord.ForumChannel);
                 const open_tag = get_tag(forum, "Open").id;
@@ -352,7 +354,7 @@ export default class ForumChannels extends BotComponent {
                 );
             }
         } else {
-            if (channel instanceof Discord.ThreadChannel && this.wheatley.is_forum_help_thread(channel)) {
+            if (channel instanceof Discord.ThreadChannel && is_forum_help_thread(channel)) {
                 await this.handle_message_for_solved_prompt(message);
             }
         }
@@ -378,7 +380,7 @@ export default class ForumChannels extends BotComponent {
         if (message.channel.id == message.id) {
             assert(message.channel.isThread());
             const thread = message.channel;
-            if (this.wheatley.is_forum_help_thread(thread) || this.is_non_forum_mirror_channel(thread)) {
+            if (is_forum_help_thread(thread) || this.is_non_forum_mirror_channel(thread)) {
                 await this.delete_mirrored_message(thread);
             }
         }

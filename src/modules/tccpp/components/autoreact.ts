@@ -8,6 +8,7 @@ import { BotComponent } from "../../../bot-component.js";
 import { SelfClearingMap } from "../../../utils/containers.js";
 import { clear_timeout, set_timeout } from "../../../utils/node.js";
 import { channel_map } from "../../../channel-map.js";
+import { tccpp_channels } from "../channels.js";
 
 /* Here's a little of an explanation as to why we do this messageSnapshot stuff
  * A forwarded message is empty, however it contains a property messageSnapshot
@@ -42,10 +43,10 @@ const REACT_TIMEOUT = 90 * SECOND;
 export default class Autoreact extends BotComponent {
     private channels = channel_map(
         this.wheatley,
-        this.wheatley.channels.introductions,
-        this.wheatley.channels.memes,
-        this.wheatley.channels.server_suggestions,
-        this.wheatley.channels.food,
+        tccpp_channels.introductions,
+        tccpp_channels.memes,
+        tccpp_channels.server_suggestions,
+        tccpp_channels.food,
     );
 
     react_timeouts = new SelfClearingMap<string, NodeJS.Timeout>(REACT_TIMEOUT);

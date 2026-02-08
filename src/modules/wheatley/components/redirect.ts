@@ -9,18 +9,19 @@ import { EarlyReplyMode, TextBasedCommandBuilder } from "../../../command-abstra
 import { TextBasedCommand } from "../../../command-abstractions/text-based-command.js";
 import { format_list } from "../../../utils/strings.js";
 import { channel_map } from "../../../channel-map.js";
+import { wheatley_channels } from "../channels.js";
 
 export default class Redirect extends BotComponent {
     private channels = channel_map(
         this.wheatley,
-        this.wheatley.channels.cpp_help,
-        this.wheatley.channels.cpp_help_text,
-        this.wheatley.channels.c_help,
-        this.wheatley.channels.c_help_text,
-        this.wheatley.channels.c_cpp_discussion,
-        this.wheatley.channels.general_discussion,
-        this.wheatley.channels.tooling,
-        this.wheatley.channels.algorithms_and_compsci,
+        wheatley_channels.cpp_help,
+        wheatley_channels.cpp_help_text,
+        wheatley_channels.c_help,
+        wheatley_channels.c_help_text,
+        wheatley_channels.c_cpp_discussion,
+        wheatley_channels.general_discussion,
+        wheatley_channels.tooling,
+        wheatley_channels.algorithms_and_compsci,
     );
 
     override async setup(commands: CommandSetBuilder) {

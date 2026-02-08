@@ -9,13 +9,14 @@ import { SelfClearingMap } from "../../../utils/containers.js";
 import { clear_timeout, set_timeout } from "../../../utils/node.js";
 import { MessageData } from "../../../bot-utilities.js";
 import { channel_map } from "../../../channel-map.js";
+import { tccpp_channels } from "../channels.js";
 
 const DISABLED: boolean = true;
 
 const GRACE_PERIOD = 10 * SECOND;
 
 export default class Memes extends BotComponent {
-    private channels = channel_map(this.wheatley, this.wheatley.channels.memes);
+    private channels = channel_map(this.wheatley, tccpp_channels.memes);
 
     // Map of message ID -> timeout handle for pending deletions
     private readonly pending_deletions = new SelfClearingMap<string, NodeJS.Timeout>(

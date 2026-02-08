@@ -9,6 +9,7 @@ import { CommandSetBuilder } from "../../../command-abstractions/command-set-bui
 import RoleManager, { user_role_entry } from "../../wheatley/components/role-manager.js";
 import { capitalize } from "../../../utils/strings.js";
 import { channel_map } from "../../../channel-map.js";
+import { tccpp_channels } from "../channels.js";
 
 // eslint-disable-next-line @typescript-eslint/naming-convention
 export const SkillLevel = {
@@ -23,7 +24,7 @@ export type skill_level = keyof typeof SkillLevel;
 type skill_role_entry = { user_id: string; last_known_skill_role: string | null };
 
 export default class SkillRoles extends BotComponent {
-    private channels = channel_map(this.wheatley, this.wheatley.channels.skill_role_log);
+    private channels = channel_map(this.wheatley, tccpp_channels.skill_role_log);
 
     private skill_roles: Discord.Role[] = [];
     public readonly roles = {} as Record<skill_level, Discord.Role>;

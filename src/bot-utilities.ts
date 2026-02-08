@@ -2,7 +2,8 @@ import { strict as assert } from "assert";
 
 import * as Discord from "discord.js";
 
-import { named_id, Wheatley, channels_map, resolved_channels, typed_channel_id } from "./wheatley.js";
+import { named_id, typed_channel_id } from "./channel-map.js";
+import { Wheatley } from "./wheatley.js";
 import { decode_snowflake, is_media_link_embed, make_url, get_thread_owner } from "./utils/discord.js";
 import { unwrap } from "./utils/misc.js";
 import { colors } from "./common.js";

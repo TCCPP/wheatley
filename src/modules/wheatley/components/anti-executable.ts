@@ -13,6 +13,7 @@ import { delay, unwrap } from "../../../utils/misc.js";
 import { CommandSetBuilder } from "../../../command-abstractions/command-set-builder.js";
 import { M } from "../../../utils/debugging-and-logging.js";
 import { channel_map } from "../../../channel-map.js";
+import { wheatley_channels } from "../channels.js";
 
 const ACTION_THRESHOLD = 5;
 const BASE_RETRY_DELAY_MS = 1000;
@@ -28,11 +29,7 @@ class HTTPError extends Error {
 }
 
 export default class AntiExecutable extends BotComponent {
-    private channels = channel_map(
-        this.wheatley,
-        this.wheatley.channels.staff_flag_log,
-        this.wheatley.channels.staff_action_log,
-    );
+    private channels = channel_map(this.wheatley, wheatley_channels.staff_flag_log, wheatley_channels.staff_action_log);
     virustotal!: Virustotal | null;
 
     static override get is_freestanding() {

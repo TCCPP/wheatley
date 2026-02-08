@@ -1,7 +1,38 @@
 import { strict as assert } from "assert";
 
+import * as Discord from "discord.js";
+
 import { BotUtilities } from "./bot-utilities.js";
-import { typed_channel_id, channel_type_map, Wheatley } from "./wheatley.js";
+import { Wheatley } from "./wheatley.js";
+
+export type named_id = {
+    // channel id used in production
+    id: string;
+
+    // fallback channel name (for development only)
+    name?: string;
+};
+
+export type channel_type = "text" | "forum" | "voice" | "thread";
+
+export type typed_channel_id = named_id & { type: channel_type };
+
+export type channel_type_map = {
+    text: Discord.TextChannel;
+    forum: Discord.ForumChannel;
+    voice: Discord.VoiceChannel;
+    thread: Discord.ThreadChannel;
+};
+
+export function define_channels<const T extends Record<string, { id: string; name?: string; type: channel_type }>>(
+    channels: T,
+): { [K in keyof T & string]: T[K] & { key: K } } {
+    const result = {} as { [K in keyof T & string]: T[K] & { key: K } };
+    for (const [key, value] of Object.entries(channels)) {
+        (result as Record<string, unknown>)[key] = { ...value, key };
+    }
+    return result;
+}
 
 type keyed_channel_id = typed_channel_id & { key: string };
 

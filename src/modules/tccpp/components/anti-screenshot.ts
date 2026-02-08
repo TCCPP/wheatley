@@ -9,6 +9,8 @@ import { BotComponent } from "../../../bot-component.js";
 import { CommandSetBuilder } from "../../../command-abstractions/command-set-builder.js";
 import { ButtonInteractionBuilder, BotButton } from "../../../command-abstractions/button.js";
 import { channel_map } from "../../../channel-map.js";
+import { wheatley_channels } from "../../wheatley/channels.js";
+import { is_forum_help_thread } from "../channels.js";
 
 const DISMISS_TIME = 30 * 1000;
 
@@ -27,7 +29,7 @@ function message_might_have_code(message: string) {
 }
 
 export default class AntiScreenshot extends BotComponent {
-    private channels = channel_map(this.wheatley, this.wheatley.channels.staff_message_log);
+    private channels = channel_map(this.wheatley, wheatley_channels.staff_message_log);
 
     private acknowledge_button!: BotButton<[]>;
 
@@ -50,7 +52,7 @@ export default class AntiScreenshot extends BotComponent {
         }
         if (message.id == message.channel.id) {
             assert(message.channel instanceof Discord.ThreadChannel);
-            if (this.wheatley.is_forum_help_thread(message.channel)) {
+            if (is_forum_help_thread(message.channel)) {
                 // forum created and starter message now exists
                 // anti-screenshot logic
                 await this.anti_screenshot(message, message.channel);

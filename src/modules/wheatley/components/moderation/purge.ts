@@ -7,6 +7,7 @@ import { DAY, HOUR, MINUTE, colors } from "../../../../common.js";
 import { BotComponent } from "../../../../bot-component.js";
 import { CommandSetBuilder } from "../../../../command-abstractions/command-set-builder.js";
 import { channel_map } from "../../../../channel-map.js";
+import { wheatley_channels } from "../../channels.js";
 import {
     EarlyReplyMode,
     TextBasedCommandBuilder,
@@ -57,11 +58,7 @@ export default class Purge extends BotComponent {
     private database = this.wheatley.database.create_proxy<{
         message_database: message_database_entry;
     }>();
-    private channels = channel_map(
-        this.wheatley,
-        this.wheatley.channels.staff_flag_log,
-        this.wheatley.channels.welcome,
-    );
+    private channels = channel_map(this.wheatley, wheatley_channels.staff_flag_log, wheatley_channels.welcome);
 
     override async setup(commands: CommandSetBuilder) {
         await this.channels.resolve();

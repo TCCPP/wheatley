@@ -11,6 +11,7 @@ import { colors } from "../../../common.js";
 import { BotComponent } from "../../../bot-component.js";
 import { CommandSetBuilder } from "../../../command-abstractions/command-set-builder.js";
 import { channel_map } from "../../../channel-map.js";
+import { wheatley_channels } from "../channels.js";
 import { EarlyReplyMode, TextBasedCommandBuilder } from "../../../command-abstractions/text-based-command-builder.js";
 import { TextBasedCommand } from "../../../command-abstractions/text-based-command.js";
 import Help from "./help.js";
@@ -476,7 +477,7 @@ function alphabetical_compare(a: string, b: string): number {
 }
 
 export default class Wiki extends BotComponent {
-    private channels = channel_map(this.wheatley, this.wheatley.channels.bot_spam);
+    private channels = channel_map(this.wheatley, wheatley_channels.bot_spam);
 
     static override get is_freestanding() {
         return true;

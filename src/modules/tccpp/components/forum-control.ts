@@ -10,6 +10,7 @@ import { Wheatley } from "../../../wheatley.js";
 import { EarlyReplyMode, TextBasedCommandBuilder } from "../../../command-abstractions/text-based-command-builder.js";
 import { TextBasedCommand } from "../../../command-abstractions/text-based-command.js";
 import { BotButton, ButtonInteractionBuilder } from "../../../command-abstractions/button.js";
+import { is_forum_help_thread } from "../channels.js";
 
 /*
  * Forum thread handling:
@@ -86,7 +87,7 @@ export default class ForumControl extends BotComponent {
     }
 
     async check_help_channel(command: TextBasedCommand, thread: Discord.ThreadChannel) {
-        if (this.wheatley.is_forum_help_thread(thread)) {
+        if (is_forum_help_thread(thread)) {
             return true;
         } else {
             await command.reply("Cannot use outside a help channel");
@@ -118,7 +119,7 @@ export default class ForumControl extends BotComponent {
             await interaction.reply({ content: "You can only control threads you own", ephemeral: true });
             return null;
         }
-        if (!this.wheatley.is_forum_help_thread(thread)) {
+        if (!is_forum_help_thread(thread)) {
             await interaction.reply({ content: "Cannot use outside a help channel", ephemeral: true });
             return null;
         }

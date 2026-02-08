@@ -12,6 +12,7 @@ import { CommandSetBuilder } from "../../../command-abstractions/command-set-bui
 import { EarlyReplyMode, TextBasedCommandBuilder } from "../../../command-abstractions/text-based-command-builder.js";
 import { TextBasedCommand } from "../../../command-abstractions/text-based-command.js";
 import { channel_map } from "../../../channel-map.js";
+import { tccpp_channels } from "../channels.js";
 
 const resolution_reactions = ["🟢", "🔴", "🟡", "🚫"];
 const resolution_reactions_set = new Set(resolution_reactions);
@@ -51,9 +52,9 @@ export default class ServerSuggestionTracker extends BotComponent {
 
     private channels = channel_map(
         this.wheatley,
-        this.wheatley.channels.suggestion_action_log,
-        this.wheatley.channels.suggestion_dashboard,
-        this.wheatley.channels.server_suggestions,
+        tccpp_channels.suggestion_action_log,
+        tccpp_channels.suggestion_dashboard,
+        tccpp_channels.server_suggestions,
     );
 
     override async setup(commands: CommandSetBuilder) {

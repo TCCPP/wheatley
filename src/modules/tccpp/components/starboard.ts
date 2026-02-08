@@ -16,6 +16,8 @@ import { MessageContextMenuInteractionBuilder } from "../../../command-abstracti
 import { has_media } from "./autoreact.js";
 import { message_database_entry } from "../../wheatley/components/moderation/purge.js";
 import { channel_map } from "../../../channel-map.js";
+import { wheatley_channels } from "../../wheatley/channels.js";
+import { tccpp_channels } from "../channels.js";
 
 const star_threshold = 5;
 const other_threshold = 5;
@@ -89,21 +91,21 @@ export default class Starboard extends BotComponent {
 
     private channels = channel_map(
         this.wheatley,
-        this.wheatley.channels.starboard,
-        this.wheatley.channels.staff_delet_log,
-        this.wheatley.channels.rules,
-        this.wheatley.channels.announcements,
-        this.wheatley.channels.server_suggestions,
-        this.wheatley.channels.resources,
-        this.wheatley.channels.the_button,
-        this.wheatley.channels.introductions,
-        this.wheatley.channels.goals2024,
-        this.wheatley.channels.goals2025,
-        this.wheatley.channels.goals2026,
-        this.wheatley.channels.skill_role_log,
-        this.wheatley.channels.polls,
-        this.wheatley.channels.memes,
-        this.wheatley.channels.cursed_code,
+        tccpp_channels.starboard,
+        wheatley_channels.staff_delet_log,
+        wheatley_channels.rules,
+        wheatley_channels.announcements,
+        tccpp_channels.server_suggestions,
+        tccpp_channels.resources,
+        tccpp_channels.the_button,
+        tccpp_channels.introductions,
+        tccpp_channels.goals2024,
+        tccpp_channels.goals2025,
+        tccpp_channels.goals2026,
+        tccpp_channels.skill_role_log,
+        tccpp_channels.polls,
+        tccpp_channels.memes,
+        tccpp_channels.cursed_code,
     );
 
     private database = this.wheatley.database.create_proxy<{

@@ -10,6 +10,7 @@ import { EarlyReplyMode, TextBasedCommandBuilder } from "../../../command-abstra
 import { TextBasedCommand } from "../../../command-abstractions/text-based-command.js";
 import { assert_type, unwrap } from "../../../utils/misc.js";
 import { channel_map } from "../../../channel-map.js";
+import { wheatley_channels } from "../../wheatley/channels.js";
 
 const LEADERBOARD_ENTRIES = 20;
 
@@ -24,11 +25,7 @@ export default class Roulette extends BotComponent {
     // user id -> streak count
     readonly streaks = new SelfClearingMap<string, number>(60 * MINUTE);
 
-    private channels = channel_map(
-        this.wheatley,
-        this.wheatley.channels.bot_spam,
-        this.wheatley.channels.staff_member_log,
-    );
+    private channels = channel_map(this.wheatley, wheatley_channels.bot_spam, wheatley_channels.staff_member_log);
 
     private database = this.wheatley.database.create_proxy<{
         roulette_leaderboard: roulette_leaderboard_entry;

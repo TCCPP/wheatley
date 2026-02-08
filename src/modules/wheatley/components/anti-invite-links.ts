@@ -10,6 +10,7 @@ import { EarlyReplyMode, TextBasedCommandBuilder } from "../../../command-abstra
 import { TextBasedCommand } from "../../../command-abstractions/text-based-command.js";
 import { BotButton, ButtonInteractionBuilder } from "../../../command-abstractions/button.js";
 import { channel_map } from "../../../channel-map.js";
+import { wheatley_channels } from "../channels.js";
 
 const INVITE_RE =
     /(?:(?:discord(?:app)?|disboard)\.(?:gg|(?:com|org|me)\/(?:invite|server\/join))|(?<!\w)\.gg)\/(\S+)/i;
@@ -28,7 +29,7 @@ type allowed_invite_entry = {
 
 export default class AntiInviteLinks extends BotComponent {
     private allowed_guilds = new Set<string>();
-    private channels = channel_map(this.wheatley, this.wheatley.channels.staff_flag_log);
+    private channels = channel_map(this.wheatley, wheatley_channels.staff_flag_log);
     private database = this.wheatley.database.create_proxy<{
         allowed_invites: allowed_invite_entry;
     }>();
