@@ -29,29 +29,7 @@ type role_update_listener = {
 export default class RoleManager extends BotComponent {
     private channels = channel_map(this.wheatley, wheatley_channels.staff_member_log);
 
-    // roles that will not be re-applied on join
-    private do_not_restore = role_map(
-        this.wheatley,
-        // moderation roles
-        wheatley_roles.muted,
-        wheatley_roles.monke,
-        wheatley_roles.no_off_topic,
-        wheatley_roles.no_suggestions,
-        wheatley_roles.no_suggestions_at_all,
-        wheatley_roles.no_reactions,
-        wheatley_roles.no_images,
-        wheatley_roles.no_threads,
-        wheatley_roles.no_serious_off_topic,
-        wheatley_roles.no_til,
-        wheatley_roles.no_memes,
-        wheatley_roles.voice,
-        // other misc roles
-        wheatley_roles.featured_bot,
-        wheatley_roles.official_bot,
-        wheatley_roles.jedi_council,
-        wheatley_roles.pink,
-        wheatley_roles.herald,
-    );
+    private do_not_restore!: Set<string>;
 
     interval: NodeJS.Timeout | null = null;
 
@@ -76,7 +54,31 @@ export default class RoleManager extends BotComponent {
     override async setup(commands: CommandSetBuilder) {
         await ensure_index(this.wheatley, this.database.user_roles, { user_id: 1 }, { unique: true });
         await this.channels.resolve();
-        this.do_not_restore.resolve();
+
+        const roles = role_map(
+            this.wheatley,
+            // moderation roles
+            wheatley_roles.muted,
+            wheatley_roles.monke,
+            wheatley_roles.no_off_topic,
+            wheatley_roles.no_suggestions,
+            wheatley_roles.no_suggestions_at_all,
+            wheatley_roles.no_reactions,
+            wheatley_roles.no_images,
+            wheatley_roles.no_threads,
+            wheatley_roles.no_serious_off_topic,
+            wheatley_roles.no_til,
+            wheatley_roles.no_memes,
+            wheatley_roles.voice,
+            // other misc roles
+            wheatley_roles.featured_bot,
+            wheatley_roles.official_bot,
+            wheatley_roles.jedi_council,
+            wheatley_roles.pink,
+            wheatley_roles.herald,
+        );
+        roles.resolve();
+        this.do_not_restore = new Set([...roles.values()].map(role => role.id));
     }
 
     override async on_ready() {
@@ -175,7 +177,7 @@ export default class RoleManager extends BotComponent {
             ],
         });
         for (const id of roles_entry.roles) {
-            if (id in this.do_not_restore || id == this.wheatley.guild.roles.everyone.id) {
+            if (this.do_not_restore.has(id) || id == this.wheatley.guild.roles.everyone.id) {
                 continue;
             }
             const role = this.wheatley.guild.roles.cache.get(id);
