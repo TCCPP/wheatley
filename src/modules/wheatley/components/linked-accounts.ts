@@ -176,7 +176,7 @@ export default class LinkedAccounts extends BotComponent {
         const user_group = await this.get_all_accounts_in_group(user_main);
         const alt_group = await this.get_all_accounts_in_group(alt_main);
         const all_accounts = new Set([...user_group, ...alt_group]);
-        await this.database.linked_accounts.deleteMany({ main_account: alt_main });
+        await this.database.linked_accounts.deleteMany({ main_account: { $in: [user_main, alt_main] } });
         const moderator = await command.get_member();
         const entries = Array.from(all_accounts)
             .filter(id => id !== user_main)
