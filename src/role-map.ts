@@ -21,13 +21,15 @@ type keyed_role_id = named_id & { key: string };
 export function role_map<const T extends readonly keyed_role_id[]>(
     wheatley: Wheatley,
     ...role_ids: T
-): { resolve(): void } & { [E in T[number] as E["key"]]: Discord.Role } {
+): { resolve(): void } & { [E in T[number] as E["key" | "id"]]: Discord.Role } {
     const target: Record<string, unknown> = {};
     let resolved = false;
     const resolve = () => {
         const utilities = new BotUtilities(wheatley);
         for (const role_id of role_ids) {
-            target[role_id.key] = utilities.resolve_role(role_id);
+            const role = utilities.resolve_role(role_id);
+            target[role_id.key] = role;
+            target[role.id] = role;
         }
         resolved = true;
     };
@@ -41,5 +43,5 @@ export function role_map<const T extends readonly keyed_role_id[]>(
             }
             return Reflect.get(obj, prop);
         },
-    }) as { resolve(): void } & { [E in T[number] as E["key"]]: Discord.Role };
+    }) as { resolve(): void } & { [E in T[number] as E["key" | "id"]]: Discord.Role };
 }
