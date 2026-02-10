@@ -9,7 +9,7 @@ export const tccpp_channels = define_channels({
     skill_role_suggestions: { id: "1211089633547526204", name: "skill-role-suggestions", type: "forum" },
     skill_roles_meta: { id: "1182536717056618557", name: "skill-roles-meta", type: "text" },
     news: { id: "1269506410530738267", name: "news", type: "text" },
-    old_resources: { id: "1124619767542718524", name: "old-resources", type: "text" },
+    old_resources: { id: "1124619767542718524", name: "old-resources", type: "forum" },
     resources: { id: "1361574878561570926", name: "resources", type: "text" },
     partners: { id: "904790565000986745", name: "partners", type: "text" },
     the_button: { id: "1069678919667687455", name: "the-button", type: "text" },
@@ -39,7 +39,7 @@ export const tccpp_channels = define_channels({
     lore: { id: "890067781628866620", name: "lore", type: "text" },
     bot_dev_internal: { id: "1166517065763536977", name: "wheatley-dev-internal", type: "text" },
     skill_role_log: { id: "1315023714206617610", name: "skill-role-log", type: "text" },
-    polls: { id: "1319336135213846568", name: "polls", type: "text" },
+    polls: { id: "1319336135213846568", name: "polls", type: "news" },
     wiki_dev: { id: "1350899338229846127", name: "wiki-dev", type: "text" },
 
     // voice
