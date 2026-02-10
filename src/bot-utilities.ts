@@ -373,6 +373,16 @@ export class BotUtilities {
         return channel;
     }
 
+    async get_news_channel(channel_info: named_id) {
+        const channel = await this.get_channel_internal(channel_info);
+        assert(
+            channel instanceof Discord.NewsChannel,
+            `Channel ${channel?.name} (${channel_info.id}) not of the expected type`,
+        );
+
+        return channel;
+    }
+
     async get_voice_channel(channel_info: named_id) {
         const channel = await this.get_channel_internal(channel_info);
         assert(
@@ -419,12 +429,16 @@ export class BotUtilities {
         switch (channel_info.type) {
             case "text":
                 return this.get_channel(channel_info);
+            case "news":
+                return this.get_news_channel(channel_info);
             case "forum":
                 return this.get_forum_channel(channel_info);
             case "voice":
                 return this.get_voice_channel(channel_info);
             case "thread":
                 return this.get_thread_channel(channel_info);
+            default:
+                throw new Error("Unhandled channel type");
         }
     }
 

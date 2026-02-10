@@ -13,12 +13,13 @@ export type named_id = {
     name?: string;
 };
 
-export type channel_type = "text" | "forum" | "voice" | "thread";
+export type channel_type = "text" | "news" | "forum" | "voice" | "thread";
 
 export type typed_channel_id = named_id & { type: channel_type };
 
 export type channel_type_map = {
     text: Discord.TextChannel;
+    news: Discord.NewsChannel;
     forum: Discord.ForumChannel;
     voice: Discord.VoiceChannel;
     thread: Discord.ThreadChannel;

@@ -13,11 +13,11 @@ export const wheatley_channels = define_channels({
     staff_message_log: { id: "467729928956411914", name: "💬-message-log", type: "text" },
     staff_only: { id: "342153262260289537", name: "staff-only", type: "text" },
     mods: { id: "847993258600038460", name: "mods-🚲", type: "text" },
-    voice_hotline: { id: "1379456835634987098", name: "voice-hotline", type: "voice" },
+    voice_hotline: { id: "1379456835634987098", name: "voice-hotline", type: "text" },
 
     // meta/infrastructure
     rules: { id: "659868782877212723", name: "rules", type: "text" },
-    announcements: { id: "331881381477089282", name: "announcements", type: "text" },
+    announcements: { id: "331881381477089282", name: "announcements", type: "news" },
     bot_spam: { id: "506274405500977153", name: "bot-spam", type: "text" },
     pin_archive: { id: "1284234644396572714", name: "pin-archive", type: "text" },
     red_telephone_alerts: { id: "1140096352278290512", name: "red-telephone-alerts", type: "text" },

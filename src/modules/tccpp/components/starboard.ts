@@ -189,9 +189,7 @@ export default class Starboard extends BotComponent {
                 .set_permissions(Discord.PermissionFlagsBits.Administrator)
                 .set_handler(this.add_to_starboard_context_menu.bind(this)),
         );
-    }
 
-    override async on_ready() {
         const state = await this.database.component_state.findOne({ id: "starboard" });
         this.delete_emojis = state?.delete_emojis ?? [];
         this.ignored_emojis = state?.ignored_emojis ?? [];
