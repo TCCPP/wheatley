@@ -388,6 +388,16 @@ export class CommandHandler {
                     }
                     // TODO: permissions sanity check?
                     const field = interaction.options.getFocused(true);
+                    M.log(
+                        `Received autocomplete interaction for /${interaction.commandName}`,
+                        "From:",
+                        interaction.user.tag,
+                        interaction.user.id,
+                        "Field:",
+                        field.name,
+                        "Text:",
+                        JSON.stringify(field.value),
+                    );
                     assert(command.options.has(field.name), `${interaction.commandName} ${field.name}`);
                     const option = command.options.get(field.name)!;
                     assert(option.autocomplete, `${interaction.commandName} ${field.name}`);
