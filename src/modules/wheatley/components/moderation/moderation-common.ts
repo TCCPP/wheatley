@@ -627,7 +627,7 @@ export abstract class ModerationComponent extends BotComponent {
             embeds: [
                 new Discord.EmbedBuilder()
                     .setColor(colors.wheatley)
-                    .setTitle(`You have been ${action} in Together C & C++.`)
+                    .setTitle(`You have been ${action} in ${this.wheatley.guild.name}.`)
                     .setDescription(
                         build_description(
                             is_removal || this.is_once_off ? null : `**Duration:** ${duration}`,

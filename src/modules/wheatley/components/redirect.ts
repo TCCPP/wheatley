@@ -100,8 +100,8 @@ export default class Redirect extends BotComponent {
 
         await command.reply({
             content:
-                `Hello <@${user.id}>, welcome to Together C & C++! This is not a help channel, please ask your ` +
-                `question in one of the help channels above (${format_list([
+                `Hello <@${user.id}>, welcome to ${this.wheatley.guild.name}! ` +
+                `This is not a help channel, please ask your question in one of the help channels above (${format_list([
                     `<#${this.channels.cpp_help.id}>`,
                     `<#${this.channels.cpp_help_text.id}>`,
                     `<#${this.channels.c_help.id}>`,
