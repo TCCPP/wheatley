@@ -69,6 +69,15 @@ export class WheatleyDatabase {
     unlock() {
         this.mutex.unlock();
     }
+
+    async with_transaction<T>(fn: (session: mongo.ClientSession) => Promise<T>): Promise<T> {
+        const session = this.client.startSession();
+        try {
+            return await session.withTransaction(fn);
+        } finally {
+            await session.endSession();
+        }
+    }
 }
 
 function generate_index_name(spec: mongo.IndexSpecification): string {
