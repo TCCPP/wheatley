@@ -10,9 +10,9 @@ import { set_interval } from "../../../utils/node.js";
 import { build_description } from "../../../utils/strings.js";
 import { with_retry } from "../../../utils/discord.js";
 import { channel_map } from "../../../channel-map.js";
-import { role_map } from "../../../role-map.js";
 import { wheatley_channels } from "../channels.js";
 import { wheatley_roles } from "../roles.js";
+import { role_map } from "../../../role-map.js";
 
 export type user_role_entry = {
     user_id: string;
@@ -28,37 +28,13 @@ type role_update_listener = {
 
 export default class RoleManager extends BotComponent {
     private channels = channel_map(this.wheatley, wheatley_channels.staff_member_log);
-    private roles = role_map(
-        this.wheatley,
-        wheatley_roles.root,
-        wheatley_roles.moderators,
-        wheatley_roles.muted,
-        wheatley_roles.monke,
-        wheatley_roles.no_off_topic,
-        wheatley_roles.no_suggestions,
-        wheatley_roles.no_suggestions_at_all,
-        wheatley_roles.no_reactions,
-        wheatley_roles.no_images,
-        wheatley_roles.no_threads,
-        wheatley_roles.no_serious_off_topic,
-        wheatley_roles.no_til,
-        wheatley_roles.no_memes,
-        wheatley_roles.voice,
-        wheatley_roles.featured_bot,
-        wheatley_roles.official_bot,
-        wheatley_roles.jedi_council,
-        wheatley_roles.server_booster,
-        wheatley_roles.pink,
-        wheatley_roles.herald,
-        wheatley_roles.linked_github,
-    );
+
+    private do_not_restore!: Set<string>;
+
     interval: NodeJS.Timeout | null = null;
 
     // current database state
     private user_roles = new Map<string, Set<string>>();
-
-    // roles that will not be re-applied on join
-    blacklisted_roles!: Set<string>;
 
     private database = this.wheatley.database.create_proxy<{
         user_roles: user_role_entry;
@@ -77,37 +53,32 @@ export default class RoleManager extends BotComponent {
 
     override async setup(commands: CommandSetBuilder) {
         await ensure_index(this.wheatley, this.database.user_roles, { user_id: 1 }, { unique: true });
-
         await this.channels.resolve();
-        this.roles.resolve();
 
-        this.blacklisted_roles = new Set([
-            // general
-            this.roles.root.id,
-            this.roles.moderators.id,
-            this.wheatley.guild.id, // the everyone id
+        const roles = role_map(
+            this.wheatley,
             // moderation roles
-            this.roles.muted.id,
-            this.roles.monke.id,
-            this.roles.no_off_topic.id,
-            this.roles.no_suggestions.id,
-            this.roles.no_suggestions_at_all.id,
-            this.roles.no_reactions.id,
-            this.roles.no_images.id,
-            this.roles.no_threads.id,
-            this.roles.no_serious_off_topic.id,
-            this.roles.no_til.id,
-            this.roles.no_memes.id,
-            this.roles.voice.id,
+            wheatley_roles.muted,
+            wheatley_roles.monke,
+            wheatley_roles.no_off_topic,
+            wheatley_roles.no_suggestions,
+            wheatley_roles.no_suggestions_at_all,
+            wheatley_roles.no_reactions,
+            wheatley_roles.no_images,
+            wheatley_roles.no_threads,
+            wheatley_roles.no_serious_off_topic,
+            wheatley_roles.no_til,
+            wheatley_roles.no_memes,
+            wheatley_roles.voice,
             // other misc roles
-            this.roles.featured_bot.id,
-            this.roles.official_bot.id,
-            this.roles.jedi_council.id,
-            this.roles.server_booster.id,
-            this.roles.pink.id,
-            this.roles.herald.id,
-            this.roles.linked_github.id,
-        ]);
+            wheatley_roles.featured_bot,
+            wheatley_roles.official_bot,
+            wheatley_roles.jedi_council,
+            wheatley_roles.pink,
+            wheatley_roles.herald,
+        );
+        roles.resolve();
+        this.do_not_restore = new Set([...roles.values()].map(role => role.id));
     }
 
     override async on_ready() {
@@ -205,10 +176,15 @@ export default class RoleManager extends BotComponent {
                     .setTimestamp(Date.now()),
             ],
         });
-        for (const role of roles_entry.roles) {
-            if (!this.blacklisted_roles.has(role)) {
-                await member.roles.add(role);
+        for (const id of roles_entry.roles) {
+            if (this.do_not_restore.has(id) || id == this.wheatley.guild.roles.everyone.id) {
+                continue;
             }
+            const role = this.wheatley.guild.roles.cache.get(id);
+            if (!role || !role.permissions.equals(this.wheatley.guild.roles.everyone.permissions) || role.managed) {
+                continue;
+            }
+            await member.roles.add(role);
         }
     }
 }

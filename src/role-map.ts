@@ -18,10 +18,7 @@ export function define_roles<const T extends Record<string, { id: string; name?:
 
 type keyed_role_id = named_id & { key: string };
 
-export function role_map<const T extends readonly keyed_role_id[]>(
-    wheatley: Wheatley,
-    ...role_ids: T
-): { resolve(): void } & { [E in T[number] as E["key"]]: Discord.Role } {
+export function role_map<const T extends readonly keyed_role_id[]>(wheatley: Wheatley, ...role_ids: T) {
     const target: Record<string, unknown> = {};
     let resolved = false;
     const resolve = () => {
@@ -31,6 +28,7 @@ export function role_map<const T extends readonly keyed_role_id[]>(
         }
         resolved = true;
     };
+    const values = () => Object.values(target);
     return new Proxy(target, {
         get(obj, prop) {
             if (prop === "resolve") {
@@ -39,7 +37,10 @@ export function role_map<const T extends readonly keyed_role_id[]>(
             if (typeof prop === "string") {
                 assert(resolved, `Role binding accessed before resolution (key: ${prop})`);
             }
+            if (prop === "values") {
+                return values;
+            }
             return Reflect.get(obj, prop);
         },
-    }) as { resolve(): void } & { [E in T[number] as E["key"]]: Discord.Role };
+    }) as { resolve(): void; values(): Iterable<Discord.Role> } & { [E in T[number] as E["key"]]: Discord.Role };
 }
