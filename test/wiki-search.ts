@@ -17,23 +17,6 @@ type WikiTestCase = {
     title_contains?: string;
 };
 
-function run_wiki_test_cases(cases: WikiTestCase[], get_index: () => WikiSearchIndex, section_name: string) {
-    describe(section_name, () => {
-        for (const test_case of cases) {
-            it(`'${test_case.query}'`, async () => {
-                const { result } = await get_index().search_with_suggestions(test_case.query);
-                expect(result).not.toBeNull();
-                if (test_case.title) {
-                    expect(result?.title).toBe(test_case.title);
-                }
-                if (test_case.title_contains) {
-                    expect(result?.title).toContain(test_case.title_contains);
-                }
-            });
-        }
-    });
-}
-
 /* eslint-disable max-len */
 const title_match_cases: WikiTestCase[] = [
     { query: "Undefined Behavior", title: "Undefined Behavior" },
@@ -227,12 +210,10 @@ const edge_case_queries = [
 
 describe("wiki search system", () => {
     let search_index: WikiSearchIndex;
-    let articles: Record<string, WikiArticle>;
-    let article_aliases: Map<string, string>;
 
     beforeAll(async () => {
-        articles = {};
-        article_aliases = new Map();
+        const articles: Record<string, WikiArticle> = {};
+        const article_aliases = new Map<string, string>();
 
         // Load bot articles from the bot-articles directory
         for (const file_path of globSync(`${WIKI_ARTICLES_PATH}/**/*.md`, { withFileTypes: true })) {
@@ -282,12 +263,27 @@ describe("wiki search system", () => {
         await search_index.load_embeddings("indexes/wiki/embeddings.json");
     }, 120_000);
 
-    const get_index = () => search_index;
+    function run_wiki_test_cases(cases: WikiTestCase[], section_name: string) {
+        describe(section_name, () => {
+            for (const test_case of cases) {
+                it(`'${test_case.query}'`, async () => {
+                    const { result } = await search_index.search_with_suggestions(test_case.query);
+                    expect(result).not.toBeNull();
+                    if (test_case.title) {
+                        expect(result?.title).toBe(test_case.title);
+                    }
+                    if (test_case.title_contains) {
+                        expect(result?.title).toContain(test_case.title_contains);
+                    }
+                });
+            }
+        });
+    }
 
-    run_wiki_test_cases(title_match_cases, get_index, "title matching");
-    run_wiki_test_cases(query_variation_cases, get_index, "query variations");
-    run_wiki_test_cases(multi_word_and_content_cases, get_index, "multi-word and content queries");
-    run_wiki_test_cases(coverage_cases, get_index, "article coverage");
+    run_wiki_test_cases(title_match_cases, "title matching");
+    run_wiki_test_cases(query_variation_cases, "query variations");
+    run_wiki_test_cases(multi_word_and_content_cases, "multi-word and content queries");
+    run_wiki_test_cases(coverage_cases, "article coverage");
 
     describe("edge cases", () => {
         for (const query of edge_case_queries) {

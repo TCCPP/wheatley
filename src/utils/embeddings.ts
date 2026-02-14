@@ -21,20 +21,15 @@ export async function generate_embedding(text: string, extractor: FeatureExtract
     return Array.from(output.data);
 }
 
-export function cosine_similarity_vectors(a: number[], b: number[]): number {
+// Embeddings are generated with normalize: true, making them unit vectors (magnitude ≈ 1.0).
+// For unit vectors, cosine similarity reduces to just the dot product.
+export function dot_product_similarity(a: number[], b: number[]): number {
     if (a.length !== b.length) {
         return 0;
     }
     let dot = 0;
-    let mag_a = 0;
-    let mag_b = 0;
     for (let i = 0; i < a.length; i++) {
         dot += a[i] * b[i];
-        mag_a += a[i] * a[i];
-        mag_b += b[i] * b[i];
     }
-    if (mag_a === 0 || mag_b === 0) {
-        return 0;
-    }
-    return dot / (Math.sqrt(mag_a) * Math.sqrt(mag_b));
+    return dot;
 }

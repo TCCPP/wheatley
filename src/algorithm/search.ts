@@ -31,7 +31,7 @@ import {
     FeatureExtractionPipeline,
     get_or_create_embedding_pipeline,
     generate_embedding,
-    cosine_similarity_vectors,
+    dot_product_similarity,
 } from "../utils/embeddings.js";
 
 export interface IndexEntry {
@@ -59,52 +59,12 @@ export function tokenize(str: string) {
         .filter(s => s != "");
 }
 
-function intersect<T>(a: Set<T>, b: Set<T>) {
-    return new Set([...a].filter(item => b.has(item)));
-}
-
 function raw_ngrams(str: string, n: number) {
     const arr = [];
     for (let i = 0; i <= str.length - n; i++) {
         arr.push(str.slice(i, i + n));
     }
     return arr;
-}
-
-function cosine_similarity(a_ngrams: Set<string>, b_ngrams: Set<string>, f: (_: string) => number) {
-    let dot = 0;
-    let a_mag = 0;
-    let b_mag = 0;
-    for (const ngram of new Set([...a_ngrams, ...b_ngrams])) {
-        if (a_ngrams.has(ngram) && b_ngrams.has(ngram)) {
-            dot += f(ngram) * f(ngram);
-        }
-        if (a_ngrams.has(ngram)) {
-            a_mag += f(ngram) * f(ngram);
-        }
-        if (b_ngrams.has(ngram)) {
-            b_mag += f(ngram) * f(ngram);
-        }
-    }
-    if (a_mag == 0 || b_mag == 0) {
-        return -1;
-    }
-    return dot / (Math.sqrt(a_mag) * Math.sqrt(b_mag));
-}
-
-function cosine_similarity_idf(
-    a_ngrams: Set<string>,
-    b_ngrams: Set<string>,
-    ngram_idf: Record<string, number>,
-    default_idf: number,
-) {
-    return cosine_similarity(a_ngrams, b_ngrams, s => {
-        if (s in ngram_idf) {
-            return ngram_idf[s];
-        } else {
-            return default_idf;
-        }
-    });
 }
 
 function log_base(base: number, x: number) {
@@ -117,26 +77,52 @@ function no_duplicates<T>(arr: T[]) {
 
 // ---------------------------------------------------------------------------------------------------------------------
 
+function add_to_inverted_index<K>(index: Map<K, number[]>, key: K, value: number) {
+    let list = index.get(key);
+    if (!list) {
+        list = [];
+        index.set(key, list);
+    }
+    list.push(value);
+}
+
 const MAGIC_NGRAM_SIMILARITY_THRESHOLD = 0.39;
 
 type EntryScore = {
     score: number;
-    fuzzy_score?: number; // pre-embedding score, used for threshold checking
     debug_info: unknown[];
 };
 
+interface NgramData {
+    ngrams: Set<string>;
+    magnitude: number;
+}
+
 // Encapsulates all ngram/IDF scoring logic. Constructed with already-processed entry data.
+// Pre-computes per-entry ngram sets, IDF-weighted magnitudes, and an inverted trigram index.
 class NgramScorer {
     private ngram_idf: Record<string, number> = {};
-    private default_idf: number;
+    private default_idf!: number;
     private threshold: number;
+    private title_data_cache: Map<string, NgramData> = new Map();
+    private inverted_index: Map<string, number[]> = new Map();
 
     constructor(
-        entries: { parsed_titles: string[]; original_title: string }[],
+        entries: { parsed_titles: string[]; original_title: string; aliases?: string[] }[],
         options?: { threshold?: number; downweight_patterns?: string[] },
     ) {
         this.threshold = options?.threshold ?? MAGIC_NGRAM_SIMILARITY_THRESHOLD;
         const downweight_patterns = options?.downweight_patterns ?? [];
+        const pattern_counts = this.compute_document_frequencies(entries, downweight_patterns);
+        this.apply_downweight_patterns(pattern_counts, downweight_patterns);
+        this.convert_to_idf(entries.length);
+        this.build_inverted_index(entries);
+    }
+
+    private compute_document_frequencies(
+        entries: { parsed_titles: string[]; original_title: string }[],
+        downweight_patterns: string[],
+    ): Map<string, number> {
         const pattern_counts = new Map<string, number>();
         for (const entry of entries) {
             for (const pattern of downweight_patterns) {
@@ -158,7 +144,11 @@ class NgramScorer {
                 }
             }
         }
-        // Downweight pattern ngrams so they only turn up when that's really the best option
+        return pattern_counts;
+    }
+
+    // Downweight pattern ngrams so they only turn up when that's really the best option
+    private apply_downweight_patterns(pattern_counts: Map<string, number>, downweight_patterns: string[]) {
         for (const pattern of downweight_patterns) {
             const count = pattern_counts.get(pattern) ?? 0;
             if (count) {
@@ -167,26 +157,101 @@ class NgramScorer {
                 }
             }
         }
-        // Convert document frequencies to IDF
-        const document_count = entries.length;
+    }
+
+    private convert_to_idf(document_count: number) {
         for (const ngram in this.ngram_idf) {
             this.ngram_idf[ngram] = log_base(10, document_count / this.ngram_idf[ngram]);
         }
         this.default_idf = log_base(10, document_count);
     }
 
-    make_ngrams(str: string) {
+    private build_inverted_index(entries: { parsed_titles: string[]; aliases?: string[] }[]) {
+        for (let i = 0; i < entries.length; i++) {
+            const entry = entries[i];
+            const entry_trigrams = new Set<string>();
+            for (const title of entry.parsed_titles) {
+                for (const ngram of this.precompute_title_data(title).ngrams) {
+                    entry_trigrams.add(ngram);
+                }
+            }
+            if (entry.aliases) {
+                for (const alias of entry.aliases) {
+                    for (const ngram of this.precompute_title_data(alias.toLowerCase()).ngrams) {
+                        entry_trigrams.add(ngram);
+                    }
+                }
+            }
+            for (const ngram of entry_trigrams) {
+                add_to_inverted_index(this.inverted_index, ngram, i);
+            }
+        }
+    }
+
+    private make_ngrams(str: string) {
         str = ` ${str.toLowerCase()} `;
         return new Set(raw_ngrams(str, 3));
     }
 
-    score(query: string, title: string): EntryScore {
-        const query_ngrams = this.make_ngrams(query);
-        const title_ngrams = this.make_ngrams(title);
-        const score = cosine_similarity_idf(query_ngrams, title_ngrams, this.ngram_idf, this.default_idf);
+    private get_idf(ngram: string): number {
+        return this.ngram_idf[ngram] ?? this.default_idf;
+    }
+
+    private precompute_title_data(title: string): NgramData {
+        const cached = this.title_data_cache.get(title);
+        if (cached) {
+            return cached;
+        }
+        const ngrams = this.make_ngrams(title);
+        let magnitude_sq = 0;
+        for (const ngram of ngrams) {
+            const idf = this.get_idf(ngram);
+            magnitude_sq += idf * idf;
+        }
+        const data: NgramData = { ngrams, magnitude: Math.sqrt(magnitude_sq) };
+        this.title_data_cache.set(title, data);
+        return data;
+    }
+
+    compute_query_data(query: string): NgramData {
+        const ngrams = this.make_ngrams(query);
+        let magnitude_sq = 0;
+        for (const ngram of ngrams) {
+            const idf = this.get_idf(ngram);
+            magnitude_sq += idf * idf;
+        }
+        return { ngrams, magnitude: Math.sqrt(magnitude_sq) };
+    }
+
+    get_candidates(query_ngrams: Set<string>): Set<number> {
+        const candidates = new Set<number>();
+        for (const ngram of query_ngrams) {
+            const entries = this.inverted_index.get(ngram);
+            if (entries) {
+                for (const idx of entries) {
+                    candidates.add(idx);
+                }
+            }
+        }
+        return candidates;
+    }
+
+    score_with_precomputed(query_data: NgramData, title: string): EntryScore {
+        const title_data = this.title_data_cache.get(title) ?? this.precompute_title_data(title);
+        if (query_data.magnitude === 0 || title_data.magnitude === 0) {
+            return { score: -1, debug_info: [] };
+        }
+        let dot = 0;
+        for (const ngram of query_data.ngrams) {
+            if (title_data.ngrams.has(ngram)) {
+                const idf = this.get_idf(ngram);
+                dot += idf * idf;
+            }
+        }
         return {
-            score,
-            debug_info: [...intersect(query_ngrams, title_ngrams)],
+            score: dot / (query_data.magnitude * title_data.magnitude),
+            // eslint-disable-next-line @typescript-eslint/no-unnecessary-condition
+            debug_info: DEBUG ? [...query_data.ngrams].filter(n => title_data.ngrams.has(n)) : [],
         };
     }
 
@@ -199,7 +264,6 @@ class NgramScorer {
     }
 }
 
-// Enhanced multi-signal scoring constants
 const EXACT_TITLE_BONUS = 5.0;
 const TOKEN_MATCH_BONUS = 3.0;
 const ALIAS_WEIGHT = 0.8;
@@ -218,9 +282,24 @@ export type EnhancedIndexOptions<T> = {
 
 type ProcessedEntry<T> = T & { parsed_title: string[] };
 
+interface PrecomputedEntryInfo {
+    title_tokens: string[][];
+    content_tokens: Set<string> | null;
+}
+
+interface SearchQueryData {
+    query: string;
+    query_lower: string;
+    tokens_for_token_bonus: string[];
+    content_token_set: Set<string>;
+    ngram_data: NgramData;
+}
+
 export class Index<T extends IndexEntry> {
     private entries: ProcessedEntry<T>[];
     private scorer: NgramScorer;
+    private entry_info: PrecomputedEntryInfo[];
+    private content_token_index: Map<string, number[]> = new Map();
     private embeddings: Map<string, number[]> | null = null;
     private embedding_dimension = 0;
     private extractor: FeatureExtractionPipeline | null = null;
@@ -238,21 +317,65 @@ export class Index<T extends IndexEntry> {
             this.entries.map(entry => ({
                 parsed_titles: entry.parsed_title,
                 original_title: entry.title,
+                aliases: entry.aliases,
             })),
             { threshold: options?.threshold, downweight_patterns: options?.downweight_patterns },
         );
+        this.entry_info = this.entries.map(entry => ({
+            title_tokens: entry.parsed_title.map(title => tokenize(title)),
+            content_tokens: entry.content ? new Set(tokenize(entry.content)) : null,
+        }));
+        // Build inverted index for content tokens so content-only matches aren't missed
+        for (let i = 0; i < this.entry_info.length; i++) {
+            const content_tokens = this.entry_info[i].content_tokens;
+            if (content_tokens) {
+                for (const token of content_tokens) {
+                    if (token.length >= 3) {
+                        add_to_inverted_index(this.content_token_index, token, i);
+                    }
+                }
+            }
+        }
     }
 
-    private compute_token_bonus(query: string, parsed_titles: string[]): number {
-        const query_tokens = tokenize(query).filter(t => !this.enhanced_options.stop_words?.has(t));
-        if (query_tokens.length === 0) {
+    private get_all_candidates(query_data: SearchQueryData): Set<number> {
+        const candidates = this.scorer.get_candidates(query_data.ngram_data.ngrams);
+        for (const query_token of query_data.content_token_set) {
+            if (query_token.length >= 3) {
+                const entries = this.content_token_index.get(query_token);
+                if (entries) {
+                    for (const idx of entries) {
+                        candidates.add(idx);
+                    }
+                }
+            }
+        }
+        return candidates;
+    }
+
+    private build_query_data(query: string): SearchQueryData {
+        const query_tokens_raw = tokenize(query);
+        return {
+            query,
+            query_lower: query.toLowerCase(),
+            tokens_for_token_bonus: this.enhanced_options.stop_words
+                ? query_tokens_raw.filter(t => !this.enhanced_options.stop_words!.has(t))
+                : query_tokens_raw,
+            content_token_set: new Set(query_tokens_raw),
+            ngram_data: this.scorer.compute_query_data(query),
+        };
+    }
+
+    private compute_token_bonus(query_data: SearchQueryData, entry_idx: number, parsed_titles: string[]): number {
+        if (query_data.tokens_for_token_bonus.length === 0) {
             return 0;
         }
+        const info = this.entry_info[entry_idx];
         let best_bonus = 0;
-        for (const title of parsed_titles) {
-            const title_tokens = tokenize(title);
+        for (let i = 0; i < parsed_titles.length; i++) {
+            const title_tokens = info.title_tokens[i];
             let match_score = 0;
-            for (const query_token of query_tokens) {
+            for (const query_token of query_data.tokens_for_token_bonus) {
                 for (const title_token of title_tokens) {
                     if (title_token === query_token) {
                         match_score += 1;
@@ -264,8 +387,8 @@ export class Index<T extends IndexEntry> {
                 }
             }
             if (match_score > 0) {
-                const match_ratio = match_score / query_tokens.length;
-                const coverage = Math.min(1.0, query.length / title.length);
+                const match_ratio = match_score / query_data.tokens_for_token_bonus.length;
+                const coverage = Math.min(1.0, query_data.query.length / parsed_titles[i].length);
                 const bonus = match_ratio * TOKEN_MATCH_BONUS * (0.5 + 0.5 * coverage);
                 best_bonus = Math.max(best_bonus, bonus);
             }
@@ -273,16 +396,16 @@ export class Index<T extends IndexEntry> {
         return best_bonus;
     }
 
-    private compute_alias_bonus(query: string, entry: ProcessedEntry<T>): number {
+    private compute_alias_bonus(query_data: SearchQueryData, entry: ProcessedEntry<T>): number {
         if (!entry.aliases || entry.aliases.length === 0) {
             return 0;
         }
-        const query_lower = query.toLowerCase();
         let best_bonus = 0;
         for (const alias of entry.aliases) {
-            const alias_score = this.scorer.score(query, alias.toLowerCase()).score;
+            const alias_lower = alias.toLowerCase();
+            const alias_score = this.scorer.score_with_precomputed(query_data.ngram_data, alias_lower).score;
             let bonus = alias_score * ALIAS_WEIGHT;
-            if (alias.toLowerCase() === query_lower) {
+            if (alias_lower === query_data.query_lower) {
                 bonus += EXACT_TITLE_BONUS;
             }
             best_bonus = Math.max(best_bonus, bonus);
@@ -290,14 +413,13 @@ export class Index<T extends IndexEntry> {
         return best_bonus;
     }
 
-    private compute_content_bonus(query: string, entry: T): number {
-        if (!entry.content) {
+    private compute_content_bonus(query_data: SearchQueryData, entry_idx: number): number {
+        const content_tokens = this.entry_info[entry_idx].content_tokens;
+        if (!content_tokens) {
             return 0;
         }
-        const query_tokens = new Set(tokenize(query));
-        const content_tokens = new Set(tokenize(entry.content));
         let bonus = 0;
-        for (const query_token of query_tokens) {
+        for (const query_token of query_data.content_token_set) {
             if (query_token.length >= 3 && content_tokens.has(query_token)) {
                 bonus += CONTENT_TOKEN_WEIGHT;
             }
@@ -305,8 +427,7 @@ export class Index<T extends IndexEntry> {
         return bonus;
     }
 
-    private compute_exact_title_bonus(query: string, parsed_titles: string[]): number {
-        const query_lower = query.toLowerCase();
+    private compute_exact_title_bonus(query_lower: string, parsed_titles: string[]): number {
         for (const title of parsed_titles) {
             if (title === query_lower) {
                 return EXACT_TITLE_BONUS;
@@ -327,28 +448,28 @@ export class Index<T extends IndexEntry> {
         if (!article_embedding) {
             return fuzzy_combined;
         }
-        const similarity = cosine_similarity_vectors(this.query_embedding_cache, article_embedding);
+        const similarity = dot_product_similarity(this.query_embedding_cache, article_embedding);
         return fuzzy_combined + similarity * (this.enhanced_options.embedding_bonus ?? DEFAULT_EMBEDDING_BONUS);
     }
 
-    private score_base(query: string, entry: ProcessedEntry<T>) {
+    private score_base(query_data: SearchQueryData, entry_idx: number, entry: ProcessedEntry<T>) {
+        const info = this.entry_info[entry_idx];
         const scores: EntryScore[] = [];
-        for (const title of entry.parsed_title) {
-            if (tokenize(title).length == 0) {
-                // TODO: slow
+        for (let i = 0; i < entry.parsed_title.length; i++) {
+            if (info.title_tokens[i].length === 0) {
                 continue;
             }
-            scores.push(this.scorer.score(query, title));
+            scores.push(this.scorer.score_with_precomputed(query_data.ngram_data, entry.parsed_title[i]));
         }
         return max(scores, s => s.score);
     }
 
-    private score_entry(query: string, entry: ProcessedEntry<T>) {
-        const base_result = this.score_base(query, entry);
-        const token_bonus = this.compute_token_bonus(query, entry.parsed_title);
-        const alias_bonus = this.compute_alias_bonus(query, entry);
-        const content_bonus = this.compute_content_bonus(query, entry);
-        const exact_title_bonus = this.compute_exact_title_bonus(query, entry.parsed_title);
+    private score_entry(query_data: SearchQueryData, entry_idx: number, entry: ProcessedEntry<T>) {
+        const base_result = this.score_base(query_data, entry_idx, entry);
+        const token_bonus = this.compute_token_bonus(query_data, entry_idx, entry.parsed_title);
+        const alias_bonus = this.compute_alias_bonus(query_data, entry);
+        const content_bonus = this.compute_content_bonus(query_data, entry_idx);
+        const exact_title_bonus = this.compute_exact_title_bonus(query_data.query_lower, entry.parsed_title);
         const fuzzy_combined =
             base_result.score +
             token_bonus +
@@ -374,21 +495,20 @@ export class Index<T extends IndexEntry> {
             debug_info: unknown[];
         };
         assert(query.length < 100);
+        const query_data = this.build_query_data(query);
+        const candidate_indices = this.get_all_candidates(query_data);
         const candidates: candidate_entry[] = [];
-        for (const page of this.entries) {
-            const { score, fuzzy_score, debug_info } = this.score_entry(query, page);
-            candidates.push({
-                page,
-                score,
-                fuzzy_score,
-                debug_info,
-            });
+        for (const idx of candidate_indices) {
+            const page = this.entries[idx];
+            const { score, fuzzy_score, debug_info } = this.score_entry(query_data, idx, page);
+            candidates.push({ page, score, fuzzy_score, debug_info });
         }
         candidates.sort((a, b) => b.score - a.score);
-        /* eslint-disable @typescript-eslint/no-unnecessary-condition */
+        // eslint-disable-next-line @typescript-eslint/no-unnecessary-condition
         if (DEBUG) {
             console.log(query);
         }
+        // eslint-disable-next-line @typescript-eslint/no-unnecessary-condition
         if (DEBUG) {
             for (const candidate of candidates.slice(0, 3)) {
                 console.log(
