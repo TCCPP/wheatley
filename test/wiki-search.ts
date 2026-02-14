@@ -4,6 +4,7 @@ import { globSync } from "glob";
 import {
     parse_article,
     WIKI_ARTICLES_PATH,
+    WIKI_STOP_WORDS,
     WikiArticle,
     WikiSearchIndex,
     create_wiki_search_entries,
@@ -257,7 +258,7 @@ describe("wiki search system", () => {
         search_index = new Index(search_entries, (title: string) => [title.toLowerCase()], {
             embedding_key_extractor: entry => entry.article.name ?? undefined,
             embedding_bonus: 1.0,
-            stop_words: new Set(["what", "is", "how", "why", "when", "does", "do", "can", "are", "which", "the"]),
+            stop_words: WIKI_STOP_WORDS,
         });
         await search_index.load_embeddings("indexes/wiki/embeddings.json");
     }, 120_000);

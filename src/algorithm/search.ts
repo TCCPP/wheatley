@@ -14,9 +14,7 @@
 //   - Embedding bonus: semantic similarity from pre-computed article embeddings (all-MiniLM-L6-v2). This is
 //     purely additive re-ranking - threshold filtering uses the pre-embedding "fuzzy_score" so that embeddings
 //     can't promote entries that don't have a reasonable textual match. The query embedding is computed once
-//     per search_get_top_5_async call and cached in query_embedding_cache, which is read synchronously by
-//     score_entry (called via the synchronous search_get_top_5 in Index). Embeddings are optional and
-//     loaded from JSON files generated offline.
+//     per search_get_top_5_async call. Embeddings are optional and loaded from JSON files generated offline.
 //
 // Title normalization is domain-specific and provided by consumers. For example, the cppref normalizer handles
 // comma-separated overload lists like "operator==, !=, <, <=>(std::optional)" by splitting into individual
@@ -303,7 +301,6 @@ export class Index<T extends IndexEntry> {
     private embeddings: Map<string, number[]> | null = null;
     private embedding_dimension = 0;
     private extractor: FeatureExtractionPipeline | null = null;
-    private query_embedding_cache: number[] | null = null;
     private enhanced_options: EnhancedIndexOptions<T>;
 
     constructor(entries: T[], normalizer: (_: string) => string[], options?: EnhancedIndexOptions<T>) {
@@ -436,8 +433,8 @@ export class Index<T extends IndexEntry> {
         return 0;
     }
 
-    private compute_embedding_bonus(fuzzy_combined: number, entry: T): number {
-        if (!this.embeddings || !this.query_embedding_cache || !this.enhanced_options.embedding_key_extractor) {
+    private compute_embedding_bonus(fuzzy_combined: number, entry: T, query_embedding: number[] | null): number {
+        if (!this.embeddings || !query_embedding || !this.enhanced_options.embedding_key_extractor) {
             return fuzzy_combined;
         }
         const key = this.enhanced_options.embedding_key_extractor(entry);
@@ -448,7 +445,7 @@ export class Index<T extends IndexEntry> {
         if (!article_embedding) {
             return fuzzy_combined;
         }
-        const similarity = dot_product_similarity(this.query_embedding_cache, article_embedding);
+        const similarity = dot_product_similarity(query_embedding, article_embedding);
         return fuzzy_combined + similarity * (this.enhanced_options.embedding_bonus ?? DEFAULT_EMBEDDING_BONUS);
     }
 
@@ -464,7 +461,12 @@ export class Index<T extends IndexEntry> {
         return max(scores, s => s.score);
     }
 
-    private score_entry(query_data: SearchQueryData, entry_idx: number, entry: ProcessedEntry<T>) {
+    private score_entry(
+        query_data: SearchQueryData,
+        entry_idx: number,
+        entry: ProcessedEntry<T>,
+        query_embedding: number[] | null,
+    ) {
         const base_result = this.score_base(query_data, entry_idx, entry);
         const token_bonus = this.compute_token_bonus(query_data, entry_idx, entry.parsed_title);
         const alias_bonus = this.compute_alias_bonus(query_data, entry);
@@ -476,7 +478,7 @@ export class Index<T extends IndexEntry> {
             content_bonus +
             Math.max(alias_bonus, exact_title_bonus) +
             (entry.boost ?? 0);
-        const final_score = this.compute_embedding_bonus(fuzzy_combined, entry);
+        const final_score = this.compute_embedding_bonus(fuzzy_combined, entry, query_embedding);
         return {
             score: final_score,
             fuzzy_score: fuzzy_combined,
@@ -484,7 +486,7 @@ export class Index<T extends IndexEntry> {
         };
     }
 
-    search_get_top_5(query: string) {
+    search_get_top_5(query: string, query_embedding: number[] | null = null) {
         if (query.trim().length === 0) {
             return [];
         }
@@ -500,7 +502,7 @@ export class Index<T extends IndexEntry> {
         const candidates: candidate_entry[] = [];
         for (const idx of candidate_indices) {
             const page = this.entries[idx];
-            const { score, fuzzy_score, debug_info } = this.score_entry(query_data, idx, page);
+            const { score, fuzzy_score, debug_info } = this.score_entry(query_data, idx, page, query_embedding);
             candidates.push({ page, score, fuzzy_score, debug_info });
         }
         candidates.sort((a, b) => b.score - a.score);
@@ -557,17 +559,15 @@ export class Index<T extends IndexEntry> {
     }
 
     async search_get_top_5_async(query: string) {
+        let query_embedding: number[] | null = null;
         if (this.extractor) {
             try {
-                this.query_embedding_cache = await generate_embedding(query, this.extractor);
+                query_embedding = await generate_embedding(query, this.extractor);
             } catch (e) {
                 M.warn("Failed to generate query embedding", e);
-                this.query_embedding_cache = null;
             }
         }
-        const results = this.search_get_top_5(query);
-        this.query_embedding_cache = null;
-        return results;
+        return this.search_get_top_5(query, query_embedding);
     }
 
     async search_async(query: string) {

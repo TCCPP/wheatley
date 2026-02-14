@@ -44,6 +44,19 @@ type WikiSearchEntry = IndexEntry & {
 };
 
 const WIKI_EMBEDDING_BONUS = 1.0;
+export const WIKI_STOP_WORDS = new Set([
+    "what",
+    "is",
+    "how",
+    "why",
+    "when",
+    "does",
+    "do",
+    "can",
+    "are",
+    "which",
+    "the",
+]);
 
 enum parse_state {
     body,
@@ -532,7 +545,7 @@ export default class Wiki extends BotComponent {
         this.wiki_search_index = new Index(search_entries, (title: string) => [title.toLowerCase()], {
             embedding_key_extractor: entry => entry.article.name ?? undefined,
             embedding_bonus: WIKI_EMBEDDING_BONUS,
-            stop_words: new Set(["what", "is", "how", "why", "when", "does", "do", "can", "are", "which", "the"]),
+            stop_words: WIKI_STOP_WORDS,
         });
         await this.wiki_search_index.load_embeddings("indexes/wiki/embeddings.json");
     }
