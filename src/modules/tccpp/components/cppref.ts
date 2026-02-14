@@ -262,9 +262,7 @@ export default class Cppref extends BotComponent {
                         this.index
                             .lookup_top_5(query, name == "cref" ? CpprefSubIndex.C : CpprefSubIndex.CPP)
                             .map(page => ({
-                                name: `${page.title.substring(0, 100 - 14)} . . . . ${
-                                    Math.round(page.score * 100) / 100
-                                }`,
+                                name: page.title.substring(0, 100),
                                 value: page.title,
                             })),
                 })
