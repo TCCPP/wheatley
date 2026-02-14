@@ -75,6 +75,17 @@ run-dev-container: build-dev-container  ## Runs the dev container container
 dev: build  ## Runs in dev mode
 	node --enable-source-maps build/src/main.js
 
-.PHONY: wiki-index
-wiki-index: prereqs  ## Generates embeddings index for wiki articles
+.PHONY: embeddings
+embeddings: cppref-embeddings man7-embeddings wiki-embeddings  ## Generates embeddings index for wiki/cppref/man7 articles
+
+.PHONY: cppref-embeddings
+cppref-embeddings: prereqs  ## Generates embeddings index for cppref articles
+	npx tsx indexes/cppref/generate-cppref-embeddings.ts
+
+.PHONY: man7-embeddings
+man7-embeddings: prereqs  ## Generates embeddings index for man7 articles
+	npx tsx indexes/man7/generate-man7-embeddings.ts
+
+.PHONY: wiki-embeddings
+wiki-embeddings: prereqs  ## Generates embeddings index for wiki articles
 	npx tsx indexes/wiki/generate-wiki-embeddings.ts

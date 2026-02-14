@@ -15,13 +15,7 @@ import { wheatley_channels } from "../channels.js";
 import { EarlyReplyMode, TextBasedCommandBuilder } from "../../../command-abstractions/text-based-command-builder.js";
 import { TextBasedCommand } from "../../../command-abstractions/text-based-command.js";
 import Help from "./help.js";
-import { Index, IndexEntry, tokenize } from "../../../algorithm/search.js";
-import {
-    create_embedding_pipeline,
-    generate_embedding,
-    cosine_similarity_vectors,
-    EMBEDDING_MODEL,
-} from "../../../utils/wiki-embeddings.js";
+import { Index, IndexEntry } from "../../../algorithm/search.js";
 import { load_wiki_web_articles } from "../wiki-article-loader.js";
 
 export type WikiArticle = {
@@ -49,12 +43,20 @@ type WikiSearchEntry = IndexEntry & {
     content: string;
 };
 
-// search tuning
-const EXACT_MATCH_BONUS = 5.0;
-const ALIAS_WEIGHT = 0.8;
-const CONTENT_WEIGHT = 0.4;
-const EMBEDDING_WEIGHT = 0.6;
-const FUZZY_WEIGHT = 0.4;
+const WIKI_EMBEDDING_BONUS = 1.0;
+export const WIKI_STOP_WORDS = new Set([
+    "what",
+    "is",
+    "how",
+    "why",
+    "when",
+    "does",
+    "do",
+    "can",
+    "are",
+    "which",
+    "the",
+]);
 
 enum parse_state {
     body,
@@ -337,115 +339,18 @@ export function parse_article(
     return [parser.article, parser.article_aliases];
 }
 
-export class WikiSearchIndex extends Index<WikiSearchEntry> {
-    private embeddings: Map<string, number[]> | null = null;
-    private embedding_dimension = 0;
-    private extractor: any = null;
-    private query_embedding: number[] | null = null;
-
-    constructor(entries: WikiSearchEntry[]) {
-        super(entries, (title: string) => [title.toLowerCase()]);
+export function create_embedding_content(article: WikiArticle): string {
+    const content_parts = [article.title];
+    if (article.body) {
+        content_parts.push(article.body);
     }
-
-    async load_embeddings() {
-        const embeddings_path = "indexes/wiki/embeddings.json";
-        try {
-            if (!fs.existsSync(embeddings_path)) {
-                M.info("Wiki embeddings not found, using fuzzy search only");
-                return;
-            }
-            const data = JSON.parse(await fs.promises.readFile(embeddings_path, "utf-8")) as {
-                embeddings: Record<string, number[]>;
-                model_info: { model: string; dimension: number };
-            };
-            this.embeddings = new Map(Object.entries(data.embeddings));
-            this.embedding_dimension = data.model_info.dimension;
-            const { model } = data.model_info;
-            M.info(
-                `Loaded ${this.embeddings.size} wiki article embeddings (${model}, dim=${this.embedding_dimension})`,
-            );
-            M.info(`Loading embedding model ${EMBEDDING_MODEL} for query processing...`);
-            this.extractor = await create_embedding_pipeline();
-            M.info("Embedding model loaded successfully");
-        } catch (e) {
-            M.warn("Failed to load wiki embeddings, falling back to fuzzy search only", e);
-            this.embeddings = null;
-            this.extractor = null;
-        }
+    for (const field of article.fields) {
+        content_parts.push(`${field.name}: ${field.value}`);
     }
-
-    override score_entry(query: string, entry: WikiSearchEntry & { parsed_title: string[] }) {
-        const base_result = super.score_entry(query, entry);
-        const query_lower = query.toLowerCase();
-        const title_lower = entry.title.toLowerCase();
-
-        let fuzzy_score = base_result.score;
-
-        if (title_lower === query_lower) {
-            fuzzy_score += EXACT_MATCH_BONUS;
-        }
-
-        for (const alias of entry.aliases) {
-            const alias_score = super.score(query, alias).score;
-            if (alias.toLowerCase() === query_lower) {
-                fuzzy_score = Math.max(fuzzy_score, alias_score * ALIAS_WEIGHT + EXACT_MATCH_BONUS);
-            } else {
-                fuzzy_score = Math.max(fuzzy_score, alias_score * ALIAS_WEIGHT);
-            }
-        }
-
-        if (entry.content) {
-            const query_tokens = new Set(tokenize(query));
-            const content_tokens = new Set(tokenize(entry.content));
-            const common_tokens = [...query_tokens].filter(t => content_tokens.has(t));
-            if (common_tokens.length > 0) {
-                fuzzy_score += common_tokens.length * CONTENT_WEIGHT;
-            }
-        }
-
-        let final_score = fuzzy_score;
-
-        if (this.embeddings && this.query_embedding && entry.article.name) {
-            const article_embedding = this.embeddings.get(entry.article.name);
-            if (article_embedding) {
-                const similarity = cosine_similarity_vectors(this.query_embedding, article_embedding);
-                const embedding_score = similarity * 10;
-                final_score = fuzzy_score * FUZZY_WEIGHT + embedding_score * EMBEDDING_WEIGHT;
-            }
-        }
-
-        return {
-            score: final_score,
-            debug_info: base_result.debug_info,
-        };
-    }
-
-    async search_get_top_5_async(query: string) {
-        if (this.extractor) {
-            try {
-                this.query_embedding = await generate_embedding(query, this.extractor);
-            } catch (e) {
-                M.warn("Failed to generate query embedding, falling back to fuzzy search only", e);
-                this.query_embedding = null;
-            }
-        }
-
-        const results = this.search_get_top_5(query);
-        this.query_embedding = null;
-        return results;
-    }
-
-    async search_with_suggestions(query: string): Promise<{
-        result: WikiSearchEntry | null;
-        suggestions: WikiSearchEntry[];
-    }> {
-        const results = await this.search_get_top_5_async(query);
-        return {
-            result: results[0] ?? null,
-            suggestions: results.slice(1, 4),
-        };
-    }
+    return content_parts.join("\n");
 }
+
+export type WikiSearchIndex = Index<WikiSearchEntry>;
 
 export function create_wiki_search_entries(
     articles: Record<string, WikiArticle>,
@@ -637,8 +542,12 @@ export default class Wiki extends BotComponent {
 
         // Initialize search index
         const search_entries = create_wiki_search_entries(this.articles, this.article_aliases);
-        this.wiki_search_index = new WikiSearchIndex(search_entries);
-        await this.wiki_search_index.load_embeddings();
+        this.wiki_search_index = new Index(search_entries, (title: string) => [title.toLowerCase()], {
+            embedding_key_extractor: entry => entry.article.name ?? undefined,
+            embedding_bonus: WIKI_EMBEDDING_BONUS,
+            stop_words: WIKI_STOP_WORDS,
+        });
+        await this.wiki_search_index.load_embeddings("indexes/wiki/embeddings.json");
     }
 
     build_see_link_text(article: WikiArticle): string {

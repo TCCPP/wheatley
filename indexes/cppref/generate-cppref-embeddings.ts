@@ -1,9 +1,11 @@
 import * as fs from "fs";
 import {
-    create_embedding_pipeline,
+    get_or_create_embedding_pipeline,
     generate_embedding,
     EMBEDDING_MODEL,
-} from "../../src/utils/wiki-embeddings.js";
+    round_embeddings,
+    serialize_embeddings_data,
+} from "../../src/utils/embeddings.js";
 
 const INDEX_DIR = "indexes/cppref";
 
@@ -51,7 +53,7 @@ function create_cppref_embedding_content(entry: CpprefEntry): string {
     console.log(`Loaded ${all_entries.length} cppref entries`);
 
     console.log("Loading embedding model (this may take a while on first run)...");
-    const extractor = await create_embedding_pipeline();
+    const extractor = await get_or_create_embedding_pipeline();
 
     console.log("Generating embeddings...");
     const embeddings: Record<string, number[]> = {};
@@ -76,7 +78,8 @@ function create_cppref_embedding_content(entry: CpprefEntry): string {
         embeddings,
     };
     const output_path = `${INDEX_DIR}/embeddings.json`;
-    await fs.promises.writeFile(output_path, JSON.stringify(output_data, null, 2));
+    output_data.embeddings = round_embeddings(output_data.embeddings);
+    await fs.promises.writeFile(output_path, serialize_embeddings_data(output_data));
     console.log(`Saved embeddings to ${output_path}`);
     console.log(`Model: ${EMBEDDING_MODEL}, Dimension: ${embedding_dimension}`);
 })();
