@@ -1,5 +1,11 @@
 import * as fs from "fs";
-import { get_or_create_embedding_pipeline, generate_embedding, EMBEDDING_MODEL } from "../../src/utils/embeddings.js";
+import {
+    get_or_create_embedding_pipeline,
+    generate_embedding,
+    EMBEDDING_MODEL,
+    round_embeddings,
+    serialize_embeddings_data,
+} from "../../src/utils/embeddings.js";
 
 const INDEX_DIR = "indexes/man7";
 
@@ -51,7 +57,8 @@ function create_man7_embedding_content(entry: Man7Entry): string {
         embeddings,
     };
     const output_path = `${INDEX_DIR}/embeddings.json`;
-    await fs.promises.writeFile(output_path, JSON.stringify(output_data, null, 2));
+    output_data.embeddings = round_embeddings(output_data.embeddings);
+    await fs.promises.writeFile(output_path, serialize_embeddings_data(output_data));
     console.log(`Saved embeddings to ${output_path}`);
     console.log(`Model: ${EMBEDDING_MODEL}, Dimension: ${embedding_dimension}`);
 })();
