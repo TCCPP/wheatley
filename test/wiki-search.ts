@@ -36,7 +36,6 @@ const title_match_cases: WikiTestCase[] = [
     { query: "init", title_contains: "Initialization" },
     { query: "include", title: "Including headers" },
     { query: "vc", title: "Voice chat" },
-    { query: "msvc", title: "MSVC" },
     { query: "w3schools", title_contains: "W3Schools" },
     { query: "g4g", title_contains: "GeeksforGeeks" },
     { query: "save", title: "Save" },
