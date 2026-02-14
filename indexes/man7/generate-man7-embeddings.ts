@@ -1,5 +1,5 @@
 import * as fs from "fs";
-import { create_embedding_pipeline, generate_embedding, EMBEDDING_MODEL } from "../../src/utils/embeddings.js";
+import { get_or_create_embedding_pipeline, generate_embedding, EMBEDDING_MODEL } from "../../src/utils/embeddings.js";
 
 const INDEX_DIR = "indexes/man7";
 
@@ -26,7 +26,7 @@ function create_man7_embedding_content(entry: Man7Entry): string {
     console.log(`Loaded ${index_data.length} man7 entries`);
 
     console.log("Loading embedding model (this may take a while on first run)...");
-    const extractor = await create_embedding_pipeline();
+    const extractor = await get_or_create_embedding_pipeline();
 
     console.log("Generating embeddings...");
     const embeddings: Record<string, number[]> = {};

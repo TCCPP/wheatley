@@ -1,5 +1,5 @@
 import * as fs from "fs";
-import { create_embedding_pipeline, generate_embedding, EMBEDDING_MODEL } from "../../src/utils/embeddings.js";
+import { get_or_create_embedding_pipeline, generate_embedding, EMBEDDING_MODEL } from "../../src/utils/embeddings.js";
 
 const INDEX_DIR = "indexes/cppref";
 
@@ -47,7 +47,7 @@ function create_cppref_embedding_content(entry: CpprefEntry): string {
     console.log(`Loaded ${all_entries.length} cppref entries`);
 
     console.log("Loading embedding model (this may take a while on first run)...");
-    const extractor = await create_embedding_pipeline();
+    const extractor = await get_or_create_embedding_pipeline();
 
     console.log("Generating embeddings...");
     const embeddings: Record<string, number[]> = {};

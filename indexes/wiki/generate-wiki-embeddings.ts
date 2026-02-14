@@ -7,7 +7,7 @@ import {
     create_embedding_content,
 } from "../../src/modules/wheatley/components/wiki.js";
 import { load_wiki_web_articles } from "../../src/modules/wheatley/wiki-article-loader.js";
-import { create_embedding_pipeline, generate_embedding, EMBEDDING_MODEL } from "../../src/utils/embeddings.js";
+import { get_or_create_embedding_pipeline, generate_embedding, EMBEDDING_MODEL } from "../../src/utils/embeddings.js";
 
 const INDEX_DIR = "indexes/wiki";
 
@@ -43,7 +43,7 @@ const INDEX_DIR = "indexes/wiki";
     console.log(`Total articles: ${Object.keys(articles).length}`);
 
     console.log("Loading embedding model (this may take a while on first run)...");
-    const extractor = await create_embedding_pipeline();
+    const extractor = await get_or_create_embedding_pipeline();
 
     console.log("Generating embeddings...");
     const embeddings: Record<string, number[]> = {};

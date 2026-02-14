@@ -12,10 +12,6 @@ export async function get_or_create_embedding_pipeline(): Promise<FeatureExtract
     return shared_pipeline;
 }
 
-export async function create_embedding_pipeline() {
-    return await pipeline("feature-extraction", EMBEDDING_MODEL);
-}
-
 export async function generate_embedding(text: string, extractor: FeatureExtractionPipeline): Promise<number[]> {
     const output = await extractor(text, { pooling: "mean", normalize: true });
     return Array.from(output.data);
