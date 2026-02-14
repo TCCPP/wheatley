@@ -18,7 +18,6 @@ type WikiTestCase = {
     title_contains?: string;
 };
 
-/* eslint-disable max-len */
 const title_match_cases: WikiTestCase[] = [
     { query: "Undefined Behavior", title: "Undefined Behavior" },
     { query: "Address Sanitizer", title: "Address Sanitizer" },
