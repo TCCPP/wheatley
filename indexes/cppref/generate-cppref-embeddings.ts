@@ -1,9 +1,5 @@
 import * as fs from "fs";
-import {
-    create_embedding_pipeline,
-    generate_embedding,
-    EMBEDDING_MODEL,
-} from "../../src/utils/wiki-embeddings.js";
+import { create_embedding_pipeline, generate_embedding, EMBEDDING_MODEL } from "../../src/utils/embeddings.js";
 
 const INDEX_DIR = "indexes/cppref";
 

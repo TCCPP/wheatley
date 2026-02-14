@@ -1,13 +1,13 @@
 import * as fs from "fs";
 import { globIterate } from "glob";
-import { parse_article, WIKI_ARTICLES_PATH, WikiArticle } from "../../src/modules/wheatley/components/wiki.js";
-import { load_wiki_web_articles } from "../../src/modules/wheatley/wiki-article-loader.js";
 import {
-    create_embedding_pipeline,
-    generate_embedding,
+    parse_article,
+    WIKI_ARTICLES_PATH,
+    WikiArticle,
     create_embedding_content,
-    EMBEDDING_MODEL,
-} from "../../src/utils/wiki-embeddings.js";
+} from "../../src/modules/wheatley/components/wiki.js";
+import { load_wiki_web_articles } from "../../src/modules/wheatley/wiki-article-loader.js";
+import { create_embedding_pipeline, generate_embedding, EMBEDDING_MODEL } from "../../src/utils/embeddings.js";
 
 const INDEX_DIR = "indexes/wiki";
 

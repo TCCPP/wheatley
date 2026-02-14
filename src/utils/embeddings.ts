@@ -1,7 +1,16 @@
 import { FeatureExtractionPipeline, pipeline } from "@xenova/transformers";
-import type { WikiArticle } from "../modules/wheatley/components/wiki.js";
+export type { FeatureExtractionPipeline } from "@xenova/transformers";
 
 export const EMBEDDING_MODEL = "Xenova/all-MiniLM-L6-v2";
+
+let shared_pipeline: FeatureExtractionPipeline | null = null;
+
+export async function get_or_create_embedding_pipeline(): Promise<FeatureExtractionPipeline> {
+    if (!shared_pipeline) {
+        shared_pipeline = await pipeline("feature-extraction", EMBEDDING_MODEL);
+    }
+    return shared_pipeline;
+}
 
 export async function create_embedding_pipeline() {
     return await pipeline("feature-extraction", EMBEDDING_MODEL);
@@ -28,15 +37,4 @@ export function cosine_similarity_vectors(a: number[], b: number[]): number {
         return 0;
     }
     return dot / (Math.sqrt(mag_a) * Math.sqrt(mag_b));
-}
-
-export function create_embedding_content(article: WikiArticle): string {
-    const content_parts = [article.title];
-    if (article.body) {
-        content_parts.push(article.body);
-    }
-    for (const field of article.fields) {
-        content_parts.push(`${field.name}: ${field.value}`);
-    }
-    return content_parts.join("\n");
 }

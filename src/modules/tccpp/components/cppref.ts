@@ -8,10 +8,10 @@ import { format_list } from "../../../utils/strings.js";
 import { M } from "../../../utils/debugging-and-logging.js";
 
 import { cppref_index, cppref_page, CpprefSubIndex } from "../../../../indexes/cppref/types.js";
-import { Index } from "../../../algorithm/search.js";
+import { Index, IndexEntry } from "../../../algorithm/search.js";
+import { normalize_and_split_cppref_title } from "../cppref-normalizer.js";
 import { BotComponent } from "../../../bot-component.js";
 import { CommandSetBuilder } from "../../../command-abstractions/command-set-builder.js";
-import { Wheatley } from "../../../wheatley.js";
 import { colors } from "../../../common.js";
 import { EarlyReplyMode, TextBasedCommandBuilder } from "../../../command-abstractions/text-based-command-builder.js";
 import { TextBasedCommand } from "../../../command-abstractions/text-based-command.js";
@@ -107,13 +107,106 @@ function eliminate_aliases_and_duplicates(pages: cppref_page[]) {
     return Object.values(page_map);
 }
 
+type augmented_cppref_page = cppref_page & IndexEntry;
+
+function extract_path_alias(path: string): string | null {
+    const match = path.match(/\/([^/]+?)\.html?$/);
+    if (!match) {
+        return null;
+    }
+    const name = match[1];
+    if (/^[a-z_][a-z0-9_]*$/i.test(name)) {
+        return name.toLowerCase();
+    }
+    return null;
+}
+
+const PATH_ALIAS_SKIP_DIRECTORIES = /\/(keyword|experimental|header|locale|symbol_index)\//;
+const ELIGIBLE_PATH_DEPTH = /\/w\/c(?:pp)?\/[^/]+\/[^/]+\.html?$/;
+// Only add path aliases for pages directly under a top-level category (e.g., algorithm/transform.html)
+// excluding keyword, experimental, and header directories. This gives pages like language/enum.html an
+// alias "enum" so they outrank keyword/enum.html (-2.0 penalty) and types/is_enum.html (alias "is_enum").
+function is_eligible_for_path_alias(path: string): boolean {
+    return !PATH_ALIAS_SKIP_DIRECTORIES.test(path) && ELIGIBLE_PATH_DEPTH.test(path);
+}
+
+function build_directory_file_map(pages: cppref_page[]): Map<string, string[]> {
+    const dir_files = new Map<string, string[]>();
+    for (const page of pages) {
+        const last_slash = page.path.lastIndexOf("/");
+        const dir = page.path.substring(0, last_slash);
+        const file = page.path.substring(last_slash + 1);
+        if (!dir_files.has(dir)) {
+            dir_files.set(dir, []);
+        }
+        dir_files.get(dir)!.push(file);
+    }
+    return dir_files;
+}
+
+// Skip alias when a sibling file starts with the same name followed by a non-identifier character
+// (e.g., sizeof.html has sibling sizeof....html - the "..." variant is a distinct concept)
+function has_confusable_sibling(alias: string, path: string, dir_files: Map<string, string[]>): boolean {
+    const last_slash = path.lastIndexOf("/");
+    const dir = path.substring(0, last_slash);
+    const file = path.substring(last_slash + 1);
+    const siblings = dir_files.get(dir) ?? [];
+    return siblings.some(
+        f => f !== file && f.startsWith(alias) && f.length > alias.length && !/[a-z0-9_]/i.test(f[alias.length]),
+    );
+}
+
+function compute_path_alias(path: string, dir_files: Map<string, string[]>): string | null {
+    if (!is_eligible_for_path_alias(path)) {
+        return null;
+    }
+    const alias = extract_path_alias(path);
+    if (!alias) {
+        return null;
+    }
+    if (has_confusable_sibling(alias, path, dir_files)) {
+        return null;
+    }
+    return alias;
+}
+
+function augment_cppref_pages(pages: cppref_page[]): augmented_cppref_page[] {
+    const dir_files = build_directory_file_map(pages);
+    return pages.map(page => {
+        const is_keyword_page = page.path.includes("/keyword/");
+        const alias = compute_path_alias(page.path, dir_files);
+        return {
+            ...page,
+            content: [page.wgPageName.replace(/\//g, " "), ...(page.headers ?? [])].join(" "),
+            ...(alias ? { aliases: [alias] } : {}),
+            ...(is_keyword_page ? { boost: -2.0 } : {}),
+        };
+    });
+}
+
 export class CpprefIndex {
-    c_index!: Index<cppref_page>;
-    cpp_index!: Index<cppref_page>;
+    c_index!: Index<augmented_cppref_page>;
+    cpp_index!: Index<augmented_cppref_page>;
 
     setup_indexes(index_data: cppref_index) {
-        this.c_index = new Index(eliminate_aliases_and_duplicates(index_data.c));
-        this.cpp_index = new Index(eliminate_aliases_and_duplicates(index_data.cpp));
+        this.c_index = new Index(
+            augment_cppref_pages(eliminate_aliases_and_duplicates(index_data.c)),
+            normalize_and_split_cppref_title,
+            {
+                embedding_key_extractor: entry => `c/${entry.wgPageName}`,
+                embedding_bonus: 0.15,
+                downweight_patterns: [" keywords:"],
+            },
+        );
+        this.cpp_index = new Index(
+            augment_cppref_pages(eliminate_aliases_and_duplicates(index_data.cpp)),
+            normalize_and_split_cppref_title,
+            {
+                embedding_key_extractor: entry => `cpp/${entry.wgPageName}`,
+                embedding_bonus: 0.15,
+                downweight_patterns: [" keywords:"],
+            },
+        );
     }
 
     async load_data() {
@@ -121,6 +214,10 @@ export class CpprefIndex {
             await fs.promises.readFile("indexes/cppref/cppref_index.json", { encoding: "utf-8" }),
         ) as cppref_index;
         this.setup_indexes(index_data);
+        await Promise.all([
+            this.c_index.load_embeddings("indexes/cppref/embeddings.json"),
+            this.cpp_index.load_embeddings("indexes/cppref/embeddings.json"),
+        ]);
     }
 
     // for testcase purposes
@@ -128,17 +225,16 @@ export class CpprefIndex {
         const index_data = <cppref_index>(
             JSON.parse(fs.readFileSync("indexes/cppref/cppref_index.json", { encoding: "utf-8" }))
         );
-        //for(const pages of [index.c, index.cpp]) {
-        //    for(const page of pages) {
-        //        if(DEBUG) console.log(page.title.split(",").map(x => x.trim()));
-        //    }
-        //}
         this.setup_indexes(index_data);
         return this;
     }
 
     lookup(query: string, target: CpprefSubIndex) {
         return (target == CpprefSubIndex.C ? this.c_index : this.cpp_index).search(query);
+    }
+
+    async lookup_async(query: string, target: CpprefSubIndex) {
+        return (target == CpprefSubIndex.C ? this.c_index : this.cpp_index).search_async(query);
     }
 
     lookup_top_5(query: string, target: CpprefSubIndex) {
@@ -180,7 +276,10 @@ export default class Cppref extends BotComponent {
     }
 
     async cppref(command: TextBasedCommand, query: string) {
-        const result = this.index.lookup(query.trim(), command.name == "cref" ? CpprefSubIndex.C : CpprefSubIndex.CPP);
+        const result = await this.index.lookup_async(
+            query.trim(),
+            command.name == "cref" ? CpprefSubIndex.C : CpprefSubIndex.CPP,
+        );
         M.log(`${command.name} query`, query, result ? `https://${result.path}` : null);
 
         if (result === null) {
