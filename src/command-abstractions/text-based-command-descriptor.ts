@@ -91,6 +91,22 @@ export class BotTextBasedCommand<Args extends unknown[] = []> extends BaseBotInt
         }
     }
 
+    // Returns a pattern matching whitespace followed by the start of a value of the given type.
+    // Used to find where a string option ends and the next option begins.
+    private static leading_pattern_for_type(type: TextBasedCommandOptionType): RegExp | null {
+        switch (type) {
+            case "user":
+            case "users":
+                return /\s(?:<@\d{10,}>|\d{10,})/;
+            case "number":
+                return /\s\d/;
+            case "boolean":
+                return /\s(?:true|false)\b/i;
+            default:
+                return null;
+        }
+    }
+
     to_slash_command<B extends Discord.SlashCommandBuilder | Discord.SlashCommandSubcommandBuilder>(djs_builder: B): B {
         assert(this.slash);
         if (this.subcommands) {
@@ -192,15 +208,32 @@ export class BotTextBasedCommand<Args extends unknown[] = []> extends BaseBotInt
                             throw required_arg_error();
                         }
                     } else {
-                        const re = /^\S+/;
-                        const match = command_body.match(re);
-                        if (match) {
-                            command_options.push(validate_choices(match[0]));
-                            command_body = command_body.slice(match[0].length).trim();
-                        } else if (!option.required) {
-                            command_options.push(null);
+                        const leading_pattern = BotTextBasedCommand.leading_pattern_for_type(
+                            [...this.options.values()][i + 1].type,
+                        );
+                        if (leading_pattern) {
+                            const separator = command_body.search(leading_pattern);
+                            if (separator > 0) {
+                                command_options.push(validate_choices(command_body.slice(0, separator)));
+                                command_body = command_body.slice(separator).trim();
+                            } else if (command_body !== "") {
+                                command_options.push(validate_choices(command_body));
+                                command_body = "";
+                            } else if (!option.required) {
+                                command_options.push(null);
+                            } else {
+                                throw required_arg_error();
+                            }
                         } else {
-                            throw required_arg_error();
+                            const match = command_body.match(/^\S+/);
+                            if (match) {
+                                command_options.push(validate_choices(match[0]));
+                                command_body = command_body.slice(match[0].length).trim();
+                            } else if (!option.required) {
+                                command_options.push(null);
+                            } else {
+                                throw required_arg_error();
+                            }
                         }
                     }
                 } else if (option.type == "number") {
