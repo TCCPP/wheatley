@@ -9,7 +9,5 @@ _bot.json
 bot.json
 backup
 scratch
-indexes/wiki/*.json
 indexes/wiki/*.html
-indexes/cppref/*.json
 indexes/cppref/*.html
