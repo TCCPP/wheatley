@@ -11,6 +11,7 @@ import { TextBasedCommand } from "../../../command-abstractions/text-based-comma
 import { BotButton, ButtonInteractionBuilder } from "../../../command-abstractions/button.js";
 import { channel_map } from "../../../channel-map.js";
 import { wheatley_channels } from "../channels.js";
+import { ReplyTracker } from "../../../utils/reply-tracker.js";
 
 const INVITE_RE =
     /(?:(?:discord(?:app)?|disboard)\.(?:gg|(?:com|org|me)\/(?:invite|server\/join))|(?<!\w)\.gg)\/(\S+)/i;
@@ -29,6 +30,7 @@ type allowed_invite_entry = {
 
 export default class AntiInviteLinks extends BotComponent {
     private allowed_guilds = new Set<string>();
+    private reply_tracker = new ReplyTracker(this.wheatley);
     private channels = channel_map(this.wheatley, wheatley_channels.staff_flag_log);
     private database = this.wheatley.database.create_proxy<{
         allowed_invites: allowed_invite_entry;
@@ -214,7 +216,8 @@ export default class AntiInviteLinks extends BotComponent {
             const quote = await this.utilities.make_quote_embeds(message);
             await message.delete();
             assert(!(message.channel instanceof Discord.PartialGroupDMChannel));
-            await message.channel.send(`<@${message.author.id}> Please do not send invite links`);
+            const reply = await message.channel.send(`<@${message.author.id}> Please do not send invite links`);
+            this.reply_tracker.track(message.author, reply);
             await this.channels.staff_flag_log.send({
                 content: `:warning: Invite link deleted`,
                 ...quote,

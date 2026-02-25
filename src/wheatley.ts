@@ -74,6 +74,7 @@ type EventMap = {
     issue_moderation: (moderation: moderation_entry) => void;
     update_moderation: (moderation: mongo.WithId<moderation_entry>) => void;
     message_db_update: (message: message_database_entry) => void;
+    delete_bot_replies: (user: Discord.User) => void;
 };
 
 export class Wheatley {
