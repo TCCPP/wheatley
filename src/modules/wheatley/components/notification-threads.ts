@@ -136,8 +136,12 @@ export default class NotificationThreads extends BotComponent {
             await (await user.createDM()).send(message);
             return true;
         } catch (e) {
-            if (e instanceof Discord.DiscordAPIError && e.code === 50007) {
-                // 50007: Cannot send messages to this user
+            // 50007 Cannot send messages to this user
+            //  https://docs.discord.com/developers/topics/opcodes-and-status-codes
+            // 50278 Cannot send messages to this user
+            //  undocumented by discord but appears in https://docs.discord.food/topics/errors
+            //  and https://gist.github.com/Dziurwa14/de2498e5ee28d2089f095aa037957cbb
+            if (e instanceof Discord.DiscordAPIError && (e.code === 50007 || e.code === 50278)) {
                 return false;
             }
             throw e;
