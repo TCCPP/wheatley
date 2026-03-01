@@ -449,6 +449,21 @@ export class Wheatley {
         return !!member?.permissions.has(permissions);
     }
 
+    /** Moving a user to a new voice channel forces Discord to re-evaluate permissions on them. */
+    async force_voice_permissions_update(member: Discord.GuildMember): Promise<boolean> {
+        const afk_channel = this.guild.afkChannel;
+        if (!afk_channel) {
+            return false;
+        }
+        const original_channel = member.voice.channel;
+        if (!original_channel || original_channel.id === afk_channel.id) {
+            return false;
+        }
+        await member.voice.setChannel(afk_channel);
+        await member.voice.setChannel(original_channel);
+        return true;
+    }
+
     async is_established_member(
         options: Discord.GuildMember | Discord.User | Discord.UserResolvable | Discord.FetchMemberOptions,
     ) {
