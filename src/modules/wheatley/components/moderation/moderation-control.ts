@@ -2,7 +2,7 @@ import * as Discord from "discord.js";
 
 import { strict as assert } from "assert";
 
-import { time_to_human } from "../../../../utils/strings.js";
+import { build_description, time_to_human } from "../../../../utils/strings.js";
 import { M } from "../../../../utils/debugging-and-logging.js";
 import { BotComponent } from "../../../../bot-component.js";
 import { ModerationComponent, parse_duration } from "./moderation-common.js";
@@ -121,7 +121,7 @@ export default class ModerationControl extends BotComponent {
 
     async notify_user(user: string, case_number: number, description: string) {
         const discord_user = await this.wheatley.client.users.fetch(user);
-        await this.notification_threads.notify_user_with_thread_fallback(
+        return await this.notification_threads.notify_user_with_thread_fallback(
             this.channels.rules,
             discord_user,
             {
@@ -134,6 +134,15 @@ export default class ModerationControl extends BotComponent {
             },
             "Moderation Notification",
         );
+    }
+
+    private async try_notify_user(user: string, case_number: number, description: string) {
+        try {
+            return !(await this.notify_user(user, case_number, description));
+        } catch (e) {
+            this.wheatley.critical_error(e);
+            return true;
+        }
     }
 
     async reason(command: TextBasedCommand, case_number: number, reason: string) {
@@ -149,7 +158,6 @@ export default class ModerationControl extends BotComponent {
             },
         );
         if (res) {
-            await this.reply_with_success(command, "Reason updated");
             await this.channels.staff_action_log.send({
                 embeds: [
                     Modlogs.case_summary(
@@ -159,6 +167,7 @@ export default class ModerationControl extends BotComponent {
                     ).setTitle(`Case ${res.case_number} reason updated`),
                 ],
             });
+            let notification_failed = false;
             if (!note_moderation_types.includes(res.type)) {
                 await this.channels.public_action_log.send({
                     embeds: [
@@ -169,8 +178,9 @@ export default class ModerationControl extends BotComponent {
                         ).setTitle(`Case ${res.case_number} reason updated`),
                     ],
                 });
-                await this.notify_user(res.user, case_number, `**Reason:** ${reason}`);
+                notification_failed = await this.try_notify_user(res.user, case_number, `**Reason:** ${reason}`);
             }
+            await this.reply_with_success(command, "Reason updated", notification_failed);
         } else {
             await this.reply_with_error(command, `Case ${case_number} not found`);
         }
@@ -227,7 +237,6 @@ export default class ModerationControl extends BotComponent {
             },
         );
         if (res) {
-            await this.reply_with_success(command, "Duration updated");
             // Update sleep lists and remove moderation if needed
             this.wheatley.event_hub.emit("update_moderation", res);
             await this.channels.staff_action_log.send({
@@ -239,6 +248,7 @@ export default class ModerationControl extends BotComponent {
                     ).setTitle(`Case ${res.case_number} duration updated`),
                 ],
             });
+            let notification_failed = false;
             if (!note_moderation_types.includes(res.type)) {
                 await this.channels.public_action_log.send({
                     embeds: [
@@ -250,8 +260,13 @@ export default class ModerationControl extends BotComponent {
                     ],
                 });
                 const duration_str = res.duration ? time_to_human(res.duration) : "Permanent";
-                await this.notify_user(res.user, case_number, `**Duration:** ${duration_str}`);
+                notification_failed = await this.try_notify_user(
+                    res.user,
+                    case_number,
+                    `**Duration:** ${duration_str}`,
+                );
             }
+            await this.reply_with_success(command, "Duration updated", notification_failed);
         }
     }
 
@@ -287,7 +302,6 @@ export default class ModerationControl extends BotComponent {
             },
         );
         if (res) {
-            await this.reply_with_success(command, "Case expunged");
             // Update sleep lists and remove moderation if needed
             this.wheatley.event_hub.emit("update_moderation", res);
             await this.channels.staff_action_log.send({
@@ -299,6 +313,7 @@ export default class ModerationControl extends BotComponent {
                     ).setTitle(`Case ${res.case_number} expunged`),
                 ],
             });
+            let notification_failed = false;
             if (!note_moderation_types.includes(res.type)) {
                 await this.channels.public_action_log.send({
                     embeds: [
@@ -309,8 +324,13 @@ export default class ModerationControl extends BotComponent {
                         ).setTitle(`Case ${res.case_number} expunged`),
                     ],
                 });
-                await this.notify_user(res.user, case_number, `**Expunged:** ${reason ?? "No reason provided"}`);
+                notification_failed = await this.try_notify_user(
+                    res.user,
+                    case_number,
+                    `**Expunged:** ${reason ?? "No reason provided"}`,
+                );
             }
+            await this.reply_with_success(command, "Case expunged", notification_failed);
         } else {
             await this.reply_with_error(command, `Case ${case_number} not found`);
         }
@@ -327,12 +347,19 @@ export default class ModerationControl extends BotComponent {
         });
     }
 
-    async reply_with_success(command: TextBasedCommand, message: string) {
+    async reply_with_success(command: TextBasedCommand, message: string, notification_failed = false) {
         await command.replyOrFollowUp({
             embeds: [
                 new Discord.EmbedBuilder()
                     .setColor(colors.green)
-                    .setDescription(`${this.wheatley.emoji.success} ***${message}***`),
+                    .setDescription(
+                        build_description(
+                            `${this.wheatley.emoji.success} ***${message}***`,
+                            notification_failed
+                                ? "Note: Couldn't notify user (DM and thread fallback both failed)."
+                                : null,
+                        ),
+                    ),
             ],
         });
     }
