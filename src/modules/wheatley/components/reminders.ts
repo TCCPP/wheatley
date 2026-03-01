@@ -106,7 +106,7 @@ export default class Reminders extends BotComponent {
             await user.send({ embeds: [embed] });
             dm_success = true;
         } catch (error) {
-            if (error instanceof Discord.DiscordAPIError && error.code === 50007) {
+            if (error instanceof Discord.DiscordAPIError && (error.code === 50007 || error.code === 50278)) {
                 M.debug("Cannot DM user for reminder, falling back to channel mention");
             } else {
                 this.wheatley.critical_error("Error sending reminder DM:", error as Error);

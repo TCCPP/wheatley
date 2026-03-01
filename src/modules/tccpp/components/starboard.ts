@@ -371,7 +371,7 @@ export default class Starboard extends BotComponent {
             });
             return true;
         } catch (e) {
-            if (e instanceof Discord.DiscordAPIError && e.code === 50007) {
+            if (e instanceof Discord.DiscordAPIError && (e.code === 50007 || e.code === 50278)) {
                 M.log(`Could not send DM to ${message.author.tag} (DMs disabled)`);
                 return false;
             } else {
