@@ -180,13 +180,15 @@ export default class LinkedAccounts extends BotComponent {
         const entries = Array.from(all_accounts)
             .filter(id => id !== user_main)
             .map(id => this.create_entry(user_main, id, command.user.id, moderator.displayName, context));
-        await this.wheatley.database.with_transaction(async session => {
-            await this.database.linked_accounts.deleteMany(
-                { main_account: { $in: [user_main, alt_main] } },
-                { session },
-            );
-            await this.database.linked_accounts.insertMany(entries, { session });
-        });
+        await this.wheatley.database.lock();
+        try {
+            await this.database.linked_accounts.deleteMany({
+                main_account: { $in: [user_main, alt_main] },
+            });
+            await this.database.linked_accounts.insertMany(entries);
+        } finally {
+            this.wheatley.database.unlock();
+        }
         await command.reply({
             embeds: [
                 new Discord.EmbedBuilder()
