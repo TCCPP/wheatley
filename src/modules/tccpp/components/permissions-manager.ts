@@ -551,6 +551,11 @@ export default class PermissionManager extends BotComponent {
         };
         this.dynamic_channel_overwrites[channel.id] = perms;
         await this.sync_channel_permissions(channel);
+        await Promise.all(
+            [...channel.members.values()]
+                .filter(member => !member.roles.cache.has(this.roles.voice.id))
+                .map(member => this.wheatley.force_voice_permissions_update(member)),
+        );
     }
 
     private async mod_has_left_the_building(channel: Discord.Channel) {

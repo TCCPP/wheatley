@@ -16,7 +16,7 @@ import { TextBasedCommand } from "../../../../command-abstractions/text-based-co
 import { moderation_entry, basic_moderation_with_user } from "./schemata.js";
 
 export default class VoiceMute extends ModerationComponent {
-    private roles = role_map(this.wheatley, wheatley_roles.voice_muted);
+    private readonly roles = role_map(this.wheatley, wheatley_roles.voice_muted);
 
     get type() {
         return "voice_mute" as const;
