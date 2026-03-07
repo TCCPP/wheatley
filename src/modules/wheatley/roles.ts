@@ -24,4 +24,5 @@ export const wheatley_roles = define_roles({
     herald: { id: "1095555811536797787", name: "Herald" },
     linked_github: { id: "1080596526478397471", name: "Linked GitHub" },
     voice: { id: "1368073548983308328", name: "voice" },
+    voice_muted: { id: "0", name: "voice mute" }, // TODO: Replace with actual role ID from Discord
 });

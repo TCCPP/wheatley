@@ -61,6 +61,7 @@ export default class PermissionManager extends BotComponent {
         wheatley_roles.server_booster,
         wheatley_roles.no_voice,
         wheatley_roles.voice_moderator,
+        wheatley_roles.voice_muted,
         wheatley_roles.no_suggestions,
         wheatley_roles.no_suggestions_at_all,
         wheatley_roles.jedi_council,
@@ -220,6 +221,9 @@ export default class PermissionManager extends BotComponent {
             [this.roles.no_off_topic.id]: no_interaction_at_all,
             [this.roles.voice_moderator.id]: {
                 allow: [...acive_voice_permissions, SET_VOICE_STATUS_PERMISSION_BIT],
+            },
+            [this.roles.voice_muted.id]: {
+                deny: acive_voice_permissions,
             },
         };
         const mod_only_channel: permission_overwrites = {
