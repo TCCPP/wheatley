@@ -9,7 +9,7 @@ import { strict as assert } from "assert";
 import { M } from "../../../../utils/debugging-and-logging.js";
 
 import { unwrap } from "../../../../utils/misc.js";
-import { build_description, capitalize } from "../../../../utils/strings.js";
+import { build_description, capitalize, format_list } from "../../../../utils/strings.js";
 import { time_to_human } from "../../../../utils/strings.js";
 import { DistributedOmit } from "../../../../utils/typing.js";
 import { SleepList } from "../../../../utils/containers.js";
@@ -654,6 +654,21 @@ export abstract class ModerationComponent extends BotComponent {
         );
     }
 
+    // returns true if notification failed
+    private async try_notify_user(
+        user: Discord.User,
+        action: string,
+        moderation: DistributedOmit<moderation_entry, "case">,
+        is_removal = false,
+    ) {
+        try {
+            return !(await this.notify_user(user, action, moderation, is_removal));
+        } catch (e) {
+            this.wheatley.critical_error(e);
+            return true;
+        }
+    }
+
     async issue_moderation_internal(
         user: Discord.User,
         moderator: Discord.User,
@@ -685,7 +700,11 @@ export abstract class ModerationComponent extends BotComponent {
             expunged: null,
             link,
         };
-        await this.notify_user(user, this.past_participle, moderation);
+        try {
+            await this.notify_user(user, this.past_participle, moderation);
+        } catch (e) {
+            this.wheatley.critical_error(e);
+        }
         await this.issue_moderation(moderation);
     }
 
@@ -743,13 +762,9 @@ export abstract class ModerationComponent extends BotComponent {
                 link: command.get_or_forge_url(),
             };
             const is_note_type = note_moderation_types.includes(this.type);
-            const notification_failed = await (async () => {
-                if (!is_note_type) {
-                    return !(await this.notify_user(user, this.past_participle, moderation));
-                } else {
-                    return false;
-                }
-            })();
+            const notification_failed = is_note_type
+                ? false
+                : await this.try_notify_user(user, this.past_participle, moderation);
             await this.issue_moderation(moderation);
             const success_message = is_note_type
                 ? `Note added for ${user.displayName}`
@@ -813,6 +828,7 @@ export abstract class ModerationComponent extends BotComponent {
     ) {
         try {
             const issuer = unwrap(await this.wheatley.try_fetch_guild_member(command.user));
+            const notification_failures: string[] = [];
             for (const user of users) {
                 const target = await this.wheatley.try_fetch_guild_member(user);
                 if (target && target.roles.highest.position >= issuer.roles.highest.position) {
@@ -848,7 +864,10 @@ export abstract class ModerationComponent extends BotComponent {
                     expunged: null,
                     link: command.get_or_forge_url(),
                 };
-                await this.notify_user(user, this.past_participle, moderation);
+                const notification_failed = await this.try_notify_user(user, this.past_participle, moderation);
+                if (notification_failed) {
+                    notification_failures.push(user.displayName);
+                }
                 await this.issue_moderation(moderation);
             }
             await command.replyOrFollowUp({
@@ -856,7 +875,13 @@ export abstract class ModerationComponent extends BotComponent {
                     new Discord.EmbedBuilder()
                         .setColor(colors.wheatley)
                         .setDescription(
-                            `${this.wheatley.emoji.success} ***${capitalize(this.past_participle)} all users***`,
+                            build_description(
+                                `${this.wheatley.emoji.success} ***${capitalize(this.past_participle)} all users***`,
+                                notification_failures.length > 0
+                                    ? `Note: Couldn't notify ${format_list(notification_failures)}` +
+                                          ` (DM and thread fallback both failed).`
+                                    : null,
+                            ),
                         ),
                 ],
             });

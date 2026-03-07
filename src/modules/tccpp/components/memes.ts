@@ -72,7 +72,7 @@ export default class Memes extends BotComponent {
             });
         } catch (e) {
             // Ignore errors sending DMs (user may have DMs disabled)
-            if (!(e instanceof Discord.DiscordAPIError && e.code === 50007)) {
+            if (!(e instanceof Discord.DiscordAPIError && (e.code === 50007 || e.code === 50278))) {
                 throw e;
             }
         }

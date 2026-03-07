@@ -24,7 +24,7 @@ export class WheatleyDatabase {
         const host = credentials.host ?? "localhost";
         const port = credentials.port ?? 27017;
         const url = `mongodb://${user}:${password}@${host}:${port}/?authMechanism=DEFAULT&authSource=wheatley`;
-        const client = new mongo.MongoClient(url, { retryWrites: true });
+        const client = new mongo.MongoClient(url);
         await client.connect();
         const db = client.db("wheatley");
         return new WheatleyDatabase(client, db);
@@ -68,15 +68,6 @@ export class WheatleyDatabase {
 
     unlock() {
         this.mutex.unlock();
-    }
-
-    async with_transaction<T>(fn: (session: mongo.ClientSession) => Promise<T>): Promise<T> {
-        const session = this.client.startSession();
-        try {
-            return await session.withTransaction(fn);
-        } finally {
-            await session.endSession();
-        }
     }
 }
 
