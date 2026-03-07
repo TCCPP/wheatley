@@ -14,6 +14,7 @@ import {
 } from "../../../../command-abstractions/text-based-command-builder.js";
 import { TextBasedCommand } from "../../../../command-abstractions/text-based-command.js";
 import { moderation_entry, basic_moderation_with_user } from "./schemata.js";
+import { channel_has_member_with_role } from "../../../../utils/discord.js";
 
 export default class VoiceTake extends ModerationComponent {
     private roles = role_map(this.wheatley, wheatley_roles.voice, wheatley_roles.voice_moderator);
@@ -97,10 +98,6 @@ export default class VoiceTake extends ModerationComponent {
         await this.moderation_revoke_handler(command, user, null, {}, { allow_no_entry: true });
     }
 
-    private has_voice_moderator_in_channel(channel: Discord.VoiceChannel | Discord.StageChannel): boolean {
-        return channel.members.some(m => m.roles.cache.has(this.roles.voice_moderator.id));
-    }
-
     async apply_moderation(entry: moderation_entry) {
         M.info(`Applying voice take to ${entry.user_name}`);
         if (this.dummy_rounds) {
@@ -110,7 +107,7 @@ export default class VoiceTake extends ModerationComponent {
         if (member) {
             await member.roles.remove(this.roles.voice);
             const channel = member.voice.channel;
-            if (channel && !this.has_voice_moderator_in_channel(channel)) {
+            if (channel && !channel_has_member_with_role(channel, this.roles.voice_moderator.id)) {
                 await this.wheatley.force_voice_permissions_update(member);
             }
         }
@@ -125,7 +122,7 @@ export default class VoiceTake extends ModerationComponent {
         if (member) {
             await member.roles.add(this.roles.voice);
             const channel = member.voice.channel;
-            if (channel && !this.has_voice_moderator_in_channel(channel)) {
+            if (channel && !channel_has_member_with_role(channel, this.roles.voice_moderator.id)) {
                 await this.wheatley.force_voice_permissions_update(member);
             }
         }
@@ -134,7 +131,7 @@ export default class VoiceTake extends ModerationComponent {
     override async apply_revoke_to_discord(member: Discord.GuildMember): Promise<void> {
         await member.roles.add(this.roles.voice);
         const channel = member.voice.channel;
-        if (channel && !this.has_voice_moderator_in_channel(channel)) {
+        if (channel && !channel_has_member_with_role(channel, this.roles.voice_moderator.id)) {
             await this.wheatley.force_voice_permissions_update(member);
         }
     }
