@@ -17,7 +17,7 @@ import { moderation_entry, basic_moderation_with_user } from "./schemata.js";
 import { channel_has_member_with_role } from "../../../../utils/discord.js";
 
 export default class VoiceTake extends ModerationComponent {
-    private roles = role_map(this.wheatley, wheatley_roles.voice, wheatley_roles.voice_moderator);
+    private readonly roles = role_map(this.wheatley, wheatley_roles.voice, wheatley_roles.voice_moderator);
 
     get type() {
         return "voice_take" as const;
