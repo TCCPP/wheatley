@@ -3,7 +3,7 @@ import * as Discord from "discord.js";
 import { strict as assert } from "assert";
 
 import { M } from "../../../utils/debugging-and-logging.js";
-import { HOUR } from "../../../common.js";
+import { HOUR, MINUTE } from "../../../common.js";
 import { BotComponent } from "../../../bot-component.js";
 import { channel_map } from "../../../channel-map.js";
 import { role_map } from "../../../role-map.js";
@@ -106,6 +106,7 @@ export default class PermissionManager extends BotComponent {
     category_permissions: Partial<Record<string, permission_overwrites>> = {};
     channel_overwrites: Partial<Record<string, permission_overwrites>> = {};
     dynamic_channel_overwrites: Partial<Record<string, permission_overwrites>> = {};
+    private last_member_update_by_channel = new Map<string, number>();
 
     override async setup(commands: CommandSetBuilder) {
         await this.channels.resolve();
@@ -606,6 +607,12 @@ export default class PermissionManager extends BotComponent {
         };
         this.dynamic_channel_overwrites[channel.id] = perms;
         await this.sync_channel_permissions(channel);
+        const now = Date.now();
+        const last_update = this.last_member_update_by_channel.get(channel.id) ?? 0;
+        if (now - last_update < 5 * MINUTE) {
+            return; // Avoid repeatedly moving everyone when mods join/leave frequently.
+        }
+        this.last_member_update_by_channel.set(channel.id, now);
         const members = members_to_update
             .map(id => channel.members.get(id))
             .filter((member): member is Discord.GuildMember => member != null);
@@ -631,6 +638,7 @@ export default class PermissionManager extends BotComponent {
             return;
         }
         delete this.dynamic_channel_overwrites[channel.id];
+        this.last_member_update_by_channel.delete(channel.id);
         await this.sync_channel_permissions(channel);
     }
 
