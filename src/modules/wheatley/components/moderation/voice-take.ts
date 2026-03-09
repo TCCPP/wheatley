@@ -15,6 +15,13 @@ import {
 import { TextBasedCommand } from "../../../../command-abstractions/text-based-command.js";
 import { moderation_entry, basic_moderation_with_user } from "./schemata.js";
 import { channel_has_member_with_role } from "../../../../utils/discord.js";
+import {
+    perform_voice_update,
+    select_everyone,
+    exclude_bots,
+    select_without_role,
+    type VoiceUpdateContext,
+} from "../../../../utils/voice-update.js";
 
 export default class VoiceTake extends ModerationComponent {
     private readonly roles = role_map(this.wheatley, wheatley_roles.voice, wheatley_roles.voice_moderator);
@@ -63,6 +70,17 @@ export default class VoiceTake extends ModerationComponent {
                             required: true,
                         })
                         .set_handler(this.handle_give.bind(this)),
+                )
+                .add_subcommand(
+                    new TextBasedCommandBuilder("update", EarlyReplyMode.ephemeral)
+                        .set_description("Force-refresh voice permissions in your current channel")
+                        .add_boolean_option({
+                            title: "all",
+                            description:
+                                "Refresh everyone (required on non-TCCPP). Omit on TCCPP for affected users only.",
+                            required: false,
+                        })
+                        .set_handler(this.handle_update.bind(this)),
                 ),
         );
     }
@@ -96,6 +114,51 @@ export default class VoiceTake extends ModerationComponent {
             return;
         }
         await this.moderation_revoke_handler(command, user, null, {}, { allow_no_entry: true });
+    }
+
+    private async handle_update(command: TextBasedCommand, all: boolean | null) {
+        const member = await command.get_member();
+        if (!member.permissions.has(Discord.PermissionFlagsBits.MoveMembers)) {
+            await this.reply_with_error(command, "You need the Move Members permission to use this command.");
+            return;
+        }
+        const channel = member.voice.channel;
+        if (!channel || !channel.isVoiceBased()) {
+            await this.reply_with_error(command, "You must be in a voice channel to use this command.");
+            return;
+        }
+        const on_tccpp = this.wheatley.components.has("PermissionManager");
+        if (!all && !on_tccpp) {
+            await this.reply_with_error(
+                command,
+                "Specify `all: true` to refresh everyone. (The affected-user mode is only available on TCCPP.)",
+            );
+            return;
+        }
+        const context: VoiceUpdateContext = {
+            guild: this.wheatley.guild,
+            caller: member,
+            channel,
+            wheatley: this.wheatley,
+        };
+        const selector = all ? exclude_bots(select_everyone) : exclude_bots(select_without_role(this.roles.voice.id));
+        const result = await perform_voice_update(context, selector);
+        if (result.afk_missing) {
+            await this.reply_with_error(
+                command,
+                "No AFK channel is configured for this guild, so voice refresh cannot run.",
+            );
+            return;
+        }
+        const scope = all ? "" : " affected";
+        const skipped_suffix = result.skipped > 0 ? ` (${result.skipped} skipped)` : "";
+        await command.reply({
+            content:
+                `Refreshed voice permissions for ${result.succeeded}${scope} member(s) in ${channel.name}.` +
+                skipped_suffix +
+                (result.failed > 0 ? ` (${result.failed} failed)` : ""),
+            should_text_reply: true,
+        });
     }
 
     async apply_moderation(entry: moderation_entry) {
