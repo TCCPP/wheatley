@@ -123,7 +123,7 @@ export default class VoiceTake extends ModerationComponent {
             return;
         }
         const channel = member.voice.channel;
-        if (!channel || !channel.isVoiceBased()) {
+        if (!channel?.isVoiceBased()) {
             await this.reply_with_error(command, "You must be in a voice channel to use this command.");
             return;
         }
