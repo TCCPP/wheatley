@@ -103,15 +103,6 @@ export default class LinkedAccounts extends BotComponent {
         return user_id;
     }
 
-    async get_all_accounts_in_group(main_account: string): Promise<Set<string>> {
-        const alts = await this.database.linked_accounts.find({ main_account }).toArray();
-        const accounts = new Set<string>([main_account]);
-        for (const alt of alts) {
-            accounts.add(alt.alt_account);
-        }
-        return accounts;
-    }
-
     async get_all_linked_accounts(user_id: string): Promise<Set<string>> {
         const main_account = await this.find_main_account(user_id);
         const alts = await this.database.linked_accounts.find({ main_account }).toArray();
@@ -133,23 +124,6 @@ export default class LinkedAccounts extends BotComponent {
         return count > 0 || main_account !== user_id;
     }
 
-    create_entry(
-        main_account: string,
-        alt_account: string,
-        moderator_id: string,
-        moderator_name: string,
-        context: string | null,
-    ): linked_accounts_entry {
-        return {
-            main_account,
-            alt_account,
-            added_by: moderator_id,
-            added_by_name: moderator_name,
-            added_at: Date.now(),
-            context: context ?? undefined,
-        };
-    }
-
     async add_link(command: TextBasedCommand, user: Discord.User, alt: Discord.User, context: string | null) {
         if (user.id === alt.id) {
             await command.reply({
@@ -161,32 +135,38 @@ export default class LinkedAccounts extends BotComponent {
             });
             return;
         }
-        const user_main = await this.find_main_account(user.id);
-        const alt_main = await this.find_main_account(alt.id);
-        if (user_main === alt_main) {
-            await command.reply({
-                embeds: [
-                    new Discord.EmbedBuilder()
-                        .setColor(colors.alert_color)
-                        .setDescription(`${this.wheatley.emoji.error} These accounts are already linked`),
-                ],
-            });
-            return;
-        }
-        const user_group = await this.get_all_accounts_in_group(user_main);
-        const alt_group = await this.get_all_accounts_in_group(alt_main);
-        const all_accounts = new Set([...user_group, ...alt_group]);
         const moderator = await command.get_member();
-        const entries = Array.from(all_accounts)
-            .filter(id => id !== user_main)
-            .map(id => this.create_entry(user_main, id, command.user.id, moderator.displayName, context));
-        await this.wheatley.database.with_transaction(async session => {
-            await this.database.linked_accounts.deleteMany(
-                { main_account: { $in: [user_main, alt_main] } },
-                { session },
+        await this.wheatley.database.lock();
+        try {
+            const [user_main, alt_main] = await Promise.all([
+                this.find_main_account(user.id),
+                this.find_main_account(alt.id),
+            ]);
+            if (user_main === alt_main) {
+                await command.reply({
+                    embeds: [
+                        new Discord.EmbedBuilder()
+                            .setColor(colors.alert_color)
+                            .setDescription(`${this.wheatley.emoji.error} These accounts are already linked`),
+                    ],
+                });
+                return;
+            }
+            await this.database.linked_accounts.updateMany(
+                { main_account: alt_main },
+                { $set: { main_account: user_main } },
             );
-            await this.database.linked_accounts.insertMany(entries, { session });
-        });
+            await this.database.linked_accounts.insertOne({
+                main_account: user_main,
+                alt_account: alt_main,
+                added_by: command.user.id,
+                added_by_name: moderator.displayName,
+                added_at: Date.now(),
+                context: context ?? undefined,
+            });
+        } finally {
+            this.wheatley.database.unlock();
+        }
         await command.reply({
             embeds: [
                 new Discord.EmbedBuilder()

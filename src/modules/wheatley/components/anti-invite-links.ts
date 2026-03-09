@@ -16,9 +16,9 @@ import { ReplyTracker } from "../../../utils/reply-tracker.js";
 const INVITE_RE =
     /(?:(?:discord(?:app)?|disboard)\.(?:gg|(?:com|org|me)\/(?:invite|server\/join))|(?<!\w)\.gg)\/(\S+)/i;
 
-export function match_invite(content: string): string | null {
+export function match_invite(content: string): [string, string] | null {
     const match = content.match(INVITE_RE);
-    return match ? match[1] : null;
+    return match ? [match[0], match[1]] : null;
 }
 
 type allowed_invite_entry = {
@@ -212,7 +212,12 @@ export default class AntiInviteLinks extends BotComponent {
             return;
         }
         const match = match_invite(message.content);
-        if (match && !(await this.is_allowed(match)) && !(await this.wheatley.is_established_member(message.author))) {
+        if (
+            match &&
+            !(await this.is_allowed(match[0])) &&
+            !(await this.wheatley.is_established_member(message.author))
+        ) {
+            this.wheatley.event_hub.emit("invite_link_detected", message.author, message.channelId, match[1]);
             const quote = await this.utilities.make_quote_embeds(message);
             await message.delete();
             assert(!(message.channel instanceof Discord.PartialGroupDMChannel));
