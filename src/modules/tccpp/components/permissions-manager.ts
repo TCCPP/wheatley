@@ -15,6 +15,7 @@ import SkillRoles from "./skill-roles.js";
 import { named_id } from "../../../channel-map.js";
 import { unwrap } from "../../../utils/misc.js";
 import { CommandSetBuilder } from "../../../command-abstractions/command-set-builder.js";
+import { channel_has_member_with_role } from "../../../utils/discord.js";
 import { set_timeout } from "../../../utils/node.js";
 
 const categories_map = {
@@ -104,6 +105,7 @@ export default class PermissionManager extends BotComponent {
 
     category_permissions: Partial<Record<string, permission_overwrites>> = {};
     channel_overwrites: Partial<Record<string, permission_overwrites>> = {};
+    dynamic_channel_overwrites: Partial<Record<string, permission_overwrites>> = {};
 
     override async setup(commands: CommandSetBuilder) {
         await this.channels.resolve();
@@ -471,6 +473,11 @@ export default class PermissionManager extends BotComponent {
     }
 
     async sync_channel_permissions(channel: Discord.CategoryChildChannel) {
+        if (channel.id in this.dynamic_channel_overwrites) {
+            M.log(`Setting dynamic permissions for channel ${channel.id} ${channel.name}`);
+            await this.set_channel_permissions(channel, unwrap(this.dynamic_channel_overwrites[channel.id]));
+            return;
+        }
         if (channel.id in this.channel_overwrites) {
             M.log(`Setting permissions for channel ${channel.id} ${channel.name}`);
             await this.set_channel_permissions(channel, unwrap(this.channel_overwrites[channel.id]));
@@ -487,6 +494,14 @@ export default class PermissionManager extends BotComponent {
         );
         for (const channel of category.children.cache.values()) {
             await this.sync_channel_permissions(channel);
+            if (channel.isVoiceBased()) {
+                for (const [id, member] of channel.members) {
+                    if (await this.wheatley.check_permissions(member, Discord.PermissionFlagsBits.MuteMembers)) {
+                        await this.mod_has_entered_the_building(channel, member.id);
+                        break;
+                    }
+                }
+            }
         }
     }
 
@@ -505,5 +520,84 @@ export default class PermissionManager extends BotComponent {
         set_timeout(() => {
             this.sync_permissions().catch(this.wheatley.critical_error.bind(this.wheatley));
         }, HOUR);
+    }
+
+    private get_base_permissions(
+        channel: Discord.VoiceChannel | Discord.StageChannel,
+    ): permission_overwrites | undefined {
+        if (this.channel_overwrites[channel.id] != null) {
+            return this.channel_overwrites[channel.id];
+        }
+        if (channel.parent != null) {
+            return this.category_permissions[channel.parent.id];
+        }
+        return undefined;
+    }
+
+    private has_moderator_in_channel(channel: Discord.VoiceChannel | Discord.StageChannel): boolean {
+        return channel.members.some(member => member.permissions.has(Discord.PermissionFlagsBits.MuteMembers));
+    }
+
+    private async mod_has_entered_the_building(
+        channel: Discord.VoiceChannel | Discord.StageChannel,
+        entering_moderator_id: string,
+    ) {
+        if (channel.id in this.dynamic_channel_overwrites || channel.id == this.wheatley.guild.afkChannelId) {
+            return;
+        }
+        const everyone = this.wheatley.guild.roles.everyone.id;
+        const base_perms = this.get_base_permissions(channel);
+        if (
+            !base_perms ||
+            !base_perms[everyone] ||
+            !base_perms[everyone].deny ||
+            !base_perms[everyone].deny.includes(Discord.PermissionsBitField.Flags.Speak) ||
+            !base_perms[everyone].deny.includes(Discord.PermissionsBitField.Flags.Stream)
+        ) {
+            return;
+        }
+        if (channel_has_member_with_role(channel, this.roles.voice_moderator.id, entering_moderator_id)) {
+            return;
+        }
+        const perms = Object.assign({}, base_perms);
+        perms[everyone] = {
+            allow: [
+                Discord.PermissionsBitField.Flags.Speak,
+                Discord.PermissionsBitField.Flags.Stream,
+                ...(perms[everyone]?.allow ?? []),
+            ],
+            deny: perms[everyone]?.deny,
+        };
+        this.dynamic_channel_overwrites[channel.id] = perms;
+        await this.sync_channel_permissions(channel);
+    }
+
+    private async mod_has_left_the_building(channel: Discord.VoiceChannel | Discord.StageChannel) {
+        if (!(channel.id in this.dynamic_channel_overwrites)) {
+            return;
+        }
+        if (this.has_moderator_in_channel(channel)) {
+            return;
+        }
+        delete this.dynamic_channel_overwrites[channel.id];
+        await this.sync_channel_permissions(channel);
+    }
+
+    override async on_voice_state_update(old_state: Discord.VoiceState, new_state: Discord.VoiceState) {
+        if (new_state.guild.id !== this.wheatley.guild.id) {
+            return;
+        }
+        if (
+            new_state.member &&
+            new_state.member.permissions.has(Discord.PermissionFlagsBits.MuteMembers) &&
+            new_state.channelId != old_state.channelId
+        ) {
+            if (old_state.channel) {
+                await this.mod_has_left_the_building(old_state.channel);
+            }
+            if (new_state.channel) {
+                await this.mod_has_entered_the_building(new_state.channel, new_state.member.id);
+            }
+        }
     }
 }
