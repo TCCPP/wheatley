@@ -214,6 +214,8 @@ export class CommandHandler {
                         return interaction.options.getNumber(opt.title)?.toString();
                     } else if (opt.type == "boolean") {
                         return interaction.options.getBoolean(opt.title)?.toString();
+                    } else if (opt.type == "channel") {
+                        return interaction.options.getChannel(opt.title)?.id;
                     } else {
                         return "<unknown>";
                     }
@@ -254,6 +256,8 @@ export class CommandHandler {
                 command_options.push(interaction.options.getNumber(option.title));
             } else if (option.type == "boolean") {
                 command_options.push(interaction.options.getBoolean(option.title));
+            } else if (option.type == "channel") {
+                command_options.push(interaction.options.getChannel(option.title));
             } else {
                 assert(false, "unhandled option type");
             }

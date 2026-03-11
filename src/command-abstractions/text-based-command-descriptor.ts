@@ -10,6 +10,7 @@ import {
     TextBasedCommandParameterOptions,
     TextBasedCommandParameterOptionsWithChoices,
     TextBasedCommandOptionType,
+    TextBasedCommandStoredOption,
     TextBasedCommandBuilder,
     EarlyReplyMode,
     CommandCategory,
@@ -34,10 +35,7 @@ class ParseError extends Error {
 }
 
 export class BotTextBasedCommand<Args extends unknown[] = []> extends BaseBotInteraction<[TextBasedCommand, ...Args]> {
-    public readonly options = new Discord.Collection<
-        string,
-        TextBasedCommandParameterOptions & { type: TextBasedCommandOptionType }
-    >();
+    public readonly options = new Discord.Collection<string, TextBasedCommandStoredOption>();
     public readonly subcommands: Discord.Collection<string, BotTextBasedCommand<any>> | null = null;
     public readonly display_name: string;
     public readonly all_names: string[];
@@ -98,6 +96,8 @@ export class BotTextBasedCommand<Args extends unknown[] = []> extends BaseBotInt
             case "user":
             case "users":
                 return /\s(?:<@\d{10,}>|\d{10,})/;
+            case "channel":
+                return /\s(?:<#\d{10,}>|\d{10,})/;
             case "number":
                 return /\s\d/;
             case "boolean":
@@ -145,6 +145,14 @@ export class BotTextBasedCommand<Args extends unknown[] = []> extends BaseBotInt
                     djs_command.addUserOption(slash_option => apply_options(slash_option));
                 } else if (option.type == "role") {
                     djs_command.addRoleOption(slash_option => apply_options(slash_option));
+                } else if (option.type == "channel") {
+                    djs_command.addChannelOption(slash_option => {
+                        const opt = apply_options(slash_option);
+                        if (option.channel_types && option.channel_types.length > 0) {
+                            opt.addChannelTypes(...option.channel_types);
+                        }
+                        return opt;
+                    });
                 } else {
                     assert(false, "unhandled option type");
                 }
@@ -318,32 +326,56 @@ export class BotTextBasedCommand<Args extends unknown[] = []> extends BaseBotInt
                             throw required_arg_error();
                         }
                     }
-                    // eslint-disable-next-line @typescript-eslint/no-unnecessary-condition
-                } else if (option.type == "role") {
-                    const re = new RegExp(
-                        this.wheatley.guild.roles.cache
-                            .map(role => escape_regex(role.name))
-                            .filter(name => name !== "@everyone")
-                            .join("|"),
-                        "i",
-                    );
-                    const match = command_body.match(re);
-                    if (match) {
-                        command_options.push(
-                            unwrap(
-                                this.wheatley.guild.roles.cache.find(
-                                    role => role.name.toLowerCase() === match[0].toLowerCase(),
-                                ),
-                            ),
-                        );
-                        command_body = command_body.slice(match[0].length).trim();
-                    } else if (!option.required) {
-                        command_options.push(null);
-                    } else {
-                        throw required_arg_error();
-                    }
                 } else {
-                    assert(false, "unhandled option type");
+                    switch (option.type) {
+                        case "role": {
+                            const re = new RegExp(
+                                this.wheatley.guild.roles.cache
+                                    .map(role => escape_regex(role.name))
+                                    .filter(name => name !== "@everyone")
+                                    .join("|"),
+                                "i",
+                            );
+                            const match = command_body.match(re);
+                            if (match) {
+                                command_options.push(
+                                    unwrap(
+                                        this.wheatley.guild.roles.cache.find(
+                                            role => role.name.toLowerCase() === match[0].toLowerCase(),
+                                        ),
+                                    ),
+                                );
+                                command_body = command_body.slice(match[0].length).trim();
+                            } else if (!option.required) {
+                                command_options.push(null);
+                            } else {
+                                throw required_arg_error();
+                            }
+                            break;
+                        }
+                        case "channel": {
+                            const re = /^(?:<#(\d{10,})>|(\d{10,}))/;
+                            const match = command_body.match(re);
+                            if (match) {
+                                const channel_id = match[1] || match[2];
+                                const guild = await command_obj.get_guild();
+                                const channel = await guild.channels.fetch(channel_id).catch(() => null);
+                                if (!channel) {
+                                    await reply_with_error(`Unable to find channel`, true);
+                                    return;
+                                }
+                                command_options.push(channel);
+                                command_body = command_body.slice(match[0].length).trim();
+                            } else if (!option.required) {
+                                command_options.push(null);
+                            } else {
+                                throw required_arg_error();
+                            }
+                            break;
+                        }
+                        default:
+                            assert(false, "unhandled option type");
+                    }
                 }
             } catch (e) {
                 if (e instanceof ParseError) {
