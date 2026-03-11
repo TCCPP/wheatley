@@ -100,7 +100,7 @@ export default class GuildLookup extends BotComponent {
             buttons.push(
                 this.guild_lookup_page_button
                     .create_button(guild.id, clamped_page - 1)
-                    .setLabel("🡄")
+                    .setLabel("←")
                     .setStyle(Discord.ButtonStyle.Primary),
             );
         }
@@ -108,7 +108,7 @@ export default class GuildLookup extends BotComponent {
             buttons.push(
                 this.guild_lookup_page_button
                     .create_button(guild.id, clamped_page + 1)
-                    .setLabel("🡆")
+                    .setLabel("→")
                     .setStyle(Discord.ButtonStyle.Primary),
             );
         }
