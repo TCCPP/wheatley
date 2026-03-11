@@ -355,8 +355,13 @@ export class BotTextBasedCommand<Args extends unknown[] = []> extends BaseBotInt
                         }
                         case "channel": {
                             const re = /^(?:<#(\d{10,})>|(\d{10,}))/;
-                            const match = command_body.match(re);
-                            if (match) {
+                            const match = re.exec(command_body);
+                            if (!match) {
+                                if (option.required) {
+                                    throw required_arg_error();
+                                }
+                                command_options.push(null);
+                            } else {
                                 const channel_id = match[1] || match[2];
                                 const guild = await command_obj.get_guild();
                                 const channel = await guild.channels.fetch(channel_id).catch(() => null);
@@ -366,10 +371,6 @@ export class BotTextBasedCommand<Args extends unknown[] = []> extends BaseBotInt
                                 }
                                 command_options.push(channel);
                                 command_body = command_body.slice(match[0].length).trim();
-                            } else if (!option.required) {
-                                command_options.push(null);
-                            } else {
-                                throw required_arg_error();
                             }
                             break;
                         }

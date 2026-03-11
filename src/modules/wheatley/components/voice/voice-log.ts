@@ -40,6 +40,15 @@ type dev_voice_bounce_task = {
     keep_running: boolean;
 };
 
+type dev_voice_bounce_context = {
+    task_id: string;
+    issuer_id: string;
+    target_member: Discord.GuildMember;
+    first: Discord.VoiceBasedChannel;
+    second: Discord.VoiceBasedChannel;
+    count: number;
+};
+
 export default class VoiceLog extends BotComponent {
     private readonly event_history = new SelfClearingMap<string, voice_log_event[]>(JOIN_HISTORY_TTL);
     private voice_log_page_button!: BotButton<[string, number, number, string]>;
@@ -230,12 +239,10 @@ export default class VoiceLog extends BotComponent {
 
         const entries = newest_first.map(e => {
             const name = e.display_name || e.username || e.user_id;
-            const move =
-                e.other_channel_id == null
-                    ? ""
-                    : e.kind === "join"
-                      ? ` • from <#${e.other_channel_id}>`
-                      : ` • to <#${e.other_channel_id}>`;
+            let move = "";
+            if (e.other_channel_id != null) {
+                move = e.kind === "join" ? ` • from <#${e.other_channel_id}>` : ` • to <#${e.other_channel_id}>`;
+            }
             const kind = e.kind === "join" ? "🟩 **JOIN**" : "🟥 **LEAVE**";
             const when = `${discord_timestamp(e.at_ms, "f")} (${discord_timestamp(e.at_ms, "T")})`;
 
@@ -388,19 +395,17 @@ export default class VoiceLog extends BotComponent {
             }
 
             let completed_round_trips = 0;
+            const bounce_context: dev_voice_bounce_context = {
+                task_id,
+                issuer_id: command.user.id,
+                target_member,
+                first,
+                second,
+                count,
+            };
             this.dev_voice_bounce_tasks.set(task_id, { keep_running: true });
             await command.replyOrFollowUp(
-                this.build_dev_voice_bounce_message(
-                    task_id,
-                    command.user.id,
-                    target_member,
-                    first,
-                    second,
-                    count,
-                    completed_round_trips,
-                    "Running...",
-                    true,
-                ),
+                this.build_dev_voice_bounce_message(bounce_context, completed_round_trips, "Running...", true),
                 true,
             );
 
@@ -417,12 +422,7 @@ export default class VoiceLog extends BotComponent {
                 const keep_running = this.dev_voice_bounce_tasks.get(task_id)?.keep_running ?? false;
                 await command.edit(
                     this.build_dev_voice_bounce_message(
-                        task_id,
-                        command.user.id,
-                        target_member,
-                        first,
-                        second,
-                        count,
+                        bounce_context,
                         completed_round_trips,
                         keep_running ? "Running..." : "Stopping...",
                         keep_running,
@@ -434,12 +434,7 @@ export default class VoiceLog extends BotComponent {
             this.dev_voice_bounce_tasks.remove(task_id);
             await command.edit(
                 this.build_dev_voice_bounce_message(
-                    task_id,
-                    command.user.id,
-                    target_member,
-                    first,
-                    second,
-                    count,
+                    bounce_context,
                     completed_round_trips,
                     stopped_early ? "Stopped" : "Finished",
                     false,
@@ -452,16 +447,12 @@ export default class VoiceLog extends BotComponent {
     }
 
     private build_dev_voice_bounce_message(
-        task_id: string,
-        issuer_id: string,
-        target_member: Discord.GuildMember,
-        first: Discord.VoiceBasedChannel,
-        second: Discord.VoiceBasedChannel,
-        count: number,
+        context: dev_voice_bounce_context,
         completed_round_trips: number,
         status: string,
         active: boolean,
     ): Discord.BaseMessageOptions & CommandAbstractionReplyOptions {
+        const { task_id, issuer_id, target_member, first, second, count } = context;
         return {
             embeds: [
                 new Discord.EmbedBuilder()
@@ -547,7 +538,7 @@ export default class VoiceLog extends BotComponent {
             await interaction.deferUpdate();
 
             const channel = await this.wheatley.guild.channels.fetch(channel_id);
-            if (!channel || !channel.isVoiceBased()) {
+            if (!channel?.isVoiceBased()) {
                 const { embeds } = create_error_reply("Error: voice channel no longer exists");
                 await interaction.followUp({ ephemeral: true, embeds });
                 return;
