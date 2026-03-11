@@ -184,16 +184,46 @@ export class CommandHandler {
         return true;
     }
 
+    private resolve_slash_command(command_name: string, subcommand_name: string | null) {
+        if (!Object.hasOwn(this.text_commands, command_name)) {
+            return null;
+        }
+        const command = this.text_commands[command_name];
+        if (subcommand_name) {
+            const subcommand = command.subcommands?.get(subcommand_name);
+            if (!subcommand) {
+                return null;
+            }
+            return {
+                command: subcommand,
+                command_log_name: `${command_name} ${subcommand_name}`,
+            };
+        }
+        return {
+            command,
+            command_log_name: command_name,
+        };
+    }
+
     private async handle_slash_comand(interaction: Discord.ChatInputCommandInteraction) {
-        if (!(interaction.commandName in this.text_commands)) {
-            // TODO: Unknown command
+        const subcommand_name = interaction.options.getSubcommand(false);
+        const resolved_command = this.resolve_slash_command(interaction.commandName, subcommand_name);
+        if (!resolved_command) {
+            M.warn(
+                "Received unknown slash command interaction:",
+                interaction.commandName,
+                subcommand_name ?? "<no subcommand>",
+                "From:",
+                interaction.user.tag,
+                interaction.user.id,
+            );
+            await interaction.reply({
+                ...create_error_reply("This command is out of date. Please wait a moment and try again."),
+                flags: Discord.MessageFlags.Ephemeral,
+            });
+            return;
         }
-        let command = this.text_commands[interaction.commandName];
-        let command_log_name = interaction.commandName;
-        if (interaction.options.getSubcommand(false)) {
-            command_log_name = `${interaction.commandName} ${interaction.options.getSubcommand()}`;
-            command = unwrap(unwrap(command.subcommands).get(interaction.options.getSubcommand()));
-        }
+        const { command, command_log_name } = resolved_command;
         M.log(
             `Received /${command_log_name}`,
             "From:",
@@ -214,6 +244,8 @@ export class CommandHandler {
                         return interaction.options.getNumber(opt.title)?.toString();
                     } else if (opt.type == "boolean") {
                         return interaction.options.getBoolean(opt.title)?.toString();
+                    } else if (opt.type == "channel") {
+                        return interaction.options.getChannel(opt.title)?.id;
                     } else {
                         return "<unknown>";
                     }
@@ -254,6 +286,8 @@ export class CommandHandler {
                 command_options.push(interaction.options.getNumber(option.title));
             } else if (option.type == "boolean") {
                 command_options.push(interaction.options.getBoolean(option.title));
+            } else if (option.type == "channel") {
+                command_options.push(interaction.options.getChannel(option.title));
             } else {
                 assert(false, "unhandled option type");
             }
@@ -381,35 +415,42 @@ export class CommandHandler {
             if (interaction.isChatInputCommand()) {
                 await this.handle_slash_comand(interaction);
             } else if (interaction.isAutocomplete()) {
-                if (interaction.commandName in this.text_commands) {
-                    let command = this.text_commands[interaction.commandName];
-                    if (interaction.options.getSubcommand(false)) {
-                        command = unwrap(unwrap(command.subcommands).get(interaction.options.getSubcommand()));
-                    }
-                    // TODO: permissions sanity check?
-                    const field = interaction.options.getFocused(true);
-                    M.log(
-                        `Received autocomplete interaction for /${interaction.commandName}`,
+                const subcommand_name = interaction.options.getSubcommand(false);
+                const resolved_command = this.resolve_slash_command(interaction.commandName, subcommand_name);
+                if (!resolved_command) {
+                    M.warn(
+                        "Received unknown autocomplete interaction:",
+                        interaction.commandName,
+                        subcommand_name ?? "<no subcommand>",
                         "From:",
                         interaction.user.tag,
                         interaction.user.id,
-                        "Field:",
-                        field.name,
-                        "Text:",
-                        JSON.stringify(field.value),
                     );
-                    assert(command.options.has(field.name), `${interaction.commandName} ${field.name}`);
-                    const option = command.options.get(field.name)!;
-                    assert(option.autocomplete, `${interaction.commandName} ${field.name}`);
-                    await interaction.respond(
-                        option.autocomplete(field.value, interaction.commandName).map(({ name, value }) => ({
-                            name: name.substring(0, 100),
-                            value: value.substring(0, 100),
-                        })),
-                    );
-                } else {
-                    // TODO unknown command
+                    await interaction.respond([]);
+                    return;
                 }
+                const { command } = resolved_command;
+                // TODO: permissions sanity check?
+                const field = interaction.options.getFocused(true);
+                M.log(
+                    `Received autocomplete interaction for /${interaction.commandName}`,
+                    "From:",
+                    interaction.user.tag,
+                    interaction.user.id,
+                    "Field:",
+                    field.name,
+                    "Text:",
+                    JSON.stringify(field.value),
+                );
+                assert(command.options.has(field.name), `${interaction.commandName} ${field.name}`);
+                const option = command.options.get(field.name)!;
+                assert(option.autocomplete, `${interaction.commandName} ${field.name}`);
+                await interaction.respond(
+                    option.autocomplete(field.value, interaction.commandName).map(({ name, value }) => ({
+                        name: name.substring(0, 100),
+                        value: value.substring(0, 100),
+                    })),
+                );
             } else if (interaction.isMessageContextMenuCommand()) {
                 assert(interaction.commandName in this.other_commands, interaction.commandName);
                 M.log(
