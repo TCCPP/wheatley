@@ -21,6 +21,7 @@ export default class VoiceFirstJoinNotice extends BotComponent {
         wheatley_roles.voice,
         wheatley_roles.no_voice,
         wheatley_roles.server_booster,
+        wheatley_roles.voice_moderator,
     );
     private database = this.wheatley.database.create_proxy<{
         voice_first_join_notice: voice_first_join_notice_entry;
@@ -51,6 +52,24 @@ export default class VoiceFirstJoinNotice extends BotComponent {
             return;
         }
         const member = new_state.member;
+        const channel = new_state.channel;
+        if (!channel) {
+            return;
+        }
+
+        // Only record or notify on first join when no voice mod or ban-capable mod is present.
+        // If one is present, the user can be helped immediately; we delay the notice until they
+        // join with no moderator present.
+        const has_voice_mod_or_ban_moderator = [...channel.members.values()].some(
+            m =>
+                m.id !== member.id &&
+                (m.roles.cache.has(this.roles.voice_moderator.id) ||
+                    m.permissions.has(Discord.PermissionFlagsBits.BanMembers)),
+        );
+        if (has_voice_mod_or_ban_moderator) {
+            return;
+        }
+
         const res = await this.database.voice_first_join_notice.updateOne(
             { guild: new_state.guild.id, user: member.id },
             {
@@ -76,18 +95,20 @@ export default class VoiceFirstJoinNotice extends BotComponent {
         ) {
             return;
         }
-        const channel = new_state.channel;
-        if (!channel) {
-            return;
+        const message =
+            "new users are suppressed by default to protect our voice channels. " +
+            "You will be able to speak when joining a channel with a voice moderator present. " +
+            "Stick around and you will eventually be granted permanent voice access. " +
+            "__Please do not ping voice moderators to be unsupressed or for the voice role.__";
+        // Try DM first; fall back to the voice channel if the user has DMs disabled.
+        // DM's will pierce the veil of a users inbox and is far more likely to be read.
+        try {
+            await member.send({ content: message });
+        } catch {
+            await channel.send({
+                content: `<@${member.id}> ` + message,
+                allowedMentions: { users: [member.id] },
+            });
         }
-        await channel.send({
-            content:
-                `<@${member.id}> ` +
-                "new users are suppressed by default to protect our voice channels. " +
-                "You will be able to speak when joining a channel with a voice moderator present. " +
-                "Stick around and you will eventually be granted permanent voice access. " +
-                "__Please do not ping voice moderators to be unsupressed or for the voice role.__",
-            allowedMentions: { users: [member.id] },
-        });
     }
 }
