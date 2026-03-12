@@ -69,22 +69,6 @@ export default class VoiceFirstJoinNotice extends BotComponent {
         if (has_voice_mod_or_ban_moderator) {
             return;
         }
-
-        const res = await this.database.voice_first_join_notice.updateOne(
-            { guild: new_state.guild.id, user: member.id },
-            {
-                $setOnInsert: {
-                    guild: new_state.guild.id,
-                    user: member.id,
-                    first_seen_at: new Date(),
-                    first_channel: new_state.channelId,
-                },
-            },
-            { upsert: true },
-        );
-        if (res.upsertedCount === 0) {
-            return;
-        }
         if (
             member.roles.cache.has(this.roles.voice.id) ||
             member.roles.cache.has(this.roles.no_voice.id) ||
@@ -102,13 +86,39 @@ export default class VoiceFirstJoinNotice extends BotComponent {
             "__Please do not ping voice moderators to be unsupressed or for the voice role.__";
         // Try DM first; fall back to the voice channel if the user has DMs disabled.
         // DM's will pierce the veil of a users inbox and is far more likely to be read.
+        let sent = false;
         try {
             await member.send({ content: message });
+            sent = true;
         } catch {
-            await channel.send({
-                content: `<@${member.id}> ` + message,
-                allowedMentions: { users: [member.id] },
-            });
+            try {
+                await channel.send({
+                    content: `<@${member.id}> ` + message,
+                    allowedMentions: { users: [member.id] },
+                });
+                sent = true;
+            } catch {
+                sent = false;
+            }
+        }
+        if (!sent) {
+            return;
+        }
+
+        const res = await this.database.voice_first_join_notice.updateOne(
+            { guild: new_state.guild.id, user: member.id },
+            {
+                $setOnInsert: {
+                    guild: new_state.guild.id,
+                    user: member.id,
+                    first_seen_at: new Date(),
+                    first_channel: new_state.channelId,
+                },
+            },
+            { upsert: true },
+        );
+        if (res.upsertedCount === 0) {
+            return;
         }
     }
 }
