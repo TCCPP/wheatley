@@ -25,6 +25,8 @@ import { CommandHandler } from "./command-handler.js";
 import { CommandSetBuilder } from "./command-abstractions/command-set-builder.js";
 import { message_database_entry } from "./modules/wheatley/components/moderation/purge.js";
 
+const OFFICIAL_TCCPP_GUILD_ID = "331718482485837825";
+
 export function create_basic_embed(title: string | undefined, color: number, content: string) {
     const embed = new Discord.EmbedBuilder().setColor(color).setDescription(content);
     if (title) {
@@ -130,6 +132,7 @@ export class Wheatley {
     });
 
     private mom_ping: string;
+    private readonly configured_guild_id: string;
 
     readonly config: {
         [key: string]: any;
@@ -144,6 +147,7 @@ export class Wheatley {
         config: wheatley_config,
     ) {
         this.freestanding = config.freestanding ?? false;
+        this.configured_guild_id = config.guild;
 
         this.mom_ping = config.mom ? ` <@${config.mom}>` : "";
 
@@ -160,6 +164,14 @@ export class Wheatley {
         this.config = { ...component_config };
 
         this.setup(config).catch(this.critical_error.bind(this));
+    }
+
+    is_tccpp() {
+        return this.configured_guild_id === OFFICIAL_TCCPP_GUILD_ID;
+    }
+
+    is_tccpp_like() {
+        return this.is_tccpp() || this.components.has("PermissionManager");
     }
 
     private *locate_components(config: core_config) {
@@ -448,6 +460,21 @@ export class Wheatley {
     ) {
         const member = await this.try_fetch_guild_member(options);
         return !!member?.permissions.has(permissions);
+    }
+
+    /** Moving a user to a new voice channel forces Discord to re-evaluate permissions on them. */
+    async force_voice_permissions_update(member: Discord.GuildMember): Promise<boolean> {
+        const afk_channel = this.guild.afkChannel;
+        if (!afk_channel) {
+            return false;
+        }
+        const original_channel = member.voice.channel;
+        if (!original_channel || original_channel.id === afk_channel.id) {
+            return false;
+        }
+        await member.voice.setChannel(afk_channel);
+        await member.voice.setChannel(original_channel);
+        return true;
     }
 
     async is_established_member(
