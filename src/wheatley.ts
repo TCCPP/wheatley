@@ -25,6 +25,8 @@ import { CommandHandler } from "./command-handler.js";
 import { CommandSetBuilder } from "./command-abstractions/command-set-builder.js";
 import { message_database_entry } from "./modules/wheatley/components/moderation/purge.js";
 
+const OFFICIAL_TCCPP_GUILD_ID = "331718482485837825";
+
 export function create_basic_embed(title: string | undefined, color: number, content: string) {
     const embed = new Discord.EmbedBuilder().setColor(color).setDescription(content);
     if (title) {
@@ -130,6 +132,7 @@ export class Wheatley {
     });
 
     private mom_ping: string;
+    private readonly configured_guild_id: string;
 
     readonly config: {
         [key: string]: any;
@@ -144,6 +147,7 @@ export class Wheatley {
         config: wheatley_config,
     ) {
         this.freestanding = config.freestanding ?? false;
+        this.configured_guild_id = config.guild;
 
         this.mom_ping = config.mom ? ` <@${config.mom}>` : "";
 
@@ -160,6 +164,14 @@ export class Wheatley {
         this.config = { ...component_config };
 
         this.setup(config).catch(this.critical_error.bind(this));
+    }
+
+    is_tccpp() {
+        return this.configured_guild_id === OFFICIAL_TCCPP_GUILD_ID;
+    }
+
+    is_tccpp_like() {
+        return this.is_tccpp() || this.components.has("PermissionManager");
     }
 
     private *locate_components(config: core_config) {

@@ -51,6 +51,7 @@ describe("voice update", () => {
             guild: { afkChannel: { id: "afk" } },
             components: { has: (name: string) => name === "PermissionManager" },
             force_voice_permissions_update,
+            is_tccpp_like: () => true,
         };
 
         const channel = createVoiceChannel([]);
@@ -101,7 +102,7 @@ describe("voice update", () => {
         });
         const component = Object.assign(Object.create(VoiceUpdate.prototype), {
             wheatley: {
-                components: { has: () => false },
+                is_tccpp_like: () => false,
             },
         });
 

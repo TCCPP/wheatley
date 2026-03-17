@@ -54,8 +54,7 @@ export default class VoiceUpdate extends BotComponent {
             return;
         }
 
-        const on_tccpp = this.wheatley.components.has("PermissionManager");
-        if (!all && !on_tccpp) {
+        if (!all && !this.wheatley.is_tccpp_like()) {
             await command.reply(
                 create_error_reply(
                     "Specify `all: true` to refresh everyone. (The affected-user mode is only available on TCCPP.)",
