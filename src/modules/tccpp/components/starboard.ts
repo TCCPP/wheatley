@@ -556,6 +556,23 @@ export default class Starboard extends BotComponent {
             ).size === 0
         );
     }
+    override async on_message_create(message: Discord.Message) {
+        if (message.guildId !== this.wheatley.guild.id) {
+            return;
+        }
+        const XIRLORD_ID = "1169201543011119156";
+        if (
+            message.author.id === XIRLORD_ID &&
+            message.channel.id === this.channels.memes.id
+        ) {
+            await this.send_auto_delete_dm(message, delete_trigger_type.repost);
+            await message.delete();
+            await message.channel.send(
+                `<@${message.author.id}> A message of yours was automatically deleted because a threshold for` +
+                " :recycle: reactions (or similar) was reached.",
+            );
+        }
+    }
     override async on_reaction_add(reaction: Discord.MessageReaction | Discord.PartialMessageReaction) {
         if (reaction.message.guildId !== this.wheatley.guild.id) {
             return;
