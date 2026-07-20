@@ -252,9 +252,9 @@ export default class Starboard extends BotComponent {
             } else {
                 return reaction.count >= star_threshold;
             }
-        } else if (
-            !(this.negative_emojis.includes(reaction.emoji.name) || this.ignored_emojis.includes(reaction.emoji.name))
-        ) {
+        } else if (!(
+            this.negative_emojis.includes(reaction.emoji.name) || this.ignored_emojis.includes(reaction.emoji.name)
+        )) {
             if (parent_channel_id == this.channels.memes.id) {
                 return reaction.count >= memes_other_threshold;
             } else {
