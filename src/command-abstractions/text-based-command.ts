@@ -205,7 +205,9 @@ export class TextBasedCommand {
 
     make_message_options(
         raw_message_options:
-            string | (Discord.BaseMessageOptions & CommandAbstractionReplyOptions) | Discord.MessageEditOptions,
+            | string
+            | (Discord.BaseMessageOptions & CommandAbstractionReplyOptions)
+            | Discord.MessageEditOptions,
         positional_ephemeral_if_possible = false,
         positional_should_text_reply = false,
     ) {

@@ -641,12 +641,14 @@ export default class Wiki extends BotComponent {
 
     async wiki_preview(command: TextBasedCommand, content: string) {
         const channel = await command.get_channel();
-        if (!(
-            this.wheatley.freestanding ||
-            channel.id === this.channels.bot_spam.id ||
-            (channel.isThread() && channel.parentId === this.channels.bot_spam.id) ||
-            channel.isDMBased()
-        )) {
+        if (
+            !(
+                this.wheatley.freestanding ||
+                channel.id === this.channels.bot_spam.id ||
+                (channel.isThread() && channel.parentId === this.channels.bot_spam.id) ||
+                channel.isDMBased()
+            )
+        ) {
             await command.reply(
                 `!wiki-preview must be used in <#${this.channels.bot_spam.id}>, a bot-spam thread, or a DM`,
                 true,

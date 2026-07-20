@@ -22,7 +22,7 @@ function is_all_ascii(str: string) {
 function has_three_continuous_valid_asciis(str: string) {
     let index: number;
     let consecutive_count = 0;
-    for (index = 0; index < str.length;) {
+    for (index = 0; index < str.length; ) {
         let point = str.codePointAt(index);
         assert(point !== undefined);
         if (point > 32 && point < 127) {
