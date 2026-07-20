@@ -98,6 +98,18 @@ export default class VoiceTake extends ModerationComponent {
         await this.moderation_revoke_handler(command, user, null, {}, { allow_no_entry: true });
     }
 
+    private async refresh_voice_permissions(member: Discord.GuildMember) {
+        const channel = member.voice.channel;
+        if (!channel || channel_has_member_with_role(channel, this.roles.voice_moderator.id)) {
+            return;
+        }
+        try {
+            await this.wheatley.force_voice_permissions_update(member);
+        } catch (e) {
+            M.error(`Failed to refresh voice permissions for ${member.user.tag}`, e);
+        }
+    }
+
     async apply_moderation(entry: moderation_entry) {
         M.info(`Applying voice take to ${entry.user_name}`);
         if (this.dummy_rounds) {
@@ -106,10 +118,7 @@ export default class VoiceTake extends ModerationComponent {
         const member = await this.wheatley.try_fetch_guild_member(entry.user);
         if (member) {
             await member.roles.remove(this.roles.voice);
-            const channel = member.voice.channel;
-            if (channel && !channel_has_member_with_role(channel, this.roles.voice_moderator.id)) {
-                await this.wheatley.force_voice_permissions_update(member);
-            }
+            await this.refresh_voice_permissions(member);
         }
     }
 
@@ -121,19 +130,13 @@ export default class VoiceTake extends ModerationComponent {
         const member = await this.wheatley.try_fetch_guild_member(entry.user);
         if (member) {
             await member.roles.add(this.roles.voice);
-            const channel = member.voice.channel;
-            if (channel && !channel_has_member_with_role(channel, this.roles.voice_moderator.id)) {
-                await this.wheatley.force_voice_permissions_update(member);
-            }
+            await this.refresh_voice_permissions(member);
         }
     }
 
     override async apply_revoke_to_discord(member: Discord.GuildMember): Promise<void> {
         await member.roles.add(this.roles.voice);
-        const channel = member.voice.channel;
-        if (channel && !channel_has_member_with_role(channel, this.roles.voice_moderator.id)) {
-            await this.wheatley.force_voice_permissions_update(member);
-        }
+        await this.refresh_voice_permissions(member);
     }
 
     async is_moderation_applied_in_discord(moderation: basic_moderation_with_user) {

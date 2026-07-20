@@ -32,8 +32,7 @@ export default class VoiceUpdate extends BotComponent {
                         .set_description("Force-refresh voice permissions in your current channel")
                         .add_boolean_option({
                             title: "all",
-                            description:
-                                "Refresh everyone (required on non-TCCPP). Omit on TCCPP for affected users only.",
+                            description: "Refresh everyone rather than only those without the voice role",
                             required: false,
                         })
                         .set_handler(this.handle_update.bind(this)),
@@ -54,15 +53,6 @@ export default class VoiceUpdate extends BotComponent {
             return;
         }
 
-        if (!all && !this.wheatley.is_tccpp_like()) {
-            await command.reply(
-                create_error_reply(
-                    "Specify `all: true` to refresh everyone. (The affected-user mode is only available on TCCPP.)",
-                ),
-            );
-            return;
-        }
-
         let selector = exclude_bots(select_everyone);
         if (!all) {
             let voice_role: Discord.Role;
@@ -72,7 +62,7 @@ export default class VoiceUpdate extends BotComponent {
                 await command.reply(
                     create_error_reply(
                         "Could not resolve the `voice` role needed for affected-user refresh. " +
-                            "Create that role in the dev guild or run with `all: true`.",
+                            "Create that role in this guild or run with `all: true`.",
                     ),
                 );
                 return;
@@ -81,7 +71,6 @@ export default class VoiceUpdate extends BotComponent {
         }
 
         const context: VoiceUpdateContext = {
-            guild: this.wheatley.guild,
             caller: member,
             channel,
             wheatley: this.wheatley,

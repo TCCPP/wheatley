@@ -49,9 +49,7 @@ describe("voice update", () => {
         const force_voice_permissions_update = vi.fn().mockResolvedValue(true);
         const wheatley = {
             guild: { afkChannel: { id: "afk" } },
-            components: { has: (name: string) => name === "PermissionManager" },
             force_voice_permissions_update,
-            is_tccpp_like: () => true,
         };
 
         const channel = createVoiceChannel([]);
@@ -93,7 +91,7 @@ describe("voice update", () => {
         });
     });
 
-    it("requires all outside TCCPP when affected-user mode is unavailable", async () => {
+    it("reports an error when the voice role cannot be resolved in affected-user mode", async () => {
         const reply = vi.fn().mockResolvedValue(undefined);
         const caller = createMember({
             id: "caller",
@@ -101,8 +99,10 @@ describe("voice update", () => {
             channel: createVoiceChannel([]),
         });
         const component = Object.assign(Object.create(VoiceUpdate.prototype), {
-            wheatley: {
-                is_tccpp_like: () => false,
+            utilities: {
+                resolve_role: vi.fn(() => {
+                    throw new Error("unresolved");
+                }),
             },
         });
 
@@ -115,7 +115,7 @@ describe("voice update", () => {
         );
 
         expect(reply).toHaveBeenCalledOnce();
-        expect(reply.mock.calls[0][0].embeds[0].data.description).toContain("Specify `all: true` to refresh everyone.");
+        expect(reply.mock.calls[0][0].embeds[0].data.description).toContain("Could not resolve the `voice` role");
     });
 });
 
@@ -147,7 +147,6 @@ describe("perform_voice_update", () => {
 
         const result = await perform_voice_update(
             {
-                guild: {} as any,
                 caller: { ...caller, voice: { channel } } as any,
                 channel: channel as any,
                 wheatley: {

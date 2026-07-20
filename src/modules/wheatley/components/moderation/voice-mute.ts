@@ -84,6 +84,14 @@ export default class VoiceMute extends ModerationComponent {
         );
     }
 
+    private async refresh_voice_permissions(member: Discord.GuildMember) {
+        try {
+            await this.wheatley.force_voice_permissions_update(member);
+        } catch (e) {
+            M.error(`Failed to refresh voice permissions for ${member.user.tag}`, e);
+        }
+    }
+
     async apply_moderation(entry: moderation_entry) {
         M.info(`Applying voice mute to ${entry.user_name}`);
         if (this.dummy_rounds) {
@@ -92,9 +100,7 @@ export default class VoiceMute extends ModerationComponent {
         const member = await this.wheatley.try_fetch_guild_member(entry.user);
         if (member) {
             await member.roles.add(this.roles.voice_muted);
-            if (member.voice.channel) {
-                await this.wheatley.force_voice_permissions_update(member);
-            }
+            await this.refresh_voice_permissions(member);
         }
     }
 
@@ -106,9 +112,7 @@ export default class VoiceMute extends ModerationComponent {
         const member = await this.wheatley.try_fetch_guild_member(entry.user);
         if (member) {
             await member.roles.remove(this.roles.voice_muted);
-            if (member.voice.channel) {
-                await this.wheatley.force_voice_permissions_update(member);
-            }
+            await this.refresh_voice_permissions(member);
         }
     }
 

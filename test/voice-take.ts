@@ -76,6 +76,19 @@ describe("voice take refreshes", () => {
         expect(force_voice_permissions_update).not.toHaveBeenCalled();
     });
 
+    it("still applies the moderation when the refresh fails", async () => {
+        const member = createMember({ id: "target" });
+        member.voice.channel = createVoiceChannel([member]);
+
+        const force_voice_permissions_update = vi.fn().mockRejectedValue(new Error("disconnected"));
+        const component = createVoiceTake(member, force_voice_permissions_update);
+
+        await expect(component.apply_moderation({ user: member.id, user_name: "Target" })).resolves.toBeUndefined();
+
+        expect(member.roles.remove).toHaveBeenCalledWith(expect.objectContaining({ id: "voice-role" }));
+        expect(force_voice_permissions_update).toHaveBeenCalledWith(member);
+    });
+
     it("forces a refresh again when removing a voice take", async () => {
         const member = createMember({ id: "target" });
         const channel = createVoiceChannel([member]);
