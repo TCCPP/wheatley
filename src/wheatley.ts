@@ -149,8 +149,7 @@ export class Wheatley {
 
         this.log_limiter = new LogLimiter(this);
 
-        // temporary until fixed in djs or @types/node
-        (this.client as any).setMaxListeners(35);
+        this.client.setMaxListeners(35);
 
         this.client.on("error", error => {
             M.error(error);
