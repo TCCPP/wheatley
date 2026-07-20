@@ -81,6 +81,14 @@ export function textchannelify(x: Discord.Channel): Discord.TextBasedChannel {
     return x;
 }
 
+export function channel_has_member_with_role(
+    channel: Discord.VoiceChannel | Discord.StageChannel,
+    role_id: string,
+    excluded_member_id?: string,
+): boolean {
+    return channel.members.some(member => member.id !== excluded_member_id && member.roles.cache.has(role_id));
+}
+
 export function get_tag(channel: Discord.ForumChannel, name: string) {
     const candidates = channel.availableTags.filter(tag => tag.name == name);
     assert(

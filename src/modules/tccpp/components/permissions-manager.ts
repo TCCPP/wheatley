@@ -15,6 +15,7 @@ import SkillRoles from "./skill-roles.js";
 import { named_id } from "../../../channel-map.js";
 import { unwrap } from "../../../utils/misc.js";
 import { CommandSetBuilder } from "../../../command-abstractions/command-set-builder.js";
+import { channel_has_member_with_role } from "../../../utils/discord.js";
 import { set_timeout } from "../../../utils/node.js";
 
 const categories_map = {
@@ -61,6 +62,7 @@ export default class PermissionManager extends BotComponent {
         wheatley_roles.server_booster,
         wheatley_roles.no_voice,
         wheatley_roles.voice_moderator,
+        wheatley_roles.voice_muted,
         wheatley_roles.no_suggestions,
         wheatley_roles.no_suggestions_at_all,
         wheatley_roles.jedi_council,
@@ -220,6 +222,9 @@ export default class PermissionManager extends BotComponent {
             [this.roles.no_off_topic.id]: no_interaction_at_all,
             [this.roles.voice_moderator.id]: {
                 allow: [...acive_voice_permissions, SET_VOICE_STATUS_PERMISSION_BIT],
+            },
+            [this.roles.voice_muted.id]: {
+                deny: acive_voice_permissions,
             },
         };
         const mod_only_channel: permission_overwrites = {
@@ -487,13 +492,12 @@ export default class PermissionManager extends BotComponent {
         await category.permissionOverwrites.set(
             Object.entries(permissions).map(([id, permissions]) => ({ id, ...permissions })),
         );
-        const channels = category.children.cache.map(channel => channel);
-        for (const channel of channels) {
+        for (const channel of category.children.cache.values()) {
             await this.sync_channel_permissions(channel);
             if (channel.isVoiceBased()) {
                 for (const [id, member] of channel.members) {
                     if (await this.wheatley.check_permissions(member, Discord.PermissionFlagsBits.MuteMembers)) {
-                        await this.mod_has_entered_the_building(channel);
+                        await this.mod_has_entered_the_building(channel, member.id);
                         break;
                     }
                 }
@@ -518,15 +522,31 @@ export default class PermissionManager extends BotComponent {
         }, HOUR);
     }
 
-    private async mod_has_entered_the_building(channel: Discord.Channel) {
-        assert(channel.isVoiceBased());
+    private get_base_permissions(
+        channel: Discord.VoiceChannel | Discord.StageChannel,
+    ): permission_overwrites | undefined {
+        if (this.channel_overwrites[channel.id] != null) {
+            return this.channel_overwrites[channel.id];
+        }
+        if (channel.parent != null) {
+            return this.category_permissions[channel.parent.id];
+        }
+        return undefined;
+    }
+
+    private has_moderator_in_channel(channel: Discord.VoiceChannel | Discord.StageChannel): boolean {
+        return channel.members.some(member => member.permissions.has(Discord.PermissionFlagsBits.MuteMembers));
+    }
+
+    private async mod_has_entered_the_building(
+        channel: Discord.VoiceChannel | Discord.StageChannel,
+        entering_moderator_id: string,
+    ) {
         if (channel.id in this.dynamic_channel_overwrites || channel.id == this.wheatley.guild.afkChannelId) {
             return;
         }
         const everyone = this.wheatley.guild.roles.everyone.id;
-        const base_perms =
-            this.channel_overwrites[channel.id] ??
-            (channel.parent ? this.category_permissions[channel.parent.id] : undefined);
+        const base_perms = this.get_base_permissions(channel);
         if (
             !base_perms ||
             !base_perms[everyone] ||
@@ -534,6 +554,9 @@ export default class PermissionManager extends BotComponent {
             !base_perms[everyone].deny.includes(Discord.PermissionsBitField.Flags.Speak) ||
             !base_perms[everyone].deny.includes(Discord.PermissionsBitField.Flags.Stream)
         ) {
+            return;
+        }
+        if (channel_has_member_with_role(channel, this.roles.voice_moderator.id, entering_moderator_id)) {
             return;
         }
         const perms = Object.assign({}, base_perms);
@@ -549,15 +572,12 @@ export default class PermissionManager extends BotComponent {
         await this.sync_channel_permissions(channel);
     }
 
-    private async mod_has_left_the_building(channel: Discord.Channel) {
-        assert(channel.isVoiceBased());
+    private async mod_has_left_the_building(channel: Discord.VoiceChannel | Discord.StageChannel) {
         if (!(channel.id in this.dynamic_channel_overwrites)) {
             return;
         }
-        for (const [id, member] of channel.members) {
-            if (await this.wheatley.check_permissions(member, Discord.PermissionFlagsBits.MuteMembers)) {
-                return;
-            }
+        if (this.has_moderator_in_channel(channel)) {
+            return;
         }
         delete this.dynamic_channel_overwrites[channel.id];
         await this.sync_channel_permissions(channel);
@@ -576,7 +596,7 @@ export default class PermissionManager extends BotComponent {
                 await this.mod_has_left_the_building(old_state.channel);
             }
             if (new_state.channel) {
-                await this.mod_has_entered_the_building(new_state.channel);
+                await this.mod_has_entered_the_building(new_state.channel, new_state.member.id);
             }
         }
     }
