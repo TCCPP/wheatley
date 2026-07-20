@@ -2,24 +2,29 @@ import { describe, expect, it } from "vitest";
 
 import { match_invite } from "../src/modules/wheatley/components/anti-invite-links.js";
 
+function match_invite_id(content: string) {
+    const match = match_invite(content);
+    return match ? match[1] : null;
+}
+
 describe("invite link tests", () => {
     it("should block invite links", () => {
-        expect(match_invite("discord.gg/foo")).to.equal("foo");
-        expect(match_invite("discord.com/invite/foo")).to.equal("foo");
-        expect(match_invite("discordapp.com/invite/foo")).to.equal("foo");
-        expect(match_invite("disboard.org/server/join/foo")).to.equal("foo");
-        expect(match_invite("discord.me/server/join/foo")).to.equal("foo");
-        expect(match_invite("discord.gg/f")).to.equal("f");
-        expect(match_invite("foo .gg/bar")).to.equal("bar");
-        expect(match_invite("foobar https://discord.gg/randomserver foobar")).to.equal("randomserver");
-        expect(match_invite("foobar discord.gg/randomserver foobar")).to.equal("randomserver");
-        expect(match_invite("foobar discord.gg/randomserver foobar")).to.equal("randomserver");
-        expect(match_invite("foobar discord.gg/T897FfR foobar")).to.equal("T897FfR");
-        expect(match_invite("foobar discord.GG/random foobar")).to.equal("random");
-        expect(match_invite("foobar discord.gg/12*(*^&^)asdggascn foobar")).to.equal("12*(*^&^)asdggascn");
-        expect(match_invite("discord.gg/1")).to.equal("1");
+        expect(match_invite_id("discord.gg/foo")).to.equal("foo");
+        expect(match_invite_id("discord.com/invite/foo")).to.equal("foo");
+        expect(match_invite_id("discordapp.com/invite/foo")).to.equal("foo");
+        expect(match_invite_id("disboard.org/server/join/foo")).to.equal("foo");
+        expect(match_invite_id("discord.me/server/join/foo")).to.equal("foo");
+        expect(match_invite_id("discord.gg/f")).to.equal("f");
+        expect(match_invite_id("foo .gg/bar")).to.equal("bar");
+        expect(match_invite_id("foobar https://discord.gg/randomserver foobar")).to.equal("randomserver");
+        expect(match_invite_id("foobar discord.gg/randomserver foobar")).to.equal("randomserver");
+        expect(match_invite_id("foobar discord.gg/randomserver foobar")).to.equal("randomserver");
+        expect(match_invite_id("foobar discord.gg/T897FfR foobar")).to.equal("T897FfR");
+        expect(match_invite_id("foobar discord.GG/random foobar")).to.equal("random");
+        expect(match_invite_id("foobar discord.gg/12*(*^&^)asdggascn foobar")).to.equal("12*(*^&^)asdggascn");
+        expect(match_invite_id("discord.gg/1")).to.equal("1");
         expect(
-            match_invite(`
+            match_invite_id(`
 !wp
 # What Is Template Instantiation?
 
@@ -64,9 +69,9 @@ argument to \`print\`.
     });
 
     it("should not block normal messages", () => {
-        expect(match_invite("foobar")).to.equal(null);
+        expect(match_invite_id("foobar")).to.equal(null);
         expect(
-            match_invite(`
+            match_invite_id(`
 !wp
 # What Is Template Instantiation?
 
@@ -107,13 +112,13 @@ argument to \`print\`.
 42 Hello
 \`\`\``),
         ).to.equal(null);
-        expect(match_invite(".gg/")).to.equal(null);
-        expect(match_invite("foo .gg/ bar")).to.equal(null);
-        expect(match_invite("foo gg/bar")).to.equal(null);
-        expect(match_invite(`Check out https://stunlock.gg/posts/emscripten_with_cmake/ sounds like ...`)).to.equal(
+        expect(match_invite_id(".gg/")).to.equal(null);
+        expect(match_invite_id("foo .gg/ bar")).to.equal(null);
+        expect(match_invite_id("foo gg/bar")).to.equal(null);
+        expect(match_invite_id(`Check out https://stunlock.gg/posts/emscripten_with_cmake/ sounds like ...`)).to.equal(
             null,
         );
-        expect(match_invite(`paste.gg/p/foobar`)).to.equal(null);
-        expect(match_invite(`https://redirect.compiler.gg/foobar`)).to.equal(null);
+        expect(match_invite_id(`paste.gg/p/foobar`)).to.equal(null);
+        expect(match_invite_id(`https://redirect.compiler.gg/foobar`)).to.equal(null);
     });
 });
