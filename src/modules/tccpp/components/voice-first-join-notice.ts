@@ -57,9 +57,9 @@ export default class VoiceFirstJoinNotice extends BotComponent {
             return;
         }
 
-        // Only record or notify on first join when no voice mod or ban-capable mod is present.
-        // If one is present, the user can be helped immediately; we delay the notice until they
-        // join with no moderator present.
+        // Only record or notify when no voice mod or ban-capable mod is present.
+        // If one is present the user can be helped immediately,
+        // so we delay the notice until they join with no moderator present.
         const has_voice_mod_or_ban_moderator = [...channel.members.values()].some(
             m =>
                 m.id !== member.id &&
@@ -79,33 +79,34 @@ export default class VoiceFirstJoinNotice extends BotComponent {
         ) {
             return;
         }
+        const already_notified = await this.database.voice_first_join_notice.findOne({
+            guild: new_state.guild.id,
+            user: member.id,
+        });
+        if (already_notified) {
+            return;
+        }
         const message =
             "new users are suppressed by default to protect our voice channels. " +
             "You will be able to speak when joining a channel with a voice moderator present. " +
             "Stick around and you will eventually be granted permanent voice access. " +
-            "__Please do not ping voice moderators to be unsupressed or for the voice role.__";
-        // Try DM first; fall back to the voice channel if the user has DMs disabled.
-        // DM's will pierce the veil of a users inbox and is far more likely to be read.
-        let sent = false;
+            "__Please do not ping voice moderators to be unsuppressed or for the voice role.__";
+        // Try a DM first since it is far more likely to be read
+        // fall back to the voice channel if the user has DMs disabled.
         try {
             await member.send({ content: message });
-            sent = true;
         } catch {
             try {
                 await channel.send({
                     content: `<@${member.id}> ` + message,
                     allowedMentions: { users: [member.id] },
                 });
-                sent = true;
             } catch {
-                sent = false;
+                // Neither delivery worked, leave the user unrecorded so the next join retries
+                return;
             }
         }
-        if (!sent) {
-            return;
-        }
-
-        const res = await this.database.voice_first_join_notice.updateOne(
+        await this.database.voice_first_join_notice.updateOne(
             { guild: new_state.guild.id, user: member.id },
             {
                 $setOnInsert: {
@@ -117,8 +118,5 @@ export default class VoiceFirstJoinNotice extends BotComponent {
             },
             { upsert: true },
         );
-        if (res.upsertedCount === 0) {
-            return;
-        }
     }
 }
