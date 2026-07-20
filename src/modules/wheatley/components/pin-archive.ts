@@ -108,6 +108,22 @@ export default class PinArchive extends BotComponent {
         }
     }
 
+    async fetch_all_pins(channel: Discord.GuildTextBasedChannel) {
+        const current_pins = new Map<string, Discord.Message<true>>();
+        let before: Date | undefined = undefined;
+        while (true) {
+            const { items, hasMore } = await channel.messages.fetchPins(before ? { before } : undefined);
+            for (const pin of items) {
+                current_pins.set(pin.message.id, pin.message);
+            }
+            if (!hasMore || items.length === 0) {
+                break;
+            }
+            before = items[items.length - 1].pinnedAt;
+        }
+        return current_pins;
+    }
+
     async update_for_channel(channel: Discord.TextBasedChannel) {
         if (
             channel.isDMBased() ||
@@ -116,13 +132,13 @@ export default class PinArchive extends BotComponent {
         ) {
             return;
         }
-        const current_pins = await channel.messages.fetchPinned();
+        const current_pins = await this.fetch_all_pins(channel);
         const database_current_pins = await this.database.pins
             .find({ channel: channel.id, current_pin: true })
             .toArray();
         // two things to handle: new pins and pins that are now no longer pins
         // ensure current pins are marked as such
-        for (const [_, message] of current_pins) {
+        for (const [, message] of current_pins) {
             const res = await this.database.pins.updateOne(
                 { channel: channel.id, message: message.id },
                 { $set: { current_pin: true } },

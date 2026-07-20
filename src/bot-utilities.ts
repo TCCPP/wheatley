@@ -157,7 +157,7 @@ export class BotUtilities {
                             type: "image",
                             attachment: {
                                 attachment: unwrap(e.image ? e.image : e.thumbnail).url,
-                            } as Discord.AttachmentPayload,
+                            },
                         };
                     } else if (e.video) {
                         // video but no thumbnail? just fallthrough...

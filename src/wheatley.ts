@@ -149,8 +149,7 @@ export class Wheatley {
 
         this.log_limiter = new LogLimiter(this);
 
-        // temporary until fixed in djs or @types/node
-        (this.client as any).setMaxListeners(35);
+        this.client.setMaxListeners(35);
 
         this.client.on("error", error => {
             M.error(error);
@@ -194,7 +193,7 @@ export class Wheatley {
             setup_metrics_server(config.metrics.port, config.metrics.hostname);
         }
 
-        this.client.on("ready", () => {
+        this.client.on("clientReady", () => {
             M.log("Wheatley starting in the following guilds:");
             (async () => {
                 await this.client.guilds.fetch();

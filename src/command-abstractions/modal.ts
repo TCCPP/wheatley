@@ -373,7 +373,7 @@ export class ModalInteractionBuilder<
             this.permissions,
             this.metadata_fields,
             this.field_configs,
-        ) as ConditionalOptional<HasHandler, BotModalHandler<Args>>;
+        );
     }
 
     build_modal(): BotModal<Args> {

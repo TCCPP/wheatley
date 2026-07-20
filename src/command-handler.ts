@@ -134,6 +134,13 @@ export class CommandHandler {
         const command_name = match[1];
         if (!(command_name in this.text_commands)) {
             // unknown command
+
+            if (this.wheatley.devmode_enabled) {
+                await message.reply({
+                    content: `Unknown text command: ${command_name}`,
+                });
+            }
+
             return false;
         }
         let command_body = message.content.substring(match[0].length).trim();
@@ -217,6 +224,13 @@ export class CommandHandler {
                 interaction.user.tag,
                 interaction.user.id,
             );
+            if (this.wheatley.devmode_enabled) {
+                await interaction.reply({
+                    content: `Unknown slash command: ${interaction.commandName}`,
+                    flags: Discord.MessageFlags.Ephemeral,
+                });
+                return;
+            }
             await interaction.reply({
                 ...create_error_reply("This command is out of date. Please wait a moment and try again."),
                 flags: Discord.MessageFlags.Ephemeral,
