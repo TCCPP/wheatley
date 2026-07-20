@@ -175,12 +175,7 @@ export class ButtonInteractionBuilder<
             return undefined as ConditionalOptional<HasHandler, BotButtonHandler<Args>>;
         }
 
-        return new BotButtonHandler(
-            this.base_custom_id,
-            this.handler,
-            this.permissions,
-            this.metadata_fields,
-        ) as ConditionalOptional<HasHandler, BotButtonHandler<Args>>;
+        return new BotButtonHandler(this.base_custom_id, this.handler, this.permissions, this.metadata_fields);
     }
 
     build_button(): BotButton<Args> {

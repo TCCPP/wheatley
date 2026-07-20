@@ -66,7 +66,7 @@ async function main() {
     // maintain database of ids
     // suggestion tracker: Content, author, votes, link.
 
-    client.on("ready", () => {
+    client.on("clientReady", () => {
         M.log(`Logged in as ${client.user!.tag}`);
     });
 
