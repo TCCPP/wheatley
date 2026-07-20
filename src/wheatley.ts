@@ -194,7 +194,7 @@ export class Wheatley {
             setup_metrics_server(config.metrics.port, config.metrics.hostname);
         }
 
-        this.client.on("ready", () => {
+        this.client.on("clientReady", () => {
             M.log("Wheatley starting in the following guilds:");
             (async () => {
                 await this.client.guilds.fetch();
