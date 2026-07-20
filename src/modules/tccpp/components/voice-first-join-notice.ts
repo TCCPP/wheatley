@@ -21,6 +21,7 @@ export default class VoiceFirstJoinNotice extends BotComponent {
         wheatley_roles.voice,
         wheatley_roles.no_voice,
         wheatley_roles.server_booster,
+        wheatley_roles.voice_moderator,
     );
     private database = this.wheatley.database.create_proxy<{
         voice_first_join_notice: voice_first_join_notice_entry;
@@ -51,19 +52,21 @@ export default class VoiceFirstJoinNotice extends BotComponent {
             return;
         }
         const member = new_state.member;
-        const res = await this.database.voice_first_join_notice.updateOne(
-            { guild: new_state.guild.id, user: member.id },
-            {
-                $setOnInsert: {
-                    guild: new_state.guild.id,
-                    user: member.id,
-                    first_seen_at: new Date(),
-                    first_channel: new_state.channelId,
-                },
-            },
-            { upsert: true },
+        const channel = new_state.channel;
+        if (!channel) {
+            return;
+        }
+
+        // Only record or notify when no voice mod or ban-capable mod is present.
+        // If one is present the user can be helped immediately,
+        // so we delay the notice until they join with no moderator present.
+        const has_voice_mod_or_ban_moderator = [...channel.members.values()].some(
+            m =>
+                m.id !== member.id &&
+                (m.roles.cache.has(this.roles.voice_moderator.id) ||
+                    m.permissions.has(Discord.PermissionFlagsBits.BanMembers)),
         );
-        if (res.upsertedCount === 0) {
+        if (has_voice_mod_or_ban_moderator) {
             return;
         }
         if (
@@ -76,18 +79,44 @@ export default class VoiceFirstJoinNotice extends BotComponent {
         ) {
             return;
         }
-        const channel = new_state.channel;
-        if (!channel) {
+        const already_notified = await this.database.voice_first_join_notice.findOne({
+            guild: new_state.guild.id,
+            user: member.id,
+        });
+        if (already_notified) {
             return;
         }
-        await channel.send({
-            content:
-                `<@${member.id}> ` +
-                "new users are suppressed by default to protect our voice channels. " +
-                "You will be able to speak when joining a channel with a voice moderator present. " +
-                "Stick around and you will eventually be granted permanent voice access. " +
-                "__Please do not ping voice moderators to be unsupressed or for the voice role.__",
-            allowedMentions: { users: [member.id] },
-        });
+        const message =
+            "new users are suppressed by default to protect our voice channels. " +
+            "You will be able to speak when joining a channel with a voice moderator present. " +
+            "Stick around and you will eventually be granted permanent voice access. " +
+            "__Please do not ping voice moderators to be unsuppressed or for the voice role.__";
+        // Try a DM first since it is far more likely to be read
+        // fall back to the voice channel if the user has DMs disabled.
+        try {
+            await member.send({ content: message });
+        } catch {
+            try {
+                await channel.send({
+                    content: `<@${member.id}> ` + message,
+                    allowedMentions: { users: [member.id] },
+                });
+            } catch {
+                // Neither delivery worked, leave the user unrecorded so the next join retries
+                return;
+            }
+        }
+        await this.database.voice_first_join_notice.updateOne(
+            { guild: new_state.guild.id, user: member.id },
+            {
+                $setOnInsert: {
+                    guild: new_state.guild.id,
+                    user: member.id,
+                    first_seen_at: new Date(),
+                    first_channel: new_state.channelId,
+                },
+            },
+            { upsert: true },
+        );
     }
 }
