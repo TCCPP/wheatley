@@ -134,6 +134,13 @@ export class CommandHandler {
         const command_name = match[1];
         if (!(command_name in this.text_commands)) {
             // unknown command
+
+            if (this.wheatley.devmode_enabled) {
+                await message.reply({
+                    content: `Unknown text command: ${command_name}`,
+                });
+            }
+
             return false;
         }
         let command_body = message.content.substring(match[0].length).trim();
@@ -186,7 +193,16 @@ export class CommandHandler {
 
     private async handle_slash_comand(interaction: Discord.ChatInputCommandInteraction) {
         if (!(interaction.commandName in this.text_commands)) {
-            // TODO: Unknown command
+            // unknown command
+
+            if (this.wheatley.devmode_enabled) {
+                await interaction.reply({
+                    content: `Unknown slash command: ${interaction.commandName}`,
+                    flags: Discord.MessageFlags.Ephemeral,
+                });
+            }
+
+            return;
         }
         let command = this.text_commands[interaction.commandName];
         let command_log_name = interaction.commandName;
