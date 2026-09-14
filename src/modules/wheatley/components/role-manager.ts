@@ -181,7 +181,12 @@ export default class RoleManager extends BotComponent {
                 continue;
             }
             const role = this.wheatley.guild.roles.cache.get(id);
-            if (!role || !role.permissions.equals(this.wheatley.guild.roles.everyone.permissions) || role.managed) {
+            if (!role) {
+                continue;
+            }
+            const permissions = role.permissions;
+            permissions.remove("Speak");
+            if (!permissions.equals(this.wheatley.guild.roles.everyone.permissions) || role.managed) {
                 continue;
             }
             await member.roles.add(role);
