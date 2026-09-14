@@ -186,6 +186,7 @@ export default class RoleManager extends BotComponent {
             }
             const permissions = role.permissions;
             permissions.remove("Speak");
+            permissions.remove("UseSoundboard");
             if (!permissions.equals(this.wheatley.guild.roles.everyone.permissions) || role.managed) {
                 continue;
             }
