@@ -11,7 +11,7 @@ import { Wheatley } from "../wheatley.js";
 import { zip } from "../utils/iterables.js";
 import { intersection } from "../utils/arrays.js";
 
-export type TextBasedCommandOptionType = "string" | "number" | "boolean" | "user" | "users" | "role";
+export type TextBasedCommandOptionType = "string" | "number" | "boolean" | "user" | "users" | "role" | "channel";
 
 export type TextBasedCommandParameterOptions = {
     title: string;
@@ -19,6 +19,24 @@ export type TextBasedCommandParameterOptions = {
     required: boolean;
     regex?: RegExp; // TODO: Should it not apply to slash command fields?
     autocomplete?: (partial: string, command_name: string) => { name: string; value: string }[];
+};
+
+export type TextBasedCommandSlashChannelType =
+    | Discord.ChannelType.GuildText
+    | Discord.ChannelType.GuildVoice
+    | Discord.ChannelType.GuildCategory
+    | Discord.ChannelType.GuildAnnouncement
+    | Discord.ChannelType.AnnouncementThread
+    | Discord.ChannelType.PublicThread
+    | Discord.ChannelType.PrivateThread
+    | Discord.ChannelType.GuildStageVoice
+    | Discord.ChannelType.GuildForum
+    | Discord.ChannelType.GuildMedia;
+
+export type TextBasedCommandStoredOption = TextBasedCommandParameterOptions & {
+    type: TextBasedCommandOptionType;
+    // Only applicable for `type: "channel"` (slash commands only)
+    channel_types?: TextBasedCommandSlashChannelType[];
 };
 
 export type TextBasedCommandParameterOptionsWithChoices<T> = TextBasedCommandParameterOptions &
@@ -58,7 +76,7 @@ export class TextBasedCommandBuilder<
     readonly names: string[];
     early_reply_mode: EarlyReplyMode;
     descriptions!: ConditionalOptional<HasDescriptions, string[]>;
-    options = new Discord.Collection<string, TextBasedCommandParameterOptions & { type: TextBasedCommandOptionType }>();
+    options = new Discord.Collection<string, TextBasedCommandStoredOption>();
     slash_config: boolean[];
     permissions: bigint | undefined = undefined;
     category: CommandCategory | undefined = undefined;
@@ -208,6 +226,29 @@ export class TextBasedCommandBuilder<
         });
         return this as unknown as TextBasedCommandBuilder<
             Append<Args, ConditionalNull<O["required"], Discord.Role>>,
+            HasDescriptions,
+            HasHandler,
+            HasSubcommands
+        >;
+    }
+
+    add_channel_option<
+        O extends TextBasedCommandParameterOptions & { channel_types?: TextBasedCommandSlashChannelType[] },
+    >(
+        option: O,
+    ): TextBasedCommandBuilder<
+        Append<Args, ConditionalNull<O["required"], Discord.Channel>>,
+        HasDescriptions,
+        HasHandler,
+        HasSubcommands
+    > {
+        assert(!this.options.has(option.title));
+        this.options.set(option.title, {
+            ...option,
+            type: "channel",
+        });
+        return this as unknown as TextBasedCommandBuilder<
+            Append<Args, ConditionalNull<O["required"], Discord.Channel>>,
             HasDescriptions,
             HasHandler,
             HasSubcommands

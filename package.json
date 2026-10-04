@@ -32,6 +32,7 @@
     },
     "scripts": {
         "start": "tsc && unbuffer cross-env NODE_ENV=production node --enable-source-maps build/src/main.js 2>&1 | tee -a log.txt",
+        "start:dev": "tsc && cross-env NODE_ENV=development node --enable-source-maps build/src/main.js",
         "lint": "eslint src",
         "lint-files": "eslint --color",
         "prepare": "husky install",
