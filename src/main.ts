@@ -29,22 +29,14 @@ async function main() {
     // Setup client
     const client = new Discord.Client({
         intents: [
-            // fuck it, everything (almost)
             Discord.GatewayIntentBits.Guilds,
             Discord.GatewayIntentBits.GuildMembers,
             Discord.GatewayIntentBits.GuildModeration,
             Discord.GatewayIntentBits.GuildEmojisAndStickers,
-            Discord.GatewayIntentBits.GuildIntegrations,
-            Discord.GatewayIntentBits.GuildWebhooks,
-            Discord.GatewayIntentBits.GuildInvites,
             Discord.GatewayIntentBits.GuildVoiceStates,
             Discord.GatewayIntentBits.GuildMessages,
             Discord.GatewayIntentBits.GuildMessageReactions,
-            Discord.GatewayIntentBits.GuildMessageTyping,
             Discord.GatewayIntentBits.MessageContent,
-            Discord.GatewayIntentBits.DirectMessages,
-            Discord.GatewayIntentBits.DirectMessageReactions,
-            Discord.GatewayIntentBits.DirectMessageTyping,
         ],
         partials: [
             Discord.Partials.Channel,
