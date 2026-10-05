@@ -99,6 +99,10 @@ export class CommandHandler {
     // Command dispatch
     //
 
+    private strip_wheatley_mention(message: string): string {
+        return message.replace(new RegExp(String.raw`^\s*<@!?${this.wheatley.client.user?.id}>\s*`), "");
+    }
+
     private static readonly command_regex = /^!(\S+)/;
 
     // Parse button custom_id into base_id and arguments
@@ -126,7 +130,8 @@ export class CommandHandler {
 
     // returns false if the message was not a wheatley command
     private async handle_text_command(message: Discord.Message, prev_command_obj?: TextBasedCommand) {
-        const match = message.content.match(CommandHandler.command_regex);
+        const command_text = this.strip_wheatley_mention(message.content);
+        const match = command_text.match(CommandHandler.command_regex);
         if (!match) {
             // starts with ! but doesn't match the command regex
             return false;
@@ -143,7 +148,7 @@ export class CommandHandler {
 
             return false;
         }
-        let command_body = message.content.substring(match[0].length).trim();
+        let command_body = command_text.substring(match[0].length).trim();
         let command = this.text_commands[command_name];
         const command_obj = prev_command_obj
             ? new TextBasedCommand(prev_command_obj, command_name, command, message)
@@ -292,7 +297,8 @@ export class CommandHandler {
             if (message.guildId !== this.wheatley.guild.id) {
                 return;
             }
-            if (message.content.startsWith("!")) {
+            const command_text = this.strip_wheatley_mention(message.content);
+            if (command_text.startsWith("!")) {
                 await this.handle_text_command(message);
             }
         } catch (e) {
