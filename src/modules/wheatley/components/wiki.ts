@@ -451,6 +451,11 @@ export default class Wiki extends BotComponent {
                     description: "ping the requested user in the bot reply",
                     required: false,
                 })
+                .add_boolean_option({
+                    title: "private",
+                    description: "Send this message only to you when possible, or in the channel otherwise",
+                    required: false,
+                })
                 .set_handler(this.wiki.bind(this)),
         );
 
@@ -463,6 +468,11 @@ export default class Wiki extends BotComponent {
                     title: "content",
                     description: "Content",
                     required: true,
+                })
+                .add_boolean_option({
+                    title: "private",
+                    description: "Send this message only to you when possible, or in the channel otherwise",
+                    required: false,
                 })
                 .set_handler(this.wiki_preview.bind(this)),
         );
@@ -480,6 +490,11 @@ export default class Wiki extends BotComponent {
                     .add_user_option({
                         title: "user",
                         description: "ping the requested user in the bot reply",
+                        required: false,
+                    })
+                    .add_boolean_option({
+                        title: "private",
+                        description: "Send this message only to you when possible, or in the channel otherwise",
                         required: false,
                     })
                     .set_handler(this.wiki_alias.bind(this)),
@@ -593,11 +608,17 @@ export default class Wiki extends BotComponent {
         return embed;
     }
 
-    async send_wiki_article(article: WikiArticle, command: TextBasedCommand, user: Discord.User | null) {
+    async send_wiki_article(
+        article: WikiArticle,
+        command: TextBasedCommand,
+        user: Discord.User | null,
+        ephemeral: boolean,
+    ) {
         M.log(`Sending wiki article "${article.name}"`);
         let mention: string | null = null;
         if (user) {
             mention = user.toString();
+            ephemeral = false;
         }
         if (article.no_embed) {
             assert(article.body);
@@ -606,6 +627,7 @@ export default class Wiki extends BotComponent {
             await command.reply({
                 content: (mention ? mention + "\n" : "") + article.body + see_link,
                 should_text_reply: true,
+                ephemeral_if_possible: ephemeral,
             });
         } else {
             const member = article.set_author ? await command.get_member() : undefined;
@@ -614,15 +636,16 @@ export default class Wiki extends BotComponent {
                 content: mention ?? undefined,
                 embeds: [embed],
                 should_text_reply: true,
+                ephemeral_if_possible: ephemeral,
             });
         }
     }
 
-    async wiki(command: TextBasedCommand, query: string, user: Discord.User | null) {
+    async wiki(command: TextBasedCommand, query: string, user: Discord.User | null, ephemeral: boolean | null) {
         assert(this.wiki_search_index, "Wiki search index not initialized");
         const { result, suggestions } = await this.wiki_search_index.search_with_suggestions(query);
         if (result) {
-            await this.send_wiki_article(result.article, command, user);
+            await this.send_wiki_article(result.article, command, user, !!ephemeral);
         } else {
             let error_message = "Couldn't find article";
             if (suggestions.length > 0) {
@@ -633,20 +656,22 @@ export default class Wiki extends BotComponent {
         }
     }
 
-    async wiki_alias(command: TextBasedCommand, user: Discord.User | null) {
+    async wiki_alias(command: TextBasedCommand, user: Discord.User | null, ephemeral: boolean | null) {
         assert(this.article_aliases.has(command.name));
         const article_name = this.article_aliases.get(command.name)!;
-        await this.send_wiki_article(this.articles[article_name], command, user);
+        await this.send_wiki_article(this.articles[article_name], command, user, !!ephemeral);
     }
 
-    async wiki_preview(command: TextBasedCommand, content: string) {
+    async wiki_preview(command: TextBasedCommand, content: string, ephemeral: boolean | null) {
         const channel = await command.get_channel();
-        if (!(
-            this.wheatley.freestanding ||
-            channel.id === this.channels.bot_spam.id ||
-            (channel.isThread() && channel.parentId === this.channels.bot_spam.id) ||
-            channel.isDMBased()
-        )) {
+        if (
+            !(
+                this.wheatley.freestanding ||
+                channel.id === this.channels.bot_spam.id ||
+                (channel.isThread() && channel.parentId === this.channels.bot_spam.id) ||
+                channel.isDMBased()
+            )
+        ) {
             await command.reply(
                 `!wiki-preview must be used in <#${this.channels.bot_spam.id}>, a bot-spam thread, or a DM`,
                 true,
@@ -663,7 +688,7 @@ export default class Wiki extends BotComponent {
             return;
         }
         try {
-            await this.send_wiki_article(article, command, null);
+            await this.send_wiki_article(article, command, null, !!ephemeral);
         } catch (e) {
             await command.reply("Error while building / sending: " + e, true, true);
         }
