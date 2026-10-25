@@ -523,18 +523,21 @@ export async function send_long_response_markdown_aware(
     const { files, embeds, ...rest_options } = extra_options ?? {};
     for (let i = 0; i < chunks.length; i++) {
         const is_last = i === chunks.length - 1;
-        await (
-            command_object.replied &&
-            (command_object instanceof Discord.MessageContextMenuCommandInteraction || !command_object.is_editing)
-                ? command_object.followUp
-                : command_object.reply
-        ).bind(command_object)({
+        const reply_options = {
             ephemeral: ephemeral_if_possible,
             ephemeral_if_possible,
             content: chunks[i],
             ...rest_options,
             ...(is_last ? { files, embeds } : {}),
-        });
+        };
+        if (
+            command_object.replied &&
+            (command_object instanceof Discord.MessageContextMenuCommandInteraction || !command_object.is_editing)
+        ) {
+            await command_object.followUp(reply_options);
+        } else {
+            await command_object.reply(reply_options);
+        }
     }
 }
 

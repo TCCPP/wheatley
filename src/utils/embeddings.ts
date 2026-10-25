@@ -1,5 +1,5 @@
-import { FeatureExtractionPipeline, pipeline } from "@xenova/transformers";
-export type { FeatureExtractionPipeline } from "@xenova/transformers";
+import { FeatureExtractionPipeline, pipeline } from "@huggingface/transformers";
+export type { FeatureExtractionPipeline } from "@huggingface/transformers";
 
 export const EMBEDDING_MODEL = "Xenova/all-MiniLM-L6-v2";
 
@@ -7,7 +7,7 @@ let shared_pipeline: FeatureExtractionPipeline | null = null;
 
 export async function get_or_create_embedding_pipeline(): Promise<FeatureExtractionPipeline> {
     if (!shared_pipeline) {
-        shared_pipeline = await pipeline("feature-extraction", EMBEDDING_MODEL);
+        shared_pipeline = await pipeline("feature-extraction", EMBEDDING_MODEL, { dtype: "q8" });
     }
     return shared_pipeline;
 }
