@@ -340,7 +340,7 @@ export class BotUtilities {
     }
 
     private async get_channel_internal(channel_info: named_id, case_insensitive: boolean = true) {
-        let channel: Discord.Channel | null = null;
+        let channel: Discord.Channel | null;
 
         try {
             channel = await this.wheatley.client.channels.fetch(channel_info.id);

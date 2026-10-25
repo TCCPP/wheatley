@@ -136,7 +136,9 @@ export class BotModalHandler<Args extends unknown[] = []> {
                     throw new Error(`Unknown parameter type: ${type}`);
                 }
             } catch (error) {
-                throw new Error(`Failed to parse argument ${index} for modal ${this.base_custom_id}: ${error}`);
+                throw new Error(`Failed to parse argument ${index} for modal ${this.base_custom_id}: ${error}`, {
+                    cause: error,
+                });
             }
         }) as Args;
     }
@@ -199,7 +201,9 @@ export class BotModal<Args extends unknown[] = []> {
                     throw new Error(`Unknown parameter type: ${type}`);
                 }
             } catch (error) {
-                throw new Error(`Failed to serialize argument ${index} for modal ${this.base_custom_id}: ${error}`);
+                throw new Error(`Failed to serialize argument ${index} for modal ${this.base_custom_id}: ${error}`, {
+                    cause: error,
+                });
             }
         });
 

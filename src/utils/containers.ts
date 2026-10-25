@@ -23,7 +23,7 @@ function set_clearing_interval(container: WeakRef<SelfClearingContainer>, interv
             clear_interval(interval);
             cleared = true;
         }
-        container_ref = undefined;
+        container_ref = undefined; // eslint-disable-line no-useless-assignment
     }, interval_time);
     return interval;
 }

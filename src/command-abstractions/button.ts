@@ -41,7 +41,9 @@ export class BotButtonHandler<Args extends unknown[] = []> {
                     throw new Error(`Unknown parameter type: ${type}`);
                 }
             } catch (error) {
-                throw new Error(`Failed to parse argument ${index} for button ${this.base_custom_id}: ${error}`);
+                throw new Error(`Failed to parse argument ${index} for button ${this.base_custom_id}: ${error}`, {
+                    cause: error,
+                });
             }
         }) as Args;
     }
@@ -101,7 +103,9 @@ export class BotButton<Args extends unknown[] = []> {
                     throw new Error(`Unknown parameter type: ${type}`);
                 }
             } catch (error) {
-                throw new Error(`Failed to serialize argument ${index} for button ${this.base_custom_id}: ${error}`);
+                throw new Error(`Failed to serialize argument ${index} for button ${this.base_custom_id}: ${error}`, {
+                    cause: error,
+                });
             }
         });
 
