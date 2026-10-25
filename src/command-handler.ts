@@ -100,7 +100,7 @@ export class CommandHandler {
     //
 
     private strip_wheatley_mention(message: string): string {
-        return message.replace(new RegExp(String.raw`^\s*<@!?${this.wheatley.client.user?.id}>\s*`), "");
+        return message.replace(new RegExp(String.raw`^\s*<@!?${this.wheatley.user.id}>\s*`), "");
     }
 
     private static readonly command_regex = /^!(\S+)/;
