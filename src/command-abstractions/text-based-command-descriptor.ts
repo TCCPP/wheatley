@@ -2,7 +2,6 @@ import { strict as assert } from "assert";
 
 import * as Discord from "discord.js";
 
-import { unwrap } from "../utils/misc.js";
 import { build_description, escape_regex, wrap } from "../utils/strings.js";
 import { zip } from "../utils/iterables.js";
 import { M } from "../utils/debugging-and-logging.js";
@@ -97,9 +96,9 @@ export class BotTextBasedCommand<Args extends unknown[] = []> extends BaseBotInt
         switch (type) {
             case "user":
             case "users":
-                return /\s(?:<@\d{10,}>|\d{10,})/;
+                return /\s(?:<@!?\d{10,}>|\d{10,})/;
             case "number":
-                return /\s\d/;
+                return /\s\d+\b/;
             case "boolean":
                 return /\s(?:true|false)\b/i;
             default:
@@ -156,6 +155,21 @@ export class BotTextBasedCommand<Args extends unknown[] = []> extends BaseBotInt
         }
     }
 
+    // The role is undefined for a mention of an unknown role. Names are tried longest first so a role isn't shadowed by
+    // another whose name is a prefix of it, and the lookahead is used instead of \b so names like "C++" still match.
+    private match_role(command_body: string): { role: Discord.Role | undefined; length: number } | null {
+        const mention = command_body.match(/^<@&(\d{10,})>/);
+        if (mention) {
+            return { role: this.wheatley.guild.roles.cache.get(mention[1]), length: mention[0].length };
+        } else {
+            const role = [...this.wheatley.guild.roles.cache.values()]
+                .filter(role => role.name !== "@everyone")
+                .sort((a, b) => b.name.length - a.name.length)
+                .find(role => new RegExp(`^${escape_regex(role.name)}(?=\\s|$)`, "i").test(command_body));
+            return role ? { role, length: role.name.length } : null;
+        }
+    }
+
     async parse_text_arguments(command_obj: TextBasedCommand, message: Discord.Message, command_body: string) {
         // TODO: Handle `required` more thoroughly?
         const reply_with_error = async (message: string, surpress_usage = false) => {
@@ -174,7 +188,7 @@ export class BotTextBasedCommand<Args extends unknown[] = []> extends BaseBotInt
         const command_options: unknown[] = [];
         for (const [i, option] of [...this.options.values()].entries()) {
             try {
-                const required_arg_error = async () => {
+                const required_arg_error = () => {
                     return new ParseError(
                         ParseErrorType.RequiredArgument,
                         `Required argument "${option.title}" not found`,
@@ -238,7 +252,7 @@ export class BotTextBasedCommand<Args extends unknown[] = []> extends BaseBotInt
                     }
                 } else if (option.type == "number") {
                     // TODO: Handle optional number...
-                    const re = /^\d+/;
+                    const re = /^\d+\b/;
                     const match = command_body.match(re);
                     if (match) {
                         command_options.push(validate_choices(parseInt(match[0])));
@@ -249,7 +263,7 @@ export class BotTextBasedCommand<Args extends unknown[] = []> extends BaseBotInt
                         throw required_arg_error();
                     }
                 } else if (option.type == "boolean") {
-                    const re = /^(?:true|false)/i;
+                    const re = /^(?:true|false)\b/i;
                     const match = command_body.match(re);
                     if (match) {
                         command_options.push(match[0].toLowerCase() === "true");
@@ -260,7 +274,7 @@ export class BotTextBasedCommand<Args extends unknown[] = []> extends BaseBotInt
                         throw required_arg_error();
                     }
                 } else if (option.type == "user") {
-                    const re = /^(?:<@(\d{10,})>|(\d{10,}))/;
+                    const re = /^(?:<@!?(\d{10,})>|(\d{10,}))/;
                     const match = command_body.match(re);
                     if (match) {
                         const userid = match[1] || match[2];
@@ -292,7 +306,7 @@ export class BotTextBasedCommand<Args extends unknown[] = []> extends BaseBotInt
                 } else if (option.type == "users") {
                     const users: Discord.User[] = [];
                     while (true) {
-                        const re = /^(?:<@(\d{10,})>|(\d{10,}))+/;
+                        const re = /^(?:<@!?(\d{10,})>|(\d{10,}))/;
                         const match = command_body.match(re);
                         if (match) {
                             const userid = match[1] || match[2];
@@ -320,23 +334,13 @@ export class BotTextBasedCommand<Args extends unknown[] = []> extends BaseBotInt
                     }
                     // eslint-disable-next-line @typescript-eslint/no-unnecessary-condition
                 } else if (option.type == "role") {
-                    const re = new RegExp(
-                        this.wheatley.guild.roles.cache
-                            .map(role => escape_regex(role.name))
-                            .filter(name => name !== "@everyone")
-                            .join("|"),
-                        "i",
-                    );
-                    const match = command_body.match(re);
-                    if (match) {
-                        command_options.push(
-                            unwrap(
-                                this.wheatley.guild.roles.cache.find(
-                                    role => role.name.toLowerCase() === match[0].toLowerCase(),
-                                ),
-                            ),
-                        );
-                        command_body = command_body.slice(match[0].length).trim();
+                    const match = this.match_role(command_body);
+                    if (match?.role) {
+                        command_options.push(match.role);
+                        command_body = command_body.slice(match.length).trim();
+                    } else if (match) {
+                        await reply_with_error(`Unable to find role`, true);
+                        return;
                     } else if (!option.required) {
                         command_options.push(null);
                     } else {
