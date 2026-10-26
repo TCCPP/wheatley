@@ -5,27 +5,42 @@ import { CommandSetBuilder } from "../../../command-abstractions/command-set-bui
 import { EarlyReplyMode, TextBasedCommandBuilder } from "../../../command-abstractions/text-based-command-builder.js";
 import { TextBasedCommand } from "../../../command-abstractions/text-based-command.js";
 import { colors } from "../../../common.js";
+import { unwrap } from "../../../utils/misc.js";
+import Wiki from "../../wheatley/components/wiki.js";
 
+const INVISIBLE_CHARS = /[\u200B-\u200D\uFEFF]/g;
+const RULE_LINE = /^(\d+)\.\s+(.+)$/;
 
-const RULES: readonly string[] = [
-    "Treat your peers with respect. Be kind. There are no stupid questions.",
-    "Use common sense. We do not tolerate slurs, bigotry of any kind " +
-        "(racism/sexism/homophobia/transphobia etc.), or glorification of violence or death.",
-    "Don't randomly ping / DM users. Just post your question in one of the help channels.",
-    "No advertising other Discord servers.",
-    "Keep the content SFW (safe-for-work). This isn't the place for controversial or sensitive topics, " +
-        "including politics, ethics, and current affairs, or for discussing your mental health problems.",
-    "We're happy to help you learn, however, we do not condone academic dishonesty. " +
-        "We will not take your tests for you or write programs for you. " +
-        "Likewise avoid giving full solutions to problems when helping other members.",
-    "Do not ask for help with unethical cheating/hacking/malware.",
-    "Don't post AI-generated answers, and don't ask for help with AI-generated code.",
-];
+function ParseWikiRules(wiki: Wiki): Map<number, string> {
+    const article = wiki.articles["rules.md"];
+
+    const rules = new Map<number, string>();
+    for (const field of article.fields) {
+        if (!field.name.toLowerCase().includes("rules")) {
+            continue;
+        }
+        for (const raw_line of field.value.split("\n")) {
+            const line = raw_line.replace(INVISIBLE_CHARS, "").trim();
+            const m = line.match(RULE_LINE);
+            if (!m) {
+                continue;
+            }
+            const number = parseInt(m[1], 10);
+            const text = m[2].trim();
+            if (text) {
+                rules.set(number, text);
+            }
+        }
+    }
+    return rules;
+}
 
 export default class RuleLookup extends BotComponent {
     static override get is_freestanding() {
         return true;
     }
+
+    private cached_rules: Map<number, string> | null = null;
 
     override async setup(commands: CommandSetBuilder) {
         commands.add(
@@ -34,7 +49,7 @@ export default class RuleLookup extends BotComponent {
                 .set_description("Look up a server rule by number")
                 .add_number_option({
                     title: "number",
-                    description: "Rule number (0-7)",
+                    description: "Rule number (0-9)",
                     required: true,
                 })
                 .set_handler(this.rule.bind(this)),
@@ -42,14 +57,34 @@ export default class RuleLookup extends BotComponent {
     }
 
     async rule(command: TextBasedCommand, number: number) {
-        if (!Number.isInteger(number) || number < 0 || number >= RULES.length) {
+        if (this.cached_rules === null) {
+            const wiki = unwrap(this.wheatley.components.get("Wiki")) as Wiki;
+            this.cached_rules = ParseWikiRules(wiki);
+        }
+        const rules = this.cached_rules;
+
+        if (rules.size === 0) {
             await command.reply({
                 embeds: [
                     new Discord.EmbedBuilder()
                         .setColor(colors.red)
-                        .setDescription(
-                            `Invalid rule number. Please pick an integer between 0 and ${RULES.length - 1}.`,
-                        ),
+                        .setDescription("Rules are not available right now."),
+                ],
+                ephemeral_if_possible: true,
+            });
+            return;
+        }
+
+        const text = Number.isInteger(number) ? rules.get(number) : undefined;
+        if (text === undefined) {
+            const keys = [...rules.keys()].sort((a, b) => a - b);
+            const min = keys[0];
+            const max = keys[keys.length - 1];
+            await command.reply({
+                embeds: [
+                    new Discord.EmbedBuilder()
+                        .setColor(colors.red)
+                        .setDescription(`Invalid rule number. Please pick a number between ${min} and ${max}.`),
                 ],
                 ephemeral_if_possible: true,
             });
@@ -58,10 +93,7 @@ export default class RuleLookup extends BotComponent {
 
         await command.reply({
             embeds: [
-                new Discord.EmbedBuilder()
-                    .setColor(colors.wheatley)
-                    .setTitle(`Rule ${number}`)
-                    .setDescription(RULES[number]),
+                new Discord.EmbedBuilder().setColor(colors.wheatley).setTitle(`Rule ${number}`).setDescription(text),
             ],
         });
     }
