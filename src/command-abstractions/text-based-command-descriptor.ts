@@ -286,23 +286,30 @@ export class BotTextBasedCommand<Args extends unknown[] = []> extends BaseBotInt
         return command_body;
     }
 
+    private async match_user(command_body: string): Promise<{ user: Discord.User; length: number } | null> {
+        const match = command_body.match(anchored(user_pattern));
+        if (match) {
+            try {
+                return { user: await this.wheatley.client.users.fetch(match[1] || match[2]), length: match[0].length };
+            } catch (e) {
+                M.debug(e);
+                throw new ArgumentError("Unable to find user");
+            }
+        } else {
+            return null;
+        }
+    }
+
     async parse_user_argument(
         command_options: unknown[],
         command_body: string,
         message: Discord.Message,
         option: TextBasedCommandParameterOptions,
     ) {
-        const match = command_body.match(anchored(user_pattern));
+        const match = await this.match_user(command_body);
         if (match) {
-            const userid = match[1] || match[2];
-            try {
-                const user = await this.wheatley.client.users.fetch(userid);
-                command_options.push(user);
-                command_body = command_body.slice(match[0].length).trim();
-            } catch (e) {
-                M.debug(e);
-                throw new ArgumentError("Unable to find user");
-            }
+            command_options.push(match.user);
+            command_body = command_body.slice(match.length).trim();
         } else if (message.type === Discord.MessageType.Reply) {
             // Handle reply as an argument, only if no text argument is provided
             // NOTE: If there's ever a command like !x <user> <user> this won't quite work
@@ -326,30 +333,17 @@ export class BotTextBasedCommand<Args extends unknown[] = []> extends BaseBotInt
         option: TextBasedCommandParameterOptions,
     ) {
         const users: Discord.User[] = [];
-        while (true) {
-            const match = command_body.match(anchored(user_pattern));
-            if (match) {
-                const userid = match[1] || match[2];
-                try {
-                    const user = await this.wheatley.client.users.fetch(userid);
-                    users.push(user);
-                    command_body = command_body.slice(match[0].length).trim();
-                } catch (e) {
-                    M.debug(e);
-                    throw new ArgumentError(`Unable to find user`);
-                }
-            } else {
-                break;
-            }
+        let match;
+        while ((match = await this.match_user(command_body))) {
+            users.push(match.user);
+            command_body = command_body.slice(match.length).trim();
         }
         if (users.length > 0) {
             command_options.push(users);
+        } else if (!option.required) {
+            command_options.push(null);
         } else {
-            if (!option.required) {
-                command_options.push(null);
-            } else {
-                throw this.required_arg_error(option);
-            }
+            throw this.required_arg_error(option);
         }
         return command_body;
     }
