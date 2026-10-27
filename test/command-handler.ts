@@ -12,6 +12,7 @@ import { Wheatley } from "../src/wheatley.js";
 const guild_id = "1000000000";
 const user = { bot: false, id: "2000000000", tag: "user" };
 const command_reply_id = "6000000000";
+const bot_id = "8000000000";
 
 function make_wheatley(has_permissions: boolean) {
     const check_permissions = vi.fn(async () => has_permissions);
@@ -19,6 +20,7 @@ function make_wheatley(has_permissions: boolean) {
     const wheatley = {
         client: { on: vi.fn() },
         guild: { id: guild_id },
+        user: { id: bot_id },
         devmode_enabled: false,
         check_permissions,
         critical_error,
@@ -187,8 +189,12 @@ function make_buttons_and_modals(handlers: Handlers) {
     };
 }
 
+// The handler reports exceptions through critical_error instead of throwing, so every test checks it in afterEach
+let critical_error_mock: ReturnType<typeof vi.fn> | undefined;
+
 function setup(has_permissions = true) {
     const { wheatley, check_permissions, critical_error } = make_wheatley(has_permissions);
+    critical_error_mock = critical_error;
     const handlers = make_handlers();
     const { button_handlers, modal_handlers, ...components } = make_buttons_and_modals(handlers);
     const command_handler = new CommandHandler(
@@ -203,6 +209,11 @@ function setup(has_permissions = true) {
     return {
         check_permissions,
         critical_error,
+        // For tests that expect an error, clears it so the afterEach check passes
+        expect_critical_error: () => {
+            expect(critical_error).toHaveBeenCalledOnce();
+            critical_error.mockClear();
+        },
         handlers,
         components,
         command_handler,
@@ -232,6 +243,8 @@ beforeEach(() => {
 });
 
 afterEach(() => {
+    expect(critical_error_mock, "critical_error").not.toHaveBeenCalled();
+    critical_error_mock = undefined;
     vi.restoreAllMocks();
 });
 
@@ -308,6 +321,32 @@ describe("CommandHandler text dispatch", () => {
     });
 });
 
+describe("CommandHandler mention commands", () => {
+    it("should dispatch commands prefixed with a mention of the bot", async () => {
+        const { handlers, send } = setup();
+        await send(fake_message(`<@${bot_id}> !echo hello 5`));
+        await send(fake_message(`<@!${bot_id}> !echo hello`));
+        await send(fake_message(`  <@${bot_id}>!echo hello`));
+        expect(arguments_of(handlers.echo, 0)).toEqual(["hello", 5]);
+        expect(arguments_of(handlers.echo, 1)).toEqual(["hello", null]);
+        expect(arguments_of(handlers.echo, 2)).toEqual(["hello", null]);
+    });
+
+    it("should ignore other mentions, mentions without a command, and mentions not at the start", async () => {
+        const { handlers, send } = setup();
+        await send(fake_message(`<@${user.id}> !echo hello`));
+        await send(fake_message(`<@${bot_id}> echo hello`));
+        await send(fake_message(`hi <@${bot_id}> !echo hello`));
+        expect(handlers.echo).not.toHaveBeenCalled();
+    });
+
+    it("should keep a mention of the bot in the command body", async () => {
+        const { handlers, send } = setup();
+        await send(fake_message(`!echo <@${bot_id}> hi`));
+        expect(arguments_of(handlers.echo)).toEqual([`<@${bot_id}> hi`, null]);
+    });
+});
+
 describe("CommandHandler message edits", () => {
     const original = fake_message("!echo hello 1");
 
@@ -316,6 +355,13 @@ describe("CommandHandler message edits", () => {
         await send(original);
         await send_edit(original, fake_message("!echo goodbye 2"));
         expect(handlers.echo).toHaveBeenCalledTimes(2);
+        expect(arguments_of(handlers.echo, 1)).toEqual(["goodbye", 2]);
+    });
+
+    it("should re-dispatch a command edited to use a mention prefix", async () => {
+        const { handlers, send, send_edit } = setup();
+        await send(original);
+        await send_edit(original, fake_message(`<@${bot_id}> !echo goodbye 2`));
         expect(arguments_of(handlers.echo, 1)).toEqual(["goodbye", 2]);
     });
 
@@ -391,10 +437,10 @@ describe("CommandHandler deletes and reactions", () => {
     });
 
     it("should report other errors deleting a non-command reply", async () => {
-        const { critical_error, command_handler, send_delete } = setup();
+        const { expect_critical_error, command_handler, send_delete } = setup();
         command_handler.register_non_command_bot_reply(trigger, fake_bot_reply(Promise.reject(new Error())).reply);
         await send_delete(trigger);
-        expect(critical_error).toHaveBeenCalledOnce();
+        expect_critical_error();
     });
 
     it("should delete a command's replies when the trigger user reacts with ❌", async () => {
@@ -469,12 +515,12 @@ describe("CommandHandler buttons and modals", () => {
     });
 
     it("should report a button custom id with the wrong number of arguments", async () => {
-        const { critical_error, handlers, send_interaction } = setup();
+        const { expect_critical_error, handlers, send_interaction } = setup();
         const interaction = fake_button("test-button:hello");
         await send_interaction(interaction);
         expect(handlers.button).not.toHaveBeenCalled();
         expect(vi.mocked(interaction).reply.mock.calls.length).toBe(1);
-        expect(critical_error).toHaveBeenCalledOnce();
+        expect_critical_error();
     });
 
     it("should ignore unknown buttons", async () => {
@@ -549,10 +595,10 @@ describe("CommandHandler slash dispatch", () => {
     });
 
     it("should not dispatch when a required option is missing", async () => {
-        const { critical_error, handlers, send_slash } = setup();
+        const { expect_critical_error, handlers, send_slash } = setup();
         await send_slash(fake_slash_interaction("echo", {}));
         expect(handlers.echo).not.toHaveBeenCalled();
-        expect(critical_error).toHaveBeenCalledOnce();
+        expect_critical_error();
     });
 
     it("should not dispatch without permissions", async () => {
