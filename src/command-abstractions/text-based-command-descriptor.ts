@@ -47,6 +47,14 @@ class ArgumentHandlingError extends Error {
     }
 }
 
+const user_pattern = /(?:<@!?(\d{10,})>|(\d{10,}))/;
+const number_pattern = /\d+\b/;
+const boolean_pattern = /(?:true|false)\b/i;
+
+function anchored(pattern: RegExp) {
+    return new RegExp(`^${pattern.source}`, pattern.flags);
+}
+
 export class BotTextBasedCommand<Args extends unknown[] = []> extends BaseBotInteraction<[TextBasedCommand, ...Args]> {
     public readonly options = new Discord.Collection<
         string,
@@ -105,17 +113,15 @@ export class BotTextBasedCommand<Args extends unknown[] = []> extends BaseBotInt
         }
     }
 
-    // Returns a pattern matching whitespace followed by the start of a value of the given type.
-    // Used to find where a string option ends and the next option begins.
-    private static leading_pattern_for_type(type: TextBasedCommandOptionType): RegExp | null {
+    private static pattern_for_type(type: TextBasedCommandOptionType): RegExp | null {
         switch (type) {
             case "user":
             case "users":
-                return /\s(?:<@!?\d{10,}>|\d{10,})/;
+                return user_pattern;
             case "number":
-                return /\s\d+\b/;
+                return number_pattern;
             case "boolean":
-                return /\s(?:true|false)\b/i;
+                return boolean_pattern;
             default:
                 return null;
         }
@@ -224,11 +230,9 @@ export class BotTextBasedCommand<Args extends unknown[] = []> extends BaseBotInt
             }
         } else {
             // Peek the next argument to see how much to consume as text
-            const leading_pattern = BotTextBasedCommand.leading_pattern_for_type(
-                [...this.options.values()][i + 1].type,
-            );
-            if (leading_pattern) {
-                const separator = command_body.search(leading_pattern);
+            const next_pattern = BotTextBasedCommand.pattern_for_type([...this.options.values()][i + 1].type);
+            if (next_pattern) {
+                const separator = command_body.search(new RegExp(`\\s${next_pattern.source}`, next_pattern.flags));
                 if (separator > 0) {
                     command_options.push(this.validate_choices(option, command_body.slice(0, separator)));
                     command_body = command_body.slice(separator).trim();
@@ -257,8 +261,7 @@ export class BotTextBasedCommand<Args extends unknown[] = []> extends BaseBotInt
 
     parse_number_argument(command_options: unknown[], command_body: string, option: TextBasedCommandParameterOptions) {
         // TODO: Handle optional number...
-        const re = /^\d+\b/;
-        const match = command_body.match(re);
+        const match = command_body.match(anchored(number_pattern));
         if (match) {
             command_options.push(this.validate_choices(option, parseInt(match[0])));
             command_body = command_body.slice(match[0].length).trim();
@@ -271,8 +274,7 @@ export class BotTextBasedCommand<Args extends unknown[] = []> extends BaseBotInt
     }
 
     parse_boolean_argument(command_options: unknown[], command_body: string, option: TextBasedCommandParameterOptions) {
-        const re = /^(?:true|false)\b/i;
-        const match = command_body.match(re);
+        const match = command_body.match(anchored(boolean_pattern));
         if (match) {
             command_options.push(match[0].toLowerCase() === "true");
             command_body = command_body.slice(match[0].length).trim();
@@ -290,8 +292,7 @@ export class BotTextBasedCommand<Args extends unknown[] = []> extends BaseBotInt
         message: Discord.Message,
         option: TextBasedCommandParameterOptions,
     ) {
-        const re = /^(?:<@!?(\d{10,})>|(\d{10,}))/;
-        const match = command_body.match(re);
+        const match = command_body.match(anchored(user_pattern));
         if (match) {
             const userid = match[1] || match[2];
             try {
@@ -326,8 +327,7 @@ export class BotTextBasedCommand<Args extends unknown[] = []> extends BaseBotInt
     ) {
         const users: Discord.User[] = [];
         while (true) {
-            const re = /^(?:<@!?(\d{10,})>|(\d{10,}))/;
-            const match = command_body.match(re);
+            const match = command_body.match(anchored(user_pattern));
             if (match) {
                 const userid = match[1] || match[2];
                 try {
