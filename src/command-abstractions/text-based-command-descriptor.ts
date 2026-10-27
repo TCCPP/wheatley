@@ -23,12 +23,27 @@ enum ParseErrorType {
     InvalidChoice,
 }
 
+// User input error
 class ParseError extends Error {
     constructor(
         readonly error_type: ParseErrorType,
         message: string,
     ) {
         super(message);
+    }
+}
+
+// User input error
+class ArgumentError extends Error {
+    constructor(message: string) {
+        super(message);
+    }
+}
+
+// Error encountered while handling, not the user's fault
+class ArgumentHandlingError extends Error {
+    constructor(message: string, options?: ErrorOptions) {
+        super(message, options);
     }
 }
 
@@ -170,6 +185,190 @@ export class BotTextBasedCommand<Args extends unknown[] = []> extends BaseBotInt
         }
     }
 
+    required_arg_error(option: TextBasedCommandParameterOptions) {
+        return new ParseError(ParseErrorType.RequiredArgument, `Required argument "${option.title}" not found`);
+    }
+
+    validate_choices<T>(option: TextBasedCommandParameterOptions, v: T) {
+        const opt = option as TextBasedCommandParameterOptionsWithChoices<T>;
+        if (opt.choices && !opt.choices.find(({ name, value }) => v == value)) {
+            throw new ParseError(ParseErrorType.InvalidChoice, `Invalid argument choice ${v}`);
+        }
+        return v;
+    }
+
+    parse_string_argument(
+        command_options: unknown[],
+        command_body: string,
+        i: number,
+        option: TextBasedCommandParameterOptions,
+    ) {
+        if (option.regex) {
+            const match = command_body.match(option.regex);
+            if (match) {
+                command_options.push(this.validate_choices(option, match[0]));
+                command_body = command_body.slice(match[0].length).trim();
+            } else if (!option.required) {
+                command_options.push(null);
+            } else {
+                throw this.required_arg_error(option);
+            }
+        } else if (i == this.options.size - 1) {
+            if (command_body !== "") {
+                command_options.push(this.validate_choices(option, command_body));
+                command_body = "";
+            } else if (!option.required) {
+                command_options.push(null);
+            } else {
+                throw this.required_arg_error(option);
+            }
+        } else {
+            // Peek the next argument to see how much to consume as text
+            const leading_pattern = BotTextBasedCommand.leading_pattern_for_type(
+                [...this.options.values()][i + 1].type,
+            );
+            if (leading_pattern) {
+                const separator = command_body.search(leading_pattern);
+                if (separator > 0) {
+                    command_options.push(this.validate_choices(option, command_body.slice(0, separator)));
+                    command_body = command_body.slice(separator).trim();
+                } else if (command_body !== "") {
+                    command_options.push(this.validate_choices(option, command_body));
+                    command_body = "";
+                } else if (!option.required) {
+                    command_options.push(null);
+                } else {
+                    throw this.required_arg_error(option);
+                }
+            } else {
+                const match = command_body.match(/^\S+/);
+                if (match) {
+                    command_options.push(this.validate_choices(option, match[0]));
+                    command_body = command_body.slice(match[0].length).trim();
+                } else if (!option.required) {
+                    command_options.push(null);
+                } else {
+                    throw this.required_arg_error(option);
+                }
+            }
+        }
+        return command_body;
+    }
+
+    parse_number_argument(command_options: unknown[], command_body: string, option: TextBasedCommandParameterOptions) {
+        // TODO: Handle optional number...
+        const re = /^\d+\b/;
+        const match = command_body.match(re);
+        if (match) {
+            command_options.push(this.validate_choices(option, parseInt(match[0])));
+            command_body = command_body.slice(match[0].length).trim();
+        } else if (!option.required) {
+            command_options.push(null);
+        } else {
+            throw this.required_arg_error(option);
+        }
+        return command_body;
+    }
+
+    parse_boolean_argument(command_options: unknown[], command_body: string, option: TextBasedCommandParameterOptions) {
+        const re = /^(?:true|false)\b/i;
+        const match = command_body.match(re);
+        if (match) {
+            command_options.push(match[0].toLowerCase() === "true");
+            command_body = command_body.slice(match[0].length).trim();
+        } else if (!option.required) {
+            command_options.push(null);
+        } else {
+            throw this.required_arg_error(option);
+        }
+        return command_body;
+    }
+
+    async parse_user_argument(
+        command_options: unknown[],
+        command_body: string,
+        message: Discord.Message,
+        option: TextBasedCommandParameterOptions,
+    ) {
+        const re = /^(?:<@!?(\d{10,})>|(\d{10,}))/;
+        const match = command_body.match(re);
+        if (match) {
+            const userid = match[1] || match[2];
+            try {
+                const user = await this.wheatley.client.users.fetch(userid);
+                command_options.push(user);
+                command_body = command_body.slice(match[0].length).trim();
+            } catch (e) {
+                M.debug(e);
+                throw new ArgumentError("Unable to find user");
+            }
+        } else if (message.type === Discord.MessageType.Reply) {
+            // Handle reply as an argument, only if no text argument is provided
+            // NOTE: If there's ever a command like !x <user> <user> this won't quite work
+            try {
+                const reply_message = await this.wheatley.fetch_message_reply(message);
+                command_options.push(reply_message.author);
+            } catch (e) {
+                throw new ArgumentHandlingError("Error fetching reply", { cause: e });
+            }
+        } else if (!option.required) {
+            command_options.push(null);
+        } else {
+            throw this.required_arg_error(option);
+        }
+        return command_body;
+    }
+
+    async parse_users_argument(
+        command_options: unknown[],
+        command_body: string,
+        option: TextBasedCommandParameterOptions,
+    ) {
+        const users: Discord.User[] = [];
+        while (true) {
+            const re = /^(?:<@!?(\d{10,})>|(\d{10,}))/;
+            const match = command_body.match(re);
+            if (match) {
+                const userid = match[1] || match[2];
+                try {
+                    const user = await this.wheatley.client.users.fetch(userid);
+                    users.push(user);
+                    command_body = command_body.slice(match[0].length).trim();
+                } catch (e) {
+                    M.debug(e);
+                    throw new ArgumentError(`Unable to find user`);
+                }
+            } else {
+                break;
+            }
+        }
+        if (users.length > 0) {
+            command_options.push(users);
+        } else {
+            if (!option.required) {
+                command_options.push(null);
+            } else {
+                throw this.required_arg_error(option);
+            }
+        }
+        return command_body;
+    }
+
+    parse_role_argument(command_options: unknown[], command_body: string, option: TextBasedCommandParameterOptions) {
+        const match = this.match_role(command_body);
+        if (match?.role) {
+            command_options.push(match.role);
+            command_body = command_body.slice(match.length).trim();
+        } else if (match) {
+            throw new ArgumentError(`Unable to find role`);
+        } else if (!option.required) {
+            command_options.push(null);
+        } else {
+            throw this.required_arg_error(option);
+        }
+        return command_body;
+    }
+
     async parse_text_arguments(command_obj: TextBasedCommand, message: Discord.Message, command_body: string) {
         // TODO: Handle `required` more thoroughly?
         const reply_with_error = async (message: string, surpress_usage = false) => {
@@ -188,164 +387,19 @@ export class BotTextBasedCommand<Args extends unknown[] = []> extends BaseBotInt
         const command_options: unknown[] = [];
         for (const [i, option] of [...this.options.values()].entries()) {
             try {
-                const required_arg_error = () => {
-                    return new ParseError(
-                        ParseErrorType.RequiredArgument,
-                        `Required argument "${option.title}" not found`,
-                    );
-                };
-                const validate_choices = <T>(v: T) => {
-                    const opt = option as TextBasedCommandParameterOptionsWithChoices<T>;
-                    if (opt.choices && !opt.choices.find(({ name, value }) => v == value)) {
-                        throw new ParseError(ParseErrorType.InvalidChoice, `Invalid argument choice ${v}`);
-                    }
-                    return v;
-                };
                 if (option.type == "string") {
-                    if (option.regex) {
-                        const match = command_body.match(option.regex);
-                        if (match) {
-                            command_options.push(validate_choices(match[0]));
-                            command_body = command_body.slice(match[0].length).trim();
-                        } else if (!option.required) {
-                            command_options.push(null);
-                        } else {
-                            throw required_arg_error();
-                        }
-                    } else if (i == this.options.size - 1) {
-                        if (command_body !== "") {
-                            command_options.push(validate_choices(command_body));
-                            command_body = "";
-                        } else if (!option.required) {
-                            command_options.push(null);
-                        } else {
-                            throw required_arg_error();
-                        }
-                    } else {
-                        const leading_pattern = BotTextBasedCommand.leading_pattern_for_type(
-                            [...this.options.values()][i + 1].type,
-                        );
-                        if (leading_pattern) {
-                            const separator = command_body.search(leading_pattern);
-                            if (separator > 0) {
-                                command_options.push(validate_choices(command_body.slice(0, separator)));
-                                command_body = command_body.slice(separator).trim();
-                            } else if (command_body !== "") {
-                                command_options.push(validate_choices(command_body));
-                                command_body = "";
-                            } else if (!option.required) {
-                                command_options.push(null);
-                            } else {
-                                throw required_arg_error();
-                            }
-                        } else {
-                            const match = command_body.match(/^\S+/);
-                            if (match) {
-                                command_options.push(validate_choices(match[0]));
-                                command_body = command_body.slice(match[0].length).trim();
-                            } else if (!option.required) {
-                                command_options.push(null);
-                            } else {
-                                throw required_arg_error();
-                            }
-                        }
-                    }
+                    command_body = this.parse_string_argument(command_options, command_body, i, option);
                 } else if (option.type == "number") {
-                    // TODO: Handle optional number...
-                    const re = /^\d+\b/;
-                    const match = command_body.match(re);
-                    if (match) {
-                        command_options.push(validate_choices(parseInt(match[0])));
-                        command_body = command_body.slice(match[0].length).trim();
-                    } else if (!option.required) {
-                        command_options.push(null);
-                    } else {
-                        throw required_arg_error();
-                    }
+                    command_body = this.parse_number_argument(command_options, command_body, option);
                 } else if (option.type == "boolean") {
-                    const re = /^(?:true|false)\b/i;
-                    const match = command_body.match(re);
-                    if (match) {
-                        command_options.push(match[0].toLowerCase() === "true");
-                        command_body = command_body.slice(match[0].length).trim();
-                    } else if (!option.required) {
-                        command_options.push(null);
-                    } else {
-                        throw required_arg_error();
-                    }
+                    command_body = this.parse_boolean_argument(command_options, command_body, option);
                 } else if (option.type == "user") {
-                    const re = /^(?:<@!?(\d{10,})>|(\d{10,}))/;
-                    const match = command_body.match(re);
-                    if (match) {
-                        const userid = match[1] || match[2];
-                        try {
-                            const user = await this.wheatley.client.users.fetch(userid);
-                            command_options.push(user);
-                            command_body = command_body.slice(match[0].length).trim();
-                        } catch (e) {
-                            M.debug(e);
-                            await reply_with_error(`Unable to find user`, true);
-                            return;
-                        }
-                    } else if (message.type === Discord.MessageType.Reply) {
-                        // Handle reply as an argument, only if no text argument is provided
-                        // NOTE: If there's ever a command like !x <user> <user> this won't quite work
-                        try {
-                            const reply_message = await this.wheatley.fetch_message_reply(message);
-                            command_options.push(reply_message.author);
-                        } catch (e) {
-                            await reply_with_error(`Error fetching reply`, true);
-                            this.wheatley.critical_error(e);
-                            return;
-                        }
-                    } else if (!option.required) {
-                        command_options.push(null);
-                    } else {
-                        throw required_arg_error();
-                    }
+                    command_body = await this.parse_user_argument(command_options, command_body, message, option);
                 } else if (option.type == "users") {
-                    const users: Discord.User[] = [];
-                    while (true) {
-                        const re = /^(?:<@!?(\d{10,})>|(\d{10,}))/;
-                        const match = command_body.match(re);
-                        if (match) {
-                            const userid = match[1] || match[2];
-                            try {
-                                const user = await this.wheatley.client.users.fetch(userid);
-                                users.push(user);
-                                command_body = command_body.slice(match[0].length).trim();
-                            } catch (e) {
-                                M.debug(e);
-                                await reply_with_error(`Unable to find user`, true);
-                                return;
-                            }
-                        } else {
-                            break;
-                        }
-                    }
-                    if (users.length > 0) {
-                        command_options.push(users);
-                    } else {
-                        if (!option.required) {
-                            command_options.push(null);
-                        } else {
-                            throw required_arg_error();
-                        }
-                    }
+                    command_body = await this.parse_users_argument(command_options, command_body, option);
                     // eslint-disable-next-line @typescript-eslint/no-unnecessary-condition
                 } else if (option.type == "role") {
-                    const match = this.match_role(command_body);
-                    if (match?.role) {
-                        command_options.push(match.role);
-                        command_body = command_body.slice(match.length).trim();
-                    } else if (match) {
-                        await reply_with_error(`Unable to find role`, true);
-                        return;
-                    } else if (!option.required) {
-                        command_options.push(null);
-                    } else {
-                        throw required_arg_error();
-                    }
+                    command_body = this.parse_role_argument(command_options, command_body, option);
                 } else {
                     assert(false, "unhandled option type");
                 }
@@ -356,10 +410,18 @@ export class BotTextBasedCommand<Args extends unknown[] = []> extends BaseBotInt
                     } else {
                         await reply_with_error(e.message);
                     }
+                    return; // user's fault, return and do no further error handling
+                } else if (e instanceof ArgumentError) {
+                    await reply_with_error(e.message, true);
+                    return; // user's fault, return and do no further error handling
+                } else if (e instanceof ArgumentHandlingError) {
+                    await reply_with_error(e.message, true);
+                    this.wheatley.critical_error(e.cause);
+                    return;
+                } else {
+                    this.wheatley.critical_error(e);
                     return;
                 }
-                this.wheatley.critical_error(e);
-                return;
             }
         }
         if (command_body != "" && !this.allow_trailing_junk) {
