@@ -1,51 +1,19 @@
-import { strict as assert } from "assert";
 import * as Discord from "discord.js";
 
 import { M } from "../utils/debugging-and-logging.js";
 import { ConditionalOptional } from "../utils/typing.js";
-import { BaseBuilder } from "./interaction-base.js";
-
-export type ButtonParameterType = "string" | "number" | "boolean" | "user_id";
+import { BaseBuilder, CustomIdParameterType, build_custom_id, parse_custom_id_arguments } from "./interaction-base.js";
 
 export class BotButtonHandler<Args extends unknown[] = []> {
-    private readonly metadata_fields: ButtonParameterType[] = [];
-
     constructor(
         public readonly base_custom_id: string,
         public readonly handler: (interaction: Discord.ButtonInteraction, ...args: Args) => Promise<void>,
         public readonly permissions?: bigint,
-        metadata_fields: ButtonParameterType[] = [],
-    ) {
-        this.metadata_fields = metadata_fields;
-    }
+        private readonly metadata_fields: CustomIdParameterType[] = [],
+    ) {}
 
     parse_arguments(raw_args: string[]): Args {
-        assert(
-            raw_args.length === this.metadata_fields.length,
-            `Expected ${this.metadata_fields.length} arguments, got ${raw_args.length} ` +
-                `for button ${this.base_custom_id}`,
-        );
-
-        return raw_args.map((arg, index) => {
-            const type = this.metadata_fields[index];
-            try {
-                if (type === "string" || type === "user_id") {
-                    return arg;
-                } else if (type === "number") {
-                    return parseInt(arg, 10);
-                } else if (
-                    type === "boolean" // eslint-disable-line @typescript-eslint/no-unnecessary-condition
-                ) {
-                    return arg === "true";
-                } else {
-                    throw new Error(`Unknown parameter type: ${type}`);
-                }
-            } catch (error) {
-                throw new Error(`Failed to parse argument ${index} for button ${this.base_custom_id}: ${error}`, {
-                    cause: error,
-                });
-            }
-        }) as Args;
+        return parse_custom_id_arguments(this.base_custom_id, this.metadata_fields, raw_args) as Args;
     }
 
     async handle(interaction: Discord.ButtonInteraction, raw_args: string[]): Promise<void> {
@@ -79,41 +47,11 @@ export class BotButtonHandler<Args extends unknown[] = []> {
 export class BotButton<Args extends unknown[] = []> {
     constructor(
         public readonly base_custom_id: string,
-        private readonly metadata_fields: ButtonParameterType[] = [],
+        private readonly metadata_fields: CustomIdParameterType[] = [],
     ) {}
 
     generate_custom_id(...args: Args): string {
-        assert(
-            args.length === this.metadata_fields.length,
-            `Expected ${this.metadata_fields.length} arguments, got ${args.length} for button ${this.base_custom_id}`,
-        );
-
-        const serialized_args = args.map((arg, index) => {
-            const type = this.metadata_fields[index];
-            try {
-                if (type === "string" || type === "user_id") {
-                    return String(arg);
-                } else if (type === "number") {
-                    return String(arg);
-                } else if (
-                    type === "boolean" // eslint-disable-line @typescript-eslint/no-unnecessary-condition
-                ) {
-                    return String(arg);
-                } else {
-                    throw new Error(`Unknown parameter type: ${type}`);
-                }
-            } catch (error) {
-                throw new Error(`Failed to serialize argument ${index} for button ${this.base_custom_id}: ${error}`, {
-                    cause: error,
-                });
-            }
-        });
-
-        if (serialized_args.length === 0) {
-            return this.base_custom_id;
-        }
-
-        return `${this.base_custom_id}:${serialized_args.join(":")}`;
+        return build_custom_id(this.base_custom_id, this.metadata_fields, args);
     }
 
     create_button(...args: Args): Discord.ButtonBuilder {
@@ -135,7 +73,7 @@ export class ButtonInteractionBuilder<
     Args extends unknown[] = [],
     HasHandler extends boolean = false,
 > extends BaseBuilder<HasHandler, [Discord.ButtonInteraction, ...Args]> {
-    private readonly metadata_fields: ButtonParameterType[] = [];
+    private readonly metadata_fields: CustomIdParameterType[] = [];
     private permissions?: bigint;
 
     constructor(public readonly base_custom_id: string) {
