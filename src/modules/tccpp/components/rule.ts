@@ -5,14 +5,16 @@ import { CommandSetBuilder } from "../../../command-abstractions/command-set-bui
 import { EarlyReplyMode, TextBasedCommandBuilder } from "../../../command-abstractions/text-based-command-builder.js";
 import { TextBasedCommand } from "../../../command-abstractions/text-based-command.js";
 import { colors } from "../../../common.js";
-import { unwrap } from "../../../utils/misc.js";
-import Wiki from "../../wheatley/components/wiki.js";
+import Wiki, { WikiArticle } from "../../wheatley/components/wiki.js";
 
 const INVISIBLE_CHARS = /[\u200B-\u200D\uFEFF]/g;
 const RULE_LINE = /^(\d+)\.\s+(.+)$/;
 
-function ParseWikiRules(wiki: Wiki): Map<number, string> {
-    const article = wiki.articles["rules.md"];
+function parse_wiki_rules(wiki: Wiki): Map<number, string> {
+    const article: WikiArticle|undefined = wiki.articles["rules.md"];
+    if (!article) {
+        return new Map();
+    }
 
     const rules = new Map<number, string>();
     for (const field of article.fields) {
@@ -21,12 +23,12 @@ function ParseWikiRules(wiki: Wiki): Map<number, string> {
         }
         for (const raw_line of field.value.split("\n")) {
             const line = raw_line.replace(INVISIBLE_CHARS, "").trim();
-            const m = line.match(RULE_LINE);
-            if (!m) {
+            const match = line.match(RULE_LINE);
+            if (!match) {
                 continue;
             }
-            const number = parseInt(m[1], 10);
-            const text = m[2].trim();
+            const number = parseInt(match[1], 10);
+            const text = match[2].trim();
             if (text) {
                 rules.set(number, text);
             }
@@ -40,7 +42,7 @@ export default class RuleLookup extends BotComponent {
         return true;
     }
 
-    private cached_rules: Map<number, string> | null = null;
+    private cached_rules: Map<number, string> = new Map();
 
     override async setup(commands: CommandSetBuilder) {
         commands.add(
@@ -48,19 +50,23 @@ export default class RuleLookup extends BotComponent {
                 .set_category("References")
                 .set_description("Look up a server rule by number")
                 .add_number_option({
-                    title: "number",
-                    description: "Rule number (0-9)",
-                    required: true,
+                    title : "number",
+                    description : "Rule number",
+                    required : true,
                 })
                 .set_handler(this.rule.bind(this)),
         );
     }
 
-    async rule(command: TextBasedCommand, number: number) {
-        if (this.cached_rules === null) {
-            const wiki = unwrap(this.wheatley.components.get("Wiki")) as Wiki;
-            this.cached_rules = ParseWikiRules(wiki);
+    override async on_ready() {
+        const wiki = this.wheatley.components.get("Wiki") as Wiki | undefined;
+        if (!wiki) {
+            return;
         }
+        this.cached_rules = parse_wiki_rules(wiki);
+    }
+
+    async rule(command: TextBasedCommand, number: number) {
         const rules = this.cached_rules;
 
         if (rules.size === 0) {
@@ -70,7 +76,7 @@ export default class RuleLookup extends BotComponent {
                         .setColor(colors.red)
                         .setDescription("Rules are not available right now."),
                 ],
-                ephemeral_if_possible: true,
+                ephemeral_if_possible : true,
             });
             return;
         }
