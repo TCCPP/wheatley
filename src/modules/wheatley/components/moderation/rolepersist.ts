@@ -7,7 +7,7 @@ import { capitalize } from "../../../../utils/strings.js";
 import { M } from "../../../../utils/debugging-and-logging.js";
 import { role_map } from "../../../../role-map.js";
 import { wheatley_roles } from "../../roles.js";
-import { ModerationComponent, duration_regex } from "./moderation-common.js";
+import { ModerationComponent, ModerationDeniedError, duration_regex } from "./moderation-common.js";
 import { CommandSetBuilder } from "../../../../command-abstractions/command-set-builder.js";
 import {
     EarlyReplyMode,
@@ -180,6 +180,22 @@ export default class Rolepersist extends ModerationComponent {
         // for a role that no longer exists
         if (entry.role === "") {
             return;
+        }
+        const role = await this.wheatley.guild.roles.fetch(entry.role, { force: true });
+        if (!role) {
+            this.wheatley.critical_error("Unknown role in rolepersist apply_moderation");
+            return;
+        }
+        const everyone = this.wheatley.guild.roles.everyone;
+        if (
+            !everyone.permissions.has(role.permissions, false) ||
+            this.wheatley.guild.channels.cache.some(
+                channel =>
+                    "permissionOverwrites" in channel &&
+                    !channel.permissionsFor(everyone, false).has(channel.permissionsFor(role, false), false),
+            )
+        ) {
+            throw new ModerationDeniedError("Cannot persist roles with permissions beyond the everyone role");
         }
         const member = await this.wheatley.try_fetch_guild_member(entry.user);
         if (member) {
