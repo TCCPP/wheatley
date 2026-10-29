@@ -567,44 +567,52 @@ export abstract class ModerationComponent extends BotComponent {
                     },
                 ]);
             }
-            const message_options: Discord.MessageCreateOptions = {
-                embeds: [
-                    Modlogs.case_summary(
-                        moderation,
-                        await this.wheatley.client.users.fetch(moderation.user),
-                        staff_moderation_display_options,
-                    ),
-                ],
-            };
-            // Only include the red telephone button if this is not an automatic moderation
-            if (moderation.moderator !== this.wheatley.user.id) {
-                message_options.components = [
-                    new Discord.ActionRowBuilder<Discord.ButtonBuilder>().addComponents(
-                        new Discord.ButtonBuilder()
-                            .setCustomId(this.ring_red_telephone_button.generate_custom_id(moderation.case_number))
-                            .setLabel("Ring the Red Telephone")
-                            .setStyle(Discord.ButtonStyle.Secondary)
-                            .setEmoji("📞"),
-                    ),
-                ];
-            }
-            this.channels.staff_action_log
-                .send(message_options)
-                .catch(this.wheatley.critical_error.bind(this.wheatley));
-            if (!note_moderation_types.includes(moderation.type)) {
-                this.channels.public_action_log
-                    .send({
-                        embeds: [
-                            Modlogs.case_summary(
-                                moderation,
-                                await this.wheatley.client.users.fetch(moderation.user),
-                                public_moderation_display_options,
-                            ),
-                        ],
-                    })
+            try {
+                const message_options: Discord.MessageCreateOptions = {
+                    embeds: [
+                        Modlogs.case_summary(
+                            moderation,
+                            await this.wheatley.client.users.fetch(moderation.user),
+                            staff_moderation_display_options,
+                        ),
+                    ],
+                };
+                // Only include the red telephone button if this is not an automatic moderation
+                if (moderation.moderator !== this.wheatley.user.id) {
+                    message_options.components = [
+                        new Discord.ActionRowBuilder<Discord.ButtonBuilder>().addComponents(
+                            new Discord.ButtonBuilder()
+                                .setCustomId(this.ring_red_telephone_button.generate_custom_id(moderation.case_number))
+                                .setLabel("Ring the Red Telephone")
+                                .setStyle(Discord.ButtonStyle.Secondary)
+                                .setEmoji("📞"),
+                        ),
+                    ];
+                }
+                this.channels.staff_action_log
+                    .send(message_options)
                     .catch(this.wheatley.critical_error.bind(this.wheatley));
+                if (!note_moderation_types.includes(moderation.type)) {
+                    this.channels.public_action_log
+                        .send({
+                            embeds: [
+                                Modlogs.case_summary(
+                                    moderation,
+                                    await this.wheatley.client.users.fetch(moderation.user),
+                                    public_moderation_display_options,
+                                ),
+                            ],
+                        })
+                        .catch(this.wheatley.critical_error.bind(this.wheatley));
+                }
+            } catch (e) {
+                this.wheatley.critical_error(e);
             }
-            this.wheatley.event_hub.emit("issue_moderation", moderation);
+            try {
+                this.wheatley.event_hub.emit("issue_moderation", moderation);
+            } catch (e) {
+                this.wheatley.critical_error(e);
+            }
         } finally {
             ModerationComponent.case_id_mutex.unlock();
         }
@@ -669,6 +677,18 @@ export abstract class ModerationComponent extends BotComponent {
         }
     }
 
+    private async issue_moderation_and_notify(user: Discord.User, moderation: moderation_entry) {
+        if (moderation.type === "ban" || moderation.type === "kick" || moderation.type === "softban") {
+            const notification_failed = await this.try_notify_user(user, this.past_participle, moderation);
+            await this.issue_moderation(moderation);
+            return notification_failed;
+        }
+        await this.issue_moderation(moderation);
+        return note_moderation_types.includes(moderation.type)
+            ? false
+            : await this.try_notify_user(user, this.past_participle, moderation);
+    }
+
     async issue_moderation_internal(
         user: Discord.User,
         moderator: Discord.User,
@@ -700,12 +720,7 @@ export abstract class ModerationComponent extends BotComponent {
             expunged: null,
             link,
         };
-        try {
-            await this.notify_user(user, this.past_participle, moderation);
-        } catch (e) {
-            this.wheatley.critical_error(e);
-        }
-        await this.issue_moderation(moderation);
+        await this.issue_moderation_and_notify(user, moderation);
     }
 
     //
@@ -762,10 +777,7 @@ export abstract class ModerationComponent extends BotComponent {
                 link: command.get_or_forge_url(),
             };
             const is_note_type = note_moderation_types.includes(this.type);
-            const notification_failed = is_note_type
-                ? false
-                : await this.try_notify_user(user, this.past_participle, moderation);
-            await this.issue_moderation(moderation);
+            const notification_failed = await this.issue_moderation_and_notify(user, moderation);
             const success_message = is_note_type
                 ? `Note added for ${user.displayName}`
                 : `${user.displayName} was ${this.past_participle}`;
@@ -864,11 +876,10 @@ export abstract class ModerationComponent extends BotComponent {
                     expunged: null,
                     link: command.get_or_forge_url(),
                 };
-                const notification_failed = await this.try_notify_user(user, this.past_participle, moderation);
+                const notification_failed = await this.issue_moderation_and_notify(user, moderation);
                 if (notification_failed) {
                     notification_failures.push(user.displayName);
                 }
-                await this.issue_moderation(moderation);
             }
             await command.replyOrFollowUp({
                 embeds: [
