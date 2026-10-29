@@ -79,6 +79,13 @@ export class ParseError extends Error {
     }
 }
 
+export class ModerationDeniedError extends Error {
+    constructor(message: string) {
+        super(message);
+        this.name = "ModerationDeniedError";
+    }
+}
+
 export type revoke_handler_options = {
     allow_no_entry?: boolean;
 };
@@ -814,7 +821,7 @@ export abstract class ModerationComponent extends BotComponent {
                 ephemeral_if_possible: is_note_type,
             });
         } catch (e) {
-            if (e instanceof ParseError) {
+            if (e instanceof ParseError || e instanceof ModerationDeniedError) {
                 await this.reply_with_error(command, e.message);
             } else {
                 await this.reply_with_error(command, `Error issuing ${this.type}`);
@@ -890,7 +897,7 @@ export abstract class ModerationComponent extends BotComponent {
                 ],
             });
         } catch (e) {
-            if (e instanceof ParseError) {
+            if (e instanceof ParseError || e instanceof ModerationDeniedError) {
                 await this.reply_with_error(command, e.message);
                 return;
             }
