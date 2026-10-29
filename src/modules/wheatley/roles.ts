@@ -13,6 +13,7 @@ export const wheatley_roles = define_roles({
     no_til: { id: "883474632370454588", name: "No TIL" },
     no_memes: { id: "982307359370141756", name: "No Memes" },
     no_voice: { id: "1371771250363465892", name: "No Voice" },
+    voice_muted: { id: "1479764785917595822", name: "Voice Muted" },
     voice_moderator: { id: "1371706420730531870", name: "Voice Moderator" },
     moderators: { id: "847915341954154536", name: "Moderator" },
     root: { id: "331719468440879105", name: "root" },

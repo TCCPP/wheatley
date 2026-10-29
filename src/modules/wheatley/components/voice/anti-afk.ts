@@ -17,7 +17,8 @@ export default class AntiAFK extends BotComponent {
         if (
             new_state.channel != null &&
             new_state.channelId != this.wheatley.guild.afkChannelId &&
-            new_state.selfDeaf
+            new_state.selfDeaf &&
+            !new_state.member?.user.bot
         ) {
             assert(new_state.member);
             const member = new_state.member;

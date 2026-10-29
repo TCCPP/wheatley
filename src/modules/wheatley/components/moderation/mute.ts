@@ -64,7 +64,7 @@ export default class Mute extends ModerationComponent {
         commands.add(
             new TextBasedCommandBuilder("unmute", EarlyReplyMode.visible)
                 .set_category("Moderation")
-                .set_permissions(Discord.PermissionFlagsBits.BanMembers)
+                .set_permissions(Discord.PermissionFlagsBits.ModerateMembers)
                 .set_description("Unmute user")
                 .add_user_option({
                     title: "user",

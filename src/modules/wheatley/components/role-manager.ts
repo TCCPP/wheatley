@@ -8,11 +8,16 @@ import { ensure_index } from "../../../infra/database-interface.js";
 import { CommandSetBuilder } from "../../../command-abstractions/command-set-builder.js";
 import { set_interval } from "../../../utils/node.js";
 import { build_description } from "../../../utils/strings.js";
-import { with_retry } from "../../../utils/discord.js";
+import { send_long_response_markdown_aware, with_retry } from "../../../utils/discord.js";
 import { channel_map } from "../../../channel-map.js";
 import { wheatley_channels } from "../channels.js";
 import { wheatley_roles } from "../roles.js";
 import { role_map } from "../../../role-map.js";
+import { EarlyReplyMode, TextBasedCommandBuilder } from "../../../command-abstractions/text-based-command-builder.js";
+import { TextBasedCommand } from "../../../command-abstractions/text-based-command.js";
+
+// Permissions beyond @everyone's that are still safe to restore automatically
+const additional_restorable_permissions = [Discord.PermissionFlagsBits.UseSoundboard];
 
 export type user_role_entry = {
     user_id: string;
@@ -70,6 +75,9 @@ export default class RoleManager extends BotComponent {
             wheatley_roles.no_til,
             wheatley_roles.no_memes,
             wheatley_roles.voice,
+            wheatley_roles.no_voice,
+            wheatley_roles.voice_muted,
+            wheatley_roles.voice,
             // other misc roles
             wheatley_roles.featured_bot,
             wheatley_roles.official_bot,
@@ -79,6 +87,14 @@ export default class RoleManager extends BotComponent {
         );
         roles.resolve();
         this.do_not_restore = new Set([...roles.values()].map(role => role.id));
+
+        commands.add(
+            new TextBasedCommandBuilder("wlistrestorableroles", EarlyReplyMode.none)
+                .set_category("Admin utilities")
+                .set_permissions(Discord.PermissionFlagsBits.Administrator)
+                .set_description("List which roles are restored when a member rejoins")
+                .set_handler(this.list_restorable_roles.bind(this)),
+        );
     }
 
     override async on_ready() {
@@ -177,14 +193,39 @@ export default class RoleManager extends BotComponent {
             ],
         });
         for (const id of roles_entry.roles) {
-            if (this.do_not_restore.has(id) || id == this.wheatley.guild.roles.everyone.id) {
-                continue;
-            }
             const role = this.wheatley.guild.roles.cache.get(id);
-            if (!role || !role.permissions.equals(this.wheatley.guild.roles.everyone.permissions) || role.managed) {
-                continue;
+            if (role && this.is_restorable(role)) {
+                await member.roles.add(role);
             }
-            await member.roles.add(role);
         }
+    }
+
+    is_restorable(role: Discord.Role) {
+        if (role.id === this.wheatley.guild.roles.everyone.id) {
+            return false;
+        } else if (this.do_not_restore.has(role.id)) {
+            return false;
+        } else if (role.managed) {
+            return false;
+        } else {
+            const disallowed_permissions = new Discord.PermissionsBitField([
+                this.wheatley.guild.roles.everyone.permissions,
+                ...additional_restorable_permissions,
+            ]).missing(role.permissions, false);
+            return disallowed_permissions.length == 0;
+        }
+    }
+
+    async list_restorable_roles(command: TextBasedCommand) {
+        const [restorable, non_restorable] = this.wheatley.guild.roles.cache
+            .sorted((a, b) => b.position - a.position)
+            .partition(role => this.is_restorable(role));
+        await send_long_response_markdown_aware(
+            command,
+            [
+                `Restorable: ${restorable.map(role => `${role}`).join(", ")}`,
+                `Non-restorable: ${non_restorable.map(role => `${role}`).join(", ")}`,
+            ].join("\n"),
+        );
     }
 }

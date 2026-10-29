@@ -124,6 +124,7 @@ export default class UsernameManager extends BotComponent {
         if (
             member.id == "152543367937392640" || // rald
             member.id == "125750748272132096" || // dragon
+            member.id == "146029304298471425" || // morwenn
             is_herald(member.displayName.trim())
         ) {
             if (!this.has_herald(member)) {

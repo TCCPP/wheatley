@@ -99,6 +99,8 @@ export class TextBasedCommandBuilder<
         assert(!this.options.has(option.title));
         this.options.set(option.title, {
             ...option,
+            // Option regexes are often written as search patterns, but parsing consumes them from the start of the text
+            regex: option.regex && new RegExp(`^(?:${option.regex.source})`, option.regex.flags),
             type: "string",
         });
         return this as unknown as TextBasedCommandBuilder<
