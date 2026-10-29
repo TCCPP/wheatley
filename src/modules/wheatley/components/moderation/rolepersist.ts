@@ -181,6 +181,22 @@ export default class Rolepersist extends ModerationComponent {
         if (entry.role === "") {
             return;
         }
+        const role = await this.wheatley.guild.roles.fetch(entry.role, { force: true });
+        if (!role) {
+            this.wheatley.critical_error("Unknown role in rolepersist apply_moderation");
+            return;
+        }
+        const everyone = this.wheatley.guild.roles.everyone;
+        if (
+            !everyone.permissions.has(role.permissions, false) ||
+            this.wheatley.guild.channels.cache.some(
+                channel =>
+                    "permissionOverwrites" in channel &&
+                    !channel.permissionsFor(everyone, false).has(channel.permissionsFor(role, false), false),
+            )
+        ) {
+            throw new Error("Cannot persist roles with permissions beyond @everyone");
+        }
         const member = await this.wheatley.try_fetch_guild_member(entry.user);
         if (member) {
             try {

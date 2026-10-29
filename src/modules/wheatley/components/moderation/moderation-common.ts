@@ -526,8 +526,12 @@ export abstract class ModerationComponent extends BotComponent {
             .find({ user: member.user.id, type: this.type, active: true })
             .toArray();
         for (const moderation of moderations) {
-            if (!(await this.is_moderation_applied_in_discord(moderation))) {
-                await this.apply_moderation(moderation);
+            try {
+                if (!(await this.is_moderation_applied_in_discord(moderation))) {
+                    await this.apply_moderation(moderation);
+                }
+            } catch (e) {
+                this.wheatley.critical_error(e);
             }
         }
     }
