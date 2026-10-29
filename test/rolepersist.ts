@@ -12,7 +12,7 @@ function setup(everyone_permissions: bigint = 0n, role_permissions: bigint = 0n)
         members: { resolve: () => null },
         roles: {
             cache: role_cache,
-            fetch: vi.fn(async (id: string) => role_cache.get(id) ?? null),
+            fetch: vi.fn((id: string) => Promise.resolve(role_cache.get(id) ?? null)),
             resolve: (role: Discord.Role | string) => role_cache.get(typeof role === "string" ? role : role.id),
         },
         channels: { cache: new Discord.Collection<string, Discord.GuildBasedChannel>() },
@@ -39,16 +39,16 @@ function setup(everyone_permissions: bigint = 0n, role_permissions: bigint = 0n)
         guild,
         roles: {
             cache: new Discord.Collection<string, Discord.Role>(),
-            add: vi.fn(async () => {}),
-            remove: vi.fn(async () => {}),
+            add: vi.fn().mockResolvedValue(undefined),
+            remove: vi.fn().mockResolvedValue(undefined),
         },
     };
     const stored: mongo.WithId<moderation_entry>[] = [];
     const critical_error = vi.fn();
     const component = Object.assign(Object.create(Rolepersist.prototype), {
-        wheatley: { guild, try_fetch_guild_member: vi.fn(async () => member), critical_error },
+        wheatley: { guild, try_fetch_guild_member: vi.fn().mockResolvedValue(member), critical_error },
         roles: { no_voice: { id: "8000000000" } },
-        database: { moderations: { find: () => ({ toArray: async () => stored }) } },
+        database: { moderations: { find: () => ({ toArray: () => Promise.resolve(stored) }) } },
     }) as Rolepersist;
     const entry: mongo.WithId<moderation_entry> = {
         type: "rolepersist",
