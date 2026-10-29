@@ -473,11 +473,6 @@ export default class Wiki extends BotComponent {
                     description: "Content",
                     required: true,
                 })
-                .add_boolean_option({
-                    title: "private",
-                    description: "Send this message only to you when possible, or in the channel otherwise",
-                    required: false,
-                })
                 .set_handler(this.wiki_preview.bind(this)),
         );
 
@@ -494,11 +489,6 @@ export default class Wiki extends BotComponent {
                     .add_user_option({
                         title: "user",
                         description: "ping the requested user in the bot reply",
-                        required: false,
-                    })
-                    .add_boolean_option({
-                        title: "private",
-                        description: "Send this message only to you when possible, or in the channel otherwise",
                         required: false,
                     })
                     .set_handler(this.wiki_alias.bind(this)),
@@ -660,22 +650,20 @@ export default class Wiki extends BotComponent {
         }
     }
 
-    async wiki_alias(command: TextBasedCommand, user: Discord.User | null, ephemeral: boolean | null) {
+    async wiki_alias(command: TextBasedCommand, user: Discord.User | null) {
         assert(this.article_aliases.has(command.name));
         const article_name = this.article_aliases.get(command.name)!;
-        await this.send_wiki_article(this.articles[article_name], command, user, !!ephemeral);
+        await this.send_wiki_article(this.articles[article_name], command, user, false);
     }
 
-    async wiki_preview(command: TextBasedCommand, content: string, ephemeral: boolean | null) {
+    async wiki_preview(command: TextBasedCommand, content: string) {
         const channel = await command.get_channel();
-        if (
-            !(
-                this.wheatley.freestanding ||
-                channel.id === this.channels.bot_spam.id ||
-                (channel.isThread() && channel.parentId === this.channels.bot_spam.id) ||
-                channel.isDMBased()
-            )
-        ) {
+        if (!(
+            this.wheatley.freestanding ||
+            channel.id === this.channels.bot_spam.id ||
+            (channel.isThread() && channel.parentId === this.channels.bot_spam.id) ||
+            channel.isDMBased()
+        )) {
             await command.reply(
                 `!wiki-preview must be used in <#${this.channels.bot_spam.id}>, a bot-spam thread, or a DM`,
                 true,
@@ -692,7 +680,7 @@ export default class Wiki extends BotComponent {
             return;
         }
         try {
-            await this.send_wiki_article(article, command, null, !!ephemeral);
+            await this.send_wiki_article(article, command, null, false);
         } catch (e) {
             await command.reply("Error while building / sending: " + e, true, true);
         }
