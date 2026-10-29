@@ -14,9 +14,10 @@ import {
 } from "../../../../command-abstractions/text-based-command-builder.js";
 import { TextBasedCommand } from "../../../../command-abstractions/text-based-command.js";
 import { moderation_entry, basic_moderation_with_user } from "./schemata.js";
+import { channel_has_member_with_role } from "../../../../utils/discord.js";
 
 export default class VoiceTake extends ModerationComponent {
-    private roles = role_map(this.wheatley, wheatley_roles.voice);
+    private readonly roles = role_map(this.wheatley, wheatley_roles.voice, wheatley_roles.voice_moderator);
 
     get type() {
         return "voice_take" as const;
@@ -97,24 +98,45 @@ export default class VoiceTake extends ModerationComponent {
         await this.moderation_revoke_handler(command, user, null, {}, { allow_no_entry: true });
     }
 
+    private async refresh_voice_permissions(member: Discord.GuildMember) {
+        const channel = member.voice.channel;
+        if (!channel || channel_has_member_with_role(channel, this.roles.voice_moderator.id)) {
+            return;
+        }
+        try {
+            await this.wheatley.force_voice_permissions_update(member);
+        } catch (e) {
+            M.error(`Failed to refresh voice permissions for ${member.user.tag}`, e);
+        }
+    }
+
     async apply_moderation(entry: moderation_entry) {
         M.info(`Applying voice take to ${entry.user_name}`);
+        if (this.dummy_rounds) {
+            return;
+        }
         const member = await this.wheatley.try_fetch_guild_member(entry.user);
         if (member) {
             await member.roles.remove(this.roles.voice);
+            await this.refresh_voice_permissions(member);
         }
     }
 
     async remove_moderation(entry: mongo.WithId<moderation_entry>) {
         M.info(`Removing voice take from ${entry.user_name}`);
+        if (this.dummy_rounds) {
+            return;
+        }
         const member = await this.wheatley.try_fetch_guild_member(entry.user);
         if (member) {
             await member.roles.add(this.roles.voice);
+            await this.refresh_voice_permissions(member);
         }
     }
 
     override async apply_revoke_to_discord(member: Discord.GuildMember): Promise<void> {
         await member.roles.add(this.roles.voice);
+        await this.refresh_voice_permissions(member);
     }
 
     async is_moderation_applied_in_discord(moderation: basic_moderation_with_user) {

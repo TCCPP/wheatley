@@ -16,7 +16,7 @@ import { BotComponent } from "./bot-component.js";
 import { CommandAbstractionReplyOptions } from "./command-abstractions/text-based-command.js";
 
 import { WheatleyDatabase } from "./infra/database-interface.js";
-import { forge_snowflake, send_long_message_markdown_aware } from "./utils/discord.js";
+import { api_wrap, forge_snowflake, send_long_message_markdown_aware } from "./utils/discord.js";
 import { TypedEventEmitter } from "./utils/event-emitter.js";
 import { setup_metrics_server } from "./infra/prometheus.js";
 import { moderation_entry } from "./modules/wheatley/components/moderation/schemata.js";
@@ -447,6 +447,21 @@ export class Wheatley {
     ) {
         const member = await this.try_fetch_guild_member(options);
         return !!member?.permissions.has(permissions);
+    }
+
+    /** Moving a user to a new voice channel forces Discord to re-evaluate permissions on them. */
+    async force_voice_permissions_update(member: Discord.GuildMember): Promise<boolean> {
+        const afk_channel = this.guild.afkChannel;
+        const original_channel = member.voice.channel;
+        if (!afk_channel || !original_channel || original_channel.id === afk_channel.id) {
+            return false;
+        }
+        // The member may disconnect mid-bounce which is not an error worth propagating
+        const disconnected = [Discord.RESTJSONErrorCodes.TargetUserIsNotConnectedToVoice];
+        if ((await api_wrap(() => member.voice.setChannel(afk_channel), disconnected)) === null) {
+            return false;
+        }
+        return (await api_wrap(() => member.voice.setChannel(original_channel), disconnected)) !== null;
     }
 
     async is_established_member(
