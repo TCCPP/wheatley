@@ -606,7 +606,7 @@ export default class Wiki extends BotComponent {
         article: WikiArticle,
         command: TextBasedCommand,
         user: Discord.User | null,
-        ephemeral: boolean,
+        ephemeral: boolean = false,
     ) {
         M.log(`Sending wiki article "${article.name}"`);
         let mention: string | null = null;
@@ -653,7 +653,7 @@ export default class Wiki extends BotComponent {
     async wiki_alias(command: TextBasedCommand, user: Discord.User | null) {
         assert(this.article_aliases.has(command.name));
         const article_name = this.article_aliases.get(command.name)!;
-        await this.send_wiki_article(this.articles[article_name], command, user, false);
+        await this.send_wiki_article(this.articles[article_name], command, user);
     }
 
     async wiki_preview(command: TextBasedCommand, content: string) {
@@ -680,7 +680,7 @@ export default class Wiki extends BotComponent {
             return;
         }
         try {
-            await this.send_wiki_article(article, command, null, false);
+            await this.send_wiki_article(article, command, null);
         } catch (e) {
             await command.reply("Error while building / sending: " + e, true, true);
         }
