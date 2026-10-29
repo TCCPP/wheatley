@@ -455,6 +455,11 @@ export default class Wiki extends BotComponent {
                     description: "ping the requested user in the bot reply",
                     required: false,
                 })
+                .add_boolean_option({
+                    title: "private",
+                    description: "Send this message only to you when possible, or in the channel otherwise",
+                    required: false,
+                })
                 .set_handler(this.wiki.bind(this)),
         );
 
@@ -597,11 +602,17 @@ export default class Wiki extends BotComponent {
         return embed;
     }
 
-    async send_wiki_article(article: WikiArticle, command: TextBasedCommand, user: Discord.User | null) {
+    async send_wiki_article(
+        article: WikiArticle,
+        command: TextBasedCommand,
+        user: Discord.User | null,
+        ephemeral: boolean = false,
+    ) {
         M.log(`Sending wiki article "${article.name}"`);
         let mention: string | null = null;
         if (user) {
             mention = user.toString();
+            ephemeral = false;
         }
         if (article.no_embed) {
             assert(article.body);
@@ -610,6 +621,7 @@ export default class Wiki extends BotComponent {
             await command.reply({
                 content: (mention ? mention + "\n" : "") + article.body + see_link,
                 should_text_reply: true,
+                ephemeral_if_possible: ephemeral,
             });
         } else {
             const member = article.set_author ? await command.get_member() : undefined;
@@ -618,15 +630,16 @@ export default class Wiki extends BotComponent {
                 content: mention ?? undefined,
                 embeds: [embed],
                 should_text_reply: true,
+                ephemeral_if_possible: ephemeral,
             });
         }
     }
 
-    async wiki(command: TextBasedCommand, query: string, user: Discord.User | null) {
+    async wiki(command: TextBasedCommand, query: string, user: Discord.User | null, ephemeral: boolean | null) {
         assert(this.wiki_search_index, "Wiki search index not initialized");
         const { result, suggestions } = await this.wiki_search_index.search_with_suggestions(query);
         if (result) {
-            await this.send_wiki_article(result.article, command, user);
+            await this.send_wiki_article(result.article, command, user, !!ephemeral);
         } else {
             let error_message = "Couldn't find article";
             if (suggestions.length > 0) {
