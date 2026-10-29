@@ -10,3 +10,5 @@ bot.json
 backup
 scratch
 indexes/**/*.html
+pnpm-lock.yaml
+pnpm-workspace.yaml
