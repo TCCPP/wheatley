@@ -2,6 +2,7 @@ import { strict as assert } from "assert";
 
 import * as Discord from "discord.js";
 import * as fs from "fs";
+import * as path from "path";
 
 import { unwrap } from "../../../utils/misc.js";
 import { globIterate } from "glob";
@@ -358,7 +359,10 @@ export function create_wiki_search_entries(
 ): WikiSearchEntry[] {
     const entries: WikiSearchEntry[] = [];
     for (const [name, article] of Object.entries(articles)) {
-        const aliases: string[] = [];
+        // Prioritize explicit aliases take priority, e.g. ask-your-question.md registers "ask", and otherwise include
+        // the article's file name as an alias (e.g. "learn-cpp")
+        const file_name = path.basename(name, ".md");
+        const aliases: string[] = article_aliases.has(file_name) ? [] : [file_name];
         for (const [alias, article_name] of article_aliases.entries()) {
             if (article_name === name) {
                 aliases.push(alias);

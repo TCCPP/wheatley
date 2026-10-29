@@ -3,7 +3,7 @@ import * as Discord from "discord.js";
 
 import { create_error_reply, Wheatley } from "./wheatley.js";
 import { BotTextBasedCommand } from "./command-abstractions/text-based-command-descriptor.js";
-import { BaseBotInteraction } from "./command-abstractions/interaction-base.js";
+import { BaseBotInteraction, split_custom_id } from "./command-abstractions/interaction-base.js";
 import { BotButtonHandler } from "./command-abstractions/button.js";
 import { SelfClearingMap } from "./utils/containers.js";
 import { MINUTE } from "./common.js";
@@ -99,15 +99,11 @@ export class CommandHandler {
     // Command dispatch
     //
 
-    private static readonly command_regex = /^!(\S+)/;
-
-    // Parse button custom_id into base_id and arguments
-    private parse_custom_id(custom_id: string): [string, string[]] {
-        const parts = custom_id.split(":");
-        const base_id = parts[0];
-        const args = parts.slice(1);
-        return [base_id, args];
+    private strip_wheatley_mention(message: string): string {
+        return message.replace(new RegExp(String.raw`^\s*<@!?${this.wheatley.user.id}>\s*`), "");
     }
+
+    private static readonly command_regex = /^!(\S+)/;
 
     private async do_command_dispatch(
         command: BotTextBasedCommand<unknown[]>,
@@ -126,7 +122,8 @@ export class CommandHandler {
 
     // returns false if the message was not a wheatley command
     private async handle_text_command(message: Discord.Message, prev_command_obj?: TextBasedCommand) {
-        const match = message.content.match(CommandHandler.command_regex);
+        const command_text = this.strip_wheatley_mention(message.content);
+        const match = command_text.match(CommandHandler.command_regex);
         if (!match) {
             // starts with ! but doesn't match the command regex
             return false;
@@ -143,7 +140,7 @@ export class CommandHandler {
 
             return false;
         }
-        let command_body = message.content.substring(match[0].length).trim();
+        let command_body = command_text.substring(match[0].length).trim();
         let command = this.text_commands[command_name];
         const command_obj = prev_command_obj
             ? new TextBasedCommand(prev_command_obj, command_name, command, message)
@@ -292,7 +289,8 @@ export class CommandHandler {
             if (message.guildId !== this.wheatley.guild.id) {
                 return;
             }
-            if (message.content.startsWith("!")) {
+            const command_text = this.strip_wheatley_mention(message.content);
+            if (command_text.startsWith("!")) {
                 await this.handle_text_command(message);
             }
         } catch (e) {
@@ -447,7 +445,7 @@ export class CommandHandler {
                 );
                 await this.other_commands[interaction.commandName].handler(interaction);
             } else if (interaction.isModalSubmit()) {
-                const [base_id, raw_args] = this.parse_custom_id(interaction.customId);
+                const [base_id, raw_args] = split_custom_id(interaction.customId);
                 if (base_id in this.modal_handlers) {
                     const handler = this.modal_handlers[base_id];
                     if (handler.permissions !== undefined) {
@@ -462,7 +460,7 @@ export class CommandHandler {
                     await handler.handle(interaction, raw_args);
                 }
             } else if (interaction.isButton()) {
-                const [base_id, raw_args] = this.parse_custom_id(interaction.customId);
+                const [base_id, raw_args] = split_custom_id(interaction.customId);
 
                 if (base_id in this.button_handlers) {
                     const handler = this.button_handlers[base_id];

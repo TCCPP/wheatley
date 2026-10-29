@@ -1,14 +1,16 @@
-import { strict as assert } from "assert";
-
 import * as Discord from "discord.js";
 
 import { unwrap } from "../utils/misc.js";
 import { ConditionalOptional } from "../utils/typing.js";
-import { BaseInteractionBuilder, BaseBotInteraction } from "./interaction-base.js";
+import {
+    BaseInteractionBuilder,
+    BaseBotInteraction,
+    CustomIdParameterType,
+    build_custom_id,
+    parse_custom_id_arguments,
+} from "./interaction-base.js";
 import { M } from "../utils/debugging-and-logging.js";
 import { BaseBuilder } from "./interaction-base.js";
-
-export type ModalParameterType = "string" | "number" | "boolean" | "user_id";
 
 export type ModalField = {
     custom_id: string;
@@ -96,49 +98,20 @@ export class BotModalSubmitInteraction {
 }
 
 export class BotModalHandler<Args extends unknown[] = []> {
-    private readonly metadata_fields: ModalParameterType[] = [];
-    private readonly field_configs: ModalField[] = [];
-
     constructor(
         public readonly base_custom_id: string,
         public readonly handler: (interaction: BotModalSubmitInteraction, ...args: Args) => Promise<void>,
         public readonly permissions?: bigint,
-        metadata_fields: ModalParameterType[] = [],
-        field_configs: ModalField[] = [],
-    ) {
-        this.metadata_fields = metadata_fields;
-        this.field_configs = field_configs;
-    }
+        private readonly metadata_fields: CustomIdParameterType[] = [],
+        private readonly field_configs: ModalField[] = [],
+    ) {}
 
     get fields(): string[] {
         return this.field_configs.map(field => field.custom_id);
     }
 
     parse_arguments(raw_args: string[]): Args {
-        assert(
-            raw_args.length === this.metadata_fields.length,
-            `Expected ${this.metadata_fields.length} arguments, got ${raw_args.length} ` +
-                `for modal ${this.base_custom_id}`,
-        );
-
-        return raw_args.map((arg, index) => {
-            const type = this.metadata_fields[index];
-            try {
-                if (type === "string" || type === "user_id") {
-                    return arg;
-                } else if (type === "number") {
-                    return parseInt(arg, 10);
-                } else if (
-                    type === "boolean" // eslint-disable-line @typescript-eslint/no-unnecessary-condition
-                ) {
-                    return arg === "true";
-                } else {
-                    throw new Error(`Unknown parameter type: ${type}`);
-                }
-            } catch (error) {
-                throw new Error(`Failed to parse argument ${index} for modal ${this.base_custom_id}: ${error}`);
-            }
-        }) as Args;
+        return parse_custom_id_arguments(this.base_custom_id, this.metadata_fields, raw_args) as Args;
     }
 
     async handle(interaction: Discord.ModalSubmitInteraction, raw_args: string[]): Promise<void> {
@@ -174,40 +147,12 @@ export class BotModal<Args extends unknown[] = []> {
     constructor(
         public readonly base_custom_id: string,
         private readonly title: string,
-        private readonly metadata_fields: ModalParameterType[] = [],
+        private readonly metadata_fields: CustomIdParameterType[] = [],
         private readonly field_configs: ModalField[] = [],
     ) {}
 
     generate_custom_id(...args: Args): string {
-        assert(
-            args.length === this.metadata_fields.length,
-            `Expected ${this.metadata_fields.length} arguments, got ${args.length} for modal ${this.base_custom_id}`,
-        );
-
-        const serialized_args = args.map((arg, index) => {
-            const type = this.metadata_fields[index];
-            try {
-                if (type === "string" || type === "user_id") {
-                    return String(arg);
-                } else if (type === "number") {
-                    return String(arg);
-                } else if (
-                    type === "boolean" // eslint-disable-line @typescript-eslint/no-unnecessary-condition
-                ) {
-                    return String(arg);
-                } else {
-                    throw new Error(`Unknown parameter type: ${type}`);
-                }
-            } catch (error) {
-                throw new Error(`Failed to serialize argument ${index} for modal ${this.base_custom_id}: ${error}`);
-            }
-        });
-
-        if (serialized_args.length === 0) {
-            return this.base_custom_id;
-        }
-
-        return `${this.base_custom_id}:${serialized_args.join(":")}`;
+        return build_custom_id(this.base_custom_id, this.metadata_fields, args);
     }
 
     create_modal(...args: Args): Discord.ModalBuilder {
@@ -285,7 +230,7 @@ export class ModalInteractionBuilder<
     Args extends unknown[] = [],
     HasHandler extends boolean = false,
 > extends BaseBuilder<HasHandler, [BotModalSubmitInteraction, ...Args]> {
-    private readonly metadata_fields: ModalParameterType[] = [];
+    private readonly metadata_fields: CustomIdParameterType[] = [];
     private permissions?: bigint;
     private title = "Modal";
     private readonly field_configs: ModalField[] = [];

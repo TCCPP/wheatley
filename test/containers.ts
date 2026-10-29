@@ -17,7 +17,7 @@ async function moveForwardBy(time: number) {
     return await vi.advanceTimersByTimeAsync(time);
 }
 
-describe.sequential("SelfClearingMap", () => {
+describe("SelfClearingMap", () => {
     beforeEach(() => {
         // tell vitest we use mocked timers
         vi.useFakeTimers();
@@ -29,7 +29,7 @@ describe.sequential("SelfClearingMap", () => {
         gc();
     });
 
-    it.sequential("should remove expired entries", async () => {
+    it("should remove expired entries", async () => {
         const map = new SelfClearingMap<string, number>(1000);
         await vi.advanceTimersToNextTimerAsync();
         vi.setSystemTime(0);
@@ -42,7 +42,7 @@ describe.sequential("SelfClearingMap", () => {
         expect(map.has("a")).to.equal(false);
     });
 
-    it.sequential("should not remove non-expired entries", async () => {
+    it("should not remove non-expired entries", async () => {
         const map = new SelfClearingMap<string, number>(1000);
         await vi.advanceTimersToNextTimerAsync();
         vi.setSystemTime(0);
@@ -54,7 +54,7 @@ describe.sequential("SelfClearingMap", () => {
         expect(map.has("a")).to.equal(true);
     });
 
-    it.sequential("should not remove non-expired entries", async () => {
+    it("should not remove non-expired entries", async () => {
         const map = new SelfClearingMap<string, number>(2000, 1000);
         await vi.advanceTimersToNextTimerAsync();
         map.set("a", 0);
@@ -65,7 +65,7 @@ describe.sequential("SelfClearingMap", () => {
         expect(map.has("a")).to.equal(true);
     });
 
-    it.sequential("Should call the on_remove callback", async () => {
+    it("Should call the on_remove callback", async () => {
         const map = new SelfClearingMap<string, number>(1000);
         const on_remove = vi.fn();
         map.on_remove = on_remove;
@@ -83,7 +83,7 @@ describe.sequential("SelfClearingMap", () => {
         expect(on_remove).toHaveBeenCalled();
     });
 
-    it.sequential("Should run the sweep only when needed", async () => {
+    it("Should run the sweep only when needed", async () => {
         const map = new SelfClearingMap<string, number>(1000);
         const map2 = new SelfClearingMap<string, number>(3000);
         const spy = vi.spyOn(map, "sweep");
@@ -108,7 +108,7 @@ describe.sequential("SelfClearingMap", () => {
     });
 });
 
-describe.sequential("SelfClearingSet", () => {
+describe("SelfClearingSet", () => {
     beforeEach(() => {
         // tell vitest we use mocked timers
         vi.useFakeTimers();
@@ -120,7 +120,7 @@ describe.sequential("SelfClearingSet", () => {
         gc();
     });
 
-    it.sequential("should remove expired entries", async () => {
+    it("should remove expired entries", async () => {
         const set = new SelfClearingSet<string>(1000);
         await vi.advanceTimersToNextTimerAsync();
         set.insert("a");
@@ -132,7 +132,7 @@ describe.sequential("SelfClearingSet", () => {
         expect(set.has("a")).to.equal(false);
     });
 
-    it.sequential("shouldn't remove unexpired entries", async () => {
+    it("shouldn't remove unexpired entries", async () => {
         const set = new SelfClearingSet<string>(1000);
         await vi.advanceTimersToNextTimerAsync();
         set.insert("a");
@@ -144,7 +144,7 @@ describe.sequential("SelfClearingSet", () => {
         expect(set.has("a")).to.equal(true);
     });
 
-    it.sequential("shouldn't remove unexpired entries", async () => {
+    it("shouldn't remove unexpired entries", async () => {
         const set = new SelfClearingSet<string>(2000, 1000);
         await vi.advanceTimersToNextTimerAsync();
         set.insert("a");
@@ -156,7 +156,7 @@ describe.sequential("SelfClearingSet", () => {
         expect(set.has("a")).to.equal(true);
     });
 
-    it.sequential("Should call the on_remove callback", async () => {
+    it("Should call the on_remove callback", async () => {
         const on_remove = vi.fn();
         const set = new SelfClearingSet<string>(1000, 1000, on_remove);
         set.insert("a");
@@ -170,7 +170,7 @@ describe.sequential("SelfClearingSet", () => {
         expect(on_remove).toHaveBeenCalled();
     });
 
-    it.sequential("Should run the sweep only when needed", async () => {
+    it("Should run the sweep only when needed", async () => {
         const set = new SelfClearingSet<string>(1000);
         const set2 = new SelfClearingSet<string>(3000);
         const spy = vi.spyOn(set, "sweep");
@@ -195,7 +195,7 @@ describe.sequential("SelfClearingSet", () => {
     });
 });
 
-describe.sequential("SelfClearingMap and SelfClearingSet", () => {
+describe("SelfClearingMap and SelfClearingSet", () => {
     beforeEach(() => {
         // tell vitest we use mocked timers
         vi.useFakeTimers();
@@ -206,7 +206,7 @@ describe.sequential("SelfClearingMap and SelfClearingSet", () => {
         vi.runOnlyPendingTimers();
         gc();
     });
-    it.sequential("should remove expired entries", async () => {
+    it("should remove expired entries", async () => {
         const map = new SelfClearingMap<string, number>(1000);
         const set = new SelfClearingSet<string>(1000);
 
