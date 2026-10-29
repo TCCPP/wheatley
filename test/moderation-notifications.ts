@@ -47,11 +47,10 @@ function setup(type: moderation_type = "rolepersist") {
                     channels: { cache: new Discord.Collection() },
                 },
                 client: { users: { fetch: fetch_user } },
-                try_fetch_guild_member: vi.fn((requested: Discord.User | string) =>
-                    Promise.resolve(
-                        (typeof requested === "string" ? requested : requested.id) === moderator.id ? issuer : member,
-                    ),
-                ),
+                try_fetch_guild_member: vi.fn((requested: Discord.User | string) => {
+                    const requested_id = typeof requested === "string" ? requested : requested.id;
+                    return Promise.resolve(requested_id === moderator.id ? issuer : member);
+                }),
                 emoji: { error: "❌", success: "✅", me: "🤖" },
                 critical_error,
                 event_hub: { emit },
@@ -226,17 +225,19 @@ describe("moderation notification ordering", () => {
         expect(fixture.notify.mock.calls.map(call => call[1].id)).toEqual([fixture.user.id, other_user.id]);
     });
 
-    it("does not notify the failed target after an earlier multi-user success", async () => {
+    it("stops issuing after a multi-user failure without notifying the failed target", async () => {
         const fixture = setup("mute");
         const other_user = { ...fixture.user, id: "4000000000" } as Discord.User;
+        const remaining_user = { ...fixture.user, id: "5000000000" } as Discord.User;
         fixture.apply.mockResolvedValueOnce(undefined).mockRejectedValueOnce(new Error("Second mute failed"));
         await fixture.component.moderation_multi_issue_handler(
             fixture.command,
-            [fixture.user, other_user],
+            [fixture.user, other_user, remaining_user],
             "1s",
             null,
             fixture.moderation,
         );
+        expect(fixture.apply).toHaveBeenCalledTimes(2);
         expect(fixture.insert).toHaveBeenCalledOnce();
         expect(fixture.notify.mock.calls.map(call => call[1].id)).toEqual([fixture.user.id]);
         expect(fixture.reply_or_follow_up).toHaveBeenCalledOnce();
@@ -263,12 +264,10 @@ describe("moderation notification ordering", () => {
         expect(fixture.notify).not.toHaveBeenCalled();
     });
 
-    it("preserves pre-notification for actions that remove guild membership", async () => {
-        for (const type of ["ban", "kick", "softban"] as const) {
-            const fixture = setup(type);
-            await fixture.issue();
-            expect(fixture.events).toEqual(["notify", "apply", "persist"]);
-            expect(fixture.reply).toHaveBeenCalledOnce();
-        }
+    it.each(["ban", "kick", "softban"] as const)("notifies before %s removes guild membership", async type => {
+        const fixture = setup(type);
+        await fixture.issue();
+        expect(fixture.events).toEqual(["notify", "apply", "persist"]);
+        expect(fixture.reply).toHaveBeenCalledOnce();
     });
 });

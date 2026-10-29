@@ -876,6 +876,7 @@ export abstract class ModerationComponent extends BotComponent {
                     expunged: null,
                     link: command.get_or_forge_url(),
                 };
+                // Sequential execution preserves duplicate checks and stops on failure.
                 const notification_failed = await this.issue_moderation_and_notify(user, moderation);
                 if (notification_failed) {
                     notification_failures.push(user.displayName);
