@@ -99,6 +99,10 @@ export default class VoiceMute extends ModerationComponent {
         }
         const member = await this.wheatley.try_fetch_guild_member(entry.user);
         if (member) {
+            if (member.voice.channel) {
+                await member.voice.setMute(true);
+            }
+
             await member.roles.add(this.roles.voice_muted);
             await this.refresh_voice_permissions(member);
         }
@@ -111,6 +115,10 @@ export default class VoiceMute extends ModerationComponent {
         }
         const member = await this.wheatley.try_fetch_guild_member(entry.user);
         if (member) {
+            if (member.voice.channel) {
+                await member.voice.setMute(false);
+            }
+
             await member.roles.remove(this.roles.voice_muted);
             await this.refresh_voice_permissions(member);
         }
